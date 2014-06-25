@@ -1,0 +1,61 @@
+Mission Support System (MSS)
+============================
+
+Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+Copyright 2011-2014 Marc Rautenhaus
+
+This product mainly includes software developed by the
+
+Institute of Atmospheric Physics
+Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+(German Aerospace Center)
+Oberpfaffenhofen, Germany
+
+***************************************************************************
+
+   When using this software, please acknowledge its use by citing the
+   reference documentation in any publication, presentation, report,
+   etc. you create:
+
+   Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based
+   tool to plan atmospheric research flights, Geosci. Model Dev., 5,
+   55-71, doi:10.5194/gmd-5-55-2012, 2012.
+
+   Thank you.
+
+***************************************************************************
+
+Below is a list of software packages that are used in the MSS or from
+which parts are used in the MSS (see the LICENSE file for the terms and
+conditions that apply to these components):
+
+OWSLib
+======
+
+Copyright (c) 2006, Ancient World Mapping Center
+
+Package for working with OGC map, feature, and coverage services.
+Obtained from SVN (http://svn.gispython.org/svn/gispy/OWSLib/trunk),
+revision 1672, on 2010/08/11.
+
+The file "wms.py" has been modified for the MSS.
+
+
+pyroms
+======
+
+mslib/greatcircle.py has been taken from the pyroms project:
+Python toolkit for the Regional Ocean Modeling System (ROMS)
+
+http://code.google.com/p/pyroms/
+
+
+NETCDF4-PYTHON
+==============
+
+Copyright: 2008 by Jeffrey Whitaker
+
+mslib/netCDF4tools.py contains substantial parts taken from the
+netcdf4-python library -- Python/numpy interface to netCDF
+
+https://code.google.com/p/netcdf4-python/

@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MSSMainWindow</class>
+ <widget class="QMainWindow" name="MSSMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>424</width>
+    <height>540</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>DLR/IPA Mission Support User Interface</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QGroupBox" name="groupBox_3">
+      <property name="title">
+       <string>Flight Tracks:</string>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Active flight track:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="lblActiveFlightTrack">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <italic>false</italic>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Box</enum>
+           </property>
+           <property name="text">
+            <string>(active flight track)</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Open flight tracks:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listFlightTracks">
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="textElideMode">
+          <enum>Qt::ElideNone</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="btSelectFlightTrack">
+           <property name="text">
+            <string>set selected flight track active</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string>Open Views:</string>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QListWidget" name="listViews"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="title">
+       <string>Open Tools:</string>
+      </property>
+      <property name="flat">
+       <bool>true</bool>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QListWidget" name="listTools"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>424</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionNewFlightTrack"/>
+    <addaction name="actionOpenFlightTrack"/>
+    <addaction name="actionCloseSelectedFlightTrack"/>
+    <addaction name="separator"/>
+    <addaction name="actionSaveActiveFlightTrack"/>
+    <addaction name="actionSaveActiveFlightTrackAs"/>
+    <addaction name="separator"/>
+    <addaction name="action_Quit"/>
+   </widget>
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
+     <string>&amp;Views</string>
+    </property>
+    <addaction name="actionTopView"/>
+    <addaction name="actionSideView"/>
+    <addaction name="actionTableView"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoopView"/>
+    <addaction name="separator"/>
+    <addaction name="actionTimeSeriesViewTrajectories"/>
+   </widget>
+   <widget class="QMenu" name="menu_Tools">
+    <property name="title">
+     <string>&amp;Tools</string>
+    </property>
+    <addaction name="actionTrajectoryToolLagranto"/>
+   </widget>
+   <widget class="QMenu" name="menu_Help">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionAboutMSUI"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_View"/>
+   <addaction name="menu_Tools"/>
+   <addaction name="menu_Help"/>
+  </widget>
+  <action name="action_Quit">
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionNewFlightTrack">
+   <property name="text">
+    <string>&amp;New Flight Track...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionOpenFlightTrack">
+   <property name="text">
+    <string>&amp;Open Flight Track...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionSaveActiveFlightTrack">
+   <property name="text">
+    <string>&amp;Save Active Flight Track</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionSaveActiveFlightTrackAs">
+   <property name="text">
+    <string>Save Active Flight Track &amp;As...</string>
+   </property>
+  </action>
+  <action name="actionCloseSelectedFlightTrack">
+   <property name="text">
+    <string>&amp;Close Selected Flight Track</string>
+   </property>
+  </action>
+  <action name="actionTopView">
+   <property name="text">
+    <string>&amp;Top View (Horizontal Section)</string>
+   </property>
+  </action>
+  <action name="actionSideView">
+   <property name="text">
+    <string>&amp;Side View (Vertical Section)</string>
+   </property>
+  </action>
+  <action name="actionTableView">
+   <property name="text">
+    <string>T&amp;able View</string>
+   </property>
+  </action>
+  <action name="actionLoopView">
+   <property name="text">
+    <string>&amp;Loop View (Images)</string>
+   </property>
+  </action>
+  <action name="actionTimeSeriesViewTrajectories">
+   <property name="text">
+    <string>T&amp;ime Series View (Trajectories)</string>
+   </property>
+  </action>
+  <action name="action3DView">
+   <property name="text">
+    <string>&amp;3D View</string>
+   </property>
+  </action>
+  <action name="actionTrajectoryToolLagranto">
+   <property name="text">
+    <string>&amp;Trajectory Tool (Lagranto)</string>
+   </property>
+  </action>
+  <action name="actionDiscoverEarthObservationDataGENESI">
+   <property name="text">
+    <string>&amp;Discover Earth Observation Data (GENESI)</string>
+   </property>
+  </action>
+  <action name="actionAboutMSUI">
+   <property name="text">
+    <string>&amp;About MSUI</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>action_Quit</sender>
+   <signal>triggered()</signal>
+   <receiver>MSSMainWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

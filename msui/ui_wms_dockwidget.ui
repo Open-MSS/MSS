@@ -1,0 +1,852 @@
+<ui version="4.0" >
+ <class>WMSDockWidget</class>
+ <widget class="QWidget" name="WMSDockWidget" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1001</width>
+    <height>155</height>
+   </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize" >
+   <size>
+    <width>1001</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize" >
+   <size>
+    <width>16777215</width>
+    <height>155</height>
+   </size>
+  </property>
+  <property name="windowTitle" >
+   <string>WMS Dock Widget</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_4" >
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_9" >
+     <item>
+      <widget class="QLabel" name="label_7" >
+       <property name="text" >
+        <string>WMS URL:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cbWMS_URL" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="toolTip" >
+        <string>Enter a valid WMS URL here.</string>
+       </property>
+       <property name="editable" >
+        <bool>true</bool>
+       </property>
+       <item>
+        <property name="text" >
+         <string>http://localhost:8002/fc_wms</string>
+        </property>
+       </item>
+       <item>
+        <property name="text" >
+         <string>http://osm.omniscale.net/proxy/service</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btGetCapabilities" >
+       <property name="toolTip" >
+        <string>Request the capabilities from the WMS server.</string>
+       </property>
+       <property name="text" >
+        <string>get capabilities</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="tbViewCapabilities" >
+       <property name="text" >
+        <string>view</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="Line" name="line_4" >
+       <property name="orientation" >
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="cbAutoUpdate" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Minimum" hsizetype="Minimum" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize" >
+        <size>
+         <width>200</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip" >
+        <string>Automatically request an updated map when the layer parameters have changed.</string>
+       </property>
+       <property name="text" >
+        <string>update on changes</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btGetMap" >
+       <property name="maximumSize" >
+        <size>
+         <width>200</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font" >
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="toolTip" >
+        <string>Request a map with the specifed parameters.</string>
+       </property>
+       <property name="text" >
+        <string>get map</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5" >
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout" >
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout" >
+         <item>
+          <widget class="QLabel" name="label_8" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Preferred" hsizetype="Fixed" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>40</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text" >
+            <string>Layer:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbLayer" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Minimum" hsizetype="MinimumExpanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>200</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="sizeAdjustPolicy" >
+            <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+           </property>
+           <property name="minimumContentsLength" >
+            <number>0</number>
+           </property>
+           <item>
+            <property name="text" >
+             <string>BASEMAP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text" >
+             <string>MSLP</string>
+            </property>
+           </item>
+           <item>
+            <property name="text" >
+             <string>TCC</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2" >
+         <item>
+          <widget class="QLabel" name="label_11" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Preferred" hsizetype="Fixed" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>40</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text" >
+            <string>Style:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbStyle" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Minimum" hsizetype="MinimumExpanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>200</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="sizeAdjustPolicy" >
+            <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+           </property>
+           <property name="frame" >
+            <bool>true</bool>
+           </property>
+           <item>
+            <property name="text" >
+             <string>...</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="teLayerAbstract" >
+         <property name="minimumSize" >
+          <size>
+           <width>242</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="readOnly" >
+          <bool>true</bool>
+         </property>
+         <property name="html" >
+          <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:10pt; font-weight:400; font-style:normal;">
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;/p>&lt;/body>&lt;/html></string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="Line" name="line_2" >
+       <property name="orientation" >
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_2" >
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4" >
+         <item>
+          <widget class="QCheckBox" name="cbLevelOn" >
+           <property name="enabled" >
+            <bool>false</bool>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>95</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>120</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="palette" >
+            <palette>
+             <active>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>20</red>
+                 <green>19</green>
+                 <blue>18</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>20</red>
+                 <green>19</green>
+                 <blue>18</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>0</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="text" >
+            <string>Level:</string>
+           </property>
+           <property name="checkable" >
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbLevel" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Fixed" hsizetype="Minimum" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>180</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>250</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip" >
+            <string>Elevation values provided by the WMS server.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbLevel_back" >
+           <property name="text" >
+            <string>&lt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbLevel_fwd" >
+           <property name="text" >
+            <string>></string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer" >
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="Line" name="line_5" >
+           <property name="orientation" >
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cbTransparent" >
+           <property name="text" >
+            <string>transparent</string>
+           </property>
+           <property name="checked" >
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line_3" >
+           <property name="orientation" >
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label" >
+           <property name="text" >
+            <string>Cache:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cbCacheEnabled" >
+           <property name="toolTip" >
+            <string>Enable the image cache (retrieved images will be stored locally to speed up repeated retrievals).</string>
+           </property>
+           <property name="text" >
+            <string>on</string>
+           </property>
+           <property name="checked" >
+            <bool>true</bool>
+           </property>
+           <property name="tristate" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btClearCache" >
+           <property name="toolTip" >
+            <string>Clear all cache contents.</string>
+           </property>
+           <property name="text" >
+            <string>clear</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3" >
+         <item>
+          <widget class="QCheckBox" name="cbInitialisationOn" >
+           <property name="enabled" >
+            <bool>false</bool>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>95</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>120</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="palette" >
+            <palette>
+             <active>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>20</red>
+                 <green>19</green>
+                 <blue>18</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>20</red>
+                 <green>19</green>
+                 <blue>18</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>0</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="text" >
+            <string>Initialisation:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbInitTime" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Fixed" hsizetype="Minimum" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>180</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>250</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip" >
+            <string>Forecast initialisation time (base time) values provided by the WMS server.</string>
+           </property>
+           <item>
+            <property name="text" >
+             <string>2010-12-12T00:00:00Z</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbInitTime_cbback" >
+           <property name="text" >
+            <string>&lt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbInitTime_cbfwd" >
+           <property name="text" >
+            <string>></string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDateTimeEdit" name="dteInitTime" >
+           <property name="minimumSize" >
+            <size>
+             <width>160</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>160</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font" >
+            <font>
+             <weight>50</weight>
+             <bold>false</bold>
+             <strikeout>false</strikeout>
+            </font>
+           </property>
+           <property name="toolTip" >
+            <string>You can also specify an initialisation date here.</string>
+           </property>
+           <property name="correctionMode" >
+            <enum>QAbstractSpinBox::CorrectToPreviousValue</enum>
+           </property>
+           <property name="displayFormat" >
+            <string>yyyy/MM/dd hh:mm UTC</string>
+           </property>
+           <property name="calendarPopup" >
+            <bool>false</bool>
+           </property>
+           <property name="timeSpec" >
+            <enum>Qt::UTC</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbInitTime_back" >
+           <property name="text" >
+            <string>&lt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbInitTime_step" />
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbInitTime_fwd" >
+           <property name="text" >
+            <string>></string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2" >
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>10</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8" >
+         <item>
+          <widget class="QCheckBox" name="cbValidOn" >
+           <property name="enabled" >
+            <bool>false</bool>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>95</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>120</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="palette" >
+            <palette>
+             <active>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>20</red>
+                 <green>19</green>
+                 <blue>18</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </active>
+             <inactive>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>20</red>
+                 <green>19</green>
+                 <blue>18</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </inactive>
+             <disabled>
+              <colorrole role="WindowText" >
+               <brush brushstyle="SolidPattern" >
+                <color alpha="255" >
+                 <red>0</red>
+                 <green>0</green>
+                 <blue>0</blue>
+                </color>
+               </brush>
+              </colorrole>
+             </disabled>
+            </palette>
+           </property>
+           <property name="text" >
+            <string>Valid:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbValidTime" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Fixed" hsizetype="Minimum" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize" >
+            <size>
+             <width>180</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>250</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip" >
+            <string>Valid time values provided by the WMS server.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbValidTime_cbback" >
+           <property name="text" >
+            <string>&lt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbValidTime_cbfwd" >
+           <property name="text" >
+            <string>></string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDateTimeEdit" name="dteValidTime" >
+           <property name="minimumSize" >
+            <size>
+             <width>160</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize" >
+            <size>
+             <width>160</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip" >
+            <string>Specify the time value here, especially if the server does not provide predefined values. Keep in mind that the specified value may not be available from the server, though.</string>
+           </property>
+           <property name="date" >
+            <date>
+             <year>2010</year>
+             <month>1</month>
+             <day>22</day>
+            </date>
+           </property>
+           <property name="minimumDateTime" >
+            <datetime>
+             <hour>12</hour>
+             <minute>0</minute>
+             <second>0</second>
+             <year>2000</year>
+             <month>1</month>
+             <day>1</day>
+            </datetime>
+           </property>
+           <property name="minimumDate" >
+            <date>
+             <year>2000</year>
+             <month>1</month>
+             <day>1</day>
+            </date>
+           </property>
+           <property name="minimumTime" >
+            <time>
+             <hour>12</hour>
+             <minute>0</minute>
+             <second>0</second>
+            </time>
+           </property>
+           <property name="displayFormat" >
+            <string>yyyy/MM/dd hh:mm UTC</string>
+           </property>
+           <property name="calendarPopup" >
+            <bool>false</bool>
+           </property>
+           <property name="timeSpec" >
+            <enum>Qt::UTC</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbValidTime_back" >
+           <property name="text" >
+            <string>&lt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbValidTime_step" />
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbValidTime_fwd" >
+           <property name="text" >
+            <string>></string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3" >
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>10</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line" >
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

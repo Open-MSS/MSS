@@ -1,0 +1,74 @@
+
+<VirtualHost *:80>
+    # You can define different hostname for the WMS VirtualHost here
+    # For example, you can add localwms to your /etc/hosts file along with localhost
+    # and use the 'localwms' name like in the template here.
+    ServerName mss.yourserver.de
+    #ServerAlias localwms
+    LogLevel debug
+    ServerAdmin webmaster@somewhere.de
+    
+    <Directory /path/to/http/mss/wsgi-scripts>
+        Order deny,allow
+        Allow from all
+    </Directory>
+
+    # The block here is to use Python script to add HTTP Basic Authentication
+    # to your /mss_wms path.
+    # Change the directories to the directory where you have the code.
+    <Location /mss_wms>
+        AuthType Basic
+        AuthName "Top Secret"
+        AuthBasicProvider wsgi
+        WSGIAuthUserScript /path/to/http/mss/wsgi-scripts/auth.wsgi
+        Require valid-user
+    </Location>
+
+    # WSGI Options
+    # home: Initial working directory of the script, make sure you change it.
+    # python-path : Directories to search for Modules, make sure you change it as well.
+    # Please see the documentation here : http://code.google.com/p/modwsgi/wiki/ConfigurationDirectives 
+    WSGIDaemonProcess mss.yourserver.de home=/path/to/http/mss/program/trunk/mswms  processes=2 threads=1 deadlock-timeout=25 python-path=/path/to/http/mss/program/trunk/mswms 
+    WSGIProcessGroup mss.yourserver.de
+
+    # Python Simplified GIL State API ( ISSUE ) 
+    # http://code.google.com/p/modwsgi/wiki/ApplicationIssues
+    WSGIApplicationGroup %{GLOBAL} 
+
+    # Main WSGI Script path
+    WSGIScriptAlias /mss_wms /path/to/http/mss/wsgi-scripts/mss_wms_wsgi.wsgi
+
+    DocumentRoot /path/to/http/mss/htdocs
+
+    <Directory />
+	Options FollowSymLinks
+	AllowOverride None
+    </Directory>
+
+    <Directory /path/to/http/mss/htdocs>
+	Options Indexes FollowSymLinks MultiViews
+	AllowOverride None
+	Order allow,deny
+	allow from all
+    </Directory>
+
+    # don't loose time with IP address lookups
+    HostnameLookups Off
+
+    # needed for named virtual hosts
+    UseCanonicalName Off
+
+    # configures the footer on server-generated documents
+    ServerSignature On
+
+    #ErrorLog ${APACHE_LOG_DIR}/error.log
+    ErrorLog /path/to/http/logs/error-mss_log
+
+    # Possible values include: debug, info, notice, warn, error, crit,
+    # alert, emerg.
+    #LogLevel warn
+
+    #CustomLog ${APACHE_LOG_DIR}/access.log combined
+    CustomLog /path/to/http/logs/access-mss_log combined
+</VirtualHost>
+

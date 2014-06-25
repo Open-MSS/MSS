@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE WMT_MS_Capabilities SYSTEM "http://www.digitalearth.gov/wmt/xml/capabilities_1_1_1.dtd">
+<WMT_MS_Capabilities version="1.1.1" updateSequence="0">
+    <Service>
+        <Name>OGC:WMS</Name>
+        <Title>Mission Support System Web Map Service</Title>
+        <Abstract>Your Abstract.</Abstract>
+        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://www.your.server"/>
+        <ContactInformation>
+            <ContactPersonPrimary>
+                <ContactPerson>Your Name</ContactPerson>
+                <ContactOrganization>Your Organization</ContactOrganization>
+            </ContactPersonPrimary>
+            <ContactAddress>
+                <AddressType>postal</AddressType>
+                <Address>Your Street</Address>
+                <City>Your City</City>
+                <StateOrProvince></StateOrProvince>
+                <PostCode>12345</PostCode>
+                <Country>Germany</Country>
+            </ContactAddress>
+        </ContactInformation>
+        <Fees>none</Fees>
+        <AccessConstraints>This service is intended for research purposes only.</AccessConstraints>
+    </Service>
+    <Capability>
+        <Request>
+            <GetCapabilities>
+                <Format>application/vnd.ogc.wms_xml</Format>
+                <DCPType>
+                    <HTTP>
+                        <Get>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/mss_wms?"/>
+                        </Get>
+                    </HTTP>
+                </DCPType>
+            </GetCapabilities>
+            <GetMap>
+                <Format>image/png</Format>
+                <DCPType>
+                    <HTTP>
+                        <Get>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/mss_wms?"/>
+                        </Get>
+                    </HTTP>
+                </DCPType>
+            </GetMap>
+        </Request>
+        <Exception>
+            <Format>application/vnd.ogc.se_xml</Format>
+        </Exception>
+        <Layer>
+            <Title>Mission Support WMS Server</Title>
+            <Abstract>Mission Support WMS Server</Abstract>
+            <Layer tal:repeat="(dataset, layer) hsec_layers" tal:attributes="queryable '0' if layer.queryable else None">
+                <Name>${ "%s.%s" % (dataset, layer.name) }</Name>
+                <Title tal:condition="layer.title"> ${ layer.title.strip() } </Title>
+                <Abstract tal:condition="layer.abstract"> ${ layer.abstract.strip() } </Abstract>
+                <SRS tal:repeat="crs layer.supported_crs()"> ${ crs } </SRS>
+                <LatLonBoundingBox minx="-180" maxx="180" miny="-90" maxy="90"></LatLonBoundingBox>
+                <Dimension tal:condition="layer.uses_time_dimensions()" name="TIME" units="ISO8610"> </Dimension>
+                <Dimension tal:condition="layer.uses_time_dimensions()" name="INIT_TIME" units="ISO8610"> </Dimension>
+                <Dimension tal:condition="len(layer.get_elevations()) > 0" name="ELEVATION" units="${layer.get_elevation_units()}"> </Dimension>
+                <Extent tal:condition="layer.uses_time_dimensions()" name="TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_all_valid_times()]) } </Extent>
+                <Extent tal:condition="layer.uses_time_dimensions()" name="INIT_TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_init_times()]) } </Extent>
+                <Extent tal:condition="len(layer.get_elevations()) > 0" name="ELEVATION" default="${layer.get_elevations()[-1]}"> ${ ",".join(layer.get_elevations()) } </Extent>
+                <Style tal:condition="type(layer.styles) is list" tal:repeat="(style_name, style_title) layer.styles">
+                    <Name> ${ style_name } </Name>
+                    <Title> ${ style_title } </Title>
+                </Style>
+            </Layer>
+        </Layer>
+
+        <Layer tal:condition="len(vsec_layers) > 0">
+            <Title> Vertical Sections of Forecasts. </Title>
+            <Layer tal:repeat="(dataset, layer) vsec_layers" tal:attributes="queryable '1' if layer.queryable else None">
+                <Name>${ "%s.%s" % (dataset, layer.name) }</Name>
+                <Title tal:condition="layer.title"> ${ layer.title.strip() } </Title>
+                <Abstract tal:condition="layer.abstract"> ${ layer.abstract.strip() } </Abstract>
+                <SRS tal:repeat="crs layer.supported_crs()"> ${ crs } </SRS>
+                <LatLonBoundingBox minx="-180" maxx="180" miny="-90" maxy="90"></LatLonBoundingBox>
+                <Dimension tal:condition="layer.uses_time_dimensions()" name="TIME" units="ISO8610"> </Dimension>
+                <Dimension tal:condition="layer.uses_time_dimensions()" name="INIT_TIME" units="ISO8610"> </Dimension>
+                <Extent tal:condition="layer.uses_time_dimensions()" name="TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_all_valid_times()]) } </Extent>
+                <Extent tal:condition="layer.uses_time_dimensions()" name="INIT_TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_init_times()]) } </Extent>
+            </Layer>
+        </Layer>
+    </Capability>
+</WMT_MS_Capabilities>
+

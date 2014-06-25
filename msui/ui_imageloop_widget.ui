@@ -1,0 +1,297 @@
+<ui version="4.0" >
+ <class>ImageLoopWidget</class>
+ <widget class="QWidget" name="ImageLoopWidget" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>553</width>
+    <height>393</height>
+   </rect>
+  </property>
+  <property name="focusPolicy" >
+   <enum>Qt::StrongFocus</enum>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" >
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2" >
+     <item>
+      <widget class="QFrame" name="frame" >
+       <property name="minimumSize" >
+        <size>
+         <width>120</width>
+         <height>22</height>
+        </size>
+       </property>
+       <property name="maximumSize" >
+        <size>
+         <width>120</width>
+         <height>14</height>
+        </size>
+       </property>
+       <property name="autoFillBackground" >
+        <bool>false</bool>
+       </property>
+       <property name="frameShape" >
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="frameShadow" >
+        <enum>QFrame::Plain</enum>
+       </property>
+       <property name="lineWidth" >
+        <number>1</number>
+       </property>
+       <widget class="QToolButton" name="btZoomIn" >
+        <property name="geometry" >
+         <rect>
+          <x>0</x>
+          <y>1</y>
+          <width>20</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="toolTip" >
+         <string>zoom in</string>
+        </property>
+        <property name="text" >
+         <string>+</string>
+        </property>
+        <property name="autoRaise" >
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QToolButton" name="btZoomOut" >
+        <property name="geometry" >
+         <rect>
+          <x>17</x>
+          <y>1</y>
+          <width>20</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="toolTip" >
+         <string>zoom out</string>
+        </property>
+        <property name="text" >
+         <string>-</string>
+        </property>
+        <property name="autoRaise" >
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QToolButton" name="btZoomNormalSize" >
+        <property name="geometry" >
+         <rect>
+          <x>38</x>
+          <y>1</y>
+          <width>30</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>30</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>30</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="toolTip" >
+         <string>reset image size to original size</string>
+        </property>
+        <property name="text" >
+         <string>orig</string>
+        </property>
+        <property name="checkable" >
+         <bool>false</bool>
+        </property>
+        <property name="autoRaise" >
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QToolButton" name="btFitToWindow" >
+        <property name="geometry" >
+         <rect>
+          <x>67</x>
+          <y>1</y>
+          <width>25</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>25</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>25</width>
+          <height>14</height>
+         </size>
+        </property>
+        <property name="toolTip" >
+         <string>fit image size to window</string>
+        </property>
+        <property name="text" >
+         <string>fit</string>
+        </property>
+        <property name="checkable" >
+         <bool>true</bool>
+        </property>
+        <property name="autoRaise" >
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QToolButton" name="tbLevel_down" >
+        <property name="geometry" >
+         <rect>
+          <x>92</x>
+          <y>8</y>
+          <width>25</width>
+          <height>14</height>
+         </rect>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>25</width>
+          <height>14</height>
+         </size>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>30</width>
+          <height>14</height>
+         </size>
+        </property>
+        <property name="toolTip" >
+         <string>decrease level</string>
+        </property>
+        <property name="text" >
+         <string>\/</string>
+        </property>
+        <property name="autoRaise" >
+         <bool>true</bool>
+        </property>
+        <property name="arrowType" >
+         <enum>Qt::DownArrow</enum>
+        </property>
+       </widget>
+       <widget class="QToolButton" name="tbLevel_up" >
+        <property name="geometry" >
+         <rect>
+          <x>92</x>
+          <y>-1</y>
+          <width>25</width>
+          <height>14</height>
+         </rect>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>25</width>
+          <height>14</height>
+         </size>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>30</width>
+          <height>14</height>
+         </size>
+        </property>
+        <property name="toolTip" >
+         <string>increase level</string>
+        </property>
+        <property name="text" >
+         <string>/\</string>
+        </property>
+        <property name="autoRaise" >
+         <bool>true</bool>
+        </property>
+        <property name="arrowType" >
+         <enum>Qt::UpArrow</enum>
+        </property>
+       </widget>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="lblInfo" >
+       <property name="minimumSize" >
+        <size>
+         <width>0</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize" >
+        <size>
+         <width>16777215</width>
+         <height>16</height>
+        </size>
+       </property>
+       <property name="font" >
+        <font>
+         <weight>75</weight>
+         <italic>false</italic>
+         <bold>true</bold>
+         <underline>false</underline>
+        </font>
+       </property>
+       <property name="text" >
+        <string>&lt;Product Information></string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QScrollArea" name="scrollArea" >
+     <property name="widgetResizable" >
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents" >
+      <property name="geometry" >
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>539</width>
+        <height>351</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
