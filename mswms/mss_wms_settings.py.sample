@@ -160,8 +160,14 @@ epsg_to_mpl_basemap_table = {
     77790000: {"projection": "stere", "lat_0": 90., "lon_0": 0.},
     77790010: {"projection": "stere", "lat_0": 90., "lon_0": 10.},
     77790015: {"projection": "stere", "lat_0": 90., "lon_0": 15.},
-    77791105: {"projection": "stere", "lat_0": 90., "lon_0": -105.}
+    77790340: {"projection": "stere", "lat_0": 90., "lon_0": -20.},
+    77791105: {"projection": "stere", "lat_0": 90., "lon_0": -105.},
 
+    77890000: {"projection": "spstere", "lat_0": 90., "lon_0": 0.},
+    77890010: {"projection": "spstere", "lat_0": 90., "lon_0": 10.},
+    77890015: {"projection": "spstere", "lat_0": 90., "lon_0": 15.},
+    77890340: {"projection": "spstere", "lat_0": 90., "lon_0": -20.},
+    77891105: {"projection": "spstere", "lat_0": 90., "lon_0": -105.}
 
     # Feel free to add other projections, e.g. a south polar projection
     # EPSG:778llLLL.
