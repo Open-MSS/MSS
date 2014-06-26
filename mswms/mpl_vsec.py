@@ -175,7 +175,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
 
     def plot_vsection(self, data, lats, lons, valid_time, init_time,
-                      resolution=(-1,-1), bbox=(-1,1050,-1,200), show=False,
+                      resolution=(-1,-1), bbox=(-1,1050,-1,200), style=None,
+                      show=False,
                       highlight=None, noframe=False, figsize=(960,480),
                       numlabels=10, orography_color='k', transparent=False,
                       return_format="image/png"):
@@ -194,6 +195,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.valid_time = valid_time
         self.init_time = init_time
         self.resolution = resolution
+        self.style = style
         self.highlight = highlight
         self.noframe = noframe
         self.p_bot = bbox[1]*100

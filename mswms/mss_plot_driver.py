@@ -563,6 +563,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                                init_time=self.init_time,
                                                resolution=resolution,
                                                bbox=self.bbox,
+                                               style=self.style,
                                                show=self.show,
                                                highlight=self.vsec_path,
                                                noframe=self.noframe,

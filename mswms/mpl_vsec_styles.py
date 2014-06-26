@@ -890,7 +890,11 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_PV01"
     title = "Potential Vorticity (PVU) Vertical Section"
-    
+    styles = [
+        ("default", "Northern Hemisphere"),
+        ("NH", "Northern Hemisphere"),
+        ("SH", "Southern Hemisphere, neg. PVU")]
+
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
@@ -934,6 +938,10 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         # Contour spacing for temperature lines.
         delta_t = 2 if (np.log(self.p_bot)-np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot)-np.log(self.p_top)) < 2.2 else 10
+
+        # Change PV sign on southern hemisphere.
+        if self.style.lower() == "default": self.style = "NH"
+        if self.style.upper() == "SH": curtain_pv = -curtain_pv
 
         pv_contours = np.arange(-2., 8.1, 0.1)
 
@@ -988,15 +996,22 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0,:],
-                                titlestring="Potential vorticity (PVU) with CLWC/CIWC (g/kg) "\
-                                "and potential temperature (K)")
+        if self.style.upper() == "SH":
+            tstr = "Neg. potential vorticity (PVU) with CLWC/CIWC (g/kg) "\
+                "and potential temperature (K)"
+        else:
+            tstr = "Potential vorticity (PVU) with CLWC/CIWC (g/kg) "\
+                "and potential temperature (K)"
+        self._latlon_logp_setup(orography=curtain_p[0,:], titlestring=tstr)
 
         # Add colorbar.
         if not self.noframe:
             self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Potential vorticity (PVU)")
+            if self.style.upper() == "SH":
+                cbar.set_label("Negative Potential vorticity (PVU)")
+            else:
+                cbar.set_label("Potential vorticity (PVU)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                 width="1%", # width = % of parent_bbox width
