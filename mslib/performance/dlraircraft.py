@@ -1,6 +1,7 @@
 """
 ********************************************************************************
 
+   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
    Copyright 2012 Marc Rautenhaus
 
    Licensed under the Apache License, Version 2.0 (the "License");

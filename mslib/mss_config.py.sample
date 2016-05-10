@@ -3,7 +3,6 @@
 ********************************************************************************
 
    Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -40,11 +39,6 @@ v = datetime.datetime(2010,07,12,15)
 mss_config.nwpaccess['ecmwf_EUR_LL015'].get_filename('low_cloud_area_fraction',
                                                      'sfc', i, v, fullpath=True)
 <returns the path to the data file>
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
 
 """
 

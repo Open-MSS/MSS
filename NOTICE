@@ -38,7 +38,8 @@ Package for working with OGC map, feature, and coverage services.
 Obtained from SVN (http://svn.gispython.org/svn/gispy/OWSLib/trunk),
 revision 1672, on 2010/08/11.
 
-The file "wms.py" has been modified for the MSS.
+NOTE: The file "wms.py" has been modified for the MSS. Changes are marked 
+with "(mss)".
 
 
 pyroms

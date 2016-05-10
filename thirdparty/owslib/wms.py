@@ -9,9 +9,8 @@
 # Contact email: sgillies@frii.com
 #
 # ******************************************************************************
-# Changes by Marc Rautenhaus, DLR:
-#   --> flagged with (mr)
-#   -- added 'Abstract' to Layer keywords (August 2010).
+# Changes made for the MSS (flagged with "(mss)"):
+#   -- added 'Abstract' to Layer keywords (2010-08).
 #   -- bugfix: copy parent SRS only if it has been defined (2010-09-22)
 #   -- added dimensions and extents parsing (2011-01-13)
 #   -- added storage of capabilities document (2011-01-17)
@@ -86,9 +85,9 @@ class WebMapService(object):
             #read from server
             self._capabilities = reader.read(self.url)
 
-        # (mr) Store capabilities document.
+        # (mss) Store capabilities document.
         self.capabilities_document = reader.capabilities_document
-        # (mr)
+        # (mss)
         
         #build metadata objects
         self._buildMetadata()
@@ -99,9 +98,9 @@ class WebMapService(object):
                 self.version, url=self.url, un=self.username, pw=self.password
                 )
             self._capabilities = ServiceMetadata(reader.read(self.url))
-            # (mr) Store capabilities document.
+            # (mss) Store capabilities document.
             self.capabilities_document = reader.capabilities_document
-            # (mr)
+            # (mss)
         return self._capabilities
 
     def _buildMetadata(self):         
@@ -321,7 +320,7 @@ class ContentMetadata:
         self.parent = parent
         if elem.tag != 'Layer':
             raise ValueError('%s should be a Layer' % (elem,))
-        # (mr) Added "Abstract".
+        # (mss) Added "Abstract".
         for key in ('Name', 'Title', 'Abstract'):
             val = elem.find(key)
             if val is not None:
@@ -380,7 +379,7 @@ class ContentMetadata:
             
         #Copy any parent SRS options (they are inheritable properties)
         if self.parent:
-            # (mr) Copy parent SRS only if it has been defined (some WMS do not!).
+            # (mss) Copy parent SRS only if it has been defined (some WMS do not!).
             if self.parent.crsOptions:
                 self.crsOptions = list(self.parent.crsOptions)
 
@@ -423,7 +422,7 @@ class ContentMetadata:
 ##             if legend is not None:
 ##                 style['legend'] = legend.attrib['{http://www.w3.org/1999/xlink}href']
 ##             self.styles[name.text] = style
-            # (mr) fixed style strip() problem.
+            # (mss) fixed style strip() problem.
             else:
                 style_name = name.text.strip() if type(name.text) is str else name.text
                 style_title = title.text.strip() if type(title.text) is str else title.text
@@ -432,7 +431,7 @@ class ContentMetadata:
             if legend is not None:
                 style['legend'] = legend.attrib['{http://www.w3.org/1999/xlink}href']
             self.styles[style_name] = style
-            # (mr)
+            # (mss)
 
         # keywords
         self.keywords = [f.text for f in elem.findall('KeywordList/Keyword')]
@@ -441,13 +440,13 @@ class ContentMetadata:
         self.timepositions=None
         for extent in elem.findall('Extent'):
             if extent.attrib.get("name").lower() =='time':
-                # (mr) inserted test for text attribute, as extent tags don't
+                # (mss) inserted test for text attribute, as extent tags don't
                 # have to contain text.
                 if extent.text is not None:
                     self.timepositions=extent.text.split(',')
                     break
 
-        #(mr) Parse dimensions and their extents.
+        #(mss) Parse dimensions and their extents.
         self.dimensions = {}
         self.extents = {}
         for dim in elem.findall('Dimension'):
@@ -460,7 +459,7 @@ class ContentMetadata:
                 self.extents[extname]["values"] = extent.text.strip().split(",")
             else:
                 self.extents[extname]["values"] = []
-        #(mr)
+        #(mss)
                 
         self.layers = []
         for child in elem.findall('Layer'):
@@ -540,9 +539,9 @@ class WMSCapabilitiesReader:
         self.url = url
         self.username = un
         self.password = pw
-        # (mr) Store capabilities document.
+        # (mss) Store capabilities document.
         self.capabilities_document = None
-        # (mr)
+        # (mss)
 
         #if self.username and self.password:
             ## Provide login information in order to use the WMS server
@@ -585,10 +584,10 @@ class WMSCapabilitiesReader:
         #now split it up again to use the generic openURL function...
         spliturl=getcaprequest.split('?')
         u = openURL(spliturl[0], spliturl[1], method='Get', username = self.username, password = self.password)
-        # (mr) Store capabilities document.
+        # (mss) Store capabilities document.
         self.capabilities_document = u.read()
         return etree.fromstring(self.capabilities_document)
-        # (mr)
+        # (mss)
 
     def readString(self, st):
         """Parse a WMS capabilities document, returning an elementtree instance

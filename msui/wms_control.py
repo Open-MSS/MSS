@@ -24,7 +24,7 @@ This file is part of the Mission Support System User Interface (MSUI).
 AUTHORS:
 ========
 
-* Marc Rautenhaus (mr)
+* Marc Rautenhaus
 
 """
 
@@ -66,6 +66,38 @@ wms_cache = mss_settings.wms_cache
 ################################################################################
 ###                          CLASS MSSWebMapService                          ###
 ################################################################################
+
+# THE CLASS MSSWebMapService INCLUDES PARTS TAKEN FROM THE owslib LIBRARY.
+# Changes are marked with (mss).
+#
+# owslib COPYRIGHT INFORMATION:
+#
+# Copyright (c) 2006, Ancient World Mapping Center
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the University of North Carolina nor the names of
+#       its contributors may be used to endorse or promote products derived
+#       from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
 class MSSWebMapService(owslib.wms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
@@ -147,7 +179,7 @@ class MSSWebMapService(owslib.wms.WebMapService):
         request['bgcolor'] = '0x' + bgcolor[1:7]
         request['exceptions'] = str(exceptions)
 
-        # ++(mr)
+        # ++(mss)
         if bbox is not None:
             request['bbox'] = ','.join([str(x) for x in bbox])
         if path_str is not None:
@@ -179,11 +211,11 @@ class MSSWebMapService(owslib.wms.WebMapService):
         
         if level is not None:
             request['elevation'] = str(level)
-        # --(mr)
+        # --(mss)
         
         data = urllib.urlencode(request)
 
-        # ++(mr)
+        # ++(mss)
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft") # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs") # IBL Bugfix!
         base_url = base_url.replace(", staging1", "") # geo.beopen.eu bugfix
@@ -191,9 +223,9 @@ class MSSWebMapService(owslib.wms.WebMapService):
         if return_only_url:
             return complete_url
         logging.debug("Retrieving: %s" % complete_url)
-        # --(mr)
+        # --(mss)
 
-        # (mr) owslib.util.openURL checks for ServiceExceptions and raises a
+        # (mss) owslib.util.openURL checks for ServiceExceptions and raises a
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
