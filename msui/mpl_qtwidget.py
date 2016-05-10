@@ -38,7 +38,7 @@ from matplotlib.backends.backend_qt4agg \
 
 # import the NavigationToolbar Qt4Agg widget
 from matplotlib.backends.backend_qt4agg \
-     import NavigationToolbar2QTAgg as NavigationToolbar
+     import NavigationToolbar2QT as NavigationToolbar
 
 # Matplotlib Figure object
 from matplotlib.figure import Figure

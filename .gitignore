@@ -1,9 +1,10 @@
 *.pyc
 *~
 mslib/mss_config.py
+mslib/performance/data/
 msui/mss.sideview.cfg
 msui/mss.topview.cfg
 msui/mss_settings.py
-mswms/mss_wms_settings.py
-mslib/performance/data/
 msui/wms_cache/
+mswms/mss_wms_settings.py
+mswms/vt_cache/
