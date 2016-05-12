@@ -789,6 +789,8 @@ class WaypointDelegate(QItemDelegate):
 
     def __init__(self, parent=None):
         super(WaypointDelegate, self).__init__(parent)
+        self.viewParent = parent
+
 
 
     def paint(self, painter, option, index):
@@ -812,7 +814,14 @@ class WaypointDelegate(QItemDelegate):
         """
         if index.column() == LOCATION:
             combobox = QComboBox(parent)
-            combobox.addItems(locations.keys())
+            adds = locations.keys()
+            if self.viewParent is not None:
+                for loc in [wp.location for wp in self.viewParent.waypoints_model.allWaypointData() if wp.location != ""]:
+                    if loc not in adds:
+                        adds.append(loc)
+                adds = sorted(adds)
+            combobox.addItems(adds)
+            
             combobox.setEditable(True)
             return combobox
         else:
@@ -845,6 +854,16 @@ class WaypointDelegate(QItemDelegate):
                 model.setData(index.sibling(index.row(), LAT), QVariant(lat),
                               update=False)
                 model.setData(index.sibling(index.row(), LON), QVariant(lon))
+            else:
+                for wp in self.viewParent.waypoints_model.allWaypointData():
+                    if loc == wp.location:
+                        lat, lon = wp.lat, wp.lon
+                        # Don't update distances and flight performance twice, hence
+                        # set update=False for LAT.
+                        model.setData(index.sibling(index.row(), LAT), QVariant(lat),
+                                      update=False)
+                        model.setData(index.sibling(index.row(), LON), QVariant(lon))
+
             model.setData(index, QVariant(editor.currentText()))
         else:
             QItemDelegate.setModelData(self, editor, model, index)

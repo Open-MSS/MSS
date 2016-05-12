@@ -37,6 +37,8 @@ AUTHORS:
 
 # standard library imports
 from datetime import datetime
+import string
+import random
 import logging
 import functools
 
@@ -128,15 +130,41 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         index = tableView.currentIndex()
         if not index.isValid():
             row = 0
+            fl = 0
         else:
             row = index.row() + 1
+            fl = self.waypoints_model.waypointData(row - 1).flightlevel
         #row = self.waypoints_model.rowCount() # Append to end
-        self.waypoints_model.insertRows(row)
+        locations = [str(wp.location) for wp in self.waypoints_model.allWaypointData()]
+        locname = ""
+        for letter in string.ascii_uppercase:
+            if letter not in locations:
+                locname = letter
+                break
+        if locname == "":
+            for fletter in string.ascii_uppercase:
+                for sletter in string.ascii_uppercase:
+                    if fletter + sletter not in locations:
+                        locname = fletter + sletter
+                        break
+                if locname != "":
+                    break
+        if locname == "":
+            i = 3
+            j = 0
+            locname = random.sample(string.ascii_uppercase, i)
+            while locname in locations:
+                locname = random.sample(string.ascii_uppercase, i)
+                j += 1
+                if j == 10:
+                    i += 1
+        self.waypoints_model.insertRows(row, waypoints=[ft.Waypoint(lat=0, lon=0, flightlevel=fl, location=locname)])
+
         index = self.waypoints_model.index(row, 0)
         tableView = self.tableWayPoints
         tableView.setFocus()
         tableView.setCurrentIndex(index)
-        tableView.edit(index)
+        # tableView.edit(index)
         tableView.resizeRowsToContents()
 
 
