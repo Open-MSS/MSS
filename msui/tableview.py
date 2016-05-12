@@ -86,6 +86,8 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
                      self.addWayPoint)
         self.connect(self.btDeleteWayPoint, QtCore.SIGNAL("clicked()"),
                      self.removeWayPoint)
+        self.connect(self.btInvertDirection, QtCore.SIGNAL("clicked()"),
+                     self.invertDirection)
 
         self.connect(self.actionFlightPerformance,
                      QtCore.SIGNAL("triggered()"),
@@ -121,6 +123,12 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
             logging.debug("opening %s" % title)
             self.createDockWidget(index, title, widget)
 
+    def invertDirection(self):
+        self.waypoints_model.invertDirection()
+        self.setFlightTrackModel(self.waypoints_model)
+        QtGui.QMessageBox.warning(None, "Invert waypoints",
+            "Please redraw the map manually, if another view is open!",
+            QtGui.QMessageBox.Ok)
 
     def addWayPoint(self):
         """Handler for button <btAddWayPointToFlightTrack>. Adds a new waypoint
