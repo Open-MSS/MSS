@@ -450,7 +450,7 @@ class MSS_WMSResponse(object):
                     layertitle.appendChild(dom.createTextNode(layer.title))
                     layere.appendChild(layertitle)
                 if layer.abstract:
-                    layerabstract = dome.createElement('Abstract')
+                    layerabstract = dom.createElement('Abstract')
                     layerabstract.appendChild(dom.createTextNode(layer.abstract))
                     layere.appendChild(layerabstract)
                 if layer.queryable:
@@ -567,7 +567,7 @@ class MSS_WMSResponse(object):
                         layertitle.appendChild(dom.createTextNode(layer.title))
                         layere.appendChild(layertitle)
                     if layer.abstract:
-                        layerabstract = dome.createElement('Abstract')
+                        layerabstract = dom.createElement('Abstract')
                         layerabstract.appendChild(dom.createTextNode(layer.abstract))
                         layere.appendChild(layerabstract)
                     if layer.queryable:
