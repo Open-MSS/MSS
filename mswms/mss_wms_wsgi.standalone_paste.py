@@ -616,6 +616,18 @@ class MSS_WMSResponse(object):
                         dimext.appendChild(dom.createTextNode(it_str))
                         layere.appendChild(dimext)
 
+                    # Layer styles, if available.
+                    if type(layer.styles) is list:
+                        for style_name, style_title in layer.styles:
+                            style = dom.createElement("Style")
+                            stylename = dom.createElement('Name')
+                            stylename.appendChild(dom.createTextNode(style_name))
+                            style.appendChild(stylename)
+                            styletitle = dom.createElement('Title')
+                            styletitle.appendChild(dom.createTextNode(style_title))
+                            style.appendChild(styletitle)
+                            layere.appendChild(style)
+
                     rootlayerelem.appendChild(layere)
 
         logging.debug("returning capabilities document.")
