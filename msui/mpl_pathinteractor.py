@@ -589,6 +589,8 @@ class PathInteractor:
 
         # Draw waypoint labels.
         label_offset = 0
+        for wp in self.wp_labels:
+            wp.remove()
         self.wp_labels = [] # remove doesn't seem to be necessary
         x, y = zip(*vertices)
         wpd = self.waypoints_model.allWaypointData()
@@ -948,6 +950,8 @@ class HPathInteractor(PathInteractor):
 
         # Draw waypoint labels.
         label_offset = self.appropriateEpsilon(px=5)
+        for wp in self.wp_labels:
+            wp.remove()
         self.wp_labels = [] # remove doesn't seem to be necessary
         wpd = self.waypoints_model.allWaypointData()
         for i in range(len(wpd)):
