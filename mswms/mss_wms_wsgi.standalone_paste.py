@@ -317,9 +317,9 @@ class MSS_WMSResponse(object):
         # If anything in the execution of the WMS goes wrong (which, of course,
         # is not supposed to.. :) ), make sure the service doesn't block
         # because of the set processing_request flag.
-        except Exception as e:
+        except:
             self.processing_request = False
-            raise e
+            raise
 
 
     def register_hsec_layer(self, datasets, layer_class):
