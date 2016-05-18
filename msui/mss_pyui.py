@@ -53,6 +53,7 @@ print "\nSystem is loading.."
 
 # standard library imports
 import sys
+import os
 import copy
 import logging
 
@@ -216,6 +217,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None
+        self.lastSaveDir = os.getcwd()        
 
         # Connect Qt SIGNALs:
         # ===================
@@ -412,7 +414,11 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         """
         filename = QtGui.QFileDialog.getOpenFileName(self,
                                                      "Open Flight Track", "",
-                                                     "flight track XML (*.ftml)");
+                                                     "Supported files (*.ftml *.csv *.txt)"\
+                                                     ";;Flight track XML (*.ftml)"\
+                                                     ";;CSV-file (*.csv)"\
+                                                     ";;Text-file (*.txt)");
+
         if not filename.isEmpty():
             filename = str(filename)
             self.createNewFlightTrack(filename=filename, activate=True)
@@ -445,8 +451,22 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
     def saveFlightTrack(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
         """
-        if self.active_flight_track.getFilename():
-            self.active_flight_track.saveToFile()
+        filename = self.active_flight_track.getFilename()
+        if filename:
+            sel = QtGui.QMessageBox.question(self, "Save flight track",
+                "Saving flight track to {:s}. Continue?".format(filename),
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+            if sel == QtGui.QMessageBox.Yes:
+                if filename.endswith('.ftml'):
+                    self.active_flight_track.saveToFTML(filename)
+                elif filename.endswith('.csv'):
+                    self.active_flight_track.saveToCSV(filename)
+                elif filename.endswith('.txt'):
+                    self.active_flight_track.saveToText(filename)
+                else:
+                    QtGui.QMessageBox.warning(self, "Save flight track",
+                        "Unknown file extension {:s}. Not saving!".format(filename),
+                        QtGui.QMessageBox.Ok)
         else:
             self.saveFlightTrackAs()
 
@@ -455,13 +475,26 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         """Slot for the 'Save Active Flight Track As' menu entry.
         """
         filename = QtGui.QFileDialog.getSaveFileName(self,
-                                                     "Save Flight Track", "",
-                                                     "flight track XML (*.ftml)");
+                                                     "Save Flight Track",
+                                                     os.path.join(self.lastSaveDir,
+                                                        self.active_flight_track.name),
+                                                     "Flight track XML (*.ftml)"\
+                                                     ";;CSV-file (*.csv)"\
+                                                     ";;Text-file (*.txt)");
+
         if not filename.isEmpty():
             filename = str(filename)
-            if not filename.endswith('.ftml'):
-                filename += '.ftml'
-            self.active_flight_track.saveToFile(filename)
+            self.lastSaveDir = os.path.dirname(filename)
+            if filename.endswith('.ftml'):
+                self.active_flight_track.saveToFTML(filename)
+            elif filename.endswith('.csv'):
+                self.active_flight_track.saveToCSV(filename)
+            elif filename.endswith('.txt'):
+                self.active_flight_track.saveToText(filename)
+            else:
+                QtGui.QMessageBox.warning(self, "Save flight track",
+                    "No supported file extension recognized!\n{:}".format(filename),
+                    QtGui.QMessageBox.Ok)
 
 
     def setFlightTrackActive(self):
