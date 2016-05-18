@@ -185,8 +185,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         spacingValues = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 40]
         deltaLon = mapLonStop - mapLonStart
         deltaLat = mapLatStop - mapLatStart
-        spacingLon = [i for i in spacingValues if i > deltaLon/10.][0]
-        spacingLat = [i for i in spacingValues if i > deltaLat/10.][0]
+        spacingLon = [i for i in spacingValues if i > deltaLon / 10.][0]
+        spacingLat = [i for i in spacingValues if i > deltaLat / 10.][0]
 
         #   c) parallels and meridians start at the first value in the
         #      spacingLon/Lat grid that's smaller than the lon/lat of the
@@ -208,8 +208,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                                             labels=[0,0,0,1],
                                             color='0.5', dashes=[5,5])
        
-
-    def plot_hsection(self, data, lats, lons, bbox=[-180,-90,180,90],
+    def plot_hsection(self, data, lats, lons, bbox=[-180, -90, 180, 90],
                       level=None, figsize=(960,640), epsg=None,
                       proj_params={"projection": "cyl"},
                       valid_time=None, init_time=None, style=None,
@@ -229,7 +228,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
-            if not dataitem in data.keys():
+            if dataitem not in data.keys():
                 raise KeyError("required data field %s not found" % dataitem)
 
         # Copy parameters to properties.
@@ -242,7 +241,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.style = style
         self.resolution = resolution
         self.noframe = noframe
-
+        self.epsg = epsg
+        
         # Derive additional data fields and make the plot.
         logging.debug("preparing additional data fields..")
         self._prepare_datafields()        
@@ -257,7 +257,6 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         if noframe:
             ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
         else:
-            #ax = fig.add_axes([0.05, 0.05, 0.92, 0.92])
             ax = fig.add_axes([0.05, 0.05, 0.9, 0.88])
 
         # The basemap instance is created with a fixed aspect ratio for framed
@@ -278,7 +277,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # ratio, for instance the Metview 4 client does not (mr, 2011Dec16).
         bm = basemap.Basemap(llcrnrlon=bbox[0], llcrnrlat=bbox[1],
                              urcrnrlon=bbox[2], urcrnrlat=bbox[3],
-                             resolution='i', area_thresh=1000., ax=ax,
+                             resolution='l', area_thresh=1000., ax=ax,
                              fix_aspect=(not noframe), **proj_params)
 
         # Set up the map appearance.
@@ -290,7 +289,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # scatter() for drawing the flight tracks and trajectories.
         # Curiously, plot() works fine without this setting, but scatter()
         # doesn't.
-        bm.fillcontinents(color = '0.98', lake_color = 'white', zorder = 0)
+        bm.fillcontinents(color='0.98', lake_color='white', zorder=0)
         self._draw_auto_graticule(bm)
 
         if noframe:
@@ -347,7 +346,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             lut.putdata(range(256))
             lut = [c[1] for c in lut.convert("RGB").getcolors()]
             facecolor_rgb = list(mpl.colors.hex2color(mpl.colors.cnames[facecolor]))
-            for i in [0,1,2]: facecolor_rgb[i] = int(facecolor_rgb[i]*255)
+            for i in [0, 1, 2]:
+                facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
             facecolor_index = lut.index(tuple(facecolor_rgb))
             
             logging.debug("saving figure as transparent PNG with transparency index %i.", 
@@ -372,21 +372,18 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)
         left_longitude = min(self.bm.llcrnrlon, ulcrnrlon)
-        logging.debug("shifting data grid to leftmost longitude in map "\
+        logging.debug("shifting data grid to leftmost longitude in map "
                       "(%.2f).." % left_longitude)
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
-        #print self.lons
         self.lons = ((self.lons - left_longitude) % 360) + left_longitude
         lon_indices = self.lons.argsort()
         self.lons = self.lons[lon_indices]
-        #print self.lons
 
         # Shift data fields correspondingly.
         for key in self.data.keys():
-            self.data[key] = self.data[key][:,lon_indices]
-
+            self.data[key] = self.data[key][:, lon_indices]
 
     def mask_data(self):
         """Mask data arrays so that all values outside the map domain
@@ -406,7 +403,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         mask2 = x > self.bm.xmax
         mask3 = y > self.bm.ymax
         mask4 = y < self.bm.ymin
-        mask = mask1+mask2+mask3+mask4
+        mask = mask1 + mask2 + mask3 + mask4
         # mask data arrays.
         for key in self.data.keys():
             self.data[key] = np.ma.masked_array(self.data[key],
