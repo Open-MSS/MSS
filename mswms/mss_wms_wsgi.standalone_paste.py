@@ -317,9 +317,9 @@ class MSS_WMSResponse(object):
         # If anything in the execution of the WMS goes wrong (which, of course,
         # is not supposed to.. :) ), make sure the service doesn't block
         # because of the set processing_request flag.
-        except Exception as e:
+        except:
             self.processing_request = False
-            raise e
+            raise
 
 
     def register_hsec_layer(self, datasets, layer_class):
@@ -450,7 +450,7 @@ class MSS_WMSResponse(object):
                     layertitle.appendChild(dom.createTextNode(layer.title))
                     layere.appendChild(layertitle)
                 if layer.abstract:
-                    layerabstract = dome.createElement('Abstract')
+                    layerabstract = dom.createElement('Abstract')
                     layerabstract.appendChild(dom.createTextNode(layer.abstract))
                     layere.appendChild(layerabstract)
                 if layer.queryable:
@@ -567,7 +567,7 @@ class MSS_WMSResponse(object):
                         layertitle.appendChild(dom.createTextNode(layer.title))
                         layere.appendChild(layertitle)
                     if layer.abstract:
-                        layerabstract = dome.createElement('Abstract')
+                        layerabstract = dom.createElement('Abstract')
                         layerabstract.appendChild(dom.createTextNode(layer.abstract))
                         layere.appendChild(layerabstract)
                     if layer.queryable:
@@ -615,6 +615,18 @@ class MSS_WMSResponse(object):
                         it_str = ",".join(it_str)
                         dimext.appendChild(dom.createTextNode(it_str))
                         layere.appendChild(dimext)
+
+                    # Layer styles, if available.
+                    if type(layer.styles) is list:
+                        for style_name, style_title in layer.styles:
+                            style = dom.createElement("Style")
+                            stylename = dom.createElement('Name')
+                            stylename.appendChild(dom.createTextNode(style_name))
+                            style.appendChild(stylename)
+                            styletitle = dom.createElement('Title')
+                            styletitle.appendChild(dom.createTextNode(style_title))
+                            style.appendChild(styletitle)
+                            layere.appendChild(style)
 
                     rootlayerelem.appendChild(layere)
 
