@@ -299,7 +299,7 @@ class PathH_GC(PathH):
 
     def __init__(self, *args, **kwargs):
         super(PathH_GC, self).__init__(*args, **kwargs)
-        self.wp_codes = np.array([])
+        self.wp_codes = np.array([], dtype=np.uint8)
         self.wp_vertices = np.array([])
 
 
@@ -316,7 +316,7 @@ class PathH_GC(PathH):
             for i in range(len(wps[1:])):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i+1)))
         self.wp_codes, self.wp_vertices = zip(*pathdata)
-        self.wp_codes = np.array(self.wp_codes)
+        self.wp_codes = np.array(self.wp_codes, dtype=np.uint8)
         self.wp_vertices = np.array(self.wp_vertices)
 
         # Coordinates of intermediate great circle points.
@@ -589,12 +589,19 @@ class PathInteractor:
 
         # Draw waypoint labels.
         label_offset = 0
+        for wp in self.wp_labels:
+            wp.remove()
         self.wp_labels = [] # remove doesn't seem to be necessary
         x, y = zip(*vertices)
-        for i in range(len(x)):
+        wpd = self.waypoints_model.allWaypointData()
+        for i in range(len(wpd)):
+            textlabel = str(i)
+            if wpd[i].location != "":
+                textlabel = "{:d}: {:}".format(i, wpd[i].location)
+        
             t = self.ax.text(x[i]+label_offset,
                              y[i]+label_offset,
-                             "  %i"%i,
+                             textlabel,
                              bbox=dict(boxstyle="round",
                                        facecolor="white",
                                        alpha=0.5,
@@ -774,6 +781,9 @@ class VPathInteractor(PathInteractor):
         elif index1.column() in [ft.LAT, ft.LON]:
             self.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
             self.redraw_figure()
+        elif index1.column() == ft.LOCATION:
+            self.redraw_figure()
+
 
 
 ################################################################################
@@ -894,7 +904,7 @@ class HPathInteractor(PathInteractor):
         """
         # Update the top view if the horizontal position of any point has been
         # changed.
-        if index1.column() in [ft.LAT, ft.LON]: self.update()
+        if index1.column() in [ft.LOCATION, ft.LAT, ft.LON]: self.update()
 
 
     def update(self):
@@ -940,11 +950,18 @@ class HPathInteractor(PathInteractor):
 
         # Draw waypoint labels.
         label_offset = self.appropriateEpsilon(px=5)
+        for wp in self.wp_labels:
+            wp.remove()
         self.wp_labels = [] # remove doesn't seem to be necessary
-        for i in range(len(x)):
+        wpd = self.waypoints_model.allWaypointData()
+        for i in range(len(wpd)):
+            textlabel = str(i)
+            if wpd[i].location != "":
+                textlabel = "{:d}: {:}".format(i, wpd[i].location)
+
             t = self.ax.text(x[i]+label_offset,
                              y[i]+label_offset,
-                             "%i"%i,
+                             textlabel,
                              bbox=dict(boxstyle="round",
                                        facecolor="white",
                                        alpha=0.6,
