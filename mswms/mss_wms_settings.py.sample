@@ -49,6 +49,13 @@ register_horizontal_layers = [
     (mpl_hsec_styles.HS_Meteosat_BT108_01, ["meteosat_EUR_LL05"])
     ]
 
+    # CLaMS standard pressure level products.
+
+for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
+            u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
+    register_horizontal_layers.append(
+        (getattr(mpl_hsec_styles, "HS_ChemStyle_PL_" + ent), ["clams_INDIA"])
+    )
 
 ###############################################################################
 ###                  Registration of vertical layers.                       ###
@@ -71,6 +78,13 @@ register_vertical_layers = [
     #(mpl_vsec_styles.VS_EMACEyja_Style_01, ["emac_GLOBAL_LL1125"])
     ]
 
+# CLaMS standard pressure level products.
+
+for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
+            u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
+    register_vertical_layers.append(
+        (getattr(mpl_vsec_styles, "VS_ChemStyle_PL_" + ent), ["clams_INDIA"])
+    )
 
 ###############################################################################
 ###                       HTTP Authentication                               ###
@@ -137,6 +151,7 @@ epsg_to_mpl_basemap_table = {
     77790015: {"projection": "stere", "lat_0": 90., "lon_0": 15.},
     77790340: {"projection": "stere", "lat_0": 90., "lon_0": -20.},
     77791105: {"projection": "stere", "lat_0": 90., "lon_0": -105.},
+    77774020: {"projection": "stere", "lat_0": 74., "lon_0": 20.},
 
     77890000: {"projection": "spstere", "lat_0": 90., "lon_0": 0.},
     77890010: {"projection": "spstere", "lat_0": 90., "lon_0": 10.},
