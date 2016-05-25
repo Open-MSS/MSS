@@ -684,7 +684,8 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
     styles = [
         ("default", "fixed colour scale"),
         ("log", "logarithmic colour scale"),
-        ("auto", "auto colour scale"), ]
+        ("auto", "auto colour scale"), 
+        ("autolog", "auto logcolour scale"), ]
 
     def _plot_style(self):
         bm = self.bm
@@ -701,16 +702,28 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
         nextlev = clevs[abs(diff).argmin()]
         
         
-        # get cmin, cmax, cbar_log and cbar_format for level_key
-        cmin, cmax = CLAMS_CONFIG[self.name]["levels"][nextlev]
-        if self.style == "auto":
-            cmin, cmax = show_data.min(), show_data.max()
-        if cmin > 0 and cmin < 0.05 * cmax and self.style != "log":
-            cmin = 0.
         # colour scale of plot
         # cmap = plt.cm.cubehelix_r
         cmap = plt.cm.gist_rainbow_r
-        if self.style == "log":
+
+        # get cmin, cmax, cbar_log and cbar_format for level_key
+        cmin, cmax = CLAMS_CONFIG[self.name]["levels"][nextlev]
+
+        if self.style == "auto":
+            cmin, cmax = show_data.min(), show_data.max()
+            if cmin > 0 and cmin < 0.05 * cmax:
+                cmin = 0.
+            clevs = np.linspace(cmin, cmax, 17)
+            norm = None
+        elif self.style == "autolog":
+            cmin, cmax = show_data.min(), show_data.max()
+            if cmin <= 1.E-6 * cmax and cmax > 0.:
+                cmin = cmax*1.E-6
+            lncmin, lncmax = np.log([cmin, cmax])
+            clevs = np.exp(np.linspace(lncmin, lncmax, 17))
+            norm = matplotlib.colors.LogNorm(cmin, cmax)
+
+        elif self.style == "log":
             cmin = max(cmin, cmax * 0.001)
             lncmin, lncmax = np.log([cmin, cmax])
             clevs = np.exp(np.linspace(lncmin, lncmax, 17))
@@ -762,11 +775,15 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical",
                                      format=clev_format, norm=norm)
 
+            # adjust colorbar fontsize to figure height
+            figheight = self.fig.bbox.height
+            fontsize = figheight * 0.026
             axins1.yaxis.set_ticks_position(tick_pos)
             for x in axins1.yaxis.majorTicks:
                 x.label1.set_backgroundcolor("w")
                 x.label2.set_backgroundcolor("w")
-
+                x.label1.set_fontsize(fontsize)
+                x.label2.set_fontsize(fontsize)
 
 def make_clams_chem_class(entity):
     class fnord(HS_ChemStyle_PL):
