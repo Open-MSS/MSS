@@ -85,6 +85,7 @@ CFVariableIdentifier = {
     "air_potential_temperature": [
         ("standard_name", "air_potential_temperature"),
         ("long_name", "Potential temperature"),
+        ("long_name", "Potential Temperature"),
         ("long_name", "Potential_temperature @ hybrid"),
         ("long_name", "Potential_temperature @ isobaric"),
         ("long_name", "Potential_temperature @ Isobaric surface"),
@@ -152,6 +153,7 @@ CFVariableIdentifier = {
         ],
     "ertel_potential_vorticity": [
         ("standard_name", "ertel_potential_vorticity"),
+        ("long_name", "Potential Vorticity"),
         ("long_name", "Potential_vorticity"),
         ("long_name", "Potential_vorticity @ hybrid"),
         ("long_name", "Potential_vorticity @ isobaric"),
@@ -284,12 +286,14 @@ CFVariableIdentifier = {
     "longitude": [
         ("standard_name", "longitude"),
         ("long_name", "longitude"),
-        ("units", "degrees_east")
+        ("units", "degrees_east"),
+        ("units", "degree_E")
         ],
     "latitude": [
         ("standard_name", "latitude"),
         ("long_name", "latitude"),
-        ("units", "degrees_north")
+        ("units", "degrees_north"),
+        ("units", "degree_N")
         ],
     # Model level is bit more difficult. ECMWF calls the variable "levelist"
     # a long_name "model_level_number", Unidata's NetCDF-Java (THREDDS)
@@ -310,6 +314,9 @@ CFVariableIdentifier = {
         ("standard_name", "atmosphere_ertel_potential_vorticity_coordinate"),
         ("long_name", "Potential vorticity surface")
         ],
+    "atmosphere_altitude_coordinate": [
+       ("long_name", "atmosphere_altitude_coordinate"),
+       ("long_name", "altitude")],
 
     # Finally, the ensemble dimension can currently (netcdf-java 4.3) only be
     # recognized from its name, "ens0".
@@ -319,12 +326,32 @@ CFVariableIdentifier = {
 
     # Meteosat variables.
     "msg_brightness_temperature_108": [
-        ("standard_name", "brightness_temperature_108")        
-        ]
-    
-    }
-
-
+        ("standard_name", "brightness_temperature_108")
+        ],
+    "equivalent_latitude": [
+        ("var_name", "EQLAT"),
+        ("standard_name", "EQLAT"),
+        ("long_name", "Equivalent Latitude")
+        ],
+    "brunt_vaisala_frequency": [
+        ("var_name", "BVF"),
+        ("standard_name", "BVF"),
+        ("long_name", "Brunt-Vaisala Frequency")
+        ],
+    "gravity_wave_temperature_perturbation": [
+        ("long_name", "residual Temperature")
+    ],
+    "tropopause_altitude": [
+        ("long_name", "tropopause height")
+    ]
+}
+for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
+            u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
+     CFVariableIdentifier[ent + "_volume_mixing_ratio"] = [
+        ("var_name", ent),
+        ("standard_name", ent),
+        ("long_name", ent + "_volume_mixing_ratio")
+     ]
 
 ################################################################################
 ###                               CONSTANTS                                  ###
@@ -340,7 +367,7 @@ CHECK_LATLONHYB = 2048
 # "2010-02-01T00:00:00Z" (as used by netcdf-java).
 re_datetime = re.compile("(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z")
 # Expression used to identify the time variable by its units string.
-re_timeunits = re.compile("\w+ since \d{4}-\d{1,2}-\d{1,2}.\d{1,2}:\d{1,2}:\d{1,2}")
+re_timeunits = re.compile("\w+ since \d{4}-\d{1,2}-\d{1,2}.\d{1,2}")
 
 
 ################################################################################
