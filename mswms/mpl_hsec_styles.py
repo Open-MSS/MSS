@@ -807,7 +807,60 @@ def make_clams_chem_class(entity):
 for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
             u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
         globals()["HS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
-        
+
+###############################################################################
+###                Gravity Wave Forecast                                    ###
+###############################################################################
+
+class HS_GravityWaveForecast_ML(MPLBasemapHorizontalSectionStyle):
+    """Pressure level version for Chemical Mixing ratios.
+    """
+    name = "GW T residual"
+
+    title = "Gravity Wave Temperature Residual"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("ml", "gravity_wave_temperature_perturbation"),
+        ("sfc", "tropopause_altitude"),
+    ]
+    styles = [
+        ("default", "fixed colour scale"),
+#        ("auto", "auto colour scale"), ]
+    ]
+
+    def _plot_style(self):
+        """
+        """
+        bm = self.bm
+        ax = self.bm.ax
+        data = self.data
+
+        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
+        lonmesh, latmesh = bm(lonmesh_, latmesh_)
+
+        show_data = np.ma.masked_invalid(data["gravity_wave_temperature_perturbation"])
+
+        cmap = plt.cm.Spectral_r
+        tc = bm.contourf(lonmesh, latmesh, show_data, [-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3], cmap=cmap)
+        tr = bm.contour(lonmesh, latmesh, data["tropopause_altitude"], [8, 10, 12, 14, 16],
+                        colors="grey", linewidths=2, zorder=100)
+        ax.clabel(tr, fmt="%d")
+
+        if not self.noframe:
+            self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7, label="gw")
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax,
+                width="3%",  # width = % of parent_bbox width
+                height="30%",  # height : %
+            )
+            self.fig.colorbar(tc, cax=axins1, orientation="vertical")
+            axins1.yaxis.set_ticks_position("left")
+            for x in axins1.yaxis.majorTicks:
+                x.label1.set_backgroundcolor("w")
+
 
 class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Pressure level version of the temperature style.
