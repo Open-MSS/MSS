@@ -121,6 +121,180 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
+CLAMS_CONFIG = {
+ u'BVF': {'limits': (0.00029, 0.00095), 'units': u's**-2'},
+ u'CH4': {'limits': (0.5, 1.7), 'units': u'ppmv'},
+ u'CO': {'limits': (0., 150.), 'units': u'ppbv'},
+ u'EQLAT': {'limits': (9.2, 90.0), 'units': u'deg N'},
+ u'F11': {'limits': (0.0, 220.0), 'units': u'pptv'},
+ u'F12': {'limits': (0.0, 550.0), 'units': u'pptv'},
+ u'H2O': {'limits': (3.0, 3000.), 'units': u'ppmv'},
+ u'N2O': {'limits': (45.0, 310.0), 'units': u'ppbv'},
+ u'SEA': {'limits': (0.0, 70.), 'units': u'%'},
+ u'ECH': {'limits': (0.0, 70.), 'units': u'%'},
+ u'NIN': {'limits': (0.0, 70.), 'units': u'%'},
+ u'SIN': {'limits': (0.0, 70.), 'units': u'%'},
+ u'ICH': {'limits': (0.0, 50.), 'units': u'%'},
+ u'O3': {'limits': (0.01, 3.0), 'units': u'ppmv'},
+ u'PV': {'limits': (11.0, 120.0), 'units': u'PVU'},
+ u'TEMP': {'limits': (180.0, 250.0), 'units': u'K'},
+ u'THETA': {'limits': (440.0, 590.0), 'units': u'K'},
+ u'U': {'limits': (-38.0, 69.0), 'units': u'm s^-1'},
+ u'V': {'limits': (-67.0, 50.0), 'units': u'm s^-1'}}
+
+
+class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
+    """Vertical section of chemical species
+    """
+    styles = [
+        ("default", "fixed colour scale"),
+        ("log", "logarithmic colour scale"),
+        ("auto", "auto colour scale"),
+        ("autolog", "auto log colour scale"), ]
+
+    def _plot_style(self):
+        """Make a cloud cover vertical section with temperature/potential
+           temperature overlay.
+        """
+        ax = self.ax
+        curtain_pt = self.data["air_potential_temperature"]
+        curtain_pv = self.data["ertel_potential_vorticity"]
+        curtain_cc = self.data[self.dataname]
+        curtain_p = np.empty_like(curtain_cc)
+        
+        for i in range(len(self.driver.vert_data.reshape(-1))):
+            curtain_p[i, :] = self.driver.vert_data[i] * 100
+        numlevel = curtain_p.shape[0]
+        numpoints = len(self.lats)
+
+        delta_pt = 10 if (np.log(self.p_bot)-np.log(self.p_top)) < 2.2 else 20
+
+        # Filled contour plot of cloud cover.
+        # INFO on COLORMAPS:
+        #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
+        cmap = plt.cm.gist_ncar_r
+        cmin, cmax = CLAMS_CONFIG[self.name.replace("VS_", "")]["limits"]
+        ##cmin, cmax = CLAMS_CONFIG[self.species]["limits"]
+        if cmin > 0 and cmin < 0.05 * cmax and self.style != "log":
+            cmin = 0.
+ 
+        norm = None
+        if self.style == "default":
+            clev = np.linspace(cmin, cmax, 24)
+        elif self.style == "log":
+            #cmin = max(cmin, cmax * 0.001)
+            #clev = np.exp(np.linspace(np.log(cmin), np.log(cmax), 12))
+            #norm = matplotlib.colors.LogNorm(cmin, cmax)
+            if cmin > 0:
+                clev = np.exp(np.linspace(np.log(cmin), np.log(cmax), 24))
+            elif cmax < 0:
+                clev = np.exp(np.linspace(np.log(-cmax), np.log(-cmin), 24))
+            else:
+                delta = cmax - cmin
+                clevlo = -np.exp(np.linspace(np.log(-cmin), np.log(max(-cmin, cmax) * 0.001), 1 + int(24 * -cmin / delta)))
+                clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001), np.log(cmax), 1 + int(24 * cmax / delta)))
+                clev = np.asarray(list(clevlo[:-1]) + list(clevhi[1:]))
+
+            norm = matplotlib.colors.BoundaryNorm(clev, 255)
+        elif self.style == "autolog":
+            visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
+            cmin = curtain_cc[visible].min()
+            cmax = curtain_cc[visible].max()
+            if cmin > 0:
+                clev = np.exp(np.linspace(np.log(cmin), np.log(cmax), 24))
+            elif cmax < 0:
+                clev = np.exp(np.linspace(np.log(-cmax), np.log(-cmin), 24))
+            else:
+                delta = cmax - cmin
+                clevlo = -np.exp(np.linspace(np.log(-cmin), np.log(max(-cmin, cmax) * 0.001), 1 + int(24 * -cmin / delta)))
+                clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001), np.log(cmax), 1 + int(24 * cmax / delta)))
+                clev = np.asarray(list(clevlo[:-1]) + list(clevhi[1:]))
+
+            norm = matplotlib.colors.BoundaryNorm(clev, 255)
+        else:
+            clev = np.linspace(curtain_cc.min(), curtain_cc.max(), 24)
+            visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
+            cmin = curtain_cc[visible].min()
+            cmax = curtain_cc[visible].max()
+            clev = np.linspace(cmin, cmax, 24)
+
+
+        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+                         curtain_p, curtain_cc, clev, norm=norm,
+                         cmap=cmap)
+        # Contour line plot of PV.
+        cs_pv = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+                           curtain_p, curtain_pv, [2, 4, 8, 16],
+                           colors='lightgrey', linestyles='dashed', linewidths=2)
+        ax.clabel(cs_pv, fontsize=8, fmt='%i')
+        # Contour line plot of potential temperature.
+        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+                           curtain_p, curtain_pt, np.arange(200,700,delta_pt), colors='lightgrey',
+                           linestyles='solid', linewidths=2)
+        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+  
+        # Pressure decreases with index, i.e. orography is stored at the
+        # zero-p-index (data field is flipped in mss_plot_driver.py if
+        # pressure increases with index).
+        self._latlon_logp_setup(titlestring=self.title)
+
+
+        # Format for colorbar labels
+        clev_format="%.3g"
+        mclev = np.abs(clev).max()
+        if self.style != "log":
+            if mclev >= 100. and mclev <10000. : clev_format="%4i" 
+            if mclev >= 10. and mclev <100. : clev_format="%.1f" 
+            if mclev >= 1. and mclev <10.   : clev_format="%.2f" 
+            if mclev >= .1 and mclev <1.    : clev_format="%.3f" 
+            if mclev >= .01 and mclev <0.1  : clev_format="%.4f" 
+
+        # Add colorbar.
+        if not self.noframe:
+            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
+            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01,
+                                     format=clev_format, norm=norm)
+            cbar.set_label(self.cbar_label)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
+                width="1%", # width = % of parent_bbox width
+                height="40%", # height : %
+                loc=1) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical",
+                                     format=clev_format, norm=norm)
+            
+            # adjust colorbar fontsize to figure height
+            figheight = self.fig.bbox.height
+            fontsize = figheight * 0.035
+            axins1.yaxis.set_ticks_position("left")
+            for x in axins1.yaxis.majorTicks:
+                x.label1.set_backgroundcolor("w")
+                x.label1.set_backgroundcolor("w")
+                x.label1.set_fontsize(fontsize)
+
+def make_clams_chem_class(entity):
+    class fnord(VS_ChemStyle_PL):
+
+        ln = {'ICH': 'India/China',
+              'SEA': 'SE Asia',
+              'NIN': 'North India',
+              'SIN': 'South India',
+              'ECH': 'East China'}
+        species = entity
+        name = 'VS_'+entity
+        dataname = entity + "_volume_mixing_ratio"
+        long_name = entity + " Mixing Ratio"
+        if CLAMS_CONFIG[entity]["units"] == '%': 
+            long_name = ln[entity] + " Origin Tracer"
+        title = long_name+" (" + CLAMS_CONFIG[entity]["units"] + ")"
+        required_datafields = [
+            ("pl", entity + "_volume_mixing_ratio"),
+            ("pl", "air_potential_temperature"),
+            ("pl", "ertel_potential_vorticity"), ]
+    return fnord
+
+for ent in CLAMS_CONFIG:
+    globals()["VS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
 
 
 ###############################################################################
@@ -160,9 +334,6 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
         curtain_cc = self.data["cloud_area_fraction_in_atmosphere_layer"]
-        
-        #print curtain_p[:, 30]
-        #print curtain_cc[:, 30]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -527,9 +698,6 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
                 loc=1) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
-
-
-
 
 
 ###############################################################################
@@ -1257,10 +1425,6 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
         curtain_cc = self.data["emac_R12"] * 1.e4
-
-        #print curtain_cc.max(), curtain_cc.min()
-        #print curtain_p[:, 30]
-        #print curtain_cc[:, 30]
 
         # Contour spacing for temperature lines.
         delta_t = 2 if (np.log(self.p_bot)-np.log(self.p_top)) < 2.2 else 4
