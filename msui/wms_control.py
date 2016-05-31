@@ -54,6 +54,7 @@ import ui_wms_password_dialog as ui_pw
 import wms_capabilities
 import mss_settings
 import wms_login_cache
+from mslib.mss_util import convertHPAToKM
 
 ################################################################################
 ###                   Settings imported from mss_settings                    ###
@@ -66,38 +67,6 @@ wms_cache = mss_settings.wms_cache
 ################################################################################
 ###                          CLASS MSSWebMapService                          ###
 ################################################################################
-
-# THE CLASS MSSWebMapService INCLUDES PARTS TAKEN FROM THE owslib LIBRARY.
-# Changes are marked with (mss).
-#
-# owslib COPYRIGHT INFORMATION:
-#
-# Copyright (c) 2006, Ancient World Mapping Center
-# All rights reserved.
-# 
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-# 
-#     * Redistributions of source code must retain the above copyright
-#       notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above copyright
-#       notice, this list of conditions and the following disclaimer in the
-#       documentation and/or other materials provided with the distribution.
-#     * Neither the name of the University of North Carolina nor the names of
-#       its contributors may be used to endorse or promote products derived
-#       from this software without specific prior written permission.
-# 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
 
 class MSSWebMapService(owslib.wms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
@@ -468,7 +437,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                     wms = MSSWebMapService(base_url, version='1.1.1',
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
-                    if str(ex).startswith("401") or str(ex).find("Error 401") >= 0:
+                    if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find("401 Unauthorized") >= 0:
                         # Catch the "401 Unauthorized" error if one has been
                         # returned by the server and ask the user for username
                         # and password.
@@ -493,7 +462,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                         else:
                             break
                     else:
-                        raise ex
+                        raise
         except Exception as ex:            
             logging.error("ERROR: %s", ex)
             logging.error("cannot load capabilities document.. "\
@@ -1651,8 +1620,48 @@ class HSecWMSControlWidget(WMSControlWidget):
                                                    default_WMS=default_WMS,
                                                    wms_cache=wms_cache,
                                                    view=view)
+        self.tp_height = None
         self.connect(self.btGetMap, QtCore.SIGNAL("clicked()"),
                      self.getMap)
+
+    def levelChanged(self):
+        if self.cbLevelOn.isChecked():
+            s = unicode(self.cbLevel.currentText(), errors="ignore")
+            if s == "":
+                return
+            lvl = float(s.split(" (")[0])
+            if s.endswith("(hPa)"):
+                lvl = convertHPAToKM(lvl)
+            settings = self.view.getMapAppearance()
+            settings["tangent_height"] = lvl
+            if self.tp_height is not None:
+                self.tp_height = lvl
+            self.view.setMapAppearance(settings)
+            if self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+                self.btGetMap.click()
+            else:
+                layer = self.getLayer()
+                style = self.getStyle()
+                if style != "":
+                    style_title = self.get_layer_object(layer).styles[style]["title"]
+                else:
+                    style_title = None
+                level = str(self.cbLevel.currentText())
+                init_time = self.getInitTime()
+                valid_time = self.getValidTime()
+                tph = self.tp_height
+                if tph is not None:
+                    tph = "{:.1f} km".format(tph)
+                self.view.drawMetadata(title=self.get_layer_object(layer).title,
+                                       init_time=init_time,
+                                       valid_time=valid_time,
+                                       level=level,
+                                       style=style_title,
+                                       tp=tph)
+                self.view.waypoints_interactor.update()
+
+    def set_tp_height(self, height=None):
+        self.tp_height = height
 
 
     def getMap(self):
@@ -1679,12 +1688,17 @@ class HSecWMSControlWidget(WMSControlWidget):
                 style_title = self.get_layer_object(layer).styles[style]["title"]
             else:
                 style_title = None
+            tph = self.tp_height
+            if tph is not None:
+                tph = "{:.1f} km".format(tph)
             self.view.drawMetadata(title=self.get_layer_object(layer).title,
                                    init_time=init_time,
                                    valid_time=valid_time,
                                    level=level,
-                                   style=style_title)
+                                   style=style_title,
+                                   tp=tph)
             self.view.drawLegend(legend_img)
+            self.view.waypoints_interactor.update()
 
 
 ################################################################################

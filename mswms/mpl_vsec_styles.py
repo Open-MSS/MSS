@@ -324,15 +324,10 @@ class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
         # curtain_p = curtain_p[::-1, :]
         tropo_p2 = 102300 * np.exp(-self.data["tropopause_altitude"].reshape(-1) / 7.9)
         curtain_p = self.data["air_pressure"] * 100
-        print curtain_p[0, :]
-        print curtain_p[:, 0]
         tropo_p = np.empty_like(self.data["tropopause_altitude"].reshape(-1))
         for i in range(curtain_p.shape[1]):
             z = self.data["tropopause_altitude"].reshape(-1)[i]
             tropo_p[i] = np.interp(z, self.driver.vert_data[:], curtain_p[::-1, i])
-            print zip(self.driver.vert_data[::-1], curtain_p[:, i]), curtain_p.shape
-            print tropo_p[i], np.interp(z, self.driver.vert_data, curtain_p[:, i]), tropo_p2[i]
-        print tropo_p, self.data["tropopause_altitude"].reshape(-1)
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
 

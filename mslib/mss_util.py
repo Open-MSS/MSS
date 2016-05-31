@@ -26,6 +26,7 @@ AUTHORS:
 """
 
 # standard library imports
+import collections
 import datetime
 from datetime import datetime as dt
 
@@ -38,6 +39,208 @@ from geopy import distance
 
 # local application imports
 
+###############################################################################
+###             Tangent point / Hexagon / Solar Angle utilities             ###
+###############################################################################
+
+JSEC_START = datetime.datetime(2000, 1, 1)
+R = 6371.
+F = 1. / 298.257223563
+E2 = (2. - F) * F
+
+
+def datetime_to_jsec(dt):
+    """
+    Calculate seconds since Jan 01 2000.
+    """
+    delta = dt - JSEC_START
+    total = delta.days * 3600 * 24
+    total += delta.seconds
+    total += delta.microseconds * 1e-6
+    return total
+
+
+def jsec_to_datetime(jsecs):
+    """
+    Get the datetime from seconds since Jan 01 2000.
+    """
+    return JSEC_START + datetime.timedelta(seconds=jsecs)
+
+
+def computeHourOfDay(jsecs):
+    date = JSEC_START + datetime.timedelta(seconds=jsecs)
+    return date.hour + date.minute / 60. + date.second / 3600.
+
+
+def fix_angle(ang):
+    """
+    Normalizes an angle between -180 and 180 degree.
+    """
+    while ang > 360:
+        ang -= 360
+    while ang < 0:
+        ang += 360
+    return ang
+
+
+def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1):
+    mlat = (lat0 + lat1) / 2.
+    lon0 *= np.cos(np.deg2rad(mlat))
+    lon1 *= np.cos(np.deg2rad(mlat))
+    dlon = lon1 - lon0
+    dlat = lat1 - lat0
+    obs_azi2 = fix_angle(90 + np.rad2deg(np.arctan2(dlon, dlat)))
+    return obs_azi2, -1
+
+
+def calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, height):
+    thresh = -np.rad2deg(np.arccos(R / (height + R))) - 3
+
+    delta_azi = obs_azi - sol_azi
+    delta_ele = obs_ele + sol_ele
+    if sol_ele < thresh:
+        delta_ele = 180
+    return np.linalg.norm([delta_azi, delta_ele])
+
+
+def compute_solar_angle(jsec, lon, lat):
+    # The input to the Astronomer's almanach is the difference between
+    # the Julian date and JD 2451545.0 (noon, 1 January 2000)
+    time = jsec / (60. * 60. * 24.) - 0.5
+
+    # Mean longitude
+    mnlong = 280.460 + .9856474 * time
+    mnlong %= 360.
+    if mnlong < 0:
+        mnlong += 360
+        assert mnlong >= 0
+
+    # Mean anomaly
+    mnanom = 357.528 + .9856003 * time
+    mnanom = np.deg2rad(mnanom % 360.)
+    if mnanom < 0:
+        mnanom += 2 * np.pi
+        assert mnanom >= 0
+
+    # Ecliptic longitude and obliquity of ecliptic
+    eclong = mnlong + 1.915 * np.sin(mnanom) + 0.020 * np.sin(2 * mnanom)
+    eclong = np.deg2rad(eclong % 360.)
+    if (eclong < 0):
+        eclong += 2 * np.pi
+        assert(eclong >= 0)
+
+    oblqec = np.deg2rad(23.439 - 0.0000004 * time)
+
+    # Celestial coordinates
+    # Right ascension and declination
+    num = np.cos(oblqec) * np.sin(eclong)
+    den = np.cos(eclong)
+    ra = np.arctan(num / den)
+    if den < 0:
+        ra += np.pi
+    elif den >= 0 and num < 0:
+        ra += 2 * np.pi
+
+    dec = np.arcsin(np.sin(oblqec) * np.sin(eclong))
+    # Local coordinates
+    # Greenwich mean sidereal time
+    gmst = 6.697375 + .0657098242 * time + computeHourOfDay(jsec)
+
+    gmst = gmst % 24.
+    if gmst < 0:
+        gmst += 24
+        assert gmst >= 0
+
+    # Local mean sidereal time
+    if lon < 0:
+        lon += 360
+        assert 0 <= lon <= 360
+
+    lmst = gmst + lon / 15.
+    lmst = np.deg2rad(15. * (lmst % 24.))
+
+    # Hour angle
+    ha = lmst - ra;
+    if ha < -np.pi:
+        ha += 2 * np.pi
+
+    if ha > np.pi:
+        ha -= 2 * np.pi
+
+    assert -np.pi < ha < 2 * np.pi
+
+    # Latitude to radians
+    lat = np.deg2rad(lat)
+
+    # Azimuth and elevation
+    zenithAngle = np.arccos(np.sin(lat) * np.sin(dec) + np.cos(lat) * np.cos(dec) * np.cos(ha))
+    azimuthAngle = np.arccos((np.sin(lat) * np.cos(zenithAngle) - np.sin(dec)) /
+                      (np.cos(lat) * np.sin(zenithAngle)))
+
+    if ha > 0:
+        azimuthAngle += np.pi
+    else:
+        azimuthAngle = 3 * np.pi - azimuthAngle % (2 * np.pi)
+
+    if azimuthAngle > np.pi:
+        azimuthAngle -= 2 * np.pi
+
+    return np.rad2deg(azimuthAngle), 90 - np.rad2deg(zenithAngle)
+
+
+def rotatePoint(point, angle, origin=(0, 0)):
+    """Rotates a point. Angle is in degrees.
+    Rotation is counter-clockwise"""
+    angle = np.deg2rad(angle)
+    temp_point = ((point[0] - origin[0]) * np.cos(angle) -
+                  (point[1] - origin[1]) * np.sin(angle) + origin[0],
+                  (point[0] - origin[0]) * np.sin(angle) +
+                  (point[1] - origin[1]) * np.cos(angle) + origin[1])
+    return temp_point
+
+
+def createHexagon(center_lat, center_lon, radius, angle=0.):
+    coords_0 = (radius, 0.)
+    CoordsCart_0 = [rotatePoint(coords_0, angle=0. + angle),
+                    rotatePoint(coords_0, angle=60. + angle),
+                    rotatePoint(coords_0, angle=120. + angle),
+                    rotatePoint(coords_0, angle=180. + angle),
+                    rotatePoint(coords_0, angle=240. + angle),
+                    rotatePoint(coords_0, angle=300. + angle),
+                    rotatePoint(coords_0, angle=360. + angle)]
+    CoordsSphere_rot = [(center_lat + vec[0] / 110.,
+                         center_lon + vec[1] / (110. *
+                         np.cos(np.deg2rad(vec[0] / 110. + center_lat))))
+                         for vec in CoordsCart_0]
+    return CoordsSphere_rot
+
+
+def convertHPAToKM(press):
+    return (288.15 / 0.0065) * (1. - (press / 1013.25)**(1. / 5.255)) / 1000.
+
+
+def tangent_point_coordinates(lon_lin, lat_lin, flight_alt=14, cut_height=12):
+    lon_lin2 = np.array(lon_lin)*np.cos(np.deg2rad(np.array(lat_lin)))
+    lins = zip(lon_lin2[0:-1], lon_lin2[1:], lat_lin[0:-1], lat_lin[1:])
+    direction = [(x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
+    direction = [(_x/np.hypot(_x,_y), _y/np.hypot(_x,_y))
+                 for _x, _y in direction]
+    los = [rotatePoint(point,-90.) for point in direction]
+    los.append(los[-1])
+
+    if isinstance(flight_alt, (collections.Sequence, np.ndarray)):
+        dist = [np.sqrt(max((R + a) ** 2 - (R + cut_height) ** 2, 0)) / 110. for a in flight_alt[:-1]]
+        dist.append(dist[-1])
+    else:
+        dist = np.sqrt((R + flight_alt) ** 2 - (R + cut_height) ** 2) / 110.
+
+    tp_dir = (np.array(los).T * dist).T
+
+    tps = [(x0 + tp_x, y0 + tp_y) for
+           ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lins, tp_dir)]
+    tps = [(x0 / np.cos(np.deg2rad(y0)), y0) for
+            (x0, y0) in tps]
+    return tps
 
 
 ###############################################################################

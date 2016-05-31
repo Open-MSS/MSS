@@ -36,6 +36,7 @@ import os
 import sys
 import logging
 import pickle
+import datetime
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -81,10 +82,24 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
                              "fill_continents": True,
                              "draw_flighttrack": True,
                              "label_flighttrack": True,
+                             "draw_tangents": True,
+                             "show_solar_angle": True,
                              "colour_water": (0,0,0,0),
                              "colour_land": (0,0,0,0),
                              "colour_ft_vertices": (0,0,0,0),
-                             "colour_ft_waypoints": (0,0,0,0)}
+                             "colour_ft_waypoints": (0,0,0,0),
+                             "colour_tangents": (0,0,0,0)}
+
+        if "draw_tangents" not in settings_dict.keys():
+            settings_dict["draw_tangents"] = True
+        if "tangent_height" not in settings_dict.keys():
+            settings_dict["tangent_height"] = 1.
+        if "show_solar_angle" not in settings_dict.keys():
+            settings_dict["show_solar_angle"] = True
+        if "start_time" not in settings_dict.keys():
+            settings_dict["start_time"] = datetime.datetime.now()
+        if "colour_tangents" not in settings_dict.keys():
+            settings_dict["colour_tangents"] = (0,0,0,0)
 
         self.cbDrawGraticule.setChecked(settings_dict["draw_graticule"])
         self.cbDrawCoastlines.setChecked(settings_dict["draw_coastlines"])
@@ -92,11 +107,16 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
         self.cbFillContinents.setChecked(settings_dict["fill_continents"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
+        self.cbDrawTangents.setChecked(settings_dict["draw_tangents"])
+        self.dsbTangentHeight.setValue(settings_dict["tangent_height"])
+        self.cbShowSolarAngle.setChecked(settings_dict["show_solar_angle"])
+        self.dteStartTime.setDateTime(settings_dict["start_time"])
 
         for button, ids in [(self.btWaterColour, "colour_water"),
                             (self.btLandColour, "colour_land"),
                             (self.btWaypointsColour, "colour_ft_waypoints"),
-                            (self.btVerticesColour, "colour_ft_vertices")]:
+                            (self.btVerticesColour, "colour_ft_vertices"),
+                            (self.btTangentsColour, "colour_tangents")]:
             palette = QtGui.QPalette(button.palette())
             colour = QtGui.QColor()
             colour.setRgbF(*settings_dict[ids])
@@ -112,6 +132,8 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
                      functools.partial(self.setColour, "ft_waypoints"))
         self.connect(self.btVerticesColour, QtCore.SIGNAL("clicked()"),
                      functools.partial(self.setColour, "ft_vertices"))
+        self.connect(self.btTangentsColour, QtCore.SIGNAL("clicked()"),
+                     functools.partial(self.setColour, "tangents"))
 
 
     def getSettings(self):
@@ -124,6 +146,10 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
             "fill_continents": self.cbFillContinents.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
+            "draw_tangents": self.cbDrawTangents.isChecked(),
+            "tangent_height": self.dsbTangentHeight.value(),
+            "show_solar_angle": self.cbShowSolarAngle.isChecked(),
+            "start_time": self.dteStartTime.dateTime().toPyDateTime(),
 
             "colour_water":
                 QtGui.QPalette(self.btWaterColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
@@ -132,7 +158,9 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
             "colour_ft_vertices":
                 QtGui.QPalette(self.btVerticesColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_ft_waypoints":
-                QtGui.QPalette(self.btWaypointsColour.palette()).color(QtGui.QPalette.Button).getRgbF()
+                QtGui.QPalette(self.btWaypointsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
+            "colour_tangents":
+                QtGui.QPalette(self.btTangentsColour.palette()).color(QtGui.QPalette.Button).getRgbF()
             }
         return settings_dict
         
@@ -149,6 +177,8 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
             button = self.btVerticesColour
         elif which == "ft_waypoints":
             button = self.btWaypointsColour
+        elif which == "tangents":
+            button = self.btTangentsColour
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
@@ -248,6 +278,9 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
                     default_WMS=mss_settings.default_WMS,
                     view=self.mpl.canvas,
                     wms_cache=mss_settings.wms_cache)
+                settings = self.getView().getMapAppearance()
+                if settings["draw_tangents"]:
+                    widget.set_tp_height(settings["tangent_height"])
             elif index == SATELLITE:
                 title = "Satellite Track Prediction"
                 widget = sat.SatelliteControlWidget(view=self.mpl.canvas)
@@ -295,6 +328,34 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
             settings = dlg.getSettings()
             self.getView().setMapAppearance(settings)
             self.saveSettings()
+            if self.docks[WMS]:
+                if settings["draw_tangents"]:
+                    self.docks[WMS].widget().set_tp_height(settings["tangent_height"])
+                else:
+                    self.docks[WMS].widget().set_tp_height(None)
+            tph = None
+            if settings["draw_tangents"]:
+                tph = "{:.1f} km".format(settings["tangent_height"])
+            if self.docks[WMS]:
+                wms_widget = self.docks[WMS].widget()
+                layer = wms_widget.getLayer()
+                style = wms_widget.getStyle()
+                if style != "":
+                    style_title = wms_widget.get_layer_object(layer).styles[style]["title"]
+                else:
+                    style_title = None
+                level = wms_widget.getLevel()
+                init_time = wms_widget.getInitTime()
+                valid_time = wms_widget.getValidTime()
+                self.mpl.canvas.drawMetadata(title=wms_widget.get_layer_object(layer).title,
+                                             init_time=init_time,
+                                             valid_time=valid_time,
+                                             level=level,
+                                             style=style_title,
+                                             tp=tph)
+            else:
+                self.mpl.canvas.drawMetadata(title="Top view", tp=tph)
+            self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
 
 
