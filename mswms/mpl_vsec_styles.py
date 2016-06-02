@@ -296,6 +296,70 @@ def make_clams_chem_class(entity):
 for ent in CLAMS_CONFIG:
     globals()["VS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
 
+###############################################################################
+###                                GW                                       ###
+###############################################################################
+
+class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
+    """Vertical section of chemical species
+    """
+    name = "GW"
+    title = "Gravity Wave Temperature Residual (K)"
+
+    required_datafields = [
+        ("ml", "gravity_wave_temperature_perturbation"),
+        ("ml", "air_pressure"),
+        ("sfc", "tropopause_altitude"),
+        ]
+
+    def _plot_style(self):
+        """Make a cloud cover vertical section with temperature/potential
+           temperature overlay.
+        """
+        ax = self.ax
+        curtain_cc = self.data["gravity_wave_temperature_perturbation"]
+        # curtain_p = np.empty_like(curtain_cc)
+        # for i in range(len(self.driver.vert_data)):
+        #    curtain_p[i, :] = 102300 * np.exp(-self.driver.vert_data[i] / 7.9)
+        # curtain_p = curtain_p[::-1, :]
+        tropo_p2 = 102300 * np.exp(-self.data["tropopause_altitude"].reshape(-1) / 7.9)
+        curtain_p = self.data["air_pressure"] * 100
+        tropo_p = np.empty_like(self.data["tropopause_altitude"].reshape(-1))
+        for i in range(curtain_p.shape[1]):
+            z = self.data["tropopause_altitude"].reshape(-1)[i]
+            tropo_p[i] = np.interp(z, self.driver.vert_data[:], curtain_p[::-1, i])
+        numlevel = curtain_p.shape[0]
+        numpoints = len(self.lats)
+
+        # Filled contour plot of cloud cover.
+        # INFO on COLORMAPS:
+        #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
+        cmap = plt.cm.Spectral_r
+        norm = matplotlib.colors.BoundaryNorm([-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3], cmap.N)
+        cs = ax.pcolormesh(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+                           curtain_p, curtain_cc, norm=norm,
+                           cmap=cmap)
+        ax.plot(self.lat_inds, tropo_p.reshape(-1), color="gray", zorder=100)
+
+        # Pressure decreases with index, i.e. orography is stored at the
+        # zero-p-index (data field is flipped in mss_plot_driver.py if
+        # pressure increases with index).
+        self._latlon_logp_setup(titlestring=self.title)
+
+        # Add colorbar.
+        if not self.noframe:
+            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
+            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
+            cbar.set_label(self.cbar_label)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
+                width="1%", # width = % of parent_bbox width
+                height="30%", # height : %
+                loc=1) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
+            axins1.yaxis.set_ticks_position("left")
+            for x in axins1.yaxis.majorTicks:
+                x.label1.set_backgroundcolor("w")
 
 ###############################################################################
 ###                                CLOUDS                                   ###

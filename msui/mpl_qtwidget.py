@@ -34,11 +34,11 @@ from PyQt4 import QtGui, QtCore
 # import the Qt4Agg FigureCanvas object, that binds Figure to
 # Qt4Agg backend. It also inherits from QWidget
 from matplotlib.backends.backend_qt4agg \
-     import FigureCanvasQTAgg as FigureCanvas
+    import FigureCanvasQTAgg as FigureCanvas
 
 # import the NavigationToolbar Qt4Agg widget
 from matplotlib.backends.backend_qt4agg \
-     import NavigationToolbar2QT as NavigationToolbar
+    import NavigationToolbar2QT as NavigationToolbar
 
 # Matplotlib Figure object
 from matplotlib.figure import Figure
@@ -85,7 +85,7 @@ class MplCanvas(FigureCanvas):
 
 
     def drawMetadata(self, title="", init_time=None, valid_time=None,
-                     level=None, style=None):
+                     level=None, style=None, tp=None):
         """Draw a title indicating the init and valid time of the
            image that has been drawn, and the vertical elevation level.
         """
@@ -93,6 +93,8 @@ class MplCanvas(FigureCanvas):
             title += ' (%s)' % style
         if type(level) is str:
             title += ' at %s' % level
+        if type(tp) is str:
+            title += ' with TP at %s' % tp
 
         if type(valid_time) is datetime and type(init_time) is datetime:
             time_step = valid_time - init_time
@@ -591,14 +593,17 @@ class MplTopViewCanvas(MplCanvas):
         else:
             # Create a path interactor object. The interactor object connects
             # itself to the change() signals of the flight track data model.
-            appearance=self.getMapAppearance()
+            appearance = self.getMapAppearance()
             self.waypoints_interactor = mpl_pi.HPathInteractor(
                                              self.map, self.waypoints_model,
                                              linecolor=appearance["colour_ft_vertices"],
                                              markerfacecolor=appearance["colour_ft_waypoints"])
             self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
-
-
+            self.waypoints_interactor.set_tangent_visible(appearance["draw_tangents"])
+            self.waypoints_interactor.set_tangent_color(appearance["colour_tangents"])
+            self.waypoints_interactor.set_tangent_height(appearance["tangent_height"])
+            self.waypoints_interactor.set_solar_angle_visible(appearance["show_solar_angle"])
+            self.waypoints_interactor.set_start_time(appearance["start_time"])
 
     def setTrajectoryModel(self, model):
         """
@@ -635,17 +640,19 @@ class MplTopViewCanvas(MplCanvas):
         self.pdlg.setValue(5); QtGui.QApplication.processEvents()
 
         # 3) UPDATE COORDINATES OF NON-MAP OBJECTS.
-        self.waypoints_interactor.update()
-
         self.pdlg.setValue(8); QtGui.QApplication.processEvents()
 
         if self.satoverpasspatch:
             self.satoverpasspatch.update()
 
-        self.drawMetadata("Top view")
+        tph = None
+        if self.waypoints_interactor.is_tangent_visible():
+            tph = "{:.1f} km".format(self.waypoints_interactor.get_tangent_height())
+        self.drawMetadata("Top view", tp=tph)
 
         self.draw() # without this one the graticule won't plot
                     # correctly. no idea why..
+        self.waypoints_interactor.update()
 
         self.pdlg.setValue(10); QtGui.QApplication.processEvents()
 
@@ -771,10 +778,15 @@ class MplTopViewCanvas(MplCanvas):
                      "fill_continents": True,
                      "draw_flighttrack": True,
                      "label_flighttrack": True,
+                     "draw_tangents": True,
+                     "tangent_height": 1.,
+                     "show_solar_angle": True,
                      "colour_water": (153/255.,255/255.,255/255.,255/255.),
                      "colour_land": (204/255.,153/255.,102/255.,255/255.),
                      "colour_ft_vertices": (0,0,1,1),
-                     "colour_ft_waypoints": (1,0,0,1)}
+                     "colour_ft_waypoints": (1,0,0,1),
+                     "colour_tangents": (0, 0, 1, 1),
+                     "start_time": datetime.now()}
         if settings_dict is not None:
             settings.update(settings_dict)
         
@@ -798,8 +810,7 @@ class MplTopViewCanvas(MplCanvas):
         """
         """
         return self.appearance_settings
-    
-        
+
         
 
 class MplTopViewWidget(MplNavBarWidget):
