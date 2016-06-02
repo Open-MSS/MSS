@@ -84,4 +84,3 @@ if __name__ == "__main__":
 <WMT_MS_Capabilities version="1.1.1" updateSequence="1295028115677" xmlns:xlink="http://www.w3.org/1999/xlink">""")
     win.show()
     sys.exit(app.exec_())
-

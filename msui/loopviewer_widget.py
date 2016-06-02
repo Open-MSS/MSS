@@ -68,7 +68,7 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
        The constructor is passed a configuration dictionary from
        mss_settings, from which the keys are displayed to the user.
     """
-    
+
     def __init__(self, config=None, *args):
         super(ProductChooserDialog, self).__init__(*args)
         self.setupUi(self)
@@ -94,7 +94,6 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
         self.connect(self.tbInitTime_fwd, QtCore.SIGNAL("clicked()"),
                      functools.partial(self.changeInitTime, True))
 
-
     def type(self):
         return str(self.cbType.currentText())
 
@@ -107,7 +106,6 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
     def initTime(self):
         return self.dteInitTime.dateTime().toPyDateTime()
 
-
     def loadConfiguration(self):
         """Fill the combobox with configurations in the 'config' dictionary.
         """
@@ -119,7 +117,6 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
         self.cbType.addItems(keys)
         self.loadProducts(self.cbType.currentText())
 
-
     def loadProducts(self, _type):
         """Fill the combobox with products for the chosen configuration.
         """
@@ -129,7 +126,6 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
         keys.sort()
         self.cbProduct.addItems(keys)
         self.loadRegions(self.cbProduct.currentText())
-
 
     def loadRegions(self, product):
         """Fill the combobox with available regions for the chosen configuration
@@ -144,7 +140,6 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
         keys.sort()
         self.cbRegion.addItems(keys)
 
-
     def changeInitTime(self, forward):
         """Slot called when one of the time fwd/back buttons has been
            clicked.
@@ -157,7 +152,6 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
         # Add value from sbInitTime_step and set new date.
         self.dteInitTime.setDateTime(d.addSecs(forward * 3600. * \
                                                timestep))
-
 
 
 ################################################################################
@@ -183,7 +177,6 @@ class LoopLabel(QtGui.QLabel):
         else:
             self.emit(QtCore.SIGNAL("wheelOnImage(bool)"), event.delta() > 0)
         event.accept()
-
 
 
 ################################################################################
@@ -216,7 +209,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
 
         self.id = ImageLoopWidget.num
         ImageLoopWidget.num += 1
-        
+
         # Scale factor of the displayed image.
         self.scaleFactor = 1.0
 
@@ -257,7 +250,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                      self.normalSize)
         self.connect(self.btFitToWindow, QtCore.SIGNAL("clicked()"),
                      self.fitToWindow)
-    
+
         self.connect(self.tbLevel_down, QtCore.SIGNAL("clicked()"),
                      functools.partial(self.changeLevel, False))
         self.connect(self.tbLevel_up, QtCore.SIGNAL("clicked()"),
@@ -272,25 +265,21 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         self.pdlg = QtGui.QProgressDialog("retrieving images...", "Cancel",
                                           0, 100, self)
 
-
     def zoomIn(self):
         """Slot connected to the '+' button (zooms in).
         """
         self.scaleImage(1.25)
-
 
     def zoomOut(self):
         """Slot connected to the '-' button (zooms out).
         """
         self.scaleImage(0.8)
 
-
     def normalSize(self):
         """Slot connected to the 'orig' button (original image size).
         """
         self.imageLabel.adjustSize()
         self.scaleFactor = 1.0
-
 
     def fitToWindow(self):
         """Slot connected to the 'fit' button (fits image to available screen
@@ -302,14 +291,12 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             self.imageLabel.adjustSize()
         self.updateActions()
 
-
     def updateActions(self):
         """Disable the zoom controls if 'fit to screen space' is checked.
         """
         self.btZoomIn.setEnabled(not self.btFitToWindow.isChecked())
         self.btZoomOut.setEnabled(not self.btFitToWindow.isChecked())
         self.btZoomNormalSize.setEnabled(not self.btFitToWindow.isChecked())
-
 
     def scaleImage(self, factor):
         """Does the actual zooming.
@@ -326,11 +313,9 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         self.btZoomIn.setEnabled(self.scaleFactor < 3.0)
         self.btZoomOut.setEnabled(self.scaleFactor > 0.333)
 
-
     def adjustScrollBar(self, scrollBar, factor):
         scrollBar.setValue(int(factor * scrollBar.value()
-                                + ((factor - 1) * scrollBar.pageStep()/2)))
-
+                               + ((factor - 1) * scrollBar.pageStep() / 2)))
 
     def loadDataFromHTTP(self, _type, product, region, init_time):
         """Load batch products from the MSS website.
@@ -341,10 +326,12 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         for the time synchronization.
         """
         self.retrieval_successful = False
-        
+
         # Show the progress dialog, since the retrieval can take a few seconds.
         self.pdlg.reset()
-        self.pdlg.setValue(0); self.pdlg.show(); self.pdlg.repaint()
+        self.pdlg.setValue(0);
+        self.pdlg.show();
+        self.pdlg.repaint()
 
         base_url = self.config[_type]["url"]
         prod_abbrev = self.config[_type]["products"][product]["abbrev"]
@@ -417,21 +404,22 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                         # Read the image file from the URL into a string (urlobject.read())
                         # and wrap this string into a StringIO object that behaves like a file.
                         imageIO = StringIO.StringIO(urlobject.read())
-                        qp = QtGui.QPixmap() 
+                        qp = QtGui.QPixmap()
                         qp.loadFromData(imageIO.getvalue())
 
-                        valid_time = init_time + timedelta(seconds=3600*step)                              
+                        valid_time = init_time + timedelta(seconds=3600 * step)
                         pixmap_cache.append((qp, valid_time))
-                except urllib2.HTTPError as e:                    
+                except urllib2.HTTPError as e:
                     logging.debug("timestep %03i not available (HTTP error %i)" % (step, e.code))
 
                 # Update progress dialog.
-                self.pdlg.setValue((float(ilevel) + float(istep)/num_steps)
+                self.pdlg.setValue((float(ilevel) + float(istep) / num_steps)
                                    / num_levels * 100.)
-                self.pdlg.repaint(); QtGui.QApplication.processEvents()
+                self.pdlg.repaint();
+                QtGui.QApplication.processEvents()
                 if self.pdlg.wasCanceled() or cancel:
                     break
-                    
+
             if self.pdlg.wasCanceled() or cancel:
                 logging.warning("map retrieval was canceled by the user.")
                 self.retrieval_successful = False
@@ -441,7 +429,6 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                 self.retrieval_successful = True
             self.pixmaps.append(pixmap_cache)
 
-           
         # Reset image display after loading is complete.
         self.current_pixmap = 0
         self.current_level = 0
@@ -459,12 +446,12 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                       self.valid_time)
             self.emit(QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"), False,
                       self.valid_time)
-#TODO: Resize the window so that the image fits exactly. Also make the image
-#      keep its aspect ratio on fit-to-window resizes (mr, 2010-09-02):
-#      http://lists.trolltech.com/qt-interest/2005-11/thread01034-0.html
+            # TODO: Resize the window so that the image fits exactly. Also make the image
+            #      keep its aspect ratio on fit-to-window resizes (mr, 2010-09-02):
+            #      http://lists.trolltech.com/qt-interest/2005-11/thread01034-0.html
             self.fitToWindow()
             pxm = self.imageLabel.pixmap()
-            self.resize(pxm.width()+50, pxm.height()+150)
+            self.resize(pxm.width() + 50, pxm.height() + 150)
 
             self.connect(self.viewer_parent, QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"),
                          self.changeValidTime)
@@ -476,7 +463,6 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
 
         # Close the progress dialog.
         self.pdlg.close()
-
 
     def updateLabel(self, time=None):
         """Update the color and font style of the information label, depending
@@ -497,15 +483,13 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                               self.valid_time.strftime("%Y-%m-%d %H:%M UTC"),
                               self.levels[self.current_level]))
 
-
     def updateImage(self, time=None):
         """Update the displayed pixmap.
         """
         self.pixmap, self.valid_time = \
-                     self.pixmaps[self.current_level][self.current_pixmap]
+            self.pixmaps[self.current_level][self.current_pixmap]
         self.imageLabel.setPixmap(self.pixmap)
         self.updateLabel(time)
-
 
     def changeValidTime(self, forward, time=None):
         """Update the displayed image when the current valid time has been
@@ -514,12 +498,12 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
          a) wheelOnImage signal of the LoopLabel.
          b) changeValidTime signal of the parent window.
         """
-        #logging.debug("Widget #%i: received changeValidTime %s / %s" % \
+        # logging.debug("Widget #%i: received changeValidTime %s / %s" % \
         #              (self.id, "fwd" if forward else "back", time))
 
         if not self.retrieval_successful:
             return
-        
+
         # If the transmitted time equals the currently displayed time nothing
         # needs to be done.
         if time == self.valid_time:
@@ -532,7 +516,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             # or decrement image pointer unless we are at the end or beginning
             # of the image series.
             if forward:
-                if self.current_pixmap < len(self.pixmaps[self.current_level])-1:
+                if self.current_pixmap < len(self.pixmaps[self.current_level]) - 1:
                     self.current_pixmap += 1
             else:
                 if self.current_pixmap > 0:
@@ -543,16 +527,16 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             # B) The more difficult case, time information has been passed and
             # needs to be synchronized.
             if forward:
-                while self.current_pixmap < len(self.pixmaps[self.current_level])-1 \
-                      and (time - self.valid_time) > \
-                      (self.pixmaps[self.current_level][self.current_pixmap+1][1] - time):
+                while self.current_pixmap < len(self.pixmaps[self.current_level]) - 1 \
+                        and (time - self.valid_time) > \
+                                (self.pixmaps[self.current_level][self.current_pixmap + 1][1] - time):
                     self.current_pixmap += 1
                     self.valid_time = \
                         self.pixmaps[self.current_level][self.current_pixmap][1]
             else:
                 while self.current_pixmap > 0 \
-                      and (self.valid_time - time) > \
-                      (time - self.pixmaps[self.current_level][self.current_pixmap-1][1]):
+                        and (self.valid_time - time) > \
+                                (time - self.pixmaps[self.current_level][self.current_pixmap - 1][1]):
                     self.current_pixmap -= 1
                     self.valid_time = \
                         self.pixmaps[self.current_level][self.current_pixmap][1]
@@ -565,7 +549,6 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             self.emit(QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"), forward,
                       self.valid_time)
 
-
     def changeLevel(self, up):
         """Change the current level. Called on either
         a) one of the up/down buttons has been clicked
@@ -574,13 +557,12 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         if not self.retrieval_successful:
             return
         if not up:
-            if self.current_level < len(self.pixmaps)-1:
-                self.current_level +=1
+            if self.current_level < len(self.pixmaps) - 1:
+                self.current_level += 1
         else:
             if self.current_level > 0:
-                self.current_level -=1
+                self.current_level -= 1
         self.updateImage()
-
 
     def mouseDoubleClickEvent(self, event):
         """A double click on the widget opens the product chooser dialog
@@ -593,7 +575,6 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                                   self.products_dialog.region(),
                                   self.products_dialog.initTime())
         event.accept()
-
 
 
 ################################################################################
@@ -615,4 +596,3 @@ if __name__ == "__main__":
     win = ImageLoopWidget(config=configuration)
     win.show()
     sys.exit(app.exec_())
-

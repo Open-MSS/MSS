@@ -37,7 +37,7 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 # local application imports
 import ui_trajectories_window as ui
 import trajectory_item_tree as titree
-#import trajectory_ts
+# import trajectory_ts
 import mss_qt
 
 
@@ -78,7 +78,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Pointer to the QListWidget that accomodates the views that are
         # open in the MSUI.
         self.listviews = listviews
-        
+
         # Connect Qt SIGNALs:
         # ===================
 
@@ -111,8 +111,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             self.connect(self.listviews, QtCore.SIGNAL("viewsChanged()"),
                          self.updateViews)
             self.updateViews()
-            
-
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the window.
@@ -122,7 +120,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         if super(MSSTrajectoriesToolWindow, self).closeEvent(event):
             self.emit(QtCore.SIGNAL("moduleCloses()"))
-
 
     def loadFlightTrack(self):
         """Slot for the 'Open Flight Track..' menu entry. Opens a file dialog
@@ -144,14 +141,13 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             self.tvVisibleElements.scrollTo(new_item_index)
             self.tvVisibleElements.resizeColumnToContents(0)
 
-
     def loadTrajectories(self):
         """Slot for the 'Open Trajectories..' menu entry. Opens a QFileDialog
            and reads the selected trajectory file using lagrantooutputreader.
         """
         # Ask for a directory to open.
         traj_dir = QtGui.QFileDialog.getExistingDirectory(self,
-                               "Open Lagranto Output Directory", "")
+                                                          "Open Lagranto Output Directory", "")
         if not traj_dir.isEmpty():
             traj_dir = str(traj_dir)
             logging.debug("Loading trajectory data from %s" % traj_dir)
@@ -167,8 +163,8 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                 for sdir in subdirs:
                     # Add the trajectories to the data tree.
                     new_item_index = self.traj_item_tree \
-                                     .addTrajectoryDirectory(os.path.join(traj_dir,
-                                                                          sdir))
+                        .addTrajectoryDirectory(os.path.join(traj_dir,
+                                                             sdir))
             else:
                 # Add the trajectories to the data tree.
                 new_item_index = self.traj_item_tree.addTrajectoryDirectory(traj_dir)
@@ -177,7 +173,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # first column to be wide enough for the text.
             self.tvVisibleElements.scrollTo(new_item_index)
             self.tvVisibleElements.resizeColumnToContents(0)
-
 
     def selectedMapElements(self):
         """Return a list with QModelIndex objects referencing the elements
@@ -219,8 +214,8 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # the item referenced by the index at i, include the new item
             # in the return list and look at the next index (ie. increase
             # the offset).
-            if indexes[i+o].internalPointer() != indexes[i].internalPointer():
-                returnIndexes.append(indexes[i+o])
+            if indexes[i + o].internalPointer() != indexes[i].internalPointer():
+                returnIndexes.append(indexes[i + o])
                 o += 1
             # If it is the same, we can use our knowledge about how the
             # elements in indexes[] are ordered: If o rows have been selected
@@ -237,8 +232,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                     returnIndexes.append(indexes[i])
                 o = 1
         return returnIndexes
-    
-    
+
     def selectMapElements(self):
         """Interpret the selection query entered by the user in the
            leSelectionQuery field and the select all items in the tree
@@ -256,8 +250,8 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             selectedIndexes = self.selectedMapElements()
             if len(selectedIndexes) != 1:
                 QtGui.QMessageBox.warning(self, self.tr("select map elements"),
-                  self.tr("Please select a single element for this operation."),
-                  QtGui.QMessageBox.Ok)
+                                          self.tr("Please select a single element for this operation."),
+                                          QtGui.QMessageBox.Ok)
                 return
             else:
                 rootIndex = selectedIndexes[0]
@@ -276,7 +270,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         itemSelection = self.traj_item_tree.selectionFromQuery(
             str(self.leSelectionQuery.text()),
             index=rootIndex)
-        
+
         # Items can be selected in the tree view by using the select()
         # method of the tree view's selection model. select() takes either
         # a single index or an item selection:
@@ -290,13 +284,12 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         if itemSelection.isEmpty():
             # If no item matches the query we can't select anything.
             QtGui.QMessageBox.warning(self, self.tr("select map elements"),
-                        self.tr("No matching items have been found."),
-                        QtGui.QMessageBox.Ok)
+                                      self.tr("No matching items have been found."),
+                                      QtGui.QMessageBox.Ok)
         else:
-            selectionModel.select(itemSelection, 
+            selectionModel.select(itemSelection,
                                   QtGui.QItemSelectionModel.ClearAndSelect |
                                   QtGui.QItemSelectionModel.Rows)
-
 
     def setCurrentItemColour(self):
         """Informs traj_item_tree to change the colour of the selected elements
@@ -317,7 +310,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         except Exception, e:
             QtGui.QMessageBox.warning(self, self.tr('item colour'),
                                       self.tr(str(e)), QtGui.QMessageBox.Ok)
-        
 
     def setCurrentItemLineStyle(self):
         """Informs traj_item_tree to change the line style of the selected 
@@ -338,7 +330,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         except Exception, e:
             QtGui.QMessageBox.warning(self, self.tr('item line style'),
                                       self.tr(str(e)), QtGui.QMessageBox.Ok)
-        
 
     def setCurrentItemLineWidth(self):
         """Informs traj_item_tree to change the line width of the selected
@@ -357,7 +348,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         except Exception, e:
             QtGui.QMessageBox.warning(self, self.tr('item line width'),
                                       self.tr(str(e)), QtGui.QMessageBox.Ok)
-        
 
     def setCurrentItemTimeMarker(self):
         """Set the given time markers for the selected item and all its
@@ -379,11 +369,11 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # set/change the time marker for all children.
             if isinstance(item, titree.LagrantoOutputItem):
                 ret = QtGui.QMessageBox.warning(self, self.tr("Time Marker"),
-                        self.tr("Do you want to set the interval " + \
-                                interval.strftime("%H:%M") + \
-                                "\nfor all children of " + item.getName()),
-                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.Default,
-                        QtGui.QMessageBox.No)
+                                                self.tr("Do you want to set the interval " + \
+                                                        interval.strftime("%H:%M") + \
+                                                        "\nfor all children of " + item.getName()),
+                                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.Default,
+                                                QtGui.QMessageBox.No)
                 if ret == QtGui.QMessageBox.No:
                     #
                     # If the answer is no, continue with the next item on
@@ -408,10 +398,10 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                                               QtGui.QMessageBox.Ok)
                 elif setInterval != interval:
                     QtGui.QMessageBox.warning(self, self.tr("Time marker"),
-                              self.tr("Warning: The minimum time interval for the" \
-                                      "selected variable is " + \
-                                      setInterval.strftime("%H:%M") + \
-                                      ".\nThe interval has been set to this value."),
+                                              self.tr("Warning: The minimum time interval for the" \
+                                                      "selected variable is " + \
+                                                      setInterval.strftime("%H:%M") + \
+                                                      ".\nThe interval has been set to this value."),
                                               QtGui.QMessageBox.Ok)
                 if not first_index:
                     first_index = index
@@ -422,8 +412,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
 
         self.traj_item_tree.emitChange(first_index, last_index,
                                        mode="MARKER_CHANGE")
-
-
 
     def plotCurrentItemInView(self):
         """
@@ -448,7 +436,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                 logging.error("View window <%s> does not support display of trajectories" %
                               view_window.identifier)
 
-    
     def removeCurrentItemFromView(self):
         """
         """
@@ -459,8 +446,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             logging.debug("Removing selected elements from view <%s>" % view_name)
             self.traj_item_tree.setItemVisibleInView_list(
                 self.selectedMapElements(), view_item.window, False)
-#TODO: Disconnect tree model from view if no item is displayed!! (2010-08-27)
-                
+            # TODO: Disconnect tree model from view if no item is displayed!! (2010-08-27)
 
     def updateViews(self):
         """Update the list of views in the comboboxes cbPlotInView and
@@ -488,13 +474,11 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         index = self.cbRemoveFromView.findText(item_remove)
         self.cbRemoveFromView.setCurrentIndex(index if index >= 0 else 0)
 
-
     def getItemTree(self):
         """
         """
         return self.traj_item_tree
 
-       
 
 ################################################################################
 

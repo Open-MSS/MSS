@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_SideViewWindow(object):
     def setupUi(self, SideViewWindow):
         SideViewWindow.setObjectName("SideViewWindow")
@@ -75,16 +76,29 @@ class Ui_SideViewWindow(object):
         QtCore.QMetaObject.connectSlotsByName(SideViewWindow)
 
     def retranslateUi(self, SideViewWindow):
-        SideViewWindow.setWindowTitle(QtGui.QApplication.translate("SideViewWindow", "Side View - DLR/IPA Mission Support", None, QtGui.QApplication.UnicodeUTF8))
-        self.btOptions.setText(QtGui.QApplication.translate("SideViewWindow", "options", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbTools.setItemText(0, QtGui.QApplication.translate("SideViewWindow", "(select to open control)", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbTools.setItemText(1, QtGui.QApplication.translate("SideViewWindow", "WMS", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("SideViewWindow", "Waypoint edit mode:", None, QtGui.QApplication.UnicodeUTF8))
-        self.btMvWaypoint.setText(QtGui.QApplication.translate("SideViewWindow", "Mv", None, QtGui.QApplication.UnicodeUTF8))
-        self.btMvWaypoint.setShortcut(QtGui.QApplication.translate("SideViewWindow", "M", None, QtGui.QApplication.UnicodeUTF8))
-        self.btInsWaypoint.setText(QtGui.QApplication.translate("SideViewWindow", "Ins", None, QtGui.QApplication.UnicodeUTF8))
-        self.btInsWaypoint.setShortcut(QtGui.QApplication.translate("SideViewWindow", "I", None, QtGui.QApplication.UnicodeUTF8))
-        self.btDelWaypoint.setText(QtGui.QApplication.translate("SideViewWindow", "Del", None, QtGui.QApplication.UnicodeUTF8))
-        self.btDelWaypoint.setShortcut(QtGui.QApplication.translate("SideViewWindow", "D", None, QtGui.QApplication.UnicodeUTF8))
+        SideViewWindow.setWindowTitle(
+            QtGui.QApplication.translate("SideViewWindow", "Side View - DLR/IPA Mission Support", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btOptions.setText(
+            QtGui.QApplication.translate("SideViewWindow", "options", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbTools.setItemText(0, QtGui.QApplication.translate("SideViewWindow", "(select to open control)", None,
+                                                                 QtGui.QApplication.UnicodeUTF8))
+        self.cbTools.setItemText(1, QtGui.QApplication.translate("SideViewWindow", "WMS", None,
+                                                                 QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(
+            QtGui.QApplication.translate("SideViewWindow", "Waypoint edit mode:", None, QtGui.QApplication.UnicodeUTF8))
+        self.btMvWaypoint.setText(
+            QtGui.QApplication.translate("SideViewWindow", "Mv", None, QtGui.QApplication.UnicodeUTF8))
+        self.btMvWaypoint.setShortcut(
+            QtGui.QApplication.translate("SideViewWindow", "M", None, QtGui.QApplication.UnicodeUTF8))
+        self.btInsWaypoint.setText(
+            QtGui.QApplication.translate("SideViewWindow", "Ins", None, QtGui.QApplication.UnicodeUTF8))
+        self.btInsWaypoint.setShortcut(
+            QtGui.QApplication.translate("SideViewWindow", "I", None, QtGui.QApplication.UnicodeUTF8))
+        self.btDelWaypoint.setText(
+            QtGui.QApplication.translate("SideViewWindow", "Del", None, QtGui.QApplication.UnicodeUTF8))
+        self.btDelWaypoint.setShortcut(
+            QtGui.QApplication.translate("SideViewWindow", "D", None, QtGui.QApplication.UnicodeUTF8))
+
 
 from mpl_qtwidget import MplSideViewWidget

@@ -55,7 +55,6 @@ from mslib import mss_util
 from mslib import thermolib
 import mss_settings
 
-
 ################################################################################
 ###                    CONSTANTS (used in this module)                       ###
 ################################################################################
@@ -96,6 +95,7 @@ class Waypoint(object):
     """Represents a waypoint with position, altitude and further
        properties. Used internally by WaypointsTableModel.
     """
+
     def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
         self.location = location
         if location in locations.keys():
@@ -111,23 +111,22 @@ class Waypoint(object):
 
         # Performance fields (for values read from the flight performance
         # service).
-        self.leg_time = None # time from previous waypoint
-        self.cum_time = None # total time of flight
-        self.utc_time = None # time in UTC since given takeoff time
-        self.leg_fuel = None # fuel consumption since previous waypoint
-        self.cum_fuel = None # total fuel consumption
-        self.weight = None   # aircraft gross weight
-        self.speed = None    # cruise speed/mode
+        self.leg_time = None  # time from previous waypoint
+        self.cum_time = None  # total time of flight
+        self.utc_time = None  # time in UTC since given takeoff time
+        self.leg_fuel = None  # fuel consumption since previous waypoint
+        self.cum_fuel = None  # total fuel consumption
+        self.weight = None  # aircraft gross weight
+        self.speed = None  # cruise speed/mode
 
         self.wpnumber_major = None
         self.wpnumber_minor = None
-        
 
     def __str__(self):
         """String representation of the waypoint (e.g., when used with the print
            statement).
         """
-        return "WAYPOINT(LAT=%f, LON=%f, FL=%f)" % (self.lat, self.lon, 
+        return "WAYPOINT(LAT=%f, LON=%f, FL=%f)" % (self.lat, self.lon,
                                                     self.flightlevel)
 
 
@@ -153,17 +152,17 @@ class WaypointsTableModel(QAbstractTableModel):
 
     def __init__(self, name="", filename=None):
         super(WaypointsTableModel, self).__init__()
-        self.name = name # a name for this flight track
-        self.filename = filename # filename for store/load
-        self.modified = False # for "save on exit"
-        self.waypoints = [] # user-defined waypoints
-        self.performance_waypoints = [] # waypoints from performance service
-        self.performance_valid = False # performance results become invalid if
-                                       # the user changes a waypoint
+        self.name = name  # a name for this flight track
+        self.filename = filename  # filename for store/load
+        self.modified = False  # for "save on exit"
+        self.waypoints = []  # user-defined waypoints
+        self.performance_waypoints = []  # waypoints from performance service
+        self.performance_valid = False  # performance results become invalid if
+        # the user changes a waypoint
         self.performance_remaining_fuel_capacity = 0
         self.performance_remaining_range_nm = 0
-        self.mode = USER # depending on the mode data from either user waypoints
-                         # or performance waypoints are returned.
+        self.mode = USER  # depending on the mode data from either user waypoints
+        # or performance waypoints are returned.
 
         # If a filename is passed to the constructor, load data from this file.
         if filename:
@@ -176,26 +175,20 @@ class WaypointsTableModel(QAbstractTableModel):
             else:
                 logging.debug("No known file extension! {:}".format(filename))
 
-
-
     def setName(self, name):
         self.name = name
         self.modified = True
 
-
     def setMode(self, mode):
         self.mode = mode
-        #logging.debug("switching to mode %s." % ("USER" if mode == USER else "PERFORMANCE"))
+        # logging.debug("switching to mode %s." % ("USER" if mode == USER else "PERFORMANCE"))
         self.reset()
-
 
     def getMode(self):
         return self.mode
 
-
     def performanceValid(self):
         return self.performance_valid
-
 
     def flags(self, index):
         """Used to specify which table columns can be edited by the user;
@@ -209,13 +202,12 @@ class WaypointsTableModel(QAbstractTableModel):
             return Qt.ItemIsEnabled
         column = index.column()
         if column in [LOCATION, LAT, LON, FLIGHTLEVEL, COMMENTS] \
-               and self.mode == USER:
-            return Qt.ItemFlags(QAbstractTableModel.flags(self, index)|
+                and self.mode == USER:
+            return Qt.ItemFlags(QAbstractTableModel.flags(self, index) |
                                 Qt.ItemIsEditable)
-            
+
         else:
             return Qt.ItemFlags(QAbstractTableModel.flags(self, index))
-
 
     def secToStr(self, sec):
         """Format a time given in seconds to a string HH:MM:SS. Used for the
@@ -227,7 +219,6 @@ class WaypointsTableModel(QAbstractTableModel):
         minutes = sec / 60
         sec = sec % 60
         return "%02i:%02i:%02i" % (hours, minutes, sec)
-
 
     def data(self, index, role=Qt.DisplayRole):
         """Return a data field at the given index (of type QModelIndex,
@@ -245,7 +236,7 @@ class WaypointsTableModel(QAbstractTableModel):
             waypoints = self.performance_waypoints
 
         if not index.isValid() or \
-           not (0 <= index.row() < len(waypoints)):
+                not (0 <= index.row() < len(waypoints)):
             return QVariant()
         waypoint = waypoints[index.row()]
         column = index.column()
@@ -259,19 +250,19 @@ class WaypointsTableModel(QAbstractTableModel):
             elif column == FLIGHTLEVEL:
                 return QVariant(waypoint.flightlevel)
             elif column == PRESSURE:
-                return QVariant("%.2f" % (waypoint.pressure/100.))
+                return QVariant("%.2f" % (waypoint.pressure / 100.))
             elif column == SPEED:
                 return QVariant(waypoint.speed) \
-                       if waypoint.speed is not None else QVariant("")
+                    if waypoint.speed is not None else QVariant("")
             elif column == TIME_LEG:
                 return QVariant(self.secToStr(waypoint.leg_time)) \
-                       if waypoint.leg_time is not None else QVariant("")
+                    if waypoint.leg_time is not None else QVariant("")
             elif column == TIME_CUM:
                 return QVariant(self.secToStr(waypoint.cum_time)) \
-                       if waypoint.cum_time is not None else QVariant("")
+                    if waypoint.cum_time is not None else QVariant("")
             elif column == TIME_UTC:
                 return QVariant(waypoint.utc_time.strftime("%Y-%m-%d %H:%M:%S")) \
-                       if waypoint.utc_time is not None else QVariant("")
+                    if waypoint.utc_time is not None else QVariant("")
             elif column == DISTANCE_LEG:
                 # Return distance in km and nm.
                 return QVariant("%.1f [%.1f]" % (waypoint.distance_to_prev,
@@ -281,19 +272,18 @@ class WaypointsTableModel(QAbstractTableModel):
                                                  waypoint.distance_total / 1.852))
             elif column == FUEL_LEG:
                 return QVariant("%.2f" % waypoint.leg_fuel) \
-                       if waypoint.leg_fuel is not None else QVariant("")
+                    if waypoint.leg_fuel is not None else QVariant("")
             elif column == FUEL_CUM:
                 return QVariant("%.2f" % waypoint.cum_fuel) \
-                       if waypoint.cum_fuel is not None else QVariant("")
+                    if waypoint.cum_fuel is not None else QVariant("")
             elif column == WEIGHT:
                 return QVariant("%.2f" % waypoint.weight) \
-                       if waypoint.weight is not None else QVariant("")
+                    if waypoint.weight is not None else QVariant("")
             elif column == COMMENTS:
                 return QVariant(waypoint.comments)
         elif role == Qt.TextAlignmentRole:
-            return QVariant(int(Qt.AlignLeft|Qt.AlignVCenter))
+            return QVariant(int(Qt.AlignLeft | Qt.AlignVCenter))
         return QVariant()
-
 
     def waypointData(self, row, mode=None):
         """Get the waypoint object defining the given row.
@@ -304,7 +294,6 @@ class WaypointsTableModel(QAbstractTableModel):
         else:
             return self.performance_waypoints[row]
 
-
     def allWaypointData(self, mode=USER):
         """Return the entire list of waypoints.
         """
@@ -313,7 +302,6 @@ class WaypointsTableModel(QAbstractTableModel):
             return self.waypoints
         else:
             return self.performance_waypoints
-
 
     def intermediatePoints(self, numpoints=101, connection="greatcircle"):
         """Compute intermediate points between the waypoints.
@@ -326,7 +314,6 @@ class WaypointsTableModel(QAbstractTableModel):
         lats, lons = mss_util.path_points(path, numpoints=numpoints,
                                           connection=connection)
         return lats, lons
-    
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         """Return data describing the table header; overrides the
@@ -334,8 +321,8 @@ class WaypointsTableModel(QAbstractTableModel):
         """
         if role == Qt.TextAlignmentRole:
             if orientation == Qt.Horizontal:
-                return QVariant(int(Qt.AlignLeft|Qt.AlignVCenter))
-            return QVariant(int(Qt.AlignRight|Qt.AlignVCenter))
+                return QVariant(int(Qt.AlignLeft | Qt.AlignVCenter))
+            return QVariant(int(Qt.AlignRight | Qt.AlignVCenter))
         if role != Qt.DisplayRole:
             return QVariant()
         # Return the names of the table columns.
@@ -377,8 +364,7 @@ class WaypointsTableModel(QAbstractTableModel):
         else:
             wp = self.performance_waypoints[int(section)]
             return ("%i" % wp.wpnumber_major) if wp.wpnumber_minor == 0 \
-                   else ("%i.%i" % (wp.wpnumber_major, wp.wpnumber_minor))
-        
+                else ("%i.%i" % (wp.wpnumber_major, wp.wpnumber_minor))
 
     def rowCount(self, index=QModelIndex()):
         """Number of waypoints in the model.
@@ -388,10 +374,8 @@ class WaypointsTableModel(QAbstractTableModel):
         else:
             return len(self.performance_waypoints)
 
-
     def columnCount(self, index=QModelIndex()):
         return 15
-
 
     def setData(self, index, value, role=Qt.EditRole, update=True):
         """Change a data element of the flight track; overrides the
@@ -400,10 +384,10 @@ class WaypointsTableModel(QAbstractTableModel):
         NOTE: Performance computations loose their validity if a change is made.
         """
         if index.isValid() and 0 <= index.row() < len(self.waypoints):
-            #print "\n>> SetData()"
+            # print "\n>> SetData()"
             waypoint = self.waypoints[index.row()]
             column = index.column()
-            index2 = index # in most cases only one field is being changed
+            index2 = index  # in most cases only one field is being changed
             if column == LOCATION:
                 waypoint.location = value.toString()
             elif column == LAT:
@@ -467,7 +451,6 @@ class WaypointsTableModel(QAbstractTableModel):
             return True
         return False
 
-
     def insertRows(self, position, rows=1, index=QModelIndex(),
                    waypoints=[None]):
         """Insert waypoint; overrides the corresponding QAbstractTableModel
@@ -483,7 +466,6 @@ class WaypointsTableModel(QAbstractTableModel):
         self.endInsertRows()
         self.modified = True
         return True
-
 
     def removeRows(self, position, rows=1, index=QModelIndex()):
         """Remove waypoint; overrides the corresponding QAbstractTableModel
@@ -501,7 +483,6 @@ class WaypointsTableModel(QAbstractTableModel):
         self.endRemoveRows()
         self.modified = True
         return True
-    
 
     def update_distances(self, position, rows=1):
         """Update all distances in a flight track that are affected by a
@@ -531,25 +512,25 @@ class WaypointsTableModel(QAbstractTableModel):
                 wp1.distance_to_prev = 0.
                 wp1.distance_total = 0.
             else:
-                wp0 = waypoints[pos-1]
+                wp0 = waypoints[pos - 1]
                 wp1.distance_to_prev = distance.distance((wp0.lat, wp0.lon),
                                                          (wp1.lat, wp1.lon)).km
-                
+
         # Update the distance of the following waypoint as well.
-        if pos < len(waypoints)-1:
-            wp2 = waypoints[pos+1]
+        if pos < len(waypoints) - 1:
+            wp2 = waypoints[pos + 1]
             wp2.distance_to_prev = distance.distance((wp1.lat, wp1.lon),
                                                      (wp2.lat, wp2.lon)).km
 
         # Update total distances of waypoint at index position and all
         # following waypoints.
         for i in range(max(min(position, 1), 1), len(waypoints)):
-            wp0 = waypoints[i-1]
+            wp0 = waypoints[i - 1]
             wp1 = waypoints[i]
             wp1.distance_total = wp0.distance_total + wp1.distance_to_prev
 
-        #for wp in self.waypoints:
-        #    print wp.lat, wp.lon, wp.distance_to_prev, wp.distance_total
+            # for wp in self.waypoints:
+            #    print wp.lat, wp.lon, wp.distance_to_prev, wp.distance_total
 
     def invertDirection(self):
         logging.debug("WARNING: Inverting waypoints will not invert performance waypoints!")
@@ -606,7 +587,6 @@ class WaypointsTableModel(QAbstractTableModel):
         doc.writexml(file_object, indent="  ", addindent="  ", newl="\n")
         file_object.close()
 
-
     def loadFromFTML(self, filename):
         """Load a flight track from an XML file at <filename>.
         """
@@ -661,7 +641,6 @@ class WaypointsTableModel(QAbstractTableModel):
                 com = str(wp.comments)
                 csv_writer.writerow([i, loc, lat, lon, lvl, pre, leg, cum, com])
 
-
     def loadFromCSV(self, filename):
         waypoints_list = []
         with open(filename, "r") as in_file:
@@ -698,8 +677,9 @@ class WaypointsTableModel(QAbstractTableModel):
             out_file.write("# Do not modify if you plan to import this file again!\n")
             out_file.write("Track name: {:}\n".format(self.name))
             line = "{0:5d}  {1:{2}}  {3:10.3f}  {4:11.3f}  {5:11.3f}  {6:14.3f}  {7:14.1f}  {8:15.1f}  {9:{10}}\n"
-            header = "Index  {0:{1}}  Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  "\
-                     "Leg dist. (km)  Cum. dist. (km)  {2:{3}}\n".format("Location", max_loc_len, "Comments", max_com_len)
+            header = "Index  {0:{1}}  Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  " \
+                     "Leg dist. (km)  Cum. dist. (km)  {2:{3}}\n".format("Location", max_loc_len, "Comments",
+                                                                         max_com_len)
             out_file.write(header)
             for i in range(len(self.waypoints)):
                 wp = self.waypoints[i]
@@ -719,29 +699,29 @@ class WaypointsTableModel(QAbstractTableModel):
                 lines = f.readlines()
 
             data = {
-            'name':[],
-            'loc':[],
+                'name': [],
+                'loc': [],
             }
             for line in lines:
                 if line.startswith('FWP'):
-                   line = line.split( )
-                   data['name'].append(line[3])
-                   alt = round(float(line[-1])/100., 2)
-                   if line[4] == 'N':
-                       NS = 1.
-                   elif line[4] =='S':
-                       NS = -1.
-                   else:
-                       NS = np.nan
-                   lat = round((float(line[5]) + float(line[6]) / 60.) * NS, 2)
-                   if line[7] == 'E':
-                       EW = 1.
-                   elif line[7] =='W':
-                       EW = -1.
-                   else:
-                       EW = np.nan
-                   lon = round((float(line[8]) + float(line[9]) / 60.) * EW, 2)
-                   data['loc'].append((lat, lon, alt))
+                    line = line.split()
+                    data['name'].append(line[3])
+                    alt = round(float(line[-1]) / 100., 2)
+                    if line[4] == 'N':
+                        NS = 1.
+                    elif line[4] == 'S':
+                        NS = -1.
+                    else:
+                        NS = np.nan
+                    lat = round((float(line[5]) + float(line[6]) / 60.) * NS, 2)
+                    if line[7] == 'E':
+                        EW = 1.
+                    elif line[7] == 'W':
+                        EW = -1.
+                    else:
+                        EW = np.nan
+                    lon = round((float(line[8]) + float(line[9]) / 60.) * EW, 2)
+                    data['loc'].append((lat, lon, alt))
             data['loc'] = np.array(data['loc'])
             return data
 
@@ -750,7 +730,7 @@ class WaypointsTableModel(QAbstractTableModel):
             firstline = in_file.readline()
         if firstline.startswith("# FliteStar/FliteMap generated flight plan."):
             data = loadFXtxt(filename)
-            for n,l in zip(data['name'], data['loc']):
+            for n, l in zip(data['name'], data['loc']):
                 wp = Waypoint()
                 wp.location = n
                 setattr(wp, "lat", float(l[0]))
@@ -767,15 +747,15 @@ class WaypointsTableModel(QAbstractTableModel):
                     if line.startswith("#"):
                         continue
                     if line.startswith("Index"):
-                        pos.append(0) # 0
-                        pos.append(line.find("Location")) # 1
-                        pos.append(line.find("Lat (+-90)")) # 2
-                        pos.append(line.find("Lon (+-180)")) # 3
-                        pos.append(line.find("Flightlevel")) # 4
-                        pos.append(line.find("Pressure (hPa)")) # 5
-                        pos.append(line.find("Leg dist. (km)")) # 6
-                        pos.append(line.find("Cum. dist. (km)")) # 7
-                        pos.append(line.find("Comments")) # 8
+                        pos.append(0)  # 0
+                        pos.append(line.find("Location"))  # 1
+                        pos.append(line.find("Lat (+-90)"))  # 2
+                        pos.append(line.find("Lon (+-180)"))  # 3
+                        pos.append(line.find("Flightlevel"))  # 4
+                        pos.append(line.find("Pressure (hPa)"))  # 5
+                        pos.append(line.find("Leg dist. (km)"))  # 6
+                        pos.append(line.find("Cum. dist. (km)"))  # 7
+                        pos.append(line.find("Comments"))  # 8
                         continue
                     if line.startswith("Track name: "):
                         self.name = line.split(':')[1].strip()
@@ -788,28 +768,27 @@ class WaypointsTableModel(QAbstractTableModel):
                                   "comments"]
                     setattr(wp, attr_names[0], line[pos[1]:pos[2]].strip())
                     setattr(wp, attr_names[7], line[pos[8]:].strip())
-                    for i in xrange(2, len(pos)-1):
+                    for i in xrange(2, len(pos) - 1):
                         if pos[i] >= 0:
                             if i == 5:
-                                setattr(wp, attr_names[i-1],
-                                        float(line[pos[i]:pos[i+1]].strip())*100.)
+                                setattr(wp, attr_names[i - 1],
+                                        float(line[pos[i]:pos[i + 1]].strip()) * 100.)
                             else:
-                                setattr(wp, attr_names[i-1],
-                                        float(line[pos[i]:pos[i+1]].strip()))
+                                setattr(wp, attr_names[i - 1],
+                                        float(line[pos[i]:pos[i + 1]].strip()))
                         else:
                             if i == 5:
-                                print('calculate pressure from FL ' + str(thermolib.flightlevel2pressure(float(wp.flightlevel))))
-                                setattr(wp, attr_names[i-1],
+                                print('calculate pressure from FL ' + str(
+                                    thermolib.flightlevel2pressure(float(wp.flightlevel))))
+                                setattr(wp, attr_names[i - 1],
                                         thermolib.flightlevel2pressure(float(wp.flightlevel)))
                     waypoints_list.append(wp)
         self.waypoints = []
         self.insertRows(0, rows=len(waypoints_list),
                         waypoints=waypoints_list)
 
-
     def getFilename(self):
         return self.filename
-
 
     def setAircraftStateList(self, ac_state_list):
         """Import the results of a performance computation of the v2 aircraft
@@ -827,10 +806,10 @@ class WaypointsTableModel(QAbstractTableModel):
         for ac_state in ac_state_list:
 
             wp = Waypoint(ac_state.lat, ac_state.lon, ac_state.alt_ft / 100.)
-            wp.speed    = ac_state.speed_desc
+            wp.speed = ac_state.speed_desc
             wp.leg_fuel = ac_state.fuel_since_last_state_lbs
             wp.cum_fuel = ac_state.fuel_since_takeoff_lbs
-            wp.weight   = ac_state.grossweight
+            wp.weight = ac_state.grossweight
             wp.leg_time = ac_state.timedelta_since_last_state.seconds
             wp.cum_time = ac_state.timedelta_since_takeoff.seconds
             wp.utc_time = ac_state.time_utc
@@ -844,13 +823,11 @@ class WaypointsTableModel(QAbstractTableModel):
 
             self.performance_waypoints.append(wp)
 
-
         if len(ac_state_list) > 0:
             self.performance_remaining_fuel_capacity = \
                 ac_state_list[-1].remaining_fuel_lbs
             self.performance_remaining_range_nm = \
                 ac_state_list[-1].remaining_range_default_cruise_nm
-
 
         if len(self.performance_waypoints) > 0:
             mode = self.mode
@@ -861,7 +838,6 @@ class WaypointsTableModel(QAbstractTableModel):
 
         self.reset()
         self.emit(QtCore.SIGNAL("performanceUpdated()"))
-
 
     def setPerformanceComputation(self, performance_string):
         """Interprets the results of the flight performance computation
@@ -887,35 +863,35 @@ class WaypointsTableModel(QAbstractTableModel):
                 # Comment lines and other things.
                 if line.startswith("#remaining_fuel_capacity="):
                     self.performance_remaining_fuel_capacity = \
-                                      float(line.split("=")[1].split(" ")[0])
+                        float(line.split("=")[1].split(" ")[0])
                 if line.startswith("#approximate_range_with_remaining_fuel_capacity="):
                     self.performance_remaining_range_nm = \
-                                      float(line.split("=")[1].split(" ")[0])
+                        float(line.split("=")[1].split(" ")[0])
             elif line.startswith("ERROR"):
                 logging.error(line)
-                QtGui.QMessageBox.critical(None, "Flight Performance", 
-                    "An error occured while computine the flight performance. "\
-                    "The error message is:\n\n%s" % line,
-                    QtGui.QMessageBox.Ok)
+                QtGui.QMessageBox.critical(None, "Flight Performance",
+                                           "An error occured while computine the flight performance. " \
+                                           "The error message is:\n\n%s" % line,
+                                           QtGui.QMessageBox.Ok)
 
             elif len(line) > 0:
                 try:
-                    #ID,LON(deg),Lat(deg),FL(hft),SPEED,FUEL(lbs),FUEL_TOT(lbs),
+                    # ID,LON(deg),Lat(deg),FL(hft),SPEED,FUEL(lbs),FUEL_TOT(lbs),
                     #          GROSS WEIGHT(lbs),TIME(sec),TIME_TOT(sec),TIME_UTC
                     values = line.split(",")
 
                     wpnumber = values[0].split(".")
                     wpnumber_major = int(wpnumber[0])
-                    wpnumber_minor = int(wpnumber[1]) if len(wpnumber)>1 else 0
-                
+                    wpnumber_minor = int(wpnumber[1]) if len(wpnumber) > 1 else 0
+
                     lon, lat, fl = [float(f) for f in values[1:4]]
                     speed = values[4]
 
                     leg_fuel, cum_fuel, weight, leg_time, \
-                         cum_time = [float(f) for f in values[5:10]]
+                    cum_time = [float(f) for f in values[5:10]]
 
                     utc_time = datetime.strptime(values[10], "%Y-%m-%dT%H:%M:%SZ")
-                    
+
                     wp = Waypoint(lat, lon, fl)
                     wp.speed = speed
                     wp.leg_fuel = leg_fuel
@@ -948,7 +924,6 @@ class WaypointsTableModel(QAbstractTableModel):
         self.reset()
         self.emit(QtCore.SIGNAL("performanceUpdated()"))
 
-
     def remainingRangeInfo(self):
         """Generates a string that contains information about the remaining
            fuel capacity and the approximate remaining range with this fuel
@@ -957,15 +932,15 @@ class WaypointsTableModel(QAbstractTableModel):
         if len(self.performance_waypoints) == 0:
             return "NO PERFORMANCE DATA AVAILABLE."
         try:
-            str = "Remaining fuel capacity ~ %i lb. Approximate "\
-                "remaining range at FL250 ~ %i km (%i nm)" \
-                % (self.performance_remaining_fuel_capacity,
-                   self.performance_remaining_range_nm * 1.852,
-                   self.performance_remaining_range_nm)
+            str = "Remaining fuel capacity ~ %i lb. Approximate " \
+                  "remaining range at FL250 ~ %i km (%i nm)" \
+                  % (self.performance_remaining_fuel_capacity,
+                     self.performance_remaining_range_nm * 1.852,
+                     self.performance_remaining_range_nm)
         except:
             str = ""
         return str
-        
+
 
 ################################################################################
 ###                       CLASS  WaypointDelegate                            ###
@@ -981,8 +956,6 @@ class WaypointDelegate(QItemDelegate):
         super(WaypointDelegate, self).__init__(parent)
         self.viewParent = parent
 
-
-
     def paint(self, painter, option, index):
         """Colours waypoints with a minor waypoint number (i.e. intermediate
            waypoints generated by the flight performance service) in red.
@@ -990,13 +963,12 @@ class WaypointDelegate(QItemDelegate):
         wpnumber_minor = index.model().waypointData(index.row()).wpnumber_minor
         if wpnumber_minor > 0:
             newpalette = QtGui.QPalette(option.palette)
-            colour = QtGui.QColor(170, 0, 0) # dark red
+            colour = QtGui.QColor(170, 0, 0)  # dark red
             newpalette.setColor(QtGui.QPalette.Text, colour)
-            colour = QtGui.QColor(255, 255, 0) # yellow
+            colour = QtGui.QColor(255, 255, 0)  # yellow
             newpalette.setColor(QtGui.QPalette.HighlightedText, colour)
             option.palette = newpalette
         QItemDelegate.paint(self, painter, option, index)
-
 
     def createEditor(self, parent, option, index):
         """Create a combobox listing predefined locations in the LOCATION
@@ -1006,19 +978,19 @@ class WaypointDelegate(QItemDelegate):
             combobox = QComboBox(parent)
             adds = locations.keys()
             if self.viewParent is not None:
-                for loc in [wp.location for wp in self.viewParent.waypoints_model.allWaypointData() if wp.location != ""]:
+                for loc in [wp.location for wp in self.viewParent.waypoints_model.allWaypointData() if
+                            wp.location != ""]:
                     if loc not in adds:
                         adds.append(loc)
                 adds = sorted(adds)
             combobox.addItems(adds)
-            
+
             combobox.setEditable(True)
             return combobox
         else:
             # All other columns get the standard editor.
             return QItemDelegate.createEditor(self, parent, option,
                                               index)
-
 
     def setEditorData(self, editor, index):
         text = index.model().data(index, Qt.DisplayRole).toString()
@@ -1029,7 +1001,6 @@ class WaypointDelegate(QItemDelegate):
             editor.setCurrentIndex(i)
         else:
             QItemDelegate.setEditorData(self, editor, index)
-
 
     def setModelData(self, editor, model, index):
         """For the LOCATION column: If the user selects a location from the

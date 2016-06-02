@@ -39,6 +39,7 @@ from xml.dom.minidom import getDOMImplementation
 
 # related third party imports
 import matplotlib as mpl
+
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -57,11 +58,11 @@ from mslib import mss_util
 class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     """Superclass for all Matplotlib-based vertical section styles.
     """
+
     def __init__(self, driver=None):
         """Constructor.
         """
         super(AbstractVerticalSectionStyle, self).__init__(driver=driver)
-
 
     def supported_crs(self):
         """Returns a list of the coordinate reference systems supported by
@@ -69,15 +70,14 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         return ["VERT:LOGP"]
 
-
-#TODO: the general setup should be a separate class as well
+    # TODO: the general setup should be a separate class as well
     def _latlon_logp_setup(self, orography=105000., titlestring=""):
         """General setup for lat/lon vs. log p vertical cross-sections.
         """
         ax = self.ax
 
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
-        tick_index_step = len(self.lat_inds)/self.numlabels
+        tick_index_step = len(self.lat_inds) / self.numlabels
         ax.set_xticks(self.lat_inds[::tick_index_step])
         ax.set_xticklabels(["%2.1f, %2.1f" % (d[0], d[1]) \
                             for d in zip(self.lats[::tick_index_step],
@@ -88,7 +88,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ipoint = 0
         for i in range(len(self.lats)):
             if abs(self.lats[i] - self.highlight[ipoint][0]) < 1E-10 and \
-               abs(self.lons[i] - self.highlight[ipoint][1]) < 1E-10:
+                            abs(self.lons[i] - self.highlight[ipoint][1]) < 1E-10:
                 ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
                 ipoint += 1
 
@@ -104,32 +104,32 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # the distance is reduced to every 10hPa above 100hPa.
         label_distance = 10000
         label_bot = self.p_bot - (self.p_bot % label_distance)
-        major_ticks = np.arange(label_bot, self.p_top-1, -label_distance)
+        major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
 
         # .. check step reduction to 10 hPa ..
         if self.p_top < 10000:
-            major_ticks2 = np.arange(major_ticks[-1], self.p_top-1,
-                                     -label_distance/10)
+            major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1,
+                                     -label_distance / 10)
             len_major_ticks = len(major_ticks)
             major_ticks = np.resize(major_ticks,
-                                    len_major_ticks+len(major_ticks2)-1)
+                                    len_major_ticks + len(major_ticks2) - 1)
             major_ticks[len_major_ticks:] = major_ticks2[1:]
 
-        labels = ['%i'%(l/100.) for l in major_ticks]
+        labels = ['%i' % (l / 100.) for l in major_ticks]
 
         # .. the same for the minor ticks ..
         p_top_minor = max(label_distance, self.p_top)
         label_distance_minor = 1000
         label_bot_minor = self.p_bot - (self.p_bot % label_distance_minor)
-        minor_ticks = np.arange(label_bot_minor, p_top_minor-1,
+        minor_ticks = np.arange(label_bot_minor, p_top_minor - 1,
                                 -label_distance_minor)
 
         if self.p_top < 10000:
-            minor_ticks2 = np.arange(minor_ticks[-1], self.p_top-1,
-                                     -label_distance_minor/10)
+            minor_ticks2 = np.arange(minor_ticks[-1], self.p_top - 1,
+                                     -label_distance_minor / 10)
             len_minor_ticks = len(minor_ticks)
             minor_ticks = np.resize(minor_ticks,
-                                    len_minor_ticks+len(minor_ticks2)-1)
+                                    len_minor_ticks + len(minor_ticks2) - 1)
             minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
 
         # Draw ticks and tick labels.
@@ -145,18 +145,18 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Plot title (either in image axes or above).
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += " [%i..%i hPa]" % (self.p_bot/100, self.p_top/100)
+        titlestring += " [%i..%i hPa]" % (self.p_bot / 100, self.p_top / 100)
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
             ax.set_xlabel('Latitude, longitude (degrees)')
             ax.set_ylabel('Pressure (hPa)')
-            if self.resolution != (-1,-1):
+            if self.resolution != (-1, -1):
                 self.fig.text(0.99, 0.01, 'model resolution %.2fx%.2f deg' %
                               (self.resolution[0], self.resolution[1]),
                               fontsize=10, horizontalalignment='right',
@@ -166,18 +166,16 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                     fontsize=10, verticalalignment='top',
                     bbox=dict(facecolor='white', alpha=0.6))
 
-
     @abstractmethod
     def _plot_style(self):
         """Can call self._log_setup()
         """
         pass
 
-
     def plot_vsection(self, data, lats, lons, valid_time, init_time,
-                      resolution=(-1,-1), bbox=(-1,1050,-1,200), style=None,
+                      resolution=(-1, -1), bbox=(-1, 1050, -1, 200), style=None,
                       show=False,
-                      highlight=None, noframe=False, figsize=(960,480),
+                      highlight=None, noframe=False, figsize=(960, 480),
                       numlabels=10, orography_color='k', transparent=False,
                       return_format="image/png"):
         """
@@ -198,13 +196,13 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.style = style
         self.highlight = highlight
         self.noframe = noframe
-        self.p_bot = bbox[1]*100
-        self.p_top = bbox[3]*100
-        self.numlabels= numlabels
+        self.p_bot = bbox[1] * 100
+        self.p_top = bbox[3] * 100
+        self.numlabels = numlabels
         self.orography_color = orography_color
 
         # Derive additional data fields and make the plot.
-        self._prepare_datafields()        
+        self._prepare_datafields()
 
         # Code for producing a png image with Matplotlib.
         # ===============================================
@@ -212,8 +210,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             logging.debug("creating figure..")
             dpi = 80
-            figsize = figsize[0]/dpi, figsize[1]/dpi
-            #print figsize
+            figsize = figsize[0] / dpi, figsize[1] / dpi
+            # print figsize
             facecolor = "white"
             self.fig = mpl.figure.Figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
             logging.debug("\twith frame and legends" if not noframe else
@@ -231,7 +229,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             # Return the image as png embedded in a StringIO stream.
             canvas = FigureCanvas(self.fig)
-            output = StringIO.StringIO() 
+            output = StringIO.StringIO()
             canvas.print_png(output, bbox_inches='tight')
 
             if show:
@@ -249,13 +247,13 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             logging.debug("converting image to indexed palette.")
             # Read the above stored png into a PIL image and create an adaptive
             # colour palette.
-            output.seek(0) # necessary for PIL.Image.open()
+            output.seek(0)  # necessary for PIL.Image.open()
             palette_img = PIL.Image.open(output).convert(mode="RGB"
-                                ).convert("P", palette=PIL.Image.ADAPTIVE)
-            output = StringIO.StringIO() 
+                                                         ).convert("P", palette=PIL.Image.ADAPTIVE)
+            output = StringIO.StringIO()
             if not transparent:
                 logging.debug("saving figure as non-transparent PNG.")
-                palette_img.save(output, format="PNG") # using optimize=True doesn't change much
+                palette_img.save(output, format="PNG")  # using optimize=True doesn't change much
             else:
                 # If the image has a transparent background, we need to find the
                 # index of the background colour in the palette. See the
@@ -270,10 +268,10 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                 lut.putdata(range(256))
                 lut = [c[1] for c in lut.convert("RGB").getcolors()]
                 facecolor_rgb = list(mpl.colors.hex2color(mpl.colors.cnames[facecolor]))
-                for i in [0,1,2]: facecolor_rgb[i] = int(facecolor_rgb[i]*255)
+                for i in [0, 1, 2]: facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
                 facecolor_index = lut.index(tuple(facecolor_rgb))
 
-                logging.debug("saving figure as transparent PNG with transparency index %i.", 
+                logging.debug("saving figure as transparent PNG with transparency index %i.",
                               facecolor_index)
                 palette_img.save(output, format="PNG", transparency=facecolor_index)
 
@@ -304,7 +302,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # Longitude data.
             node = xmldoc.createElement("Longitude")
             node.setAttribute("num_waypoints", "%s" % len(self.lons))
-            
+
             data_str = ""
             for value in self.lons:
                 data_str += str(value) + ","
@@ -316,7 +314,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # Latitude data.
             node = xmldoc.createElement("Latitude")
             node.setAttribute("num_waypoints", "%s" % len(self.lats))
-            
+
             data_str = ""
             for value in self.lats:
                 data_str += str(value) + ","
@@ -333,7 +331,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                 data_shape = self.data[var].shape
                 node.setAttribute("num_levels", "%s" % data_shape[0])
                 node.setAttribute("num_waypoints", "%s" % data_shape[1])
-                
+
                 data_str = ""
                 for data_row in self.data[var]:
                     for value in data_row:
@@ -343,8 +341,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
                 node.appendChild(xmldoc.createTextNode(data_str))
                 data_node.appendChild(node)
-            
+
             xmldoc.documentElement.appendChild(data_node)
-            
+
             # Return the XML document as formatted string.
             return xmldoc.toprettyxml(indent="  ")

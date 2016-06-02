@@ -1,5 +1,6 @@
 import paste.util.multidict
 
+
 class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
     """Extension to paste.util.multidict.MultiDict that makes the MultiDict
        case-insensitive.
@@ -10,6 +11,7 @@ class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
     See ../paste/util/multidict.py as well as
       http://stackoverflow.com/questions/2082152/case-insensitive-dictionary
     """
+
     def __getitem__(self, key):
         if hasattr(key, 'lower'):
             key = key.lower()
@@ -19,5 +21,3 @@ class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
             if k == key:
                 return v
         raise KeyError(repr(key))
-
-

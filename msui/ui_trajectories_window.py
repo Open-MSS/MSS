@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_TrajectoriesWindow(object):
     def setupUi(self, TrajectoriesWindow):
         TrajectoriesWindow.setObjectName("TrajectoriesWindow")
@@ -27,7 +28,7 @@ class Ui_TrajectoriesWindow(object):
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.tabData)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.groupBox = QtGui.QGroupBox(self.tabData)
-        self.groupBox.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.groupBox.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.groupBox.setFlat(True)
         self.groupBox.setCheckable(False)
         self.groupBox.setObjectName("groupBox")
@@ -219,59 +220,120 @@ class Ui_TrajectoriesWindow(object):
         QtCore.QMetaObject.connectSlotsByName(TrajectoriesWindow)
 
     def retranslateUi(self, TrajectoriesWindow):
-        TrajectoriesWindow.setWindowTitle(QtGui.QApplication.translate("TrajectoriesWindow", "Trajectories - DLR/IPA Mission Support", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox.setTitle(QtGui.QApplication.translate("TrajectoriesWindow", "Open trajectory items:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Select:", None, QtGui.QApplication.UnicodeUTF8))
-        self.leSelectionQuery.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow", "Enter selection criteria here. Available variables are %lat, %lon, %pres, \n"
-"and %meta(\"NAME\"), where NAME has to be the name of a matatag that appears in the data. \n"
-"For example, type \'%lat >= 45.\' will select all elements with a start point latitude larger \n"
-"equal to 45 degrees after you click the button on the left. To select all trajectories with a \n"
-"start latitude larger than 45 degrees at flight level 320, type \'%lat > 45. and %meta(\"flightlevel\") == 320\'.", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbSelectElements.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "from all items", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbSelectElements.setItemText(1, QtGui.QApplication.translate("TrajectoriesWindow", "from children of current node", None, QtGui.QApplication.UnicodeUTF8))
-        self.btSelectMapElements.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow", "Select all items listed below that match the criteria given on the right.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btSelectMapElements.setText(QtGui.QApplication.translate("TrajectoriesWindow", "&go!", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_7.setTitle(QtGui.QApplication.translate("TrajectoriesWindow", "Modify selected items:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Colour:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "None", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(1, QtGui.QApplication.translate("TrajectoriesWindow", "blue", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(2, QtGui.QApplication.translate("TrajectoriesWindow", "green", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(3, QtGui.QApplication.translate("TrajectoriesWindow", "red", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(4, QtGui.QApplication.translate("TrajectoriesWindow", "cyan", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(5, QtGui.QApplication.translate("TrajectoriesWindow", "magenta", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(6, QtGui.QApplication.translate("TrajectoriesWindow", "yellow", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(7, QtGui.QApplication.translate("TrajectoriesWindow", "black", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbColour.setItemText(8, QtGui.QApplication.translate("TrajectoriesWindow", "white", None, QtGui.QApplication.UnicodeUTF8))
-        self.btColour.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow", "Set the colour of the selected items.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btColour.setText(QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Line Style:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLineStyle.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "None", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLineStyle.setItemText(1, QtGui.QApplication.translate("TrajectoriesWindow", "-", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLineStyle.setItemText(2, QtGui.QApplication.translate("TrajectoriesWindow", "--", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLineStyle.setItemText(3, QtGui.QApplication.translate("TrajectoriesWindow", "-.", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLineStyle.setItemText(4, QtGui.QApplication.translate("TrajectoriesWindow", ":", None, QtGui.QApplication.UnicodeUTF8))
-        self.btLineStyle.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow", "Set the line style of the selected items.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btLineStyle.setText(QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Line Width:", None, QtGui.QApplication.UnicodeUTF8))
-        self.btLineWidth.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow", "Set the line width of the selected items.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btLineWidth.setText(QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Draw time markers (hh:mm):", None, QtGui.QApplication.UnicodeUTF8))
-        self.teTimeMarker.setDisplayFormat(QtGui.QApplication.translate("TrajectoriesWindow", "hh:mm", None, QtGui.QApplication.UnicodeUTF8))
-        self.btTimeMarker.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow", "Draw time markers along the trajectories. These will be dots with the spacing given on the right (hh:mm).", None, QtGui.QApplication.UnicodeUTF8))
-        self.btTimeMarker.setText(QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Plot in view:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbPlotInView.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "None", None, QtGui.QApplication.UnicodeUTF8))
-        self.btPlotInView.setText(QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_7.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Remove from view:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbRemoveFromView.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "None", None, QtGui.QApplication.UnicodeUTF8))
-        self.btRemoveFromView.setText(QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
-        self.tabGUI.setTabText(self.tabGUI.indexOf(self.tabData), QtGui.QApplication.translate("TrajectoriesWindow", "Data", None, QtGui.QApplication.UnicodeUTF8))
-        self.menu_File.setTitle(QtGui.QApplication.translate("TrajectoriesWindow", "&File", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOpenTrajectories.setText(QtGui.QApplication.translate("TrajectoriesWindow", "&Open Trajectories...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOpenTrajectories.setShortcut(QtGui.QApplication.translate("TrajectoriesWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOpenFlightTrack.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Open &Flight Track...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOpenFlightTrack.setShortcut(QtGui.QApplication.translate("TrajectoriesWindow", "Ctrl+F", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_Quit.setText(QtGui.QApplication.translate("TrajectoriesWindow", "&Exit", None, QtGui.QApplication.UnicodeUTF8))
-        self.action_Quit.setShortcut(QtGui.QApplication.translate("TrajectoriesWindow", "Ctrl+X", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCloseElement.setText(QtGui.QApplication.translate("TrajectoriesWindow", "&Close Element...", None, QtGui.QApplication.UnicodeUTF8))
-
+        TrajectoriesWindow.setWindowTitle(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Trajectories - DLR/IPA Mission Support", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.groupBox.setTitle(QtGui.QApplication.translate("TrajectoriesWindow", "Open trajectory items:", None,
+                                                            QtGui.QApplication.UnicodeUTF8))
+        self.label_4.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Select:", None, QtGui.QApplication.UnicodeUTF8))
+        self.leSelectionQuery.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow",
+                                                                      "Enter selection criteria here. Available variables are %lat, %lon, %pres, \n"
+                                                                      "and %meta(\"NAME\"), where NAME has to be the name of a matatag that appears in the data. \n"
+                                                                      "For example, type \'%lat >= 45.\' will select all elements with a start point latitude larger \n"
+                                                                      "equal to 45 degrees after you click the button on the left. To select all trajectories with a \n"
+                                                                      "start latitude larger than 45 degrees at flight level 320, type \'%lat > 45. and %meta(\"flightlevel\") == 320\'.",
+                                                                      None, QtGui.QApplication.UnicodeUTF8))
+        self.cbSelectElements.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "from all items", None,
+                                                                          QtGui.QApplication.UnicodeUTF8))
+        self.cbSelectElements.setItemText(1, QtGui.QApplication.translate("TrajectoriesWindow",
+                                                                          "from children of current node", None,
+                                                                          QtGui.QApplication.UnicodeUTF8))
+        self.btSelectMapElements.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow",
+                                                                         "Select all items listed below that match the criteria given on the right.",
+                                                                         None, QtGui.QApplication.UnicodeUTF8))
+        self.btSelectMapElements.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "&go!", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBox_7.setTitle(QtGui.QApplication.translate("TrajectoriesWindow", "Modify selected items:", None,
+                                                              QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Colour:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "None", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(1, QtGui.QApplication.translate("TrajectoriesWindow", "blue", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(2, QtGui.QApplication.translate("TrajectoriesWindow", "green", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(3, QtGui.QApplication.translate("TrajectoriesWindow", "red", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(4, QtGui.QApplication.translate("TrajectoriesWindow", "cyan", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(5, QtGui.QApplication.translate("TrajectoriesWindow", "magenta", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(6, QtGui.QApplication.translate("TrajectoriesWindow", "yellow", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(7, QtGui.QApplication.translate("TrajectoriesWindow", "black", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbColour.setItemText(8, QtGui.QApplication.translate("TrajectoriesWindow", "white", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.btColour.setToolTip(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Set the colour of the selected items.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btColour.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Line Style:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbLineStyle.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "None", None,
+                                                                     QtGui.QApplication.UnicodeUTF8))
+        self.cbLineStyle.setItemText(1, QtGui.QApplication.translate("TrajectoriesWindow", "-", None,
+                                                                     QtGui.QApplication.UnicodeUTF8))
+        self.cbLineStyle.setItemText(2, QtGui.QApplication.translate("TrajectoriesWindow", "--", None,
+                                                                     QtGui.QApplication.UnicodeUTF8))
+        self.cbLineStyle.setItemText(3, QtGui.QApplication.translate("TrajectoriesWindow", "-.", None,
+                                                                     QtGui.QApplication.UnicodeUTF8))
+        self.cbLineStyle.setItemText(4, QtGui.QApplication.translate("TrajectoriesWindow", ":", None,
+                                                                     QtGui.QApplication.UnicodeUTF8))
+        self.btLineStyle.setToolTip(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Set the line style of the selected items.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btLineStyle.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Line Width:", None, QtGui.QApplication.UnicodeUTF8))
+        self.btLineWidth.setToolTip(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Set the line width of the selected items.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btLineWidth.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_5.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Draw time markers (hh:mm):", None,
+                                                          QtGui.QApplication.UnicodeUTF8))
+        self.teTimeMarker.setDisplayFormat(
+            QtGui.QApplication.translate("TrajectoriesWindow", "hh:mm", None, QtGui.QApplication.UnicodeUTF8))
+        self.btTimeMarker.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow",
+                                                                  "Draw time markers along the trajectories. These will be dots with the spacing given on the right (hh:mm).",
+                                                                  None, QtGui.QApplication.UnicodeUTF8))
+        self.btTimeMarker.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_6.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Plot in view:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbPlotInView.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "None", None,
+                                                                      QtGui.QApplication.UnicodeUTF8))
+        self.btPlotInView.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_7.setText(QtGui.QApplication.translate("TrajectoriesWindow", "Remove from view:", None,
+                                                          QtGui.QApplication.UnicodeUTF8))
+        self.cbRemoveFromView.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "None", None,
+                                                                          QtGui.QApplication.UnicodeUTF8))
+        self.btRemoveFromView.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))
+        self.tabGUI.setTabText(self.tabGUI.indexOf(self.tabData),
+                               QtGui.QApplication.translate("TrajectoriesWindow", "Data", None,
+                                                            QtGui.QApplication.UnicodeUTF8))
+        self.menu_File.setTitle(
+            QtGui.QApplication.translate("TrajectoriesWindow", "&File", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpenTrajectories.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "&Open Trajectories...", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.actionOpenTrajectories.setShortcut(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpenFlightTrack.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Open &Flight Track...", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.actionOpenFlightTrack.setShortcut(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Ctrl+F", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Quit.setText(
+            QtGui.QApplication.translate("TrajectoriesWindow", "&Exit", None, QtGui.QApplication.UnicodeUTF8))
+        self.action_Quit.setShortcut(
+            QtGui.QApplication.translate("TrajectoriesWindow", "Ctrl+X", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCloseElement.setText(QtGui.QApplication.translate("TrajectoriesWindow", "&Close Element...", None,
+                                                                     QtGui.QApplication.UnicodeUTF8))

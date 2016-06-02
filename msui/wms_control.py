@@ -64,6 +64,7 @@ default_WMS = mss_settings.default_WMS
 default_VSEC_WMS = mss_settings.default_VSEC_WMS
 wms_cache = mss_settings.wms_cache
 
+
 ################################################################################
 ###                          CLASS MSSWebMapService                          ###
 ################################################################################
@@ -125,10 +126,10 @@ class MSSWebMapService(owslib.wms.WebMapService):
             >>> out.write(img.read())
             >>> out.close()
 
-        """        
+        """
         base_url = self.getOperationByName('GetMap').methods[method]['url']
         request = {'version': self.version, 'request': 'GetMap'}
-        
+
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
@@ -141,7 +142,7 @@ class MSSWebMapService(owslib.wms.WebMapService):
         # size
         request['width'] = str(size[0])
         request['height'] = str(size[1])
-        
+
         request['srs'] = str(srs)
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
@@ -157,37 +158,37 @@ class MSSWebMapService(owslib.wms.WebMapService):
         # According to the WMS 1.1.1 standard, dimension names must be
         # prefixed with a "dim_", except for the in the standard predefined
         # dimensions "time" and "elevation".
-        time_name = time_name if time_name == "time" else "dim_"+time_name
-        init_time_name = "dim_"+init_time_name
+        time_name = time_name if time_name == "time" else "dim_" + time_name
+        init_time_name = "dim_" + init_time_name
 
         # If the parameters time and init_time are given as datetime objects,
         # create formatted strings with the given formatter. If they are
         # given as strings, use these strings directly as WMS arguments.
         if type(time) is datetime:
             if time_format is None:
-                raise ValueError("Could not determine date/time format. Please "\
+                raise ValueError("Could not determine date/time format. Please " \
                                  "check dimension tag in capabiltites document.")
             request[time_name] = time.strftime(time_format)
         elif type(time) is str:
             request[time_name] = time
         if type(init_time) is datetime:
             if init_time_format is None:
-                raise ValueError("Could not determine date/time format. Please "\
+                raise ValueError("Could not determine date/time format. Please " \
                                  "check dimension tag in capabiltites document.")
             request[init_time_name] = init_time.strftime(init_time_format)
         elif type(init_time) is str:
             request[init_time_name] = init_time
-        
+
         if level is not None:
             request['elevation'] = str(level)
         # --(mss)
-        
+
         data = urllib.urlencode(request)
 
         # ++(mss)
-        base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft") # IBL Bugfix!
-        base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs") # IBL Bugfix!
-        base_url = base_url.replace(", staging1", "") # geo.beopen.eu bugfix
+        base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
+        base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
+        base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
         complete_url = "%s%s" % (base_url, data)
         if return_only_url:
             return complete_url
@@ -198,10 +199,10 @@ class MSSWebMapService(owslib.wms.WebMapService):
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
-        
+
         u = owslib.util.openURL(base_url, data, method,
-                                username = self.username,
-                                password = self.password)
+                                username=self.username,
+                                password=self.password)
 
         # check for service exceptions, and return
         if hasattr(u, "info"):
@@ -227,6 +228,7 @@ class MSS_WMS_AuthenticationDialog(QtGui.QDialog, ui_pw.Ui_WMSAuthenticationDial
     """Dialog to ask the user for username/password should this be
        required by a WMS server.
     """
+
     def __init__(self, parent=None):
         """
         Arguments:
@@ -234,7 +236,6 @@ class MSS_WMS_AuthenticationDialog(QtGui.QDialog, ui_pw.Ui_WMSAuthenticationDial
         """
         super(MSS_WMS_AuthenticationDialog, self).__init__(parent)
         self.setupUi(self)
-
 
     def getAuthInfo(self):
         """Return the entered username and password.
@@ -255,6 +256,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
     NOTE: Currently this class can only handle WMS 1.1.1 servers.
     """
+
     def __init__(self, parent=None, crs_filter=".*",
                  default_WMS=[], wms_cache=None, view=None):
         """
@@ -330,7 +332,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             self.serviceCache()
         else:
             self.wms_cache = None
-                            
 
         # Initialise date/time fields with current day, 00 UTC.
         self.dteInitTime.setDateTime(QtCore.QDateTime( \
@@ -361,11 +362,11 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # back/forward buttons).
         self.connect(self.cbInitTime, QtCore.SIGNAL("activated(int)"),
                      self.initTimeChanged)
-        #self.connect(self.cbInitTime, QtCore.SIGNAL("currentIndexChanged(int)"),
+        # self.connect(self.cbInitTime, QtCore.SIGNAL("currentIndexChanged(int)"),
         #             self.initTimeChanged)
         self.connect(self.cbValidTime, QtCore.SIGNAL("activated(int)"),
                      self.validTimeChanged)
-        #self.connect(self.cbValidTime, QtCore.SIGNAL("currentIndexChanged(int)"),
+        # self.connect(self.cbValidTime, QtCore.SIGNAL("currentIndexChanged(int)"),
         #             self.validTimeChanged)
 
         self.connect(self.tbInitTime_back, QtCore.SIGNAL("clicked()"),
@@ -404,14 +405,12 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.pdlg = QtGui.QProgressDialog("retrieving image...", "Cancel",
                                           0, 10, self)
 
-
     def __del__(self):
         """Destructor.
         """
         # Service the WMS cache on application exit.
         if self.wms_cache is not None:
             self.serviceCache()
-
 
     def initialiseWMS(self, base_url):
         """Initialises a MSSWebMapService object with the specified base_url.
@@ -437,7 +436,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                     wms = MSSWebMapService(base_url, version='1.1.1',
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
-                    if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find("401 Unauthorized") >= 0:
+                    if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
+                            "401 Unauthorized") >= 0:
                         # Catch the "401 Unauthorized" error if one has been
                         # returned by the server and ask the user for username
                         # and password.
@@ -463,15 +463,14 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                             break
                     else:
                         raise
-        except Exception as ex:            
+        except Exception as ex:
             logging.error("ERROR: %s", ex)
-            logging.error("cannot load capabilities document.. "\
+            logging.error("cannot load capabilities document.. " \
                           "no layers can be used in this view.")
             QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                        self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
-                        QtGui.QMessageBox.Ok)
+                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                       QtGui.QMessageBox.Ok)
         return wms
-
 
     def getCapabilities(self):
         """Query the WMS server in the URL combobox for its capabilities. Fill
@@ -497,7 +496,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 layer = stack.pop()
                 if len(layer.layers) == 0:
                     if self.crsAllowed(layer):
-                        #cb_string = "%s | %s" % (layer.name, layer.title)
+                        # cb_string = "%s | %s" % (layer.name, layer.title)
                         cb_string = "%s | %s" % (layer.title, layer.name)
                         if cb_string not in filtered_layers:
                             filtered_layers.append(cb_string)
@@ -516,7 +515,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.connect(self.cbLayer, QtCore.SIGNAL("currentIndexChanged(int)"),
                      self.layerChanged)
 
-
     def viewCapabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities
            document.
@@ -529,7 +527,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 capabilities_xml=self.wms.capabilities_document)
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             wmsbrws.show()
-        
 
     def crsAllowed(self, layer):
         """Check whether the CRS in which the layer can be provided are allowed
@@ -542,7 +539,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 if self.crs_filter.match(crs):
                     return True
         return False
-
 
     def interpret_timestring(self, timestring, return_format=False):
         """Tries to interpret a given time string.
@@ -567,7 +563,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 pass
         return None
 
-
     def get_layer_object(self, layername):
         """Returns the object from the layer tree that fits the given
            layer name.
@@ -584,7 +579,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                     stack.extend(layer.layers)
         return None
 
-
     def layerChanged(self, index):
         """Slot that updates the <cbStyle> and <teLayerAbstract> GUI elements
            when the user selects a new layer in <cbLayer>.
@@ -594,7 +588,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             # Do not execute this method if no WMS has been registered or no
             # layer is available (layer will be an empty string then).
             return
-        self.layerChangeInProgress = True # Flag for autoUpdate()
+        self.layerChangeInProgress = True  # Flag for autoUpdate()
         layerobj = self.get_layer_object(layer)
         styles = layerobj.styles
         self.cbStyle.clear()
@@ -608,7 +602,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         save_init_time = self.dteInitTime.dateTime()
         save_valid_time = self.dteValidTime.dateTime()
-        
+
         enable_elevation = False
         enable_inittime = False
         enable_validtime = False
@@ -619,7 +613,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         lobj = layerobj
         while lobj is not None:
             if "elevation" in lobj.dimensions.keys() and \
-                   "elevation" in lobj.extents.keys():
+                            "elevation" in lobj.extents.keys():
                 units = lobj.dimensions["elevation"]["units"]
                 elev_list = ["%s (%s)" % (e.strip(), units) for e in \
                              lobj.extents["elevation"]["values"]]
@@ -639,12 +633,12 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         lobj = layerobj
         while lobj is not None:
             if "init_time" in lobj.dimensions.keys() and \
-                   "init_time" in lobj.extents.keys():
+                            "init_time" in lobj.extents.keys():
                 # MSS web map service.
                 self.init_time_name = "init_time"
                 enable_inittime = True
             elif "run" in lobj.dimensions.keys() and \
-                   "run" in lobj.extents.keys():
+                            "run" in lobj.extents.keys():
                 # IBL web map service.
                 self.init_time_name = "run"
                 enable_inittime = True
@@ -668,8 +662,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             # parent.
             lobj = lobj.parent
 
-            
-
         # ~~~~ C) Valid/forecast time. ~~~~~~~~~~~~~~~~~~~~~~~~~
         self.cbValidOn.setToolTip("")
         font = self.cbValidOn.font()
@@ -681,9 +673,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
         lobj = layerobj
         while lobj is not None:
-        
+
             if "time" in lobj.dimensions.keys() and \
-                   "time" in lobj.extents.keys():
+                            "time" in lobj.extents.keys():
                 self.valid_time_name = "time"
                 enable_validtime = True
             elif "time" in lobj.dimensions.keys():
@@ -691,7 +683,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 self.valid_time_name = "time"
                 vtime_no_extent = True
             elif "forecast" in lobj.dimensions.keys() and \
-                   "forecast" in lobj.extents.keys():
+                            "forecast" in lobj.extents.keys():
                 # IBL web map service.
                 self.valid_time_name = "forecast"
                 enable_validtime = True
@@ -714,14 +706,14 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                         self.cbValidOn.setToolTip(items[0])
                         vtime_no_extent = True
 
-                    else: # (no time range)
+                    else:  # (no time range)
                         # Determine time format and try to determine allowed times.
                         self.valid_time_format = self.interpret_timestring(items[0],
                                                                            return_format=True)
 
                         # Loop over all time items provided by the server:
                         self.allowed_valid_times = []
-                        for time_item in items:                           
+                        for time_item in items:
                             interpretation_successful = True
 
                             if time_item.find("/") > 0:
@@ -732,7 +724,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                                 # time interval.
                                 if len(list_desc) != 3:
                                     interpretation_successful = False
-                                
+
                                 try:
                                     time_val = datetime.strptime(list_desc[0],
                                                                  self.valid_time_format)
@@ -764,9 +756,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                                     interpretation_successful = False
 
                             if not interpretation_successful:
-                                logging.error("Can't understand time string %s."\
-                                                  " Please check the implementation." % time_item)
-
+                                logging.error("Can't understand time string %s." \
+                                              " Please check the implementation." % time_item)
 
             # No time extent tag was found: Set allowed_valid_times to None
             # (used by validTimeChanged()).
@@ -780,7 +771,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             # were identified, check if this layer inherits some from its
             # parent.
             lobj = lobj.parent
-
 
         logging.debug("determined init time format: %s", self.init_time_format)
         if enable_inittime and self.init_time_format is None:
@@ -805,7 +795,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                                            self.tr("ERROR: %s" % msg),
                                            QtGui.QMessageBox.Ok)
             self.valid_time_format = ""
-
 
         self.enableLevelElements(enable_elevation)
         self.enableValidTimeElements(enable_validtime)
@@ -835,7 +824,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.check_valid_time(save_valid_time)
         self.layerChangeInProgress = False
 
-
     def secs_from_timestep(self, timestep_string):
         """Convert a string specifying a time step (e.g. 5 min, 3 hours) to
            seconds.
@@ -861,7 +849,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         except:
             raise ValueError("cannot convert %s to seconds: wrong format." \
                              % timestep_string)
-        
 
     def init_time_back_click(self):
         """Slot for the tbInitTime_back button.
@@ -883,7 +870,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.dteInitTime.setDateTime(d.addSecs(secs))
         self.autoUpdate()
 
-
     def valid_time_back_click(self):
         # Get QDateTime object from QtDateTimeEdit field.
         d = self.dteValidTime.dateTime()
@@ -891,7 +877,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         secs = self.secs_from_timestep(str(self.cbValidTime_step.currentText()))
         self.dteValidTime.setDateTime(d.addSecs(-1. * secs))
         self.autoUpdate()
-
 
     def valid_time_fwd_click(self):
         # Get QDateTime object from QtDateTimeEdit field.
@@ -901,52 +886,45 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.dteValidTime.setDateTime(d.addSecs(secs))
         self.autoUpdate()
 
-
     def level_back_click(self):
         ci = self.cbLevel.currentIndex()
         if ci > 0:
-            ci = ci-1
+            ci = ci - 1
         self.cbLevel.setCurrentIndex(ci)
 
-        
     def level_fwd_click(self):
         ci = self.cbLevel.currentIndex()
-        if ci < self.cbLevel.count()-1:
-            ci = ci+1
+        if ci < self.cbLevel.count() - 1:
+            ci = ci + 1
         self.cbLevel.setCurrentIndex(ci)
-
 
     def cb_init_time_back_click(self):
         ci = self.cbInitTime.currentIndex()
         if ci > 0:
-            ci = ci-1
-        self.cbInitTime.setCurrentIndex(ci)
-        self.initTimeChanged()
-        
-        
-    def cb_init_time_fwd_click(self):
-        ci = self.cbInitTime.currentIndex()
-        if ci < self.cbInitTime.count()-1:
-            ci = ci+1
+            ci = ci - 1
         self.cbInitTime.setCurrentIndex(ci)
         self.initTimeChanged()
 
+    def cb_init_time_fwd_click(self):
+        ci = self.cbInitTime.currentIndex()
+        if ci < self.cbInitTime.count() - 1:
+            ci = ci + 1
+        self.cbInitTime.setCurrentIndex(ci)
+        self.initTimeChanged()
 
     def cb_valid_time_back_click(self):
         ci = self.cbValidTime.currentIndex()
         if ci > 0:
-            ci = ci-1
+            ci = ci - 1
         self.cbValidTime.setCurrentIndex(ci)
         self.validTimeChanged()
 
-        
     def cb_valid_time_fwd_click(self):
         ci = self.cbValidTime.currentIndex()
-        if ci < self.cbValidTime.count()-1:
-            ci = ci+1
+        if ci < self.cbValidTime.count() - 1:
+            ci = ci + 1
         self.cbValidTime.setCurrentIndex(ci)
         self.validTimeChanged()
-
 
     def autoUpdate(self):
         """If the auto update check box is checked, let btGetMap emit a
@@ -960,7 +938,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         """
         if self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.btGetMap.click()
-
 
     def check_init_time(self, dt):
         """Checks whether an initialisation time set with the init time
@@ -979,7 +956,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             index = self.cbInitTime.findText(iso8601_time)
             self.cbInitTime.setCurrentIndex(index)
 
-
     def check_valid_time(self, dt):
         """Same as check_init_time, but for valid time.
         """
@@ -995,7 +971,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             index = self.cbValidTime.findText(iso8601_time)
             # setCurrentIndex also sets the date/time edit via signal.
             self.cbValidTime.setCurrentIndex(index)
-    
 
     def initTimeChanged(self):
         """Slot to be called when the current index of the init time
@@ -1010,7 +985,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.autoUpdate()
         return (init_time == "" or init_time is not None)
 
-
     def validTimeChanged(self):
         """Same as initTimeChanged(), but for the valid time elements.
         """
@@ -1022,10 +996,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.autoUpdate()
         return (valid_time == "" or valid_time is not None)
 
-
     def levelChanged(self):
         self.autoUpdate()
-
 
     def enableLevelElements(self, enable):
         """Enable or disable the GUI elements allowing vertical elevation
@@ -1035,7 +1007,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.cbLevel.setEnabled(enable)
         self.tbLevel_back.setEnabled(enable)
         self.tbLevel_fwd.setEnabled(enable)
-
 
     def enableInitTimeElements(self, enable):
         """Enables or disables the GUI elements allowing initialisation time
@@ -1050,7 +1021,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.tbInitTime_cbfwd.setEnabled(enable)
         self.cbInitTime_step.setEnabled(enable)
 
-
     def enableValidTimeElements(self, enable):
         """Enables or disables the GUI elements allowing valid time
            control.
@@ -1064,7 +1034,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.tbValidTime_cbfwd.setEnabled(enable)
         self.cbValidTime_step.setEnabled(enable)
 
-
     def disableDTEInitTimeElements(self):
         """Disables init time date/time edit elements.
         """
@@ -1073,7 +1042,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.tbInitTime_back.setEnabled(enable)
         self.tbInitTime_fwd.setEnabled(enable)
         self.cbInitTime_step.setEnabled(enable)
-        
 
     def disableDTEValidTimeElements(self):
         """Disables valid time date/time edit elements.
@@ -1084,7 +1052,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.tbValidTime_fwd.setEnabled(enable)
         self.cbValidTime_step.setEnabled(enable)
 
-
     def disableCBInitTimeElements(self):
         """Disables init time combobox elements.
         """
@@ -1092,7 +1059,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.cbInitTime.setEnabled(enable)
         self.tbInitTime_cbback.setEnabled(enable)
         self.tbInitTime_cbfwd.setEnabled(enable)
-        
 
     def disableCBValidTimeElements(self):
         """Disables valid time combobox elements.
@@ -1102,21 +1068,17 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.tbValidTime_cbback.setEnabled(enable)
         self.tbValidTime_cbfwd.setEnabled(enable)
 
-        
     def getLayer(self):
         return unicode(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
 
-
     def getStyle(self):
         return unicode(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
-
 
     def getLevel(self):
         if self.cbLevelOn.isChecked():
             return unicode(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
         else:
             return None
-
 
     def getInitTime(self):
         """Get the initialisation time from the GUI elements.
@@ -1134,7 +1096,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 return itime_str
         else:
             return None
-    
 
     def getValidTime(self):
         """The same as getInitTime(), but for the valid time.
@@ -1147,7 +1108,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 return vtime_str
         else:
             return None
-
 
     def _queued_get_map(self, queue=None, **kwargs):
         """Helper routine to call getmap() from a thread: The return value
@@ -1165,13 +1125,11 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         except Exception as e:
             if queue is not None:
                 queue.put(e)
-        
 
     def cachingEnabled(self):
         """Returns if the image cache is enabled.
         """
         return self.wms_cache is not None and self.cbCacheEnabled.isChecked()
-
 
     def retrieveImage(self, crs="EPSG:4326", bbox=None, path_string=None,
                       width=800, height=400):
@@ -1209,7 +1167,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # Stores the image to be returned. If an error occurs, None will be
         # returned.
         img = None
-        
+
         # Get layer and style names.
         layer = self.getLayer()
         style = self.getStyle()
@@ -1277,10 +1235,11 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
             if not cache_hit:
 
-                self.pdlg.show(); QtGui.QApplication.processEvents()
-                self.pdlg.setValue(1); QtGui.QApplication.processEvents()
+                self.pdlg.show();
+                QtGui.QApplication.processEvents()
+                self.pdlg.setValue(1);
+                QtGui.QApplication.processEvents()
 
-                
                 queue = Queue.Queue()
                 kwargs["queue"] = queue
                 thread = threading.Thread(target=self._queued_get_map, kwargs=kwargs)
@@ -1312,7 +1271,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                     else:
                         raise qreturn
 
-                self.pdlg.setValue(8); QtGui.QApplication.processEvents()
+                self.pdlg.setValue(8);
+                QtGui.QApplication.processEvents()
                 # Read the image file from the URL into a string (urlobject.read())
                 # and wrap this string into a StringIO object that behaves like a file.
                 imageIO = StringIO.StringIO(urlobject.read())
@@ -1327,7 +1287,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                     # Check if the image is stored as indexed palette
                     # with a transparent colour. Store correspondingly.
                     if img.mode == "P" and "transparency" in img.info.keys():
-                        logging.debug("image is index colour and transparent, "\
+                        logging.debug("image is index colour and transparent, " \
                                       "transparency index of image is %i.",
                                       img.info["transparency"])
                         img.save(md5_filename, transparency=img.info["transparency"])
@@ -1341,8 +1301,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             self.pdlg.close()
             logging.error("ERROR: %s", ex)
             QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                        self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
-                        QtGui.QMessageBox.Ok)
+                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                       QtGui.QMessageBox.Ok)
             raise ex
 
         legend_img = self.retrieveLegendGraphic()
@@ -1353,7 +1313,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         complete_level = str(self.cbLevel.currentText())
         complete_level = complete_level if complete_level != "" else None
         return img, legend_img, layer, style, init_time, valid_time, complete_level
-
 
     def _queued_get_legend(self, queue=None, url=""):
         """Helper routine to retrieve a legend graphic from a thread: The return value
@@ -1371,7 +1330,6 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         except Exception as e:
             if queue is not None:
                 queue.put(e)
-    
 
     def retrieveLegendGraphic(self):
         """Retrieves the legend graphic of the currently selected layer and
@@ -1380,7 +1338,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # Stores the image to be returned. If no legend is available, None
         # will be returned.
         img = None
-        
+
         # Get layer and style names.
         layer = self.getLayer()
         style = self.getStyle()
@@ -1456,29 +1414,26 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
         return img
 
-
     def getMap(self):
         """Prototypical stub for getMap() function. Needs to be reimplemented
            in derived classes.
         """
         logging.error("getMap not implemented in base class.")
 
-
     def afterRedraw(self):
         """Event handler that a canvas can call after it has been redrawn.
         """
         self.autoUpdate()
-
 
     def clearCache(self):
         """Clear the image file cache. First ask the user for confirmation.
         """
         # User confirmation to clear the cache.
         clear = (QtGui.QMessageBox.question(
-            self, "Clear Cache", 
-            "Do you really want to clear the cache? All stored image "\
+            self, "Clear Cache",
+            "Do you really want to clear the cache? All stored image " \
             "files will be deleted.",
-            QtGui.QMessageBox.Yes|QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
+            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
         if clear:
             # Delete all files in cache.
             if self.wms_cache is not None:
@@ -1494,13 +1449,12 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             else:
                 logging.debug("no cache exists that can be cleared.")
 
-
     def serviceCache(self):
         """Service the cache: Remove all files older than the maximum file
            age specified in mss_settings, and remove the oldest files if the
            maximum cache size has been reached.
         """
-        logging.debug("servicing cache..") 
+        logging.debug("servicing cache..")
 
         # Create a list of all files in the cache.
         files = [os.path.join(self.wms_cache, f)
@@ -1523,15 +1477,16 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         removed_files = 0
         for f, fsize, fage in files:
             cum_size_bytes += fsize
-            if (cum_size_bytes >  mss_settings.wms_cache_max_size_bytes) or \
-                   fage > mss_settings.wms_cache_max_age_seconds:
+            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or \
+                            fage > mss_settings.wms_cache_max_age_seconds:
                 os.remove(f)
                 removed_files += 1
-        
-        logging.debug("cache has been cleaned (%i files removed)." % removed_files) 
+
+        logging.debug("cache has been cleaned (%i files removed)." % removed_files)
+
+    ################################################################################
 
 
-################################################################################
 ###                       CLASS VSecWMSControlWidget                         ###
 ################################################################################
 
@@ -1553,13 +1508,11 @@ class VSecWMSControlWidget(WMSControlWidget):
         self.connect(self.btGetMap, QtCore.SIGNAL("clicked()"),
                      self.getVSec)
 
-
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance from which the waypoints
            are obtained.
         """
-        self.waypoints_model = model        
-        
+        self.waypoints_model = model
 
     def getVSec(self):
         """Slot that retrieves the vertical section and passes the image
@@ -1578,7 +1531,6 @@ class VSecWMSControlWidget(WMSControlWidget):
             path_string += "%.2f,%.2f," % (waypoint.lat, waypoint.lon)
         path_string = path_string[:-1]
 
-
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
         width, height = self.view.getPlotSizePx()
@@ -1586,8 +1538,8 @@ class VSecWMSControlWidget(WMSControlWidget):
         # Retrieve the image.
         try:
             img, legend_img, layer, style, init_time, valid_time, level = \
-                 self.retrieveImage(crs=crs, path_string=path_string, bbox=bbox,
-                                    width=width, height=height)
+                self.retrieveImage(crs=crs, path_string=path_string, bbox=bbox,
+                                   width=width, height=height)
         except Exception as ex:
             logging.error("an error occurred. no image retrieved. (%s)" % ex)
         else:
@@ -1601,7 +1553,6 @@ class VSecWMSControlWidget(WMSControlWidget):
                                    init_time=init_time,
                                    valid_time=valid_time,
                                    style=style_title)
-
 
 
 ################################################################################
@@ -1663,7 +1614,6 @@ class HSecWMSControlWidget(WMSControlWidget):
     def set_tp_height(self, height=None):
         self.tp_height = height
 
-
     def getMap(self):
         """Slot that retrieves the map and passes the image
            to the view.
@@ -1678,7 +1628,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         # Retrieve the image.
         try:
             img, legend_img, layer, style, init_time, valid_time, level = \
-                 self.retrieveImage(crs=crs, bbox=bbox, width=width, height=height)
+                self.retrieveImage(crs=crs, bbox=bbox, width=width, height=height)
         except Exception as ex:
             logging.error("an error occurred. no image retried. (%s)" % ex)
         else:

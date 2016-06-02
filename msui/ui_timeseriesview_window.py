@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_TimeSeriesViewWindow(object):
     def setupUi(self, TimeSeriesViewWindow):
         TimeSeriesViewWindow.setObjectName("TimeSeriesViewWindow")
@@ -39,6 +40,9 @@ class Ui_TimeSeriesViewWindow(object):
         QtCore.QMetaObject.connectSlotsByName(TimeSeriesViewWindow)
 
     def retranslateUi(self, TimeSeriesViewWindow):
-        TimeSeriesViewWindow.setWindowTitle(QtGui.QApplication.translate("TimeSeriesViewWindow", "Time Series View - DLR/IPA Mission Support", None, QtGui.QApplication.UnicodeUTF8))
+        TimeSeriesViewWindow.setWindowTitle(
+            QtGui.QApplication.translate("TimeSeriesViewWindow", "Time Series View - DLR/IPA Mission Support", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+
 
 from mpl_qtwidget import MplTimeSeriesViewWidget

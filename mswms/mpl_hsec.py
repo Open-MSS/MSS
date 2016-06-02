@@ -80,18 +80,16 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
     """
     name = "BASEMAP"
     title = "Matplotlib basemap"
-    
+
     def _plot_style(self, style=None):
         """Overwrite this method to plot style-specific data on the map.
         """
         pass
 
-
     def supported_epsg_codes(self):
         """Returns a list of supported EPSG codes.
         """
         return mss_wms_settings.epsg_to_mpl_basemap_table.keys()
-
 
     def supported_crs(self):
         """Returns a list of the coordinate reference systems supported by
@@ -102,7 +100,6 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         for code in epsg_codes:
             crs_list.append("EPSG:%i" % code)
         return crs_list
-
 
     def _draw_auto_graticule(self, bm):
         """
@@ -115,11 +112,11 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         lowerRightCornerLon, lowerRightCornerLat = bm(axis[1], axis[2],
                                                       inverse=True)
         middleUpperBoundaryLon, middleUpperBoundaryLat = \
-                                bm(np.mean([axis[0], axis[1]]),
-                                   axis[3], inverse=True)
+            bm(np.mean([axis[0], axis[1]]),
+               axis[3], inverse=True)
         middleLowerBoundaryLon, middleLowerBoundaryLat = \
-                                bm(np.mean([axis[0], axis[1]]),
-                                   axis[2], inverse=True)
+            bm(np.mean([axis[0], axis[1]]),
+               axis[2], inverse=True)
 
         # Determine which parallels and meridians should be drawn.
         #   a) determine which are the minimum and maximum visible
@@ -131,7 +128,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             # maximum longitude at one of these corner points. If
             # the map centre is contained in the map, draw all meridians
             # around the globe.
-#FIXME? This is only correct for polar stereographic projections.
+            # FIXME? This is only correct for polar stereographic projections.
             # Draw parallels from the min latitude contained in the map at
             # one of the four corners OR the middle top or bottom to the
             # maximum latitude at one of these six points.
@@ -172,10 +169,10 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             # lower left and the upper right corner.
             mapLonStart = bm.llcrnrlon
             mapLonStop = bm.urcrnrlon
-            mapLatStart = bm.llcrnrlat            
+            mapLatStart = bm.llcrnrlat
             mapLatStop = bm.urcrnrlat
 
-        #   b) parallels and meridians can be drawn with a spacing of
+        # b) parallels and meridians can be drawn with a spacing of
         #      >spacingValues< degrees. Determine the appropriate
         #      spacing for the lon/lat differences: about 10 lines
         #      should be drawn in each direction. (The following lines
@@ -201,15 +198,15 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         #      range.
         bm.map_parallels = bm.drawparallels(np.arange(latStart, latStop,
                                                       spacingLat),
-                                            labels=[1,1,0,0],
-                                            color='0.5', dashes=[5,5])
+                                            labels=[1, 1, 0, 0],
+                                            color='0.5', dashes=[5, 5])
         bm.map_meridians = bm.drawmeridians(np.arange(lonStart, lonStop,
                                                       spacingLon),
-                                            labels=[0,0,0,1],
-                                            color='0.5', dashes=[5,5])
-       
+                                            labels=[0, 0, 0, 1],
+                                            color='0.5', dashes=[5, 5])
+
     def plot_hsection(self, data, lats, lons, bbox=[-180, -90, 180, 90],
-                      level=None, figsize=(960,640), epsg=None,
+                      level=None, figsize=(960, 640), epsg=None,
                       proj_params={"projection": "cyl"},
                       valid_time=None, init_time=None, style=None,
                       resolution=-1, noframe=False, show=False,
@@ -223,9 +220,9 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                 proj_params = mss_wms_settings.epsg_to_mpl_basemap_table[epsg]
             except:
                 raise ValueError("unknown EPSG code: %i", epsg)
-        
+
         logging.debug("plotting data..")
-        
+
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
             if dataitem not in data.keys():
@@ -242,14 +239,14 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.resolution = resolution
         self.noframe = noframe
         self.epsg = epsg
-        
+
         # Derive additional data fields and make the plot.
         logging.debug("preparing additional data fields..")
-        self._prepare_datafields()        
+        self._prepare_datafields()
 
         logging.debug("creating figure..")
         dpi = 80
-        figsize = figsize[0]/dpi, figsize[1]/dpi
+        figsize = figsize[0] / dpi, figsize[1] / dpi
         facecolor = "white"
         fig = mpl.figure.Figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
         logging.debug("\twith frame and legends" if not noframe else
@@ -283,7 +280,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Set up the map appearance.
         bm.drawcoastlines(color='0.25')
         bm.drawcountries(color='0.5')
-        bm.drawmapboundary(fill_color = 'white')
+        bm.drawmapboundary(fill_color='white')
 
         # zorder = 0 is necessary to paint over the filled continents with
         # scatter() for drawing the flight tracks and trajectories.
@@ -295,19 +292,19 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         if noframe:
             ax.axis('off')
 
-        self.bm = bm # !! BETTER PASS EVERYTHING AS PARAMETERS?
+        self.bm = bm  # !! BETTER PASS EVERYTHING AS PARAMETERS?
         self.fig = fig
         self.shift_data()
         self.mask_data()
         self._plot_style()
-        
+
         # Set transparency for the output image.
         if transparent:
             fig.patch.set_alpha(0.)
 
         # Return the image as png embedded in a StringIO stream.
         canvas = FigureCanvas(fig)
-        output = StringIO.StringIO() 
+        output = StringIO.StringIO()
         canvas.print_png(output, bbox_inches='tight')
 
         if show:
@@ -325,13 +322,13 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         logging.debug("converting image to indexed palette.")
         # Read the above stored png into a PIL image and create an adaptive
         # colour palette.
-        output.seek(0) # necessary for PIL.Image.open()
+        output.seek(0)  # necessary for PIL.Image.open()
         palette_img = PIL.Image.open(output).convert(mode="RGB"
-                            ).convert("P", palette=PIL.Image.ADAPTIVE)
-        output = StringIO.StringIO() 
+                                                     ).convert("P", palette=PIL.Image.ADAPTIVE)
+        output = StringIO.StringIO()
         if not transparent:
             logging.debug("saving figure as non-transparent PNG.")
-            palette_img.save(output, format="PNG") # using optimize=True doesn't change much
+            palette_img.save(output, format="PNG")  # using optimize=True doesn't change much
         else:
             # If the image has a transparent background, we need to find the
             # index of the background colour in the palette. See the
@@ -349,14 +346,13 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             for i in [0, 1, 2]:
                 facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
             facecolor_index = lut.index(tuple(facecolor_rgb))
-            
-            logging.debug("saving figure as transparent PNG with transparency index %i.", 
+
+            logging.debug("saving figure as transparent PNG with transparency index %i.",
                           facecolor_index)
             palette_img.save(output, format="PNG", transparency=facecolor_index)
 
         logging.debug("returning figure..")
         return output.getvalue()
-
 
     def shift_data(self):
         """Shift the data fields such that the longitudes are in the range
@@ -408,4 +404,3 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         for key in self.data.keys():
             self.data[key] = np.ma.masked_array(self.data[key],
                                                 mask=mask, keep_mask=False)
-

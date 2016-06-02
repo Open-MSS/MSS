@@ -40,7 +40,6 @@ import ui_timeseriesview_window as ui
 import mss_qt
 
 
-
 ################################################################################
 ###                          CLASS TimeSeriesView                            ###
 ################################################################################
@@ -56,7 +55,6 @@ class MSSTimeSeriesViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TimeSeriesViewWindo
         super(MSSTimeSeriesViewWindow, self).__init__(parent)
         self.setupUi(self)
 
-
     def setIdentifier(self, identifier):
         super(MSSTimeSeriesViewWindow, self).setIdentifier(identifier)
         self.mpl.canvas.setIdentifier(identifier)
@@ -70,7 +68,6 @@ class MSSTimeSeriesViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TimeSeriesViewWindo
 # System user interface.
 
 if __name__ == "__main__":
-
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.

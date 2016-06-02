@@ -84,11 +84,11 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
                              "label_flighttrack": True,
                              "draw_tangents": True,
                              "show_solar_angle": True,
-                             "colour_water": (0,0,0,0),
-                             "colour_land": (0,0,0,0),
-                             "colour_ft_vertices": (0,0,0,0),
-                             "colour_ft_waypoints": (0,0,0,0),
-                             "colour_tangents": (0,0,0,0)}
+                             "colour_water": (0, 0, 0, 0),
+                             "colour_land": (0, 0, 0, 0),
+                             "colour_ft_vertices": (0, 0, 0, 0),
+                             "colour_ft_waypoints": (0, 0, 0, 0),
+                             "colour_tangents": (0, 0, 0, 0)}
 
         if "draw_tangents" not in settings_dict.keys():
             settings_dict["draw_tangents"] = True
@@ -99,7 +99,7 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
         if "start_time" not in settings_dict.keys():
             settings_dict["start_time"] = datetime.datetime.now()
         if "colour_tangents" not in settings_dict.keys():
-            settings_dict["colour_tangents"] = (0,0,0,0)
+            settings_dict["colour_tangents"] = (0, 0, 0, 0)
 
         self.cbDrawGraticule.setChecked(settings_dict["draw_graticule"])
         self.cbDrawCoastlines.setChecked(settings_dict["draw_coastlines"])
@@ -135,7 +135,6 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
         self.connect(self.btTangentsColour, QtCore.SIGNAL("clicked()"),
                      functools.partial(self.setColour, "tangents"))
 
-
     def getSettings(self):
         """
         """
@@ -161,10 +160,9 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
                 QtGui.QPalette(self.btWaypointsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_tangents":
                 QtGui.QPalette(self.btTangentsColour.palette()).color(QtGui.QPalette.Button).getRgbF()
-            }
+        }
         return settings_dict
-        
-    
+
     def setColour(self, which):
         """Slot for the colour buttons: Opens a QColorDialog and sets the
            new button face colour.
@@ -186,8 +184,6 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
         if colour.isValid():
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
-
-
 
 
 ################################################################################
@@ -244,7 +240,6 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.connect(self.btDelWaypoint, QtCore.SIGNAL("clicked()"),
                      functools.partial(wpi.set_edit_mode, mpl_pi.DELETE))
 
-
     def setupTopView(self):
         """Initialise GUI elements. (This method is called before signals/slots
            are connected).
@@ -264,7 +259,6 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         kwargs = self.changeMapSection(only_kwargs=True)
         self.mpl.canvas.initMap(**kwargs)
         self.setFlightTrackModel(self.waypoints_model)
-
 
     def openTool(self, index):
         """Slot that handles requests to open control windows.
@@ -286,10 +280,9 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
                 widget = sat.SatelliteControlWidget(view=self.mpl.canvas)
             else:
                 raise IndexError("invalid control index")
-            
+
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
-
 
     def changeMapSection(self, index=0, only_kwargs=False):
         """Change the current map section to one of the predefined regions.
@@ -308,16 +301,14 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         if only_kwargs:
             # Return kwargs dictionary and do NOT redraw the map.
             return kwargs
-        
+
         logging.debug("switching to map section %s", current_map_key)
         self.mpl.canvas.redrawMap(kwargs)
-
 
     def setIdentifier(self, identifier):
         super(MSSTopViewWindow, self).setIdentifier(identifier)
         self.mpl.canvas.map.set_identifier(identifier)
 
-    
     def settingsDlg(self):
         """
         """
@@ -358,19 +349,17 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
 
-
     def saveSettings(self):
         """Save the current settings (map appearance) to the file
            self.settingsfile.
         """
-#TODO: ConfigParser and a central configuration file might be the better solution than pickle.
-# http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
+        # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
+        # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         settings = self.getView().getMapAppearance()
         logging.debug("storing settings to %s" % self.settingsfile)
         fileobj = open(self.settingsfile, "w")
         pickle.dump(settings, fileobj)
         fileobj.close()
-
 
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
@@ -382,9 +371,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
             settings = pickle.load(fileobj)
             fileobj.close()
         self.getView().setMapAppearance(settings)
-        
 
-        
 
 ################################################################################
 ################################################################################
@@ -394,7 +381,6 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
 # System user interface.
 
 if __name__ == "__main__":
-
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.

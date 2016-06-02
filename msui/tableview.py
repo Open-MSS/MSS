@@ -53,9 +53,9 @@ import flighttrack as ft
 import mss_qt
 import mss_settings
 
-
 PERFORMANCE = 0
 PERFORMANCE_OLD = 1
+
 
 ################################################################################
 ###                 USER INTERFACE CLASS FlightPlanTableView                 ###
@@ -77,7 +77,7 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
 
         self.lblRemainingRange.setVisible(False)
-        
+
         # Dock windows [Performance, Performance_Old].
         self.docks = [None, None]
 
@@ -91,16 +91,15 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
 
         self.connect(self.actionFlightPerformance,
                      QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.openTool, PERFORMANCE+1))
+                     functools.partial(self.openTool, PERFORMANCE + 1))
         self.connect(self.actionFlightPerformance_old,
                      QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.openTool, PERFORMANCE_OLD+1))
+                     functools.partial(self.openTool, PERFORMANCE_OLD + 1))
 
         self.connect(self.btViewPerformance, QtCore.SIGNAL("clicked()"),
                      self.viewPerformance)
 
         self.resizeColumns()
-
 
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
@@ -127,8 +126,8 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         self.waypoints_model.invertDirection()
         self.setFlightTrackModel(self.waypoints_model)
         QtGui.QMessageBox.warning(None, "Invert waypoints",
-            "Please redraw the map manually, if another view is open!",
-            QtGui.QMessageBox.Ok)
+                                  "Please redraw the map manually, if another view is open!",
+                                  QtGui.QMessageBox.Ok)
 
     def addWayPoint(self):
         """Handler for button <btAddWayPointToFlightTrack>. Adds a new waypoint
@@ -142,7 +141,7 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         else:
             row = index.row() + 1
             fl = self.waypoints_model.waypointData(row - 1).flightlevel
-        #row = self.waypoints_model.rowCount() # Append to end
+        # row = self.waypoints_model.rowCount() # Append to end
         locations = [str(wp.location) for wp in self.waypoints_model.allWaypointData()]
         locname = ""
         for letter in string.ascii_uppercase:
@@ -175,7 +174,6 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         # tableView.edit(index)
         tableView.resizeRowsToContents()
 
-
     def confirm_delete_waypoint(self, row):
         """Open a QMessageBox and ask the user if he really wants to
            delete the waypoint at index <row>.
@@ -188,16 +186,15 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         wps = self.waypoints_model.allWaypointData(mode=ft.USER)
         if len(wps) < 3:
             QtGui.QMessageBox.warning(None, "Remove waypoint",
-                 "Cannot remove waypoint, the flight track needs to consist "\
-                 "of at least two points.", QtGui.QMessageBox.Ok)
+                                      "Cannot remove waypoint, the flight track needs to consist " \
+                                      "of at least two points.", QtGui.QMessageBox.Ok)
             return False
         else:
             wp = wps[row]
-            return (QtGui.QMessageBox.question(None, "Remove waypoint", 
-                "Remove waypoint at %.2f/%.2f, flightlevel %.2f?" \
-                % (wp.lat, wp.lon, wp.flightlevel),
-                QtGui.QMessageBox.Yes|QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
-
+            return (QtGui.QMessageBox.question(None, "Remove waypoint",
+                                               "Remove waypoint at %.2f/%.2f, flightlevel %.2f?" \
+                                               % (wp.lat, wp.lon, wp.flightlevel),
+                                               QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
 
     def removeWayPoint(self):
         """Handler for button <btDeleteWayPoint>. Deletes the currently selected
@@ -212,11 +209,9 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         if self.confirm_delete_waypoint(row):
             self.waypoints_model.removeRows(row)
 
-
     def resizeColumns(self):
         for column in range(self.waypoints_model.columnCount()):
             self.tableWayPoints.resizeColumnToContents(column)
-
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance that the table displays.
@@ -229,7 +224,6 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
                      self.viewPerformance)
         # Set the performance mode of the flight track.
         self.viewPerformance()
-
 
     def viewPerformance(self):
         """Slot to toggle the view mode of the table between 'USER' and
@@ -272,11 +266,9 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         self.resizeColumns()
 
 
-
 ################################################################################
 
 if __name__ == "__main__":
-
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -302,6 +294,6 @@ if __name__ == "__main__":
     win = MSSTableViewWindow(model=waypoints_model)
     win.show()
 
-    #waypoints_model.setPerformanceComputation(testperformance)
-    
+    # waypoints_model.setPerformanceComputation(testperformance)
+
     sys.exit(app.exec_())

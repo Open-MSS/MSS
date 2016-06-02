@@ -32,7 +32,6 @@ AUTHORS:
 # local application imports
 from dlraircraft import HALO, Falcon
 
-
 ################################################################################
 ###                            Aircraft "pool"                               ###
 ################################################################################
@@ -62,13 +61,13 @@ except:
 sample_flight_description = [
     ["takeoff_weight", 75000],
     ["takeoff_time", "2012-10-21T12:00:00Z"],
-    ["takeoff_location", 11, 48], # elevation determined from psfc
+    ["takeoff_location", 11, 48],  # elevation determined from psfc
     ["temperature_ISA_deviation", 10],
     ["climb_descent_to", 13, 48, 21000],
-    ["cruise_to", 15, 50, "LRC"], # FL remains unchanged
+    ["cruise_to", 15, 50, "LRC"],  # FL remains unchanged
     ["climb_descent_to", 13, 49, 11000],
     ["land_at", 11, 48],
-    ]
+]
 
-#halo.fly(sample_flight_description)
-#falcon.fly(sample_flight_description)
+# halo.fly(sample_flight_description)
+# falcon.fly(sample_flight_description)

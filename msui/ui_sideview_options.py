@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_SideViewOptionsDialog(object):
     def setupUi(self, SideViewOptionsDialog):
         SideViewOptionsDialog.setObjectName("SideViewOptionsDialog")
@@ -160,7 +161,7 @@ class Ui_SideViewOptionsDialog(object):
         self.verticalLayout_4.addWidget(self.groupBox_3)
         self.buttonBox = QtGui.QDialogButtonBox(SideViewOptionsDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout_4.addWidget(self.buttonBox)
 
@@ -170,22 +171,44 @@ class Ui_SideViewOptionsDialog(object):
         QtCore.QMetaObject.connectSlotsByName(SideViewOptionsDialog)
 
     def retranslateUi(self, SideViewOptionsDialog):
-        SideViewOptionsDialog.setWindowTitle(QtGui.QApplication.translate("SideViewOptionsDialog", "Side View Options", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox.setTitle(QtGui.QApplication.translate("SideViewOptionsDialog", "Vertical Extent", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "Vertical extent:", None, QtGui.QApplication.UnicodeUTF8))
-        self.sbPbot.setSuffix(QtGui.QApplication.translate("SideViewOptionsDialog", " hPa", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "to", None, QtGui.QApplication.UnicodeUTF8))
-        self.sbPtop.setSuffix(QtGui.QApplication.translate("SideViewOptionsDialog", " hPa", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_2.setTitle(QtGui.QApplication.translate("SideViewOptionsDialog", "Flight Levels", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbDrawFlightLevels.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "draw the following flight levels:", None, QtGui.QApplication.UnicodeUTF8))
-        self.tableWidget.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("SideViewOptionsDialog", "flight levels", None, QtGui.QApplication.UnicodeUTF8))
-        self.btAdd.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "add", None, QtGui.QApplication.UnicodeUTF8))
-        self.btDelete.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "delete selected", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_3.setTitle(QtGui.QApplication.translate("SideViewOptionsDialog", "Flight Track Colours", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbDrawFlightTrack.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "draw flight track", None, QtGui.QApplication.UnicodeUTF8))
-        self.btWaypointsColour.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "colour of waypoints", None, QtGui.QApplication.UnicodeUTF8))
-        self.btVerticesColour.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "colour of vertices", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbFillFlightTrack.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "fill flight track", None, QtGui.QApplication.UnicodeUTF8))
-        self.btFillColour.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "colour", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLabelFlightTrack.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "label flight track", None, QtGui.QApplication.UnicodeUTF8))
-
+        SideViewOptionsDialog.setWindowTitle(
+            QtGui.QApplication.translate("SideViewOptionsDialog", "Side View Options", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.groupBox.setTitle(QtGui.QApplication.translate("SideViewOptionsDialog", "Vertical Extent", None,
+                                                            QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "Vertical extent:", None,
+                                                          QtGui.QApplication.UnicodeUTF8))
+        self.sbPbot.setSuffix(
+            QtGui.QApplication.translate("SideViewOptionsDialog", " hPa", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(
+            QtGui.QApplication.translate("SideViewOptionsDialog", "to", None, QtGui.QApplication.UnicodeUTF8))
+        self.sbPtop.setSuffix(
+            QtGui.QApplication.translate("SideViewOptionsDialog", " hPa", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBox_2.setTitle(QtGui.QApplication.translate("SideViewOptionsDialog", "Flight Levels", None,
+                                                              QtGui.QApplication.UnicodeUTF8))
+        self.cbDrawFlightLevels.setText(
+            QtGui.QApplication.translate("SideViewOptionsDialog", "draw the following flight levels:", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.tableWidget.horizontalHeaderItem(0).setText(
+            QtGui.QApplication.translate("SideViewOptionsDialog", "flight levels", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btAdd.setText(
+            QtGui.QApplication.translate("SideViewOptionsDialog", "add", None, QtGui.QApplication.UnicodeUTF8))
+        self.btDelete.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "delete selected", None,
+                                                           QtGui.QApplication.UnicodeUTF8))
+        self.groupBox_3.setTitle(QtGui.QApplication.translate("SideViewOptionsDialog", "Flight Track Colours", None,
+                                                              QtGui.QApplication.UnicodeUTF8))
+        self.cbDrawFlightTrack.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "draw flight track", None,
+                                                                    QtGui.QApplication.UnicodeUTF8))
+        self.btWaypointsColour.setText(
+            QtGui.QApplication.translate("SideViewOptionsDialog", "colour of waypoints", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btVerticesColour.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "colour of vertices", None,
+                                                                   QtGui.QApplication.UnicodeUTF8))
+        self.cbFillFlightTrack.setText(QtGui.QApplication.translate("SideViewOptionsDialog", "fill flight track", None,
+                                                                    QtGui.QApplication.UnicodeUTF8))
+        self.btFillColour.setText(
+            QtGui.QApplication.translate("SideViewOptionsDialog", "colour", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbLabelFlightTrack.setText(
+            QtGui.QApplication.translate("SideViewOptionsDialog", "label flight track", None,
+                                         QtGui.QApplication.UnicodeUTF8))

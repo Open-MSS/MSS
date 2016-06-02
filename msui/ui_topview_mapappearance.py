@@ -16,11 +16,14 @@ except AttributeError:
 
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
+
+
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+
 
 class Ui_MapAppearanceDialog(object):
     def setupUi(self, MapAppearanceDialog):
@@ -198,7 +201,7 @@ class Ui_MapAppearanceDialog(object):
         self.verticalLayout.addItem(spacerItem3)
         self.buttonBox = QtGui.QDialogButtonBox(MapAppearanceDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.verticalLayout.addWidget(self.buttonBox)
 
@@ -224,4 +227,3 @@ class Ui_MapAppearanceDialog(object):
         self.dsbTangentHeight.setSuffix(_translate("MapAppearanceDialog", " km", None))
         self.cbShowSolarAngle.setText(_translate("MapAppearanceDialog", "show solar angle", None))
         self.lbStartTime.setText(_translate("MapAppearanceDialog", "Start time:", None))
-

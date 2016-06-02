@@ -33,6 +33,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
+
 # local application imports
 
 
@@ -47,12 +48,11 @@ class MSSViewWindow(QtGui.QMainWindow):
         super(MSSViewWindow, self).__init__(parent)
 
         # Object variables:
-        self.waypoints_model = model # pointer to the current flight track.
+        self.waypoints_model = model  # pointer to the current flight track.
 
         # List that accommodates the dock window instances: Needs to be defined
         # in proper size in derived classes!
         self.docks = []
-
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the window.
@@ -61,9 +61,9 @@ class MSSViewWindow(QtGui.QMainWindow):
         Qt receives a window close request for our application window.
         """
         ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                        self.tr("Do you want to close this %s?" % self.name),
-                        QtGui.QMessageBox.Yes,
-                        QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
+                                        self.tr("Do you want to close this %s?" % self.name),
+                                        QtGui.QMessageBox.Yes,
+                                        QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
         if ret == QtGui.QMessageBox.Yes:
             self.emit(QtCore.SIGNAL("viewCloses()"))
             event.accept()
@@ -72,12 +72,10 @@ class MSSViewWindow(QtGui.QMainWindow):
             event.ignore()
             return False
 
-
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance that the view displays.
         """
         self.waypoints_model = model
-
 
     def controlToBeCreated(self, index):
         """Check if the dock widget at index <index> exists. If yes, show
@@ -93,7 +91,6 @@ class MSSViewWindow(QtGui.QMainWindow):
         if hasattr(self, "cbTools"):
             self.cbTools.setCurrentIndex(0)
         return index
-
 
     def createDockWidget(self, index, title, widget):
         """Create a new dock widget. A pointer to the dock widget will be
@@ -113,7 +110,6 @@ class MSSViewWindow(QtGui.QMainWindow):
                 self.tabifyDockWidget(dock, self.docks[index])
                 break
 
-
     @abstractmethod
     def getView(self):
         """Return view object that tools can interact with.
@@ -122,20 +118,17 @@ class MSSViewWindow(QtGui.QMainWindow):
         """
         return None
 
-
     def setIdentifier(self, identifier):
         self.identifier = identifier
-
 
 
 class MSSMplViewWindow(MSSViewWindow):
     """Adds Matplotlib-specific functionality to MSSViewWindow.
     """
-    
+
     def __init__(self, parent=None, model=None):
         super(MSSMplViewWindow, self).__init__(parent, model)
         self.mpl = None
-
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance that the view displays.
@@ -143,7 +136,6 @@ class MSSMplViewWindow(MSSViewWindow):
         self.waypoints_model = model
         if self.mpl:
             self.mpl.canvas.setWaypointsModel(model)
-
 
     def getView(self):
         """Return the MplCanvas instance of the window.

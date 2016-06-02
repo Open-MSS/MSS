@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_WMSDockWidget(object):
     def setupUi(self, WMSDockWidget):
         WMSDockWidget.setObjectName("WMSDockWidget")
@@ -331,54 +332,111 @@ class Ui_WMSDockWidget(object):
         QtCore.QMetaObject.connectSlotsByName(WMSDockWidget)
 
     def retranslateUi(self, WMSDockWidget):
-        WMSDockWidget.setWindowTitle(QtGui.QApplication.translate("WMSDockWidget", "WMS Dock Widget", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_7.setText(QtGui.QApplication.translate("WMSDockWidget", "WMS URL:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbWMS_URL.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Enter a valid WMS URL here.", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbWMS_URL.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "http://localhost:8002/fc_wms", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbWMS_URL.setItemText(1, QtGui.QApplication.translate("WMSDockWidget", "http://osm.omniscale.net/proxy/service", None, QtGui.QApplication.UnicodeUTF8))
-        self.btGetCapabilities.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Request the capabilities from the WMS server.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btGetCapabilities.setText(QtGui.QApplication.translate("WMSDockWidget", "get capabilities", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbViewCapabilities.setText(QtGui.QApplication.translate("WMSDockWidget", "view", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbAutoUpdate.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Automatically request an updated map when the layer parameters have changed.", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbAutoUpdate.setText(QtGui.QApplication.translate("WMSDockWidget", "update on changes", None, QtGui.QApplication.UnicodeUTF8))
-        self.btGetMap.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Request a map with the specifed parameters.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btGetMap.setText(QtGui.QApplication.translate("WMSDockWidget", "get map", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_8.setText(QtGui.QApplication.translate("WMSDockWidget", "Layer:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLayer.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "BASEMAP", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLayer.setItemText(1, QtGui.QApplication.translate("WMSDockWidget", "MSLP", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLayer.setItemText(2, QtGui.QApplication.translate("WMSDockWidget", "TCC", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_11.setText(QtGui.QApplication.translate("WMSDockWidget", "Style:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbStyle.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "...", None, QtGui.QApplication.UnicodeUTF8))
-        self.teLayerAbstract.setHtml(QtGui.QApplication.translate("WMSDockWidget", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'Sans Serif\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLevelOn.setText(QtGui.QApplication.translate("WMSDockWidget", "Level:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbLevel.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Elevation values provided by the WMS server.", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbLevel_back.setText(QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbLevel_fwd.setText(QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbTransparent.setText(QtGui.QApplication.translate("WMSDockWidget", "transparent", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("WMSDockWidget", "Cache:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbCacheEnabled.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Enable the image cache (retrieved images will be stored locally to speed up repeated retrievals).", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbCacheEnabled.setText(QtGui.QApplication.translate("WMSDockWidget", "on", None, QtGui.QApplication.UnicodeUTF8))
-        self.btClearCache.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Clear all cache contents.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btClearCache.setText(QtGui.QApplication.translate("WMSDockWidget", "clear", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbInitialisationOn.setText(QtGui.QApplication.translate("WMSDockWidget", "Initialisation:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbInitTime.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Forecast initialisation time (base time) values provided by the WMS server.", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbInitTime.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "2010-12-12T00:00:00Z", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbInitTime_cbback.setText(QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbInitTime_cbfwd.setText(QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
-        self.dteInitTime.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "You can also specify an initialisation date here.", None, QtGui.QApplication.UnicodeUTF8))
-        self.dteInitTime.setDisplayFormat(QtGui.QApplication.translate("WMSDockWidget", "yyyy/MM/dd hh:mm UTC", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbInitTime_back.setText(QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbInitTime_fwd.setText(QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbValidOn.setText(QtGui.QApplication.translate("WMSDockWidget", "Valid:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbValidTime.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Valid time values provided by the WMS server.", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbValidTime_cbback.setText(QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbValidTime_cbfwd.setText(QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
-        self.dteValidTime.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Specify the time value here, especially if the server does not provide predefined values. Keep in mind that the specified value may not be available from the server, though.", None, QtGui.QApplication.UnicodeUTF8))
-        self.dteValidTime.setDisplayFormat(QtGui.QApplication.translate("WMSDockWidget", "yyyy/MM/dd hh:mm UTC", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbValidTime_back.setText(QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbValidTime_fwd.setText(QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
-
+        WMSDockWidget.setWindowTitle(
+            QtGui.QApplication.translate("WMSDockWidget", "WMS Dock Widget", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_7.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "WMS URL:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbWMS_URL.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Enter a valid WMS URL here.", None,
+                                                               QtGui.QApplication.UnicodeUTF8))
+        self.cbWMS_URL.setItemText(0,
+                                   QtGui.QApplication.translate("WMSDockWidget", "http://localhost:8002/fc_wms", None,
+                                                                QtGui.QApplication.UnicodeUTF8))
+        self.cbWMS_URL.setItemText(1, QtGui.QApplication.translate("WMSDockWidget",
+                                                                   "http://osm.omniscale.net/proxy/service", None,
+                                                                   QtGui.QApplication.UnicodeUTF8))
+        self.btGetCapabilities.setToolTip(
+            QtGui.QApplication.translate("WMSDockWidget", "Request the capabilities from the WMS server.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btGetCapabilities.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "get capabilities", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbViewCapabilities.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "view", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbAutoUpdate.setToolTip(QtGui.QApplication.translate("WMSDockWidget",
+                                                                  "Automatically request an updated map when the layer parameters have changed.",
+                                                                  None, QtGui.QApplication.UnicodeUTF8))
+        self.cbAutoUpdate.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "update on changes", None, QtGui.QApplication.UnicodeUTF8))
+        self.btGetMap.setToolTip(
+            QtGui.QApplication.translate("WMSDockWidget", "Request a map with the specifed parameters.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btGetMap.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "get map", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_8.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "Layer:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbLayer.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "BASEMAP", None,
+                                                                 QtGui.QApplication.UnicodeUTF8))
+        self.cbLayer.setItemText(1, QtGui.QApplication.translate("WMSDockWidget", "MSLP", None,
+                                                                 QtGui.QApplication.UnicodeUTF8))
+        self.cbLayer.setItemText(2, QtGui.QApplication.translate("WMSDockWidget", "TCC", None,
+                                                                 QtGui.QApplication.UnicodeUTF8))
+        self.label_11.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "Style:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbStyle.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "...", None,
+                                                                 QtGui.QApplication.UnicodeUTF8))
+        self.teLayerAbstract.setHtml(QtGui.QApplication.translate("WMSDockWidget",
+                                                                  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+                                                                  "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+                                                                  "p, li { white-space: pre-wrap; }\n"
+                                                                  "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
+                                                                  "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"></p></body></html>",
+                                                                  None, QtGui.QApplication.UnicodeUTF8))
+        self.cbLevelOn.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "Level:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbLevel.setToolTip(
+            QtGui.QApplication.translate("WMSDockWidget", "Elevation values provided by the WMS server.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.tbLevel_back.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbLevel_fwd.setText(
+            QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbTransparent.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "transparent", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "Cache:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbCacheEnabled.setToolTip(QtGui.QApplication.translate("WMSDockWidget",
+                                                                    "Enable the image cache (retrieved images will be stored locally to speed up repeated retrievals).",
+                                                                    None, QtGui.QApplication.UnicodeUTF8))
+        self.cbCacheEnabled.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "on", None, QtGui.QApplication.UnicodeUTF8))
+        self.btClearCache.setToolTip(QtGui.QApplication.translate("WMSDockWidget", "Clear all cache contents.", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.btClearCache.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "clear", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbInitialisationOn.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "Initialisation:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbInitTime.setToolTip(QtGui.QApplication.translate("WMSDockWidget",
+                                                                "Forecast initialisation time (base time) values provided by the WMS server.",
+                                                                None, QtGui.QApplication.UnicodeUTF8))
+        self.cbInitTime.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "2010-12-12T00:00:00Z", None,
+                                                                    QtGui.QApplication.UnicodeUTF8))
+        self.tbInitTime_cbback.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbInitTime_cbfwd.setText(
+            QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
+        self.dteInitTime.setToolTip(
+            QtGui.QApplication.translate("WMSDockWidget", "You can also specify an initialisation date here.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.dteInitTime.setDisplayFormat(
+            QtGui.QApplication.translate("WMSDockWidget", "yyyy/MM/dd hh:mm UTC", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbInitTime_back.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbInitTime_fwd.setText(
+            QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbValidOn.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "Valid:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbValidTime.setToolTip(
+            QtGui.QApplication.translate("WMSDockWidget", "Valid time values provided by the WMS server.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.tbValidTime_cbback.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbValidTime_cbfwd.setText(
+            QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
+        self.dteValidTime.setToolTip(QtGui.QApplication.translate("WMSDockWidget",
+                                                                  "Specify the time value here, especially if the server does not provide predefined values. Keep in mind that the specified value may not be available from the server, though.",
+                                                                  None, QtGui.QApplication.UnicodeUTF8))
+        self.dteValidTime.setDisplayFormat(
+            QtGui.QApplication.translate("WMSDockWidget", "yyyy/MM/dd hh:mm UTC", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbValidTime_back.setText(
+            QtGui.QApplication.translate("WMSDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbValidTime_fwd.setText(
+            QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))

@@ -58,13 +58,11 @@ class Abstract2DSectionStyle(object):
     def __init__(self, driver=None):
         self.driver = driver
 
-
     def required_datatypes(self):
         """Returns a list containing the datatypes required by the
            data fields requested by the style.
         """
         return [datafield[0] for datafield in self.required_datafields]
-
 
     def _prepare_datafields(self):
         """Optional re-implementation: Use this function to process some
@@ -73,12 +71,10 @@ class Abstract2DSectionStyle(object):
         """
         pass
 
-
     def supported_epsg_codes(self):
         """Returns a list of supported EPSG codes, if available.
         """
         return []
-    
 
     @abstractmethod
     def supported_crs(self):
@@ -86,13 +82,11 @@ class Abstract2DSectionStyle(object):
            this style.
         """
         pass
-    
 
     def set_driver(self, driver):
         """Set the driver object for this layer.
         """
         self.driver = driver
-    
 
     def get_init_times(self):
         """Returns a list of available forecast init times (base times).
@@ -101,7 +95,6 @@ class Abstract2DSectionStyle(object):
             return self.driver.get_init_times()
         else:
             return []
-
 
     def get_all_valid_times(self):
         """Returns a list containing the combined forecast valid times of
@@ -118,7 +111,6 @@ class Abstract2DSectionStyle(object):
         valid_times = list(valid_times)
         valid_times.sort()
         return valid_times
-        
 
     def uses_time_dimensions(self):
         """Returns whether this layer uses the WMS time dimensions. If False,
@@ -129,7 +121,6 @@ class Abstract2DSectionStyle(object):
         from the ECMWF forecast.
         """
         return len(self.required_datafields) > 0
-
 
     def get_elevations(self):
         """Returns a list of available elevations for this layer.
@@ -143,8 +134,8 @@ class Abstract2DSectionStyle(object):
             # Get the latest init time.
             init_times = self.driver.get_init_times()
             if len(init_times) == 0:
-                logging.error("ERROR: cannot determine initialisation time(s) "\
-                              "of this dataset. Check that file structure is "\
+                logging.error("ERROR: cannot determine initialisation time(s) " \
+                              "of this dataset. Check that file structure is " \
                               "in accordance with the used access class in mss_config.py!")
                 return []
             time = init_times[-1]
@@ -161,7 +152,7 @@ class Abstract2DSectionStyle(object):
                                                     init_time=time,
                                                     valid_time=time)
                 except (IOError, ValueError) as e:
-                    logging.debug("WARNING: unsuccessfully examined data for "\
+                    logging.debug("WARNING: unsuccessfully examined data for " \
                                   "init time %s.. trying next time." % time)
                     logging.debug("(Error message: %s)" % e)
                 else:
@@ -183,8 +174,8 @@ class Abstract2DSectionStyle(object):
                                                             init_time=it,
                                                             valid_time=vt)
                         except (IOError, ValueError) as e:
-                            logging.debug("WARNING: unsuccessfully examined data for "\
-                                          "init time %s, valid time %s.. trying next "\
+                            logging.debug("WARNING: unsuccessfully examined data for " \
+                                          "init time %s, valid time %s.. trying next " \
                                           "time." % (it, vt))
                             logging.debug("(Error message: %s)" % e)
                         else:
@@ -193,11 +184,11 @@ class Abstract2DSectionStyle(object):
 
             # If we're still not successful..
             if not successful:
-                logging.error("ERROR: cannot determine whether there's a "\
-                              "vertical coordinate.. something is wrong with "\
+                logging.error("ERROR: cannot determine whether there's a " \
+                              "vertical coordinate.. something is wrong with " \
                               "this dataset!!")
                 return []
-            
+
             # Get a list of the available levels.
             if self.driver.vert_data is not None:
                 return ["%i" % lvl for lvl in sorted(set([int(_x) for _x in self.driver.vert_data]))]
@@ -205,7 +196,6 @@ class Abstract2DSectionStyle(object):
                 return []
         else:
             return []
-
 
     def get_elevation_units(self):
         """Returns the units of the elevation values.

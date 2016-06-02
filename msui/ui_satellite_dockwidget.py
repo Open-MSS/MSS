@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_SatelliteDockWidget(object):
     def setupUi(self, SatelliteDockWidget):
         SatelliteDockWidget.setObjectName("SatelliteDockWidget")
@@ -56,9 +57,15 @@ class Ui_SatelliteDockWidget(object):
         QtCore.QMetaObject.connectSlotsByName(SatelliteDockWidget)
 
     def retranslateUi(self, SatelliteDockWidget):
-        SatelliteDockWidget.setWindowTitle(QtGui.QApplication.translate("SatelliteDockWidget", "Satellite Tracks", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("SatelliteDockWidget", "File with predicted satellite track:", None, QtGui.QApplication.UnicodeUTF8))
-        self.btSelectFile.setText(QtGui.QApplication.translate("SatelliteDockWidget", "...", None, QtGui.QApplication.UnicodeUTF8))
-        self.btLoadFile.setText(QtGui.QApplication.translate("SatelliteDockWidget", "load", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("SatelliteDockWidget", "Predicted satellite overpasses:", None, QtGui.QApplication.UnicodeUTF8))
-
+        SatelliteDockWidget.setWindowTitle(QtGui.QApplication.translate("SatelliteDockWidget", "Satellite Tracks", None,
+                                                                        QtGui.QApplication.UnicodeUTF8))
+        self.label_5.setText(
+            QtGui.QApplication.translate("SatelliteDockWidget", "File with predicted satellite track:", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btSelectFile.setText(
+            QtGui.QApplication.translate("SatelliteDockWidget", "...", None, QtGui.QApplication.UnicodeUTF8))
+        self.btLoadFile.setText(
+            QtGui.QApplication.translate("SatelliteDockWidget", "load", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_6.setText(
+            QtGui.QApplication.translate("SatelliteDockWidget", "Predicted satellite overpasses:", None,
+                                         QtGui.QApplication.UnicodeUTF8))

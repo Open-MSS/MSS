@@ -63,11 +63,9 @@ from PyQt4.QtGui import *
 
 # local application imports
 import flighttrack as ft
-#from mslib.mss_util import tangent_point_coordinates, convertHPAToKM,\
+# from mslib.mss_util import tangent_point_coordinates, convertHPAToKM,\
 #                           datetime_to_jsec, compute_solar_angle, rotatePoint
 from mslib.mss_util import *
-
-
 
 ################################################################################
 ###                             CONSTANTS                                    ###
@@ -98,17 +96,17 @@ def distance_point_linesegment(p, l1, l2):
     # Compute the parameter r in the line formulation p* = l1 + r*(l2-l1).
     # p* is the point on the line at which (p-p*) and (l1-l2) form a right
     # angle.
-    r = np.dot(p-l1, l2-l1)/np.linalg.norm(l2-l1)**2
+    r = np.dot(p - l1, l2 - l1) / np.linalg.norm(l2 - l1) ** 2
     # If 0 < r < 1, we return the distance p-p*. If r > 1, p* is on the
     # forward extension of l1-l2, hence return the distance between
     # p and l2. If r < 0, return the distance p-l1.
     if r > 1:
-        return np.linalg.norm(p-l2)
+        return np.linalg.norm(p - l2)
     elif r < 0:
-        return np.linalg.norm(p-l1)
+        return np.linalg.norm(p - l1)
     else:
-        p_on_line = l1 + r*(l2-l1)
-        return np.linalg.norm(p-p_on_line)
+        p_on_line = l1 + r * (l2 - l1)
+        return np.linalg.norm(p - p_on_line)
 
 
 ################################################################################
@@ -123,12 +121,11 @@ class WaypointsPath(mpath.Path):
     def delete_vertex(self, index):
         """Remove the vertex at the given index from the list of vertices.
         """
-#TODO: Should codes (MOVETO, LINETO) be modified here? relevant for
-#      inserting/deleting first/last point.
+        # TODO: Should codes (MOVETO, LINETO) be modified here? relevant for
+        #      inserting/deleting first/last point.
         # Emulate pop() for ndarray:
         self.vertices = np.delete(self.vertices, index, axis=0)
         self.codes = np.delete(self.codes, index, axis=0)
-
 
     def insert_vertex(self, index, vertex, code):
         """Insert a new vertex (a tuple x,y) with the given code (see
@@ -137,7 +134,6 @@ class WaypointsPath(mpath.Path):
         self.vertices = np.insert(self.vertices, index,
                                   np.asarray(vertex, np.float_), axis=0)
         self.codes = np.insert(self.codes, index, code, axis=0)
-
 
     def index_of_closest_segment(self, x, y, eps=5):
         """Find the index of the edge closest to the specified point at x,y.
@@ -152,33 +148,32 @@ class WaypointsPath(mpath.Path):
 
         # Compute the distance between the first point in the path and
         # the given point.
-        point = np.array([x,y])
+        point = np.array([x, y])
         min_index = 0
-        min_distance = np.linalg.norm(point-self.vertices[0])
+        min_distance = np.linalg.norm(point - self.vertices[0])
 
         # Loop over all line segments. If the distance between the given
         # point and the segment is smaller than a specified threshold AND
         # the distance is smaller than the currently smallest distance
         # then remember the current index.
-        for i in range(len(self.vertices)-1):
+        for i in range(len(self.vertices) - 1):
             l1 = self.vertices[i]
-            l2 = self.vertices[i+1]
+            l2 = self.vertices[i + 1]
             distance = distance_point_linesegment(point, l1, l2)
-            #print i, l1, l2, distance
+            # print i, l1, l2, distance
             if distance < eps and distance < min_distance:
-                min_index = i+1
+                min_index = i + 1
                 min_distance = distance
 
         # Compute the distance between the given point and the end point of
         # the path. Is it smaller than the currently smallest distance?
-        distance = np.linalg.norm(point-self.vertices[-1])
-        #print "last",distance
+        distance = np.linalg.norm(point - self.vertices[-1])
+        # print "last",distance
         if distance < min_distance:
             min_index = len(self.vertices)
 
-        #print "return", min_index, "\n"
+        # print "return", min_index, "\n"
         return min_index
-
 
     def transform_waypoint(self, wps_list, index):
         """Transform the waypoint at index <index> of wps_list to plot
@@ -191,7 +186,6 @@ class WaypointsPath(mpath.Path):
         """
         return (0, 0)
 
-
     def update_from_WaypointsTableModel(self, wps_model):
         """
         """
@@ -200,7 +194,7 @@ class WaypointsPath(mpath.Path):
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
-                pathdata.append((Path.LINETO, self.transform_waypoint(wps, i+1)))
+                pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
 
         self.codes, self.vertices = zip(*pathdata)
         self.codes = np.array(self.codes, dtype=np.uint8)
@@ -214,6 +208,7 @@ class WaypointsPath(mpath.Path):
 class PathV(WaypointsPath):
     """Class to represent a vertical flight profile path.
     """
+
     def __init__(self, *args, **kwargs):
         """The constructor required the additional keyword 'numintpoints':
 
@@ -223,7 +218,6 @@ class PathV(WaypointsPath):
         """
         self.numintpoints = kwargs.pop("numintpoints")
         WaypointsPath.__init__(self, *args, **kwargs)
-
 
     def update_from_WaypointsTableModel(self, wps_model):
         """Extended version of the corresponding WaypointsPath method.
@@ -252,7 +246,7 @@ class PathV(WaypointsPath):
         ipoint = 0
         for i in range(len(lats)):
             if abs(lats[i] - waypoints[ipoint][0]) < 1E-10 and \
-               abs(lons[i] - waypoints[ipoint][1]) < 1E-10:
+                            abs(lons[i] - waypoints[ipoint][1]) < 1E-10:
                 intermediate_indexes.append(i)
                 ipoint += 1
             if ipoint >= len(waypoints): break
@@ -263,7 +257,6 @@ class PathV(WaypointsPath):
 
         # Call super method.
         WaypointsPath.update_from_WaypointsTableModel(self, wps_model)
-
 
     def transform_waypoint(self, wps_list, index):
         """Returns the x-index of the waypoint and its pressure.
@@ -279,13 +272,13 @@ class PathH(WaypointsPath):
     """Class to represent a horizontal flight track path, waypoints connected
        by linear line segments.
     """
+
     def __init__(self, *args, **kwargs):
         """The constructor required the additional keyword 'map' to transform
            vertex cooredinates between lat/lon and projection coordinates.
         """
         self.map = kwargs.pop("map")
         WaypointsPath.__init__(self, *args, **kwargs)
-
 
     def transform_waypoint(self, wps_list, index):
         """Transform lon/lat to projection coordinates.
@@ -308,7 +301,6 @@ class PathH_GC(PathH):
         self.wp_codes = np.array([], dtype=np.uint8)
         self.wp_vertices = np.array([])
 
-
     def update_from_WaypointsTableModel(self, wps_model):
         """Get waypoint coordinates from flight track model, get
            intermediate great circle vertices from map instance.
@@ -320,7 +312,7 @@ class PathH_GC(PathH):
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
-                pathdata.append((Path.LINETO, self.transform_waypoint(wps, i+1)))
+                pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
         self.wp_codes, self.wp_vertices = zip(*pathdata)
         self.wp_codes = np.array(self.wp_codes, dtype=np.uint8)
         self.wp_vertices = np.array(self.wp_vertices)
@@ -332,11 +324,10 @@ class PathH_GC(PathH):
         if len(x) > 0:
             pathdata = [(Path.MOVETO, (x[0], y[0]))]
             for i in range(len(x[1:])):
-                pathdata.append((Path.LINETO, (x[i+1], y[i+1])))
+                pathdata.append((Path.LINETO, (x[i + 1], y[i + 1])))
         self.codes, self.vertices = zip(*pathdata)
         self.codes = np.array(self.codes, dtype=np.uint8)
         self.vertices = np.array(self.vertices)
-
 
     def index_of_closest_segment(self, x, y, eps=5):
         """Find the index of the edge closest to the specified point at x,y.
@@ -356,8 +347,8 @@ class PathH_GC(PathH):
         # Otherwise iterate through the list of great circle points and remember
         # the index of the last "real" waypoint that was encountered in this
         # list.
-        i = 0 # index for great circle points
-        j = 0 # index for waypoints
+        i = 0  # index for great circle points
+        j = 0  # index for waypoints
         wp_vertex = self.wp_vertices[j]
         while (i < gcvertex_index):
             vertex = self.vertices[i]
@@ -380,9 +371,10 @@ class PathInteractor:
     Mission Support System.
     """
 
-    showverts = True # show the vertices of the path patch
+    showverts = True  # show the vertices of the path patch
     epsilon = 5  # max pixel distance to count as a vertex hit when
-                 # picking points
+
+    # picking points
 
 
     def __init__(self, ax=None, waypoints=None, mplpath=None,
@@ -406,7 +398,7 @@ class PathInteractor:
         """
         self.waypoints_model = None
         self.background = None
-        self._ind = None # the active vertex
+        self._ind = None  # the active vertex
         self.editmode = MOVE
 
         # Create a PathPatch representing the interactively editable path
@@ -419,7 +411,7 @@ class PathInteractor:
         self.ax = ax
         self.path = path
         self.pathpatch = pathpatch
-        self.pathpatch.set_animated(True) # ensure correct redrawing
+        self.pathpatch.set_animated(True)  # ensure correct redrawing
 
         # Draw the line representing flight track or profile (correct
         # vertices handling for the line needs to be ensured in subclasses).
@@ -444,7 +436,6 @@ class PathInteractor:
         # Set the waypoints model, connect to the change() signals of the model
         # and redraw the figure.
         self.set_waypoints_model(waypoints)
-
 
     def set_waypoints_model(self, waypoints):
         """Change the underlying waypoints data structure. Disconnect change()
@@ -474,7 +465,6 @@ class PathInteractor:
         self.pathpatch.get_path().update_from_WaypointsTableModel(wpm)
         self.redraw_figure()
 
-
     def qt_insert_remove_point_listener(self, index, first, last):
         """Listens to rowsInserted() and rowsRemoved() signals emitted
            by the flight track data model. The view can thus react to
@@ -483,7 +473,6 @@ class PathInteractor:
         self.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
         self.redraw_figure()
 
-
     def qt_data_changed_listener(self, index1, index2):
         """Listens to dataChanged() signals emitted by the flight track
            data model. The view can thus react to data changes induced
@@ -491,7 +480,6 @@ class PathInteractor:
         """
         # REIMPLEMENT IN SUBCLASSES.
         pass
-
 
     def draw_callback(self, event):
         """Called when the figure is redrawn. Stores background data (for later
@@ -508,13 +496,12 @@ class PathInteractor:
             # out why that error occurs.. (mr, 2013Feb08).
             pass
         self.ax.draw_artist(self.line)
-        for t in self.wp_labels: 
+        for t in self.wp_labels:
             self.ax.draw_artist(t)
-        # The blit() method makes problems (distorted figure background). However,
-        # I don't see why it is needed -- everything seems to work without this line.
-        # (see infos on http://www.scipy.org/Cookbook/Matplotlib/Animations).
-        #self.canvas.blit(self.ax.bbox)
-
+            # The blit() method makes problems (distorted figure background). However,
+            # I don't see why it is needed -- everything seems to work without this line.
+            # (see infos on http://www.scipy.org/Cookbook/Matplotlib/Animations).
+            # self.canvas.blit(self.ax.bbox)
 
     def get_ind_under_point(self, event):
         """Get the index of the waypoint vertex under the point
@@ -526,12 +513,11 @@ class PathInteractor:
         xy = np.asarray(self.pathpatch.get_path().vertices)
         xyt = self.pathpatch.get_transform().transform(xy)
         xt, yt = xyt[:, 0], xyt[:, 1]
-        d = np.sqrt((xt-event.x)**2 + (yt-event.y)**2)
+        d = np.sqrt((xt - event.x) ** 2 + (yt - event.y) ** 2)
         ind = d.argmin()
-        if d[ind]>=self.epsilon:
+        if d[ind] >= self.epsilon:
             ind = None
         return ind
-
 
     def button_press_callback(self, event):
         """Called whenever a mouse button is pressed. Determines the index of
@@ -543,7 +529,6 @@ class PathInteractor:
         if event.button != 1: return
         self._ind = self.get_ind_under_point(event)
 
-
     def set_vertices_visible(self, showverts=True):
         """Set the visibility of path vertices (the line plot).
         """
@@ -551,17 +536,15 @@ class PathInteractor:
         self.line.set_visible(self.showverts)
         for t in self.wp_labels:
             t.set_visible(showverts and self.label_waypoints)
-        if not self.showverts: 
+        if not self.showverts:
             self._ind = None
         self.canvas.draw()
-
 
     def set_patch_visible(self, showpatch=True):
         """Set the visibility of path patch (the area).
         """
         self.pathpatch.set_visible(showpatch)
         self.canvas.draw()
-
 
     def set_labels_visible(self, visible=True):
         """Set the visibility of the waypoint labels.
@@ -571,17 +554,14 @@ class PathInteractor:
             t.set_visible(self.showverts and self.label_waypoints)
         self.canvas.draw()
 
-
     def set_edit_mode(self, mode):
         """Set the edit mode to one of [MOVE, INSERT, DELETE].
         """
         if mode not in [MOVE, INSERT, DELETE]: return
         self.editmode = mode
 
-
     def get_edit_mode(self):
         return self.editmode
-
 
     def redraw_path(self, vertices=None):
         """Redraw the matplotlib artists that represent the flight track
@@ -632,7 +612,6 @@ class PathInteractor:
 
     redraw_figure = redraw_path
 
-
     def confirm_delete_waypoint(self, row):
         """Open a QMessageBox and ask the user if he really wants to
            delete the waypoint at index <row>.
@@ -645,16 +624,15 @@ class PathInteractor:
         wps = self.waypoints_model.allWaypointData(mode=ft.USER)
         if len(wps) < 3:
             QMessageBox.warning(None, "Remove waypoint",
-                 "Cannot remove waypoint, the flight track needs to consist "\
-                 "of at least two points.", QMessageBox.Ok)
+                                "Cannot remove waypoint, the flight track needs to consist " \
+                                "of at least two points.", QMessageBox.Ok)
             return False
         else:
             wp = wps[row]
             return (QMessageBox.question(None, "Remove waypoint",
-                "Remove waypoint no.%i at %.2f/%.2f, flightlevel %.2f?" \
-                % (row, wp.lat, wp.lon, wp.flightlevel),
-                QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes)
-
+                                         "Remove waypoint no.%i at %.2f/%.2f, flightlevel %.2f?" \
+                                         % (row, wp.lat, wp.lon, wp.flightlevel),
+                                         QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes)
 
     def set_path_color(self, line_color=None, marker_facecolor=None,
                        patch_facecolor=None):
@@ -698,14 +676,12 @@ class VPathInteractor(PathInteractor):
         PathInteractor.__init__(self,
                                 ax=ax,
                                 waypoints=waypoints,
-                                mplpath=PathV([[0,0]],
+                                mplpath=PathV([[0, 0]],
                                               numintpoints=numintpoints)
                                 )
 
-
     def get_num_interpolation_points(self):
         return self.numintpoints
-
 
     def redraw_figure(self):
         """For the side view, changes in the horizontal position of a waypoint
@@ -719,7 +695,6 @@ class VPathInteractor(PathInteractor):
             self.redrawXAxis(self.path.ilats, self.path.ilons)
         self.ax.figure.canvas.draw()
 
-
     def button_release_callback(self, event):
         """Called whenever a mouse button is released.
         """
@@ -732,7 +707,7 @@ class VPathInteractor(PathInteractor):
                 self.waypoints_model.removeRows(self._ind)
 
         elif self.editmode == INSERT:
-#TODO: Inserting points is currently not available for side view.
+            # TODO: Inserting points is currently not available for side view.
             pass
 
         elif self.editmode == MOVE and self._ind is not None:
@@ -740,7 +715,7 @@ class VPathInteractor(PathInteractor):
             # in the side view) to the data model.
             vertices = self.pathpatch.get_path().vertices
             pressure = vertices[self._ind][1]
-            #print "moved", self._ind, pressure
+            # print "moved", self._ind, pressure
             # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
@@ -748,7 +723,6 @@ class VPathInteractor(PathInteractor):
             self.waypoints_model.setData(qt_index, QVariant(float(pressure)))
 
         self._ind = None
-
 
     def motion_notify_callback(self, event):
         """Called on mouse movement. Redraws the path if a vertex has been
@@ -769,7 +743,6 @@ class VPathInteractor(PathInteractor):
         vertices[self._ind] = vertices[self._ind][0], event.ydata
         self.redraw_path(vertices)
 
-
     def qt_data_changed_listener(self, index1, index2):
         """Listens to dataChanged() signals emitted by the flight track
            data model. The side view can thus react to data changes
@@ -782,7 +755,7 @@ class VPathInteractor(PathInteractor):
         if index1.column() == ft.FLIGHTLEVEL:
             i = index1.row()
             pres = self.waypoints_model.waypointData(i, mode=ft.USER).pressure
-            #print "SideView: pressure of point %i has been changed to %f." % (i, pres)
+            # print "SideView: pressure of point %i has been changed to %f." % (i, pres)
             vertices = self.pathpatch.get_path().vertices
             vertices[i] = vertices[i][0], pres
             self.redraw_path(vertices)
@@ -835,13 +808,12 @@ class HPathInteractor(PathInteractor):
             (0.0, 0.69999999999999996, 0.0, 1.0)])
         self.solar_norm = BoundaryNorm([0, 5, 10, 15, 25, 35, 45, 60, 90, 135, 180], self.solar_cmap.N)
         PathInteractor.__init__(self, ax=mplmap.ax, waypoints=waypoints,
-                                mplpath=PathH_GC([[0,0]], map=mplmap),
+                                mplpath=PathH_GC([[0, 0]], map=mplmap),
                                 facecolor='none', edgecolor='none',
                                 linecolor=linecolor,
                                 markerfacecolor=markerfacecolor,
                                 marker='',
                                 label_waypoints=label_waypoints)
-
 
     def appropriateEpsilon(self, px=5):
         """Determine an epsilon value appropriate for the current projection and
@@ -860,11 +832,10 @@ class HPathInteractor(PathInteractor):
         map_coords_per_px_x = map_delta_x / width
         # X and Y are always approximately the same, hence it's enough to only
         # consider X.
-        #height = int(round(ax_bounds[3]))
-        #map_delta_y = abs(self.map.llcrnry - self.map.urcrnry)
-        #map_coords_per_px_y = map_delta_y / height
+        # height = int(round(ax_bounds[3]))
+        # map_delta_y = abs(self.map.llcrnry - self.map.urcrnry)
+        # map_coords_per_px_y = map_delta_y / height
         return map_coords_per_px_x * px
-
 
     def button_release_callback(self, event):
         """Called whenever a mouse button is released.
@@ -879,12 +850,12 @@ class HPathInteractor(PathInteractor):
 
         elif self.editmode == INSERT:
             # Get position for new vertex.
-            x,y = event.xdata, event.ydata
+            x, y = event.xdata, event.ydata
             best_index = self.pathpatch.get_path() \
-                         .index_of_closest_segment(x,y,eps=self.appropriateEpsilon())
-            logging.debug("TopView insert point: clicked at (%f, %f), "\
+                .index_of_closest_segment(x, y, eps=self.appropriateEpsilon())
+            logging.debug("TopView insert point: clicked at (%f, %f), " \
                           "best index: %i" % (x, y, best_index))
-            self.pathpatch.get_path().insert_vertex(best_index, [x,y],
+            self.pathpatch.get_path().insert_vertex(best_index, [x, y],
                                                     WaypointsPath.LINETO)
 
             lon, lat = self.map(x, y, inverse=True)
@@ -906,17 +877,16 @@ class HPathInteractor(PathInteractor):
             vertices = self.pathpatch.get_path().wp_vertices
             lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
                                 inverse=True)
-            #print "moved", self._ind, lon, lat
+            # print "moved", self._ind, lon, lat
             # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
-#TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
-#      twice?
+            # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
+            #      twice?
             qt_index = self.waypoints_model.createIndex(self._ind, ft.LAT)
             self.waypoints_model.setData(qt_index, QVariant(round(float(lat), 2)))
             qt_index = self.waypoints_model.createIndex(self._ind, ft.LON)
             self.waypoints_model.setData(qt_index, QVariant(round(float(lon), 2)))
 
         self._ind = None
-
 
     def motion_notify_callback(self, event):
         """Called on mouse movement. Redraws the path if a vertex has been
@@ -931,7 +901,6 @@ class HPathInteractor(PathInteractor):
         wp_vertices[self._ind] = event.xdata, event.ydata
         self.redraw_path(wp_vertices)
 
-
     def qt_data_changed_listener(self, index1, index2):
         """Listens to dataChanged() signals emitted by the flight track
            data model. The top view can thus react to data changes
@@ -939,9 +908,8 @@ class HPathInteractor(PathInteractor):
         """
         # Update the top view if the horizontal position of any point has been
         # changed.
-        if index1.column() in [ft.LOCATION, ft.LAT, ft.LON, ft.FLIGHTLEVEL]: 
+        if index1.column() in [ft.LOCATION, ft.LAT, ft.LON, ft.FLIGHTLEVEL]:
             self.update()
-
 
     def update(self):
         """Update the path plot by updating coordinates and intermediate
@@ -950,7 +918,6 @@ class HPathInteractor(PathInteractor):
         self.pathpatch.get_path().update_from_WaypointsTableModel(
             self.waypoints_model)
         self.redraw_path()
-
 
     def redraw_path(self, wp_vertices=None):
         """Redraw the matplotlib artists that represent the flight track
@@ -986,10 +953,13 @@ class HPathInteractor(PathInteractor):
             if fine_lines is None:
                 x, y = zip(*wp_vertices)
                 wp_lons, wp_lats = self.map(x, y, inverse=True)
-                fine_lines = [self.map.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], del_s=10., map_coords = False) for i in range(len(wp_lons) - 1)]
-                line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in range(len(fine_lines))]
+                fine_lines = [self.map.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], del_s=10.,
+                                                 map_coords=False) for i in range(len(wp_lons) - 1)]
+                line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
+                                range(len(fine_lines))]
                 # fine_lines = list of tuples with x-list and y-list for each segment
-            tplines = [tangent_point_coordinates(fine_lines[i][0], fine_lines[i][1], line_heights[i], cut_height=self.tangent_height) for i in range(len(fine_lines))]
+            tplines = [tangent_point_coordinates(fine_lines[i][0], fine_lines[i][1], line_heights[i],
+                                                 cut_height=self.tangent_height) for i in range(len(fine_lines))]
             for i in range(len(tplines)):
                 l = tplines[i]
                 for j in range(len(l)):
@@ -1010,8 +980,10 @@ class HPathInteractor(PathInteractor):
             if fine_lines is None:
                 x, y = zip(*wp_vertices)
                 wp_lons, wp_lats = self.map(x, y, inverse=True)
-                fine_lines = [self.map.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1]) for i in range(len(wp_lons) - 1)]
-                line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in range(len(fine_lines))]
+                fine_lines = [self.map.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1]) for i in
+                              range(len(wp_lons) - 1)]
+                line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
+                                range(len(fine_lines))]
                 # fine_lines = list of tuples with x-list and y-list for each segment
             # lines = list of tuples with lon-list and lat-list for each segment
             heights = []
@@ -1031,7 +1003,7 @@ class HPathInteractor(PathInteractor):
             total_distance = 0
             for i in range(len(solar_x)):
                 lon, lat = solar_x[i], solar_y[i]
-                points.append([[lon, lat]]) # append double-list for later concatenation
+                points.append([[lon, lat]])  # append double-list for later concatenation
                 if old_wp is None:
                     times.append(start_jsec)
                 else:
@@ -1083,8 +1055,8 @@ class HPathInteractor(PathInteractor):
             textlabel = str(i)
             if wpd[i].location != "":
                 textlabel = "{:}".format(wpd[i].location)
-            t = self.ax.text(x[i]+label_offset,
-                             y[i]+label_offset,
+            t = self.ax.text(x[i] + label_offset,
+                             y[i] + label_offset,
                              textlabel,
                              bbox=dict(boxstyle="round",
                                        facecolor="white",
@@ -1102,7 +1074,7 @@ class HPathInteractor(PathInteractor):
         try:
             self.ax.draw_artist(self.pathpatch)
         except ValueError:
-            pass # silently ignore "ValueError: Invalid codes array."
+            pass  # silently ignore "ValueError: Invalid codes array."
         self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
         for t in self.wp_labels: self.ax.draw_artist(t)
@@ -1112,10 +1084,8 @@ class HPathInteractor(PathInteractor):
             self.ax.draw_artist(self.solarlines)
         self.canvas.blit(self.ax.bbox)
 
-
     # Link redraw_figure() to redraw_path().
     redraw_figure = redraw_path
-
 
     def draw_callback(self, event):
         """Extends PathInteractor.draw_callback() by drawing the scatter
@@ -1123,7 +1093,6 @@ class HPathInteractor(PathInteractor):
         """
         PathInteractor.draw_callback(self, event)
         self.ax.draw_artist(self.wp_scatter)
-
 
     def get_ind_under_point(self, event):
         """Get the index of the waypoint vertex under the point
@@ -1135,12 +1104,11 @@ class HPathInteractor(PathInteractor):
         xy = np.asarray(self.pathpatch.get_path().wp_vertices)
         xyt = self.pathpatch.get_transform().transform(xy)
         xt, yt = xyt[:, 0], xyt[:, 1]
-        d = np.sqrt((xt-event.x)**2 + (yt-event.y)**2)
+        d = np.sqrt((xt - event.x) ** 2 + (yt - event.y) ** 2)
         ind = d.argmin()
-        if d[ind]>=self.epsilon:
+        if d[ind] >= self.epsilon:
             ind = None
         return ind
-
 
     def set_path_color(self, line_color=None, marker_facecolor=None,
                        patch_facecolor=None):
@@ -1158,37 +1126,29 @@ class HPathInteractor(PathInteractor):
             self.wp_scatter.set_edgecolor(marker_facecolor)
             self.markerfacecolor = marker_facecolor
 
-
     def set_vertices_visible(self, showverts=True):
         """Set the visibility of path vertices (the line plot).
         """
         self.wp_scatter.set_visible(showverts)
         PathInteractor.set_vertices_visible(self, showverts)
 
-
     def set_tangent_color(self, tangentcolor='blue'):
         self.tangentcolor = tangentcolor
-
 
     def set_tangent_visible(self, visible=True):
         self.showtangents = visible
 
-
     def is_tangent_visible(self):
         return self.showtangents
-
 
     def set_tangent_height(self, height=1.):
         self.tangent_height = height
 
-
     def get_tangent_height(self):
         return self.tangent_height
 
-
     def set_start_time(self, time=datetime.datetime.now()):
         self.start_time = time
-
 
     def set_solar_angle_visible(self, visible=False):
         self.show_solar_angle = visible

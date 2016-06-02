@@ -86,6 +86,7 @@ import logging
 # related third party imports
 import numpy
 
+
 # local application imports
 
 
@@ -97,7 +98,7 @@ class LagrantoOutputReader(object):
        a specified directory.
     """
 
-    def __init__(self, lagrantoOutputPath, of = sys.stdout):
+    def __init__(self, lagrantoOutputPath, of=sys.stdout):
         """Initialise the reader and read all ls* and lsl* files contained
            in the path argument.
 
@@ -118,18 +119,17 @@ class LagrantoOutputReader(object):
         self.lagrantoOutputPath = os.path.expanduser(lagrantoOutputPath)
         if not os.path.isdir(self.lagrantoOutputPath):
             raise ValueError, "Argument " + \
-                  self.lagrantoOutputPath + \
-                  " does not represent a valid path."
+                              self.lagrantoOutputPath + \
+                              " does not represent a valid path."
 
         self.of = of
         self.data = []  # stores trajectory data from lsl* files
         self.meta = []  # stores metadata belonging to the trajectories
-        self.stats = {} # stores data from ls* files
+        self.stats = {}  # stores data from ls* files
 
         #
         # Read all files contained in lagrantoOutputPath.
         self.__readFilesInDirectory()
-
 
     def __read_lslFile(self, fname):
         """Parse a Lagranto lsl-file and reads the data into NumPy arrays.
@@ -160,7 +160,7 @@ class LagrantoOutputReader(object):
         # containing the individual text lines as elements.
         flsl = open(os.path.join(self.lagrantoOutputPath, fname), 'r')
         lines = flsl.readlines()
-        
+
         #
         # Open and read the metadata file, if existent.
         metafile = os.path.join(self.lagrantoOutputPath, fname) + '.meta.pyl'
@@ -176,7 +176,7 @@ class LagrantoOutputReader(object):
             startCoordinates = None
             startTime = None
             duration = None
-        
+
         #
         # Data contained in the current file will be appended to self.data,
         # hence be accessible under self.data[startIndex + X], where 
@@ -201,7 +201,7 @@ class LagrantoOutputReader(object):
         #
         # Variable names are contained in the line following the first
         # blank line. Initialise empty lists for each variable.
-        varNames = lines[firstBlank+1].split()
+        varNames = lines[firstBlank + 1].split()
         emptyVariableDictionaryTemplate = {}
         for varName in varNames:
             emptyVariableDictionaryTemplate[varName] = []
@@ -214,7 +214,7 @@ class LagrantoOutputReader(object):
         # [-1] index references the last element). If a blank line is
         # encountered, this indicates a new trajectory in the file. Hence, 
         # append a new trajectory to self.data.
-        for dataLine in lines[firstBlank+4:]:
+        for dataLine in lines[firstBlank + 4:]:
             if dataLine == " \n":
                 self.data.append( \
                     copy.deepcopy(emptyVariableDictionaryTemplate))
@@ -231,7 +231,7 @@ class LagrantoOutputReader(object):
             for varName in varNames:
                 self.data[i][varName] = numpy.array(self.data[i][varName])
             metadict = {'file': filename,
-                        'starttime_filename': startTimeFile} 
+                        'starttime_filename': startTimeFile}
             # If metadata is present, check if a metadata dictionary was
             # specified for this trajectory (last element of the start
             # coordinates list is a dictionary, cf. lagranto.py). If yes,
@@ -244,7 +244,6 @@ class LagrantoOutputReader(object):
                 metadict['starttime'] = startTime
                 metadict['duration'] = duration
             self.meta.append(metadict)
-
 
     def __read_lsFile(self, fname):
         """Parse a Lagranto ls-file and reads the data into NumPy arrays.
@@ -271,8 +270,8 @@ class LagrantoOutputReader(object):
             self.starttimes[dataKey] = self.initTimeDir
 
         firstBlank = lines.index(" \n")
-        
-        varNames = lines[firstBlank+1].split()
+
+        varNames = lines[firstBlank + 1].split()
 
         #
         # In the ls-files, all variables except for time, lat and lon are
@@ -284,7 +283,7 @@ class LagrantoOutputReader(object):
         # name appended by a '_stddev'. Note that the first three variabe
         # names (i.e. time, lat, lon) are skipped in this loop.
         for varName in varNames[3:]:
-            varNames.insert(varNames.index(varName)+1, varName+"_stddev")
+            varNames.insert(varNames.index(varName) + 1, varName + "_stddev")
 
         #
         # Also, an additional column following the variable data is stored in
@@ -299,24 +298,23 @@ class LagrantoOutputReader(object):
         #
         # Get the index of the second blank line to get the end of the data
         # section.
-        secondBlank = lines.index(" \n", firstBlank+1)
+        secondBlank = lines.index(" \n", firstBlank + 1)
 
         #
         # Process the data section.
-        for dataLine in lines[firstBlank+3:secondBlank]:
-            for varName, strValue in zip(varNames[:len(varNames)-1],
+        for dataLine in lines[firstBlank + 3:secondBlank]:
+            for varName, strValue in zip(varNames[:len(varNames) - 1],
                                          dataLine.split()):
                 self.stats[dataKey][varName].append(float(strValue))
 
         #
         # Process the second data section containing 'evolution_of_ntraout'.
-        for dataLine in lines[secondBlank+4:]:
+        for dataLine in lines[secondBlank + 4:]:
             strValue = dataLine.split()[1]
             self.stats[dataKey]["evolution_of_ntraout"].append(float(strValue))
 
         for varName in varNames:
             self.stats[dataKey][varName] = numpy.array(self.stats[dataKey][varName])
-
 
     def __readFilesInDirectory(self):
         """Read all files contained in the directory passed to the constructor.
@@ -335,7 +333,7 @@ class LagrantoOutputReader(object):
         #
         # Try to extract the init time from the directory name.
         self.initTimeDir = self.__getDateTimeFromName(subdirname)
-        
+
         #
         # Get a list of files in the directory given by lagrantoOutputPath.
         fileList = os.listdir(self.lagrantoOutputPath)
@@ -357,7 +355,6 @@ class LagrantoOutputReader(object):
         for fname in lsFiles:
             self.__read_lsFile(fname)
 
-
     def __getDateTimeFromName(self, name):
         """Look for a sequence of format YYYYMMDD_hh[mm] in name (where mm is)
            optional and return a datetime object.
@@ -369,15 +366,15 @@ class LagrantoOutputReader(object):
         # to convert the part of the string to a datetime object. If successful,
         # break out of the loop. If the format YYYYMMDD_hhmm is successful,
         # return this value, otherwise try YYYYMMDD_hh.
-        timeFormat = ["%Y%m%d_%H%M", "%Y%m%d_%H"] # YYYYMMDD_hh[mm]
+        timeFormat = ["%Y%m%d_%H%M", "%Y%m%d_%H"]  # YYYYMMDD_hh[mm]
         timeFormatLen = [13, 11]
         time = None
-     
+
         for tf, tflen in zip(timeFormat, timeFormatLen):
             try:
-                for i in range(len(name)-tflen):
+                for i in range(len(name) - tflen):
                     try:
-                        time = datetime.datetime.strptime(name[i:i+tflen], tf)
+                        time = datetime.datetime.strptime(name[i:i + tflen], tf)
                         break
                     except:
                         pass
@@ -385,12 +382,11 @@ class LagrantoOutputReader(object):
                 pass
 
         return time
-    
+
 
 #
 # Perform some tests if the module is called directly. Remember to adjust the
 # paths before executing this script.
 if __name__ == "__main__":
-
     lout = LagrantoOutputReader(
-                        '/path/to/lagranto/output/scf_ensemble_test_N01')
+        '/path/to/lagranto/output/scf_ensemble_test_N01')

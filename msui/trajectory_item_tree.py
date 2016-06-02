@@ -37,8 +37,10 @@ import logging
 # related third party imports
 from PyQt4 import QtCore, QtGui
 import numpy
+
 try:
     import nappy
+
     hasNAppy = True
 except:
     print "*** NAppy is not available. You will not be able to read NASA Ames files. ***"
@@ -94,18 +96,14 @@ class AbstractLagrantoDataItem:
         if parent:
             parent.appendChild(self)
 
-
     def appendChild(self, item):
         self.childItems.append(item)
-
 
     def child(self, row):
         return self.childItems[row]
 
-
     def childCount(self):
         return len(self.childItems)
-
 
     def treeViewData(self, column):
         """Return string data for display in the tree view.
@@ -129,25 +127,22 @@ class AbstractLagrantoDataItem:
             s = ''
             try:
                 s += 'time(%s)' % self.gxElements['general'][
-                                        'timeMarkerInterval'].strftime('%H:%M') 
+                    'timeMarkerInterval'].strftime('%H:%M')
             except:
                 pass
             return s
         else:
             return ''
 
-        
     def parent(self):
         return self.parentItem
-
 
     def row(self):
         if self.parentItem:
             return self.parentItem.childItems.index(self)
         else:
             return 0
-        
-    
+
     def setVisibleInView(self, view_id, visible):
         """Set the visibility of this item in the view with the identifier
            <view_id>.
@@ -160,27 +155,23 @@ class AbstractLagrantoDataItem:
         else:
             if view_id in self.views:
                 self.views.remove(view_id)
-            
 
     def isVisible(self, view_id):
         """Is this item visible in the view with identifier <view_id>?
         """
-##         logging.debug("%s is visible on %s: %s" % (self.itemName,
-##                                                    view_id,
-##                                                    view_id in self.views))
+        ##         logging.debug("%s is visible on %s: %s" % (self.itemName,
+        ##                                                    view_id,
+        ##                                                    view_id in self.views))
         return view_id in self.views
-
 
     def getName(self):
         return self.itemName
-
 
     def isRoot(self):
         """Return True if item is the root item of a tree (ie., it has no
            parent).
         """
         return not self.parentItem
-
 
     def setGxElementProperty(self, element, eproperty, value):
         """
@@ -189,19 +180,15 @@ class AbstractLagrantoDataItem:
             self.gxElements[element] = {}
         self.gxElements[element][eproperty] = value
 
-
     def getGxElements(self):
         return self.gxElements
 
-
     def getGxElementProperty(self, element, eproperty):
         return self.gxElements[element][eproperty]
-    
-    
+
     def hasMetadata(self):
         return self.hasMetadata
-    
-    
+
     def getMetadata(self):
         """Return metadata dictionary of the item.
         
@@ -209,8 +196,7 @@ class AbstractLagrantoDataItem:
         classes.
         """
         raise NotImplementedError, \
-              "Abstract AbstractLagrantoDataItem.getMetadata called."
-
+            "Abstract AbstractLagrantoDataItem.getMetadata called."
 
     def getMetadataValue(self, key):
         """Return the value belonging to a metadata key.
@@ -219,8 +205,7 @@ class AbstractLagrantoDataItem:
         classes.
         """
         raise NotImplementedError, \
-              "Abstract AbstractLagrantoDataItem.getMetadataValue called."
-
+            "Abstract AbstractLagrantoDataItem.getMetadataValue called."
 
 
 ################################################################################
@@ -230,8 +215,8 @@ class AbstractLagrantoDataItem:
 class LagrantoMapItem(AbstractLagrantoDataItem):
     """
     """
-    
-    def __init__(self, name, visible, parent = None):
+
+    def __init__(self, name, visible, parent=None):
         """
         """
         AbstractLagrantoDataItem.__init__(self, name, visible, parent)
@@ -246,7 +231,6 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         self.setGxElementProperty("general", "linewidth", None)
         self.setGxElementProperty("general", "timeMarkerInterval", None)
 
-
     def treeViewData(self, column):
         """Return string data for display in the tree view.
         
@@ -259,44 +243,38 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
             # Start coordinates from first elements of lon/lat/p variables.
             try:
                 return '%.2f, %.2f, %.1f' % \
-                        (self.lonVariableChild.getVariableData()[0],
-                         self.latVariableChild.getVariableData()[0],
-                         self.pressureVariableChild.getVariableData()[0])
+                       (self.lonVariableChild.getVariableData()[0],
+                        self.latVariableChild.getVariableData()[0],
+                        self.pressureVariableChild.getVariableData()[0])
             except:
                 return ''
         else:
             return ''
-
 
     def getTimeVariable(self):
         """Return the child item that holds the time variable.
         """
         return self.timeVariableChild
 
-
     def getLonVariable(self):
         """Return the child item that holds the longitude variable.
         """
         return self.lonVariableChild
-
 
     def getLatVariable(self):
         """Return the child item that holds the latitude variable.
         """
         return self.latVariableChild
 
-
     def getPressureVariable(self):
         """Return the child item that holds the pressure variable.
         """
         return self.pressureVariableChild
 
-
     def getTimeMarkerIndexes(self):
         """Return an array containing the indexes of the time marker points.
         """
         return self.timeMarkerIndexes
-
 
     def setGxElementProperty(self, element, eproperty, value):
         """Overloads AbstractLagrantoDataItem.setGxElementProperty(). Calls
@@ -312,7 +290,6 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
                 self.timeSeriesPlotter.update()
             except:
                 pass
-
 
     def __computeTimeMarkerIndexes(self, requestedInterval):
         """Computes the indexes for the variable arrays at which time markers
@@ -372,11 +349,11 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         # If we're not using the requested interval store the new interval value
         # to gxElements.
         if interval != requestedInterval:
-            self.gxElements["general"]["timeMarkerInterval"].replace(hour = 0,
-                                                                     minute = 0)
+            self.gxElements["general"]["timeMarkerInterval"].replace(hour=0,
+                                                                     minute=0)
             self.gxElements["general"]["timeMarkerInterval"] += \
-                                        datetime.timedelta(seconds = interval)
-            
+                datetime.timedelta(seconds=interval)
+
         #
         # Compute the time marker times: arange from the first to the last data
         # point in the time variable, spacing is 'interval'.
@@ -392,9 +369,8 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         # Find the indexes in the time variable array that correspond to these
         # times.
         self.timeMarkerIndexes = timeDataInSeconds.searchsorted(
-                                                        markerTimesInSeconds)
-        
-        
+            markerTimesInSeconds)
+
     def translateQueryString(self, qstring):
         """Translate a user query string containing %lon, %lat, %pres and %meta
            identifiers into a Python statement that can be evaluated with
@@ -406,16 +382,15 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         Arguments:
         qstring -- user query string.
         """
-        qstring = qstring.replace('%lon', 
+        qstring = qstring.replace('%lon',
                                   'self.lonVariableChild.getVariableData()[0]')
-        qstring = qstring.replace('%lat', 
+        qstring = qstring.replace('%lat',
                                   'self.latVariableChild.getVariableData()[0]')
-        qstring = qstring.replace('%pres', 
-                             'self.pressureVariableChild.getVariableData()[0]')
+        qstring = qstring.replace('%pres',
+                                  'self.pressureVariableChild.getVariableData()[0]')
         qstring = qstring.replace('%meta', 'self.getMetadataValue')
         return qstring
-    
-    
+
     def query(self, qstring):
         """Evaluate the translated query string qstring. Note that the query
            must be translated into a Python statement by using
@@ -426,7 +401,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         """
         return eval(qstring)
 
-    
+
 ################################################################################
 ###                        CLASS FlightTrackItem                             ###
 ################################################################################
@@ -464,14 +439,13 @@ class FlightTrackItem(LagrantoMapItem):
         for variable in variableNames:
             newItem = FlightTrackVariableItem(variable, False, self)
 
-
         self.timeVariableChild = None
         for identifier in [self.nafile.XNAME[0]]:
             for item in self.childItems:
                 if item.getName().find(identifier) >= 0:
                     self.timeVariableChild = item
-                    logging.debug("identified time variable <%s>" 
-                                   % item.getName())
+                    logging.debug("identified time variable <%s>"
+                                  % item.getName())
                     #
                     # The time variable has to be modified a bit: convert
                     # seconds to hours and change the name correspondingly.
@@ -487,7 +461,7 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.lonVariableChild = item
-                    logging.debug("identified longitude variable <%s> with "\
+                    logging.debug("identified longitude variable <%s> with " \
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
             if self.lonVariableChild is not None: break
@@ -497,21 +471,20 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.latVariableChild = item
-                    logging.debug("identified latitude variable <%s> with "\
+                    logging.debug("identified latitude variable <%s> with " \
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
             if self.latVariableChild is not None: break
-            
+
         self.pressureVariableChild = None
         for identifier in mss_settings.traj_nas_p_identifier:
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.pressureVariableChild = item
-                    logging.debug("identified pressure variable <%s> with "\
+                    logging.debug("identified pressure variable <%s> with " \
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
             if self.pressureVariableChild is not None: break
-
 
     def __readNasaAmesFile(self):
         """Read the NASA Ames file 'self.nasFileName'.
@@ -536,18 +509,17 @@ class FlightTrackItem(LagrantoMapItem):
         for i in range(self.nafile.V.shape[0]):
             Vtemp.append(numpy.ma.masked_values(self.nafile.V[i],
                                                 self.nafile.VMISS[i]))
-        # Append independent variable to list of variables. Independent
-        # variables don't have a missing value, hence the dummy -9999.. here.
-#TODO: This should be revised; the individual FlightTrackVariableItem shouldn't
-#      access their parent's 'self.nafile.V' attribute to access the data;
-#      instead they should own their own data array.
+            # Append independent variable to list of variables. Independent
+            # variables don't have a missing value, hence the dummy -9999.. here.
+            # TODO: This should be revised; the individual FlightTrackVariableItem shouldn't
+        #      access their parent's 'self.nafile.V' attribute to access the data;
+        #      instead they should own their own data array.
         Vtemp.append(numpy.ma.masked_values(self.nafile.X,
                                             -99999999))
         self.nafile.VNAME.append(self.nafile.XNAME[0])
 
         self.nafile.V = numpy.ma.masked_array(Vtemp)
-        
-        
+
     def getMetadataValue(self, key):
         """Return the value belonging to a metadata key.
         
@@ -556,14 +528,12 @@ class FlightTrackItem(LagrantoMapItem):
         """
         return None
 
-
     def getStartTime(self):
         """Return the start time of the trajectory as a datetime object.
         """
         # Get the date from the NASA Ames file as a list [YYYY, MM, DD].
         nas_date = self.nafile.getFileDates()[0]
         return datetime.datetime(nas_date[0], nas_date[1], nas_date[2])
-        
 
 
 ################################################################################
@@ -573,6 +543,7 @@ class FlightTrackItem(LagrantoMapItem):
 class LagrantoOutputItem(LagrantoMapItem):
     """Holds all data stored in a Lagranto output directory.
     """
+
     def __init__(self, path, visible, parent=None):
         """Constructor.
 
@@ -589,7 +560,6 @@ class LagrantoOutputItem(LagrantoMapItem):
         self.loutput = None
         self.__readLagrantoOutput()
 
-
     def __readLagrantoOutput(self):
         """
         """
@@ -601,13 +571,12 @@ class LagrantoOutputItem(LagrantoMapItem):
         # LagrantoOutputReader.
         for i, (trajectory, metadata) in enumerate(zip(self.loutput.data,
                                                        self.loutput.meta)):
-            trname = '%04i ' % i 
+            trname = '%04i ' % i
             if 'startcoordinates' in metadata.keys():
                 trname += str(['%.2f' % r for r in
                                metadata['startcoordinates']]).replace('\'', '')
             newItem = TrajectoryItem(trname, True, self, trajectory, metadata)
-            
-            
+
 
 ################################################################################
 ###                         CLASS TrajectoryItem                             ###
@@ -619,6 +588,7 @@ class TrajectoryItem(LagrantoMapItem):
     Data is accessible as TrajectoryItem.data['varname']; all available
     variables can be queried with TrajectoryItem.data.keys().
     """
+
     def __init__(self, trajectoryname, visible, parent=None, trdata=None,
                  trmetadata=None):
         """Constructor.
@@ -655,7 +625,7 @@ class TrajectoryItem(LagrantoMapItem):
             if variable == "time":
                 self.timeVariableChild = newItem
                 self.timeVariableChild.itemName += " [hr since " + \
-                        self.getStartTime().strftime("%Y-%m-%d %H:%M UTC") + "]"
+                                                   self.getStartTime().strftime("%Y-%m-%d %H:%M UTC") + "]"
                 self.data[self.timeVariableChild.itemName] = self.data[variable]
             elif variable == "lon":
                 self.lonVariableChild = newItem
@@ -663,7 +633,6 @@ class TrajectoryItem(LagrantoMapItem):
                 self.latVariableChild = newItem
             elif variable == "p":
                 self.pressureVariableChild = newItem
-
 
     def treeViewData(self, column):
         """Return string data for display in the tree view.
@@ -675,8 +644,8 @@ class TrajectoryItem(LagrantoMapItem):
             return LagrantoMapItem.treeViewData(self, column)
         elif column == 5:
             return '%s for %i hrs' % \
-                (self.getStartTime().strftime('%Y-%m-%d %H:%M UTC'),
-                 self.timeVariableChild.getVariableData()[-1])
+                   (self.getStartTime().strftime('%Y-%m-%d %H:%M UTC'),
+                    self.timeVariableChild.getVariableData()[-1])
         elif column == 6:
             s = ''
             for key, value in self.metadata.items():
@@ -685,7 +654,6 @@ class TrajectoryItem(LagrantoMapItem):
                     s += '%s = %s, ' % (key, str(value))
             return s
 
-
     def getStartTime(self):
         """Return the start time of the trajectory as a datetime object.
         """
@@ -693,16 +661,14 @@ class TrajectoryItem(LagrantoMapItem):
             return self.metadata['starttime']
         except:
             return self.metadata['starttime_filename']
-        
-        
+
     def getMetadata(self):
         """Return the metadata dictionary.
         
         This method implements AbstractLagrantoDataItem.getMetadata().
         """
         return self.metadata
-    
-    
+
     def getMetadataValue(self, key):
         """Return the value belonging to a metadata key.
         
@@ -733,18 +699,17 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
        can use the common interface and not bother about the data is stored
        in respective parent nodes.
     """
+
     def __init__(self, name, visible, parent=None):
         """The constructor takes the same arguments as AbstractLagrantoDataItem.
            Only the constructor of the superclass is called.
         """
         AbstractLagrantoDataItem.__init__(self, name, visible, parent)
 
-
     def getVariableName(self):
         """Return the name of the variable.
         """
         return self.itemName
-
 
     def getVariableData(self):
         """Return the data associated with this variable. This method depends
@@ -756,8 +721,7 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
         classes.
         """
         raise NotImplementedError, \
-              "Abstract AbstractVariableNameItem.getVariableData called."
-
+            "Abstract AbstractVariableNameItem.getVariableData called."
 
     def exceedsThreshold(self, threshold=0.):
         """Determines time intervals in which the value of the variable
@@ -775,7 +739,7 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
         timeData = self.parentItem.getTimeVariable().getVariableData()
 
         aboveThreshold = False
-        timeWindows = []        
+        timeWindows = []
         for i in range(len(myData)):
             if not aboveThreshold and myData[i] > threshold:
                 aboveThreshold = True
@@ -785,7 +749,6 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
                 timeWindows.append([windowStartTime, timeData[i]])
 
         return timeWindows
-            
 
     def setGxElementProperty(self, element, eproperty, value):
         """Overloads AbstractLagrantoDataItem.setGxElementProperty(). Calls
@@ -795,12 +758,11 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
         """
         if element == "general":
             raise LagrantoTreeModelUnsupportedOperationError, \
-                  "Setting " + element + "/" + eproperty + \
-                  " is not supported by AbstractVariableItem."
+                "Setting " + element + "/" + eproperty + \
+                " is not supported by AbstractVariableItem."
         else:
             AbstractLagrantoDataItem.setGxElementProperty(self, element,
                                                           eproperty, value)
-
 
 
 ################################################################################
@@ -810,6 +772,7 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
 class FlightTrackVariableItem(AbstractVariableItem):
     """
     """
+
     def getVariableData(self):
         """Return the data associated with this variable.
 
@@ -818,7 +781,6 @@ class FlightTrackVariableItem(AbstractVariableItem):
         naVNames = self.parentItem.nafile.VNAME
         index = naVNames.index(self.itemName)
         return self.parentItem.nafile.V[index, :]
-
 
     def getGxElementProperty(self, element, eproperty):
         """Return graphics properties (colour etc.) that are stored in the
@@ -831,7 +793,6 @@ class FlightTrackVariableItem(AbstractVariableItem):
                                                              eproperty)
 
 
-
 ################################################################################
 ###                      CLASS TrajectoryVariableItem                        ###
 ################################################################################
@@ -839,6 +800,7 @@ class FlightTrackVariableItem(AbstractVariableItem):
 class TrajectoryVariableItem(AbstractVariableItem):
     """
     """
+
     def getVariableData(self):
         """Return the data associated with this variable.
 
@@ -846,7 +808,6 @@ class TrajectoryVariableItem(AbstractVariableItem):
         """
         return self.parentItem.data[self.itemName]
 
-   
 
 ################################################################################
 ###                    CLASS LagrantoMapItemsTreeModel                       ###
@@ -859,6 +820,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
        observe it..
        
     """
+
     def __init__(self, data=None, parent=None):
         QtCore.QAbstractItemModel.__init__(self, parent)
 
@@ -873,10 +835,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
 
         self.lastChange = "INIT"
 
-
     def getRootItem(self):
         return self.rootItem
-
 
     def columnCount(self, parent):
         """Return number of columns to be displayed in the tree view.
@@ -886,7 +846,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         is independent of the parent.
         """
         return len(self.header)
-
 
     def data(self, index, role):
         """Return data to be displayed in the tree view.
@@ -901,13 +860,11 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
 
         return QtCore.QVariant(item.treeViewData(index.column()))
 
-
     def flags(self, index):
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
 
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-
 
     def headerData(self, section, orientation, role):
         """Return descriptions of the columns ('sections') in the tree view
@@ -919,7 +876,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
             return QtCore.QVariant(self.header[section])
 
         return QtCore.QVariant()
-    
 
     def index(self, row, column, parent):
         """
@@ -928,7 +884,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         QModelIndex parent
         """
         if row < 0 or column < 0 or \
-            row >= self.rowCount(parent) or column >= self.columnCount(parent):
+                        row >= self.rowCount(parent) or column >= self.columnCount(parent):
             return QtCore.QModelIndex()
 
         if not parent.isValid():
@@ -942,7 +898,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         else:
             return QtCore.QModelIndex()
 
-
     def parent(self, index):
         if not index.isValid():
             return QtCore.QModelIndex()
@@ -955,7 +910,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
 
         return self.createIndex(parentItem.row(), 0, parentItem)
 
-
     def rowCount(self, parent):
         if parent.column() > 0:
             return 0
@@ -966,7 +920,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
             parentItem = parent.internalPointer()
 
         return parentItem.childCount()
-
 
     def addFlightTrack(self, flighttrack):
         """
@@ -992,9 +945,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
                   index, index)
         self.emit(QtCore.SIGNAL('layoutChanged()'))
-        
-        return index
 
+        return index
 
     def addTrajectoryDirectory(self, path):
         """
@@ -1020,10 +972,9 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
                   index, index)
         self.emit(QtCore.SIGNAL('layoutChanged()'))
-        
+
         return index
 
-        
     def setItemVisibleInView(self, index, view_window, visible,
                              emit_change=True):
         """
@@ -1036,7 +987,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                 self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
                           index, index)
                 self.emit(QtCore.SIGNAL('layoutChanged()'))
-
 
     def setItemVisibleInView_list(self, indices, view_window, visible,
                                   emit_change=True):
@@ -1054,14 +1004,11 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                       indices[0], indices[-1])
             self.emit(QtCore.SIGNAL('layoutChanged()'))
 
-
-
     def emitChange(self, index1, index2, mode="GXPROPERTY_CHANGE"):
         self.lastChange = mode
         self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
                   index1, index2)
         self.emit(QtCore.SIGNAL('layoutChanged()'))
-
 
     def getLastChange(self):
         """Returns a description of the last change that has been made
@@ -1078,7 +1025,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         """
         return self.lastChange
 
-
     def changeItemGxProperty(self, index, element, eproperty, value):
         """Change a graphics property of the item given by index. Specify
            graphics element, property to be changed and the new value.
@@ -1092,7 +1038,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
             self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
                       index, index)
             self.emit(QtCore.SIGNAL('layoutChanged()'))
-
 
     def changeItemGxProperty_list(self, indices, element, eproperty, value):
         """Change a graphics property of the items given by the list indices.
@@ -1112,7 +1057,6 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                       indices[0], indices[-1])
             self.emit(QtCore.SIGNAL('layoutChanged()'))
 
-
     def setTimeMarker(self, index, interval, emit_change=True):
         """Set the time marker interval property of the item given by the
            index. If the given time interval is smaller than the interval
@@ -1131,8 +1075,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                 self.emit(QtCore.SIGNAL('layoutChanged()'))
 
             return item.getGxElementProperty("general", "timeMarkerInterval")
-        
-        
+
     def selectionFromQuery(self, query, index=None):
         """Translate a selection query string into a Python statement and
            check for each item in the tree if the query is fulfilled.
@@ -1183,7 +1126,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
             #
             # Only flight tracks and trajectories can be queried and selected.
             if isinstance(item, FlightTrackItem) or \
-               isinstance(item, TrajectoryItem):  
+                    isinstance(item, TrajectoryItem):
                 #
                 # Check if the item matches the query.
                 if item.query(queryTranslation):
@@ -1198,4 +1141,3 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                     itemSelection.append(itemSelectionRange)
 
         return itemSelection
-

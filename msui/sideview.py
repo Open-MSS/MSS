@@ -81,9 +81,9 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
                                  "draw_flighttrack": True,
                                  "fill_flighttrack": True,
                                  "label_flighttrack": True,
-                                 "colour_ft_vertices": (0,0,0,0),
-                                 "colour_ft_waypoints": (0,0,0,0),
-                                 "colour_ft_fill": (0,0,0,0)}
+                                 "colour_ft_vertices": (0, 0, 0, 0),
+                                 "colour_ft_waypoints": (0, 0, 0, 0),
+                                 "colour_ft_fill": (0, 0, 0, 0)}
         default_settings_dict.update(settings_dict)
         settings_dict = default_settings_dict
 
@@ -94,7 +94,7 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.tableWidget.setRowCount(len(flightlevels))
         flightlevels.sort()
         for i, level in enumerate(flightlevels):
-            tableitem = QtGui.QTableWidgetItem("%3i"%level)
+            tableitem = QtGui.QTableWidgetItem("%3i" % level)
             self.tableWidget.setItem(i, 0, tableitem)
 
         self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
@@ -127,7 +127,6 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.connect(self.tableWidget, QtCore.SIGNAL("itemChanged(QTableWidgetItem *)"),
                      self.itemChanged)
 
-
     def setColour(self, which):
         """Slot for the colour buttons: Opens a QColorDialog and sets the
            new button face colour.
@@ -149,13 +148,11 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
                 colour.setAlphaF(0.15)
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
- 
 
     def addItem(self):
         """Add a new item (i.e. flight level) to the table.
         """
         self.tableWidget.insertRow(self.tableWidget.rowCount())
-        
 
     def deleteSelected(self):
         """Remove the selected items (i.e. flight levels) from the table.
@@ -163,7 +160,6 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         selecteditems = self.tableWidget.selectedItems()
         for item in selecteditems:
             self.tableWidget.removeRow(item.row())
-        
 
     def itemChanged(self, item):
         """Slot that is called when an item has been changed. Checks for
@@ -178,16 +174,14 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             flightlevel = 0
         if flightlevel > 999:
             flightlevel = 999
-        item.setText("%3i"%flightlevel)
+        item.setText("%3i" % flightlevel)
         self.tableWidget.sortItems(0)
-
 
     def getFlightLevels(self):
         """Returns the flight level values contained in the table.
         """
         return [int(str(self.tableWidget.item(row, 0).text()))
                 for row in range(self.tableWidget.rowCount())]
-
 
     def getSettings(self):
         """Return settings dictionary with values from the GUI elements.
@@ -205,9 +199,8 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
                 QtGui.QPalette(self.btWaypointsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_ft_fill":
                 QtGui.QPalette(self.btFillColour.palette()).color(QtGui.QPalette.Button).getRgbF()
-            }
+        }
         return settings_dict
-        
 
 
 ################################################################################
@@ -259,7 +252,6 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
         self.connect(self.btDelWaypoint, QtCore.SIGNAL("clicked()"),
                      functools.partial(wpi.set_edit_mode, mpl_pi.DELETE))
 
-
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
         """
@@ -276,7 +268,6 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
-            
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance that the view displays.
@@ -284,7 +275,6 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
         super(MSSSideViewWindow, self).setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
-        
 
     def setOptions(self):
         """Slot to open a dialog that lets the user specifiy sideview options.
@@ -298,19 +288,17 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
             self.saveSettings()
         dlg.destroy()
 
-
     def saveSettings(self):
         """Save the current settings (vertical extent, displayed flightlevels
            etc.) to the file self.settingsfile.
         """
-#TODO: ConfigParser and a central configuration file might be the better solution than pickle.
-# http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
+        # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
+        # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         settings = self.getView().getSettings()
         logging.debug("storing settings to %s" % self.settingsfile)
         fileobj = open(self.settingsfile, "w")
         pickle.dump(settings, fileobj)
         fileobj.close()
-
 
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
@@ -321,7 +309,6 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
             settings = pickle.load(fileobj)
             fileobj.close()
             self.getView().setSettings(settings)
-            
 
 
 ################################################################################
@@ -345,7 +332,7 @@ if __name__ == "__main__":
     waypoints_model = ft.WaypointsTableModel(QtCore.QString(""))
     waypoints_model.insertRows(0, rows=len(initial_waypoints),
                                waypoints=initial_waypoints)
-    
+
     app = QtGui.QApplication(sys.argv)
     win = MSSSideViewWindow(model=waypoints_model)
     win.show()

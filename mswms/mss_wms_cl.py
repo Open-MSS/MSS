@@ -94,7 +94,6 @@ import mss_wms_wsgi
 import mss_wms_settings
 from mslib import mss_config
 
-
 ################################################################################
 ###                              Main Program                                ###
 ################################################################################
@@ -110,31 +109,31 @@ if __name__ == "__main__":
 
     # Specify the command line options.
     parser.add_option("-c", "--crs", dest="crs",
-                      help="Coordinate reference system of the plot "\
-                      "to generate. Must be either an EPSG code (for "\
-                      "codes registered with the system see "\
-                      "mss_wms_settings.py) or VERT:LOGP for vertical "\
-                      "sections.", metavar="CRS")
+                      help="Coordinate reference system of the plot " \
+                           "to generate. Must be either an EPSG code (for " \
+                           "codes registered with the system see " \
+                           "mss_wms_settings.py) or VERT:LOGP for vertical " \
+                           "sections.", metavar="CRS")
     parser.add_option("-l", "--layer", dest="layer",
-                      help="Layer instance to be plotted. Must be the name "\
-                      "of a layer registered with the WMS.", metavar="LAYER")
+                      help="Layer instance to be plotted. Must be the name " \
+                           "of a layer registered with the WMS.", metavar="LAYER")
     parser.add_option("-s", "--style", dest="style",
-                      help="Style of the layer to be plotted, if "\
-                      "the layer provides styles. ", metavar="STYLE")
+                      help="Style of the layer to be plotted, if " \
+                           "the layer provides styles. ", metavar="STYLE")
     parser.add_option("-i", "--inittime", dest="inittime",
-                      help="Initialisation time of the forecast to be used. "\
-                      "Must be of the format 2011-01-01T00:00:00Z.",
+                      help="Initialisation time of the forecast to be used. " \
+                           "Must be of the format 2011-01-01T00:00:00Z.",
                       metavar="TIME")
     parser.add_option("-v", "--validtime", dest="validtime",
-                      help="Valid time of the requested plot. "\
-                      "Must be of the format 2011-01-01T00:00:00Z.",
+                      help="Valid time of the requested plot. " \
+                           "Must be of the format 2011-01-01T00:00:00Z.",
                       metavar="TIME")
     parser.add_option("-x", "--width", dest="width",
-                      help="Width of the image file to be generated in "\
-                      "pixels.", metavar="WIDTH")
+                      help="Width of the image file to be generated in " \
+                           "pixels.", metavar="WIDTH")
     parser.add_option("-y", "--height", dest="height",
-                      help="Height of the image file to be generated in "\
-                      "pixels.", metavar="WIDTH")
+                      help="Height of the image file to be generated in " \
+                           "pixels.", metavar="WIDTH")
     parser.add_option("-f", "--frame", action="store_true",
                       dest="frame", default=True,
                       help="Plot figure title and legend outside the data plot.")
@@ -142,50 +141,50 @@ if __name__ == "__main__":
                       dest="transparent", default=False,
                       help="Produce a transparent image file.")
     parser.add_option("-b", "--bbox", dest="bbox",
-                      help="Bounding box of the figure. For maps this has "\
-                      "to be a comma separated list of the four corner "\
-                      "coordinates of the map (LON1,LAT1,LON2,LAT2 where 1 "\
-                      "and 2 specifiy the lower left and the upper right "\
-                      "corner of the plot), for vertical sections the "\
-                      "bounding box sepcifies the four values "\
-                      "(NINT,PBOT,NLAB,PTOP where NINT and NLAB specify the "\
-                      "number of interpolation points to be used along the "\
-                      "vertical section path and the number of labels to be "\
-                      "to be plotted along the x-axis, and PBOT and PTOP "\
-                      "specify the botton and top pressure of the section).",
+                      help="Bounding box of the figure. For maps this has " \
+                           "to be a comma separated list of the four corner " \
+                           "coordinates of the map (LON1,LAT1,LON2,LAT2 where 1 " \
+                           "and 2 specifiy the lower left and the upper right " \
+                           "corner of the plot), for vertical sections the " \
+                           "bounding box sepcifies the four values " \
+                           "(NINT,PBOT,NLAB,PTOP where NINT and NLAB specify the " \
+                           "number of interpolation points to be used along the " \
+                           "vertical section path and the number of labels to be " \
+                           "to be plotted along the x-axis, and PBOT and PTOP " \
+                           "specify the botton and top pressure of the section).",
                       metavar="BBOX")
     parser.add_option("-e", "--elevation", dest="elevation",
-                      help="(maps only) Specifies the vertical level of the "\
-                      "dataset to be used. Depending on the layer, the units"\
-                      "are hPa, model level, potential temperature or "\
-                      "potential vorticity.\nNOTE that you can also specify "\
-                      "a comma separated list of vertical levels here, all of "\
-                      "which will be plotted (e.g. 700,850,925)",
+                      help="(maps only) Specifies the vertical level of the " \
+                           "dataset to be used. Depending on the layer, the units" \
+                           "are hPa, model level, potential temperature or " \
+                           "potential vorticity.\nNOTE that you can also specify " \
+                           "a comma separated list of vertical levels here, all of " \
+                           "which will be plotted (e.g. 700,850,925)",
                       metavar="ELEVATION")
     parser.add_option("-p", "--path", dest="path",
-                      help="(vertical sections only) Coordinates of the "\
-                      "points that specify the path along which the vertical "\
-                      "section shall be plotted. Must be a comma separated "\
-                      "list LAT1,LON1,LAT2,LON2,... with arbitrarily many "\
-                      "points. The individual points are connected with "\
-                      "great circles.", metavar="LAT1,LON1,LAT2,LON2,...")
+                      help="(vertical sections only) Coordinates of the " \
+                           "points that specify the path along which the vertical " \
+                           "section shall be plotted. Must be a comma separated " \
+                           "list LAT1,LON1,LAT2,LON2,... with arbitrarily many " \
+                           "points. The individual points are connected with " \
+                           "great circles.", metavar="LAT1,LON1,LAT2,LON2,...")
     parser.add_option("--timeloop", dest="timeloop",
-                      help="Loop over valid time to generate a sequence of "\
-                      "images. Must be a list of three values FROM,TO,STEP "\
-                      "that specify the forecast steps to be used (starting "\
-                      "at the intitialisation time). For instance, to "\
-                      "generate plots of all forecast steps from the analysis "\
-                      "to forecast step 72 in 3 hour intervals, use the "\
-                      "parameter 0,72,3. Valid times that are not available "\
-                      "in the dataset will be ignored.", metavar="FROM,TO,STEP")
+                      help="Loop over valid time to generate a sequence of " \
+                           "images. Must be a list of three values FROM,TO,STEP " \
+                           "that specify the forecast steps to be used (starting " \
+                           "at the intitialisation time). For instance, to " \
+                           "generate plots of all forecast steps from the analysis " \
+                           "to forecast step 72 in 3 hour intervals, use the " \
+                           "parameter 0,72,3. Valid times that are not available " \
+                           "in the dataset will be ignored.", metavar="FROM,TO,STEP")
     parser.add_option("-o", "--output", dest="output", default="mss",
-                      help="Filename prefix of the output file. Vertical "\
-                      "level or cross-section path and time step will be "\
-                      "appended.", metavar="PREFIX")
+                      help="Filename prefix of the output file. Vertical " \
+                           "level or cross-section path and time step will be " \
+                           "appended.", metavar="PREFIX")
     parser.add_option("-d", "--directory", dest="directory", default="./",
-                      help="Output directory. The generated plots will be"\
-                      "written to a subdirectory specifying the "\
-                      "initialisation. time.", metavar="DIRECTORY")
+                      help="Output directory. The generated plots will be" \
+                           "written to a subdirectory specifying the " \
+                           "initialisation. time.", metavar="DIRECTORY")
 
     # Get command line arguments.
     (options, args) = parser.parse_args()
@@ -196,7 +195,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format="%(asctime)s %(funcName)19s || %(message)s",
                         datefmt="%H:%M:%S")
-    
+
     # Initialise the WSGI application.
     wsgi = mss_wms_wsgi.MSS_WMSResponse(mss_config.nwpaccess, address="COMMAND_LINE")
 
@@ -238,7 +237,7 @@ if __name__ == "__main__":
                 itime = datetime.strptime(options.inittime, "%Y-%m-%dT%H:%M:%SZ")
                 vtime = itime + timedelta(hours=int(timestep))
                 query += "&time=%s" % vtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-                
+
             query += "&format=image/png"
             query += "&request=GetMap"
             query += "&bgcolor=0xFFFFFF"
@@ -263,7 +262,7 @@ if __name__ == "__main__":
             wsgi_environ = {"PATH_INFO": "/mss_wms", "QUERY_STRING": query}
 
             print "Passing query to WMS engine.."
-            result = wsgi(wsgi_environ, lambda a,b: None)[0]
+            result = wsgi(wsgi_environ, lambda a, b: None)[0]
             print "\nRetrieved result from WMS engine."
 
             # If the WSGI object returns a unicode string, this means that
