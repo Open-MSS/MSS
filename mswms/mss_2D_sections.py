@@ -134,8 +134,8 @@ class Abstract2DSectionStyle(object):
             # Get the latest init time.
             init_times = self.driver.get_init_times()
             if len(init_times) == 0:
-                logging.error("ERROR: cannot determine initialisation time(s) " \
-                              "of this dataset. Check that file structure is " \
+                logging.error("ERROR: cannot determine initialisation time(s) "
+                              "of this dataset. Check that file structure is "
                               "in accordance with the used access class in mss_config.py!")
                 return []
             time = init_times[-1]
@@ -152,7 +152,7 @@ class Abstract2DSectionStyle(object):
                                                     init_time=time,
                                                     valid_time=time)
                 except (IOError, ValueError) as e:
-                    logging.debug("WARNING: unsuccessfully examined data for " \
+                    logging.debug("WARNING: unsuccessfully examined data for "
                                   "init time %s.. trying next time." % time)
                     logging.debug("(Error message: %s)" % e)
                 else:
@@ -174,8 +174,8 @@ class Abstract2DSectionStyle(object):
                                                             init_time=it,
                                                             valid_time=vt)
                         except (IOError, ValueError) as e:
-                            logging.debug("WARNING: unsuccessfully examined data for " \
-                                          "init time %s, valid time %s.. trying next " \
+                            logging.debug("WARNING: unsuccessfully examined data for "
+                                          "init time %s, valid time %s.. trying next "
                                           "time." % (it, vt))
                             logging.debug("(Error message: %s)" % e)
                         else:
@@ -184,8 +184,8 @@ class Abstract2DSectionStyle(object):
 
             # If we're still not successful..
             if not successful:
-                logging.error("ERROR: cannot determine whether there's a " \
-                              "vertical coordinate.. something is wrong with " \
+                logging.error("ERROR: cannot determine whether there's a "
+                              "vertical coordinate.. something is wrong with "
                               "this dataset!!")
                 return []
 

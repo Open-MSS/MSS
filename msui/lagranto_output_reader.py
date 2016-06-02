@@ -216,7 +216,7 @@ class LagrantoOutputReader(object):
         # append a new trajectory to self.data.
         for dataLine in lines[firstBlank + 4:]:
             if dataLine == " \n":
-                self.data.append( \
+                self.data.append(
                     copy.deepcopy(emptyVariableDictionaryTemplate))
             for varName, strValue in zip(varNames, dataLine.split()):
                 self.data[-1][varName].append(float(strValue))

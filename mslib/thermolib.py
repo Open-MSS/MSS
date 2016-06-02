@@ -697,7 +697,7 @@ def geop_thickness(p, t, q=None, cumulative=False, axis=-1):
     # Evaluate equation 3.24 in Wallace and Hobbs:
     #     delta Z = -Rd/g0 * int( Tv,  d ln(p), p1, p2 ),
     # where Z denotes the geopotential height, Z = phi/g0.
-    return -1. / 9.80665 * geop_difference(p, tv, method='cumtrapz' \
+    return -1. / 9.80665 * geop_difference(p, tv, method='cumtrapz'
         if cumulative else 'trapz', axis=axis)
 
 
@@ -993,7 +993,7 @@ def flightlevel2pressure(flightlevel):
         return p
 
     else:
-        raise ValueError("flight level to pressure conversion not " \
+        raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 32km")
 
 
@@ -1016,7 +1016,7 @@ def pressure2flightlevel(p):
     R = 287.058
 
     if p < 1011.:
-        raise ValueError("pressure to flight level conversion not " \
+        raise ValueError("pressure to flight level conversion not "
                          "implemented for z > 32km (p ~ 10.11 hPa)")
 
     elif p < 5475.006582501095:
@@ -1081,7 +1081,7 @@ def flightlevel2pressure_a(flightlevel):
     z = flightlevel * 100. / 3.28083989501
 
     if (z > 32000.).any():
-        raise ValueError("flight level to pressure conversion not " \
+        raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 32km")
 
     # g and R are used by all equations below.
@@ -1158,7 +1158,7 @@ def pressure2flightlevel_a(p, fake_above_32km=False):
     R = 287.058
 
     if (p < 1011.).any() and not fake_above_32km:
-        raise ValueError("pressure to flight level conversion not " \
+        raise ValueError("pressure to flight level conversion not "
                          "implemented for z > 32km (p ~ 10.11 hPa)")
 
     # Initialize the return array.
@@ -1239,7 +1239,7 @@ def isa_temperature(flightlevel):
         return T0 - gamma * (z - z0)
 
     else:
-        raise ValueError("ISA temperature from flight level not " \
+        raise ValueError("ISA temperature from flight level not "
                          "implemented for z > 32km")
 
 

@@ -436,7 +436,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cloud cover (0-1) with temperature (K) " \
+                                titlestring="Cloud cover (0-1) with temperature (K) "
                                             "and potential temperature (K)")
 
         # Add colorbar.
@@ -520,7 +520,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cloud cover (0-1) with wind speed (m/s) " \
+                                titlestring="Cloud cover (0-1) with wind speed (m/s) "
                                             "and potential temperature (K)")
 
         # Add colorbar.
@@ -625,7 +625,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Relative humdity (%) with temperature (K) " \
+                                titlestring="Relative humdity (%) with temperature (K) "
                                             "and potential temperature (K)")
 
         # Add colorbar.
@@ -739,7 +739,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Specific humdity (g/kg) with temperature (K) " \
+                                titlestring="Specific humdity (g/kg) with temperature (K) "
                                             "and potential temperature (K)")
 
         # Add colorbar.
@@ -843,7 +843,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Vertical velocity (cm/s) with temperature (K) " \
+                                titlestring="Vertical velocity (cm/s) with temperature (K) "
                                             "and potential temperature (K)")
 
         # Add colorbar.
@@ -951,7 +951,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Horizontal wind speed (m/s) with temperature (K) " \
+                                titlestring="Horizontal wind speed (m/s) with temperature (K) "
                                             "and potential temperature (K)")
 
         # Add colorbar.
@@ -1344,7 +1344,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Probability of WCB (%) with CLWC/CIWC (g/kg) " \
+                                titlestring="Probability of WCB (%) with CLWC/CIWC (g/kg) "
                                             "and potential temperature (K)")
 
         # Add colorbar.
@@ -1505,8 +1505,8 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="EMAC Eyjafjallajokull Tracer (relative) " \
-                                            "with temperature (K) " \
+                                titlestring="EMAC Eyjafjallajokull Tracer (relative) "
+                                            "with temperature (K) "
                                             "and potential temp. (K)")
 
         # Add colorbar.

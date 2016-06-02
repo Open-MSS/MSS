@@ -82,7 +82,7 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
         logging.debug("read %i segments" % len(overpass_segments))
 
         self.cbSatelliteOverpasses.clear()
-        items = ["%s to %s" % (str(seg["utc"][0]), str(seg["utc"][-1])) \
+        items = ["%s to %s" % (str(seg["utc"][0]), str(seg["utc"][-1]))
                  for seg in overpass_segments]
         items.insert(0, "None (select item to plot)")
         self.cbSatelliteOverpasses.addItems(items)

@@ -261,9 +261,9 @@ class MSS_WMSResponse(object):
         # with multiple threads is required, multiple instances of this
         # WSGI app should be created.
         if self.processing_request:
-            return HTTPServiceUnavailable(detail="This service is currently " \
-                                                 "active and does not support " \
-                                                 "simultaneous requests. Please try " \
+            return HTTPServiceUnavailable(detail="This service is currently "
+                                                 "active and does not support "
+                                                 "simultaneous requests. Please try "
                                                  "again in a few seconds.")(environ, start_response)
 
         # Block sinultaneous class instance calls by setting the
@@ -334,7 +334,7 @@ class MSS_WMSResponse(object):
         # instances with the datasets.
         for dataset in datasets:
             layer = layer_class()
-            logging.debug("registering horizontal section layer %s with " \
+            logging.debug("registering horizontal section layer %s with "
                           "dataset %s", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
@@ -356,7 +356,7 @@ class MSS_WMSResponse(object):
         # instances with the datasets.
         for dataset in datasets:
             layer = layer_class()
-            logging.debug("registering vertical section layer %s with " \
+            logging.debug("registering vertical section layer %s with "
                           "dataset %s", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
@@ -489,7 +489,7 @@ class MSS_WMSResponse(object):
                 if layer.uses_time_dimensions():
                     dimext = dom.createElement("Extent")
                     dimext.setAttribute("name", "TIME")
-                    vt_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt \
+                    vt_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt
                               in layer.get_all_valid_times()]
                     vt_str = ",".join(vt_str)
                     dimext.appendChild(dom.createTextNode(vt_str))
@@ -497,7 +497,7 @@ class MSS_WMSResponse(object):
 
                     dimext = dom.createElement("Extent")
                     dimext.setAttribute("name", "INIT_TIME")
-                    it_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt \
+                    it_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt
                               in layer.get_init_times()]
                     it_str = ",".join(it_str)
                     dimext.appendChild(dom.createTextNode(it_str))
@@ -597,7 +597,7 @@ class MSS_WMSResponse(object):
 
                         dimext = dom.createElement("Extent")
                         dimext.setAttribute("name", "TIME")
-                        vt_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt \
+                        vt_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt
                                   in layer.get_all_valid_times()]
                         vt_str = ",".join(vt_str)
                         dimext.appendChild(dom.createTextNode(vt_str))
@@ -605,7 +605,7 @@ class MSS_WMSResponse(object):
 
                         dimext = dom.createElement("Extent")
                         dimext.setAttribute("name", "INIT_TIME")
-                        it_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt \
+                        it_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt
                                   in layer.get_init_times()]
                         it_str = ",".join(it_str)
                         dimext.appendChild(dom.createTextNode(it_str))
@@ -670,7 +670,7 @@ class MSS_WMSResponse(object):
                 init_time = datetime.strptime(init_time, "%Y-%m-%dT%H:%M:%SZ")
             except ValueError:
                 return self.service_exception(code="InvalidDimensionValue",
-                                              text="DIM_INIT_TIME has wrong format " \
+                                              text="DIM_INIT_TIME has wrong format "
                                                    "(needs to be 2005-08-29T13:00:00Z)"), None
         logging.debug("  requested initialisation time = %s" % init_time)
 
@@ -681,7 +681,7 @@ class MSS_WMSResponse(object):
                 valid_time = datetime.strptime(valid_time, "%Y-%m-%dT%H:%M:%SZ")
             except ValueError:
                 return self.service_exception(code="InvalidDimensionValue",
-                                              text="TIME has wrong format " \
+                                              text="TIME has wrong format "
                                                    "(needs to be 2005-08-29T13:00:00Z)"), None
         logging.debug("  requested (valid) time = %s" % valid_time)
 
@@ -956,7 +956,7 @@ if __name__ == '__main__':
     # http://pythonpaste.org/modules/auth.digest.html#module-paste.auth.digest
     # for more information. (mr, 2011-02-25).
     if mss_wms_settings.enable_basic_http_authentication:
-        logging.debug("Enabling basic HTTP authentication. Username and " \
+        logging.debug("Enabling basic HTTP authentication. Username and "
                       "password required to access the service.")
 
         from paste.auth.basic import AuthBasicHandler
@@ -978,7 +978,7 @@ if __name__ == '__main__':
     # used for development purposes to reduce debug output.
     use_threadpool = mss_wms_settings.paste_use_threadpool
 
-    logging.debug("Starting PASTE httpserver on %s (%s), port %s. " \
+    logging.debug("Starting PASTE httpserver on %s (%s), port %s. "
                   "Threads are %s." % (hostname, host, port,
                                        "enabled" if use_threadpool else "disabled"))
     logging.debug("SSH tunnel mode is %s. WMS access on client via %s"

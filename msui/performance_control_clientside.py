@@ -127,7 +127,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         self.btComputePerformance.setEnabled(True)
 
         # Initialise date/time fields with current day, 00 UTC.
-        self.dteTakeoffTime.setDateTime(QtCore.QDateTime( \
+        self.dteTakeoffTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=12, minute=0, second=0,
                                       microsecond=0)))
 
@@ -212,7 +212,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                         raise ex
         except Exception as ex:
             logging.error("ERROR: %s", ex)
-            logging.error("cannot load capabilities document.. " \
+            logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
             QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
                                        self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
@@ -265,7 +265,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                                 filtered_layers.append(cb_string)
                 else:
                     stack.extend(layer.layers)
-            logging.debug("discovered %i layers that can be used in this view" % \
+            logging.debug("discovered %i layers that can be used in this view" %
                           len(filtered_layers))
             filtered_layers.sort()
             self.cbWMSLayer.addItems(filtered_layers)
@@ -601,7 +601,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         # User confirmation to clear the cache.
         clear = (QtGui.QMessageBox.question(
             self, "Clear Cache",
-            "Do you really want to clear the cache? All stored image " \
+            "Do you really want to clear the cache? All stored image "
             "files will be deleted.",
             QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
         if clear:
@@ -747,7 +747,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         takeoff_weight = self.sbTakeoffWeight.value()
 
         logging.debug("aircraft: %s (%s)" % (aircraft_name, aircraft_config))
-        logging.debug("takeoff at %s with weight %i lbs" % \
+        logging.debug("takeoff at %s with weight %i lbs" %
                       (takeoff_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                        takeoff_weight))
 
@@ -761,7 +761,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         # Insert waypoints of the current flight track.
         waypoints = self.model.allWaypointData(mode=ft.USER)
         if len(waypoints) < 3:
-            logging.error("for performance computations, the flight track " \
+            logging.error("for performance computations, the flight track "
                           "must consist of at least three waypoints.")
             return
 
@@ -957,7 +957,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         takeoff_weight = self.sbTakeoffWeight.value()
 
         logging.debug("aircraft: %s (%s)" % (aircraft_name, aircraft_config))
-        logging.debug("takeoff at %s with weight %i lbs" % \
+        logging.debug("takeoff at %s with weight %i lbs" %
                       (takeoff_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
                        takeoff_weight))
 
@@ -969,14 +969,14 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         # Get waypoints of the current flight track.
         waypoints = self.model.allWaypointData(mode=ft.USER)
         if len(waypoints) < 3:
-            logging.error("for performance computations, the flight track " \
+            logging.error("for performance computations, the flight track "
                           "must consist of at least three waypoints.")
             return
 
         # Setup an initial flight track description for the performance module.
         flight_description_csv = [
             "General Input",
-            "%i;%i;%i;%f;%i;%i;%f;%f" % \
+            "%i;%i;%i;%f;%i;%i;%f;%f" %
             (zero_fuel_weight_lbs,  # zero fuel weight [lbs]
              fuel_weight_lbs,  # takeoff fuel [lbs]
              3000,  # reserve fuel [lbs]
@@ -1016,7 +1016,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             if waypoint == waypoints[-2]: segment_length_nm = "TOD"
 
             flight_description_csv.append(
-                "%s;%i;%s;%s;;;;;%f;%f" % \
+                "%s;%i;%s;%s;;;;;%f;%f" %
                 (flight_type,
                  waypoint.flightlevel,  # flight level
                  speed_indicator,  # aircraft speed
@@ -1028,7 +1028,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         # Output final decent to destination airport.
         waypoint = waypoints[-1]
         flight_description_csv.append(
-            "Final Descent;;;;1500;;0;0;%f;%f" % \
+            "Final Descent;;;;1500;;0;0;%f;%f" %
             (waypoint.lon,  # segment position
              waypoint.lat)
         )

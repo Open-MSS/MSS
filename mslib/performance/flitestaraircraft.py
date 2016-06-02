@@ -153,12 +153,12 @@ class FliteStarExportedAircraft(Aircraft):
         # Error checking.
         if self._errorHandling == "strict":
             if altitude > self.maximumCruiseAltitude_ft:
-                raise ValueError("the requested altitude of %i ft is above " \
-                                 "the maximum cruise altitude of %i that " \
-                                 "this aircraft can reach" % \
+                raise ValueError("the requested altitude of %i ft is above "
+                                 "the maximum cruise altitude of %i that "
+                                 "this aircraft can reach" %
                                  (altitude, self.maximumCruiseAltitude_ft))
             if grossweight > self.maximumTakeoffWeight_lbs:
-                raise ValueError("grossweight of %i lbs exceeds maximum takeoff" \
+                raise ValueError("grossweight of %i lbs exceeds maximum takeoff"
                                  " weight of %i lbs" % (grossweight,
                                                         self.maximumTakeoffWeight_lbs))
 
@@ -197,9 +197,9 @@ class FliteStarExportedAircraft(Aircraft):
 
         if self._errorHandling == "strict":
             if altitude > altitude_above:
-                raise ValueError("the requested altitude of %i ft cannot be " \
-                                 "reached with the given weight; maximum " \
-                                 "altitude with weight %i lbs is %i ft" % \
+                raise ValueError("the requested altitude of %i ft cannot be "
+                                 "reached with the given weight; maximum "
+                                 "altitude with weight %i lbs is %i ft" %
                                  (altitude, grossweight, altitude_above))
 
         # 3a) Conservative interpretation of performance tables: We're done.

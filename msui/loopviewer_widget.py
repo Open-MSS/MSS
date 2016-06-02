@@ -77,7 +77,7 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
         self.loadConfiguration()
 
         # Initialise date/time fields with current day, 00 UTC.
-        self.dteInitTime.setDateTime(QtCore.QDateTime( \
+        self.dteInitTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0,
                                       microsecond=0)))
 
@@ -150,7 +150,7 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
         # Get QDateTime object from QtDateTimeEdit field.
         d = self.dteInitTime.dateTime()
         # Add value from sbInitTime_step and set new date.
-        self.dteInitTime.setDateTime(d.addSecs(forward * 3600. * \
+        self.dteInitTime.setDateTime(d.addSecs(forward * 3600. *
                                                timestep))
 
 
@@ -439,7 +439,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             self.synchronized = True
             self.levels = levels
             self.init_time = init_time
-            self.lblInfo.setToolTip("Initialisation time: %s" % \
+            self.lblInfo.setToolTip("Initialisation time: %s" %
                                     self.init_time.strftime("%Y-%m-%d %H:%M UTC"))
             self.updateImage()
             self.emit(QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"), True,
@@ -478,7 +478,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             else:
                 self.synchronized = True
         colour = "black" if self.synchronized else "red"
-        self.lblInfo.setText("<font style='color: %s;'><b>VT: %s, LVL: %s</b></font>" % \
+        self.lblInfo.setText("<font style='color: %s;'><b>VT: %s, LVL: %s</b></font>" %
                              (colour,
                               self.valid_time.strftime("%Y-%m-%d %H:%M UTC"),
                               self.levels[self.current_level]))

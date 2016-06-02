@@ -461,7 +461,7 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.lonVariableChild = item
-                    logging.debug("identified longitude variable <%s> with " \
+                    logging.debug("identified longitude variable <%s> with "
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
             if self.lonVariableChild is not None: break
@@ -471,7 +471,7 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.latVariableChild = item
-                    logging.debug("identified latitude variable <%s> with " \
+                    logging.debug("identified latitude variable <%s> with "
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
             if self.latVariableChild is not None: break
@@ -481,7 +481,7 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.pressureVariableChild = item
-                    logging.debug("identified pressure variable <%s> with " \
+                    logging.debug("identified pressure variable <%s> with "
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
             if self.pressureVariableChild is not None: break
@@ -1121,7 +1121,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
             # Push all children of the current item onto the stack that are
             # instances of LagrantoMapItem (VariableItems are not plotted on
             # the map and cannot be selected).
-            itemStack.extend([child for child in item.childItems \
+            itemStack.extend([child for child in item.childItems
                               if isinstance(child, LagrantoMapItem)])
             #
             # Only flight tracks and trajectories can be queried and selected.

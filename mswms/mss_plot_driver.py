@@ -160,7 +160,7 @@ class MSSPlotDriver(object):
                 raise IOError("file %s does not exist" % short_filename)
 
         if len(filenames) == 0:
-            raise ValueError("no files found that correspond to the specified " \
+            raise ValueError("no files found that correspond to the specified "
                              "datafields. Aborting..")
 
         self.init_time = init_time
@@ -462,7 +462,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         # one gridbox size to obtain "left_longitude".
         dlon = self.lon_data[1] - self.lon_data[0]
         left_longitude = self.lons.min() - dlon
-        logging.debug("shifting data grid to gridpoint west of westmost " \
+        logging.debug("shifting data grid to gridpoint west of westmost "
                       "longitude in path: %.2f (path %.2f).."
                       % (left_longitude, self.lons.min()))
 
@@ -480,7 +480,7 @@ class VerticalSectionDriver(MSSPlotDriver):
 
         for name, var in self.data_vars.items():
             var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
-            logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %i." % \
+            logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %i." %
                           (var_data.nbytes / 1048576., name, timestep))
             logging.debug("\tVertical dimension direction is %s." %
                           ("up" if self.vert_order == 1 else "down"))
@@ -507,7 +507,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         # Determine the leftmost longitude in the plot.
         left_longitude = self.lons.min()
-        logging.debug("shifting data grid to leftmost longitude in path " \
+        logging.debug("shifting data grid to leftmost longitude in path "
                       "(%.2f).." % left_longitude)
 
         # Shift the longitude field such that the data is in the range
@@ -561,7 +561,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         del data
 
         d3 = datetime.now()
-        logging.debug("Finished plotting (required time %s; total " \
+        logging.debug("Finished plotting (required time %s; total "
                       "time %s).\n" % (d3 - d2, d3 - d1))
 
         return image
@@ -643,7 +643,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
             if self.vert_order == -1:
                 level = len(self.vert_data) - 1 - level
             self.actual_level = self.vert_data[level]
-        logging.debug("loading data for time step %i (%s), level index " \
+        logging.debug("loading data for time step %i (%s), level index "
                       "%s (level %s)",
                       timestep, self.fc_time, level, self.level)
         for name, var in self.data_vars.items():
@@ -653,7 +653,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
             else:
                 # 3D fields: time, level, lat, lon.
                 var_data = var[timestep, level, ::self.lat_order, :]
-            logging.debug("\tLoaded %.2f Mbytes from data field <%s>." % \
+            logging.debug("\tLoaded %.2f Mbytes from data field <%s>." %
                           (var_data.nbytes / 1048576., name))
             data[name] = var_data
             # Free memory.
@@ -700,7 +700,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
         del data
 
         d3 = datetime.now()
-        logging.debug("Finished plotting (required time %s; total " \
+        logging.debug("Finished plotting (required time %s; total "
                       "time %s).\n" % (d3 - d2, d3 - d1))
 
         return image

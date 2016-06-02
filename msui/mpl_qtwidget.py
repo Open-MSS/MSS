@@ -335,7 +335,7 @@ class MplSideViewCanvas(MplCanvas):
            a vertical section image if one exists, as it is invalid after
            a path change.
         """
-        logging.debug("path of side view has changed.. removing invalidated " \
+        logging.debug("path of side view has changed.. removing invalidated "
                       "image (if existent) and redrawing.")
 
         # Remove image (it is now invalid).
@@ -350,7 +350,7 @@ class MplSideViewCanvas(MplCanvas):
         lat_inds = np.arange(len(lats))
         tick_index_step = len(lat_inds) / self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
-        self.ax.set_xticklabels(["%2.1f, %2.1f" % (d[0], d[1]) \
+        self.ax.set_xticklabels(["%2.1f, %2.1f" % (d[0], d[1])
                                  for d in zip(lats[::tick_index_step],
                                               lons[::tick_index_step])],
                                 rotation=25, fontsize=10, horizontalalignment='right')
@@ -903,7 +903,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         if not self.traj_item_tree:
             return
 
-        logging.debug("updating trajectory items on view <%s>, mode %s" % \
+        logging.debug("updating trajectory items on view <%s>, mode %s" %
                       (self.identifier, mode))
 
         # Determine which items have to be plotted (these are the items that
@@ -960,7 +960,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             logging.debug("plotting item %s" % item.getName())
             # The variables that have to be plotted are children of self.mapItem.
             # Plot all variables whose visible-flag is set to True.
-            variablesToPlot = [variable for variable in item.childItems \
+            variablesToPlot = [variable for variable in item.childItems
                                if variable.getVariableName() in self.subPlots]
 
             if mode in ["GXPROPERTY_CHANGE"]:
@@ -1041,8 +1041,8 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # The bottommost subplot gets the x-label: The name of the time
                     # variable.
                     if index == len(self.subPlots) - 1:
-                        ax.set_xlabel("time [hr since " + \
-                                      earliestStartTime.strftime("%Y-%m-%d %H:%M UTC") + \
+                        ax.set_xlabel("time [hr since " +
+                                      earliestStartTime.strftime("%Y-%m-%d %H:%M UTC") +
                                       "]")
         # Update the figure canvas.
         self.fig.canvas.draw()

@@ -624,13 +624,13 @@ class PathInteractor:
         wps = self.waypoints_model.allWaypointData(mode=ft.USER)
         if len(wps) < 3:
             QMessageBox.warning(None, "Remove waypoint",
-                                "Cannot remove waypoint, the flight track needs to consist " \
+                                "Cannot remove waypoint, the flight track needs to consist "
                                 "of at least two points.", QMessageBox.Ok)
             return False
         else:
             wp = wps[row]
             return (QMessageBox.question(None, "Remove waypoint",
-                                         "Remove waypoint no.%i at %.2f/%.2f, flightlevel %.2f?" \
+                                         "Remove waypoint no.%i at %.2f/%.2f, flightlevel %.2f?"
                                          % (row, wp.lat, wp.lon, wp.flightlevel),
                                          QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes)
 
@@ -853,7 +853,7 @@ class HPathInteractor(PathInteractor):
             x, y = event.xdata, event.ydata
             best_index = self.pathpatch.get_path() \
                 .index_of_closest_segment(x, y, eps=self.appropriateEpsilon())
-            logging.debug("TopView insert point: clicked at (%f, %f), " \
+            logging.debug("TopView insert point: clicked at (%f, %f), "
                           "best index: %i" % (x, y, best_index))
             self.pathpatch.get_path().insert_vertex(best_index, [x, y],
                                                     WaypointsPath.LINETO)

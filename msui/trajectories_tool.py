@@ -157,7 +157,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # load all those subdirectories. Otherwise load the selected
             # directory.
             traj_dir_items = os.listdir(traj_dir)
-            subdirs = [sdir for sdir in traj_dir_items \
+            subdirs = [sdir for sdir in traj_dir_items
                        if os.path.isdir(os.path.join(traj_dir, sdir))]
             if len(subdirs) > 0:
                 for sdir in subdirs:
@@ -300,7 +300,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             colour = None
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug("Changing colour of element %s" % \
+            logging.debug("Changing colour of element %s" %
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing colour of selected elements")
@@ -320,7 +320,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             lineStyle = None
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug("Changing line style of element %s" % \
+            logging.debug("Changing line style of element %s" %
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing line style of selected elements")
@@ -338,7 +338,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         lineWidth = self.sbLineWidth.value()
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug("Changing line thickness of element %s" % \
+            logging.debug("Changing line thickness of element %s" %
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing line thickness of selected elements")
@@ -369,8 +369,8 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # set/change the time marker for all children.
             if isinstance(item, titree.LagrantoOutputItem):
                 ret = QtGui.QMessageBox.warning(self, self.tr("Time Marker"),
-                                                self.tr("Do you want to set the interval " + \
-                                                        interval.strftime("%H:%M") + \
+                                                self.tr("Do you want to set the interval " +
+                                                        interval.strftime("%H:%M") +
                                                         "\nfor all children of " + item.getName()),
                                                 QtGui.QMessageBox.Yes | QtGui.QMessageBox.Default,
                                                 QtGui.QMessageBox.No)
@@ -382,13 +382,13 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             #
             # If the current item has LagrantoMapItem children, push them onto
             # the stack.
-            indexStack.extend([self.traj_item_tree.createIndex(child.row(), 0, child) \
-                               for child in item.childItems \
+            indexStack.extend([self.traj_item_tree.createIndex(child.row(), 0, child)
+                               for child in item.childItems
                                if isinstance(child, titree.LagrantoMapItem)])
             #
             # Now set the time marker for the current item.
             try:
-                logging.debug("Setting time marker for element %s" % \
+                logging.debug("Setting time marker for element %s" %
                               item.getName())
                 setInterval = self.traj_item_tree.setTimeMarker(index, interval,
                                                                 emit_change=False)
@@ -398,9 +398,9 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                                               QtGui.QMessageBox.Ok)
                 elif setInterval != interval:
                     QtGui.QMessageBox.warning(self, self.tr("Time marker"),
-                                              self.tr("Warning: The minimum time interval for the" \
-                                                      "selected variable is " + \
-                                                      setInterval.strftime("%H:%M") + \
+                                              self.tr("Warning: The minimum time interval for the"
+                                                      "selected variable is " +
+                                                      setInterval.strftime("%H:%M") +
                                                       ".\nThe interval has been set to this value."),
                                               QtGui.QMessageBox.Ok)
                 if not first_index:

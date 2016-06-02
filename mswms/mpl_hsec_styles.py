@@ -241,7 +241,7 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         thick_contours = np.arange(952, 1050, 8)
-        thin_contours = [c for c in np.arange(952, 1050, 2) \
+        thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
         mslp = 0.01 * data['air_pressure_at_sea_level']
@@ -324,9 +324,9 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         thick_contours = np.arange(-10, 95, 5)
-        thin_contours = [c for c in np.arange(0, 90, 1) \
+        thin_contours = [c for c in np.arange(0, 90, 1)
                          if c not in thick_contours]
-        neg_thin_contours = [c for c in np.arange(-10, 0, 1) \
+        neg_thin_contours = [c for c in np.arange(-10, 0, 1)
                              if c not in thick_contours]
 
         sea = data['solar_elevation_angle']
@@ -473,7 +473,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         cmin = -72
         cmax = 42
         thick_contours = np.arange(cmin, cmax, 6)
-        thin_contours = [c for c in np.arange(cmin, cmax, 2) \
+        thin_contours = [c for c in np.arange(cmin, cmax, 2)
                          if c not in thick_contours]
 
         tempC = data['air_temperature'] - 273.15
@@ -888,7 +888,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         cmin = -72
         cmax = 42
         thick_contours = np.arange(cmin, cmax, 6)
-        thin_contours = [c for c in np.arange(cmin, cmax, 2) \
+        thin_contours = [c for c in np.arange(cmin, cmax, 2)
                          if c not in thick_contours]
 
         tempC = data['air_temperature'] - 273.15
@@ -1654,7 +1654,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         thick_contours = np.arange(952, 1050, 8)
-        thin_contours = [c for c in np.arange(952, 1050, 2) \
+        thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
         mslp = 0.01 * data["air_pressure_at_sea_level"]
@@ -1807,7 +1807,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         thick_contours = np.arange(952, 1050, 8)
-        thin_contours = [c for c in np.arange(952, 1050, 2) \
+        thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
         mslp = 0.01 * data["air_pressure_at_sea_level"]

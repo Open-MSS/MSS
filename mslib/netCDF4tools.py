@@ -421,7 +421,7 @@ def identify_variable(ncfile, identifier_list, check=False):
                     if variable.units == id_name:
                         return var_name, variable
     if check:
-        raise NetCDFVariableError("cannot identify NetCDF variable " \
+        raise NetCDFVariableError("cannot identify NetCDF variable "
                                   "specified by <%s>" % identifier_list)
     return None, None
 
@@ -444,8 +444,8 @@ def identify_CF_variable(ncfile, standard_name, varname_override=None,
         id_list.extend(CFVariableIdentifier[standard_name])
     var_name, var = identify_variable(ncfile, id_list)
     if check and not var:
-        raise NetCDFVariableError("cannot identify NetCDF-CF variable <%s>" % \
-                                  standard_name if not varname_override else \
+        raise NetCDFVariableError("cannot identify NetCDF-CF variable <%s>" %
+                                  standard_name if not varname_override else
                                       varname_override)
     return var_name, var
 
@@ -484,11 +484,11 @@ def identify_CF_coordhybrid(ncfile, dimname_override={}, check=CHECK_NONE):
 
     if check == CHECK_LATLON:
         if not (lat_var and lon_var):
-            raise NetCDFVariableError("Cannot identify lat/lon coordinate system " \
+            raise NetCDFVariableError("Cannot identify lat/lon coordinate system "
                                       "in NetCDF-CF input.")
     elif check == CHECK_LATLONHYB:
         if not (lat_var and lon_var and hybrid_var):
-            raise NetCDFVariableError("Cannot identify lat/lon/hybrid coordinate system " \
+            raise NetCDFVariableError("Cannot identify lat/lon/hybrid coordinate system "
                                       "in NetCDF-CF input.")
 
     return lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var
@@ -907,12 +907,12 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                         raise IOError("dimension %s not defined in master %s" % (dimName, master))
                     if len(part.variables[dimName]) != len(cdfm.variables[dimName]) or \
                             (part.variables[dimName][:] != cdfm.variables[dimName][:]).all():
-                        raise IOError("dimension %s differs in master %s and " \
+                        raise IOError("dimension %s differs in master %s and "
                                       "file %s" % (dimName, master, f))
 
             if requireDimNum:
                 if len(part.dimensions) != len(masterDims):
-                    raise IOError("number of dimensions not consistent in master " \
+                    raise IOError("number of dimensions not consistent in master "
                                   "%s and %s" % (master, f))
 
             for vName, v in part.variables.items():
@@ -933,8 +933,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         self._file_format = []
         for dset in self._cdf:
             if dset.file_format == 'NETCDF4':
-                raise ValueError('MFNetCDF4 only works with NETCDF3_CLASSIC, ' \
-                                 'NETCDF3_64BIT and NETCDF4_CLASSIC ' \
+                raise ValueError('MFNetCDF4 only works with NETCDF3_CLASSIC, '
+                                 'NETCDF3_64BIT and NETCDF4_CLASSIC '
                                  'formatted files, not NETCDF4')
             self._file_format.append(dset.file_format)
 

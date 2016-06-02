@@ -166,14 +166,14 @@ class MSSWebMapService(owslib.wms.WebMapService):
         # given as strings, use these strings directly as WMS arguments.
         if type(time) is datetime:
             if time_format is None:
-                raise ValueError("Could not determine date/time format. Please " \
+                raise ValueError("Could not determine date/time format. Please "
                                  "check dimension tag in capabiltites document.")
             request[time_name] = time.strftime(time_format)
         elif type(time) is str:
             request[time_name] = time
         if type(init_time) is datetime:
             if init_time_format is None:
-                raise ValueError("Could not determine date/time format. Please " \
+                raise ValueError("Could not determine date/time format. Please "
                                  "check dimension tag in capabiltites document.")
             request[init_time_name] = init_time.strftime(init_time_format)
         elif type(init_time) is str:
@@ -334,10 +334,10 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             self.wms_cache = None
 
         # Initialise date/time fields with current day, 00 UTC.
-        self.dteInitTime.setDateTime(QtCore.QDateTime( \
+        self.dteInitTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0,
                                       microsecond=0)))
-        self.dteValidTime.setDateTime(QtCore.QDateTime( \
+        self.dteValidTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0,
                                       microsecond=0)))
 
@@ -465,7 +465,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                         raise
         except Exception as ex:
             logging.error("ERROR: %s", ex)
-            logging.error("cannot load capabilities document.. " \
+            logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
             QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
                                        self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
@@ -502,7 +502,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                             filtered_layers.append(cb_string)
                 else:
                     stack.extend(layer.layers)
-            logging.debug("discovered %i layers that can be used in this view" % \
+            logging.debug("discovered %i layers that can be used in this view" %
                           len(filtered_layers))
             filtered_layers.sort()
             self.cbLayer.addItems(filtered_layers)
@@ -592,7 +592,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         styles = layerobj.styles
         self.cbStyle.clear()
-        self.cbStyle.addItems(["%s | %s" % (s, styles[s]["title"]) \
+        self.cbStyle.addItems(["%s | %s" % (s, styles[s]["title"])
                                for s in styles])
         abstract_text = layerobj.abstract if layerobj.abstract else ""
         abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
@@ -615,7 +615,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             if "elevation" in lobj.dimensions.keys() and \
                             "elevation" in lobj.extents.keys():
                 units = lobj.dimensions["elevation"]["units"]
-                elev_list = ["%s (%s)" % (e.strip(), units) for e in \
+                elev_list = ["%s (%s)" % (e.strip(), units) for e in
                              lobj.extents["elevation"]["values"]]
                 self.cbLevel.addItems(elev_list)
                 enable_elevation = True
@@ -652,7 +652,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                     return_format=True)
                 if self.init_time_format is not None:
                     # (otherwise self.init_time_format remains an emtpy list)
-                    self.allowed_init_times = [datetime.strptime(val.strip(), self.init_time_format) \
+                    self.allowed_init_times = [datetime.strptime(val.strip(), self.init_time_format)
                                                for val in lobj.extents[self.init_time_name]["values"]]
                 self.cbInitTime.addItems(lobj.extents[self.init_time_name]["values"])
                 break
@@ -756,7 +756,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                                     interpretation_successful = False
 
                             if not interpretation_successful:
-                                logging.error("Can't understand time string %s." \
+                                logging.error("Can't understand time string %s."
                                               " Please check the implementation." % time_item)
 
             # No time extent tag was found: Set allowed_valid_times to None
@@ -847,7 +847,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             days = int(timestep_string.split(" days")[0])
             return days * 86400
         except:
-            raise ValueError("cannot convert %s to seconds: wrong format." \
+            raise ValueError("cannot convert %s to seconds: wrong format."
                              % timestep_string)
 
     def init_time_back_click(self):
@@ -1287,7 +1287,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                     # Check if the image is stored as indexed palette
                     # with a transparent colour. Store correspondingly.
                     if img.mode == "P" and "transparency" in img.info.keys():
-                        logging.debug("image is index colour and transparent, " \
+                        logging.debug("image is index colour and transparent, "
                                       "transparency index of image is %i.",
                                       img.info["transparency"])
                         img.save(md5_filename, transparency=img.info["transparency"])
@@ -1431,7 +1431,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # User confirmation to clear the cache.
         clear = (QtGui.QMessageBox.question(
             self, "Clear Cache",
-            "Do you really want to clear the cache? All stored image " \
+            "Do you really want to clear the cache? All stored image "
             "files will be deleted.",
             QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
         if clear:

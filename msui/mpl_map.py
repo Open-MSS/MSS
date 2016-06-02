@@ -406,7 +406,7 @@ class MapCanvas(basemap.Basemap):
         self.kwargs['urcrnrlon'], self.kwargs['urcrnrlat'] = \
             self.__call__(axis[1], axis[3], inverse=True)
 
-        logging.debug("corner coordinates (lat/lon): ll(%.2f,%.2f), " \
+        logging.debug("corner coordinates (lat/lon): ll(%.2f,%.2f), "
                       "ur(%.2f,%.2f)" % (self.kwargs['llcrnrlat'],
                                          self.kwargs['llcrnrlon'],
                                          self.kwargs['urcrnrlat'],
@@ -579,7 +579,7 @@ class MapCanvas(basemap.Basemap):
         if not self.traj_item_tree:
             return
 
-        logging.debug("updating trajectory items on map <%s>, mode %s" % \
+        logging.debug("updating trajectory items on map <%s>, mode %s" %
                       (self.identifier, mode))
 
         # If no item is given start at the root of the 'traj_item_tree'.
@@ -652,12 +652,12 @@ class MapCanvas(basemap.Basemap):
             # Push all children of the current item onto the stack that are
             # instances of LagrantoMapItem (VariableItems are not plotted on
             # the map).
-            itemStack.extend([(child, itemProperties) for child in item.childItems \
+            itemStack.extend([(child, itemProperties) for child in item.childItems
                               if isinstance(child, titree.LagrantoMapItem)])
 
             # Plotting and graphics property update operations can only be
             # performed for flight tracks and trajectories.
-            if not (isinstance(item, titree.FlightTrackItem) \
+            if not (isinstance(item, titree.FlightTrackItem)
                             or isinstance(item, titree.TrajectoryItem)):
                 continue
 
@@ -827,7 +827,7 @@ class SatelliteOverpassPatch:
         # way the indexes in self.utc correspond to those in self.sat.
         # np.ma.getmaskarray is necessary as ..mask only returns a scalar
         # "False" if the array contains no masked entries.
-        self.utc = segment["utc"][np.where(np.ma.getmaskarray( \
+        self.utc = segment["utc"][np.where(np.ma.getmaskarray(
             segment["satpos"])[:, 0] == False)]
         self.sat = np.ma.compress_rows(segment["satpos"])
         self.sw_l = np.ma.compress_rows(segment["swath_left"])

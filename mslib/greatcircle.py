@@ -46,7 +46,7 @@ class GreatCircle(object):
         self.azimuth12 = a12
         self.azimuth21 = a21
         # great circle arc-length distance (in radians).
-        self.gcarclen = 2. * math.asin(math.sqrt((math.sin((lat1 - lat2) / 2)) ** 2 + \
+        self.gcarclen = 2. * math.asin(math.sqrt((math.sin((lat1 - lat2) / 2)) ** 2 +
                                                  math.cos(lat1) * math.cos(lat2) * (math.sin((lon1 - lon2) / 2)) ** 2))
         # check to see if points are antipodal (if so, route is undefined).
         if self.gcarclen == math.pi:
@@ -192,7 +192,7 @@ def vinc_dist(f, a, phi1, lembda1, phi2, lembda2):
 
     while (last_lembda < -3000000.0 or lembda != 0 and abs((last_lembda - lembda) / lembda) > 1.0e-9):
         sqr_sin_sigma = pow(math.cos(U2) * math.sin(lembda), 2) + \
-                        pow((math.cos(U1) * math.sin(U2) - \
+                        pow((math.cos(U1) * math.sin(U2) -
                              math.sin(U1) * math.cos(U2) * math.cos(lembda)), 2)
 
         Sin_sigma = math.sqrt(sqr_sin_sigma)
@@ -210,7 +210,7 @@ def vinc_dist(f, a, phi1, lembda1, phi2, lembda2):
 
         last_lembda = lembda
 
-        lembda = omega + (1 - C) * f * math.sin(alpha) * (sigma + C * math.sin(sigma) * \
+        lembda = omega + (1 - C) * f * math.sin(alpha) * (sigma + C * math.sin(sigma) *
                                                           (Cos2sigma_m + C * math.cos(sigma) * (
                                                               -1 + 2 * pow(Cos2sigma_m, 2))))
 
@@ -220,17 +220,17 @@ def vinc_dist(f, a, phi1, lembda1, phi2, lembda2):
 
     B = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
 
-    delta_sigma = B * Sin_sigma * (Cos2sigma_m + (B / 4) * \
-                                   (Cos_sigma * (-1 + 2 * pow(Cos2sigma_m, 2)) - \
-                                    (B / 6) * Cos2sigma_m * (-3 + 4 * sqr_sin_sigma) * \
+    delta_sigma = B * Sin_sigma * (Cos2sigma_m + (B / 4) *
+                                   (Cos_sigma * (-1 + 2 * pow(Cos2sigma_m, 2)) -
+                                    (B / 6) * Cos2sigma_m * (-3 + 4 * sqr_sin_sigma) *
                                     (-3 + 4 * pow(Cos2sigma_m, 2))))
 
     s = b * A * (sigma - delta_sigma)
 
-    alpha12 = math.atan2((math.cos(U2) * math.sin(lembda)), \
+    alpha12 = math.atan2((math.cos(U2) * math.sin(lembda)),
                          (math.cos(U1) * math.sin(U2) - math.sin(U1) * math.cos(U2) * math.cos(lembda)))
 
-    alpha21 = math.atan2((math.cos(U1) * math.sin(lembda)), \
+    alpha21 = math.atan2((math.cos(U1) * math.sin(lembda)),
                          (-math.sin(U1) * math.cos(U2) + math.cos(U1) * math.sin(U2) * math.cos(lembda)))
 
     if (alpha12 < 0.0):
@@ -287,7 +287,7 @@ def vinc_pt(f, a, phi1, lembda1, alpha12, s):
     cosalpha_sq = 1.0 - Sinalpha * Sinalpha
 
     u2 = cosalpha_sq * (a * a - b * b) / (b * b)
-    A = 1.0 + (u2 / 16384) * (4096 + u2 * (-768 + u2 * \
+    A = 1.0 + (u2 / 16384) * (4096 + u2 * (-768 + u2 *
                                            (320 - 175 * u2)))
     B = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
 
@@ -304,34 +304,34 @@ def vinc_pt(f, a, phi1, lembda1, alpha12, s):
     while (abs((last_sigma - sigma) / sigma) > 1.0e-9):
         two_sigma_m = 2 * sigma1 + sigma
 
-        delta_sigma = B * math.sin(sigma) * (math.cos(two_sigma_m) \
-                                             + (B / 4) * (math.cos(sigma) * \
-                                                          (-1 + 2 * math.pow(math.cos(two_sigma_m), 2) - \
-                                                           (B / 6) * math.cos(two_sigma_m) * \
-                                                           (-3 + 4 * math.pow(math.sin(sigma), 2)) * \
+        delta_sigma = B * math.sin(sigma) * (math.cos(two_sigma_m)
+                                             + (B / 4) * (math.cos(sigma) *
+                                                          (-1 + 2 * math.pow(math.cos(two_sigma_m), 2) -
+                                                           (B / 6) * math.cos(two_sigma_m) *
+                                                           (-3 + 4 * math.pow(math.sin(sigma), 2)) *
                                                            (-3 + 4 * math.pow(math.cos(two_sigma_m), 2)))))
 
         last_sigma = sigma
         sigma = (s / (b * A)) + delta_sigma
 
-    phi2 = math.atan2((math.sin(U1) * math.cos(sigma) + math.cos(U1) * math.sin(sigma) * math.cos(alpha12)), \
-                      ((1 - f) * math.sqrt(math.pow(Sinalpha, 2) + \
+    phi2 = math.atan2((math.sin(U1) * math.cos(sigma) + math.cos(U1) * math.sin(sigma) * math.cos(alpha12)),
+                      ((1 - f) * math.sqrt(math.pow(Sinalpha, 2) +
                                            pow(math.sin(U1) * math.sin(sigma) - math.cos(U1) * math.cos(
                                                sigma) * math.cos(alpha12), 2))))
 
-    lembda = math.atan2((math.sin(sigma) * math.sin(alpha12)), (math.cos(U1) * math.cos(sigma) - \
+    lembda = math.atan2((math.sin(sigma) * math.sin(alpha12)), (math.cos(U1) * math.cos(sigma) -
                                                                 math.sin(U1) * math.sin(sigma) * math.cos(alpha12)))
 
     C = (f / 16) * cosalpha_sq * (4 + f * (4 - 3 * cosalpha_sq))
 
     omega = lembda - (1 - C) * f * Sinalpha * \
-                     (sigma + C * math.sin(sigma) * (math.cos(two_sigma_m) + \
+                     (sigma + C * math.sin(sigma) * (math.cos(two_sigma_m) +
                                                      C * math.cos(sigma) * (
                                                          -1 + 2 * math.pow(math.cos(two_sigma_m), 2))))
 
     lembda2 = lembda1 + omega
 
-    alpha21 = math.atan2(Sinalpha, (-math.sin(U1) * math.sin(sigma) + \
+    alpha21 = math.atan2(Sinalpha, (-math.sin(U1) * math.sin(sigma) +
                                     math.cos(U1) * math.cos(sigma) * math.cos(alpha12)))
 
     alpha21 = alpha21 + two_pi / 2.0

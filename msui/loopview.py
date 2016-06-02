@@ -92,7 +92,7 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
         super(MSSLoopWindow, self).__init__(*args)
         self.setupUi(self)
         self.statusBar.addPermanentWidget(QtGui.QLabel(
-            "Use wheel on image for time navigation, " \
+            "Use wheel on image for time navigation, "
             "shift+wheel for level navigation."))
 
         # Create max_views image labels. The labels will exist

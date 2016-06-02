@@ -120,7 +120,7 @@ class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent,
                                                          type)
 
-        view_window.setWindowTitle("(%i) %s" % \
+        view_window.setWindowTitle("(%i) %s" %
                                    (QActiveViewsListWidgetItem.opened_views,
                                     view_window.windowTitle()))
         view_window.setIdentifier(view_name)
@@ -278,7 +278,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         Qt receives a window close request for our application window.
         """
         ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                        self.tr("Do you want to close the DLR/IPA Mission " \
+                                        self.tr("Do you want to close the DLR/IPA Mission "
                                                 "Support System user interface?"),
                                         QtGui.QMessageBox.Yes,
                                         QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
@@ -383,7 +383,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         else:
             # Create a new flight track from the waypoints template.
             self.new_flight_track_counter += 1
-            waypoints_model = ft.WaypointsTableModel(name="new flight track (%i)" % \
+            waypoints_model = ft.WaypointsTableModel(name="new flight track (%i)" %
                                                           self.new_flight_track_counter)
             # Make a copy of the template. Otherwise all new flight tracks would
             # use the same data structure in memory.
@@ -394,7 +394,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         # editable.
         listitem = QFlightTrackListWidgetItem(waypoints_model,
                                               self.listFlightTracks)
-        listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable \
+        listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable
                           | QtCore.Qt.ItemIsEnabled)
 
         if activate:
@@ -407,9 +407,9 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         """
         filename = QtGui.QFileDialog.getOpenFileName(self,
                                                      "Open Flight Track", "",
-                                                     "Supported files (*.ftml *.csv *.txt)" \
-                                                     ";;Flight track XML (*.ftml)" \
-                                                     ";;CSV-file (*.csv)" \
+                                                     "Supported files (*.ftml *.csv *.txt)"
+                                                     ";;Flight track XML (*.ftml)"
+                                                     ";;CSV-file (*.csv)"
                                                      ";;Text-file (*.txt)");
 
         if not filename.isEmpty():
@@ -432,7 +432,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             return
         if item.flighttrack_model.modified:
             ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                            self.tr("The flight track you are about to close has " \
+                                            self.tr("The flight track you are about to close has "
                                                     "been modified. Close anyway?"),
                                             QtGui.QMessageBox.Yes,
                                             QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
@@ -468,8 +468,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                                                      "Save Flight Track",
                                                      os.path.join(self.lastSaveDir,
                                                                   self.active_flight_track.name),
-                                                     "Flight track XML (*.ftml)" \
-                                                     ";;CSV-file (*.csv)" \
+                                                     "Flight track XML (*.ftml)"
+                                                     ";;CSV-file (*.csv)"
                                                      ";;Text-file (*.txt)");
 
         if not filename.isEmpty():

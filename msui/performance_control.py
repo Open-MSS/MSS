@@ -109,7 +109,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.tbViewCapabilities.setEnabled(False)
 
         # Initialise date/time fields with current day, 00 UTC.
-        self.dteTime.setDateTime(QtCore.QDateTime( \
+        self.dteTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0,
                                       microsecond=0)))
 
@@ -159,7 +159,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             wms = MSSWebMapService(base_url, version='1.1.1')
         except Exception as ex:
             logging.error("ERROR: %s", ex)
-            logging.error("cannot load capabilities document.. " \
+            logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
             QtGui.QMessageBox.critical(self, self.tr("Flight Performance Service"),
                                        self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
@@ -179,7 +179,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                             filtered_layers.append(cb_string)
                 else:
                     stack.extend(layer.layers)
-            logging.debug("discovered %i layers that can be used in this view" % \
+            logging.debug("discovered %i layers that can be used in this view" %
                           len(filtered_layers))
             filtered_layers.sort()
             self.cbMode.addItems(filtered_layers)
@@ -271,7 +271,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.cbAircraft.clear()
         if "aircraft" in layerobj.dimensions.keys() and \
                         "aircraft" in layerobj.extents.keys():
-            self.cbAircraft.addItems(["%s" % s for s in \
+            self.cbAircraft.addItems(["%s" % s for s in
                                       layerobj.extents["aircraft"]["values"]])
 
         abstract_text = layerobj.abstract if layerobj.abstract else ""

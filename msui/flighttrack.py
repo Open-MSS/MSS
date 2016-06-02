@@ -870,7 +870,7 @@ class WaypointsTableModel(QAbstractTableModel):
             elif line.startswith("ERROR"):
                 logging.error(line)
                 QtGui.QMessageBox.critical(None, "Flight Performance",
-                                           "An error occured while computine the flight performance. " \
+                                           "An error occured while computine the flight performance. "
                                            "The error message is:\n\n%s" % line,
                                            QtGui.QMessageBox.Ok)
 
