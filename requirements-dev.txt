@@ -1,7 +1,7 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-basemap=1.0.8.dev0=np111py27_1
+basemap=1.0.8.dev0=np110py27_1
 basemap-data-hires=1.0.8.dev0=0
 blas=1.1=openblas
 curl=7.45.0=0
@@ -24,10 +24,10 @@ libtiff=4.0.6=1
 libxml2=2.9.2=0
 libxslt=1.1.28=0
 lxml=3.6.0=py27_0
-matplotlib=1.5.1=np111py27_1
+matplotlib=1.5.1=np110py27_1
 mkl=11.3.1=0
-netcdf4=1.2.4=np111py27_1
-numpy=1.11.0=py27_blas_openblas_100
+netcdf4=1.2.4=np110py27_1
+numpy=1.10.4=py27_blas_openblas_201
 openblas=0.2.18=1
 openssl=1.0.2g=0
 pep8=1.7.0=py27_0
@@ -47,7 +47,7 @@ pytz=2016.3=py27_0
 qt=4.8.7=1
 readline=6.2=2
 requests=2.9.1=py27_0
-scipy=0.17.1=np111py27_blas_openblas_200
+scipy=0.17.0=np110py27_2
 setuptools=21.2.1=py27_0
 simplejson=3.8.2=py27_0
 sip=4.16.9=py27_0
