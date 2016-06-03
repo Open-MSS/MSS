@@ -611,8 +611,7 @@ class MapCanvas(basemap.Basemap):
         while parent:  # loop until root has been reached
             # Set visible to False if one item along the path to the root is
             # found to be set to invisible.
-            parentProperties["visible"] = parent.isVisible(self.identifier) \
-                                          and parentProperties["visible"]
+            parentProperties["visible"] = parent.isVisible(self.identifier) and parentProperties["visible"]
 
             # Inherit colour and time marker interval of the highest tree level
             # on which they are set (set the current property to the value

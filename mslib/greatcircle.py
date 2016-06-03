@@ -191,9 +191,8 @@ def vinc_dist(f, a, phi1, lembda1, phi2, lembda2):
     #  until there is no significant change in lembda
 
     while (last_lembda < -3000000.0 or lembda != 0 and abs((last_lembda - lembda) / lembda) > 1.0e-9):
-        sqr_sin_sigma = pow(math.cos(U2) * math.sin(lembda), 2) + \
-                        pow((math.cos(U1) * math.sin(U2) -
-                             math.sin(U1) * math.cos(U2) * math.cos(lembda)), 2)
+        sqr_sin_sigma = pow(math.cos(U2) * math.sin(lembda), 2) + pow((math.cos(U1) * math.sin(U2) - math.sin(U1) *
+                                                                       math.cos(U2) * math.cos(lembda)), 2)
 
         Sin_sigma = math.sqrt(sqr_sin_sigma)
 

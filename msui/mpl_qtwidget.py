@@ -953,8 +953,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                 earliestStartTime = min(earliestStartTime,
                                         item.getStartTime())
                 for variable in item.childItems:
-                    if variable.isVisible(self.identifier) and \
-                                    variable.getVariableName() not in self.subPlots:
+                    if variable.isVisible(self.identifier) and variable.getVariableName() not in self.subPlots:
                         self.subPlots.append(variable.getVariableName())
 
         # Iterative list traversal no. 2: Draw / update plots.

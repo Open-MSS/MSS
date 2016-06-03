@@ -118,9 +118,9 @@ class AbstractLagrantoDataItem:
         elif column == 2:
             # Item line properties (if not applicable return empty string).
             try:
-                return str(self.gxElements['general']['colour']) + '/' + \
-                       str(self.gxElements['general']['linestyle']) + '/' + \
-                       str(self.gxElements['general']['linewidth'])
+                return str(self.gxElements['general']['colour']
+                           ) + '/' + str(self.gxElements['general']['linestyle']) + '/' +  str(
+                    self.gxElements['general']['linewidth'])
             except:
                 return ''
         elif column == 3:
@@ -313,8 +313,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         # Convert the requested interval from the datetime object to an int
         # value representing seconds.
         try:
-            requestedInterval = requestedInterval.hour * 3600 + \
-                                requestedInterval.minute * 60
+            requestedInterval = requestedInterval.hour * 3600 + requestedInterval.minute * 60
         except:
             pass
 
@@ -353,8 +352,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         if interval != requestedInterval:
             self.gxElements["general"]["timeMarkerInterval"].replace(hour=0,
                                                                      minute=0)
-            self.gxElements["general"]["timeMarkerInterval"] += \
-                datetime.timedelta(seconds=interval)
+            self.gxElements["general"]["timeMarkerInterval"] += datetime.timedelta(seconds=interval)
 
         #
         # Compute the time marker times: arange from the first to the last data

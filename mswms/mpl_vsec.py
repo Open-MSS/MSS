@@ -87,8 +87,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Add lines to highlight points if any are given.
         ipoint = 0
         for i in range(len(self.lats)):
-            if abs(self.lats[i] - self.highlight[ipoint][0]) < 1E-10 and \
-                            abs(self.lons[i] - self.highlight[ipoint][1]) < 1E-10:
+            if abs(self.lats[i] - self.highlight[ipoint][0]) < 1E-10 and abs(self.lons[i] -
+                                                                                     self.highlight[ipoint][1]) < 1E-10:
                 ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
                 ipoint += 1
 

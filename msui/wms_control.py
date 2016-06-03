@@ -614,8 +614,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # ~~~~ A) Elevation. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         lobj = layerobj
         while lobj is not None:
-            if "elevation" in lobj.dimensions.keys() and \
-                            "elevation" in lobj.extents.keys():
+            if "elevation" in lobj.dimensions.keys() and "elevation" in lobj.extents.keys():
                 units = lobj.dimensions["elevation"]["units"]
                 elev_list = ["%s (%s)" % (e.strip(), units) for e in
                              lobj.extents["elevation"]["values"]]
@@ -634,8 +633,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
         lobj = layerobj
         while lobj is not None:
-            if "init_time" in lobj.dimensions.keys() and \
-                            "init_time" in lobj.extents.keys():
+            if "init_time" in lobj.dimensions.keys() and "init_time" in lobj.extents.keys():
                 # MSS web map service.
                 self.init_time_name = "init_time"
                 enable_inittime = True
@@ -676,16 +674,14 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         lobj = layerobj
         while lobj is not None:
 
-            if "time" in lobj.dimensions.keys() and \
-                            "time" in lobj.extents.keys():
+            if "time" in lobj.dimensions.keys() and "time" in lobj.extents.keys():
                 self.valid_time_name = "time"
                 enable_validtime = True
             elif "time" in lobj.dimensions.keys():
                 enable_validtime = True
                 self.valid_time_name = "time"
                 vtime_no_extent = True
-            elif "forecast" in lobj.dimensions.keys() and \
-                            "forecast" in lobj.extents.keys():
+            elif "forecast" in lobj.dimensions.keys() and "forecast" in lobj.extents.keys():
                 # IBL web map service.
                 self.valid_time_name = "forecast"
                 enable_validtime = True

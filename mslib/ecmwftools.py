@@ -306,17 +306,13 @@ def half_level_pressure(surface_pressure, num_levels=91):
     half_level_pressure = numpy.zeros(num_levels + 1)
     half_level_pressure[0] = surface_pressure
     if num_levels == 137:
-        half_level_pressure[1:] = ak_halflevel_137 + \
-                                  surface_pressure * bk_halflevel_137
+        half_level_pressure[1:] = ak_halflevel_137 + surface_pressure * bk_halflevel_137
     elif num_levels == 91:
-        half_level_pressure[1:] = ak_halflevel_91 + \
-                                  surface_pressure * bk_halflevel_91
+        half_level_pressure[1:] = ak_halflevel_91 + surface_pressure * bk_halflevel_91
     elif num_levels == 62:
-        half_level_pressure[1:] = ak_halflevel_62 + \
-                                  surface_pressure * bk_halflevel_62
+        half_level_pressure[1:] = ak_halflevel_62 + surface_pressure * bk_halflevel_62
     elif num_levels == 31:
-        half_level_pressure[1:] = ak_halflevel_31 + \
-                                  surface_pressure * bk_halflevel_31
+        half_level_pressure[1:] = ak_halflevel_31 + surface_pressure * bk_halflevel_31
     return half_level_pressure[::-1] * 100.
 
 

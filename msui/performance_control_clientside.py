@@ -880,8 +880,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                                            QtGui.QMessageBox.Ok)
                 return
 
-            valid_time_list = self.available_valid_times[
-                              index_before_takeoff_time:index_after_landing_time + 1]
+            valid_time_list = self.available_valid_times[index_before_takeoff_time:index_after_landing_time + 1]
 
             print index_before_takeoff_time, self.available_valid_times[index_before_takeoff_time]
             print index_after_landing_time, self.available_valid_times[index_after_landing_time]

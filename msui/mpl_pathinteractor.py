@@ -247,8 +247,7 @@ class PathV(WaypointsPath):
         intermediate_indexes = []
         ipoint = 0
         for i in range(len(lats)):
-            if abs(lats[i] - waypoints[ipoint][0]) < 1E-10 and \
-                            abs(lons[i] - waypoints[ipoint][1]) < 1E-10:
+            if abs(lats[i] - waypoints[ipoint][0]) < 1E-10 and abs(lons[i] - waypoints[ipoint][1]) < 1E-10:
                 intermediate_indexes.append(i)
                 ipoint += 1
             if ipoint >= len(waypoints):
