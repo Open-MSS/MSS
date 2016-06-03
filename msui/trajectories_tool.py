@@ -67,7 +67,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # for the rest of the program (especially the map).
         self.traj_item_tree = titree.LagrantoMapItemsTreeModel()
 
-        # Connect the implementation for QtAbstractItemModel 
+        # Connect the implementation for QtAbstractItemModel
         # (self.mapItemsTree) with the tree view. All changes in the data
         # structure will automatically be displayed in the GUI.
         self.tvVisibleElements.setModel(self.traj_item_tree)
@@ -241,7 +241,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Check if the selection query should be applied to all available
         # map elements (index of cbSelectElements is 0), or only to the
         # children of the currently selected element (index is 1). In the
-        # latter case also check that only one item is currently selected. 
+        # latter case also check that only one item is currently selected.
         if self.cbSelectElements.currentIndex() == 0:
             # LagrantoMapItemsTreeModel.selectionFromQuery() interprets
             # a root index of None as a selection from all available elements.
@@ -259,13 +259,13 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # LagrantoMapItemsTreeModel.selectionFromQuery() returns a
         # QtGui.QItemSelection() instance containing the indexes of all
         # elements that match the query.
-        #    
+        #
         # FROM THE PYQT DOCUMENTATION:
         # A QItemSelection is basically a list of selection ranges, see
         # QItemSelectionRange. QItemSelection saves memory, and avoids
         # unnecessary work, by working with selection ranges rather than
         # recording the model item index for each item in the selection.
-        # Generally, an instance of this class will contain a list of 
+        # Generally, an instance of this class will contain a list of
         # non-overlapping selection ranges.
         itemSelection = self.traj_item_tree.selectionFromQuery(
             str(self.leSelectionQuery.text()),
@@ -274,12 +274,12 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Items can be selected in the tree view by using the select()
         # method of the tree view's selection model. select() takes either
         # a single index or an item selection:
-        #     QItemSelectionModel.select (self, QModelIndex index, 
+        #     QItemSelectionModel.select (self, QModelIndex index,
         #                                 SelectionFlags command)
         #     QItemSelectionModel.select (self, QItemSelection selection,
         #                                 SelectionFlags command)
         # (see http://www.riverbankcomputing.co.uk/static/Docs/PyQt4/html/
-        #   qitemselectionmodel.html#SelectionFlag-enum)       
+        #   qitemselectionmodel.html#SelectionFlag-enum)
         selectionModel = self.tvVisibleElements.selectionModel()
         if itemSelection.isEmpty():
             # If no item matches the query we can't select anything.

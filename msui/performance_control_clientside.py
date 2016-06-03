@@ -886,7 +886,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             # Get lat/lon coordinates of flight track and convert to string for URL.
             path_string = ""
             for waypoint in self.model.allWaypointData():
-                # path_string += "%.2f,%.2f," % (waypoint.lat, waypoint.lon) 
+                # path_string += "%.2f,%.2f," % (waypoint.lat, waypoint.lon)
                 path_string += "%s,%s," % (waypoint.lat, waypoint.lon)
             path_string = path_string[:-1]
 

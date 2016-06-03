@@ -1117,7 +1117,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         # QItemSelectionRange. QItemSelection saves memory, and avoids
         # unnecessary work, by working with selection ranges rather than
         # recording the model item index for each item in the selection.
-        # Generally, an instance of this class will contain a list of 
+        # Generally, an instance of this class will contain a list of
         # non-overlapping selection ranges.
         itemSelection = QtGui.QItemSelection()
 

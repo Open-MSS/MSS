@@ -173,7 +173,7 @@ class HALO(FliteStarExportedAircraft):
         # Correction for each 10 degrees off ISA conditions. See HALO
         # performance manual, p.27.
         num_10_degrees_off_ISA = int(deltatemp / 10.)
-        # true airspeed: increase/decrease by 2.3% for each 10 deg off ISA day 
+        # true airspeed: increase/decrease by 2.3% for each 10 deg off ISA day
         # conditions
         tas += num_10_degrees_off_ISA * 0.023 * tas
         # fuelflow: increase/decrease by 3.4% for each ..

@@ -386,7 +386,7 @@ class MplSideViewCanvas(MplCanvas):
         for artist in self.fl_label_list:
             artist.remove()
         self.fl_label_list = []
-        # Plot lines indicating flight level altitude.        
+        # Plot lines indicating flight level altitude.
         ax = self.ax
         for level in self.flightlevels:
             pressure = thermolib.flightlevel2pressure(level)

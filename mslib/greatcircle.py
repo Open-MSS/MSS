@@ -117,13 +117,13 @@ class GreatCircle(object):
 
 
 #
-# --------------------------------------------------------------------- 
+# ---------------------------------------------------------------------
 # |                                                                    |
 # |     geodetic.py -  a collection of geodetic functions              |
 # |                                                                    |
-# --------------------------------------------------------------------- 
-# 
-# 
+# ---------------------------------------------------------------------
+#
+#
 # ----------------------------------------------------------------------
 # | Algrothims from Geocentric Datum of Australia Technical Manual      |
 # |                                                                     |
@@ -157,7 +157,7 @@ class GreatCircle(object):
 # | Calculate: the ellipsoidal distance (s) and                         |
 # | forward and reverse azimuths between the points (alpha12, alpha21). |
 # |                                                                     |
-# ---------------------------------------------------------------------- 
+# ----------------------------------------------------------------------
 
 def vinc_dist(f, a, phi1, lembda1, phi2, lembda2):
     """
@@ -345,34 +345,34 @@ def vinc_pt(f, a, phi1, lembda1, alpha12, s):
 
 
 # ---------------------------------------------------------------------------
-# Notes: 
-# 
-# * "The inverse formulae may give no solution over a line 
-#       between two nearly antipodal points. This will occur when 
+# Notes:
+#
+# * "The inverse formulae may give no solution over a line
+#       between two nearly antipodal points. This will occur when
 #       lembda ... is greater than pi in absolute value". (Vincenty, 1975)
-#  
-# * In Vincenty (1975) L is used for the difference in longitude, 
-#       however for consistency with other formulae in this Manual, 
-#       omega is used here. 
-# 
-# * Variables specific to Vincenty's formulae are shown below, 
-#       others common throughout the manual are shown in the Glossary. 
-# 
-# 
+#
+# * In Vincenty (1975) L is used for the difference in longitude,
+#       however for consistency with other formulae in this Manual,
+#       omega is used here.
+#
+# * Variables specific to Vincenty's formulae are shown below,
+#       others common throughout the manual are shown in the Glossary.
+#
+#
 # alpha = Azimuth of the geodesic at the equator
 # U = Reduced latitude
-# lembda = Difference in longitude on an auxiliary sphere (lembda1 & lembda2 
+# lembda = Difference in longitude on an auxiliary sphere (lembda1 & lembda2
 #               are the geodetic longitudes of points 1 & 2)
 # sigma = Angular distance on a sphere, from point 1 to point 2
 # sigma1 = Angular distance on a sphere, from the equator to point 1
 # sigma2 = Angular distance on a sphere, from the equator to point 2
-# sigma_m = Angular distance on a sphere, from the equator to the 
+# sigma_m = Angular distance on a sphere, from the equator to the
 #               midpoint of the line from point 1 to point 2
 # u, A, B, C = Internal variables
-# 
-# 
+#
+#
 # Sample Data
-# 
+#
 # Flinders Peak
 # -37o57'03.72030"
 # 144o25'29.52440"
@@ -381,14 +381,14 @@ def vinc_pt(f, a, phi1, lembda1, alpha12, s):
 # 143o55'35.38390"
 # Ellipsoidal Distance
 # 54,972.271 m
-#  
+#
 # Forward Azimuth
 # 306o52'05.37"
-#  
+#
 # Reverse Azimuth
 # 127o10'25.07"
-# 
-# 
+#
+#
 # *******************************************************************
 
 # Test driver

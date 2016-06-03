@@ -180,7 +180,7 @@ class LagrantoOutputReader(object):
 
         #
         # Data contained in the current file will be appended to self.data,
-        # hence be accessible under self.data[startIndex + X], where 
+        # hence be accessible under self.data[startIndex + X], where
         # startIndex is the length of self.data at the time this method is
         # called.
         startIndex = len(self.data)
@@ -213,7 +213,7 @@ class LagrantoOutputReader(object):
         # the first blank line. Append the numerical values, converted to
         # floats, to the data lists identified by the variable names (the
         # [-1] index references the last element). If a blank line is
-        # encountered, this indicates a new trajectory in the file. Hence, 
+        # encountered, this indicates a new trajectory in the file. Hence,
         # append a new trajectory to self.data.
         for dataLine in lines[firstBlank + 4:]:
             if dataLine == " \n":
@@ -237,7 +237,7 @@ class LagrantoOutputReader(object):
             # specified for this trajectory (last element of the start
             # coordinates list is a dictionary, cf. lagranto.py). If yes,
             # add the contained elements to self.meta. Store start coordinates,
-            # time and duration in the metadata dictionary. 
+            # time and duration in the metadata dictionary.
             if startCoordinates is not None:
                 if isinstance(startCoordinates[i - startIndex][-1], dict):
                     metadict.update(startCoordinates[i - startIndex].pop())

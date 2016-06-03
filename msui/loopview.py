@@ -97,7 +97,7 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
 
         # Create max_views image labels. The labels will exist
         # in memory, but they won't always be visible to the user.
-        # Connect the changeValidTime signal of the widgets to the 
+        # Connect the changeValidTime signal of the widgets to the
         # changeValidTime() method of this class, which displays
         # the globally synchronized time.
         self.imageWidgets = []
