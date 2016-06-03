@@ -34,9 +34,9 @@ AUTHORS:
 # local application imports
 
 
-###############################################################################
-###                          Global cache variables                         ###
-###############################################################################
+"""
+Global cache variables
+"""
 
 global cached_usrname
 global cached_passwd

@@ -34,13 +34,13 @@ import glob
 import netCDF4
 import numpy
 
-
 # local application imports
 
 
-################################################################################
-###                          EXCEPTION CLASSES                               ###
-################################################################################
+"""
+EXCEPTION CLASSES
+"""
+
 
 class NetCDFVariableError(Exception):
     """Exception class to handle error concerning NetCDF variables.
@@ -48,9 +48,9 @@ class NetCDFVariableError(Exception):
     pass
 
 
-################################################################################
-###                        CF convention identifier                          ###
-################################################################################
+"""
+CF convention identifier
+"""
 
 CFVariableIdentifier = {
     # Identification of upper air variables.
@@ -351,9 +351,9 @@ for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
         ("long_name", ent + "_volume_mixing_ratio")
     ]
 
-################################################################################
-###                               CONSTANTS                                  ###
-################################################################################
+"""
+CONSTANTS
+"""
 
 NO_FIELDS = 1
 
@@ -367,13 +367,10 @@ re_datetime = re.compile("(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z")
 # Expression used to identify the time variable by its units string.
 re_timeunits = re.compile("\w+ since \d{4}-\d{1,2}-\d{1,2}.\d{1,2}")
 
+"""
+NETCDF FILE TOOLS
+"""
 
-################################################################################
-################################################################################
-
-################################################################################
-###                          NETCDF FILE TOOLS                               ###
-################################################################################
 
 def identify_variable(ncfile, identifier_list, check=False):
     """Identify the variable in ncfile that is described by specified rules.
@@ -446,7 +443,7 @@ def identify_CF_variable(ncfile, standard_name, varname_override=None,
     if check and not var:
         raise NetCDFVariableError("cannot identify NetCDF-CF variable <%s>" %
                                   standard_name if not varname_override else
-                                      varname_override)
+                                  varname_override)
     return var_name, var
 
 
@@ -648,9 +645,8 @@ def get_latlon_data(ncfile, autoreverse=True):
     return lat_data, lon_data, lat_order
 
 
-################################################################################
-###                          COPY NETCDF FILES                               ###
-################################################################################
+"""
+COPY NETCDF FILES
 
 # THE FOLLOWING CODE INCLUDES SUBSTANTIAL PARTS TAKEN FROM THE NETCDF4-PYTHON
 # LIBRARY (<http://netcdf4-python.googlecode.com/>).
@@ -671,6 +667,8 @@ def get_latlon_data(ncfile, autoreverse=True):
 # DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 # TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 # OF THIS SOFTWARE.
+"""
+
 
 # The following method is taken from the "nc3tonc4" script from the
 # netcdf4-python package. Small adjustments have been made.
@@ -810,9 +808,10 @@ def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
     ncfile4.close()
 
 
-################################################################################
-###                          MFDataset_CommonDims                            ###
-################################################################################
+"""
+MFDataset_CommonDims
+"""
+
 
 class MFDatasetCommonDims(netCDF4.MFDataset):
     """MFDatasetCommonDims(self, files, exclude=[], requireDimNum=False)
@@ -947,22 +946,22 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # The following methods are inherited from MFDataset:
 
-##     def __setattr__(self, name, value):
-##         """override base class attribute creation"""
-##         self.__dict__[name] = value
+#     def __setattr__(self, name, value):
+#         """override base class attribute creation"""
+#         self.__dict__[name] = value
 
-##     def __getattribute__(self, name):
-##         if name in ['variables','dimensions','file_format']:
-##             if name == 'dimensions': return self._dims
-##             if name == 'variables': return self._vars
-##             if name == 'file_format': return self._file_format
-##         else:
-##             return netCDF4.Dataset.__getattribute__(self, name)
+#     def __getattribute__(self, name):
+#         if name in ['variables','dimensions','file_format']:
+#             if name == 'dimensions': return self._dims
+#             if name == 'variables': return self._vars
+#             if name == 'file_format': return self._file_format
+#         else:
+#             return netCDF4.Dataset.__getattribute__(self, name)
 
-##     def ncattrs(self):
-##         return self._cdf[0].__dict__.keys()
+#     def ncattrs(self):
+#         return self._cdf[0].__dict__.keys()
 
-##     def close(self):
-##         for dset in self._cdf:
-##             dset.close()
+#     def close(self):
+#         for dset in self._cdf:
+#             dset.close()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

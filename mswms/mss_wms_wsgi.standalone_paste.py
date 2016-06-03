@@ -103,10 +103,10 @@ from mslib import mss_config
 import mss_plot_driver
 import mss_wms_settings
 
+"""
+CaseInsensitiveMulitDict
+"""
 
-################################################################################
-###                       CaseInsensitiveMulitDict                           ###
-################################################################################
 
 # The following class is used to make the module case-insensitive for
 # the URL query parameters (i.e. it doesn't matter whether the client
@@ -133,9 +133,10 @@ class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
         raise KeyError(repr(key))
 
 
-################################################################################
-###                          CLASS MSS_WMSResponse                            ###
-################################################################################
+"""
+CLASS MSS_WMSResponse
+"""
+
 
 class MSS_WMSResponse(object):
     """WSGI handler for WMS server. The Web Map Service corresponds to version
@@ -874,14 +875,9 @@ class MSS_WMSResponse(object):
         return image, return_format
 
 
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-
-################################################################################
-###                      MAIN: integrated HTTP server                        ###
-################################################################################
+"""
+MAIN: integrated HTTP server
+"""
 
 if __name__ == '__main__':
 

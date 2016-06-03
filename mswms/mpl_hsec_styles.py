@@ -80,10 +80,10 @@ import mpl_toolkits.basemap
 from mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib import thermolib
 
+"""
+Surface Field: CLOUDS
+"""
 
-###############################################################################
-###                      Surface Field: CLOUDS                              ###
-###############################################################################
 
 class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -190,32 +190,33 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###               Surface Field: Mean Sea Level Pressure                    ###
-###############################################################################
+"""
+Surface Field: Mean Sea Level Pressure
+"""
 
-## from scipy.ndimage import minimum_filter
-## def local_minima(fits, window=15):
-##     """Find the local minima within fits, and return them and their
-##        indices.
 
-##     Returns a list of indices at which the minima were found, and a  
-##     list of the minima, sorted in order of increasing minimum. The
-##     keyword argument window determines how close two local minima
-##     are allowed to be to one another.  If two local minima are found
-##     closer together than that, then the lowest of them is taken as
-##     the real minimum.  window=1 will return all local minima.
+# from scipy.ndimage import minimum_filter
+# def local_minima(fits, window=15):
+#     """Find the local minima within fits, and return them and their
+#        indices.
 
-##     Taken from
-##     http://mail.scipy.org/pipermail/scipy-user/2008-August/017886.html
-##     """
-##     fits = np.asarray(fits)
-##     minfits = minimum_filter(fits, size=window, mode="wrap")
-##     minima_mask = fits == minfits
-##     good_indices = np.arange(len(fits))[minima_mask]
-##     good_fits = fits[minima_mask]
-##     order = good_fits.argsort()
-##     return good_indices[order], good_fits[order]
+#     Returns a list of indices at which the minima were found, and a
+#     list of the minima, sorted in order of increasing minimum. The
+#     keyword argument window determines how close two local minima
+#     are allowed to be to one another.  If two local minima are found
+#     closer together than that, then the lowest of them is taken as
+#     the real minimum.  window=1 will return all local minima.
+
+#     Taken from
+#     http://mail.scipy.org/pipermail/scipy-user/2008-August/017886.html
+#     """
+#     fits = np.asarray(fits)
+#     minfits = minimum_filter(fits, size=window, mode="wrap")
+#     minima_mask = fits == minfits
+#     good_indices = np.arange(len(fits))[minima_mask]
+#     good_fits = fits[minima_mask]
+#     order = good_fits.argsort()
+#     return good_indices[order], good_fits[order]
 
 class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -272,15 +273,15 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
                  linewidths=1)
 
         # Find local minima and maxima.
-        ##         min_indices, min_values = local_minima(mslp.ravel(), window=50)
-        ##         #min_indices, min_values = local_minima(mslp, window=(50,50))
-        ##         minfits = minimum_filter(mslp, size=(50,50), mode="wrap")
-        ##         logging.debug("%s", minfits)
-        ##         #logging.debug("%s // %s // %s", min_values, lonmesh_.ravel()[min_indices],
-        ##         #              latmesh_.ravel()[min_indices])
+        #         min_indices, min_values = local_minima(mslp.ravel(), window=50)
+        #         #min_indices, min_values = local_minima(mslp, window=(50,50))
+        #         minfits = minimum_filter(mslp, size=(50,50), mode="wrap")
+        #         logging.debug("%s", minfits)
+        #         #logging.debug("%s // %s // %s", min_values, lonmesh_.ravel()[min_indices],
+        #         #              latmesh_.ravel()[min_indices])
 
-        ##         bm.scatter(lonmesh.ravel()[min_indices], latmesh.ravel()[min_indices],
-        ##                    s=20, c='blue', marker='s')
+        #         bm.scatter(lonmesh.ravel()[min_indices], latmesh.ravel()[min_indices],
+        #                    s=20, c='blue', marker='s')
 
         titlestring = "Mean sea level pressure (hPa) and surface wind"
         time_step = self.valid_time - self.init_time
@@ -298,9 +299,10 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                Surface Field: Solar Elevation Angle                     ###
-###############################################################################
+"""
+Surface Field: Solar Elevation Angle
+"""
+
 
 class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -370,9 +372,10 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    Surface Field: Sea Ice Cover                         ###
-###############################################################################
+"""
+Surface Field: Sea Ice Cover
+"""
+
 
 class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -445,9 +448,10 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    Upper Air Field: Temperature                         ###
-###############################################################################
+"""
+Upper Air Field: Temperature
+"""
+
 
 class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -516,9 +520,9 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                Chemical Mixing Ratios (CLaMS)                           ###
-###############################################################################
+"""
+Chemical Mixing Ratios (CLaMS)
+"""
 
 CLAMS_CONFIG = {
     u'BVF': {'levels': {50: (0.00029, 0.00095),
@@ -808,10 +812,10 @@ for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
             u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
     globals()["HS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
 
+"""
+Gravity Wave Forecast
+"""
 
-###############################################################################
-###                Gravity Wave Forecast                                    ###
-###############################################################################
 
 class HS_GravityWaveForecast_ML(MPLBasemapHorizontalSectionStyle):
     """Pressure level version for Chemical Mixing ratios.
@@ -941,9 +945,10 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                Upper Air Field: Geopotential and Wind                   ###
-###############################################################################
+"""
+Upper Air Field: Geopotential and Wind
+"""
+
 
 class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
     """
@@ -1046,9 +1051,10 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                  Upper Air Field: Relative Humidity                     ###
-###############################################################################
+"""
+Upper Air Field: Relative Humidity
+"""
+
 
 class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Relative humidity and geopotential on pressure levels.
@@ -1132,9 +1138,10 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###             Upper Air Field: Equivalent Potential Temperature           ###
-###############################################################################
+"""
+Upper Air Field: Equivalent Potential Temperature
+"""
+
 
 class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Equivalent potential temperature and geopotential on pressure levels.
@@ -1218,9 +1225,10 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    Upper Air Field: Vertical Velocity                   ###
-###############################################################################
+"""
+Upper Air Field: Vertical Velocity
+"""
+
 
 class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Vertical velocity and geopotential on pressure levels.
@@ -1305,9 +1313,10 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                        Upper Air Field: Divergence                      ###
-###############################################################################
+"""
+Upper Air Field: Divergence
+"""
+
 
 class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Divergence and geopotential on pressure levels.
@@ -1369,9 +1378,10 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    Upper Air Field: EMAC Tracer                         ###
-###############################################################################
+"""
+Upper Air Field: EMAC Tracer
+"""
+
 
 class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -1439,9 +1449,10 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    2D field: EMAC total column density                  ###
-###############################################################################
+"""
+2D field: EMAC total column density
+"""
+
 
 class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -1518,9 +1529,10 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                  Dynamical (2PVU) Tropopause Fields                     ###
-###############################################################################
+"""
+Dynamical (2PVU) Tropopause Fields
+"""
+
 
 class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
     """Dynamical tropopause plots (2-PVU level). Three styles are available:
@@ -1624,9 +1636,9 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                 Surface Field: Probability of WCB                       ###
-###############################################################################
+"""
+Surface Field: Probability of WCB
+"""
 
 
 class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
@@ -1697,9 +1709,9 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###       Upper level Field: Lagranto WCB/INSITU/MIX trajectories           ###
-###############################################################################
+"""
+Upper level Field: Lagranto WCB/INSITU/MIX trajectories
+"""
 
 
 class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
@@ -1780,9 +1792,10 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                 Surface Field: Boundary Layer Height                    ###
-###############################################################################
+"""
+Surface Field: Boundary Layer Height
+"""
+
 
 class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -1856,9 +1869,10 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    Meteosat brightness temperature                      ###
-###############################################################################
+"""
+Meteosat brightness temperature
+"""
+
 
 class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
     """

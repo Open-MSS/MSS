@@ -55,10 +55,9 @@ from mslib import mss_util
 from mslib import thermolib
 import mss_settings
 
-################################################################################
-###                    CONSTANTS (used in this module)                       ###
-################################################################################
-
+"""
+CONSTANTS (used in this module)
+"""
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, \
@@ -86,10 +85,10 @@ PERFORMANCE = 1
 # column).
 locations = mss_settings.locations
 
+"""
+CLASS Waypoint
+"""
 
-################################################################################
-###                           CLASS Waypoint                                 ###
-################################################################################
 
 class Waypoint(object):
     """Represents a waypoint with position, altitude and further
@@ -130,9 +129,10 @@ class Waypoint(object):
                                                     self.flightlevel)
 
 
-################################################################################
-###                     CLASS WaypointsTableModel                            ###
-################################################################################
+"""
+CLASS WaypointsTableModel
+"""
+
 
 class WaypointsTableModel(QAbstractTableModel):
     """Qt-QAbstractTableModel-derived data structure representing a flight
@@ -942,9 +942,10 @@ class WaypointsTableModel(QAbstractTableModel):
         return str
 
 
-################################################################################
-###                       CLASS  WaypointDelegate                            ###
-################################################################################
+"""
+CLASS  WaypointDelegate
+"""
+
 
 class WaypointDelegate(QItemDelegate):
     """Qt delegate class for the appearance of the table view. Based on the

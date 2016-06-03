@@ -32,9 +32,9 @@ AUTHORS:
 # local application imports
 from dlraircraft import HALO, Falcon
 
-################################################################################
-###                            Aircraft "pool"                               ###
-################################################################################
+"""
+Aircraft "pool"
+"""
 
 available_aircraft = {}
 
@@ -54,9 +54,9 @@ except:
 # Add your aircraft object here to make it accessible from the user interface.
 
 
-################################################################################
-###                              Example code                                ###
-################################################################################
+"""
+Example code
+"""
 
 sample_flight_description = [
     ["takeoff_weight", 75000],

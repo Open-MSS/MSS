@@ -56,10 +56,10 @@ import mss_settings
 PERFORMANCE = 0
 PERFORMANCE_OLD = 1
 
+"""
+USER INTERFACE CLASS FlightPlanTableView
+"""
 
-################################################################################
-###                 USER INTERFACE CLASS FlightPlanTableView                 ###
-################################################################################
 
 class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
     """Implements the table view of the flight plan. Data comes from a
@@ -265,8 +265,6 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
 
         self.resizeColumns()
 
-
-################################################################################
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.

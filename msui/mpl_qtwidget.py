@@ -55,10 +55,10 @@ if _matplotlib_version >= '1.2':
 else:
     PIL_image_origin = "lower"
 
+"""
+Matplotlib Qt Canvas
+"""
 
-################################################################################
-###                         Matplotlib Qt Canvas                             ###
-################################################################################
 
 class MplCanvas(FigureCanvas):
     """Class to represent the FigureCanvas widget.
@@ -134,9 +134,10 @@ class MplCanvas(FigureCanvas):
         return width, height
 
 
-################################################################################
-###                        Matplotlib Qt Widget                              ###
-################################################################################
+"""
+Matplotlib Qt Widget
+"""
+
 
 class MplWidget(QtGui.QWidget):
     """Matplotlib canvas widget defined in Qt Designer"""
@@ -185,9 +186,9 @@ class MplNavBarWidget(QtGui.QWidget):
         self.setLayout(self.vbl)
 
 
-################################################################################
-###                      Side View Canvas and Widget                         ###
-################################################################################
+"""
+Side View Canvas and Widget
+"""
 
 # standard library imports
 import logging
@@ -520,9 +521,10 @@ class MplSideViewWidget(MplNavBarWidget):
                 action.setEnabled(False)
 
 
-################################################################################
-###                       Top View Canvas and Widget                         ###
-################################################################################
+"""
+Top View Canvas and Widget
+"""
+
 
 class MplTopViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws a top view (map), together with a
@@ -825,9 +827,10 @@ class MplTopViewWidget(MplNavBarWidget):
         self.canvas.redrawMap()
 
 
-################################################################################
-###                  Time Series View Canvas and Widget                      ###
-################################################################################
+"""
+Time Series View Canvas and Widget
+"""
+
 
 class MplTimeSeriesViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws time series of trajectory data.

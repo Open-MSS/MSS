@@ -46,10 +46,10 @@ from geopy import distance
 # local application imports
 from mslib import thermolib
 
+"""
+EXCEPTION CLASSES
+"""
 
-################################################################################
-###                          EXCEPTION CLASSES                               ###
-################################################################################
 
 class FlightError(Exception):
     """Exception class to handle errors occuring during flight performance
@@ -58,9 +58,10 @@ class FlightError(Exception):
     pass
 
 
-################################################################################
-###                            AIRCRAFT STATE                                ###
-################################################################################
+"""
+AIRCRAFT STATE
+"""
+
 
 class AircraftState(object):
     """This class describes the state of an aircraft, including its position,
@@ -99,9 +100,10 @@ class AircraftState(object):
     has_landed = False
 
 
-################################################################################
-###                                 AIRCRAFT                                 ###
-################################################################################
+"""
+AIRCRAFT
+"""
+
 
 class Aircraft(object):
     """Abstract superclass for all aircraft classes.
@@ -595,7 +597,7 @@ class Aircraft(object):
                    ac_state.alt_ft if ac_state.alt_ft is not None else -999.,
                    ac_state.remaining_fuel_lbs if ac_state.remaining_fuel_lbs is not None else -999.,
                    ac_state.remaining_range_default_cruise_nm
-                       if ac_state.remaining_range_default_cruise_nm is not None else -999.)
+                   if ac_state.remaining_range_default_cruise_nm is not None else -999.)
             print "atmosphere status -- TEMPERATURE: %.2f K off ISA\n" % \
                   (delta_temp_ISA)
 

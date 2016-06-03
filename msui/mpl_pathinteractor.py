@@ -67,17 +67,17 @@ import flighttrack as ft
 #                           datetime_to_jsec, compute_solar_angle, rotatePoint
 from mslib.mss_util import *
 
-################################################################################
-###                             CONSTANTS                                    ###
-################################################################################
+"""
+CONSTANTS
+"""
 
 # Constants to specify the current editing mode.
 MOVE, DELETE, INSERT = range(3)
 
+"""
+HELPER ROUTINES
+"""
 
-################################################################################
-###                           HELPER ROUTINES                                ###
-################################################################################
 
 def distance_point_linesegment(p, l1, l2):
     """Computes the distance between a point p and a line segment given by its
@@ -109,9 +109,10 @@ def distance_point_linesegment(p, l1, l2):
         return np.linalg.norm(p - p_on_line)
 
 
-################################################################################
-###                        CLASS WaypointsPath                               ###
-################################################################################
+"""
+CLASS WaypointsPath
+"""
+
 
 class WaypointsPath(mpath.Path):
     """Derivative of matplotlib.Path that provides methods to insert and
@@ -201,9 +202,10 @@ class WaypointsPath(mpath.Path):
         self.vertices = np.array(self.vertices)
 
 
-################################################################################
-###                            CLASS PathV                                   ###
-################################################################################
+"""
+CLASS PathV
+"""
+
 
 class PathV(WaypointsPath):
     """Class to represent a vertical flight profile path.
@@ -264,9 +266,10 @@ class PathV(WaypointsPath):
         return (self.intermediate_indexes[index], wps_list[index].pressure)
 
 
-################################################################################
-###                       CLASS PathH, PathH_GC                              ###
-################################################################################
+"""
+CLASS PathH, PathH_GC
+"""
+
 
 class PathH(WaypointsPath):
     """Class to represent a horizontal flight track path, waypoints connected
@@ -359,9 +362,10 @@ class PathH_GC(PathH):
         return j
 
 
-################################################################################
-###                          CLASS PathInteractor                           ###
-################################################################################
+"""
+CLASS PathInteractor
+"""
+
 
 class PathInteractor:
     """An interactive matplotlib path editor. Allows vertices of a path patch
@@ -651,9 +655,10 @@ class PathInteractor:
             self.pathpatch.set_facecolor(patch_facecolor)
 
 
-################################################################################
-###                          CLASS VPathInteractor                           ###
-################################################################################
+"""
+CLASS VPathInteractor
+"""
+
 
 class VPathInteractor(PathInteractor):
     """Subclass of PathInteractor that implements an interactively editable
@@ -766,9 +771,10 @@ class VPathInteractor(PathInteractor):
             self.redraw_figure()
 
 
-################################################################################
-###                          CLASS HPathInteractor                           ###
-################################################################################
+"""
+CLASS HPathInteractor
+"""
+
 
 class HPathInteractor(PathInteractor):
     """Subclass of PathInteractor that implements an interactively editable

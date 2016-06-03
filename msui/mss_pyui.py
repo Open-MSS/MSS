@@ -86,9 +86,9 @@ if enableGENESI:
     except:
         enableGENESI = False
 
-###############################################################################
-###                  Template for new flight tracks                         ###
-###############################################################################
+"""
+Template for new flight tracks
+"""
 
 # Template that is used when a new flight track is created (created from
 # mss_settings).
@@ -96,10 +96,10 @@ waypoints_template = []
 for wp in mss_settings.new_flighttrack_template:
     waypoints_template.append(ft.Waypoint(flightlevel=0, location=wp))
 
+"""
+QActiveViewsListWidgetItem
+"""
 
-################################################################################
-###                    QActiveViewsListWidgetItem                            ###
-################################################################################
 
 class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
     """Subclass of QListWidgetItem, represents an open view in the list of
@@ -136,9 +136,10 @@ class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
             self.parent.emit(QtCore.SIGNAL("viewsChanged()"))
 
 
-################################################################################
-###                    QFlightTrackListWidgetItem                            ###
-################################################################################
+"""
+QFlightTrackListWidgetItem
+"""
+
 
 class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
     """Subclass of QListWidgetItem, represents a flight track in the list of
@@ -177,9 +178,10 @@ class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
         item.flighttrack_model.setName(str(item.text()))
 
 
-################################################################################
-###                       About MSUI DIALOG                                  ###
-################################################################################
+"""
+About MSUI DIALOG
+"""
+
 
 class MSS_AboutDialog(QtGui.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
@@ -196,9 +198,10 @@ class MSS_AboutDialog(QtGui.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.lblVersion.setText("Version: %s" % __version__)
 
 
-################################################################################
-###                             MAIN WINDOW                                  ###
-################################################################################
+"""
+MAIN WINDOW
+"""
+
 
 class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
     """MSUI main window class. Provides user interface elements for managing
@@ -518,9 +521,9 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.exec_()
 
 
-################################################################################
-###                            MAIN PROGRAM                                  ###
-################################################################################
+"""
+MAIN PROGRAM
+"""
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.

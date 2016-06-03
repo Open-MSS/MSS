@@ -66,10 +66,10 @@ import ui_loopwindow as ui
 import loopviewer_widget as imw
 import mss_qt
 
+"""
+CLASS MSSLoopWindow
+"""
 
-################################################################################
-###                          CLASS MSSLoopWindow                             ###
-################################################################################
 
 class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
     """MSUI view that can load and display batch images. No interactive

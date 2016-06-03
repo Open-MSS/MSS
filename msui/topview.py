@@ -51,16 +51,14 @@ import flighttrack as ft
 import wms_control as wms
 import satellite_dockwidget as sat
 
-################################################################################
-
 # Dock window indices.
 WMS = 0
 SATELLITE = 1
 
+"""
+DIALOG for map appearance
+"""
 
-################################################################################
-###                       DIALOG for map appearance                          ###
-################################################################################
 
 class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
     """Dialog to set map appearance parameters. User interface is
@@ -186,9 +184,10 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
             button.setPalette(palette)
 
 
-################################################################################
-###                        CLASS FlightPlanTopView                           ###
-################################################################################
+"""
+CLASS FlightPlanTopView
+"""
+
 
 class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
     """PyQt4 window implementing a MapCanvas as an interactive flight track
@@ -372,9 +371,6 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
             fileobj.close()
         self.getView().setMapAppearance(settings)
 
-
-################################################################################
-################################################################################
 
 # Main program to test the window during development. The following code
 # will not be executed if the view is opened from the Mission Support

@@ -94,9 +94,9 @@ import mss_wms_wsgi
 import mss_wms_settings
 from mslib import mss_config
 
-################################################################################
-###                              Main Program                                ###
-################################################################################
+"""
+Main Program
+"""
 
 if __name__ == "__main__":
 

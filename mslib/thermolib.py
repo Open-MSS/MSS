@@ -35,10 +35,10 @@ import numpy
 import pylab
 import scipy.integrate
 
+"""
+EXCEPTION CLASSES
+"""
 
-################################################################################
-###                          EXCEPTION CLASSES                               ###
-################################################################################
 
 class VapourPressureError(Exception):
     """Exception class to handle error arising during the computation of vapour
@@ -47,9 +47,10 @@ class VapourPressureError(Exception):
     pass
 
 
-################################################################################
-###                           Vapour Pressure                                ###
-################################################################################
+"""
+Vapour Pressure
+"""
+
 
 def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                         force_phase='None'):
@@ -232,34 +233,34 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             tc = t - 273.15
             e_sat[idx_liq] = 6.112 * numpy.exp(17.67 * tc[idx_liq] / (tc[idx_liq] + 243.5))
 
-        ##         THIS CURVE LOOKS WRONG!
-        ##         elif liquid == 'Fukuta':
-        ##             # Source: Fukuta, N. and C. M. Gramada, Vapor pressure
-        ##             # measurement of supercooled water, J. Atmos. Sci., 60,
-        ##             # 1871-1875, 2003.
-        ##             # This paper does not give a vapor pressure formulation,
-        ##             # but rather a correction over the Smithsonian Tables.
-        ##             # Thus calculate the table value first, then use the
-        ##             # correction to get to the measured value.
-        ##             ts    = 373.16       # steam point temperature in K
-        ##             ews   = 1013.246     # saturation pressure at steam point
-        ##                                  # temperature, normal atmosphere
+        # THIS CURVE LOOKS WRONG!
+        #         elif liquid == 'Fukuta':
+        #             # Source: Fukuta, N. and C. M. Gramada, Vapor pressure
+        #             # measurement of supercooled water, J. Atmos. Sci., 60,
+        #             # 1871-1875, 2003.
+        #             # This paper does not give a vapor pressure formulation,
+        #             # but rather a correction over the Smithsonian Tables.
+        #             # Thus calculate the table value first, then use the
+        #             # correction to get to the measured value.
+        #             ts    = 373.16       # steam point temperature in K
+        #             ews   = 1013.246     # saturation pressure at steam point
+        #                                  # temperature, normal atmosphere
 
-        ##             e_sat[idx_liq] = 10.**(-7.90298*(ts/t[idx_liq]-1.)
-        ##                                    + 5.02808 * numpy.log10(ts/t[idx_liq])
-        ##                                    - 1.3816E-7 * (10.**(11.344*(1.-t[idx_liq]/ts))-1.)
-        ##                                    + 8.1328E-3*(10.**(-3.49149*(ts/t[idx_liq]-1)) -1.)
-        ##                                    + numpy.log10(ews))
+        #             e_sat[idx_liq] = 10.**(-7.90298*(ts/t[idx_liq]-1.)
+        #                                    + 5.02808 * numpy.log10(ts/t[idx_liq])
+        #                                    - 1.3816E-7 * (10.**(11.344*(1.-t[idx_liq]/ts))-1.)
+        #                                    + 8.1328E-3*(10.**(-3.49149*(ts/t[idx_liq]-1)) -1.)
+        #                                    + numpy.log10(ews))
 
-        ##             tc = t - 273.15
-        ##             x = tc[idx_liq] + 19
-        ##             e_sat[idx_liq] = e_sat[idx_liq] * (0.9992 + 7.113E-4*x
-        ##                                                - 1.847E-4*x**2.
-        ##                                                + 1.189E-5*x**3.
-        ##                                                + 1.130E-7*x**4.
-        ##                                                - 1.743E-8*x**5.)
+        #             tc = t - 273.15
+        #             x = tc[idx_liq] + 19
+        #             e_sat[idx_liq] = e_sat[idx_liq] * (0.9992 + 7.113E-4*x
+        #                                                - 1.847E-4*x**2.
+        #                                                + 1.189E-5*x**3.
+        #                                                + 1.130E-7*x**4.
+        #                                                - 1.743E-8*x**5.)
 
-        ##             e_sat[numpy.where(tc < -39.)] = None
+        #             e_sat[numpy.where(tc < -39.)] = None
 
         elif liquid == 'IAPWS':
             # Source: Wagner W. and A. Pruss (2002), The IAPWS
@@ -509,9 +510,10 @@ def test_vapour_pressure():
     pylab.ylabel("Deviation from Goff Gratch [%]")
 
 
-################################################################################
-###                          Relative Humidity                               ###
-################################################################################
+"""
+Relative Humidity
+"""
+
 
 def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
             force_phase='None'):
@@ -555,9 +557,10 @@ def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
     return 100. * w / w_sat
 
 
-################################################################################
-###                         Virtual Temperature                              ###
-################################################################################
+"""
+Virtual Temperature
+"""
+
 
 def virt_temp(t, q, method='exact'):
     """Compute virtual temperature in [K] from temperature and
@@ -599,9 +602,10 @@ def virt_temp(t, q, method='exact'):
         raise TypeError, 'virtual temperature method not understood'
 
 
-################################################################################
-###                             Geopotential                                 ###
-################################################################################
+"""
+Geopotential
+"""
+
 
 def geop_difference(p, t, method='trapz', axis=-1):
     """Compute geopotential difference in [m**2 s**-2] between the pressure
@@ -698,7 +702,7 @@ def geop_thickness(p, t, q=None, cumulative=False, axis=-1):
     #     delta Z = -Rd/g0 * int( Tv,  d ln(p), p1, p2 ),
     # where Z denotes the geopotential height, Z = phi/g0.
     return -1. / 9.80665 * geop_difference(p, tv, method='cumtrapz'
-        if cumulative else 'trapz', axis=axis)
+    if cumulative else 'trapz', axis=axis)
 
 
 def test_geop_thickness():
@@ -762,9 +766,10 @@ def test_geop_thickness():
     print geop
 
 
-################################################################################
-###                          Specific Humidity                               ###
-################################################################################
+"""
+Specific Humidity
+"""
+
 
 def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
     """Computes specific humidity in [kg/kg] from pressure and dew point
@@ -798,9 +803,10 @@ def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
     return 0.622 * e_sat / (p + e_sat * (0.622 - 1.))
 
 
-################################################################################
-###                                Dew Point                                 ###
-################################################################################
+"""
+Dew Point
+"""
+
 
 def dewpoint_approx(p, q, method='Bolton'):
     """Computes dew point in [K] from pressure and specific humidity.
@@ -843,9 +849,10 @@ def dewpoint_approx(p, q, method='Bolton'):
     return td
 
 
-################################################################################
-###                        Potential Temperature                             ###
-################################################################################
+"""
+Potential Temperature
+"""
+
 
 def pot_temp(p, t):
     """Computes potential temperature in [K] from pressure and temperature.
@@ -932,9 +939,10 @@ def omega_to_w(omega, p, t):
     return omega / (-9.80665 * rho)
 
 
-###############################################################################
-###                  Flight Level / Pressure Conversion                     ###
-###############################################################################
+"""
+Flight Level / Pressure Conversion
+"""
+
 
 def flightlevel2pressure(flightlevel):
     """Conversion of flight level (given in hft) to pressure (Pa) with
@@ -1243,9 +1251,10 @@ def isa_temperature(flightlevel):
                          "implemented for z > 32km")
 
 
-###############################################################################
-###                             Schmidt/Appleman                            ###
-###############################################################################
+"""
+Schmidt/Appleman
+"""
+
 
 def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
     """Schmidt/Appleman criterion folded by relative humidity of 80%.

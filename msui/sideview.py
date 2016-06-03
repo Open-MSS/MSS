@@ -51,15 +51,13 @@ import mpl_pathinteractor as mpl_pi
 import wms_control as wms
 import mss_settings
 
-################################################################################
-
 # Dock window indices.
 WMS = 0
 
+"""
+DIALOG for setting sideview options
+"""
 
-################################################################################
-###                  DIALOG for setting sideview options                     ###
-################################################################################
 
 class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     """Dialog to specify sideview options. User interface is specified
@@ -203,9 +201,10 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         return settings_dict
 
 
-################################################################################
-###                        CLASS MSSSideViewWindow                           ###
-################################################################################
+"""
+CLASS MSSSideViewWindow
+"""
+
 
 class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
     """PyQt4 window implementing a matplotlib canvas as an interactive
@@ -310,8 +309,6 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
             fileobj.close()
             self.getView().setSettings(settings)
 
-
-################################################################################
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.

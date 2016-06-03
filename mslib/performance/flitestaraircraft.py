@@ -35,10 +35,10 @@ import numpy as np
 # local application imports
 from aircraft import Aircraft
 
+"""
+FLITESTAR AIRCRAFT
+"""
 
-################################################################################
-###                          FLITESTAR AIRCRAFT                              ###
-################################################################################
 
 class FliteStarExportedAircraft(Aircraft):
     """Intermediate, still abstract, Aircraft class that can be used as

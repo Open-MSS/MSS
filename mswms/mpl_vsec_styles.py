@@ -46,10 +46,10 @@ import mpl_toolkits.axes_grid1.inset_locator
 from mpl_vsec import AbstractVerticalSectionStyle
 from mslib import thermolib
 
+"""
+TEMPERATURE
+"""
 
-###############################################################################
-###                               TEMPERATURE                               ###
-###############################################################################
 
 class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
     """Vertical section of temperature.
@@ -297,10 +297,10 @@ def make_clams_chem_class(entity):
 for ent in CLAMS_CONFIG:
     globals()["VS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
 
+"""
+GW
+"""
 
-###############################################################################
-###                                GW                                       ###
-###############################################################################
 
 class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
     """Vertical section of chemical species
@@ -364,9 +364,10 @@ class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
                 x.label1.set_backgroundcolor("w")
 
 
-###############################################################################
-###                                CLOUDS                                   ###
-###############################################################################
+"""
+CLOUDS
+"""
+
 
 class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
     """Vertical section of cloud cover.
@@ -537,9 +538,10 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-###############################################################################
-###                           RELATIVE HUMIDITY                             ###
-###############################################################################
+"""
+RELATIVE HUMIDITY
+"""
+
 
 class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
     """Vertical sections of relative humidity.
@@ -756,9 +758,10 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-###############################################################################
-###                           VERTICAL VELOCITY                             ###
-###############################################################################
+"""
+VERTICAL VELOCITY
+"""
+
 
 class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
     """Vertical sections of vertical velocity.
@@ -860,9 +863,10 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-###############################################################################
-###                          HORIZONTAL VELOCITY                            ###
-###############################################################################
+"""
+HORIZONTAL VELOCITY
+"""
+
 
 class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
     """Vertical sections of horizontal velocity.
@@ -968,9 +972,9 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-###############################################################################
-###                          POTENTIAL VORTICITY                            ###
-###############################################################################
+"""
+POTENTIAL VORTICITY
+"""
 
 pv_cmap_data = [
     [0.0000, 0.6000, 1.0000],
@@ -1236,9 +1240,10 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-###############################################################################
-###                           PROBABILITY OF WCB                            ###
-###############################################################################
+"""
+PROBABILITY OF WCB
+"""
+
 
 class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
     """Vertical sections of probability of WCB trajectory occurence,
@@ -1429,9 +1434,10 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-###############################################################################
-###                         EMAC Eyjafjallajokull                           ###
-###############################################################################
+"""
+EMAC Eyjafjallajokull
+"""
+
 
 class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
     """EMAC Eyja tracer vertical cross sections.

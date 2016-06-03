@@ -46,10 +46,10 @@ import numpy as np
 from mslib import netCDF4tools
 from mslib import mss_util
 
+"""
+MSS Plot Driver
+"""
 
-###############################################################################
-###                             MSS Plot Driver                             ###
-###############################################################################
 
 class MSSPlotDriver(object):
     """Abstract super class for implementing driver classes that provide
@@ -355,9 +355,10 @@ class MSSPlotDriver(object):
         return self.data_access.get_valid_times(variable, vartype, init_time)
 
 
-###############################################################################
-###                         Vertical Section Driver                         ###
-###############################################################################
+"""
+Vertical Section Driver
+"""
+
 
 class VerticalSectionDriver(MSSPlotDriver):
     """The vertical section driver is responsible for loading the data that
@@ -567,9 +568,10 @@ class VerticalSectionDriver(MSSPlotDriver):
         return image
 
 
-###############################################################################
-###                        Horizontal Section Driver                        ###
-###############################################################################
+"""
+Horizontal Section Driver
+"""
+
 
 class HorizontalSectionDriver(MSSPlotDriver):
     """The horizontal section driver is responsible for loading the data that
@@ -706,12 +708,9 @@ class HorizontalSectionDriver(MSSPlotDriver):
         return image
 
 
-################################################################################
-################################################################################
-
-###############################################################################
-###                             Module TESTING                              ###
-###############################################################################
+"""
+Module TESTING
+"""
 
 
 def test_vsec_clouds_path():
@@ -833,8 +832,6 @@ def test_hsec_geopwind():
                              show=True)
     image = hsec.plot()
 
-
-###############################################################################
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.

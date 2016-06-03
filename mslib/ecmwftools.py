@@ -29,10 +29,10 @@ AUTHORS:
 # related third party imports
 import numpy
 
+"""
+EXCEPTION CLASSES
+"""
 
-################################################################################
-###                          EXCEPTION CLASSES                               ###
-################################################################################
 
 class ECMWFInvalidNetCDFVariableError(Exception):
     """Exception class to handle invalid or non-CF-compliant NetCDF variables.
@@ -46,30 +46,30 @@ class ECMWFMissingValueError(Exception):
     pass
 
 
-################################################################################
-###                      Pressure on model levels                            ###
-################################################################################
+"""
+Pressure on model levels
 
-# The pressure on ECMWF model levels can be computed from the surface
-# pressure field.
-#
-# The underlying equation is p_k = a_k + b_k * p_surface
-#
-# References:
-#    http://www.ecmwf.int/products/data/technical/model_levels/model_def_91.html
-# and
-#    Section 2.2.1 of the IFS Documentation Cy31r1 Part III: Dynamics and
-#    Numerical Procedures.
+The pressure on ECMWF model levels can be computed from the surface
+pressure field.
 
-# Define coefficients a_k and b_k for what is called "half-levels" in the IFS
-# documentation. These values can be found on the webpage listed above.
-# NOTE that they are in reverse order, i.e. the first coefficient here
-# corresponds to the bottom layer.
+The underlying equation is p_k = a_k + b_k * p_surface
 
+References:
+  http://www.ecmwf.int/products/data/technical/model_levels/model_def_91.html
+  and
+  Section 2.2.1 of the IFS Documentation Cy31r1 Part III: Dynamics and
+  Numerical Procedures.
+
+Define coefficients a_k and b_k for what is called "half-levels" in the IFS
+documentation. These values can be found on the webpage listed above.
+NOTE that they are in reverse order, i.e. the first coefficient here
+corresponds to the bottom layer.
+"""
 # Coefficients for 91 model levels. The following values for ak and bk have been
 # taken from
 # http://www.ecmwf.int/products/data/technical/model_levels/model_def_91.html
 # NOTE: The ak coefficients are defined in [hPa]!
+
 ak_halflevel_91 = numpy.array([
     0.003160, 6.575628, 54.208336, 162.043427, 336.772369,
     576.314148, 895.193542, 1297.656128, 1784.854614, 2356.202637,
@@ -431,9 +431,10 @@ def full_level_pressure_fast(surface_pressure, levelaxis=-1, num_levels=91):
     return data * 100.
 
 
-################################################################################
-###                      Mask and Scale Functions                            ###
-################################################################################
+"""
+Mask and Scale Functions
+"""
+
 
 def scale_variable(nc_var):
     """Scale the data of a packed NetCDF variable and return the result as
@@ -482,9 +483,10 @@ def scale_variable(nc_var):
         return data * nc_var.scale_factor + nc_var.add_offset
 
 
-################################################################################
-###                            Data processing                               ###
-################################################################################
+"""
+Data processing
+"""
+
 
 def omega_to_w(data_omega, data_sfc_pressure, data_temperature, levelaxis=-1,
                return_rho_pressure=False):

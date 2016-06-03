@@ -39,9 +39,9 @@ from geopy import distance
 
 # local application imports
 
-###############################################################################
-###             Tangent point / Hexagon / Solar Angle utilities             ###
-###############################################################################
+"""
+Tangent point / Hexagon / Solar Angle utilities
+"""
 
 JSEC_START = datetime.datetime(2000, 1, 1)
 R = 6371.
@@ -243,9 +243,10 @@ def tangent_point_coordinates(lon_lin, lat_lin, flight_alt=14, cut_height=12):
     return tps
 
 
-###############################################################################
-###         Utility functions for interpolating vertical sections.          ###
-###############################################################################
+"""
+Utility functions for interpolating vertical sections.
+"""
+
 
 def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     """
@@ -453,9 +454,9 @@ def path_points(points, numpoints=100, connection='linear'):
     return lats, lons
 
 
-###############################################################################
-###                     Satellite Track Predictions                         ###
-###############################################################################
+"""
+Satellite Track Predictions
+"""
 
 
 def read_nasa_satellite_prediction(fname):

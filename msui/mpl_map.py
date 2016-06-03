@@ -54,10 +54,10 @@ import mpl_pathinteractor as mpl_pi
 import flighttrack as ft
 import trajectory_item_tree as titree
 
+"""
+CLASS MapCanvas
+"""
 
-################################################################################
-###                           CLASS MapCanvas                                ###
-################################################################################
 
 class MapCanvas(basemap.Basemap):
     """Derivative of mpl_toolkits.basemap, providing additional methods to
@@ -658,7 +658,7 @@ class MapCanvas(basemap.Basemap):
             # Plotting and graphics property update operations can only be
             # performed for flight tracks and trajectories.
             if not (isinstance(item, titree.FlightTrackItem)
-                            or isinstance(item, titree.TrajectoryItem)):
+                    or isinstance(item, titree.TrajectoryItem)):
                 continue
 
             if mode in ["GXPROPERTY_CHANGE", "VISIBILITY_CHANGE"]:
@@ -804,9 +804,10 @@ class MapCanvas(basemap.Basemap):
         return self.plot(x, y, **kwargs)
 
 
-################################################################################
-###                     CLASS SatelliteOverpassPatch                         ###
-################################################################################
+"""
+CLASS SatelliteOverpassPatch
+"""
+
 
 class SatelliteOverpassPatch:
     """Represents a satellite overpass on the top view map (satellite

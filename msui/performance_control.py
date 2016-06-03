@@ -46,16 +46,16 @@ import mss_settings
 from wms_control import MSSWebMapService
 import flighttrack as ft
 
-################################################################################
-###                    Settings imported from mss_settings                   ###
-################################################################################
+"""
+Settings imported from mss_settings
+"""
 
 default_FPS = mss_settings.default_FPS
 
+"""
+CLASS PerformanceControlWidget
+"""
 
-################################################################################
-###                    CLASS PerformanceControlWidget                        ###
-################################################################################
 
 class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
     """The base class of the performance control widget: Provides the GUI
@@ -622,8 +622,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             self.model.setPerformanceComputation(performance)
 
 
-################################################################################
-
 if __name__ == "__main__":
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
@@ -656,8 +654,8 @@ if __name__ == "__main__":
 
 
 
-################################################################################
-## IPYTHON TEST LINES.
+
+# IPYTHON TEST LINES.
 
 # import wms_control; base_url = "http://localhost:8081/mss_wms"; wms = wms_control.MSSWebMapService(base_url, version='1.1.1')
 # l = wms.contents["PLGeopWind"]

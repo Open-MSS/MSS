@@ -58,17 +58,17 @@ from wms_control import MSSWebMapService, MSS_WMS_AuthenticationDialog
 import flighttrack as ft
 from mslib import performance
 
-################################################################################
-###                   Settings imported from mss_settings                    ###
-################################################################################
+"""
+Settings imported from mss_settings
+"""
 
 wms_cache = mss_settings.wms_cache
 num_interpolation_points = mss_settings.num_interpolation_points
 
+"""
+CLASS PerformanceControlWidget
+"""
 
-################################################################################
-###                    CLASS PerformanceControlWidget                        ###
-################################################################################
 
 class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
     """The base class of the performance control widget: Provides the GUI
@@ -1049,8 +1049,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
 
         logging.debug("Done.")
 
-
-################################################################################
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.

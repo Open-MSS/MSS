@@ -37,10 +37,10 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 from mslib import mss_util
 import ui_satellite_dockwidget as ui
 
+"""
+CLASS SatelliteControlWidgeT
+"""
 
-################################################################################
-###                      CLASS SatelliteControlWidget                        ###
-################################################################################
 
 class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
     def __init__(self, parent=None, view=None):
@@ -101,8 +101,6 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
         if self.view:
             self.view.plotSatelliteOverpass(segment)
 
-
-################################################################################
 
 if __name__ == "__main__":
     import sys

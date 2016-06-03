@@ -40,10 +40,10 @@ import trajectory_item_tree as titree
 # import trajectory_ts
 import mss_qt
 
+"""
+USER INTERFACE CLASS FlightPlanTableView
+"""
 
-################################################################################
-###                 USER INTERFACE CLASS FlightPlanTableView                 ###
-################################################################################
 
 class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
     """Implements a trajectory tool.

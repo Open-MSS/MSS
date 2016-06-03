@@ -56,10 +56,10 @@ import ui_imageloop_widget as ui
 import ui_imageloop_load_dialog as uipc
 from wms_control import MSS_WMS_AuthenticationDialog
 
+"""
+Product Chooser Dialog
+"""
 
-################################################################################
-###                        Product Chooser Dialog                            ###
-################################################################################
 
 class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
     """Dialog to let the user choose a product to load (e.g. ECMWF Europe
@@ -154,9 +154,10 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
                                                timestep))
 
 
-################################################################################
-###                           CLASS LoopLabel                                ###
-################################################################################
+"""
+CLASS LoopLabel
+"""
+
 
 class LoopLabel(QtGui.QLabel):
     """This is a label that is used to display an image, extended by a method
@@ -179,9 +180,10 @@ class LoopLabel(QtGui.QLabel):
         event.accept()
 
 
-################################################################################
-###                       CLASS Image Viewer Widget                          ###
-################################################################################
+"""
+CLASS Image Viewer Widget
+"""
+
 
 class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
     """Widget that includes a LoopLabel for an image. Additionally

@@ -33,10 +33,10 @@ AUTHORS:
 from abc import ABCMeta, abstractmethod, abstractproperty
 import logging
 
+"""
+Horizontal Section Styles
+"""
 
-###############################################################################
-###                       Horizontal Section Styles                         ###
-###############################################################################
 
 class Abstract2DSectionStyle(object):
     """Abstract 2D section super class. Use this class as a parent

@@ -51,10 +51,10 @@ from mslib import netCDF4tools
 import mss_2D_sections
 import mss_wms_settings
 
+"""
+Horizontal Section Styles
+"""
 
-###############################################################################
-###                       Horizontal Section Styles                         ###
-###############################################################################
 
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     """Abstract horizontal section super class. Use this class as a parent
@@ -70,9 +70,10 @@ class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         pass
 
 
-###############################################################################
-###                       HSEC Matplotlib Super Class                       ###
-###############################################################################
+"""
+HSEC Matplotlib Super Class
+"""
+
 
 class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
     """Matplotlib-based super class for all horizontal section styles.

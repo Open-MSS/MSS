@@ -50,10 +50,10 @@ import PIL.Image
 import mss_2D_sections
 from mslib import mss_util
 
+"""
+Abstract Vertical Section Style
+"""
 
-###############################################################################
-###                    Abstract Vertical Section Style                      ###
-###############################################################################
 
 class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     """Superclass for all Matplotlib-based vertical section styles.

@@ -56,18 +56,18 @@ import mss_settings
 import wms_login_cache
 from mslib.mss_util import convertHPAToKM
 
-################################################################################
-###                   Settings imported from mss_settings                    ###
-################################################################################
+"""
+Settings imported from mss_settings
+"""
 
 default_WMS = mss_settings.default_WMS
 default_VSEC_WMS = mss_settings.default_VSEC_WMS
 wms_cache = mss_settings.wms_cache
 
+"""
+CLASS MSSWebMapService
+"""
 
-################################################################################
-###                          CLASS MSSWebMapService                          ###
-################################################################################
 
 class MSSWebMapService(owslib.wms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
@@ -220,9 +220,10 @@ class MSSWebMapService(owslib.wms.WebMapService):
         return u
 
 
-################################################################################
-###                      DIALOG for WMS Authentication                       ###
-################################################################################
+"""
+DIALOG for WMS Authentication
+"""
+
 
 class MSS_WMS_AuthenticationDialog(QtGui.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
     """Dialog to ask the user for username/password should this be
@@ -244,9 +245,10 @@ class MSS_WMS_AuthenticationDialog(QtGui.QDialog, ui_pw.Ui_WMSAuthenticationDial
                 str(self.lePassword.text()))
 
 
-################################################################################
-###                        CLASS WMSControlWidget                            ###
-################################################################################
+"""
+CLASS WMSControlWidget
+"""
+
 
 class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
     """The base class of the WMS control widget: Provides the GUI
@@ -1484,11 +1486,13 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
         logging.debug("cache has been cleaned (%i files removed)." % removed_files)
 
-    ################################################################################
+        ################################################################################
 
 
-###                       CLASS VSecWMSControlWidget                         ###
-################################################################################
+"""
+CLASS VSecWMSControlWidget
+"""
+
 
 class VSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to
@@ -1555,9 +1559,10 @@ class VSecWMSControlWidget(WMSControlWidget):
                                    style=style_title)
 
 
-################################################################################
-###                       CLASS HSecWMSControlWidget                         ###
-################################################################################
+"""
+CLASS HSecWMSControlWidget
+"""
+
 
 class HSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to
@@ -1651,8 +1656,6 @@ class HSecWMSControlWidget(WMSControlWidget):
             self.view.waypoints_interactor.update()
 
 
-################################################################################
-
 if __name__ == "__main__":
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
@@ -1675,8 +1678,7 @@ if __name__ == "__main__":
 
 
 
-################################################################################
-## IPYTHON TEST LINES.
+# IPYTHON TEST LINES.
 
 # import wms_control; base_url = "http://localhost:8081/mss_wms"; wms = wms_control.MSSWebMapService(base_url, version='1.1.1')
 # l = wms.contents["PLGeopWind"]

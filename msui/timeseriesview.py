@@ -39,10 +39,10 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 import ui_timeseriesview_window as ui
 import mss_qt
 
+"""
+CLASS TimeSeriesView
+"""
 
-################################################################################
-###                          CLASS TimeSeriesView                            ###
-################################################################################
 
 class MSSTimeSeriesViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TimeSeriesViewWindow):
     """PyQt4 window implementing a time series view.
@@ -59,9 +59,6 @@ class MSSTimeSeriesViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TimeSeriesViewWindo
         super(MSSTimeSeriesViewWindow, self).setIdentifier(identifier)
         self.mpl.canvas.setIdentifier(identifier)
 
-
-################################################################################
-################################################################################
 
 # Main program to test the window during development. The following code
 # will not be executed if the view is opened from the Mission Support

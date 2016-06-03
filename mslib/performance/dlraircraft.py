@@ -41,10 +41,10 @@ try:
 except:
     modulepath = ""
 
+"""
+HALO
+"""
 
-################################################################################
-###                                   HALO                                   ###
-################################################################################
 
 class HALO(FliteStarExportedAircraft):
     """DLR Gulfstream G550 "HALO" (D-ADLR) performance class.
@@ -214,9 +214,10 @@ class HALO(FliteStarExportedAircraft):
         return time, dist, fuel
 
 
-################################################################################
-###                                 FALCON                                   ###
-################################################################################
+"""
+FALCON
+"""
+
 
 class Falcon(FliteStarExportedAircraft):
     """DLR Dessault Falcon E20 (D-CMET).

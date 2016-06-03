@@ -50,10 +50,10 @@ except:
 import lagranto_output_reader
 import mss_settings
 
+"""
+EXCEPTION CLASSES
+"""
 
-################################################################################
-###                          EXCEPTION CLASSES                               ###
-################################################################################
 
 class LagrantoTreeModelUnsupportedOperationError(Exception):
     """Exception class to handle wrong method arguments.
@@ -61,9 +61,10 @@ class LagrantoTreeModelUnsupportedOperationError(Exception):
     pass
 
 
-################################################################################
-###                   CLASS AbstractLagrantoDataItem                         ###
-################################################################################
+"""
+CLASS AbstractLagrantoDataItem
+"""
+
 
 class AbstractLagrantoDataItem:
     """Base class for all trajectory instances that are loaded into a
@@ -159,9 +160,9 @@ class AbstractLagrantoDataItem:
     def isVisible(self, view_id):
         """Is this item visible in the view with identifier <view_id>?
         """
-        ##         logging.debug("%s is visible on %s: %s" % (self.itemName,
-        ##                                                    view_id,
-        ##                                                    view_id in self.views))
+        #         logging.debug("%s is visible on %s: %s" % (self.itemName,
+        #                                                    view_id,
+        #                                                    view_id in self.views))
         return view_id in self.views
 
     def getName(self):
@@ -208,9 +209,10 @@ class AbstractLagrantoDataItem:
             "Abstract AbstractLagrantoDataItem.getMetadataValue called."
 
 
-################################################################################
-###                        CLASS LagrantoMapItem                             ###
-################################################################################
+"""
+CLASS LagrantoMapItem
+"""
+
 
 class LagrantoMapItem(AbstractLagrantoDataItem):
     """
@@ -402,9 +404,10 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         return eval(qstring)
 
 
-################################################################################
-###                        CLASS FlightTrackItem                             ###
-################################################################################
+"""
+CLASS FlightTrackItem
+"""
+
 
 class FlightTrackItem(LagrantoMapItem):
     """Holds flight track data stored in a NASA Ames file.
@@ -536,9 +539,10 @@ class FlightTrackItem(LagrantoMapItem):
         return datetime.datetime(nas_date[0], nas_date[1], nas_date[2])
 
 
-################################################################################
-###                      CLASS LagrantoOutputItem                            ###
-################################################################################
+"""
+CLASS LagrantoOutputItem
+"""
+
 
 class LagrantoOutputItem(LagrantoMapItem):
     """Holds all data stored in a Lagranto output directory.
@@ -578,9 +582,10 @@ class LagrantoOutputItem(LagrantoMapItem):
             newItem = TrajectoryItem(trname, True, self, trajectory, metadata)
 
 
-################################################################################
-###                         CLASS TrajectoryItem                             ###
-################################################################################
+"""
+CLASS TrajectoryItem
+"""
+
 
 class TrajectoryItem(LagrantoMapItem):
     """Holds the data from an individual trajectory computed by Lagranto.
@@ -681,9 +686,10 @@ class TrajectoryItem(LagrantoMapItem):
             return None
 
 
-################################################################################
-###                       CLASS AbstractVariableItem                         ###
-################################################################################
+"""
+CLASS AbstractVariableItem
+"""
+
 
 class AbstractVariableItem(AbstractLagrantoDataItem):
     """Tree node for variables contained in a flight track or trajectory file.
@@ -765,9 +771,10 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
                                                           eproperty, value)
 
 
-################################################################################
-###                     CLASS FlightTrackVariableItem                        ###
-################################################################################
+"""
+CLASS FlightTrackVariableItem
+"""
+
 
 class FlightTrackVariableItem(AbstractVariableItem):
     """
@@ -793,9 +800,10 @@ class FlightTrackVariableItem(AbstractVariableItem):
                                                              eproperty)
 
 
-################################################################################
-###                      CLASS TrajectoryVariableItem                        ###
-################################################################################
+"""
+CLASS TrajectoryVariableItem
+"""
+
 
 class TrajectoryVariableItem(AbstractVariableItem):
     """
@@ -809,9 +817,10 @@ class TrajectoryVariableItem(AbstractVariableItem):
         return self.parentItem.data[self.itemName]
 
 
-################################################################################
-###                    CLASS LagrantoMapItemsTreeModel                       ###
-################################################################################
+"""
+CLASS LagrantoMapItemsTreeModel
+"""
+
 
 class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
     """
