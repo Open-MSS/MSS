@@ -77,7 +77,7 @@ class MSSWebMapService(owslib.wms.WebMapService):
          level
          path_str
 
-        the function times out after wms_timeout seconds. 
+        the function times out after wms_timeout seconds.
     """
 
     def getmap(self, layers=None, styles=None, srs=None, bbox=None,
@@ -89,7 +89,7 @@ class MSSWebMapService(owslib.wms.WebMapService):
                exceptions='application/vnd.ogc.se_xml', method='Get',
                return_only_url=False):
         """Request and return an image from the WMS as a file-like object.
-        
+
         Parameters
         ----------
         layers : list
@@ -111,12 +111,12 @@ class MSSWebMapService(owslib.wms.WebMapService):
             Optional. Image background color.
         method : string
             Optional. HTTP DCP method name: Get or Post.
-        
+
         Example
         -------
             >>> img = wms.getmap(layers=['global_mosaic'],
             ...                  styles=['visual'],
-            ...                  srs='EPSG:4326', 
+            ...                  srs='EPSG:4326',
             ...                  bbox=(-112,36,-106,41),
             ...                  format='image/jpeg',
             ...                  size=(300,250),
@@ -1134,11 +1134,11 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
            GUI elements from the current WMS provider. If caching is
            enabled, first check the cache for the requested image. If
            the image is retrieved from the WMS and caching is enabled,
-           store the image into the cache.  
+           store the image into the cache.
            If a legend graphic is available for the layer, this image
            is also retrieved.
 
-        Arguments: 
+        Arguments:
         crs -- coordinate reference system as a string passed to the WMS
         path_string -- string of waypoints that resemble a vertical
                        section path. Can be omitted for horizontal

@@ -114,7 +114,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the window.
-           
+
         Overloads MSSViewWindow.closeEvent() and emits the signal
         'moduleCloses()'.
         """
@@ -177,13 +177,13 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
     def selectedMapElements(self):
         """Return a list with QModelIndex objects referencing the elements
            selected in tvVisisbleElements.
-           
+
         Background: For tvVisibleElements.selectedIndexes(), one element is
         a value at a row/column position. That means that, if one row is
         selected, as many indexes are returned as there are columns. However,
         in this application all values in a row belong to the same element.
-        The indexes returned by selectedIndexes() for a single row all 
-        reference the same element, and we need only one reference per row. 
+        The indexes returned by selectedIndexes() for a single row all
+        reference the same element, and we need only one reference per row.
         Unfortunately, the ordering of the indexes in the list returned by
         selectedIndexes() is a bit of a mess -- the elements are ordered
         'rows first' for rows selected at once by the user, and 'columns first'
@@ -192,7 +192,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         [r1,c1; r2,c1; .. rN,c1; r1,c2, r2,c2, ...], if the three rows are
         selected one after the other while pressing the ctrl-key, the list
         will be ordered [r1,c1; r1,c2; .. r1,cM; r2,c1, r2,c2, ...].
-        
+
         The algorithm implemented in this method returns a list of the items
         represented by the rows, with only looking once at each row.
         """
@@ -312,7 +312,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                                       self.tr(str(e)), QtGui.QMessageBox.Ok)
 
     def setCurrentItemLineStyle(self):
-        """Informs traj_item_tree to change the line style of the selected 
+        """Informs traj_item_tree to change the line style of the selected
            elements to the one specified by cbLineStyle.
         """
         lineStyle = str(self.cbLineStyle.currentText())

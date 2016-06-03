@@ -1069,7 +1069,7 @@ def flightlevel2pressure_a(flightlevel):
        standard atmosphere.
 
     Array version, the argument "p" must be a numpy array.
-       
+
     Reference:
         For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
         470pp., Sections II.1.4. and II.6.1.2.
@@ -1141,14 +1141,14 @@ def pressure2flightlevel_a(p, fake_above_32km=False):
        standard atmosphere.
 
     Array version, the argument "p" must be a numpy array.
-       
+
     Reference:
         For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
         470pp., Sections II.1.4. and II.6.1.2.
 
     Arguments:
         p -- numpy array of pressure (Pa)
-        fake_above_32km -- compute values above 54.75 hPa (32km) with the 
+        fake_above_32km -- compute values above 54.75 hPa (32km) with the
                            profile valid for 20..32km. WARNING: This gives
                            unphysical results. Use this option only for
                            testing purposes.
@@ -1256,7 +1256,7 @@ Schmidt/Appleman
 
 def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
     """Schmidt/Appleman criterion folded by relative humidity of 80%.
-    
+
     Reference: U. Schumann, "On conditions for contrail formation from
         aircraft exhausts", Met.Z. (1996) 4-23.
 
@@ -1265,14 +1265,14 @@ def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
     T_K   -- temperature in K
     rh_01 -- relative humidity mapped to 0..1
 
-    Returns: 
+    Returns:
     Temperature difference T_K - Schm./Appl.Threshold. Of interest are
     return values below 0.
 
     NOTE: The current implementation returns a value of 1. if relative
     humidity is below 80% (as used, e.g. during CONCERT and ML-Cirrus).
 
-    NOTE: This function is a port of U. Schumann's FORTRAN77 function in 
+    NOTE: This function is a port of U. Schumann's FORTRAN77 function in
     the old Metview3 scripts.
 
     mr/18Mar2014

@@ -32,9 +32,9 @@ can be accessed via
 the data of lsl* files (statistics of trajectories in ls* files) via
 
     lout.stats[<output_filename>][<variable_name>],
-    
+
 where <trajectoryIndex> is the number of the trajectory (increasing with each
-file) (if more than one trajectories were computed from a start region or in 
+file) (if more than one trajectories were computed from a start region or in
 scf mode; if there is only one file with one trajectory, this number takes
 the value 0).
 
@@ -44,7 +44,7 @@ Call
 
     len(lout.data)
 
-to see how many trajectories have been read, and 
+to see how many trajectories have been read, and
 which files have been read, and
 
     lout.data[trajectoryIndex].keys()
@@ -52,7 +52,7 @@ which files have been read, and
 to see which variables are available for a trajectory. Call
 
     lout.meta[trajectoryIndex]
-    
+
 to view the metadata available for a given trajectory.
 
 
@@ -140,7 +140,7 @@ class LagrantoOutputReader(object):
             self.data[trajectoryIndex][variablename]
             self.meta[trajectoryIndex][metatagname]
         after this method has been executed.
-        
+
         self.meta[trajectoryIndex] will contain at least the variables 'file'
         and 'startttime_filename', indicating the file from which the trajectory
         was read and the start time, determined from the filename or the

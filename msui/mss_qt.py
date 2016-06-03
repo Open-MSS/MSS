@@ -56,7 +56,7 @@ class MSSViewWindow(QtGui.QMainWindow):
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the window.
-           
+
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """

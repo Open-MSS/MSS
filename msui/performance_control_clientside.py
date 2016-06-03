@@ -453,7 +453,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
     def retrieveForecast(self, layer=None, init_time=None, valid_time_list=[],
                          bbox=None, path_string=None):
         """
-        Arguments: 
+        Arguments:
         crs -- coordinate reference system as a string passed to the WMS
         path_string -- string of waypoints that resemble a vertical
                        section path. Can be omitted for horizontal
@@ -937,7 +937,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         Flight Legs
         Type; FL; Ma/CAS [Ma oder Kxxx fuer Knoten CAS]; Distance [NM oder \
             Tmmm fuer Minuten]; Vertical Speed [ft/min]; Profile Climb Step \
-            [ft]; HWC/TWC [Kts]; delta T ISA [K] 
+            [ft]; HWC/TWC [Kts]; delta T ISA [K]
         Type; FL; Ma/CAS [Ma oder Kxxx fuer Knoten CAS]; Distance [NM oder \
             Tmmm fuer Minuten]; Vertical Speed [ft/min]; Profile Climb Step \
             [ft]; HWC/TWC [Kts]; delta T ISA [K]

@@ -290,7 +290,7 @@ def half_level_pressure(surface_pressure, num_levels=91):
     num_levels -- number of ECMWF model levels, currently the only valid
                   values for this argument are 137,91,62,31.
 
-    Returns: 
+    Returns:
     A numpy array of length num_levels+1, at index [0] the pressure of the
     uppermost model half-level can be found, at index [num_levels] the surface
     pressure.
@@ -333,7 +333,7 @@ def full_level_pressure(surface_pressure, num_levels=91):
     Returns:
     A numpy array of length 91(62,31) at index [0] the pressure of the
     uppermost model level can be found, at index [90(61,30)] the
-    pressure of the lowest level.       
+    pressure of the lowest level.
 
     NOTE: This method can only handle scalars as input, see
           full_level_pressure_fast() on how to implement array support.
@@ -363,7 +363,7 @@ def full_level_pressure_fast(surface_pressure, levelaxis=-1, num_levels=91):
                  information is stored (values >= 0 are allowed). By
                  default, this will be the last axis (i.e., a 2D input
                  array [lat, lon] will yield a 3D output array [lat,
-                 lon, level]). See example below. 
+                 lon, level]). See example below.
     num_levels -- number of ECMWF model levels, currently the only valid
                   values for this argument are 137,91,62,31.
 

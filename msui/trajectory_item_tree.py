@@ -192,7 +192,7 @@ class AbstractLagrantoDataItem:
 
     def getMetadata(self):
         """Return metadata dictionary of the item.
-        
+
         This method is ABSTRACT and has to be implemented in the derived
         classes.
         """
@@ -201,7 +201,7 @@ class AbstractLagrantoDataItem:
 
     def getMetadataValue(self, key):
         """Return the value belonging to a metadata key.
-        
+
         This method is ABSTRACT and has to be implemented in the derived
         classes.
         """
@@ -235,7 +235,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
 
     def treeViewData(self, column):
         """Return string data for display in the tree view.
-        
+
         Overrides AbstractLagrantoDataItem.treeViewData() to provide data
         for column 4 (start coordinates).
         """
@@ -375,10 +375,10 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         """Translate a user query string containing %lon, %lat, %pres and %meta
            identifiers into a Python statement that can be evaluated with
            eval().
-           
+
         The function replaces the %-identifiers by the appropriate Python
         statements that access the data.
-        
+
         Arguments:
         qstring -- user query string.
         """
@@ -413,7 +413,7 @@ class FlightTrackItem(LagrantoMapItem):
 
     def __init__(self, nasFileName, visible, parent=None):
         """Constructor.
-        
+
         Arguments:
         nasFileName -- full path NASA Ames file
         visible,
@@ -527,7 +527,7 @@ class FlightTrackItem(LagrantoMapItem):
 
     def getMetadataValue(self, key):
         """Return the value belonging to a metadata key.
-        
+
         Implements AbstractLagrantoDataItem.getMetadataValue(). Always returns
         None as flight track items have no metadata.
         """
@@ -643,7 +643,7 @@ class TrajectoryItem(LagrantoMapItem):
 
     def treeViewData(self, column):
         """Return string data for display in the tree view.
-        
+
         Overrides LagrantoMapItem.treeViewData() to provide data
         for columns 5 and 6 (start time & duration, metadata).
         """
@@ -671,14 +671,14 @@ class TrajectoryItem(LagrantoMapItem):
 
     def getMetadata(self):
         """Return the metadata dictionary.
-        
+
         This method implements AbstractLagrantoDataItem.getMetadata().
         """
         return self.metadata
 
     def getMetadataValue(self, key):
         """Return the value belonging to a metadata key.
-        
+
         Implements AbstractLagrantoDataItem.getMetadataValue(). Returns None
         if the key is not contained in the metadata dictionary.
         """
@@ -829,7 +829,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
 
     .. the model should know nothing about the kind of viewports which
        observe it..
-       
+
     """
 
     def __init__(self, data=None, parent=None):
@@ -851,8 +851,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
 
     def columnCount(self, parent):
         """Return number of columns to be displayed in the tree view.
-        
-        Implementation of QAbstractItemModel.columnCount(self, 
+
+        Implementation of QAbstractItemModel.columnCount(self,
         QModelIndex parent = QModelIndex()). Here, the number of columns
         is independent of the parent.
         """
@@ -1090,11 +1090,11 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         """Translate a selection query string into a Python statement and
            check for each item in the tree if the query is fulfilled.
            Return a QItemSelection of all items that match the query.
-           
+
         Arguments:
         query -- string of format '%lat >= 20. and %pres >= 500.'. See
                  LagrantoMapItem.translateQueryString() for exact syntax.
-        
+
         Keyword arguments:
         index -- if the query should only be applied to children of a specific
                  item pass this item's index in this argument. If index is None

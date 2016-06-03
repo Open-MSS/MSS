@@ -74,7 +74,7 @@ class MapCanvas(basemap.Basemap):
         Additional arguments:
         CRS -- string describing the coordinate reference system of the map.
         BBOX_UNITS -- string describing the units of the map coordinates.
-        
+
         """
         # Coordinate reference system identifier and coordinate system units.
         self.crs = CRS if CRS else self.crs if hasattr(self, "crs") else None
@@ -562,7 +562,7 @@ class MapCanvas(basemap.Basemap):
                 be started.
         mode -- string with information on what should be done (draw vs.
                 update):
-                
+
                 DRAW_EVERYTHING -- draw or redraw all elements on the map.
                 FLIGHT_TRACK_ADDED -- draw the flight track represented
                     by 'item' (including markers).

@@ -270,7 +270,7 @@ class MplSideViewCanvas(MplCanvas):
 
     def setupSideView(self):
         """Set up a vertical section view.
-        
+
         Vertical cross section code (log-p axis etc.) taken from
         mss_batch_production/visualisation/mpl_vsec.py.
         """
@@ -443,7 +443,7 @@ class MplSideViewCanvas(MplCanvas):
 
     def getBBOX(self):
         """Get the bounding box of the view (returns a 4-tuple
-           x1, y1(p_bot[hPa]), x2, y2(p_top[hPa])). 
+           x1, y1(p_bot[hPa]), x2, y2(p_top[hPa])).
         """
         # Get the bounding box of the current view
         # (bbox = llcrnrlon, llcrnrlat, urcrnrlon, urcrnrlat; i.e. for the side
@@ -655,7 +655,7 @@ class MplTopViewCanvas(MplCanvas):
 
     def getBBOX(self):
         """Get the bounding box of the map (returns a 4-tuple
-           lllon, lllat, urlon, urlat). 
+           lllon, lllat, urlon, urlat).
         """
         # Get the bounding box of the current map view
         # (bbox = llcrnrlon, llcrnrlat, urcrnrlon, urcrnrlat).

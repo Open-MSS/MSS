@@ -333,7 +333,7 @@ class MSSPlotDriver(object):
     def plot(self):
         """Plot the figure (i.e. load the data fields and call the
            corresponding plotting routines of the plot object).
-           
+
         THIS METHOD NEEDS TO BE REIMPLEMENTED IN ANY CLASS DERIVING FROM
         MSSPlotDriver!
         """

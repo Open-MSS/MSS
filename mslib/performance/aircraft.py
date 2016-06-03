@@ -164,7 +164,7 @@ class Aircraft(object):
     def climbPerformance(self, altitude, deltatemp, grossweight,
                          use_next_lower_altitude=False):
         """This abstract method needs to be implemented in a derived class.
-        
+
         Climb performance of the aircraft. Returns time [min], distance [nm] and
         fuel [lbs] required for a climb from sea level to the specified
         altitude.
@@ -174,7 +174,7 @@ class Aircraft(object):
         deltatemp   -- temperature deviation off ISA conditions in K
         grossweight -- total weight of the aircraft in lbs
         use_next_lower_altitude
-                    -- if performance table interpretation has been set to 
+                    -- if performance table interpretation has been set to
                        "conservative", setting this arg to True will result
                        in the performance values of the next lower altitude
                        level listed in the performance table being returned
@@ -186,7 +186,7 @@ class Aircraft(object):
     @abstractmethod
     def cruisePerformance(self, cruisemode, altitude, deltatemp, grossweight):
         """This abstract method needs to be implemented in a derived class.
-        
+
         Cruise performance of the aircraft. Returns true airspeed [knots] and
         fuelflow [lbs/hr] required for a cruise at the specified altitude.
 
@@ -200,7 +200,7 @@ class Aircraft(object):
     def descentPerformance(self, altitude, deltatemp, grossweight,
                            use_next_lower_altitude=False):
         """This abstract method needs to be implemented in a derived class.
-        
+
         Descent performance of the aircraft. Returns time [min], distance [nm]
         and fuel [lbs] required for a climb from sea level to the specified
         altitude.

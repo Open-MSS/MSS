@@ -110,7 +110,7 @@ class HALO(FliteStarExportedAircraft):
         deltatemp   -- temperature deviation of ISA conditions in K
         grossweight -- total weight of the aircraft in lbs
         use_next_lower_altitude
-                    -- if performance table interpretation has been set to 
+                    -- if performance table interpretation has been set to
                        "conservative", setting this arg to True will result
                        in the performance values of the next lower altitude
                        level listed in the performance table being returned
@@ -152,7 +152,7 @@ class HALO(FliteStarExportedAircraft):
         cruisemode  -- one of the values in "availableCruiseModes"
         altitude    -- altitude in ft to climb to
         deltatemp   -- temperature deviation of ISA conditions in K
-        grossweight -- total weight of the aircraft in lbs        
+        grossweight -- total weight of the aircraft in lbs
 
         Returns true airspeed [knots] and fuelflow [lbs/hr].
         """
@@ -312,7 +312,7 @@ class Falcon(FliteStarExportedAircraft):
         cruisemode  -- one of the values in "availableCruiseModes"
         altitude    -- altitude in ft to climb to
         deltatemp   -- temperature deviation of ISA conditions in K
-        grossweight -- total weight of the aircraft in lbs        
+        grossweight -- total weight of the aircraft in lbs
 
         Returns true airspeed [knots] and fuelflow [lbs/hr].
         """

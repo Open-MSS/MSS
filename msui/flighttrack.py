@@ -27,7 +27,7 @@ from chapter 14/16 of 'Rapid GUI Programming with Python and Qt: The
 Definitive Guide to PyQt Programming' (Mark Summerfield).
 
 The model includes a method for computing the distance between waypoints
-and for the entire flight track. 
+and for the entire flight track.
 
 AUTHORS:
 ========
@@ -180,8 +180,8 @@ class WaypointsTableModel(QAbstractTableModel):
     def flags(self, index):
         """Used to specify which table columns can be edited by the user;
            overrides the corresponding QAbstractTableModel method.
-           
-        PERFORMANCE mode is always read-only.  
+
+        PERFORMANCE mode is always read-only.
         USER mode allows modification of LOCATION, LAT, LON, FLIGHTLEVEL,
         COMMENTS.
         """

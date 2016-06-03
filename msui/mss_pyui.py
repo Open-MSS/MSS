@@ -155,7 +155,7 @@ class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
         """Item class for the list widget that accomodates the open flight
            tracks.
 
-        Arguments: 
+        Arguments:
         flighttrack_model -- instance of a flight track model that is
                              associated with the item
         parent -- pointer to the QListWidgetItem that accomodates this item.
@@ -279,7 +279,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
            close all views that are open.
-           
+
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
@@ -381,7 +381,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         Arguments:
         template -- copy the specified template to the new flight track (so that
                     it is not empty).
-        filename -- if not None, load the flight track in the specified file. 
+        filename -- if not None, load the flight track in the specified file.
         activate -- set the new flight track to be the active flight track.
         """
         if filename:
