@@ -10,6 +10,7 @@
 from PyQt4 import QtCore, QtGui
 from mpl_qtwidget import MplTopViewWidget
 
+
 class Ui_TopViewWindow(object):
     def setupUi(self, TopViewWindow):
         TopViewWindow.setObjectName("TopViewWindow")

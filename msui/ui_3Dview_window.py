@@ -10,6 +10,7 @@
 from PyQt4 import QtCore, QtGui
 from mss3Dwidget import MSS3DWidget
 
+
 class Ui_View3DWindow(object):
     def setupUi(self, View3DWindow):
         View3DWindow.setObjectName("View3DWindow")

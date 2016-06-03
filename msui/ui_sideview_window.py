@@ -10,6 +10,7 @@
 from PyQt4 import QtCore, QtGui
 from mpl_qtwidget import MplSideViewWidget
 
+
 class Ui_SideViewWindow(object):
     def setupUi(self, SideViewWindow):
         SideViewWindow.setObjectName("SideViewWindow")
