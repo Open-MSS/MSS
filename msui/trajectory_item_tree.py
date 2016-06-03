@@ -762,7 +762,7 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
            time markers are computed with __computeTimeMarkerPoints().
         """
         if element == "general":
-            raise LagrantoTreeModelUnsupportedOperationError("Setting " + element + "/" + eproperty + \
+            raise LagrantoTreeModelUnsupportedOperationError("Setting " + element + "/" + eproperty +
                 " is not supported by AbstractVariableItem.")
         else:
             AbstractLagrantoDataItem.setGxElementProperty(self, element,

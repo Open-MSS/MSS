@@ -119,8 +119,8 @@ class LagrantoOutputReader(object):
         # a valid path. Raise an exception if not.
         self.lagrantoOutputPath = os.path.expanduser(lagrantoOutputPath)
         if not os.path.isdir(self.lagrantoOutputPath):
-            raise ValueError("Argument " + \
-                              self.lagrantoOutputPath + \
+            raise ValueError("Argument " +
+                              self.lagrantoOutputPath +
                               " does not represent a valid path.")
 
         self.of = of

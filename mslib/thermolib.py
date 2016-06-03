@@ -113,7 +113,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
         idx_ice = numpy.where(t <= 273.15)
         idx_liq = numpy.where(t > 273.15)
     else:
-        raise VapourPressureError("Cannot recognize the force_phase " \
+        raise VapourPressureError("Cannot recognize the force_phase "
                                    "keyword: %s (valid are ice, liquid, None)" % force_phase)
 
     # Initialise output field.
@@ -124,7 +124,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
     if not force_phase == 'ice':
 
         if liquid == 'MartiMauersberger':
-            raise VapourPressureError("Marti and Mauersberger don't " \
+            raise VapourPressureError("Marti and Mauersberger don't "
                                        "have a vapour pressure curve over liquid.")
 
         elif liquid == 'HylandWexler':
@@ -296,7 +296,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                                           + 0.014025 * t[idx_liq])) / 100.
 
         else:
-            raise VapourPressureError("Unkown method for computing " \
+            raise VapourPressureError("Unkown method for computing "
                                        "the vapour pressure curve over liquid: %s" % liquid)
 
     # =============================================================================
@@ -307,7 +307,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             ice = 'WMO_Goff'
 
         elif ice == 'IAWPS':
-            raise VapourPressureError("IAPWS does not provide a vapour " \
+            raise VapourPressureError("IAPWS does not provide a vapour "
                                        "pressure formulation over ice")
 
         elif ice == 'MartiMauersberger':
@@ -392,7 +392,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                                        - 0.00728332 * t[idx_ice]) / 100.
 
         else:
-            raise VapourPressureError("Unkown method for computing " \
+            raise VapourPressureError("Unkown method for computing "
                                        "the vapour pressure curve over ice: %s" % ice)
 
     # Convert return value units from hPa to Pa.
