@@ -763,7 +763,7 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
         """
         if element == "general":
             raise LagrantoTreeModelUnsupportedOperationError("Setting " + element + "/" + eproperty +
-                " is not supported by AbstractVariableItem.")
+                                                             " is not supported by AbstractVariableItem.")
         else:
             AbstractLagrantoDataItem.setGxElementProperty(self, element,
                                                           eproperty, value)

@@ -120,8 +120,8 @@ class LagrantoOutputReader(object):
         self.lagrantoOutputPath = os.path.expanduser(lagrantoOutputPath)
         if not os.path.isdir(self.lagrantoOutputPath):
             raise ValueError("Argument " +
-                              self.lagrantoOutputPath +
-                              " does not represent a valid path.")
+                             self.lagrantoOutputPath +
+                             " does not represent a valid path.")
 
         self.of = of
         self.data = []  # stores trajectory data from lsl* files

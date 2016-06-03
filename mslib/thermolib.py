@@ -114,7 +114,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
         idx_liq = numpy.where(t > 273.15)
     else:
         raise VapourPressureError("Cannot recognize the force_phase "
-                                   "keyword: %s (valid are ice, liquid, None)" % force_phase)
+                                  "keyword: %s (valid are ice, liquid, None)" % force_phase)
 
     # Initialise output field.
     e_sat = numpy.zeros(numpy.shape(t))
@@ -125,7 +125,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
         if liquid == 'MartiMauersberger':
             raise VapourPressureError("Marti and Mauersberger don't "
-                                       "have a vapour pressure curve over liquid.")
+                                      "have a vapour pressure curve over liquid.")
 
         elif liquid == 'HylandWexler':
             # Source: Hyland, R. W. and A. Wexler, Formulations for the
@@ -297,7 +297,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
         else:
             raise VapourPressureError("Unkown method for computing "
-                                       "the vapour pressure curve over liquid: %s" % liquid)
+                                      "the vapour pressure curve over liquid: %s" % liquid)
 
     # =============================================================================
     #  Calculate saturation pressure over ice -------------------------------------
@@ -308,7 +308,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
         elif ice == 'IAWPS':
             raise VapourPressureError("IAPWS does not provide a vapour "
-                                       "pressure formulation over ice")
+                                      "pressure formulation over ice")
 
         elif ice == 'MartiMauersberger':
             # Source: Marti, J. and K Mauersberger, A survey and new
@@ -393,7 +393,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
         else:
             raise VapourPressureError("Unkown method for computing "
-                                       "the vapour pressure curve over ice: %s" % ice)
+                                      "the vapour pressure curve over ice: %s" % ice)
 
     # Convert return value units from hPa to Pa.
     return e_sat * 100. if not input_scalar else e_sat[0] * 100.

@@ -451,7 +451,7 @@ def scale_variable(nc_var):
     test = [b in dir(nc_var) for b in ['long_name', 'units']]
     if not numpy.array(test).all():
         raise ECMWFInvalidNetCDFVariableError("NetCDF variable %s does not "
-                                               "represent a valid CF-compliant data field." % nc_var.long_name)
+                                              "represent a valid CF-compliant data field." % nc_var.long_name)
 
     # Get the data array of the variable object and test if missing
     # values are present in the field (values that correspond to the _FillValue
@@ -467,8 +467,8 @@ def scale_variable(nc_var):
     if '_FillValue' in dir(nc_var):
         if not (data - nc_var._FillValue).all():
             raise ECMWFMissingValueError("NetCDF variable %s contains "
-                                          "mssing values. Please implement a method using masked "
-                                          "arrays for this kind of data." % nc_var.long_name)
+                                         "mssing values. Please implement a method using masked "
+                                         "arrays for this kind of data." % nc_var.long_name)
 
     # If the above tests succeeded, check if scale and offset attributes
     # are specified -- if not, return the data as-is as a numpy.ndarray
