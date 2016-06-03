@@ -648,8 +648,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         removed_files = 0
         for f, fsize, fage in files:
             cum_size_bytes += fsize
-            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or \
-                            fage > mss_settings.wms_cache_max_age_seconds:
+            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or fage > mss_settings.wms_cache_max_age_seconds:
                 os.remove(f)
                 removed_files += 1
 
@@ -966,8 +965,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                        takeoff_weight))
 
         # Compute fuel weight.
-        zero_fuel_weight_lbs = aircraft.maximumTakeoffWeight_lbs - \
-                               aircraft.fuelCapacity_lbs
+        zero_fuel_weight_lbs = aircraft.maximumTakeoffWeight_lbs - aircraft.fuelCapacity_lbs
         fuel_weight_lbs = takeoff_weight - zero_fuel_weight_lbs
 
         # Get waypoints of the current flight track.

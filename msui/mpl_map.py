@@ -152,9 +152,8 @@ class MapCanvas(basemap.Basemap):
         self.ax.set_autoscale_on(False)
 
         # Connect to the trajectory item tree, if defined.
-        self.traj_item_tree = traj_item_tree if traj_item_tree else \
-            self.traj_item_tree if \
-                hasattr(self, "traj_item_tree") else None
+        self.traj_item_tree = traj_item_tree if traj_item_tree else self.traj_item_tree if hasattr(
+            self, "traj_item_tree") else None
         if traj_item_tree:
             self.set_trajectory_tree(traj_item_tree)
 
@@ -219,8 +218,7 @@ class MapCanvas(basemap.Basemap):
             # use projection coordinates for this test
             centre_x = self.projparams["x_0"]
             centre_y = self.projparams["y_0"]
-            contains_centre = (centre_x < self.urcrnrx) \
-                              and (centre_y < self.urcrnry)
+            contains_centre = (centre_x < self.urcrnrx)and (centre_y < self.urcrnry)
             # merdidians
             if contains_centre:
                 mapLonStart = -180.
@@ -641,8 +639,7 @@ class MapCanvas(basemap.Basemap):
             # Its visibility is determined by its own visibility status
             # and that of its parent (i.e. the subtree it is part of).
             itemProperties = {}
-            itemProperties["visible"] = item.isVisible(self.identifier) and \
-                                        parentProperties["visible"]
+            itemProperties["visible"] = item.isVisible(self.identifier) and parentProperties["visible"]
             #
             for propName in ["colour", "linestyle", "linewidth",
                              "timeMarkerInterval"]:

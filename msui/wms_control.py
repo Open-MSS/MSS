@@ -637,8 +637,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 # MSS web map service.
                 self.init_time_name = "init_time"
                 enable_inittime = True
-            elif "run" in lobj.dimensions.keys() and \
-                            "run" in lobj.extents.keys():
+            elif "run" in lobj.dimensions.keys() and "run" in lobj.extents.keys():
                 # IBL web map service.
                 self.init_time_name = "run"
                 enable_inittime = True
@@ -1475,8 +1474,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         removed_files = 0
         for f, fsize, fage in files:
             cum_size_bytes += fsize
-            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or \
-                            fage > mss_settings.wms_cache_max_age_seconds:
+            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or fage > mss_settings.wms_cache_max_age_seconds:
                 os.remove(f)
                 removed_files += 1
 

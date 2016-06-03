@@ -894,8 +894,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         int row, column
         QModelIndex parent
         """
-        if row < 0 or column < 0 or \
-                        row >= self.rowCount(parent) or column >= self.columnCount(parent):
+        if row < 0 or column < 0 or row >= self.rowCount(parent) or column >= self.columnCount(parent):
             return QtCore.QModelIndex()
 
         if not parent.isValid():

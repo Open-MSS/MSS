@@ -141,8 +141,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             # use projection coordinates for this test
             centre_x = bm.projparams["x_0"]
             centre_y = bm.projparams["y_0"]
-            contains_centre = (centre_x < bm.urcrnrx) \
-                              and (centre_y < bm.urcrnry)
+            contains_centre = (centre_x < bm.urcrnrx) and (centre_y < bm.urcrnry)
             # merdidians
             if contains_centre:
                 mapLonStart = -180.

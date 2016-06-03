@@ -269,10 +269,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         layerobj = self.get_layer_object(layer)
 
         self.cbAircraft.clear()
-        if "aircraft" in layerobj.dimensions.keys() and \
-                        "aircraft" in layerobj.extents.keys():
-            self.cbAircraft.addItems(["%s" % s for s in
-                                      layerobj.extents["aircraft"]["values"]])
+        if "aircraft" in layerobj.dimensions.keys() and "aircraft" in layerobj.extents.keys():
+            self.cbAircraft.addItems(["%s" % s for s in layerobj.extents["aircraft"]["values"]])
 
         abstract_text = layerobj.abstract if layerobj.abstract else ""
         abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
@@ -287,8 +285,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
 
         # ~~~~ A) Initialisation time.
         self.init_time_format = None
-        if "init_time" in layerobj.dimensions.keys() and \
-                        "init_time" in layerobj.extents.keys():
+        if "init_time" in layerobj.dimensions.keys() and "init_time" in layerobj.extents.keys():
             self.init_time_name = "init_time"
             enable_inittime = True
 
@@ -309,8 +306,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.cbTimeOn.setFont(font)
         vtime_no_extent = False
         self.valid_time_format = None
-        if "time" in layerobj.dimensions.keys() and \
-                        "time" in layerobj.extents.keys():
+        if "time" in layerobj.dimensions.keys() and "time" in layerobj.extents.keys():
             self.valid_time_name = "time"
             enable_validtime = True
         elif "time" in layerobj.dimensions.keys():

@@ -476,8 +476,7 @@ class WaypointsTableModel(QAbstractTableModel):
         # beginRemoveRows emits rowsAboutToBeRemoved(index, first, last).
         self.beginRemoveRows(QModelIndex(), position,
                              position + rows - 1)
-        self.waypoints = self.waypoints[:position] + \
-                         self.waypoints[position + rows:]
+        self.waypoints = self.waypoints[:position] + self.waypoints[position + rows:]
         if position < len(self.waypoints):
             self.update_distances(position, rows=min(rows, len(self.waypoints) - position))
 
