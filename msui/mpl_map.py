@@ -726,7 +726,7 @@ class MapCanvas(basemap.Basemap):
                 except (KeyError, ValueError) as e:
                     pass
                 imarker = item.getTimeMarkerIndexes()
-                if imarker != None:
+                if imarker is not None:
                     scatterInstance = self.scatter(x[imarker], y[imarker],
                                                    s=20, c=itemProperties["colour"],
                                                    visible=itemProperties["visible"], linewidth=0)

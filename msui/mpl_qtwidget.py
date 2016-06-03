@@ -1024,7 +1024,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # Draw vertical dotted lines at the time marker indexes to help
                     # identify the time markers on the time series plot.
                     timeMarkerIndexes = item.getTimeMarkerIndexes()
-                    if timeMarkerIndexes != None:
+                    if timeMarkerIndexes is not None:
                         for time in x[timeMarkerIndexes[1:]]:
                             ax.axvline(time, color='black', linestyle=':')
 
