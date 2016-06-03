@@ -173,7 +173,7 @@ class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
         cmap = plt.cm.gist_ncar_r
         cmin, cmax = CLAMS_CONFIG[self.name.replace("VS_", "")]["limits"]
-        #cmin, cmax = CLAMS_CONFIG[self.species]["limits"]
+        # cmin, cmax = CLAMS_CONFIG[self.species]["limits"]
         if cmin > 0 and cmin < 0.05 * cmax and self.style != "log":
             cmin = 0.
 
