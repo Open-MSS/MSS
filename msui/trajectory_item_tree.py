@@ -457,7 +457,8 @@ class FlightTrackItem(LagrantoMapItem):
                     self.nafile.VNAME[index] = "(1/3600) * " + self.nafile.VNAME[index]
                     item.itemName = self.nafile.VNAME[index]
                     break
-            if self.timeVariableChild is not None: break
+            if self.timeVariableChild is not None:
+                break
 
         self.lonVariableChild = None
         for identifier in mss_settings.traj_nas_lon_identifier:
@@ -467,7 +468,8 @@ class FlightTrackItem(LagrantoMapItem):
                     logging.debug("identified longitude variable <%s> with "
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
-            if self.lonVariableChild is not None: break
+            if self.lonVariableChild is not None:
+                break
 
         self.latVariableChild = None
         for identifier in mss_settings.traj_nas_lat_identifier:
@@ -477,7 +479,8 @@ class FlightTrackItem(LagrantoMapItem):
                     logging.debug("identified latitude variable <%s> with "
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
-            if self.latVariableChild is not None: break
+            if self.latVariableChild is not None:
+                break
 
         self.pressureVariableChild = None
         for identifier in mss_settings.traj_nas_p_identifier:
@@ -487,7 +490,8 @@ class FlightTrackItem(LagrantoMapItem):
                     logging.debug("identified pressure variable <%s> with "
                                   "identifier <%s>" % (item.getName(), identifier))
                     break
-            if self.pressureVariableChild is not None: break
+            if self.pressureVariableChild is not None:
+                break
 
     def __readNasaAmesFile(self):
         """Read the NASA Ames file 'self.nasFileName'.

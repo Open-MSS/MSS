@@ -1319,7 +1319,8 @@ def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
     def DDPSAT(TT):
         return PSAT(TT + 1.) + PSAT(TT - 1.) - 2. * PSAT(TT)
 
-    if (rh_01 < 0.): rh_01 = 0.
+    if (rh_01 < 0.):
+        rh_01 = 0.
 
     # TLM: THRESHOLD TEMPERATURE FOR U=1., IN K
     # COMPUTATION OF TLM BY APPROXIMATION ACCORDING TO SCHUMANN (1996)
@@ -1330,7 +1331,8 @@ def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
         DF = DDPSAT(TLM)
         DX = F / DF
         TLM = TLM - DX
-        if (numpy.abs(DX) < 1.E-3): break
+        if (numpy.abs(DX) < 1.E-3):
+            break
 
     # PRINT *,' ITER NOT LARGE ENOUGH FOR TLM, TLM,DX=',TLM,DX
 
@@ -1352,7 +1354,8 @@ def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
                 DF = G - rh_01 * DPSAT(TLC)
                 DX = F / DF
                 TLC = TLC - DX
-                if (numpy.abs(DX) < 1.E-3): break
+                if (numpy.abs(DX) < 1.E-3):
+                    break
 
     # Filter values with rel.hum. < 80%.
     TMKDIFF = 1.
@@ -1441,7 +1444,8 @@ def schmidt_appleman_tdiff_q_a(p_Pa, T_K, q, liquid='HylandWexler', ice='GoffGra
         DF = DDPSAT(TLM)
         DX = F / DF
         TLM = TLM - DX
-        if (numpy.abs(DX) < 1.E-3).all(): break
+        if (numpy.abs(DX) < 1.E-3).all():
+            break
 
     TLC = numpy.zeros(TLM.shape)
 
@@ -1464,7 +1468,8 @@ def schmidt_appleman_tdiff_q_a(p_Pa, T_K, q, liquid='HylandWexler', ice='GoffGra
         DF = G[i_rhLT1] - rh_01[i_rhLT1] * DPSAT(TLC[i_rhLT1])
         DX = F / DF
         TLC[i_rhLT1] = TLC[i_rhLT1] - DX
-        if (numpy.abs(DX) < 1.E-3).all(): break
+        if (numpy.abs(DX) < 1.E-3).all():
+            break
 
     TMKDIFF = T_K - TLC
 

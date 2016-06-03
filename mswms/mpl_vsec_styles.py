@@ -242,11 +242,16 @@ class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
         clev_format = "%.3g"
         mclev = np.abs(clev).max()
         if self.style != "log":
-            if mclev >= 100. and mclev < 10000.: clev_format = "%4i"
-            if mclev >= 10. and mclev < 100.: clev_format = "%.1f"
-            if mclev >= 1. and mclev < 10.: clev_format = "%.2f"
-            if mclev >= .1 and mclev < 1.: clev_format = "%.3f"
-            if mclev >= .01 and mclev < 0.1: clev_format = "%.4f"
+            if mclev >= 100. and mclev < 10000.:
+                clev_format = "%4i"
+            if mclev >= 10. and mclev < 100.:
+                clev_format = "%.1f"
+            if mclev >= 1. and mclev < 10.:
+                clev_format = "%.2f"
+            if mclev >= .1 and mclev < 1.:
+                clev_format = "%.3f"
+            if mclev >= .01 and mclev < 0.1:
+                clev_format = "%.4f"
 
             # Add colorbar.
         if not self.noframe:
@@ -1159,8 +1164,10 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
 
         # Change PV sign on southern hemisphere.
-        if self.style.lower() == "default": self.style = "NH"
-        if self.style.upper() == "SH": curtain_pv = -curtain_pv
+        if self.style.lower() == "default":
+            self.style = "NH"
+        if self.style.upper() == "SH":
+            curtain_pv = -curtain_pv
 
         pv_contours = np.arange(-2., 8.1, 0.1)
 

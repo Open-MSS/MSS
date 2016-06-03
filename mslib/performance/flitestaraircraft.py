@@ -89,7 +89,8 @@ class FliteStarExportedAircraft(Aircraft):
                 while (i < len(performancefile_lines)):
                     line = performancefile_lines[i].strip()
                     i += 1
-                    if (line == ""): break
+                    if (line == ""):
+                        break
                     self._performanceTables[section]["data"].append(
                         [float(v) for v in line.split(", ")])
 

@@ -268,7 +268,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                 lut.putdata(range(256))
                 lut = [c[1] for c in lut.convert("RGB").getcolors()]
                 facecolor_rgb = list(mpl.colors.hex2color(mpl.colors.cnames[facecolor]))
-                for i in [0, 1, 2]: facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
+                for i in [0, 1, 2]:
+                    facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
                 facecolor_index = lut.index(tuple(facecolor_rgb))
 
                 logging.debug("saving figure as transparent PNG with transparency index %i.",

@@ -756,11 +756,16 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
         clev_format = "%.3g"
         mclev = np.abs(clevs).max()
         if self.style != "log":
-            if mclev >= 100. and mclev < 10000.: clev_format = "%4i"
-            if mclev >= 10. and mclev < 100.: clev_format = "%.1f"
-            if mclev >= 1. and mclev < 10.: clev_format = "%.2f"
-            if mclev >= .1 and mclev < 1.: clev_format = "%.3f"
-            if mclev >= .01 and mclev < 0.1: clev_format = "%.4f"
+            if mclev >= 100. and mclev < 10000.:
+                clev_format = "%4i"
+            if mclev >= 10. and mclev < 100.:
+                clev_format = "%.1f"
+            if mclev >= 1. and mclev < 10.:
+                clev_format = "%.2f"
+            if mclev >= .1 and mclev < 1.:
+                clev_format = "%.3f"
+            if mclev >= .01 and mclev < 0.1:
+                clev_format = "%.4f"
 
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
@@ -1565,7 +1570,8 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         # Default style is pressure.
-        if self.style.lower() == "default": self.style = "PRES"
+        if self.style.lower() == "default":
+            self.style = "PRES"
 
         # Define colourbars and contour levels for the three styles. For
         # pressure and height, a terrain colourmap is used (bluish colours for

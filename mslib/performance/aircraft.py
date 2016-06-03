@@ -546,7 +546,8 @@ class Aircraft(object):
                         # if (nwp_lon[nwp_index] == next_wp_lon) \
                         #         and (nwp_lat[nwp_index] == next_wp_lat): break
                         if abs(nwp_lon[nwp_index] - next_wp_lon) < eps \
-                                and abs(nwp_lat[nwp_index] - next_wp_lat) < eps: break
+                                and abs(nwp_lat[nwp_index] - next_wp_lat) < eps:
+                            break
 
                 # Update flight time and aircraft weight.
                 ac_state.stateID += 1

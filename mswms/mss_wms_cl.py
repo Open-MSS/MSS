@@ -281,7 +281,8 @@ if __name__ == "__main__":
                 filename = options.output
 
                 # Add vertical level to the filename, if applicable.
-                if level: filename += "_%s" % level
+                if level:
+                    filename += "_%s" % level
 
                 # Add timestep to the filename.
                 itime = datetime.strptime(options.inittime, "%Y-%m-%dT%H:%M:%SZ")

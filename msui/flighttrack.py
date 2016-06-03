@@ -288,7 +288,8 @@ class WaypointsTableModel(QAbstractTableModel):
     def waypointData(self, row, mode=None):
         """Get the waypoint object defining the given row.
         """
-        if mode is None: mode = self.mode
+        if mode is None:
+            mode = self.mode
         if mode == USER:
             return self.waypoints[row]
         else:
@@ -297,7 +298,8 @@ class WaypointsTableModel(QAbstractTableModel):
     def allWaypointData(self, mode=USER):
         """Return the entire list of waypoints.
         """
-        if mode is None: mode = self.mode
+        if mode is None:
+            mode = self.mode
         if mode == USER:
             return self.waypoints
         else:

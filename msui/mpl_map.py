@@ -102,7 +102,8 @@ class MapCanvas(basemap.Basemap):
         # before, Basemap stores an EPSG code that will not be changed if
         # the Basemap constructor is called a second time. Hence, we have to
         # delete the attribute (mr, 08Feb2013).
-        if hasattr(self, "epsg"): del self.epsg
+        if hasattr(self, "epsg"):
+            del self.epsg
         super(MapCanvas, self).__init__(**kwargs)
         self.kwargs = kwargs
 
@@ -414,8 +415,10 @@ class MapCanvas(basemap.Basemap):
 
         if self.kwargs["projection"] in ["cyl"]:
             # Latitudes in cylindrical projection need to be within -90..90.
-            if self.kwargs['urcrnrlat'] > 90: self.kwargs['urcrnrlat'] = 90
-            if self.kwargs['llcrnrlat'] < -90: self.kwargs['llcrnrlat'] = -90
+            if self.kwargs['urcrnrlat'] > 90:
+                self.kwargs['urcrnrlat'] = 90
+            if self.kwargs['llcrnrlat'] < -90:
+                self.kwargs['llcrnrlat'] = -90
             # Longitudes in cylindrical projection need to be within -360..360.
             if self.kwargs['llcrnrlon'] < -360 \
                     or self.kwargs['urcrnrlon'] < -360:

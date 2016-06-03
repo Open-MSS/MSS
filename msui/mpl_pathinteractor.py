@@ -251,7 +251,8 @@ class PathV(WaypointsPath):
                             abs(lons[i] - waypoints[ipoint][1]) < 1E-10:
                 intermediate_indexes.append(i)
                 ipoint += 1
-            if ipoint >= len(waypoints): break
+            if ipoint >= len(waypoints):
+                break
 
         self.intermediate_indexes = intermediate_indexes
         self.ilats = lats
@@ -528,9 +529,12 @@ class PathInteractor:
            the vertex closest to the click, as long as a vertex is within
            epsilon tolerance of the click.
         """
-        if not self.showverts: return
-        if event.inaxes == None: return
-        if event.button != 1: return
+        if not self.showverts:
+            return
+        if event.inaxes == None:
+            return
+        if event.button != 1:
+            return
         self._ind = self.get_ind_under_point(event)
 
     def set_vertices_visible(self, showverts=True):
@@ -561,7 +565,8 @@ class PathInteractor:
     def set_edit_mode(self, mode):
         """Set the edit mode to one of [MOVE, INSERT, DELETE].
         """
-        if mode not in [MOVE, INSERT, DELETE]: return
+        if mode not in [MOVE, INSERT, DELETE]:
+            return
         self.editmode = mode
 
     def get_edit_mode(self):
@@ -703,8 +708,10 @@ class VPathInteractor(PathInteractor):
     def button_release_callback(self, event):
         """Called whenever a mouse button is released.
         """
-        if not self.showverts: return
-        if event.button != 1: return
+        if not self.showverts:
+            return
+        if event.button != 1:
+            return
 
         if self.editmode == DELETE and self._ind is not None:
             if self.confirm_delete_waypoint(self._ind):
@@ -737,11 +744,16 @@ class VPathInteractor(PathInteractor):
         Hence, points can only be moved in the vertical direction (y position
         in this view).
         """
-        if not self.showverts: return
-        if not self.editmode == MOVE: return
-        if self._ind is None: return
-        if event.inaxes is None: return
-        if event.button != 1: return
+        if not self.showverts:
+            return
+        if not self.editmode == MOVE:
+            return
+        if self._ind is None:
+            return
+        if event.inaxes is None:
+            return
+        if event.button != 1:
+            return
         vertices = self.pathpatch.get_path().vertices
         # Set the new y position of the vertex to event.ydata. Keep the
         # x coordinate.
@@ -846,8 +858,10 @@ class HPathInteractor(PathInteractor):
     def button_release_callback(self, event):
         """Called whenever a mouse button is released.
         """
-        if not self.showverts: return
-        if event.button != 1: return
+        if not self.showverts:
+            return
+        if event.button != 1:
+            return
 
         if self.editmode == DELETE and self._ind is not None:
             if self.confirm_delete_waypoint(self._ind):
@@ -898,11 +912,16 @@ class HPathInteractor(PathInteractor):
         """Called on mouse movement. Redraws the path if a vertex has been
            picked and dragged.
         """
-        if not self.showverts: return
-        if not self.editmode == MOVE: return
-        if self._ind is None: return
-        if event.inaxes is None: return
-        if event.button != 1: return
+        if not self.showverts:
+            return
+        if not self.editmode == MOVE:
+            return
+        if self._ind is None:
+            return
+        if event.inaxes is None:
+            return
+        if event.button != 1:
+            return
         wp_vertices = self.pathpatch.get_path().wp_vertices
         wp_vertices[self._ind] = event.xdata, event.ydata
         self.redraw_path(wp_vertices)
@@ -1083,7 +1102,8 @@ class HPathInteractor(PathInteractor):
             pass  # silently ignore "ValueError: Invalid codes array."
         self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
-        for t in self.wp_labels: self.ax.draw_artist(t)
+        for t in self.wp_labels:
+            self.ax.draw_artist(t)
         if self.showtangents:
             self.ax.draw_artist(self.tangentlines)
         if self.show_solar_angle:

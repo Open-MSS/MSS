@@ -385,7 +385,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
            weight limits when the user selects an aircraft in <cbAircraft>.
         """
         aircraftName = str(self.cbAircraft.currentText())  # convert from QString
-        if aircraftName == '': return
+        if aircraftName == '':
+            return
 
         aircraft = performance.available_aircraft[aircraftName]
 
@@ -733,9 +734,11 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         logging.debug("computing flight performance..")
 
         aircraft_name = str(self.cbAircraft.currentText())  # convert from QString
-        if aircraft_name == '': return
+        if aircraft_name == '':
+            return
         aircraft_config = str(self.cbAircraftConfig.currentText())
-        if aircraft_config == '': return
+        if aircraft_config == '':
+            return
 
         # Get the aircraft object.
         aircraft = performance.available_aircraft[aircraft_name]
@@ -946,9 +949,11 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         logging.debug("exporting flight path to FX csv..")
 
         aircraft_name = str(self.cbAircraft.currentText())  # convert from QString
-        if aircraft_name == '': return
+        if aircraft_name == '':
+            return
         aircraft_config = str(self.cbAircraftConfig.currentText())
-        if aircraft_config == '': return
+        if aircraft_config == '':
+            return
 
         # Get the aircraft object.
         aircraft = performance.available_aircraft[aircraft_name]
@@ -999,7 +1004,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             # Automatic flight mode: First waypoint is takeoff, all other
             # waypoints are level flights.
             flight_type = "Level"
-            if waypoint == waypoints[1]: flight_type = "Initial Climb"
+            if waypoint == waypoints[1]:
+                flight_type = "Initial Climb"
 
             # Predefined speed selection (see email Johannes 26Apr2013):
             #           < FL100 : K250 = 250 knots IAS
@@ -1007,13 +1013,16 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             #           > FL280 : 0.8  = Mach 0.8
 
             speed_indicator = "K250"
-            if waypoint.flightlevel > 100: speed_indicator = "K280"
-            if waypoint.flightlevel > 280: speed_indicator = "0.8"
+            if waypoint.flightlevel > 100:
+                speed_indicator = "K280"
+            if waypoint.flightlevel > 280:
+                speed_indicator = "0.8"
 
             # Second-to-last waypoint: Top Of Descent (TOD) instead of
             # segment length.
             segment_length_nm = "%f" % (waypoint.distance_to_prev / 1.852)
-            if waypoint == waypoints[-2]: segment_length_nm = "TOD"
+            if waypoint == waypoints[-2]:
+                segment_length_nm = "TOD"
 
             flight_description_csv.append(
                 "%s;%i;%s;%s;;;;;%f;%f" %
