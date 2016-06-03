@@ -380,7 +380,6 @@ class PathInteractor:
 
     # picking points
 
-
     def __init__(self, ax=None, waypoints=None, mplpath=None,
                  facecolor='blue', edgecolor='yellow',
                  linecolor='blue', markerfacecolor='red',

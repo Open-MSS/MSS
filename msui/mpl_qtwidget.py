@@ -207,7 +207,6 @@ Side View Canvas and Widget
 """
 
 
-
 class MplSideViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws a side view (vertical section) of a
        flight track / list of waypoints.

@@ -89,7 +89,6 @@ print "VERSION:", __version__
 print "\nSystem is loading.."
 
 
-
 """
 Template for new flight tracks
 """

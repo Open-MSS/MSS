@@ -493,7 +493,6 @@ class MapCanvas(basemap.Basemap):
     # self.urcrnrx = axis[1]
     # self.urcrnry = axis[3]
 
-
     def imshow(self, X, **kwargs):
         """Overloads basemap.imshow(). Deletes any existing image and
            redraws the figure after the new image has been plotted.

@@ -517,7 +517,6 @@ def read_nasa_satellite_prediction(fname):
                 segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
                 segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
 
-
         else:
             segment["utc"] = np.array(segment["utc"])
             segment["satpos"] = np.ma.masked_equal(segment["satpos"], -999.)

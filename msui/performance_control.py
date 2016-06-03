@@ -647,10 +647,6 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 
-
-
-
-
 # IPYTHON TEST LINES.
 
 # import wms_control; base_url = "http://localhost:8081/mss_wms"; wms = wms_control.MSSWebMapService(base_url, version='1.1.1')

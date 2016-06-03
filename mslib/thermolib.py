@@ -204,7 +204,6 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                                      + 0.42873E-3 * (10. ** (+4.76955 * (1. - ts / t[idx_liq])) - 1.)
                                      + 0.78614)
 
-
         elif liquid == 'WMO2000':
             # WMO formulation, which is very similar to Goff Gratch
             # Source: WMO technical regulations, WMO-NO 49, Vol I,

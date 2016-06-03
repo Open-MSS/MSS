@@ -793,7 +793,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
 
         # print flight_description
 
-
         # Compute the performance.
         # ====================================================
 

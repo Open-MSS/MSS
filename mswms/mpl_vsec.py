@@ -48,8 +48,6 @@ import mss_2D_sections
 from mslib import mss_util
 
 
-
-
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
 """
