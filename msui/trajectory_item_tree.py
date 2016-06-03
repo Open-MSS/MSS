@@ -119,7 +119,7 @@ class AbstractLagrantoDataItem:
             # Item line properties (if not applicable return empty string).
             try:
                 return str(self.gxElements['general']['colour']
-                           ) + '/' + str(self.gxElements['general']['linestyle']) + '/' +  str(
+                           ) + '/' + str(self.gxElements['general']['linestyle']) + '/' + str(
                     self.gxElements['general']['linewidth'])
             except:
                 return ''
