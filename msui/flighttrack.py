@@ -60,21 +60,8 @@ CONSTANTS (used in this module)
 """
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
-LOCATION, \
-LAT, \
-LON, \
-FLIGHTLEVEL, \
-PRESSURE, \
-SPEED, \
-TIME_LEG, \
-TIME_CUM, \
-TIME_UTC, \
-DISTANCE_LEG, \
-DISTANCE_CUM, \
-FUEL_LEG, \
-FUEL_CUM, \
-WEIGHT, \
-COMMENTS = range(15)
+LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE, SPEED, TIME_LEG, TIME_CUM, TIME_UTC, DISTANCE_LEG, DISTANCE_CUM, \
+    FUEL_LEG, FUEL_CUM, WEIGHT, COMMENTS = range(15)
 
 # Internal mode of the WaypointsTableModel.
 USER = 0
@@ -888,8 +875,7 @@ class WaypointsTableModel(QAbstractTableModel):
                     lon, lat, fl = [float(f) for f in values[1:4]]
                     speed = values[4]
 
-                    leg_fuel, cum_fuel, weight, leg_time, \
-                    cum_time = [float(f) for f in values[5:10]]
+                    leg_fuel, cum_fuel, weight, leg_time, cum_time = [float(f) for f in values[5:10]]
 
                     utc_time = datetime.strptime(values[10], "%Y-%m-%dT%H:%M:%SZ")
 
