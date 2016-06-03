@@ -36,20 +36,22 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import StringIO
 import logging
 from xml.dom.minidom import getDOMImplementation
+import numpy as np
+import PIL.Image
 
 # related third party imports
 import matplotlib as mpl
-
-mpl.rcParams['xtick.direction'] = 'out'
-mpl.rcParams['ytick.direction'] = 'out'
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import numpy as np
-import PIL.Image
 
 # local application imports
 import mss_2D_sections
 from mslib import mss_util
 
+
+
+
+mpl.rcParams['xtick.direction'] = 'out'
+mpl.rcParams['ytick.direction'] = 'out'
 """
 Abstract Vertical Section Style
 """

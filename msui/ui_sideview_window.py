@@ -8,7 +8,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
-
+from mpl_qtwidget import MplSideViewWidget
 
 class Ui_SideViewWindow(object):
     def setupUi(self, SideViewWindow):
@@ -101,4 +101,4 @@ class Ui_SideViewWindow(object):
             QtGui.QApplication.translate("SideViewWindow", "D", None, QtGui.QApplication.UnicodeUTF8))
 
 
-from mpl_qtwidget import MplSideViewWidget
+

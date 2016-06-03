@@ -8,7 +8,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
-
+from mpl_qtwidget import MplTimeSeriesViewWidget
 
 class Ui_TimeSeriesViewWindow(object):
     def setupUi(self, TimeSeriesViewWindow):
@@ -45,4 +45,4 @@ class Ui_TimeSeriesViewWindow(object):
                                          QtGui.QApplication.UnicodeUTF8))
 
 
-from mpl_qtwidget import MplTimeSeriesViewWidget
+

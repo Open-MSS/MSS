@@ -27,6 +27,22 @@ AUTHORS:
 * Marc Rautenhaus (mr)
 
 """
+# standard library imports
+import logging
+from datetime import datetime
+
+# related third party imports
+import numpy as np
+import matplotlib.pyplot as plt
+
+# local application imports
+import flighttrack as ft
+import mpl_pathinteractor as mpl_pi
+import mpl_map
+import trajectory_item_tree as titree
+from mslib import thermolib
+import mss_settings
+
 
 # Python Qt4 bindings for GUI objects
 from PyQt4 import QtGui, QtCore
@@ -190,21 +206,6 @@ class MplNavBarWidget(QtGui.QWidget):
 Side View Canvas and Widget
 """
 
-# standard library imports
-import logging
-from datetime import datetime
-
-# related third party imports
-import numpy as np
-import matplotlib.pyplot as plt
-
-# local application imports
-import flighttrack as ft
-import mpl_pathinteractor as mpl_pi
-import mpl_map
-import trajectory_item_tree as titree
-from mslib import thermolib
-import mss_settings
 
 
 class MplSideViewCanvas(MplCanvas):

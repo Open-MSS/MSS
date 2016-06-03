@@ -43,13 +43,6 @@ AUTHORS:
 
 """
 
-__version__ = "Release 1.1beta"
-
-print "***********************************************************************"
-print "\n            DLR/IPA Mission Support System User Interface\n"
-print "***********************************************************************"
-print "VERSION:", __version__
-print "\nSystem is loading.."
 
 # standard library imports
 import sys
@@ -57,8 +50,6 @@ import os
 import copy
 import logging
 
-# related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
 import ui_mainwindow as ui
@@ -71,6 +62,8 @@ import timeseriesview
 import trajectories_tool
 import loopview
 import mss_settings
+# related third party imports
+from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 try:
     import view3D
@@ -85,6 +78,17 @@ if enableGENESI:
         import genesi_tool
     except:
         enableGENESI = False
+
+__version__ = "Release 1.1beta"
+
+
+print "***********************************************************************"
+print "\n            DLR/IPA Mission Support System User Interface\n"
+print "***********************************************************************"
+print "VERSION:", __version__
+print "\nSystem is loading.."
+
+
 
 """
 Template for new flight tracks

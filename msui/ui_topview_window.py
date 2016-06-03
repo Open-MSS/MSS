@@ -8,7 +8,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
-
+from mpl_qtwidget import MplTopViewWidget
 
 class Ui_TopViewWindow(object):
     def setupUi(self, TopViewWindow):
@@ -143,4 +143,4 @@ class Ui_TopViewWindow(object):
             QtGui.QApplication.translate("TopViewWindow", "D", None, QtGui.QApplication.UnicodeUTF8))
 
 
-from mpl_qtwidget import MplTopViewWidget
+
