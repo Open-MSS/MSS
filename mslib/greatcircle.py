@@ -401,8 +401,8 @@ if __name__ == "__main__":
     b = 6356752.3142
     f = (a - b) / a
 
-    print  "\n Ellipsoidal major axis =  %12.3f metres\n" % (a)
-    print  "\n Inverse flattening     =  %15.9f\n" % (1.0 / f)
+    print "\n Ellipsoidal major axis =  %12.3f metres\n" % (a)
+    print "\n Inverse flattening     =  %15.9f\n" % (1.0 / f)
 
     print "\n Test Flinders Peak to Buninyon"
     print "\n ****************************** \n"
