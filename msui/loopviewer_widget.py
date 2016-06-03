@@ -331,8 +331,8 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
 
         # Show the progress dialog, since the retrieval can take a few seconds.
         self.pdlg.reset()
-        self.pdlg.setValue(0);
-        self.pdlg.show();
+        self.pdlg.setValue(0)
+        self.pdlg.show()
         self.pdlg.repaint()
 
         base_url = self.config[_type]["url"]
@@ -417,7 +417,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                 # Update progress dialog.
                 self.pdlg.setValue((float(ilevel) + float(istep) / num_steps)
                                    / num_levels * 100.)
-                self.pdlg.repaint();
+                self.pdlg.repaint()
                 QtGui.QApplication.processEvents()
                 if self.pdlg.wasCanceled() or cancel:
                     break

@@ -160,7 +160,7 @@ def compute_solar_angle(jsec, lon, lat):
     lmst = np.deg2rad(15. * (lmst % 24.))
 
     # Hour angle
-    ha = lmst - ra;
+    ha = lmst - ra
     if ha < -np.pi:
         ha += 2 * np.pi
 
@@ -356,7 +356,7 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
 
     Returns two arrays lats, lons with intermediate latitude and longitudes.
     """
-    LAT = 0;
+    LAT = 0
     LON = 1
     if connection == 'linear':
         if p2[LAT] - p1[LAT] == 0:
@@ -395,7 +395,7 @@ def path_points(points, numpoints=100, connection='linear'):
     """
     if connection not in ['linear', 'greatcircle']:
         return None, None
-    LAT = 0;
+    LAT = 0
     LON = 1
 
     # First compute the lengths of the individual path segments, i.e.

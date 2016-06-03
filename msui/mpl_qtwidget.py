@@ -611,7 +611,7 @@ class MplTopViewCanvas(MplCanvas):
         # 1) STORE COORDINATES OF NON-MAP OBJECTS IN LAT/LON.
 
         # (Currently none.)
-        self.pdlg.setValue(1);
+        self.pdlg.setValue(1)
         QtGui.QApplication.processEvents()
 
         # 2) UPDATE MAP.
@@ -620,11 +620,11 @@ class MplTopViewCanvas(MplCanvas):
         # drawevent to update the background
         # in waypoints_interactor()
 
-        self.pdlg.setValue(5);
+        self.pdlg.setValue(5)
         QtGui.QApplication.processEvents()
 
         # 3) UPDATE COORDINATES OF NON-MAP OBJECTS.
-        self.pdlg.setValue(8);
+        self.pdlg.setValue(8)
         QtGui.QApplication.processEvents()
 
         if self.satoverpasspatch:
@@ -639,7 +639,7 @@ class MplTopViewCanvas(MplCanvas):
         # correctly. no idea why..
         self.waypoints_interactor.update()
 
-        self.pdlg.setValue(10);
+        self.pdlg.setValue(10)
         QtGui.QApplication.processEvents()
 
         logging.debug("finished redrawing map")

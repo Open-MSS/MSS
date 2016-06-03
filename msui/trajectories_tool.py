@@ -128,7 +128,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Ask for a file to open, convert the return file name from type
         # QString to str.
         nas_file = QtGui.QFileDialog.getOpenFileName(self, "Open NASA Ames File",
-                                                     "", "NASA Ames files (*.nas)");
+                                                     "", "NASA Ames files (*.nas)")
         if not nas_file.isEmpty():
             nas_file = str(nas_file)
             logging.debug("Loading flight track data from %s" % nas_file)

@@ -466,12 +466,12 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         # Show the progress dialog, (a) since the retrieval can take a few
         # seconds, and (b) to allow for cancellation of the request by the
         # user.
-        self.pdlg.setValue(0);
-        self.pdlg.setModal(True);
+        self.pdlg.setValue(0)
+        self.pdlg.setModal(True)
         self.pdlg.reset()
-        self.pdlg.show();
+        self.pdlg.show()
         QtGui.QApplication.processEvents()
-        self.pdlg.setValue(0.1);
+        self.pdlg.setValue(0.1)
         QtGui.QApplication.processEvents()
 
         data = []
@@ -564,7 +564,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                         else:
                             raise qreturn
 
-                    self.pdlg.setValue(10. * (iv + 1) / len(valid_time_list));
+                    self.pdlg.setValue(10. * (iv + 1) / len(valid_time_list))
                     QtGui.QApplication.processEvents()
                     # Read the image file from the URL into a string (urlobject.read()).
                     xml = urlobject.read()
@@ -1044,7 +1044,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
 
         # Ask the user for a filename.
         filename = QtGui.QFileDialog.getSaveFileName(
-            self, "Save Flight Profile", "", "FX CSV (*.csv)");
+            self, "Save Flight Profile", "", "FX CSV (*.csv)")
         if not filename.isEmpty():
             # Write the list to an output file.
             filename = str(filename)

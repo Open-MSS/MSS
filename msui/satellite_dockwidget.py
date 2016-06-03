@@ -66,7 +66,7 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
         """
         fname = QtGui.QFileDialog.getOpenFileName(self,
                                                   "Open NASA satellite overpass prediction",
-                                                  "", "(*.*)");
+                                                  "", "(*.*)")
         if fname.isEmpty():
             return
         self.leFile.setText(fname)

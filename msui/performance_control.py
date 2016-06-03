@@ -514,7 +514,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.pdlg.setValue(0)
         self.pdlg.setModal(True)
         self.pdlg.reset()
-        self.pdlg.show();
+        self.pdlg.show()
         QtGui.QApplication.processEvents()
 
         # Stores the computation results to be returned (multiline string).
@@ -570,7 +570,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             thread = threading.Thread(target=self._queued_get_performance, kwargs=kwargs)
             thread.start()
 
-            self.pdlg.setValue(1);
+            self.pdlg.setValue(1)
             QtGui.QApplication.processEvents()
 
             while thread.isAlive():
@@ -592,7 +592,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                 else:
                     raise qreturn
 
-            self.pdlg.setValue(8);
+            self.pdlg.setValue(8)
             QtGui.QApplication.processEvents()
 
             # Read the result from the URL into a string (urlobject.read())

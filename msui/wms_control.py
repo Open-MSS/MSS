@@ -1237,9 +1237,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
             if not cache_hit:
 
-                self.pdlg.show();
+                self.pdlg.show()
                 QtGui.QApplication.processEvents()
-                self.pdlg.setValue(1);
+                self.pdlg.setValue(1)
                 QtGui.QApplication.processEvents()
 
                 queue = Queue.Queue()
@@ -1273,7 +1273,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                     else:
                         raise qreturn
 
-                self.pdlg.setValue(8);
+                self.pdlg.setValue(8)
                 QtGui.QApplication.processEvents()
                 # Read the image file from the URL into a string (urlobject.read())
                 # and wrap this string into a StringIO object that behaves like a file.

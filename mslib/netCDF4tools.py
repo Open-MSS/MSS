@@ -779,8 +779,8 @@ def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
         if hasunlimdim:  # has an unlim dim, loop over unlim dim index.
             # range to copy
             if nchunk:
-                start = 0;
-                stop = len(unlimdim);
+                start = 0
+                stop = len(unlimdim)
                 step = nchunk
                 if step < 1:
                     step = 1

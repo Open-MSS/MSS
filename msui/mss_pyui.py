@@ -413,7 +413,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                                                      "Supported files (*.ftml *.csv *.txt)"
                                                      ";;Flight track XML (*.ftml)"
                                                      ";;CSV-file (*.csv)"
-                                                     ";;Text-file (*.txt)");
+                                                     ";;Text-file (*.txt)")
 
         if not filename.isEmpty():
             filename = str(filename)
@@ -473,7 +473,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                                                                   self.active_flight_track.name),
                                                      "Flight track XML (*.ftml)"
                                                      ";;CSV-file (*.csv)"
-                                                     ";;Text-file (*.txt)");
+                                                     ";;Text-file (*.txt)")
 
         if not filename.isEmpty():
             filename = str(filename)

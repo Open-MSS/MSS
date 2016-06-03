@@ -109,7 +109,7 @@ class GreatCircle(object):
                 d, azimuth, a21 = vinc_dist(self.f, self.a, latptnew, lonptnew, lat2, lon2)
                 lats.append(math.degrees(latptnew))
                 lons.append(math.degrees(lonptnew))
-                latpt = latptnew;
+                latpt = latptnew
                 lonpt = lonptnew
             lons.append(math.degrees(self.lon2))
             lats.append(math.degrees(self.lat2))

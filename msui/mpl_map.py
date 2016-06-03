@@ -751,12 +751,12 @@ class MapCanvas(basemap.Basemap):
         az12, az21, dist = gc.inv(lon1, lat1, lon2, lat2)
         npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
         lonlats = gc.npts(lon1, lat1, lon2, lat2, npoints)
-        lons = [lon1];
+        lons = [lon1]
         lats = [lat1]
         for lon, lat in lonlats:
             lons.append(lon)
             lats.append(lat)
-        lons.append(lon2);
+        lons.append(lon2)
         lats.append(lat2)
         if map_coords:
             x, y = self(lons, lats)
@@ -772,7 +772,7 @@ class MapCanvas(basemap.Basemap):
         gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
         assert len(lons) == len(lats)
         assert len(lons) > 1
-        gclons = [lons[0]];
+        gclons = [lons[0]]
         gclats = [lats[0]]
         for i in range(len(lons) - 1):
             az12, az21, dist = gc.inv(lons[i], lats[i], lons[i + 1], lats[i + 1])
@@ -792,7 +792,7 @@ class MapCanvas(basemap.Basemap):
             for lon, lat in lonlats:
                 gclons.append(lon)
                 gclats.append(lat)
-            gclons.append(lons[i + 1]);
+            gclons.append(lons[i + 1])
             gclats.append(lats[i + 1])
         if map_coords:
             x, y = self(gclons, gclats)
