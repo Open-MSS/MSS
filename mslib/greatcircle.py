@@ -70,14 +70,14 @@ class GreatCircle(object):
         """
         # must ask for at least 2 points.
         if npoints <= 1:
-            raise ValueError, 'npoints must be greater than 1'
+            raise ValueError('npoints must be greater than 1')
         elif npoints == 2:
             return [math.degrees(self.lon1), math.degrees(self.lon2)], [math.degrees(self.lat1),
                                                                         math.degrees(self.lat2)]
         # can't do it if endpoints are antipodal, since
         # route is undefined.
         if self.antipodal:
-            raise ValueError, 'cannot compute intermediate points on a great circle whose endpoints are antipodal'
+            raise ValueError('cannot compute intermediate points on a great circle whose endpoints are antipodal')
         d = self.gcarclen
         delta = 1.0 / (npoints - 1)
         f = delta * NX.arange(npoints)  # f=0 is point 1, f=1 is point 2.

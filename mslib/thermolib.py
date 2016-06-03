@@ -113,8 +113,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
         idx_ice = numpy.where(t <= 273.15)
         idx_liq = numpy.where(t > 273.15)
     else:
-        raise VapourPressureError, "Cannot recognize the force_phase " \
-                                   "keyword: %s (valid are ice, liquid, None)" % force_phase
+        raise VapourPressureError("Cannot recognize the force_phase " \
+                                   "keyword: %s (valid are ice, liquid, None)" % force_phase)
 
     # Initialise output field.
     e_sat = numpy.zeros(numpy.shape(t))
@@ -124,8 +124,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
     if not force_phase == 'ice':
 
         if liquid == 'MartiMauersberger':
-            raise VapourPressureError, "Marti and Mauersberger don't " \
-                                       "have a vapour pressure curve over liquid."
+            raise VapourPressureError("Marti and Mauersberger don't " \
+                                       "have a vapour pressure curve over liquid.")
 
         elif liquid == 'HylandWexler':
             # Source: Hyland, R. W. and A. Wexler, Formulations for the
@@ -296,8 +296,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                                           + 0.014025 * t[idx_liq])) / 100.
 
         else:
-            raise VapourPressureError, "Unkown method for computing " \
-                                       "the vapour pressure curve over liquid: %s" % liquid
+            raise VapourPressureError("Unkown method for computing " \
+                                       "the vapour pressure curve over liquid: %s" % liquid)
 
     # =============================================================================
     #  Calculate saturation pressure over ice -------------------------------------
@@ -307,8 +307,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             ice = 'WMO_Goff'
 
         elif ice == 'IAWPS':
-            raise VapourPressureError, "IAPWS does not provide a vapour " \
-                                       "pressure formulation over ice"
+            raise VapourPressureError("IAPWS does not provide a vapour " \
+                                       "pressure formulation over ice")
 
         elif ice == 'MartiMauersberger':
             # Source: Marti, J. and K Mauersberger, A survey and new
@@ -392,8 +392,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                                        - 0.00728332 * t[idx_ice]) / 100.
 
         else:
-            raise VapourPressureError, "Unkown method for computing " \
-                                       "the vapour pressure curve over ice: %s" % ice
+            raise VapourPressureError("Unkown method for computing " \
+                                       "the vapour pressure curve over ice: %s" % ice)
 
     # Convert return value units from hPa to Pa.
     return e_sat * 100. if not input_scalar else e_sat[0] * 100.
@@ -598,7 +598,7 @@ def virt_temp(t, q, method='exact'):
         w = q / (1. - q)
         return t * (1. + 0.61 * w)
     else:
-        raise TypeError, 'virtual temperature method not understood'
+        raise TypeError('virtual temperature method not understood')
 
 
 """
@@ -653,7 +653,7 @@ def geop_difference(p, t, method='trapz', axis=-1):
     elif method == 'simps':
         return 287.058 * scipy.integrate.simps(t, lnp, axis=axis)
     else:
-        raise TypeError, 'integration method for geopotential not understood'
+        raise TypeError('integration method for geopotential not understood')
 
 
 def geop_thickness(p, t, q=None, cumulative=False, axis=-1):

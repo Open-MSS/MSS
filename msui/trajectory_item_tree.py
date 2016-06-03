@@ -196,8 +196,7 @@ class AbstractLagrantoDataItem:
         This method is ABSTRACT and has to be implemented in the derived
         classes.
         """
-        raise NotImplementedError, \
-            "Abstract AbstractLagrantoDataItem.getMetadata called."
+        raise NotImplementedError("Abstract AbstractLagrantoDataItem.getMetadata called.")
 
     def getMetadataValue(self, key):
         """Return the value belonging to a metadata key.
@@ -205,8 +204,7 @@ class AbstractLagrantoDataItem:
         This method is ABSTRACT and has to be implemented in the derived
         classes.
         """
-        raise NotImplementedError, \
-            "Abstract AbstractLagrantoDataItem.getMetadataValue called."
+        raise NotImplementedError("Abstract AbstractLagrantoDataItem.getMetadataValue called.")
 
 
 """
@@ -728,8 +726,7 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
         This method is ABSTRACT and has to be implemented in the derived
         classes.
         """
-        raise NotImplementedError, \
-            "Abstract AbstractVariableNameItem.getVariableData called."
+        raise NotImplementedError("Abstract AbstractVariableNameItem.getVariableData called.")
 
     def exceedsThreshold(self, threshold=0.):
         """Determines time intervals in which the value of the variable
@@ -765,9 +762,8 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
            time markers are computed with __computeTimeMarkerPoints().
         """
         if element == "general":
-            raise LagrantoTreeModelUnsupportedOperationError, \
-                "Setting " + element + "/" + eproperty + \
-                " is not supported by AbstractVariableItem."
+            raise LagrantoTreeModelUnsupportedOperationError("Setting " + element + "/" + eproperty + \
+                " is not supported by AbstractVariableItem.")
         else:
             AbstractLagrantoDataItem.setGxElementProperty(self, element,
                                                           eproperty, value)
