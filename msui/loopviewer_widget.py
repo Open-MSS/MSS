@@ -531,17 +531,14 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             if forward:
                 while self.current_pixmap < len(self.pixmaps[self.current_level]) - 1 \
                         and (time - self.valid_time) > \
-                                (self.pixmaps[self.current_level][self.current_pixmap + 1][1] - time):
+                        (self.pixmaps[self.current_level][self.current_pixmap + 1][1] - time):
                     self.current_pixmap += 1
-                    self.valid_time = \
-                        self.pixmaps[self.current_level][self.current_pixmap][1]
+                    self.valid_time = self.pixmaps[self.current_level][self.current_pixmap][1]
             else:
-                while self.current_pixmap > 0 \
-                        and (self.valid_time - time) > \
-                                (time - self.pixmaps[self.current_level][self.current_pixmap - 1][1]):
+                while self.current_pixmap > 0 and (self.valid_time - time) > \
+                        (time - self.pixmaps[self.current_level][self.current_pixmap - 1][1]):
                     self.current_pixmap -= 1
-                    self.valid_time = \
-                        self.pixmaps[self.current_level][self.current_pixmap][1]
+                    self.valid_time = self.pixmaps[self.current_level][self.current_pixmap][1]
 
         # Display image and update internal pointers to current pixmap and time.
         self.updateImage(time)
