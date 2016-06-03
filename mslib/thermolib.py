@@ -701,8 +701,7 @@ def geop_thickness(p, t, q=None, cumulative=False, axis=-1):
     # Evaluate equation 3.24 in Wallace and Hobbs:
     #     delta Z = -Rd/g0 * int( Tv,  d ln(p), p1, p2 ),
     # where Z denotes the geopotential height, Z = phi/g0.
-    return -1. / 9.80665 * geop_difference(p, tv, method='cumtrapz'
-    if cumulative else 'trapz', axis=axis)
+    return -1. / 9.80665 * geop_difference(p, tv, method='cumtrapz' if cumulative else 'trapz', axis=axis)
 
 
 def test_geop_thickness():
