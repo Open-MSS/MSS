@@ -68,7 +68,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -392,7 +392,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -479,7 +479,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -566,7 +566,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -669,7 +669,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -787,7 +787,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         it has not been passed as a data field. Also computes vertical
         velocity in cm/s.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -896,7 +896,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -1136,7 +1136,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -1275,7 +1275,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
@@ -1464,7 +1464,7 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        if not 'air_potential_temperature' in self.data.keys():
+        if 'air_potential_temperature' not in self.data.keys():
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])

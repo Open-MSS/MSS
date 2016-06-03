@@ -149,7 +149,7 @@ class AbstractLagrantoDataItem:
            <view_id>.
         """
         if visible:
-            if not view_id in self.views:
+            if view_id not in self.views:
                 self.views.append(view_id)
                 if self.parentItem:
                     self.parentItem.setVisibleInView(view_id, visible)

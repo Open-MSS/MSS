@@ -425,7 +425,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             view_window = view_item.window
             view = view_window.getView()
             if hasattr(view, "setTrajectoryModel"):
-                if not view_window in self.connected_views:
+                if view_window not in self.connected_views:
                     logging.debug("Connecting to view window <%s>" %
                                   view_window.identifier)
                     self.connected_views.append(view_window)

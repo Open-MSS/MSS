@@ -182,7 +182,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
-            if not dataitem in data.keys():
+            if dataitem not in data.keys():
                 raise KeyError("required data field %s not found" % dataitem)
 
         # Copy parameters to properties.
