@@ -316,8 +316,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         self.btZoomOut.setEnabled(self.scaleFactor > 0.333)
 
     def adjustScrollBar(self, scrollBar, factor):
-        scrollBar.setValue(int(factor * scrollBar.value()
-                               + ((factor - 1) * scrollBar.pageStep() / 2)))
+        scrollBar.setValue(int(factor * scrollBar.value() + ((factor - 1) * scrollBar.pageStep() / 2)))
 
     def loadDataFromHTTP(self, _type, product, region, init_time):
         """Load batch products from the MSS website.
@@ -415,8 +414,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                     logging.debug("timestep %03i not available (HTTP error %i)" % (step, e.code))
 
                 # Update progress dialog.
-                self.pdlg.setValue((float(ilevel) + float(istep) / num_steps)
-                                   / num_levels * 100.)
+                self.pdlg.setValue((float(ilevel) + float(istep) / num_steps) / num_levels * 100.)
                 self.pdlg.repaint()
                 QtGui.QApplication.processEvents()
                 if self.pdlg.wasCanceled() or cancel:

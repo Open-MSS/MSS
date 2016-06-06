@@ -655,8 +655,7 @@ class MapCanvas(basemap.Basemap):
 
             # Plotting and graphics property update operations can only be
             # performed for flight tracks and trajectories.
-            if not (isinstance(item, titree.FlightTrackItem)
-                    or isinstance(item, titree.TrajectoryItem)):
+            if not (isinstance(item, titree.FlightTrackItem) or isinstance(item, titree.TrajectoryItem)):
                 continue
 
             if mode in ["GXPROPERTY_CHANGE", "VISIBILITY_CHANGE"]:

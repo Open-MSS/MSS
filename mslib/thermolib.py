@@ -131,24 +131,24 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # Source: Hyland, R. W. and A. Wexler, Formulations for the
             # Thermodynamic Properties of the saturated Phases of H2O
             # from 173.15K to 473.15K, ASHRAE Trans, 89(2A), 500-519, 1983.
-            e_sat[idx_liq] = numpy.exp(-0.58002206E4 / t[idx_liq]
-                                       + 0.13914993E1
-                                       - 0.48640239E-1 * t[idx_liq]
-                                       + 0.41764768E-4 * t[idx_liq] ** 2.
-                                       - 0.14452093E-7 * t[idx_liq] ** 3.
-                                       + 0.65459673E1 * numpy.log(t[idx_liq])) / 100.
+            e_sat[idx_liq] = numpy.exp(-0.58002206E4 / t[idx_liq] +
+                                       0.13914993E1 -
+                                       0.48640239E-1 * t[idx_liq] +
+                                       0.41764768E-4 * t[idx_liq] ** 2. -
+                                       0.14452093E-7 * t[idx_liq] ** 3. +
+                                       0.65459673E1 * numpy.log(t[idx_liq])) / 100.
 
         elif liquid == 'Wexler':
             # Wexler, A., Vapor pressure formulation for ice, Journal of
             # Research of the National Bureau of Standards-A. 81A, 5-20, 1977.
-            e_sat[idx_liq] = numpy.exp(-2.9912729E3 * t[idx_liq] ** (-2.)
-                                       - 6.0170128E3 * t[idx_liq] ** (-1.)
-                                       + 1.887643854E1 * t[idx_liq] ** 0.
-                                       - 2.8354721E-2 * t[idx_liq] ** 1.
-                                       + 1.7838301E-5 * t[idx_liq] ** 2.
-                                       - 8.4150417E-10 * t[idx_liq] ** 3.
-                                       - 4.4412543E-13 * t[idx_liq] ** 4.
-                                       + 2.858487 * numpy.log(t[idx_liq])) / 100.
+            e_sat[idx_liq] = numpy.exp(-2.9912729E3 * t[idx_liq] ** (-2.) -
+                                       6.0170128E3 * t[idx_liq] ** (-1.) +
+                                       1.887643854E1 * t[idx_liq] ** 0. -
+                                       2.8354721E-2 * t[idx_liq] ** 1. +
+                                       1.7838301E-5 * t[idx_liq] ** 2. -
+                                       8.4150417E-10 * t[idx_liq] ** 3. -
+                                       4.4412543E-13 * t[idx_liq] ** 4. +
+                                       2.858487 * numpy.log(t[idx_liq])) / 100.
 
         elif liquid == 'GoffGratch':
             # Goff Gratch formulation.
@@ -158,18 +158,17 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             ts = 373.16  # steam point temperature in K
             ews = 1013.246  # saturation pressure at steam point
             # temperature, normal atmosphere
-            e_sat[idx_liq] = 10. ** (-7.90298 * (ts / t[idx_liq] - 1.)
-                                     + 5.02808 * numpy.log10(ts / t[idx_liq])
-                                     - 1.3816E-7 * (10. ** (11.344 * (1. - t[idx_liq] / ts)) - 1.)
-                                     + 8.1328E-3 * (10. ** (-3.49149 * (ts / t[idx_liq] - 1)) - 1.)
-                                     + numpy.log10(ews))
+            e_sat[idx_liq] = 10. ** (-7.90298 * (ts / t[idx_liq] - 1.) +
+                                     5.02808 * numpy.log10(ts / t[idx_liq]) -
+                                     1.3816E-7 * (10. ** (11.344 * (1. - t[idx_liq] / ts)) - 1.) +
+                                     8.1328E-3 * (10. ** (-3.49149 * (ts / t[idx_liq] - 1)) - 1.) +
+                                     numpy.log10(ews))
 
         elif liquid == 'MagnusTeten':
             # Source: Murray, F. W., On the computation of saturation
             # vapor pressure, J. Appl. Meteorol., 6, 203-204, 1967.
             tc = t - 273.15
-            e_sat[idx_liq] = 10. ** (7.5 * (tc[idx_liq]) / (tc[idx_liq] + 237.5)
-                                     + 0.7858)
+            e_sat[idx_liq] = 10. ** (7.5 * (tc[idx_liq]) / (tc[idx_liq] + 237.5) + 0.7858)
 
         elif liquid == 'Buck_original':
             # Bucks vapor pressure formulation based on Tetens formula
@@ -177,17 +176,15 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # pressure and enhancement factor, J. Appl. Meteorol., 20,
             # 1527-1532, 1981.
             tc = t - 273.15
-            e_sat[idx_liq] = 6.1121 * numpy.exp(17.502 * tc[idx_liq] /
-                                                (240.97 + tc[idx_liq]))
+            e_sat[idx_liq] = 6.1121 * numpy.exp(17.502 * tc[idx_liq] / (240.97 + tc[idx_liq]))
 
         elif liquid == 'Buck_manual':
             # Bucks vapor pressure formulation based on Tetens formula
             # Source: Buck Research, Model CR-1A Hygrometer Operating
             # Manual, Sep 2001
             tc = t - 273.15
-            e_sat[idx_liq] = 6.1121 * numpy.exp((18.678 - (tc[idx_liq]) / 234.5)
-                                                * (tc[idx_liq])
-                                                / (257.14 + tc[idx_liq]))
+            e_sat[idx_liq] = 6.1121 * numpy.exp((18.678 - (tc[idx_liq]) / 234.5) *
+                                                (tc[idx_liq]) / (257.14 + tc[idx_liq]))
 
         elif liquid == 'WMO_Goff':
             # Intended WMO formulation, originally published by Goff (1957)
@@ -198,11 +195,11 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # WMO-NO 49, Vol I, General Meteorological Standards and
             # Recommended Practices, App. A, 1988.
             ts = 273.16  # steam point temperature in K
-            e_sat[idx_liq] = 10. ** (10.79574 * (1. - ts / t[idx_liq])
-                                     - 5.02800 * numpy.log10(t[idx_liq] / ts)
-                                     + 1.50475E-4 * (1. - 10. ** (-8.2969 * (t[idx_liq] / ts - 1.)))
-                                     + 0.42873E-3 * (10. ** (+4.76955 * (1. - ts / t[idx_liq])) - 1.)
-                                     + 0.78614)
+            e_sat[idx_liq] = 10. ** (10.79574 * (1. - ts / t[idx_liq]) -
+                                     5.02800 * numpy.log10(t[idx_liq] / ts) +
+                                     1.50475E-4 * (1. - 10. ** (-8.2969 * (t[idx_liq] / ts - 1.))) +
+                                     0.42873E-3 * (10. ** (+4.76955 * (1. - ts / t[idx_liq])) - 1.) +
+                                     0.78614)
 
         elif liquid == 'WMO2000':
             # WMO formulation, which is very similar to Goff Gratch
@@ -210,20 +207,20 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # General Meteorological Standards and Recommended Practices,
             # App. A, Corrigendum Aug 2000.
             ts = 273.16  # steam point temperature in K
-            e_sat[idx_liq] = 10. ** (10.79574 * (1. - ts / t[idx_liq])
-                                     - 5.02800 * numpy.log10(t[idx_liq] / ts)
-                                     + 1.50475E-4 * (1. - 10. ** (-8.2969 * (t[idx_liq] / ts - 1.)))
-                                     + 0.42873E-3 * (10. ** (-4.76955 * (1. - ts / t[idx_liq])) - 1.)
-                                     + 0.78614)
+            e_sat[idx_liq] = 10. ** (10.79574 * (1. - ts / t[idx_liq]) -
+                                     5.02800 * numpy.log10(t[idx_liq] / ts) +
+                                     1.50475E-4 * (1. - 10. ** (-8.2969 * (t[idx_liq] / ts - 1.))) +
+                                     0.42873E-3 * (10. ** (-4.76955 * (1. - ts / t[idx_liq])) - 1.) +
+                                     0.78614)
 
         elif liquid == 'Sonntag':
             # Source: Sonntag, D., Advancements in the field of hygrometry,
             # Meteorol. Z., N. F., 3, 51-66, 1994.
-            e_sat[idx_liq] = numpy.exp(-6096.9385 * t[idx_liq] ** (-1.)
-                                       + 16.635794
-                                       - 2.711193E-2 * t[idx_liq] ** 1.
-                                       + 1.673952E-5 * t[idx_liq] ** 2.
-                                       + 2.433502 * numpy.log(t[idx_liq]))
+            e_sat[idx_liq] = numpy.exp(-6096.9385 * t[idx_liq] ** (-1.) +
+                                       16.635794 -
+                                       2.711193E-2 * t[idx_liq] ** 1. +
+                                       1.673952E-5 * t[idx_liq] ** 2. +
+                                       2.433502 * numpy.log(t[idx_liq]))
 
         elif liquid == 'Bolton':
             # Source: Bolton, D., The computation of equivalent potential
@@ -280,20 +277,20 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             a5 = -15.9618719
             a6 = 1.80122502
             e_sat[idx_liq] = Pc * numpy.exp(Tc / t[idx_liq] *
-                                            (a1 * nu + a2 * nu ** 1.5 + a3 * nu ** 3.
-                                             + a4 * nu ** 3.5 + a5 * nu ** 4. + a6 * nu ** 7.5))
+                                            (a1 * nu + a2 * nu ** 1.5 + a3 * nu ** 3. +
+                                             a4 * nu ** 3.5 + a5 * nu ** 4. + a6 * nu ** 7.5))
 
         elif liquid == 'MurphyKoop':
             # Source : Murphy and Koop, Review of the vapour pressure
             # of ice and supercooled water for atmospheric applications,
             # Q. J. R. Meteorol. Soc (2005), 131, pp. 1539-1565.
-            e_sat[idx_liq] = numpy.exp(54.842763 - 6763.22 / t[idx_liq]
-                                       - 4.210 * numpy.log(t[idx_liq])
-                                       + 0.000367 * t[idx_liq]
-                                       + numpy.tanh(0.0415 * (t[idx_liq] - 218.8))
-                                       * (53.878 - 1331.22 / t[idx_liq]
-                                          - 9.44523 * numpy.log(t[idx_liq])
-                                          + 0.014025 * t[idx_liq])) / 100.
+            e_sat[idx_liq] = numpy.exp(54.842763 - 6763.22 / t[idx_liq] -
+                                       4.210 * numpy.log(t[idx_liq]) +
+                                       0.000367 * t[idx_liq] +
+                                       numpy.tanh(0.0415 * (t[idx_liq] - 218.8)) *
+                                       (53.878 - 1331.22 / t[idx_liq] -
+                                       9.44523 * numpy.log(t[idx_liq]) +
+                                       0.014025 * t[idx_liq])) / 100.
 
         else:
             raise VapourPressureError("Unkown method for computing "
@@ -320,13 +317,13 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # Source Hyland, R. W. and A. Wexler, Formulations for the
             # Thermodynamic Properties of the saturated Phases of H2O
             # from 173.15K to 473.15K, ASHRAE Trans, 89(2A), 500-519, 1983.
-            e_sat[idx_ice] = numpy.exp(-0.56745359E4 / t[idx_ice]
-                                       + 0.63925247E1
-                                       - 0.96778430E-2 * t[idx_ice]
-                                       + 0.62215701E-6 * t[idx_ice] ** 2.
-                                       + 0.20747825E-8 * t[idx_ice] ** 3.
-                                       - 0.94840240E-12 * t[idx_ice] ** 4.
-                                       + 0.41635019E1 * numpy.log(t[idx_ice])) / 100.
+            e_sat[idx_ice] = numpy.exp(-0.56745359E4 / t[idx_ice] +
+                                       0.63925247E1 -
+                                       0.96778430E-2 * t[idx_ice] +
+                                       0.62215701E-6 * t[idx_ice] ** 2. +
+                                       0.20747825E-8 * t[idx_ice] ** 3. -
+                                       0.94840240E-12 * t[idx_ice] ** 4. +
+                                       0.41635019E1 * numpy.log(t[idx_ice])) / 100.
 
         elif ice == 'GoffGratch':
             # Source: Smithsonian Meteorological Tables, 5th edition,
@@ -335,10 +332,10 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             ei0 = 6.1071  # mbar
             T0 = 273.16  # freezing point in K
 
-            e_sat[idx_ice] = 10. ** (-9.09718 * (T0 / t[idx_ice] - 1.)
-                                     - 3.56654 * numpy.log10(T0 / t[idx_ice])
-                                     + 0.876793 * (1. - t[idx_ice] / T0)
-                                     + numpy.log10(ei0))
+            e_sat[idx_ice] = 10. ** (-9.09718 * (T0 / t[idx_ice] - 1.) -
+                                     3.56654 * numpy.log10(T0 / t[idx_ice]) +
+                                     0.876793 * (1. - t[idx_ice] / T0) +
+                                     numpy.log10(ei0))
 
         elif ice == 'MagnusTeten':
             # Source: Murray, F. W., On the computation of saturation
@@ -359,8 +356,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # Source: Buck Research, Model CR-1A Hygrometer Operating
             # Manual, Sep 2001
             tc = t - 273.15
-            e_sat[idx_ice] = 6.1115 * numpy.exp((23.036 - tc[idx_ice] / 333.7)
-                                                * tc[idx_ice] / (279.82 + tc[idx_ice]))
+            e_sat[idx_ice] = 6.1115 * numpy.exp((23.036 - tc[idx_ice] / 333.7) *
+                                                tc[idx_ice] / (279.82 + tc[idx_ice]))
 
         elif ice == 'WMO_Goff':
             # WMO formulation, which is very similar to Goff Gratch
@@ -370,26 +367,26 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
             T0 = 273.16  # steam point temperature in K
 
-            e_sat[idx_ice] = 10. ** (-9.09685 * (T0 / t[idx_ice] - 1.)
-                                     - 3.56654 * numpy.log10(T0 / t[idx_ice])
-                                     + 0.87682 * (1. - t[idx_ice] / T0) + 0.78614)
+            e_sat[idx_ice] = 10. ** (-9.09685 * (T0 / t[idx_ice] - 1.) -
+                                     3.56654 * numpy.log10(T0 / t[idx_ice]) +
+                                     0.87682 * (1. - t[idx_ice] / T0) + 0.78614)
 
         elif ice == 'Sonntag':
             # Source: Sonntag, D., Advancements in the field of hygrometry,
             # Meteorol. Z., N. F., 3, 51-66, 1994.
-            e_sat[idx_ice] = numpy.exp(-6024.5282 * t[idx_ice] ** (-1.)
-                                       + 24.721994
-                                       + 1.0613868E-2 * t[idx_ice] ** 1.
-                                       - 1.3198825E-5 * t[idx_ice] ** 2.
-                                       - 0.49382577 * numpy.log(t[idx_ice]))
+            e_sat[idx_ice] = numpy.exp(-6024.5282 * t[idx_ice] ** (-1.) +
+                                       24.721994 +
+                                       1.0613868E-2 * t[idx_ice] ** 1. -
+                                       1.3198825E-5 * t[idx_ice] ** 2. -
+                                       0.49382577 * numpy.log(t[idx_ice]))
 
         elif ice == 'MurphyKoop':
             # Source: Murphy and Koop, Review of the vapour pressure of ice
             # and supercooled water for atmospheric applications, Q. J. R.
             # Meteorol. Soc (2005), 131, pp. 1539-1565.
-            e_sat[idx_ice] = numpy.exp(9.550426 - 5723.265 / t[idx_ice]
-                                       + 3.53068 * numpy.log(t[idx_ice])
-                                       - 0.00728332 * t[idx_ice]) / 100.
+            e_sat[idx_ice] = numpy.exp(9.550426 - 5723.265 / t[idx_ice] +
+                                       3.53068 * numpy.log(t[idx_ice]) -
+                                       0.00728332 * t[idx_ice]) / 100.
 
         else:
             raise VapourPressureError("Unkown method for computing "

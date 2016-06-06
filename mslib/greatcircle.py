@@ -303,12 +303,12 @@ def vinc_pt(f, a, phi1, lembda1, alpha12, s):
     while (abs((last_sigma - sigma) / sigma) > 1.0e-9):
         two_sigma_m = 2 * sigma1 + sigma
 
-        delta_sigma = B * math.sin(sigma) * (math.cos(two_sigma_m)
-                                             + (B / 4) * (math.cos(sigma) *
-                                                          (-1 + 2 * math.pow(math.cos(two_sigma_m), 2) -
-                                                           (B / 6) * math.cos(two_sigma_m) *
-                                                           (-3 + 4 * math.pow(math.sin(sigma), 2)) *
-                                                           (-3 + 4 * math.pow(math.cos(two_sigma_m), 2)))))
+        delta_sigma = B * math.sin(sigma) * (math.cos(two_sigma_m) +
+                                             (B / 4) * (math.cos(sigma) *
+                                                        (-1 + 2 * math.pow(math.cos(two_sigma_m), 2) -
+                                                         (B / 6) * math.cos(two_sigma_m) *
+                                                         (-3 + 4 * math.pow(math.sin(sigma), 2)) *
+                                                         (-3 + 4 * math.pow(math.cos(two_sigma_m), 2)))))
 
         last_sigma = sigma
         sigma = (s / (b * A)) + delta_sigma

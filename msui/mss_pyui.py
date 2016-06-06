@@ -400,8 +400,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         # editable.
         listitem = QFlightTrackListWidgetItem(waypoints_model,
                                               self.listFlightTracks)
-        listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable
-                          | QtCore.Qt.ItemIsEnabled)
+        listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
         if activate:
             self.listFlightTracks.setCurrentItem(listitem)

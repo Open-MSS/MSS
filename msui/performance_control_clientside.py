@@ -393,8 +393,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         self.cbAircraftConfig.clear()
         self.cbAircraftConfig.addItems(aircraft.availableConfigurations)
 
-        self.sbTakeoffWeight.setMinimum(aircraft.maximumTakeoffWeight_lbs
-                                        - aircraft.fuelCapacity_lbs)
+        self.sbTakeoffWeight.setMinimum(aircraft.maximumTakeoffWeight_lbs - aircraft.fuelCapacity_lbs)
         self.sbTakeoffWeight.setMaximum(aircraft.maximumTakeoffWeight_lbs)
         self.sbTakeoffWeight.setValue(aircraft.maximumTakeoffWeight_lbs)
 
