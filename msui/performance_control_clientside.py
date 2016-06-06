@@ -648,7 +648,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         for f, fsize, fage in files:
             cum_size_bytes += fsize
             if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or \
-                            fage > mss_settings.wms_cache_max_age_seconds:
+                fage > mss_settings.wms_cache_max_age_seconds:
                 os.remove(f)
                 removed_files += 1
 
