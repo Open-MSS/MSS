@@ -804,7 +804,6 @@ class MSS_WMSResponse(object):
                       "\n\nError message: %s" % e
                 return self.service_exception(text=msg), None
 
-
         elif mode == "GetVSec":
 
             # Vertical secton path.
@@ -962,13 +961,11 @@ if __name__ == '__main__':
 
         realm = 'DLR/IPA Mission Support Web Map Service'
 
-
         def authfunc(environ, username, password):
             for u, p in mss_wms_settings.allowed_users:
                 if (u == username) and (p == hashlib.md5(password).hexdigest()):
                     return True
             return False
-
 
         app = AuthBasicHandler(app, realm, authfunc)
 
