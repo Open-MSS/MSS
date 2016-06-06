@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_WMSAuthenticationDialog(object):
     def setupUi(self, WMSAuthenticationDialog):
         WMSAuthenticationDialog.setObjectName("WMSAuthenticationDialog")
@@ -51,7 +52,7 @@ class Ui_WMSAuthenticationDialog(object):
         self.verticalLayout.addItem(spacerItem)
         self.buttonBox = QtGui.QDialogButtonBox(WMSAuthenticationDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
@@ -61,9 +62,16 @@ class Ui_WMSAuthenticationDialog(object):
         QtCore.QMetaObject.connectSlotsByName(WMSAuthenticationDialog)
 
     def retranslateUi(self, WMSAuthenticationDialog):
-        WMSAuthenticationDialog.setWindowTitle(QtGui.QApplication.translate("WMSAuthenticationDialog", "HTTP Authentication", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblMessage.setText(QtGui.QApplication.translate("WMSAuthenticationDialog", "Web Map Service", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("WMSAuthenticationDialog", "The server you are trying to connect requires a username and a password:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("WMSAuthenticationDialog", "User name:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("WMSAuthenticationDialog", "Password:", None, QtGui.QApplication.UnicodeUTF8))
-
+        WMSAuthenticationDialog.setWindowTitle(
+            QtGui.QApplication.translate("WMSAuthenticationDialog", "HTTP Authentication", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.lblMessage.setText(QtGui.QApplication.translate("WMSAuthenticationDialog", "Web Map Service", None,
+                                                             QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("WMSAuthenticationDialog",
+                                                        "The server you are trying to connect requires a "
+                                                        "username and a password:",
+                                                        None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(
+            QtGui.QApplication.translate("WMSAuthenticationDialog", "User name:", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(
+            QtGui.QApplication.translate("WMSAuthenticationDialog", "Password:", None, QtGui.QApplication.UnicodeUTF8))

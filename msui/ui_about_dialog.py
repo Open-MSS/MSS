@@ -16,11 +16,13 @@ except AttributeError:
 
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
+
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+
 
 class Ui_AboutMSUIDialog(object):
     def setupUi(self, AboutMSUIDialog):
@@ -77,10 +79,11 @@ class Ui_AboutMSUIDialog(object):
     def retranslateUi(self, AboutMSUIDialog):
         AboutMSUIDialog.setWindowTitle(_translate("AboutMSUIDialog", "About MSUI", None))
         self.label.setText(_translate("AboutMSUIDialog", "Mission Support System User Interface", None))
-        self.label_2.setText(_translate("AboutMSUIDialog", "User Interface Application of the DLR/IPA Mission Support System", None))
+        self.label_2.setText(
+            _translate("AboutMSUIDialog", "User Interface Application of the DLR/IPA Mission Support System", None))
         self.lblVersion.setText(_translate("AboutMSUIDialog", "--VERSION--", None))
-        self.label_3.setText(_translate("AboutMSUIDialog", "Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.", None))
+        self.label_3.setText(
+            _translate("AboutMSUIDialog", "Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.", None))
         self.label_4.setText(_translate("AboutMSUIDialog", "Copyright 2011-2014 Marc Rautenhaus", None))
         self.label_5.setText(_translate("AboutMSUIDialog", "See the files README, LICENSE, NOTICE for details.", None))
         self.btOK.setText(_translate("AboutMSUIDialog", "Ok", None))
-

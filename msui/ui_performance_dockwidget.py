@@ -13,6 +13,7 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
+
 class Ui_PerformanceDockWidget(object):
     def setupUi(self, PerformanceDockWidget):
         PerformanceDockWidget.setObjectName(_fromUtf8("PerformanceDockWidget"))
@@ -323,46 +324,110 @@ class Ui_PerformanceDockWidget(object):
         QtCore.QMetaObject.connectSlotsByName(PerformanceDockWidget)
 
     def retranslateUi(self, PerformanceDockWidget):
-        PerformanceDockWidget.setWindowTitle(QtGui.QApplication.translate("PerformanceDockWidget", "Flight Performance Service Dock Widget", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_7.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Flight Perf. Serv. URL:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbURL.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget", "Enter a valid flight performance service URL here.", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbURL.setItemText(0, QtGui.QApplication.translate("PerformanceDockWidget", "http://localhost:8002/fc_wms", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbURL.setItemText(1, QtGui.QApplication.translate("PerformanceDockWidget", "http://osm.omniscale.net/proxy/service", None, QtGui.QApplication.UnicodeUTF8))
-        self.btGetCapabilities.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget", "Request the capabilities from the server.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btGetCapabilities.setText(QtGui.QApplication.translate("PerformanceDockWidget", "get capabilities", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbViewCapabilities.setText(QtGui.QApplication.translate("PerformanceDockWidget", "view", None, QtGui.QApplication.UnicodeUTF8))
-        self.btComputePerformance.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget", "Request the computation of the flight performance with the specifed parameters.", None, QtGui.QApplication.UnicodeUTF8))
-        self.btComputePerformance.setText(QtGui.QApplication.translate("PerformanceDockWidget", "compute performance", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_8.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Mode:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbMode.setItemText(0, QtGui.QApplication.translate("PerformanceDockWidget", "NO_NWP.TAKEOFF_WEIGHT", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_11.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Aircraft configuration:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbAircraft.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget", "Choose an aircraft configuration you would like to use.", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbAircraft.setItemText(0, QtGui.QApplication.translate("PerformanceDockWidget", "HALO (+10 DC)", None, QtGui.QApplication.UnicodeUTF8))
-        self.teLayerAbstract.setHtml(QtGui.QApplication.translate("PerformanceDockWidget", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'Sans Serif\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Specify the time at an arbitrary waypoint and the (takeoff or landing) weight of the aircraft:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbTimeOn.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Time:", None, QtGui.QApplication.UnicodeUTF8))
-        self.dteTime.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget", "The time at which you would like the aircraft to be at the waypoint you specify in the edit field to the right.", None, QtGui.QApplication.UnicodeUTF8))
-        self.dteTime.setDisplayFormat(QtGui.QApplication.translate("PerformanceDockWidget", "yyyy/MM/dd hh:mm UTC", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("PerformanceDockWidget", "at waypoint no.", None, QtGui.QApplication.UnicodeUTF8))
-        self.sbWaypoint.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget", "The number of the waypoint at which you would like the aircraft to be at the time you have specified.", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbMoreOptions.setText(QtGui.QApplication.translate("PerformanceDockWidget", "(more)", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbWeightOn.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Weight:", None, QtGui.QApplication.UnicodeUTF8))
-        self.sbWeight.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget", "Either the takeoff weight or the landing weight of the aircraft, depending on the mode you have selected.", None, QtGui.QApplication.UnicodeUTF8))
-        self.sbWeight.setSuffix(QtGui.QApplication.translate("PerformanceDockWidget", " lbs", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbInitialisationOn.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Initialisation:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbInitTime.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget", "If the mode you have selected uses NWP data, select a forecast initialisation time.", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbInitTime.setItemText(0, QtGui.QApplication.translate("PerformanceDockWidget", "2010-12-12T00:00:00Z", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbInitTime_cbback.setText(QtGui.QApplication.translate("PerformanceDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbInitTime_cbfwd.setText(QtGui.QApplication.translate("PerformanceDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblInterpolation.setText(QtGui.QApplication.translate("PerformanceDockWidget", "When using NWP data:", None, QtGui.QApplication.UnicodeUTF8))
-        self.rbNWPnointerpolation.setText(QtGui.QApplication.translate("PerformanceDockWidget", "use nearest grid point", None, QtGui.QApplication.UnicodeUTF8))
-        self.rbNWPinterpolation.setText(QtGui.QApplication.translate("PerformanceDockWidget", "interpolate linearly", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblAccuracy.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Computation points between waypoints:", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbOptionsBack.setText(QtGui.QApplication.translate("PerformanceDockWidget", "(back)", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblDecline.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Engine power decline:", None, QtGui.QApplication.UnicodeUTF8))
-        self.sbEngineDecline.setSuffix(QtGui.QApplication.translate("PerformanceDockWidget", " %", None, QtGui.QApplication.UnicodeUTF8))
-
+        PerformanceDockWidget.setWindowTitle(
+            QtGui.QApplication.translate("PerformanceDockWidget", "Flight Performance Service Dock Widget", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.label_7.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Flight Perf. Serv. URL:", None,
+                                                          QtGui.QApplication.UnicodeUTF8))
+        self.cbURL.setToolTip(
+            QtGui.QApplication.translate("PerformanceDockWidget", "Enter a valid flight performance service URL here.",
+                                         None, QtGui.QApplication.UnicodeUTF8))
+        self.cbURL.setItemText(0, QtGui.QApplication.translate("PerformanceDockWidget", "http://localhost:8002/fc_wms",
+                                                               None, QtGui.QApplication.UnicodeUTF8))
+        self.cbURL.setItemText(1, QtGui.QApplication.translate("PerformanceDockWidget",
+                                                               "http://osm.omniscale.net/proxy/service", None,
+                                                               QtGui.QApplication.UnicodeUTF8))
+        self.btGetCapabilities.setToolTip(
+            QtGui.QApplication.translate("PerformanceDockWidget", "Request the capabilities from the server.", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btGetCapabilities.setText(QtGui.QApplication.translate("PerformanceDockWidget", "get capabilities", None,
+                                                                    QtGui.QApplication.UnicodeUTF8))
+        self.tbViewCapabilities.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "view", None, QtGui.QApplication.UnicodeUTF8))
+        self.btComputePerformance.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget",
+                                                                          "Request the computation of the flight "
+                                                                          "performance with the specifed parameters.",
+                                                                          None, QtGui.QApplication.UnicodeUTF8))
+        self.btComputePerformance.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "compute performance", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.label_8.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "Mode:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbMode.setItemText(0, QtGui.QApplication.translate("PerformanceDockWidget", "NO_NWP.TAKEOFF_WEIGHT", None,
+                                                                QtGui.QApplication.UnicodeUTF8))
+        self.label_11.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Aircraft configuration:", None,
+                                                           QtGui.QApplication.UnicodeUTF8))
+        self.cbAircraft.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget",
+                                                                "Choose an aircraft configuration you would like "
+                                                                "to use.",
+                                                                None, QtGui.QApplication.UnicodeUTF8))
+        self.cbAircraft.setItemText(0, QtGui.QApplication.translate("PerformanceDockWidget", "HALO (+10 DC)", None,
+                                                                    QtGui.QApplication.UnicodeUTF8))
+        self.teLayerAbstract.setHtml(QtGui.QApplication.translate("PerformanceDockWidget", """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<html><head><meta name="qrichtext" content="1" /><style type="text/css">
+p, li { white-space: pre-wrap; }
+</style></head><body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;>
+<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; \
+-qt-block-indent:0; text-indent:0px; font-size:10pt;"><br /></p></body></html>""", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("PerformanceDockWidget",
+                                                          "Specify the time at an arbitrary waypoint and the "
+                                                          "(takeoff or landing) weight of the aircraft:",
+                                                          None, QtGui.QApplication.UnicodeUTF8))
+        self.cbTimeOn.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "Time:", None, QtGui.QApplication.UnicodeUTF8))
+        self.dteTime.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget",
+                                                             "The time at which you would like the aircraft to be at "
+                                                             "the waypoint you specify in the edit field to the right.",
+                                                             None, QtGui.QApplication.UnicodeUTF8))
+        self.dteTime.setDisplayFormat(
+            QtGui.QApplication.translate("PerformanceDockWidget", "yyyy/MM/dd hh:mm UTC", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("PerformanceDockWidget", "at waypoint no.", None,
+                                                        QtGui.QApplication.UnicodeUTF8))
+        self.sbWaypoint.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget",
+                                                                "The number of the waypoint at which you would like "
+                                                                "the aircraft to be at the time you have specified.",
+                                                                None, QtGui.QApplication.UnicodeUTF8))
+        self.tbMoreOptions.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "(more)", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbWeightOn.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "Weight:", None, QtGui.QApplication.UnicodeUTF8))
+        self.sbWeight.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget",
+                                                              "Either the takeoff weight or the landing weight of "
+                                                              "the aircraft, depending on the mode you have selected.",
+                                                              None, QtGui.QApplication.UnicodeUTF8))
+        self.sbWeight.setSuffix(
+            QtGui.QApplication.translate("PerformanceDockWidget", " lbs", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbInitialisationOn.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Initialisation:", None,
+                                                                     QtGui.QApplication.UnicodeUTF8))
+        self.cbInitTime.setToolTip(QtGui.QApplication.translate("PerformanceDockWidget",
+                                                                "If the mode you have selected uses NWP data, "
+                                                                "select a forecast initialisation time.",
+                                                                None, QtGui.QApplication.UnicodeUTF8))
+        self.cbInitTime.setItemText(0,
+                                    QtGui.QApplication.translate("PerformanceDockWidget", "2010-12-12T00:00:00Z", None,
+                                                                 QtGui.QApplication.UnicodeUTF8))
+        self.tbInitTime_cbback.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "<", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbInitTime_cbfwd.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblInterpolation.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "When using NWP data:", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.rbNWPnointerpolation.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "use nearest grid point", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.rbNWPinterpolation.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "interpolate linearly", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.lblAccuracy.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "Computation points between waypoints:", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.tbOptionsBack.setText(
+            QtGui.QApplication.translate("PerformanceDockWidget", "(back)", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblDecline.setText(QtGui.QApplication.translate("PerformanceDockWidget", "Engine power decline:", None,
+                                                             QtGui.QApplication.UnicodeUTF8))
+        self.sbEngineDecline.setSuffix(
+            QtGui.QApplication.translate("PerformanceDockWidget", " %", None, QtGui.QApplication.UnicodeUTF8))

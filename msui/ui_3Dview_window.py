@@ -8,6 +8,8 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
+from mss3Dwidget import MSS3DWidget
+
 
 class Ui_View3DWindow(object):
     def setupUi(self, View3DWindow):
@@ -51,8 +53,12 @@ class Ui_View3DWindow(object):
         QtCore.QMetaObject.connectSlotsByName(View3DWindow)
 
     def retranslateUi(self, View3DWindow):
-        View3DWindow.setWindowTitle(QtGui.QApplication.translate("View3DWindow", "3D View - DLR/IPA Mission Support", None, QtGui.QApplication.UnicodeUTF8))
-        self.tab3DView.setTabText(self.tab3DView.indexOf(self.tab_3), QtGui.QApplication.translate("View3DWindow", "Flight Track", None, QtGui.QApplication.UnicodeUTF8))
-        self.tab3DView.setTabText(self.tab3DView.indexOf(self.tab_4), QtGui.QApplication.translate("View3DWindow", "Terrain", None, QtGui.QApplication.UnicodeUTF8))
-
-from mss3Dwidget import MSS3DWidget
+        View3DWindow.setWindowTitle(
+            QtGui.QApplication.translate("View3DWindow", "3D View - DLR/IPA Mission Support", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.tab3DView.setTabText(self.tab3DView.indexOf(self.tab_3),
+                                  QtGui.QApplication.translate("View3DWindow", "Flight Track", None,
+                                                               QtGui.QApplication.UnicodeUTF8))
+        self.tab3DView.setTabText(self.tab3DView.indexOf(self.tab_4),
+                                  QtGui.QApplication.translate("View3DWindow", "Terrain", None,
+                                                               QtGui.QApplication.UnicodeUTF8))

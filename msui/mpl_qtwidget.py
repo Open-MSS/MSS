@@ -27,6 +27,22 @@ AUTHORS:
 * Marc Rautenhaus (mr)
 
 """
+# standard library imports
+import logging
+from datetime import datetime
+
+# related third party imports
+import numpy as np
+import matplotlib.pyplot as plt
+
+# local application imports
+import flighttrack as ft
+import mpl_pathinteractor as mpl_pi
+import mpl_map
+import trajectory_item_tree as titree
+from mslib import thermolib
+import mss_settings
+
 
 # Python Qt4 bindings for GUI objects
 from PyQt4 import QtGui, QtCore
@@ -43,11 +59,11 @@ from matplotlib.backends.backend_qt4agg \
 # Matplotlib Figure object
 from matplotlib.figure import Figure
 
-
 # With Matplotlib 1.2, PIL images are rotated differently when plotted with
 # imshow(). See Basemap __init__.py file, in which the same issue occurs
 # (https://github.com/matplotlib/basemap/pull/52). (mr, 08Feb2013)
 from matplotlib import __version__ as _matplotlib_version
+
 if _matplotlib_version >= '1.2':
     # orientation of arrays returned by pil_to_array
     # changed (https://github.com/matplotlib/matplotlib/pull/616)
@@ -55,10 +71,10 @@ if _matplotlib_version >= '1.2':
 else:
     PIL_image_origin = "lower"
 
+"""
+Matplotlib Qt Canvas
+"""
 
-################################################################################
-###                         Matplotlib Qt Canvas                             ###
-################################################################################
 
 class MplCanvas(FigureCanvas):
     """Class to represent the FigureCanvas widget.
@@ -69,7 +85,7 @@ class MplCanvas(FigureCanvas):
 
     def __init__(self):
         # setup Matplotlib Figure and Axis
-        self.fig = Figure(facecolor="w") # 0.75
+        self.fig = Figure(facecolor="w")  # 0.75
         self.ax = self.fig.add_subplot(111, zorder=99)
 
         # initialization of the canvas
@@ -82,7 +98,6 @@ class MplCanvas(FigureCanvas):
 
         # notify the system of updated policy
         FigureCanvas.updateGeometry(self)
-
 
     def drawMetadata(self, title="", init_time=None, valid_time=None,
                      level=None, style=None, tp=None):
@@ -123,7 +138,6 @@ class MplCanvas(FigureCanvas):
         self.ax.set_title(title, horizontalalignment='left', x=0)
         self.draw()
 
-
     def getPlotSizePx(self):
         """Determines the size of the current figure in pixels.
 
@@ -136,10 +150,11 @@ class MplCanvas(FigureCanvas):
         return width, height
 
 
-################################################################################
-###                        Matplotlib Qt Widget                              ###
-################################################################################
-        
+"""
+Matplotlib Qt Widget
+"""
+
+
 class MplWidget(QtGui.QWidget):
     """Matplotlib canvas widget defined in Qt Designer"""
 
@@ -187,26 +202,9 @@ class MplNavBarWidget(QtGui.QWidget):
         self.setLayout(self.vbl)
 
 
-
-################################################################################
-###                      Side View Canvas and Widget                         ###
-################################################################################
-
-# standard library imports
-import logging
-from datetime import datetime
-
-# related third party imports
-import numpy as np
-import matplotlib.pyplot as plt
-
-# local application imports
-import flighttrack as ft
-import mpl_pathinteractor as mpl_pi
-import mpl_map
-import trajectory_item_tree as titree
-from mslib import thermolib
-import mss_settings
+"""
+Side View Canvas and Widget
+"""
 
 
 class MplSideViewCanvas(MplCanvas):
@@ -229,9 +227,9 @@ class MplSideViewCanvas(MplCanvas):
                               "draw_flighttrack": True,
                               "fill_flighttrack": True,
                               "label_flighttrack": True,
-                              "colour_ft_vertices": (0,0,1,1),
-                              "colour_ft_waypoints": (1,0,0,1),
-                              "colour_ft_fill": (0,0,1,0.15)}
+                              "colour_ft_vertices": (0, 0, 1, 1),
+                              "colour_ft_waypoints": (1, 0, 0, 1),
+                              "colour_ft_fill": (0, 0, 1, 0.15)}
         if settings is not None:
             self.settings_dict.update(settings)
 
@@ -253,7 +251,6 @@ class MplSideViewCanvas(MplCanvas):
 
         self.setSettings(self.settings_dict)
 
-
     def setWaypointsModel(self, model):
         """Set the WaypointsTableModel defining the vertical section.
         If no model had been set before, create a new interactor object on the
@@ -266,24 +263,23 @@ class MplSideViewCanvas(MplCanvas):
             # Create a path interactor object. The interactor object connects
             # itself to the change() signals of the flight track data model.
             self.waypoints_interactor = mpl_pi.VPathInteractor(
-                                             self.ax, self.waypoints_model,
-                                             numintpoints=mss_settings.num_interpolation_points,
-                                             redrawXAxis=self.redrawXAxis
-                                             )
-
+                self.ax, self.waypoints_model,
+                numintpoints=mss_settings.num_interpolation_points,
+                redrawXAxis=self.redrawXAxis
+            )
 
     def setupSideView(self):
         """Set up a vertical section view.
-        
+
         Vertical cross section code (log-p axis etc.) taken from
         mss_batch_production/visualisation/mpl_vsec.py.
         """
         ax = self.ax
         self.fig.subplots_adjust(left=0.08, right=0.96,
                                  top=0.9, bottom=0.14)
-        
+
         ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
-        ax.set_xlim(0,10)
+        ax.set_xlim(0, 10)
 
         p_bot = self.p_bot
         p_top = self.p_top
@@ -295,32 +291,32 @@ class MplSideViewCanvas(MplCanvas):
         # the distance is reduced to every 10hPa above 100hPa.
         label_distance = 10000
         label_bot = p_bot - (p_bot % label_distance)
-        major_ticks = np.arange(label_bot, p_top-1, -label_distance)
+        major_ticks = np.arange(label_bot, p_top - 1, -label_distance)
 
         # .. check step reduction to 10 hPa ..
         if p_top < 10000:
-            major_ticks2 = np.arange(major_ticks[-1], p_top-1,
-                                        -label_distance/10)
+            major_ticks2 = np.arange(major_ticks[-1], p_top - 1,
+                                     -label_distance / 10)
             len_major_ticks = len(major_ticks)
             major_ticks = np.resize(major_ticks,
-                                       len_major_ticks+len(major_ticks2)-1)
+                                    len_major_ticks + len(major_ticks2) - 1)
             major_ticks[len_major_ticks:] = major_ticks2[1:]
 
-        labels = ['%i'%(l/100.) for l in major_ticks]
+        labels = ['%i' % (l / 100.) for l in major_ticks]
 
         # .. the same for the minor ticks ..
-        p_top_minor = max(label_distance,p_top)
+        p_top_minor = max(label_distance, p_top)
         label_distance_minor = 1000
         label_bot_minor = p_bot - (p_bot % label_distance_minor)
-        minor_ticks = np.arange(label_bot_minor, p_top_minor-1,
-                                   -label_distance_minor)
+        minor_ticks = np.arange(label_bot_minor, p_top_minor - 1,
+                                -label_distance_minor)
 
         if p_top < 10000:
-            minor_ticks2 = np.arange(minor_ticks[-1], p_top-1,
-                                        -label_distance_minor/10)
+            minor_ticks2 = np.arange(minor_ticks[-1], p_top - 1,
+                                     -label_distance_minor / 10)
             len_minor_ticks = len(minor_ticks)
             minor_ticks = np.resize(minor_ticks,
-                                       len_minor_ticks+len(minor_ticks2)-1)
+                                    len_minor_ticks + len(minor_ticks2) - 1)
             minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
 
         # Draw ticks and tick labels.
@@ -335,13 +331,12 @@ class MplSideViewCanvas(MplCanvas):
         ax.set_xlabel("lat/lon")
         ax.set_ylabel("pressure (hPa)")
 
-
     def redrawXAxis(self, lats, lons):
         """Redraw the x-axis of the side view on path changes. Also remove
            a vertical section image if one exists, as it is invalid after
            a path change.
         """
-        logging.debug("path of side view has changed.. removing invalidated "\
+        logging.debug("path of side view has changed.. removing invalidated "
                       "image (if existent) and redrawing.")
 
         # Remove image (it is now invalid).
@@ -351,16 +346,15 @@ class MplSideViewCanvas(MplCanvas):
             self.ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
 
         # Re-label x-axis.
-        self.ax.set_xlim(0, len(lats)-1)
+        self.ax.set_xlim(0, len(lats) - 1)
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
         lat_inds = np.arange(len(lats))
-        tick_index_step = len(lat_inds)/self.numlabels
+        tick_index_step = len(lat_inds) / self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
-        self.ax.set_xticklabels(["%2.1f, %2.1f" % (d[0], d[1]) \
+        self.ax.set_xticklabels(["%2.1f, %2.1f" % (d[0], d[1])
                                  for d in zip(lats[::tick_index_step],
                                               lons[::tick_index_step])],
                                 rotation=25, fontsize=10, horizontalalignment='right')
-
 
     def setVerticalExtent(self, pbot, ptop):
         """Set the vertical extent of the view to the specified pressure
@@ -380,12 +374,10 @@ class MplSideViewCanvas(MplCanvas):
             self.setupSideView()
             self.waypoints_interactor.redraw_figure()
 
-
     def getVerticalExtent(self):
         """Returns the bottom and top pressure (hPa) of the plot.
         """
-        return self.p_bot/100, self.p_top/100
-
+        return self.p_bot / 100, self.p_top / 100
 
     def drawFlightLevels(self):
         """Draw horizontal lines indicating the altitude of the flight levels.
@@ -394,20 +386,18 @@ class MplSideViewCanvas(MplCanvas):
         for artist in self.fl_label_list:
             artist.remove()
         self.fl_label_list = []
-        # Plot lines indicating flight level altitude.        
+        # Plot lines indicating flight level altitude.
         ax = self.ax
         for level in self.flightlevels:
             pressure = thermolib.flightlevel2pressure(level)
             self.fl_label_list.append(ax.axhline(pressure, color='k'))
-            self.fl_label_list.append(ax.text(0.1, pressure, "FL%i"%level))
+            self.fl_label_list.append(ax.text(0.1, pressure, "FL%i" % level))
         self.draw()
-
 
     def getFlightLevels(self):
         """
         """
         return self.flightlevels
-        
 
     def setFlightLevels(self, flightlevels):
         """
@@ -415,7 +405,6 @@ class MplSideViewCanvas(MplCanvas):
         self.flightlevels = flightlevels
         self.drawFlightLevels()
 
-        
     def setFlightLevelsVisible(self, visible):
         """Toggle the visibility of the flight level lines.
         """
@@ -423,13 +412,11 @@ class MplSideViewCanvas(MplCanvas):
             gxelement.set_visible(visible)
         self.draw()
 
-        
     def getSettings(self):
         """Returns a dictionary containing settings regarding the side view
            appearance.
         """
         return self.settings_dict
-
 
     def setSettings(self, settings):
         """Apply settings to view.
@@ -454,10 +441,9 @@ class MplSideViewCanvas(MplCanvas):
 
         self.settings_dict = settings
 
-
     def getBBOX(self):
         """Get the bounding box of the view (returns a 4-tuple
-           x1, y1(p_bot[hPa]), x2, y2(p_top[hPa])). 
+           x1, y1(p_bot[hPa]), x2, y2(p_top[hPa])).
         """
         # Get the bounding box of the current view
         # (bbox = llcrnrlon, llcrnrlat, urcrnrlon, urcrnrlat; i.e. for the side
@@ -473,10 +459,9 @@ class MplSideViewCanvas(MplCanvas):
 
         # Return a tuple (num_interpolation_points, p_bot[hPa],
         #                 num_labels, p_top[hPa]) as BBOX.
-        bbox = (num_interpolation_points, axis[2]/100,
-                num_labels, axis[3]/100)
+        bbox = (num_interpolation_points, axis[2] / 100,
+                num_labels, axis[3] / 100)
         return bbox
-
 
     def drawImage(self, img):
         """Draw the image img on the current plot.
@@ -493,7 +478,7 @@ class MplSideViewCanvas(MplCanvas):
             # Disable old white figure background so that the new underlying
             # axes become visible.
             self.ax.patch.set_facecolor('None')
-            #self.mpl.canvas.ax.patch.set_alpha(0.5)
+            # self.mpl.canvas.ax.patch.set_alpha(0.5)
 
             # Add new axes to the plot (imshow doesn't work with logarithmic axes).
             ax_bbox = self.ax.get_position()
@@ -509,20 +494,20 @@ class MplSideViewCanvas(MplCanvas):
         # Plot the new image in the image axes and adjust the axes limits.
         self.image = self.imgax.imshow(img, interpolation="nearest", aspect="auto",
                                        origin=PIL_image_origin)
-        self.imgax.set_xlim(0, ix-1)
+        self.imgax.set_xlim(0, ix - 1)
         if _matplotlib_version >= '1.2':
-            self.imgax.set_ylim(iy-1, 0)
+            self.imgax.set_ylim(iy - 1, 0)
         else:
-            self.imgax.set_ylim(0, iy-1)
+            self.imgax.set_ylim(0, iy - 1)
         self.draw()
         logging.debug("done.")
 
-       
 
 class MplSideViewWidget(MplNavBarWidget):
     """MplNavBarWidget using an MplSideViewCanvas as the Matplotlib
        view instance.
     """
+
     def __init__(self, parent=None):
         super(MplSideViewWidget, self).__init__(parent=parent,
                                                 canvas=MplSideViewCanvas())
@@ -536,10 +521,10 @@ class MplSideViewWidget(MplNavBarWidget):
                 action.setEnabled(False)
 
 
+"""
+Top View Canvas and Widget
+"""
 
-################################################################################
-###                       Top View Canvas and Widget                         ###
-################################################################################
 
 class MplTopViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws a top view (map), together with a
@@ -566,7 +551,6 @@ class MplTopViewCanvas(MplCanvas):
         self.pdlg = QtGui.QProgressDialog("redrawing map...", "Cancel",
                                           0, 10, self)
 
-
     def initMap(self, model=None, **kwargs):
         """Set up the map view.
         """
@@ -576,11 +560,10 @@ class MplTopViewCanvas(MplCanvas):
                                      **kwargs)
         ax.set_autoscale_on(False)
         ax.set_title('top view')
-        self.draw() # necessary?
+        self.draw()  # necessary?
 
         if model:
             self.setWaypointsModel(model)
-
 
     def setWaypointsModel(self, model):
         """Set the WaypointsTableModel defining the flight track.
@@ -595,9 +578,9 @@ class MplTopViewCanvas(MplCanvas):
             # itself to the change() signals of the flight track data model.
             appearance = self.getMapAppearance()
             self.waypoints_interactor = mpl_pi.HPathInteractor(
-                                             self.map, self.waypoints_model,
-                                             linecolor=appearance["colour_ft_vertices"],
-                                             markerfacecolor=appearance["colour_ft_waypoints"])
+                self.map, self.waypoints_model,
+                linecolor=appearance["colour_ft_vertices"],
+                markerfacecolor=appearance["colour_ft_waypoints"])
             self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
             self.waypoints_interactor.set_tangent_visible(appearance["draw_tangents"])
             self.waypoints_interactor.set_tangent_color(appearance["colour_tangents"])
@@ -609,7 +592,6 @@ class MplTopViewCanvas(MplCanvas):
         """
         """
         self.map.set_trajectory_tree(model)
-
 
     def redrawMap(self, kwargs_update=None):
         """Redraw map canvas.
@@ -629,18 +611,21 @@ class MplTopViewCanvas(MplCanvas):
         # 1) STORE COORDINATES OF NON-MAP OBJECTS IN LAT/LON.
 
         # (Currently none.)
-        self.pdlg.setValue(1); QtGui.QApplication.processEvents()
+        self.pdlg.setValue(1)
+        QtGui.QApplication.processEvents()
 
         # 2) UPDATE MAP.
         self.map.update_with_coordinate_change(kwargs_update)
-        self.draw() # this one is required to trigger a
-                    # drawevent to update the background
-                    # in waypoints_interactor()
+        self.draw()  # this one is required to trigger a
+        # drawevent to update the background
+        # in waypoints_interactor()
 
-        self.pdlg.setValue(5); QtGui.QApplication.processEvents()
+        self.pdlg.setValue(5)
+        QtGui.QApplication.processEvents()
 
         # 3) UPDATE COORDINATES OF NON-MAP OBJECTS.
-        self.pdlg.setValue(8); QtGui.QApplication.processEvents()
+        self.pdlg.setValue(8)
+        QtGui.QApplication.processEvents()
 
         if self.satoverpasspatch:
             self.satoverpasspatch.update()
@@ -650,11 +635,12 @@ class MplTopViewCanvas(MplCanvas):
             tph = "{:.1f} km".format(self.waypoints_interactor.get_tangent_height())
         self.drawMetadata("Top view", tp=tph)
 
-        self.draw() # without this one the graticule won't plot
-                    # correctly. no idea why..
+        self.draw()  # without this one the graticule won't plot
+        # correctly. no idea why..
         self.waypoints_interactor.update()
 
-        self.pdlg.setValue(10); QtGui.QApplication.processEvents()
+        self.pdlg.setValue(10)
+        QtGui.QApplication.processEvents()
 
         logging.debug("finished redrawing map")
         self.pdlg.close()
@@ -662,16 +648,14 @@ class MplTopViewCanvas(MplCanvas):
         # Emit signal so other parts of the module can react to a redraw event.
         self.emit(QtCore.SIGNAL("redrawn()"))
 
-
     def getCRS(self):
         """Get the coordinate reference system of the displayed map.
         """
         return self.map.crs
 
-
     def getBBOX(self):
         """Get the bounding box of the map (returns a 4-tuple
-           lllon, lllat, urlon, urlat). 
+           lllon, lllat, urlon, urlat).
         """
         # Get the bounding box of the current map view
         # (bbox = llcrnrlon, llcrnrlat, urcrnrlon, urcrnrlat).
@@ -682,10 +666,9 @@ class MplTopViewCanvas(MplCanvas):
             axis0, axis2 = self.map(axis[0], axis[2], inverse=True)
             axis1, axis3 = self.map(axis[1], axis[3], inverse=True)
             axis = [axis0, axis1, axis2, axis3]
-        
+
         bbox = (axis[0], axis[2], axis[1], axis[3])
         return bbox
-
 
     def drawImage(self, img):
         """Draw the image img on the current plot.
@@ -701,10 +684,9 @@ class MplTopViewCanvas(MplCanvas):
         #
         # Question: Is this an issue for us or do we always want the images in the back
         # anyhow? At least we need to remove filled continents here.
-        #self.map.set_fillcontinents_visible(False)
+        # self.map.set_fillcontinents_visible(False)
         # ** UPDATE 2011/01/14 ** seems to work with version 1.0!
         logging.debug("done.")
-
 
     def drawLegend(self, img):
         """Draw the legend graphics img on the current plot.
@@ -724,15 +706,15 @@ class MplTopViewCanvas(MplCanvas):
         # pixels, we need to determine the size of the currently displayed
         # figure in pixels.
         figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
-        ax_extent_x = img.size[0]/figsize_px[0]
-        ax_extent_y = img.size[1]/figsize_px[1]
+        ax_extent_x = img.size[0] / figsize_px[0]
+        ax_extent_y = img.size[1] / figsize_px[1]
 
         # If no legend axes have been created, do so now.
         if self.legax is None:
             # Add new axes to the plot.
             ax_bbox = self.ax.get_position()
             # Main axes instance of mplwidget has zorder 99.
-            self.legax = self.fig.add_axes([1-ax_extent_x,0.01,ax_extent_x,ax_extent_y],
+            self.legax = self.fig.add_axes([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y],
                                            frameon=False,
                                            xticks=[], yticks=[],
                                            label='ax2', zorder=0)
@@ -744,13 +726,12 @@ class MplTopViewCanvas(MplCanvas):
             if self.legimg is not None:
                 self.legimg.remove()
                 self.legimg = None
-            self.legax.set_position([1-ax_extent_x,0.01,ax_extent_x,ax_extent_y])
+            self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
 
         # Plot the new legimg in the legax axes.
         self.legimg = self.legax.imshow(img, origin=PIL_image_origin, aspect="equal",
-                                       interpolation="nearest")
+                                        interpolation="nearest")
         self.draw()
-
 
     def plotSatelliteOverpass(self, segment):
         """Plots a satellite track on top of the map.
@@ -771,25 +752,25 @@ class MplTopViewCanvas(MplCanvas):
 
         If settings is None, apply default settings.
         """
-        #logging.debug("applying map appearance settings %s." % settings)
-        settings =  {"draw_graticule": True,
-                     "draw_coastlines": True,
-                     "fill_waterbodies": True,
-                     "fill_continents": True,
-                     "draw_flighttrack": True,
-                     "label_flighttrack": True,
-                     "draw_tangents": True,
-                     "tangent_height": 1.,
-                     "show_solar_angle": True,
-                     "colour_water": (153/255.,255/255.,255/255.,255/255.),
-                     "colour_land": (204/255.,153/255.,102/255.,255/255.),
-                     "colour_ft_vertices": (0,0,1,1),
-                     "colour_ft_waypoints": (1,0,0,1),
-                     "colour_tangents": (0, 0, 1, 1),
-                     "start_time": datetime.now()}
+        # logging.debug("applying map appearance settings %s." % settings)
+        settings = {"draw_graticule": True,
+                    "draw_coastlines": True,
+                    "fill_waterbodies": True,
+                    "fill_continents": True,
+                    "draw_flighttrack": True,
+                    "label_flighttrack": True,
+                    "draw_tangents": True,
+                    "tangent_height": 1.,
+                    "show_solar_angle": True,
+                    "colour_water": (153 / 255., 255 / 255., 255 / 255., 255 / 255.),
+                    "colour_land": (204 / 255., 153 / 255., 102 / 255., 255 / 255.),
+                    "colour_ft_vertices": (0, 0, 1, 1),
+                    "colour_ft_waypoints": (1, 0, 0, 1),
+                    "colour_tangents": (0, 0, 1, 1),
+                    "start_time": datetime.now()}
         if settings_dict is not None:
             settings.update(settings_dict)
-        
+
         self.appearance_settings = settings
 
         if self.map is not None:
@@ -805,18 +786,17 @@ class MplTopViewCanvas(MplCanvas):
             self.waypoints_interactor.set_vertices_visible(settings["draw_flighttrack"])
             self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
 
-
     def getMapAppearance(self):
         """
         """
         return self.appearance_settings
 
-        
 
 class MplTopViewWidget(MplNavBarWidget):
     """MplNavBarWidget using an MplSideViewCanvas as the Matplotlib
        view instance.
     """
+
     def __init__(self, parent=None):
         super(MplTopViewWidget, self).__init__(parent=parent,
                                                canvas=MplTopViewCanvas())
@@ -833,15 +813,12 @@ class MplTopViewWidget(MplNavBarWidget):
         # Identify zoom events to redraw the map, if necessary.
         self.canvas.mpl_connect('button_release_event', self.zoomEvent)
 
-
-
     def zoomEvent(self, event):
         """Slot to react to zoom events. Called on button release events.
            Redraws the map after the user has zoomed or panned the image.
         """
         if self.navbar.mode in ["zoom rect", "pan/zoom"]:
             self.canvas.redrawMap()
-
 
     def historyEvent(self):
         """Slot to react to clicks on one of the history buttons in the
@@ -850,10 +827,10 @@ class MplTopViewWidget(MplNavBarWidget):
         self.canvas.redrawMap()
 
 
+"""
+Time Series View Canvas and Widget
+"""
 
-################################################################################
-###                  Time Series View Canvas and Widget                      ###
-################################################################################
 
 class MplTimeSeriesViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws time series of trajectory data.
@@ -869,10 +846,8 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             self.setTrajectoryModel(traj_item_tree)
         self.subPlots = []
 
-
     def setIdentifier(self, identifier):
         self.identifier = identifier
-
 
     def setTrajectoryModel(self, tree):
         """Set a reference to the tree data structure containing the information
@@ -894,7 +869,6 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             self.updateFromTrajectoryTree)
         # Draw tree items.
         self.updateTrajectoryItems()
-        
 
     def updateFromTrajectoryTree(self, index1, index2):
         """This method should be connected to the 'dataChanged()' signal
@@ -912,7 +886,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         item = index1.internalPointer()
         item2 = index2.internalPointer()
         if isinstance(item, titree.LagrantoMapItem) or \
-               isinstance(item, titree.AbstractVariableItem):
+                isinstance(item, titree.AbstractVariableItem):
             lastChange = self.traj_item_tree.getLastChange()
             if lastChange == "VISIBILITY_CHANGE":
                 lastChange = "REDRAW"
@@ -925,7 +899,6 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             self.updateTrajectoryItems(item=item if item == item2 else None,
                                        mode=lastChange)
 
-
     def updateTrajectoryItems(self, item=None, mode="REDRAW"):
         """Delete the old figure and draw a new one.
         """
@@ -933,7 +906,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         if not self.traj_item_tree:
             return
 
-        logging.debug("updating trajectory items on view <%s>, mode %s" % \
+        logging.debug("updating trajectory items on view <%s>, mode %s" %
                       (self.identifier, mode))
 
         # Determine which items have to be plotted (these are the items that
@@ -953,14 +926,14 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         else:
             # Remember the item that has been changed.
             stack.append(item)
-            
+
         while len(stack) > 0:
             # Downwards traversal of the tree to determine all visible items
             # below the items that are on the stack.
             item = stack.pop()
             if item.isVisible(self.identifier):
                 if isinstance(item, titree.FlightTrackItem) \
-                       or isinstance(item, titree.TrajectoryItem):
+                        or isinstance(item, titree.TrajectoryItem):
                     itemsList.append(item)
                 else:
                     stack.extend(item.childItems)
@@ -980,17 +953,16 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                 earliestStartTime = min(earliestStartTime,
                                         item.getStartTime())
                 for variable in item.childItems:
-                    if variable.isVisible(self.identifier) and \
-                           variable.getVariableName() not in self.subPlots:
+                    if variable.isVisible(self.identifier) and variable.getVariableName() not in self.subPlots:
                         self.subPlots.append(variable.getVariableName())
-          
+
         # Iterative list traversal no. 2: Draw / update plots.
         for item in itemsList:
 
             logging.debug("plotting item %s" % item.getName())
             # The variables that have to be plotted are children of self.mapItem.
             # Plot all variables whose visible-flag is set to True.
-            variablesToPlot = [variable for variable in item.childItems \
+            variablesToPlot = [variable for variable in item.childItems
                                if variable.getVariableName() in self.subPlots]
 
             if mode in ["GXPROPERTY_CHANGE"]:
@@ -1000,7 +972,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                 for variable in variablesToPlot:
                     plt.setp(
                         variable.getGxElementProperty("timeseries",
-                                                      "instance::%s"%self.identifier),
+                                                      "instance::%s" % self.identifier),
                         visible=item.isVisible(self.identifier),
                         color=item.getGxElementProperty("general", "colour"),
                         linestyle=item.getGxElementProperty("general", "linestyle"),
@@ -1015,7 +987,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # Place the plot of this variable on the index+1-th subplot,
                     # where index is the index of the variable name in 'self.subPlots'.
                     index = self.subPlots.index(variable.getVariableName())
-                    ax = self.fig.add_subplot(len(self.subPlots), 1, index+1)
+                    ax = self.fig.add_subplot(len(self.subPlots), 1, index + 1)
                     #
                     # The x-axis is the time axis. Shift the current time data
                     # so that the common time axis starts with the earliest
@@ -1026,14 +998,14 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     #
                     # Plot the variable data with the colour determines above, store
                     # the plot instance in the variable's gxElements.
-                    plotInstance = ax.plot(x, y, 
-                        color=item.getGxElementProperty("general", "colour"),
-                        linestyle=item.getGxElementProperty("general",
-                                                            "linestyle"),
-                        linewidth=item.getGxElementProperty("general",
-                                                            "linewidth"))
+                    plotInstance = ax.plot(x, y,
+                                           color=item.getGxElementProperty("general", "colour"),
+                                           linestyle=item.getGxElementProperty("general",
+                                                                               "linestyle"),
+                                           linewidth=item.getGxElementProperty("general",
+                                                                               "linewidth"))
                     variable.setGxElementProperty("timeseries",
-                                                  "instance::%s"%self.identifier,
+                                                  "instance::%s" % self.identifier,
                                                   plotInstance)
                     #
                     # If we've just plotted the pressure variable flip the y-axis
@@ -1052,7 +1024,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # Draw vertical dotted lines at the time marker indexes to help
                     # identify the time markers on the time series plot.
                     timeMarkerIndexes = item.getTimeMarkerIndexes()
-                    if timeMarkerIndexes != None:
+                    if timeMarkerIndexes is not None:
                         for time in x[timeMarkerIndexes[1:]]:
                             ax.axvline(time, color='black', linestyle=':')
 
@@ -1064,27 +1036,25 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                                          (itemsList[0].getName(),
                                           itemsList[-1].getName()))
                         else:
-                            ax.set_title("Single item: %s" % 
+                            ax.set_title("Single item: %s" %
                                          itemsList[0].getName())
-
 
                     #
                     # The bottommost subplot gets the x-label: The name of the time
                     # variable.
-                    if index == len(self.subPlots)-1:
-                        ax.set_xlabel("time [hr since " + \
-                                      earliestStartTime.strftime("%Y-%m-%d %H:%M UTC") + \
+                    if index == len(self.subPlots) - 1:
+                        ax.set_xlabel("time [hr since " +
+                                      earliestStartTime.strftime("%Y-%m-%d %H:%M UTC") +
                                       "]")
         # Update the figure canvas.
         self.fig.canvas.draw()
-
-
 
 
 class MplTimeSeriesViewWidget(MplNavBarWidget):
     """MplNavBarWidget using an MplTimeSeriesViewCanvas as the Matplotlib
        view instance.
     """
+
     def __init__(self, parent=None):
         super(MplTimeSeriesViewWidget, self).__init__(parent=parent,
                                                       canvas=MplTimeSeriesViewCanvas())

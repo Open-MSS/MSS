@@ -46,18 +46,16 @@ import mss_settings
 from wms_control import MSSWebMapService
 import flighttrack as ft
 
-
-################################################################################
-###                    Settings imported from mss_settings                   ###
-################################################################################
+"""
+Settings imported from mss_settings
+"""
 
 default_FPS = mss_settings.default_FPS
 
+"""
+CLASS PerformanceControlWidget
+"""
 
-
-################################################################################
-###                    CLASS PerformanceControlWidget                        ###
-################################################################################
 
 class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
     """The base class of the performance control widget: Provides the GUI
@@ -111,7 +109,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.tbViewCapabilities.setEnabled(False)
 
         # Initialise date/time fields with current day, 00 UTC.
-        self.dteTime.setDateTime(QtCore.QDateTime( \
+        self.dteTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0,
                                       microsecond=0)))
 
@@ -142,7 +140,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.pdlg = QtGui.QProgressDialog("computing flight performance...", "Cancel",
                                           0, 10, self)
 
-
     def getCapabilities(self):
         """Query the server in the URL combobox for its capabilities. Fill
            mode, etc. combo boxes.
@@ -162,11 +159,11 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             wms = MSSWebMapService(base_url, version='1.1.1')
         except Exception as ex:
             logging.error("ERROR: %s", ex)
-            logging.error("cannot load capabilities document.. "\
+            logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
             QtGui.QMessageBox.critical(self, self.tr("Flight Performance Service"),
-                        self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
-                        QtGui.QMessageBox.Ok)
+                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                       QtGui.QMessageBox.Ok)
             self.wms = None
         else:
             # Parse layer tree of the wms object and discover usable layers.
@@ -176,13 +173,13 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                 layer = stack.pop()
                 if len(layer.layers) == 0:
                     if self.crsAllowed(layer):
-                        #cb_string = "%s | %s" % (layer.name, layer.title)
+                        # cb_string = "%s | %s" % (layer.name, layer.title)
                         cb_string = "%s | %s" % (layer.title, layer.name)
                         if cb_string not in filtered_layers:
                             filtered_layers.append(cb_string)
                 else:
                     stack.extend(layer.layers)
-            logging.debug("discovered %i layers that can be used in this view" % \
+            logging.debug("discovered %i layers that can be used in this view" %
                           len(filtered_layers))
             filtered_layers.sort()
             self.cbMode.addItems(filtered_layers)
@@ -194,7 +191,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         # Reconnect modeChanged.
         self.connect(self.cbMode, QtCore.SIGNAL("currentIndexChanged(int)"),
                      self.modeChanged)
-
 
     def viewCapabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities
@@ -208,7 +204,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                 capabilities_xml=self.wms.capabilities_document)
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             wmsbrws.show()
-        
 
     def crsAllowed(self, layer):
         """Check whether the CRS in which the layer can be provided are allowed
@@ -221,7 +216,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                 if self.crs_filter.match(crs):
                     return True
         return False
-
 
     def interpret_timestring(self, timestring, return_format=False):
         """Tries to interpret a given time string.
@@ -246,7 +240,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                 pass
         return None
 
-
     def get_layer_object(self, layername):
         """Returns the object from the layer tree that fits the given
            layer name.
@@ -263,7 +256,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                     stack.extend(layer.layers)
         return None
 
-
     def modeChanged(self, index):
         """Slot that updates the <cbAircraft> and <teLayerAbstract> GUI elements
            when the user selects a new layer in <cbMode>.
@@ -273,17 +265,13 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             # Do not execute this method if no WMS has been registered or no
             # layer is available (layer will be an empty string then).
             return
-        self.layerChangeInProgress = True # Flag for autoUpdate()
+        self.layerChangeInProgress = True  # Flag for autoUpdate()
         layerobj = self.get_layer_object(layer)
 
         self.cbAircraft.clear()
-        if "aircraft" in layerobj.dimensions.keys() and \
-               "aircraft" in layerobj.extents.keys():
-            self.cbAircraft.addItems(["%s" % s for s in \
-                                      layerobj.extents["aircraft"]["values"]])
+        if "aircraft" in layerobj.dimensions.keys() and "aircraft" in layerobj.extents.keys():
+            self.cbAircraft.addItems(["%s" % s for s in layerobj.extents["aircraft"]["values"]])
 
-        
-        
         abstract_text = layerobj.abstract if layerobj.abstract else ""
         abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
         self.teLayerAbstract.setText(abstract_text)
@@ -291,14 +279,13 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         # Handle dimensions:
         # ~~~~~~~~~~~~~~~~~~
         save_init_time = self.getInitTime()
-        
+
         enable_inittime = False
         self.cbInitTime.clear()
 
         # ~~~~ A) Initialisation time.
         self.init_time_format = None
-        if "init_time" in layerobj.dimensions.keys() and \
-               "init_time" in layerobj.extents.keys():
+        if "init_time" in layerobj.dimensions.keys() and "init_time" in layerobj.extents.keys():
             self.init_time_name = "init_time"
             enable_inittime = True
 
@@ -310,7 +297,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                 layerobj.extents[self.init_time_name]["values"][0],
                 return_format=True)
             self.cbInitTime.addItems(layerobj.extents[self.init_time_name]["values"])
-            self.cbInitTime.setCurrentIndex(self.cbInitTime.count()-1)
+            self.cbInitTime.setCurrentIndex(self.cbInitTime.count() - 1)
 
         # ~~~~ B) Valid time.
         self.cbTimeOn.setToolTip("")
@@ -319,8 +306,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.cbTimeOn.setFont(font)
         vtime_no_extent = False
         self.valid_time_format = None
-        if "time" in layerobj.dimensions.keys() and \
-               "time" in layerobj.extents.keys():
+        if "time" in layerobj.dimensions.keys() and "time" in layerobj.extents.keys():
             self.valid_time_name = "time"
             enable_validtime = True
         elif "time" in layerobj.dimensions.keys():
@@ -376,7 +362,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         if save_init_time is not None:
             index = self.cbInitTime.findText(save_init_time)
             self.cbInitTime.setCurrentIndex(index)
-            
+
         # ~~~~ C) Weight, accuracy, engine decline tool tips.
         self.trySetExtentTooltip(layerobj, "weight", self.cbWeightOn)
         self.sbAccuracy.setEnabled("accuracy" in layerobj.dimensions.keys())
@@ -390,10 +376,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         if "decline" in layerobj.dimensions.keys():
             if "default" in layerobj.dimensions["decline"].keys():
                 self.sbAccuracy.setValue(int(layerobj.dimensions["decline"]["default"]))
-            
+
         self.layerChangeInProgress = False
-
-
 
     def setElementTooltip(self, element, tooltip):
         """Set a tooltip for an element and set the font of the element bold.
@@ -409,7 +393,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             element.setFont(font)
             element.setToolTip("")
 
-
     def trySetExtentTooltip(self, layerobj, dim_id, element):
         """If the layer object <layerobj> has an entry for <dim_id> in its
            extents dictionary, set the tooltip of element <element> to
@@ -421,20 +404,17 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         else:
             self.setElementTooltip(element, None)
 
-
     def cb_init_time_back_click(self):
         ci = self.cbInitTime.currentIndex()
         if ci > 0:
-            ci = ci-1
+            ci = ci - 1
         self.cbInitTime.setCurrentIndex(ci)
 
-        
     def cb_init_time_fwd_click(self):
         ci = self.cbInitTime.currentIndex()
-        if ci < self.cbInitTime.count()-1:
-            ci = ci+1
+        if ci < self.cbInitTime.count() - 1:
+            ci = ci + 1
         self.cbInitTime.setCurrentIndex(ci)
-
 
     def autoUpdate(self):
         """If the auto update check box is checked, let btComputePerformance emit a
@@ -449,7 +429,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         if self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.btComputePerformance.emit(QtCore.SIGNAL("clicked()"))
 
-
     def enableInitTimeElements(self, enable):
         """Enables or disables the GUI elements allowing initialisation time
            control.
@@ -462,7 +441,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.rbNWPnointerpolation.setEnabled(enable)
         self.lblInterpolation.setEnabled(enable)
 
-
     def enableTimeElements(self, enable):
         """Enables or disables the GUI elements allowing time control.
         """
@@ -470,14 +448,11 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.dteTime.setEnabled(enable)
         self.sbWaypoint.setEnabled(enable)
 
-
     def getMode(self):
         return unicode(self.cbMode.currentText(), errors="ignore").split(" | ")[-1]
 
-
     def getAircraft(self):
         return unicode(self.cbAircraft.currentText(), errors="ignore").split(" |")[0]
-
 
     def getInitTime(self):
         """Get the initialisation time from the GUI elements.
@@ -492,7 +467,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             return itime_str
         else:
             return None
-    
 
     def getTime(self):
         """The same as getInitTime(), but for the waypoint time.
@@ -502,13 +476,11 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         else:
             return None
 
-
     def switchOptions(self):
         """
         """
         index = self.stackedWidget.currentIndex()
         self.stackedWidget.setCurrentIndex(0 if index else 1)
-
 
     def _queued_get_performance(self, queue=None, url=""):
         """Helper routine to retrieve a performance computation result from a
@@ -526,7 +498,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         except Exception as e:
             if queue is not None:
                 queue.put(e)
-    
 
     def retrievePerformanceComputation(self):
         """Queries the flight performance service for a flight performance
@@ -539,29 +510,30 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         self.pdlg.setValue(0)
         self.pdlg.setModal(True)
         self.pdlg.reset()
-        self.pdlg.show(); QtGui.QApplication.processEvents()
-        
+        self.pdlg.show()
+        QtGui.QApplication.processEvents()
+
         # Stores the computation results to be returned (multiline string).
         performance = None
-        
+
         # Get mode and aircraft names.
         mode = self.getMode()
         aircraft = self.getAircraft()
 
         # Get time and the waypoint for which it has been specified.
         waypoint_no = self.sbWaypoint.value()
-        time = self.getTime() # datetime object
+        time = self.getTime()  # datetime object
 
         # Weight, either takeoff weight or landing weight, depending on the mode.
         weight = self.sbWeight.value()
 
         # If applicable, get init time values.
-        init_time = self.getInitTime() # string from combobox; None if disabled
+        init_time = self.getInitTime()  # string from combobox; None if disabled
         interpolateNWP = self.rbNWPinterpolation.isChecked()
 
         accuracy_points = self.sbAccuracy.value()
         engine_decline = self.sbEngineDecline.value()
-        
+
         # Assemble URL.
         url = str(self.cbURL.currentText()) + "?"
         url += "REQUEST=GetPerformance"
@@ -594,7 +566,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             thread = threading.Thread(target=self._queued_get_performance, kwargs=kwargs)
             thread.start()
 
-            self.pdlg.setValue(1); QtGui.QApplication.processEvents()
+            self.pdlg.setValue(1)
+            QtGui.QApplication.processEvents()
 
             while thread.isAlive():
                 # This loop keeps the GUI alive while the thread is executing,
@@ -615,7 +588,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
                 else:
                     raise qreturn
 
-            self.pdlg.setValue(8); QtGui.QApplication.processEvents()
+            self.pdlg.setValue(8)
+            QtGui.QApplication.processEvents()
 
             # Read the result from the URL into a string (urlobject.read())
             performance = urlobject.read()
@@ -624,16 +598,15 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         except Exception as ex:
             logging.error("ERROR: %s", ex)
             QtGui.QMessageBox.critical(self, self.tr("Flight Performace Service"),
-                        self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
-                        QtGui.QMessageBox.Ok)
-            #self.pdlg.close()
-            #raise ex
+                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                       QtGui.QMessageBox.Ok)
+            # self.pdlg.close()
+            # raise ex
 
         # Close the progress dialog and return the result.
         self.pdlg.close()
 
         return performance
-
 
     def getPerformance(self):
         """Slot for the 'get performance' button.
@@ -644,10 +617,6 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         if performance is not None:
             self.model.setPerformanceComputation(performance)
 
-
-
-
-################################################################################
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.
@@ -670,6 +639,7 @@ if __name__ == "__main__":
                                waypoints=initial_waypoints)
 
     import sys
+
     app = QtGui.QApplication(sys.argv)
     win = PerformanceControlWidget(default_FPS=default_FPS,
                                    model=waypoints_model)
@@ -677,11 +647,9 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 
+# IPYTHON TEST LINES.
 
-
-
-################################################################################
-## IPYTHON TEST LINES.
-
-# import wms_control; base_url = "http://localhost:8081/mss_wms"; wms = wms_control.MSSWebMapService(base_url, version='1.1.1')
+# import wms_control
+# base_url = "http://localhost:8081/mss_wms"
+# wms = wms_control.MSSWebMapService(base_url, version='1.1.1')
 # l = wms.contents["PLGeopWind"]

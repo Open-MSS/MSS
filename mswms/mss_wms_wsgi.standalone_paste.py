@@ -58,7 +58,7 @@ with Ctrl+C. If you need to keep the server running on a remote
 computer, use the Unix 'nohup' command and provide a logfile to which
 all output can be written.
 
-The following command line arguments are supported: 
+The following command line arguments are supported:
 
 a) "--ssh" Starts the server in ssh-tunnel mode, i.e. the GetMap URL
 specified in the capabilities document points to localhost instead of
@@ -103,10 +103,10 @@ from mslib import mss_config
 import mss_plot_driver
 import mss_wms_settings
 
+"""
+CaseInsensitiveMulitDict
+"""
 
-################################################################################
-###                       CaseInsensitiveMulitDict                           ###
-################################################################################
 
 # The following class is used to make the module case-insensitive for
 # the URL query parameters (i.e. it doesn't matter whether the client
@@ -121,6 +121,7 @@ class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
     See ../paste/util/multidict.py as well as
       http://stackoverflow.com/questions/2082152/case-insensitive-dictionary
     """
+
     def __getitem__(self, key):
         if hasattr(key, 'lower'):
             key = key.lower()
@@ -132,9 +133,10 @@ class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
         raise KeyError(repr(key))
 
 
-################################################################################
-###                          CLASS MSS_WMSResponse                            ###
-################################################################################
+"""
+CLASS MSS_WMSResponse
+"""
+
 
 class MSS_WMSResponse(object):
     """WSGI handler for WMS server. The Web Map Service corresponds to version
@@ -174,7 +176,8 @@ class MSS_WMSResponse(object):
             <DCPType>
               <HTTP>
                 <Get>
-                  <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/mss_wms?"/>
+                  <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                  xlink:href="http://localhost:8081/mss_wms?"/>
                 </Get>
               </HTTP>
             </DCPType>
@@ -184,7 +187,8 @@ class MSS_WMSResponse(object):
             <DCPType>
               <HTTP>
                 <Get>
-                  <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/mss_wms?"/>
+                  <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                  xlink:href="http://localhost:8081/mss_wms?"/>
                 </Get>
               </HTTP>
             </DCPType>
@@ -244,7 +248,6 @@ class MSS_WMSResponse(object):
         # Variable to lock simultaneous requests (see __call__ for more
         # information).
         self.processing_request = False
-        
 
     def __call__(self, environ, start_response):
         """Main routine that handles server requests. Parses the URL to
@@ -261,10 +264,10 @@ class MSS_WMSResponse(object):
         # with multiple threads is required, multiple instances of this
         # WSGI app should be created.
         if self.processing_request:
-            return HTTPServiceUnavailable(detail="This service is currently "\
-                                          "active and does not support "\
-                                          "simultaneous requests. Please try "\
-                                          "again in a few seconds.")(environ, start_response)
+            return HTTPServiceUnavailable(detail="This service is currently "
+                                                 "active and does not support "
+                                                 "simultaneous requests. Please try "
+                                                 "again in a few seconds.")(environ, start_response)
 
         # Block sinultaneous class instance calls by setting the
         # processing_request flag to True. The following code is embedded
@@ -272,7 +275,7 @@ class MSS_WMSResponse(object):
         # the flag (otherwise the application would be locked forever).
         self.processing_request = True
         try:
-        
+
             # WSGI return headers.
             self.headers = []
 
@@ -294,19 +297,19 @@ class MSS_WMSResponse(object):
                 if not self.is_service_exception(return_data):
                     self.headers.append(('Content-type', 'text/xml'))
                 else:
-                    #self.headers.append(('Content-type', 'application/vnd.ogc.se_xml'))
+                    # self.headers.append(('Content-type', 'application/vnd.ogc.se_xml'))
                     self.headers.append(('Content-type', 'text/xml'))
             elif type_.lower() in ['getmap', 'getvsec']:
                 return_data, return_format = self.produce_plot(environ, type_)
                 if not self.is_service_exception(return_data):
-                    #self.headers.append(('Content-type', 'image/png'))
+                    # self.headers.append(('Content-type', 'image/png'))
                     self.headers.append(('Content-type', return_format.lower()))
                 else:
-                    #self.headers.append(('Content-type', 'application/vnd.ogc.se_xml'))
+                    # self.headers.append(('Content-type', 'application/vnd.ogc.se_xml'))
                     self.headers.append(('Content-type', 'text/xml'))
             else:
                 return_data = self.service_exception(text='Invalid REQUEST "%s"' % type_)
-                #self.headers.append(('Content-type', 'application/vnd.ogc.se_xml'))
+                # self.headers.append(('Content-type', 'application/vnd.ogc.se_xml'))
                 self.headers.append(('Content-type', 'text/xml'))
 
             # Start the HTTP response and return the result.
@@ -321,7 +324,6 @@ class MSS_WMSResponse(object):
             self.processing_request = False
             raise
 
-
     def register_hsec_layer(self, datasets, layer_class):
         """Register horizontal section layer in internal dict of layers.
 
@@ -335,7 +337,7 @@ class MSS_WMSResponse(object):
         # instances with the datasets.
         for dataset in datasets:
             layer = layer_class()
-            logging.debug("registering horizontal section layer %s with "\
+            logging.debug("registering horizontal section layer %s with "
                           "dataset %s", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
@@ -347,7 +349,6 @@ class MSS_WMSResponse(object):
             layer.set_driver(self.hsec_drivers[dataset])
             self.hsec_layer_registry[dataset][layer.name] = layer
 
-
     def register_vsec_layer(self, datasets, layer_class):
         """Register vertical section layer in internal dict of layers.
 
@@ -358,7 +359,7 @@ class MSS_WMSResponse(object):
         # instances with the datasets.
         for dataset in datasets:
             layer = layer_class()
-            logging.debug("registering vertical section layer %s with "\
+            logging.debug("registering vertical section layer %s with "
                           "dataset %s", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
@@ -369,7 +370,6 @@ class MSS_WMSResponse(object):
                     raise ValueError("dataset %s not available" % dataset)
             layer.set_driver(self.vsec_drivers[dataset])
             self.vsec_layer_registry[dataset][layer.name] = layer
-
 
     def service_exception(self, code=None, text=""):
         """Create a service exception XML from the XML template defined above.
@@ -398,7 +398,6 @@ class MSS_WMSResponse(object):
 
         return dom.toprettyxml(indent="  ")
 
-
     def is_service_exception(self, var):
         """Returns True if the given parameter is an XML that contains
            a service exception.
@@ -407,7 +406,6 @@ class MSS_WMSResponse(object):
             if var.find("<ServiceException") > 1:
                 return True
         return False
-
 
     def get_capabilities(self, environ):
         """Create a capabilities document from the XML template defined above.
@@ -436,7 +434,7 @@ class MSS_WMSResponse(object):
         # Advertise registered map layers.
         for dataset in self.hsec_layer_registry.keys():
             for layer in self.hsec_layer_registry[dataset].values():
-           
+
                 layere = dom.createElement('Layer')
 
                 # Name
@@ -454,9 +452,9 @@ class MSS_WMSResponse(object):
                     layerabstract.appendChild(dom.createTextNode(layer.abstract))
                     layere.appendChild(layerabstract)
                 if layer.queryable:
-                    layere.setAttribute('queryable', '0')                    
+                    layere.setAttribute('queryable', '0')
 
-                # SRS.
+                    # SRS.
                 for crs in layer.supported_crs():
                     layerepsg = dom.createElement('SRS')
                     layerepsg.appendChild(dom.createTextNode(crs))
@@ -474,12 +472,12 @@ class MSS_WMSResponse(object):
                 if layer.uses_time_dimensions():
                     dim = dom.createElement("Dimension")
                     dim.setAttribute("name", "TIME")
-                    dim.setAttribute("units", "ISO8601") # cf http://de.wikipedia.org/wiki/ISO_8601
+                    dim.setAttribute("units", "ISO8601")  # cf http://de.wikipedia.org/wiki/ISO_8601
                     layere.appendChild(dim)
 
                     dim = dom.createElement("Dimension")
                     dim.setAttribute("name", "INIT_TIME")
-                    dim.setAttribute("units", "ISO8601") # cf http://de.wikipedia.org/wiki/ISO_8601
+                    dim.setAttribute("units", "ISO8601")  # cf http://de.wikipedia.org/wiki/ISO_8601
                     layere.appendChild(dim)
 
                 # Elevation dimension, if required by the layer.
@@ -489,12 +487,12 @@ class MSS_WMSResponse(object):
                     dim.setAttribute("name", "ELEVATION")
                     dim.setAttribute("units", layer.get_elevation_units())
                     layere.appendChild(dim)
-                    
+
                 # Extents of time and elevation dimensions.
                 if layer.uses_time_dimensions():
                     dimext = dom.createElement("Extent")
                     dimext.setAttribute("name", "TIME")
-                    vt_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt \
+                    vt_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt
                               in layer.get_all_valid_times()]
                     vt_str = ",".join(vt_str)
                     dimext.appendChild(dom.createTextNode(vt_str))
@@ -502,7 +500,7 @@ class MSS_WMSResponse(object):
 
                     dimext = dom.createElement("Extent")
                     dimext.setAttribute("name", "INIT_TIME")
-                    it_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt \
+                    it_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt
                               in layer.get_init_times()]
                     it_str = ",".join(it_str)
                     dimext.appendChild(dom.createTextNode(it_str))
@@ -516,13 +514,13 @@ class MSS_WMSResponse(object):
                     dimext.appendChild(dom.createTextNode(el_str))
                     layere.appendChild(dimext)
 
-                #layerbbox = ElementTree.Element('BoundingBox')
-                #layerbbox.set('SRS', '')
-                #layerbbox.set('minx', str(env.minx))
-                #layerbbox.set('miny', str(env.miny))
-                #layerbbox.set('maxx', str(env.maxx))
-                #layerbbox.set('maxy', str(env.maxy))
-                #layere.appendChild(layerbbox)
+                # layerbbox = ElementTree.Element('BoundingBox')
+                # layerbbox.set('SRS', '')
+                # layerbbox.set('minx', str(env.minx))
+                # layerbbox.set('miny', str(env.miny))
+                # layerbbox.set('maxx', str(env.maxx))
+                # layerbbox.set('maxy', str(env.maxy))
+                # layere.appendChild(layerbbox)
 
                 # Layer styles, if available.
                 if type(layer.styles) is list:
@@ -580,7 +578,7 @@ class MSS_WMSResponse(object):
                         layere.appendChild(layerepsg)
 
                     # Bounding box.
-#TODO: This should become the area in which a vsec is allowed.
+                    # TODO: This should become the area in which a vsec is allowed.
                     latlonbb = dom.createElement('LatLonBoundingBox')
                     latlonbb.setAttribute('minx', '-180')
                     latlonbb.setAttribute('miny', '-90')
@@ -592,17 +590,17 @@ class MSS_WMSResponse(object):
                     if layer.uses_time_dimensions():
                         dim = dom.createElement("Dimension")
                         dim.setAttribute("name", "TIME")
-                        dim.setAttribute("units", "ISO8601") # cf http://de.wikipedia.org/wiki/ISO_8601
+                        dim.setAttribute("units", "ISO8601")  # cf http://de.wikipedia.org/wiki/ISO_8601
                         layere.appendChild(dim)
 
                         dim = dom.createElement("Dimension")
                         dim.setAttribute("name", "INIT_TIME")
-                        dim.setAttribute("units", "ISO8601") # cf http://de.wikipedia.org/wiki/ISO_8601
+                        dim.setAttribute("units", "ISO8601")  # cf http://de.wikipedia.org/wiki/ISO_8601
                         layere.appendChild(dim)
 
                         dimext = dom.createElement("Extent")
                         dimext.setAttribute("name", "TIME")
-                        vt_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt \
+                        vt_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt
                                   in layer.get_all_valid_times()]
                         vt_str = ",".join(vt_str)
                         dimext.appendChild(dom.createTextNode(vt_str))
@@ -610,7 +608,7 @@ class MSS_WMSResponse(object):
 
                         dimext = dom.createElement("Extent")
                         dimext.setAttribute("name", "INIT_TIME")
-                        it_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt \
+                        it_str = [dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt
                                   in layer.get_init_times()]
                         it_str = ",".join(it_str)
                         dimext.appendChild(dom.createTextNode(it_str))
@@ -633,7 +631,6 @@ class MSS_WMSResponse(object):
         logging.debug("returning capabilities document.")
         return dom.toprettyxml(indent="  ")
 
-
     def produce_plot(self, environ, mode):
         """Handler for a GetMap and GetVSec requests. Produces a plot with
            the parameters specified in the URL.
@@ -643,7 +640,7 @@ class MSS_WMSResponse(object):
 #      parameters has already been produced. (mr, 2010-08-18)
         """
         logging.debug("GetMap/GetVSec request. Interpreting parameters..")
-        
+
         # 1) Get the query parameters from the URL.
         # =========================================
         query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))
@@ -668,7 +665,7 @@ class MSS_WMSResponse(object):
         styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
         style = styles[0] if len(styles) > 0 else None
         logging.debug("  requested style = %s" % style)
-            
+
         # Forecast initialisation time.
         init_time = query.get('DIM_INIT_TIME', None)
         if init_time is not None:
@@ -676,10 +673,10 @@ class MSS_WMSResponse(object):
                 init_time = datetime.strptime(init_time, "%Y-%m-%dT%H:%M:%SZ")
             except ValueError:
                 return self.service_exception(code="InvalidDimensionValue",
-                                              text="DIM_INIT_TIME has wrong format "\
-                                              "(needs to be 2005-08-29T13:00:00Z)"), None
+                                              text="DIM_INIT_TIME has wrong format "
+                                                   "(needs to be 2005-08-29T13:00:00Z)"), None
         logging.debug("  requested initialisation time = %s" % init_time)
-            
+
         # Forecast valid time.
         valid_time = query.get('TIME', None)
         if valid_time is not None:
@@ -687,8 +684,8 @@ class MSS_WMSResponse(object):
                 valid_time = datetime.strptime(valid_time, "%Y-%m-%dT%H:%M:%SZ")
             except ValueError:
                 return self.service_exception(code="InvalidDimensionValue",
-                                              text="TIME has wrong format "\
-                                              "(needs to be 2005-08-29T13:00:00Z)"), None
+                                              text="TIME has wrong format "
+                                                   "(needs to be 2005-08-29T13:00:00Z)"), None
         logging.debug("  requested (valid) time = %s" % valid_time)
 
         # Coordinate reference system.
@@ -711,7 +708,7 @@ class MSS_WMSResponse(object):
             return self.service_exception(code="InvalidSRS", text=msg), None
         else:
             logging.debug("  requested coordinate reference system = %s" % crs)
-    
+
         # Create a frameless figure (WMS) or one with title and legend
         # (MSS specific)? Default is WMS mode (frameless).
         noframe = query.get('FRAME', 'OFF').upper() == 'OFF'
@@ -729,7 +726,6 @@ class MSS_WMSResponse(object):
             logging.error(msg)
             return self.service_exception(code="InvalidFORMAT", text=msg), None
 
-
         # 3) Check GetMap/GetVSec-specific parameters and produce
         #    the image with the corresponding section driver.
         # =======================================================
@@ -738,7 +734,7 @@ class MSS_WMSResponse(object):
 
             # Check requested layer.
             if (dataset not in self.hsec_layer_registry.keys()) or \
-               (layer not in self.hsec_layer_registry[dataset].keys()):
+                    (layer not in self.hsec_layer_registry[dataset].keys()):
                 msg = "Invalid LAYER '%s.%s' requested" % (dataset, layer)
                 logging.error(msg)
                 return self.service_exception(code="LayerNotDefined", text=msg), None
@@ -746,7 +742,7 @@ class MSS_WMSResponse(object):
             # Check if the layer requires time information and if they are given.
             if self.hsec_layer_registry[dataset][layer].uses_time_dimensions():
                 if init_time is None:
-                    msg = "INIT_TIME not specified (use the "\
+                    msg = "INIT_TIME not specified (use the " \
                           "DIM_INIT_TIME keyword)"
                     logging.error(msg)
                     return self.service_exception(code="MissingDimensionValue", text=msg), None
@@ -775,14 +771,14 @@ class MSS_WMSResponse(object):
             level = int(level) if level else None
             layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
             if (("ml" in layer_datatypes) or ("pl" in layer_datatypes)) \
-                   and not level:
+                    and not level:
                 # Use the default value.
                 level = -1
-                #return HTTPBadRequest("ELEVATION not specified (required for "\
+                # return HTTPBadRequest("ELEVATION not specified (required for "\
                 #                      "layer %s)." % layer)
             elif ("sfc" in layer_datatypes) and ("ml" not in layer_datatypes) \
-                   and ("pl" not in layer_datatypes) and level:
-                msg = "ELEVATION argument not applicable for layer "\
+                    and ("pl" not in layer_datatypes) and level:
+                msg = "ELEVATION argument not applicable for layer " \
                       "%s. Please omit this argument." % layer
                 logging.error(msg)
                 return self.service_exception(text=msg), None
@@ -795,19 +791,18 @@ class MSS_WMSResponse(object):
                                                 init_time=init_time,
                                                 valid_time=valid_time,
                                                 style=style,
-                                                figsize=figsize, 
+                                                figsize=figsize,
                                                 epsg=epsg,
                                                 noframe=noframe,
                                                 transparent=transparent,
                                                 return_format=return_format)
             except (IOError, ValueError) as e:
                 logging.error("ERROR: %s" % e)
-                msg = "The data corresponding to your request "\
-                      "is not available. Please check the "\
-                      "times and/or levels you have specified."\
+                msg = "The data corresponding to your request " \
+                      "is not available. Please check the " \
+                      "times and/or levels you have specified." \
                       "\n\nError message: %s" % e
                 return self.service_exception(text=msg), None
-
 
         elif mode == "GetVSec":
 
@@ -823,18 +818,17 @@ class MSS_WMSResponse(object):
                 logging.error(msg)
                 return self.service_exception(text=msg), None
             logging.debug("VSEC PATH: %s", path)
-            
+
             # Check requested layers.
             if (dataset not in self.vsec_layer_registry.keys()) or \
-                   (layer not in self.vsec_layer_registry[dataset].keys()):
+                    (layer not in self.vsec_layer_registry[dataset].keys()):
                 msg = "Invalid LAYER '%s.%s' requested" % (dataset, layer)
                 return self.service_exception(code="LayerNotDefined", text=msg), None
-
 
             # Check if the layer requires time information and if they are given.
             if self.vsec_layer_registry[dataset][layer].uses_time_dimensions():
                 if init_time is None:
-                    msg = "INIT_TIME not specified (use the "\
+                    msg = "INIT_TIME not specified (use the " \
                           "DIM_INIT_TIME keyword)"
                     logging.error(msg)
                     return self.service_exception(code="MissingDimensionValue", text=msg), None
@@ -868,12 +862,11 @@ class MSS_WMSResponse(object):
                                                 return_format=return_format)
             except (IOError, ValueError) as e:
                 logging.error("ERROR: %s" % e)
-                msg = "The data corresponding to your request "\
-                      "is not available. Please check the "\
-                      "times and/or path you have specified."\
+                msg = "The data corresponding to your request " \
+                      "is not available. Please check the " \
+                      "times and/or path you have specified." \
                       "\n\nError message: %s" % e
                 return self.service_exception(text=msg), None
-            
 
         # Produce the image.
         image = plot_driver.plot()
@@ -883,15 +876,9 @@ class MSS_WMSResponse(object):
         return image, return_format
 
 
-
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-
-################################################################################
-###                      MAIN: integrated HTTP server                        ###
-################################################################################
+"""
+MAIN: integrated HTTP server
+"""
 
 if __name__ == '__main__':
 
@@ -908,11 +895,11 @@ if __name__ == '__main__':
         ssh_tunnel = (sys.argv[1] == "--ssh")
         i = 2
     logfile = sys.argv[i] if len(sys.argv) > i else None
-    
+
     if logfile is not None:
         # Log everything to "logfile".
-#TODO: Change this to write to a rotating log handler (so that the file size
-#      is kept constant). (mr, 2011-02-25)
+        # TODO: Change this to write to a rotating log handler (so that the file size
+        #      is kept constant). (mr, 2011-02-25)
         logging.basicConfig(filename=logfile,
                             level=logging.DEBUG,
                             format="%(asctime)s %(funcName)19s || %(message)s",
@@ -922,7 +909,7 @@ if __name__ == '__main__':
         # See http://docs.python.org/library/logging.html for more information
         # on the Python logging module.
         logging.basicConfig(level=logging.DEBUG,
-                            #format="%(levelname)s %(asctime)s %(funcName)19s || %(message)s",
+                            # format="%(levelname)s %(asctime)s %(funcName)19s || %(message)s",
                             format="%(asctime)s %(funcName)19s || %(message)s",
                             datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -942,7 +929,6 @@ if __name__ == '__main__':
         else:
             http_address = "%s:%s" % ("localhost", port)
 
-
     # Initialise the WSGI application.
     app = MSS_WMSResponse(mss_config.nwpaccess, address=http_address)
 
@@ -953,7 +939,6 @@ if __name__ == '__main__':
     # Register vertical section styles.
     for layer, datasets in mss_wms_settings.register_vertical_layers:
         app.register_vsec_layer(datasets, layer)
-
 
     # Start the server.
     from paste import httpserver
@@ -968,11 +953,12 @@ if __name__ == '__main__':
     # http://pythonpaste.org/modules/auth.digest.html#module-paste.auth.digest
     # for more information. (mr, 2011-02-25).
     if mss_wms_settings.enable_basic_http_authentication:
-        logging.debug("Enabling basic HTTP authentication. Username and "\
+        logging.debug("Enabling basic HTTP authentication. Username and "
                       "password required to access the service.")
-        
+
         from paste.auth.basic import AuthBasicHandler
         import hashlib
+
         realm = 'DLR/IPA Mission Support Web Map Service'
 
         def authfunc(environ, username, password):
@@ -983,13 +969,11 @@ if __name__ == '__main__':
 
         app = AuthBasicHandler(app, realm, authfunc)
 
-
-
     # Set use_threadpool=True when using this software. The "False" setting is
     # used for development purposes to reduce debug output.
     use_threadpool = mss_wms_settings.paste_use_threadpool
 
-    logging.debug("Starting PASTE httpserver on %s (%s), port %s. "\
+    logging.debug("Starting PASTE httpserver on %s (%s), port %s. "
                   "Threads are %s." % (hostname, host, port,
                                        "enabled" if use_threadpool else "disabled"))
     logging.debug("SSH tunnel mode is %s. WMS access on client via %s"

@@ -66,10 +66,10 @@ import ui_loopwindow as ui
 import loopviewer_widget as imw
 import mss_qt
 
+"""
+CLASS MSSLoopWindow
+"""
 
-################################################################################
-###                          CLASS MSSLoopWindow                             ###
-################################################################################
 
 class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
     """MSUI view that can load and display batch images. No interactive
@@ -86,18 +86,18 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
        signal, which is emitted by a widget whose time has been changed.
     """
     name = "Loop View"
-    max_views = 4 # maximum number of views
+    max_views = 4  # maximum number of views
 
     def __init__(self, config, *args):
         super(MSSLoopWindow, self).__init__(*args)
         self.setupUi(self)
         self.statusBar.addPermanentWidget(QtGui.QLabel(
-            "Use wheel on image for time navigation, "\
+            "Use wheel on image for time navigation, "
             "shift+wheel for level navigation."))
 
         # Create max_views image labels. The labels will exist
         # in memory, but they won't always be visible to the user.
-        # Connect the changeValidTime signal of the widgets to the 
+        # Connect the changeValidTime signal of the widgets to the
         # changeValidTime() method of this class, which displays
         # the globally synchronized time.
         self.imageWidgets = []
@@ -149,14 +149,13 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
         self.connect(self.tbValidTime_back, QtCore.SIGNAL("clicked()"),
                      functools.partial(self.changeValidTime, False))
 
-
     def setLayout(self, index):
         """Set the layout of the displayed image labels. This slot is called
            whenever an antry from the Layout menu has been selected. It shows/
            hides the ImageLoopWidgets.
         """
-        #print self.mainSplitter.width(), self.mainSplitter.height()
-        #for i in xrange(self.mainSplitter.count()):
+        # print self.mainSplitter.width(), self.mainSplitter.height()
+        # for i in xrange(self.mainSplitter.count()):
         #    print "main", i, self.mainSplitter.widget(i)
 
         # Hide everything.
@@ -173,7 +172,7 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
             # Single view: Hide all sub-splitters and display one label.
             self.mainSplitter.addWidget(self.imageWidgets[0])
             show_widgets = [0]
-        
+
         elif index == 1:
             # Dual view: Hide all sub-splitters and show two labels
             # side by side.
@@ -193,11 +192,11 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
             self.mainSplitter.setOrientation(QtCore.Qt.Horizontal)
             self.rightSplitter.addWidget(self.imageWidgets[1])
             self.rightSplitter.addWidget(self.imageWidgets[2])
-            self.rightSplitter.show()        
+            self.rightSplitter.show()
             self.mainSplitter.insertWidget(0, self.imageWidgets[0])
             show_widgets = [0, 1, 2]
             self.rightSplitter.setSizes(np.ones(self.rightSplitter.count()))
-            self.mainSplitter.setSizes([2*w/3, w/3])
+            self.mainSplitter.setSizes([2 * w / 3, w / 3])
 
         elif index == 3:
             # One large and three small views.
@@ -205,11 +204,11 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
             self.rightSplitter.addWidget(self.imageWidgets[1])
             self.rightSplitter.addWidget(self.imageWidgets[2])
             self.rightSplitter.addWidget(self.imageWidgets[3])
-            self.rightSplitter.show()        
+            self.rightSplitter.show()
             self.mainSplitter.insertWidget(0, self.imageWidgets[0])
             show_widgets = [0, 1, 2, 3]
             self.rightSplitter.setSizes(np.ones(self.rightSplitter.count()))
-            self.mainSplitter.setSizes([2*w/3, w/3])
+            self.mainSplitter.setSizes([2 * w / 3, w / 3])
 
         elif index == 4:
             # Four equally sized views.
@@ -228,7 +227,6 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
         # Show the labels that are visible in the new layout.
         for i in show_widgets:
             self.imageWidgets[i].show()
-
 
     def changeValidTime(self, forward, time=None):
         """Slot called when (a) one of the global time fwd/back buttons has
@@ -254,7 +252,6 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
         self.emit(QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"), forward, time)
 
 
-            
 ################################################################################
 ################################################################################
 # Module test.
@@ -275,4 +272,3 @@ if __name__ == "__main__":
     win = MSSLoopWindow(mss_settings.loop_configuration)
     win.show()
     sys.exit(app.exec_())
-

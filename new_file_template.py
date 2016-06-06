@@ -35,9 +35,3 @@ import sys
 # related third party imports
 
 # local application imports
-
-
-
-###############################################################################
-###                 This separates classes, functions, etc.                 ###
-###############################################################################

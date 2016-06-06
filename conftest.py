@@ -8,4 +8,3 @@ import os
 
 MSS_PATH = py.path.local(__file__).dirname
 sys.path.extend([os.path.join(MSS_PATH, 'thirdparty')])
-

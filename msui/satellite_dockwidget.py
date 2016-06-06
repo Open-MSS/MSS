@@ -37,13 +37,12 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 from mslib import mss_util
 import ui_satellite_dockwidget as ui
 
+"""
+CLASS SatelliteControlWidgeT
+"""
 
-################################################################################
-###                      CLASS SatelliteControlWidget                        ###
-################################################################################
 
 class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
-
     def __init__(self, parent=None, view=None):
         super(SatelliteControlWidget, self).__init__(parent)
         self.setupUi(self)
@@ -61,18 +60,16 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
                      QtCore.SIGNAL("currentIndexChanged(int)"),
                      self.plotOverpassTrack)
 
-
     def selectFile(self):
         """Slot that opens a file dialog to choose a file with satellite
            overpass predictions.
         """
         fname = QtGui.QFileDialog.getOpenFileName(self,
-                    "Open NASA satellite overpass prediction",
-                    "", "(*.*)");
+                                                  "Open NASA satellite overpass prediction",
+                                                  "", "(*.*)")
         if fname.isEmpty():
             return
         self.leFile.setText(fname)
-
 
     def loadFile(self):
         """Load the file specified in leFile and fill the combobox with the
@@ -83,15 +80,14 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
 
         overpass_segments = mss_util.read_nasa_satellite_prediction(fname)
         logging.debug("read %i segments" % len(overpass_segments))
-        
+
         self.cbSatelliteOverpasses.clear()
-        items = ["%s to %s" % (str(seg["utc"][0]), str(seg["utc"][-1])) \
+        items = ["%s to %s" % (str(seg["utc"][0]), str(seg["utc"][-1]))
                  for seg in overpass_segments]
         items.insert(0, "None (select item to plot)")
         self.cbSatelliteOverpasses.addItems(items)
 
         self.overpass_segments = overpass_segments
-
 
     def plotOverpassTrack(self, index):
         """
@@ -106,9 +102,6 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
             self.view.plotSatelliteOverpass(segment)
 
 
-
-################################################################################
-
 if __name__ == "__main__":
     import sys
 
@@ -116,4 +109,3 @@ if __name__ == "__main__":
     win = SatelliteControlWidget()
     win.show()
     sys.exit(app.exec_())
-

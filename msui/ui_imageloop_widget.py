@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_ImageLoopWidget(object):
     def setupUi(self, ImageLoopWidget):
         ImageLoopWidget.setObjectName("ImageLoopWidget")
@@ -92,18 +93,32 @@ class Ui_ImageLoopWidget(object):
         QtCore.QMetaObject.connectSlotsByName(ImageLoopWidget)
 
     def retranslateUi(self, ImageLoopWidget):
-        ImageLoopWidget.setWindowTitle(QtGui.QApplication.translate("ImageLoopWidget", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.btZoomIn.setToolTip(QtGui.QApplication.translate("ImageLoopWidget", "zoom in", None, QtGui.QApplication.UnicodeUTF8))
-        self.btZoomIn.setText(QtGui.QApplication.translate("ImageLoopWidget", "+", None, QtGui.QApplication.UnicodeUTF8))
-        self.btZoomOut.setToolTip(QtGui.QApplication.translate("ImageLoopWidget", "zoom out", None, QtGui.QApplication.UnicodeUTF8))
-        self.btZoomOut.setText(QtGui.QApplication.translate("ImageLoopWidget", "-", None, QtGui.QApplication.UnicodeUTF8))
-        self.btZoomNormalSize.setToolTip(QtGui.QApplication.translate("ImageLoopWidget", "reset image size to original size", None, QtGui.QApplication.UnicodeUTF8))
-        self.btZoomNormalSize.setText(QtGui.QApplication.translate("ImageLoopWidget", "orig", None, QtGui.QApplication.UnicodeUTF8))
-        self.btFitToWindow.setToolTip(QtGui.QApplication.translate("ImageLoopWidget", "fit image size to window", None, QtGui.QApplication.UnicodeUTF8))
-        self.btFitToWindow.setText(QtGui.QApplication.translate("ImageLoopWidget", "fit", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbLevel_down.setToolTip(QtGui.QApplication.translate("ImageLoopWidget", "decrease level", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbLevel_down.setText(QtGui.QApplication.translate("ImageLoopWidget", "\\/", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbLevel_up.setToolTip(QtGui.QApplication.translate("ImageLoopWidget", "increase level", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbLevel_up.setText(QtGui.QApplication.translate("ImageLoopWidget", "/\\", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblInfo.setText(QtGui.QApplication.translate("ImageLoopWidget", "<Product Information>", None, QtGui.QApplication.UnicodeUTF8))
-
+        ImageLoopWidget.setWindowTitle(
+            QtGui.QApplication.translate("ImageLoopWidget", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        self.btZoomIn.setToolTip(
+            QtGui.QApplication.translate("ImageLoopWidget", "zoom in", None, QtGui.QApplication.UnicodeUTF8))
+        self.btZoomIn.setText(
+            QtGui.QApplication.translate("ImageLoopWidget", "+", None, QtGui.QApplication.UnicodeUTF8))
+        self.btZoomOut.setToolTip(
+            QtGui.QApplication.translate("ImageLoopWidget", "zoom out", None, QtGui.QApplication.UnicodeUTF8))
+        self.btZoomOut.setText(
+            QtGui.QApplication.translate("ImageLoopWidget", "-", None, QtGui.QApplication.UnicodeUTF8))
+        self.btZoomNormalSize.setToolTip(
+            QtGui.QApplication.translate("ImageLoopWidget", "reset image size to original size", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.btZoomNormalSize.setText(
+            QtGui.QApplication.translate("ImageLoopWidget", "orig", None, QtGui.QApplication.UnicodeUTF8))
+        self.btFitToWindow.setToolTip(QtGui.QApplication.translate("ImageLoopWidget", "fit image size to window", None,
+                                                                   QtGui.QApplication.UnicodeUTF8))
+        self.btFitToWindow.setText(
+            QtGui.QApplication.translate("ImageLoopWidget", "fit", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbLevel_down.setToolTip(
+            QtGui.QApplication.translate("ImageLoopWidget", "decrease level", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbLevel_down.setText(
+            QtGui.QApplication.translate("ImageLoopWidget", "\\/", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbLevel_up.setToolTip(
+            QtGui.QApplication.translate("ImageLoopWidget", "increase level", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbLevel_up.setText(
+            QtGui.QApplication.translate("ImageLoopWidget", "/\\", None, QtGui.QApplication.UnicodeUTF8))
+        self.lblInfo.setText(QtGui.QApplication.translate("ImageLoopWidget", "<Product Information>", None,
+                                                          QtGui.QApplication.UnicodeUTF8))

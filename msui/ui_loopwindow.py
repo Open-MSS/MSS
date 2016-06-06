@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_ImageLoopWindow(object):
     def setupUi(self, ImageLoopWindow):
         ImageLoopWindow.setObjectName("ImageLoopWindow")
@@ -118,35 +119,69 @@ class Ui_ImageLoopWindow(object):
         QtCore.QMetaObject.connectSlotsByName(ImageLoopWindow)
 
     def retranslateUi(self, ImageLoopWindow):
-        ImageLoopWindow.setWindowTitle(QtGui.QApplication.translate("ImageLoopWindow", "Loop View - DLR/IPA Mission Support", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("ImageLoopWindow", "Synchronized Valid Time:", None, QtGui.QApplication.UnicodeUTF8))
-        self.dteValidTime.setDisplayFormat(QtGui.QApplication.translate("ImageLoopWindow", "yyyy-MM-dd hh:mm UTC", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbValidTime_back.setToolTip(QtGui.QApplication.translate("ImageLoopWindow", "decrement time", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbValidTime_back.setText(QtGui.QApplication.translate("ImageLoopWindow", "<<", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setToolTip(QtGui.QApplication.translate("ImageLoopWindow", "time step for changing the valid time", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(0, QtGui.QApplication.translate("ImageLoopWindow", "5 min", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(1, QtGui.QApplication.translate("ImageLoopWindow", "10 min", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(2, QtGui.QApplication.translate("ImageLoopWindow", "15 min", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(3, QtGui.QApplication.translate("ImageLoopWindow", "30 min", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(4, QtGui.QApplication.translate("ImageLoopWindow", "1 hour", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(5, QtGui.QApplication.translate("ImageLoopWindow", "3 hours", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(6, QtGui.QApplication.translate("ImageLoopWindow", "6 hours", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(7, QtGui.QApplication.translate("ImageLoopWindow", "12 hours", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbVTStep.setItemText(8, QtGui.QApplication.translate("ImageLoopWindow", "24 hours", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbValidTime_fwd.setToolTip(QtGui.QApplication.translate("ImageLoopWindow", "increment time", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbValidTime_fwd.setText(QtGui.QApplication.translate("ImageLoopWindow", ">>", None, QtGui.QApplication.UnicodeUTF8))
-        self.menu_File.setTitle(QtGui.QApplication.translate("ImageLoopWindow", "&File", None, QtGui.QApplication.UnicodeUTF8))
-        self.menu_Layout.setTitle(QtGui.QApplication.translate("ImageLoopWindow", "&Layout", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionE_xit.setText(QtGui.QApplication.translate("ImageLoopWindow", "E&xit Module", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionE_xit.setShortcut(QtGui.QApplication.translate("ImageLoopWindow", "Ctrl+X", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSingleView.setText(QtGui.QApplication.translate("ImageLoopWindow", "&Single View", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionSingleView.setShortcut(QtGui.QApplication.translate("ImageLoopWindow", "Alt+1", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionDualView.setText(QtGui.QApplication.translate("ImageLoopWindow", "&Dual View", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionDualView.setShortcut(QtGui.QApplication.translate("ImageLoopWindow", "Alt+2", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOneLargeTwoSmall.setText(QtGui.QApplication.translate("ImageLoopWindow", "&One Large, Two Small", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOneLargeTwoSmall.setShortcut(QtGui.QApplication.translate("ImageLoopWindow", "Alt+3", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOneLargeThreeSmall.setText(QtGui.QApplication.translate("ImageLoopWindow", "One &Large, Three Small", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionOneLargeThreeSmall.setShortcut(QtGui.QApplication.translate("ImageLoopWindow", "Alt+4", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionQuadView.setText(QtGui.QApplication.translate("ImageLoopWindow", "&Quad View", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionQuadView.setShortcut(QtGui.QApplication.translate("ImageLoopWindow", "Alt+5", None, QtGui.QApplication.UnicodeUTF8))
-
+        ImageLoopWindow.setWindowTitle(
+            QtGui.QApplication.translate("ImageLoopWindow", "Loop View - DLR/IPA Mission Support", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(QtGui.QApplication.translate("ImageLoopWindow", "Synchronized Valid Time:", None,
+                                                          QtGui.QApplication.UnicodeUTF8))
+        self.dteValidTime.setDisplayFormat(QtGui.QApplication.translate("ImageLoopWindow", "yyyy-MM-dd hh:mm UTC", None,
+                                                                        QtGui.QApplication.UnicodeUTF8))
+        self.tbValidTime_back.setToolTip(
+            QtGui.QApplication.translate("ImageLoopWindow", "decrement time", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbValidTime_back.setText(
+            QtGui.QApplication.translate("ImageLoopWindow", "<<", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setToolTip(
+            QtGui.QApplication.translate("ImageLoopWindow", "time step for changing the valid time", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(0, QtGui.QApplication.translate("ImageLoopWindow", "5 min", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(1, QtGui.QApplication.translate("ImageLoopWindow", "10 min", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(2, QtGui.QApplication.translate("ImageLoopWindow", "15 min", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(3, QtGui.QApplication.translate("ImageLoopWindow", "30 min", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(4, QtGui.QApplication.translate("ImageLoopWindow", "1 hour", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(5, QtGui.QApplication.translate("ImageLoopWindow", "3 hours", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(6, QtGui.QApplication.translate("ImageLoopWindow", "6 hours", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(7, QtGui.QApplication.translate("ImageLoopWindow", "12 hours", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.cbVTStep.setItemText(8, QtGui.QApplication.translate("ImageLoopWindow", "24 hours", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.tbValidTime_fwd.setToolTip(
+            QtGui.QApplication.translate("ImageLoopWindow", "increment time", None, QtGui.QApplication.UnicodeUTF8))
+        self.tbValidTime_fwd.setText(
+            QtGui.QApplication.translate("ImageLoopWindow", ">>", None, QtGui.QApplication.UnicodeUTF8))
+        self.menu_File.setTitle(
+            QtGui.QApplication.translate("ImageLoopWindow", "&File", None, QtGui.QApplication.UnicodeUTF8))
+        self.menu_Layout.setTitle(
+            QtGui.QApplication.translate("ImageLoopWindow", "&Layout", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionE_xit.setText(
+            QtGui.QApplication.translate("ImageLoopWindow", "E&xit Module", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionE_xit.setShortcut(
+            QtGui.QApplication.translate("ImageLoopWindow", "Ctrl+X", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSingleView.setText(
+            QtGui.QApplication.translate("ImageLoopWindow", "&Single View", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSingleView.setShortcut(
+            QtGui.QApplication.translate("ImageLoopWindow", "Alt+1", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionDualView.setText(
+            QtGui.QApplication.translate("ImageLoopWindow", "&Dual View", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionDualView.setShortcut(
+            QtGui.QApplication.translate("ImageLoopWindow", "Alt+2", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOneLargeTwoSmall.setText(
+            QtGui.QApplication.translate("ImageLoopWindow", "&One Large, Two Small", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.actionOneLargeTwoSmall.setShortcut(
+            QtGui.QApplication.translate("ImageLoopWindow", "Alt+3", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOneLargeThreeSmall.setText(
+            QtGui.QApplication.translate("ImageLoopWindow", "One &Large, Three Small", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.actionOneLargeThreeSmall.setShortcut(
+            QtGui.QApplication.translate("ImageLoopWindow", "Alt+4", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionQuadView.setText(
+            QtGui.QApplication.translate("ImageLoopWindow", "&Quad View", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionQuadView.setShortcut(
+            QtGui.QApplication.translate("ImageLoopWindow", "Alt+5", None, QtGui.QApplication.UnicodeUTF8))
