@@ -1474,7 +1474,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         removed_files = 0
         for f, fsize, fage in files:
             cum_size_bytes += fsize
-            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or fage > mss_settings.wms_cache_max_age_seconds:
+            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or \
+                            fage > mss_settings.wms_cache_max_age_seconds:
                 os.remove(f)
                 removed_files += 1
 
@@ -1671,5 +1672,7 @@ if __name__ == "__main__":
 
 # IPYTHON TEST LINES.
 
-# import wms_control; base_url = "http://localhost:8081/mss_wms"; wms = wms_control.MSSWebMapService(base_url, version='1.1.1')
+# import wms_control
+# base_url = "http://localhost:8081/mss_wms"
+# wms = wms_control.MSSWebMapService(base_url, version='1.1.1')
 # l = wms.contents["PLGeopWind"]

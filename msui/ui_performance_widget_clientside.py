@@ -283,10 +283,13 @@ class Ui_PerformanceWidget(object):
         PerformanceWidget.setWindowTitle(
             _translate("PerformanceWidget", "Flight Performance Service Dock Widget", None))
         self.lblNWPWarning.setText(_translate("PerformanceWidget",
-                                              "<html><head/><body><p><span style=\" font-weight:600; color:#ff0000;\">NOTE:</span> Wind forecasts are only considered for cruise segments, not for climb/descent segments.</p></body></html>",
+                                              "<html><head/><body><p><span style=\" font-weight:600; "
+                                              "color:#ff0000;\">NOTE:</span> Wind forecasts are only considered for "
+                                              "cruise segments, not for climb/descent segments.</p></body></html>",
                                               None))
         self.btComputePerformance.setToolTip(_translate("PerformanceWidget",
-                                                        "Request the computation of the flight performance with the specifed parameters.",
+                                                        "Request the computation of the flight performance with the "
+                                                        "specifed parameters.",
                                                         None))
         self.btComputePerformance.setText(_translate("PerformanceWidget", "compute performance", None))
         self.btExportToFX.setToolTip(
@@ -300,17 +303,20 @@ class Ui_PerformanceWidget(object):
         self.cbAircraftConfig.setItemText(0, _translate("PerformanceWidget", "+10 DC", None))
         self.label_3.setText(_translate("PerformanceWidget", "Takeoff time:", None))
         self.dteTakeoffTime.setToolTip(_translate("PerformanceWidget",
-                                                  "The time at which you would like the aircraft to be at the waypoint you specify in the edit field to the right.",
+                                                  "The time at which you would like the aircraft to be at the "
+                                                  "waypoint you specify in the edit field to the right.",
                                                   None))
         self.dteTakeoffTime.setDisplayFormat(_translate("PerformanceWidget", "yyyy/MM/dd hh:mm UTC", None))
         self.label_4.setText(_translate("PerformanceWidget", "Takeoff weight:", None))
         self.sbTakeoffWeight.setToolTip(_translate("PerformanceWidget",
-                                                   "Either the takeoff weight or the landing weight of the aircraft, depending on the mode you have selected.",
+                                                   "Either the takeoff weight or the landing weight of the aircraft, "
+                                                   "depending on the mode you have selected.",
                                                    None))
         self.sbTakeoffWeight.setSuffix(_translate("PerformanceWidget", " lbs", None))
         self.cbUseNWP.setText(_translate("PerformanceWidget", "Use NWP from Web Service:", None))
         self.cbCacheEnabled.setToolTip(_translate("PerformanceWidget",
-                                                  "Enable the image cache (retrieved images will be stored locally to speed up repeated retrievals).",
+                                                  "Enable the image cache (retrieved images will be stored locally to "
+                                                  "speed up repeated retrievals).",
                                                   None))
         self.cbCacheEnabled.setText(_translate("PerformanceWidget", "Cache", None))
         self.btClearCache.setToolTip(_translate("PerformanceWidget", "Clear all cache contents.", None))
@@ -325,7 +331,8 @@ class Ui_PerformanceWidget(object):
         self.cbWMSLayer.setItemText(0, _translate("PerformanceWidget", "ECMWF ..", None))
         self.label_5.setText(_translate("PerformanceWidget", "Initialisation:", None))
         self.cbInitTime.setToolTip(_translate("PerformanceWidget",
-                                              "If the mode you have selected uses NWP data, select a forecast initialisation time.",
+                                              "If the mode you have selected uses NWP data, select a forecast "
+                                              "initialisation time.",
                                               None))
         self.cbInitTime.setItemText(0, _translate("PerformanceWidget", "2010-12-12T00:00:00Z", None))
         self.tbInitTime_cbback.setText(_translate("PerformanceWidget", "<", None))

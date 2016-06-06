@@ -1056,15 +1056,15 @@ pv_eth_cmap_0 = matplotlib.colors.ListedColormap(pv_cmap_data)
 # muessten folgende sein:
 #         ( (/142, 178, 255/) # -2 .. 0
 #           (/181, 201, 255/) #  0 .. .2
-#           (/214, 226, 237/) #
-#           (/242, 221, 160/) #
-#           (/239, 193, 130/) #
-#           (/242, 132,  68/) #
-#           (/220,  60,  30/) #
-#           (/255, 120,  20/) #
-#           (/255, 190,  20/) #
-#           (/255, 249,  20/) #
-#           (/170, 255,  60/) )/255
+#           (/214, 226, 237/) # 
+#           (/242, 221, 160/) # 
+#           (/239, 193, 130/) # 
+#           (/242, 132,  68/) # 
+#           (/220,  60,  30/) # 
+#           (/255, 120,  20/) # 
+#           (/255, 190,  20/) # 
+#           (/255, 249,  20/) # 
+#           (/170, 255,  60/) )/255  
 
 def scale_pvu_to_01(pvu):
     return (pvu + 2.) / 10.
@@ -1425,7 +1425,8 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa) Vertical Section")
+                                titlestring="Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa) "
+                                            "Vertical Section")
 
         # Add colorbar.
         if not self.noframe:

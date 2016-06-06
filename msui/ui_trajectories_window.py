@@ -228,11 +228,20 @@ class Ui_TrajectoriesWindow(object):
         self.label_4.setText(
             QtGui.QApplication.translate("TrajectoriesWindow", "Select:", None, QtGui.QApplication.UnicodeUTF8))
         self.leSelectionQuery.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow",
-                                                                      "Enter selection criteria here. Available variables are %lat, %lon, %pres, \n"
-                                                                      "and %meta(\"NAME\"), where NAME has to be the name of a matatag that appears in the data. \n"
-                                                                      "For example, type \'%lat >= 45.\' will select all elements with a start point latitude larger \n"
-                                                                      "equal to 45 degrees after you click the button on the left. To select all trajectories with a \n"
-                                                                      "start latitude larger than 45 degrees at flight level 320, type \'%lat > 45. and %meta(\"flightlevel\") == 320\'.",
+                                                                      "Enter selection criteria here. Available "
+                                                                      "variables are %lat, %lon, %pres, \n"
+                                                                      "and %meta(\"NAME\"), where NAME has to be "
+                                                                      "the name of a matatag that appears in "
+                                                                      "the data. \n"
+                                                                      "For example, type \'%lat >= 45.\' will select "
+                                                                      "all elements with a start point latitude "
+                                                                      "larger \n"
+                                                                      "equal to 45 degrees after you click the "
+                                                                      "button on the left. To select all "
+                                                                      "trajectories with a \n"
+                                                                      "start latitude larger than 45 degrees at "
+                                                                      "flight level 320, type \'%lat > 45. and "
+                                                                      "%meta(\"flightlevel\") == 320\'.",
                                                                       None, QtGui.QApplication.UnicodeUTF8))
         self.cbSelectElements.setItemText(0, QtGui.QApplication.translate("TrajectoriesWindow", "from all items", None,
                                                                           QtGui.QApplication.UnicodeUTF8))
@@ -240,7 +249,8 @@ class Ui_TrajectoriesWindow(object):
                                                                           "from children of current node", None,
                                                                           QtGui.QApplication.UnicodeUTF8))
         self.btSelectMapElements.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow",
-                                                                         "Select all items listed below that match the criteria given on the right.",
+                                                                         "Select all items listed below that match "
+                                                                         "the criteria given on the right.",
                                                                          None, QtGui.QApplication.UnicodeUTF8))
         self.btSelectMapElements.setText(
             QtGui.QApplication.translate("TrajectoriesWindow", "&go!", None, QtGui.QApplication.UnicodeUTF8))
@@ -300,7 +310,9 @@ class Ui_TrajectoriesWindow(object):
         self.teTimeMarker.setDisplayFormat(
             QtGui.QApplication.translate("TrajectoriesWindow", "hh:mm", None, QtGui.QApplication.UnicodeUTF8))
         self.btTimeMarker.setToolTip(QtGui.QApplication.translate("TrajectoriesWindow",
-                                                                  "Draw time markers along the trajectories. These will be dots with the spacing given on the right (hh:mm).",
+                                                                  "Draw time markers along the trajectories. These "
+                                                                  "will be dots with the spacing given on the "
+                                                                  "right (hh:mm).",
                                                                   None, QtGui.QApplication.UnicodeUTF8))
         self.btTimeMarker.setText(
             QtGui.QApplication.translate("TrajectoriesWindow", "apply", None, QtGui.QApplication.UnicodeUTF8))

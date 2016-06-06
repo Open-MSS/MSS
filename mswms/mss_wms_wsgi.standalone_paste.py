@@ -58,7 +58,7 @@ with Ctrl+C. If you need to keep the server running on a remote
 computer, use the Unix 'nohup' command and provide a logfile to which
 all output can be written.
 
-The following command line arguments are supported:
+The following command line arguments are supported: 
 
 a) "--ssh" Starts the server in ssh-tunnel mode, i.e. the GetMap URL
 specified in the capabilities document points to localhost instead of
@@ -176,7 +176,8 @@ class MSS_WMSResponse(object):
             <DCPType>
               <HTTP>
                 <Get>
-                  <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/mss_wms?"/>
+                  <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                  xlink:href="http://localhost:8081/mss_wms?"/>
                 </Get>
               </HTTP>
             </DCPType>
@@ -186,7 +187,8 @@ class MSS_WMSResponse(object):
             <DCPType>
               <HTTP>
                 <Get>
-                  <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/mss_wms?"/>
+                  <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink"
+                  xlink:href="http://localhost:8081/mss_wms?"/>
                 </Get>
               </HTTP>
             </DCPType>
@@ -802,6 +804,7 @@ class MSS_WMSResponse(object):
                       "\n\nError message: %s" % e
                 return self.service_exception(text=msg), None
 
+
         elif mode == "GetVSec":
 
             # Vertical secton path.
@@ -959,11 +962,13 @@ if __name__ == '__main__':
 
         realm = 'DLR/IPA Mission Support Web Map Service'
 
+
         def authfunc(environ, username, password):
             for u, p in mss_wms_settings.allowed_users:
                 if (u == username) and (p == hashlib.md5(password).hexdigest()):
                     return True
             return False
+
 
         app = AuthBasicHandler(app, realm, authfunc)
 

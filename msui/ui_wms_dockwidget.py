@@ -352,7 +352,8 @@ class Ui_WMSDockWidget(object):
         self.tbViewCapabilities.setText(
             QtGui.QApplication.translate("WMSDockWidget", "view", None, QtGui.QApplication.UnicodeUTF8))
         self.cbAutoUpdate.setToolTip(QtGui.QApplication.translate("WMSDockWidget",
-                                                                  "Automatically request an updated map when the layer parameters have changed.",
+                                                                  "Automatically request an updated map when the "
+                                                                  "layer parameters have changed.",
                                                                   None, QtGui.QApplication.UnicodeUTF8))
         self.cbAutoUpdate.setText(
             QtGui.QApplication.translate("WMSDockWidget", "update on changes", None, QtGui.QApplication.UnicodeUTF8))
@@ -374,11 +375,18 @@ class Ui_WMSDockWidget(object):
         self.cbStyle.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "...", None,
                                                                  QtGui.QApplication.UnicodeUTF8))
         self.teLayerAbstract.setHtml(QtGui.QApplication.translate("WMSDockWidget",
-                                                                  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                                                  "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+                                                                  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" "
+                                                                  "\"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+                                                                  "<html><head><meta name=\"qrichtext\" content=\"1\" "
+                                                                  "/><style type=\"text/css\">\n"
                                                                   "p, li { white-space: pre-wrap; }\n"
-                                                                  "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-                                                                  "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"></p></body></html>",
+                                                                  "</style></head><body style=\" "
+                                                                  "font-family:\'Sans Serif\'; font-size:10pt; "
+                                                                  "font-weight:400; font-style:normal;\">\n"
+                                                                  "<p style=\"-qt-paragraph-type:empty; margin-top:0px;"
+                                                                  " margin-bottom:0px; margin-left:0px; "
+                                                                  "margin-right:0px; -qt-block-indent:0; "
+                                                                  "text-indent:0px;\"></p></body></html>",
                                                                   None, QtGui.QApplication.UnicodeUTF8))
         self.cbLevelOn.setText(
             QtGui.QApplication.translate("WMSDockWidget", "Level:", None, QtGui.QApplication.UnicodeUTF8))
@@ -394,7 +402,9 @@ class Ui_WMSDockWidget(object):
         self.label.setText(
             QtGui.QApplication.translate("WMSDockWidget", "Cache:", None, QtGui.QApplication.UnicodeUTF8))
         self.cbCacheEnabled.setToolTip(QtGui.QApplication.translate("WMSDockWidget",
-                                                                    "Enable the image cache (retrieved images will be stored locally to speed up repeated retrievals).",
+                                                                    "Enable the image cache (retrieved images will "
+                                                                    "be stored locally to speed up repeated "
+                                                                    "retrievals).",
                                                                     None, QtGui.QApplication.UnicodeUTF8))
         self.cbCacheEnabled.setText(
             QtGui.QApplication.translate("WMSDockWidget", "on", None, QtGui.QApplication.UnicodeUTF8))
@@ -405,7 +415,8 @@ class Ui_WMSDockWidget(object):
         self.cbInitialisationOn.setText(
             QtGui.QApplication.translate("WMSDockWidget", "Initialisation:", None, QtGui.QApplication.UnicodeUTF8))
         self.cbInitTime.setToolTip(QtGui.QApplication.translate("WMSDockWidget",
-                                                                "Forecast initialisation time (base time) values provided by the WMS server.",
+                                                                "Forecast initialisation time (base time) values "
+                                                                "provided by the WMS server.",
                                                                 None, QtGui.QApplication.UnicodeUTF8))
         self.cbInitTime.setItemText(0, QtGui.QApplication.translate("WMSDockWidget", "2010-12-12T00:00:00Z", None,
                                                                     QtGui.QApplication.UnicodeUTF8))
@@ -432,7 +443,10 @@ class Ui_WMSDockWidget(object):
         self.tbValidTime_cbfwd.setText(
             QtGui.QApplication.translate("WMSDockWidget", ">", None, QtGui.QApplication.UnicodeUTF8))
         self.dteValidTime.setToolTip(QtGui.QApplication.translate("WMSDockWidget",
-                                                                  "Specify the time value here, especially if the server does not provide predefined values. Keep in mind that the specified value may not be available from the server, though.",
+                                                                  "Specify the time value here, especially if the "
+                                                                  "server does not provide predefined values. "
+                                                                  "Keep in mind that the specified value may not be "
+                                                                  "available from the server, though.",
                                                                   None, QtGui.QApplication.UnicodeUTF8))
         self.dteValidTime.setDisplayFormat(
             QtGui.QApplication.translate("WMSDockWidget", "yyyy/MM/dd hh:mm UTC", None, QtGui.QApplication.UnicodeUTF8))
