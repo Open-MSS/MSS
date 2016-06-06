@@ -44,6 +44,3 @@ class Ui_TimeSeriesViewWindow(object):
         TimeSeriesViewWindow.setWindowTitle(
             QtGui.QApplication.translate("TimeSeriesViewWindow", "Time Series View - DLR/IPA Mission Support", None,
                                          QtGui.QApplication.UnicodeUTF8))
-
-
-

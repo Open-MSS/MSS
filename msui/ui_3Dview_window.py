@@ -62,6 +62,3 @@ class Ui_View3DWindow(object):
         self.tab3DView.setTabText(self.tab3DView.indexOf(self.tab_4),
                                   QtGui.QApplication.translate("View3DWindow", "Terrain", None,
                                                                QtGui.QApplication.UnicodeUTF8))
-
-
-

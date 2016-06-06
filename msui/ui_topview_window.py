@@ -142,6 +142,3 @@ class Ui_TopViewWindow(object):
             QtGui.QApplication.translate("TopViewWindow", "&Del", None, QtGui.QApplication.UnicodeUTF8))
         self.btDelWaypoint.setShortcut(
             QtGui.QApplication.translate("TopViewWindow", "D", None, QtGui.QApplication.UnicodeUTF8))
-
-
-

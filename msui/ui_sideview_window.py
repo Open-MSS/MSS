@@ -100,6 +100,3 @@ class Ui_SideViewWindow(object):
             QtGui.QApplication.translate("SideViewWindow", "Del", None, QtGui.QApplication.UnicodeUTF8))
         self.btDelWaypoint.setShortcut(
             QtGui.QApplication.translate("SideViewWindow", "D", None, QtGui.QApplication.UnicodeUTF8))
-
-
-
