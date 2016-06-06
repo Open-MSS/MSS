@@ -742,7 +742,7 @@ def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
         if not quiet:
             print 'copying variable', varname
         # quantize data?
-        if lsd_dict is not None and lsd_dict.has_key(varname):
+        if lsd_dict is not None and varname in lsd_dict:
             lsd = lsd_dict[varname]
             if not quiet:
                 print 'truncating to least_significant_digit =', lsd
