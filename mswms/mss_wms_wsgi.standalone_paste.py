@@ -58,7 +58,7 @@ with Ctrl+C. If you need to keep the server running on a remote
 computer, use the Unix 'nohup' command and provide a logfile to which
 all output can be written.
 
-The following command line arguments are supported: 
+The following command line arguments are supported:
 
 a) "--ssh" Starts the server in ssh-tunnel mode, i.e. the GetMap URL
 specified in the capabilities document points to localhost instead of
