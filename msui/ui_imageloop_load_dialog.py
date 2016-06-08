@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_ProductChooserDialog(object):
     def setupUi(self, ProductChooserDialog):
         ProductChooserDialog.setObjectName("ProductChooserDialog")
@@ -101,7 +102,7 @@ class Ui_ProductChooserDialog(object):
         self.verticalLayout.addLayout(self.horizontalLayout_4)
         self.buttonBox = QtGui.QDialogButtonBox(ProductChooserDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
@@ -111,15 +112,27 @@ class Ui_ProductChooserDialog(object):
         QtCore.QMetaObject.connectSlotsByName(ProductChooserDialog)
 
     def retranslateUi(self, ProductChooserDialog):
-        ProductChooserDialog.setWindowTitle(QtGui.QApplication.translate("ProductChooserDialog", "Product Chooser", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("ProductChooserDialog", "Type:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbType.setItemText(0, QtGui.QApplication.translate("ProductChooserDialog", "(type)", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("ProductChooserDialog", "Product:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbProduct.setItemText(0, QtGui.QApplication.translate("ProductChooserDialog", "(product)", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("ProductChooserDialog", "Region:", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbRegion.setItemText(0, QtGui.QApplication.translate("ProductChooserDialog", "(region)", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("ProductChooserDialog", "Initialisation:", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbInitTime_back.setText(QtGui.QApplication.translate("ProductChooserDialog", "<<", None, QtGui.QApplication.UnicodeUTF8))
-        self.dteInitTime.setDisplayFormat(QtGui.QApplication.translate("ProductChooserDialog", "yyyy-MM-dd hh:mm UTC", None, QtGui.QApplication.UnicodeUTF8))
-        self.tbInitTime_fwd.setText(QtGui.QApplication.translate("ProductChooserDialog", ">>", None, QtGui.QApplication.UnicodeUTF8))
-
+        ProductChooserDialog.setWindowTitle(
+            QtGui.QApplication.translate("ProductChooserDialog", "Product Chooser", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.label_5.setText(
+            QtGui.QApplication.translate("ProductChooserDialog", "Type:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbType.setItemText(0, QtGui.QApplication.translate("ProductChooserDialog", "(type)", None,
+                                                                QtGui.QApplication.UnicodeUTF8))
+        self.label_4.setText(
+            QtGui.QApplication.translate("ProductChooserDialog", "Product:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbProduct.setItemText(0, QtGui.QApplication.translate("ProductChooserDialog", "(product)", None,
+                                                                   QtGui.QApplication.UnicodeUTF8))
+        self.label_6.setText(
+            QtGui.QApplication.translate("ProductChooserDialog", "Region:", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbRegion.setItemText(0, QtGui.QApplication.translate("ProductChooserDialog", "(region)", None,
+                                                                  QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("ProductChooserDialog", "Initialisation:", None,
+                                                          QtGui.QApplication.UnicodeUTF8))
+        self.tbInitTime_back.setText(
+            QtGui.QApplication.translate("ProductChooserDialog", "<<", None, QtGui.QApplication.UnicodeUTF8))
+        self.dteInitTime.setDisplayFormat(
+            QtGui.QApplication.translate("ProductChooserDialog", "yyyy-MM-dd hh:mm UTC", None,
+                                         QtGui.QApplication.UnicodeUTF8))
+        self.tbInitTime_fwd.setText(
+            QtGui.QApplication.translate("ProductChooserDialog", ">>", None, QtGui.QApplication.UnicodeUTF8))

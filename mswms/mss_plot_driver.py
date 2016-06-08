@@ -46,10 +46,10 @@ import numpy as np
 from mslib import netCDF4tools
 from mslib import mss_util
 
+"""
+MSS Plot Driver
+"""
 
-###############################################################################
-###                             MSS Plot Driver                             ###
-###############################################################################
 
 class MSSPlotDriver(object):
     """Abstract super class for implementing driver classes that provide
@@ -70,7 +70,7 @@ class MSSPlotDriver(object):
     set_plot_parameters() and plot().
     """
     __metaclass__ = ABCMeta
-    
+
     def __init__(self, data_access_object):
         """Requires an instance of a data access object from the MSS
            configuration (i.e. an NWPDataAccess instance).
@@ -79,14 +79,12 @@ class MSSPlotDriver(object):
         self.dataset = None
         self.plot_object = None
 
-
     def __del__(self):
         """Closes the open NetCDF dataset, if existing.
         """
         logging.debug("closing plot driver")
         if self.dataset:
             self.dataset.close()
-
 
     def _set_time(self, init_time, fc_time):
         """Open the dataset that corresponds to a forecast field specified
@@ -112,9 +110,9 @@ class MSSPlotDriver(object):
             self.vert_order = None
             self.vert_units = None
             return
-        
+
         if fc_time < init_time:
-            msg = "Forecast valid time cannot be earlier than "\
+            msg = "Forecast valid time cannot be earlier than " \
                   "initialisation time."
             logging.error(msg)
             raise ValueError(msg)
@@ -159,10 +157,10 @@ class MSSPlotDriver(object):
                           short_filename)
             if short_filename not in available_files:
                 logging.error("ERROR: file %s does not exist" % short_filename)
-                raise IOError("file %s does not exist" % short_filename)    
+                raise IOError("file %s does not exist" % short_filename)
 
         if len(filenames) == 0:
-            raise ValueError("no files found that correspond to the specified "\
+            raise ValueError("no files found that correspond to the specified "
                              "datafields. Aborting..")
 
         self.init_time = init_time
@@ -171,7 +169,7 @@ class MSSPlotDriver(object):
         logging.debug("opening datasets.")
         dsKWargs = self.data_access.mfDatasetArgs()
         dataset = netCDF4tools.MFDatasetCommonDims(filenames, **dsKWargs)
-            
+
         # Load and check time dimension. self.dataset will remain None
         # if an Exception is raised here.
         timename, timevar = netCDF4tools.identify_CF_time(dataset)
@@ -189,7 +187,7 @@ class MSSPlotDriver(object):
         # Load lat/lon dimensions.
         try:
             lat_data, lon_data, lat_order = \
-                      netCDF4tools.get_latlon_data(dataset)
+                netCDF4tools.get_latlon_data(dataset)
         except Exception as e:
             logging.error("ERROR: %s" % e)
             dataset.close()
@@ -204,7 +202,7 @@ class MSSPlotDriver(object):
         vert_units = None
 
         hybrid_name, hybrid_var, hybrid_orientation = \
-                  netCDF4tools.identify_CF_hybrid(dataset)
+            netCDF4tools.identify_CF_hybrid(dataset)
         if hybrid_var:
             vert_data = hybrid_var[:]
             vert_orientation = hybrid_orientation
@@ -212,7 +210,7 @@ class MSSPlotDriver(object):
 
         if vert_data is None:
             isopressure_name, isopressure_var, isopressure_orientation = \
-                              netCDF4tools.identify_CF_isopressure(dataset)
+                netCDF4tools.identify_CF_isopressure(dataset)
             if isopressure_var:
                 vert_data = isopressure_var[:]
                 vert_orientation = isopressure_orientation
@@ -220,12 +218,12 @@ class MSSPlotDriver(object):
 
         if vert_data is None:
             isopotvort_name, isopotvort_var, isopotvort_orientation = \
-                              netCDF4tools.identify_CF_isopotvort(dataset)
+                netCDF4tools.identify_CF_isopotvort(dataset)
             if isopotvort_var:
                 vert_data = isopotvort_var[:]
                 vert_orientation = isopotvort_orientation
                 vert_units = "10^-3 PVU"
-        
+
         self.dataset = dataset
         self.times = times
         self.lat_data = lat_data
@@ -238,7 +236,6 @@ class MSSPlotDriver(object):
         # Identify the variable objects from the NetCDF file that correspond
         # to the data fields required by the plot object.
         self._find_data_vars()
-
 
     def _find_data_vars(self):
         """Find NetCDF variables of required data fields.
@@ -257,10 +254,9 @@ class MSSPlotDriver(object):
                           varname, df_name)
             self.data_vars[df_name] = var
 
-
     @abstractmethod
     def set_plot_parameters(self, plot_object, init_time=None, valid_time=None,
-                            style=None, bbox=None, figsize=(800,600),
+                            style=None, bbox=None, figsize=(800, 600),
                             noframe=False, require_reload=False, transparent=False,
                             return_format="image/png"):
         """Set parameters controlling the plot.
@@ -295,7 +291,6 @@ class MSSPlotDriver(object):
         self.return_format = return_format
 
         self._set_time(init_time, valid_time)
-
 
     @abstractmethod
     def update_plot_parameters(self, plot_object=None, figsize=None, style=None,
@@ -334,29 +329,25 @@ class MSSPlotDriver(object):
                                           transparent=transparent,
                                           return_format=return_format)
 
-
     @abstractmethod
     def plot(self):
         """Plot the figure (i.e. load the data fields and call the
            corresponding plotting routines of the plot object).
-           
+
         THIS METHOD NEEDS TO BE REIMPLEMENTED IN ANY CLASS DERIVING FROM
         MSSPlotDriver!
         """
         pass
-
 
     def get_init_times(self):
         """Returns a list of available forecast init times (base times).
         """
         return self.data_access.get_init_times()
 
-
     def get_all_valid_times(self, variable, vartype):
         """See ECMWFDataAccess.get_all_valid_times().
         """
         return self.data_access.get_all_valid_times(variable, vartype)
-
 
     def get_valid_times(self, variable, vartype, init_time):
         """See ECMWFDataAccess.get_valid_times().
@@ -364,9 +355,10 @@ class MSSPlotDriver(object):
         return self.data_access.get_valid_times(variable, vartype, init_time)
 
 
-###############################################################################
-###                         Vertical Section Driver                         ###
-###############################################################################
+"""
+Vertical Section Driver
+"""
+
 
 class VerticalSectionDriver(MSSPlotDriver):
     """The vertical section driver is responsible for loading the data that
@@ -378,7 +370,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                             vsec_numpoints=101, vsec_path_connection='linear',
                             vsec_numlabels=10,
                             init_time=None, valid_time=None, style=None,
-                            bbox=None, figsize=(800,600), noframe=False,
+                            bbox=None, figsize=(800, 600), noframe=False,
                             show=False, transparent=False,
                             return_format="image/png"):
         """
@@ -395,7 +387,6 @@ class VerticalSectionDriver(MSSPlotDriver):
                                         vsec_path_connection)
         self.show = show
         self.vsec_numlabels = vsec_numlabels
-
 
     def update_plot_parameters(self, plot_object=None, vsec_path=None,
                                vsec_numpoints=None, vsec_path_connection=None,
@@ -416,7 +407,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         vsec_numpoints = vsec_numpoints if vsec_numpoints else self.vsec_numpoints
         vsec_numlabels = vsec_numlabels if vsec_numlabels else self.vsec_numlabels
         vsec_path_connection = vsec_path_connection if vsec_path_connection \
-                               else self.vsec_path_connection
+            else self.vsec_path_connection
         show = show if show else self.show
         transparent = transparent if transparent is not None else self.transparent
         return_format = return_format if return_format is not None else self.return_format
@@ -435,7 +426,6 @@ class VerticalSectionDriver(MSSPlotDriver):
                                  transparent=transparent,
                                  return_format=return_format)
 
-
     def _set_vertical_section_path(self, vsec_path, vsec_numpoints=101,
                                    vsec_path_connection='linear'):
         """
@@ -448,7 +438,6 @@ class VerticalSectionDriver(MSSPlotDriver):
         self.vsec_path = vsec_path
         self.vsec_numpoints = vsec_numpoints
         self.vsec_path_connection = vsec_path_connection
-
 
     def _load_interpolate_timestep(self):
         """Load and interpolate the data fields as required by the vertical
@@ -472,9 +461,9 @@ class VerticalSectionDriver(MSSPlotDriver):
 
         # Determine the westmost longitude in the cross-section path. Subtract
         # one gridbox size to obtain "left_longitude".
-        dlon = self.lon_data[1]-self.lon_data[0]
-        left_longitude = self.lons.min()-dlon
-        logging.debug("shifting data grid to gridpoint west of westmost "\
+        dlon = self.lon_data[1] - self.lon_data[0]
+        left_longitude = self.lons.min() - dlon
+        logging.debug("shifting data grid to gridpoint west of westmost "
                       "longitude in path: %.2f (path %.2f).."
                       % (left_longitude, self.lons.min()))
 
@@ -483,30 +472,29 @@ class VerticalSectionDriver(MSSPlotDriver):
         # NOTE: This does not overwrite self.lon_data (which is required
         # in its original form in case other data is loaded while this
         # file is open).
-        #print self.lon_data
+        # print self.lon_data
         lon_data = ((self.lon_data - left_longitude) % 360) + left_longitude
-        #print lon_data
+        # print lon_data
         lon_indices = lon_data.argsort()
         lon_data = lon_data[lon_indices]
-        #print lon_data
-        
+        # print lon_data
+
         for name, var in self.data_vars.items():
             var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
-            logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %i." % \
+            logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %i." %
                           (var_data.nbytes / 1048576., name, timestep))
-            logging.debug("\tVertical dimension direction is %s." % 
+            logging.debug("\tVertical dimension direction is %s." %
                           ("up" if self.vert_order == 1 else "down"))
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
-            var_data = var_data[:,:,lon_indices]
+            var_data = var_data[:, :, lon_indices]
             data[name] = mss_util.interpolate_vertsec3(var_data, self.lat_data, lon_data,
                                                        self.lats, self.lons)
-            #print data[name][:,30]
+            # print data[name][:,30]
             # Free memory.
             del var_data
 
         return data
-
 
     def shift_data(self):
         """Shift the data fields such that the longitudes are in the range
@@ -520,21 +508,20 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         # Determine the leftmost longitude in the plot.
         left_longitude = self.lons.min()
-        logging.debug("shifting data grid to leftmost longitude in path "\
+        logging.debug("shifting data grid to leftmost longitude in path "
                       "(%.2f).." % left_longitude)
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
-        #print self.lons
+        # print self.lons
         self.lons = ((self.lons - left_longitude) % 360) + left_longitude
         lon_indices = self.lons.argsort()
         self.lons = self.lons[lon_indices]
-        #print self.lons
+        # print self.lons
 
         # Shift data fields correspondingly.
         for key in self.data.keys():
-            self.data[key] = self.data[key][:,lon_indices]
-
+            self.data[key] = self.data[key][:, lon_indices]
 
     def plot(self):
         """
@@ -548,14 +535,14 @@ class VerticalSectionDriver(MSSPlotDriver):
         data = self._load_interpolate_timestep()
 
         d2 = datetime.now()
-        logging.debug("Loaded and interpolated data (required time %s)." % (d2-d1))
+        logging.debug("Loaded and interpolated data (required time %s)." % (d2 - d1))
         logging.debug("Plotting interpolated curtain.")
 
         if len(self.lat_data) > 1 and len(self.lon_data) > 1:
-            resolution = (self.lon_data[1]-self.lon_data[0],
-                          self.lat_data[1]-self.lat_data[0])
+            resolution = (self.lon_data[1] - self.lon_data[0],
+                          self.lat_data[1] - self.lat_data[0])
         else:
-            resolution = (-1,-1)
+            resolution = (-1, -1)
 
         # Call the plotting method of the vertical section style instance.
         image = self.plot_object.plot_vsection(data, self.lats, self.lons,
@@ -575,16 +562,16 @@ class VerticalSectionDriver(MSSPlotDriver):
         del data
 
         d3 = datetime.now()
-        logging.debug("Finished plotting (required time %s; total "\
-                      "time %s).\n" % (d3-d2, d3-d1))
+        logging.debug("Finished plotting (required time %s; total "
+                      "time %s).\n" % (d3 - d2, d3 - d1))
 
         return image
 
 
+"""
+Horizontal Section Driver
+"""
 
-###############################################################################
-###                        Horizontal Section Driver                        ###
-###############################################################################
 
 class HorizontalSectionDriver(MSSPlotDriver):
     """The horizontal section driver is responsible for loading the data that
@@ -595,7 +582,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
     def set_plot_parameters(self, plot_object=None, bbox=None,
                             level=None, epsg=None,
                             init_time=None, valid_time=None, style=None,
-                            figsize=(800,600), noframe=False, show=False,
+                            figsize=(800, 600), noframe=False, show=False,
                             transparent=False, return_format="image/png"):
         """
         """
@@ -611,7 +598,6 @@ class HorizontalSectionDriver(MSSPlotDriver):
         self.actual_level = None
         self.epsg = epsg
         self.show = show
-
 
     def update_plot_parameters(self, plot_object=None, bbox=None,
                                level=None, epsg=None,
@@ -645,7 +631,6 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                  transparent=transparent,
                                  return_format=return_format)
 
-
     def _load_timestep(self):
         """Load the data fields as required by the horizontal section style
            instance at the current timestep.
@@ -658,9 +643,9 @@ class HorizontalSectionDriver(MSSPlotDriver):
         if self.level is not None:
             level = self.vert_data[::self.vert_order].searchsorted(self.level)
             if self.vert_order == -1:
-                level = len(self.vert_data)-1-level
+                level = len(self.vert_data) - 1 - level
             self.actual_level = self.vert_data[level]
-        logging.debug("loading data for time step %i (%s), level index "\
+        logging.debug("loading data for time step %i (%s), level index "
                       "%s (level %s)",
                       timestep, self.fc_time, level, self.level)
         for name, var in self.data_vars.items():
@@ -670,14 +655,13 @@ class HorizontalSectionDriver(MSSPlotDriver):
             else:
                 # 3D fields: time, level, lat, lon.
                 var_data = var[timestep, level, ::self.lat_order, :]
-            logging.debug("\tLoaded %.2f Mbytes from data field <%s>." % \
+            logging.debug("\tLoaded %.2f Mbytes from data field <%s>." %
                           (var_data.nbytes / 1048576., name))
             data[name] = var_data
             # Free memory.
             del var_data
 
         return data
-
 
     def plot(self):
         """
@@ -691,14 +675,14 @@ class HorizontalSectionDriver(MSSPlotDriver):
         data = self._load_timestep()
 
         d2 = datetime.now()
-        logging.debug("Loaded data (required time %s)." % (d2-d1))
+        logging.debug("Loaded data (required time %s)." % (d2 - d1))
         logging.debug("Plotting horizontal section.")
 
         if len(self.lat_data) > 1:
-            resolution = (self.lat_data[1]-self.lat_data[0])
+            resolution = (self.lat_data[1] - self.lat_data[0])
         else:
             resolution = 0
-        
+
         # Call the plotting method of the horizontal section style instance.
         image = self.plot_object.plot_hsection(data,
                                                self.lat_data,
@@ -718,22 +702,15 @@ class HorizontalSectionDriver(MSSPlotDriver):
         del data
 
         d3 = datetime.now()
-        logging.debug("Finished plotting (required time %s; total "\
-                      "time %s).\n" % (d3-d2, d3-d1))
+        logging.debug("Finished plotting (required time %s; total "
+                      "time %s).\n" % (d3 - d2, d3 - d1))
 
         return image
 
 
-
-
-
-
-################################################################################
-################################################################################
-
-###############################################################################
-###                             Module TESTING                              ###
-###############################################################################
+"""
+Module TESTING
+"""
 
 
 def test_vsec_clouds_path():
@@ -752,7 +729,7 @@ def test_vsec_clouds_path():
     valid_time = datetime(2010, 12, 14, 15)
 
     import mpl_vsec_styles
-    #plot_object = mpl_vsec_styles.VSCloudsStyle01(p_top=20000.)
+    # plot_object = mpl_vsec_styles.VSCloudsStyle01(p_top=20000.)
     plot_object = mpl_vsec_styles.VSTemperatureStyle01(p_top=2000.)
 
     vsec = VerticalSectionDriver(nwpaccess)
@@ -771,8 +748,8 @@ def test_hsec_clouds_total():
     """TEST: Create a horizontal section of the CLOUDS style.
     """
     # Define a bounding box for the map.
-#    bbox = [0,30,30,60]
-    bbox = [-22.5,27.5,55,62.5]
+    #    bbox = [0,30,30,60]
+    bbox = [-22.5, 27.5, 55, 62.5]
 
     import mss_config
     nwpaccess = mss_config.nwpaccess["ecmwf_EUR_LL015"]
@@ -786,7 +763,7 @@ def test_hsec_clouds_total():
     hsec = HorizontalSectionDriver(nwpaccess)
     hsec.set_plot_parameters(plot_object=plot_object,
                              bbox=bbox,
-                             #epsg=4326,
+                             # epsg=4326,
                              epsg=77790010,
                              init_time=init_time,
                              valid_time=valid_time,
@@ -799,8 +776,8 @@ def test_hsec_temp():
     """TEST: Create a horizontal section of the TEMPERATURE style.
     """
     # Define a bounding box for the map.
-#    bbox = [0,30,30,60]
-    bbox = [-22.5,27.5,55,62.5]
+    #    bbox = [0,30,30,60]
+    bbox = [-22.5, 27.5, 55, 62.5]
 
     import mss_config
     nwpaccess = mss_config.nwpaccess["ecmwf_EUR_LL015"]
@@ -809,8 +786,8 @@ def test_hsec_temp():
     valid_time = datetime(2010, 12, 16, 15)
 
     import mpl_hsec_styles
-#    plot_object = mpl_hsec_styles.HS_TemperatureStyle_ML_01()
-#    level = 50
+    #    plot_object = mpl_hsec_styles.HS_TemperatureStyle_ML_01()
+    #    level = 50
     plot_object = mpl_hsec_styles.HS_TemperatureStyle_PL_01()
     level = 925
 
@@ -818,7 +795,7 @@ def test_hsec_temp():
     hsec.set_plot_parameters(plot_object=plot_object,
                              bbox=bbox,
                              level=level,
-                             #epsg=4326,
+                             # epsg=4326,
                              epsg=77790010,
                              init_time=init_time,
                              valid_time=valid_time,
@@ -831,7 +808,7 @@ def test_hsec_geopwind():
     """TEST: Create a horizontal section.
     """
     # Define a bounding box for the map.
-    bbox = [-22.5,27.5,55,62.5]
+    bbox = [-22.5, 27.5, 55, 62.5]
 
     import mss_config
     nwpaccess = mss_config.nwpaccess["ecmwf_EUR_LL015"]
@@ -847,7 +824,7 @@ def test_hsec_geopwind():
     hsec.set_plot_parameters(plot_object=plot_object,
                              bbox=bbox,
                              level=level,
-                             #epsg=4326,
+                             # epsg=4326,
                              epsg=77790010,
                              init_time=init_time,
                              valid_time=valid_time,
@@ -856,18 +833,14 @@ def test_hsec_geopwind():
     image = hsec.plot()
 
 
-
-###############################################################################
-
 if __name__ == "__main__":
-
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
     logging.basicConfig(level=logging.DEBUG,
                         format="%(levelname)s %(asctime)s %(funcName)s || %(message)s")
 
-    #test_vsec_clouds_path()
-    #test_hsec_clouds_total()
+    # test_vsec_clouds_path()
+    # test_hsec_clouds_total()
     test_hsec_temp()
-    #test_hsec_geopwind()
+    # test_hsec_geopwind()

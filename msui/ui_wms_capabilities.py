@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Ui_WMSCapabilitiesBrowser(object):
     def setupUi(self, WMSCapabilitiesBrowser):
         WMSCapabilitiesBrowser.setObjectName("WMSCapabilitiesBrowser")
@@ -56,8 +57,12 @@ class Ui_WMSCapabilitiesBrowser(object):
         QtCore.QMetaObject.connectSlotsByName(WMSCapabilitiesBrowser)
 
     def retranslateUi(self, WMSCapabilitiesBrowser):
-        WMSCapabilitiesBrowser.setWindowTitle(QtGui.QApplication.translate("WMSCapabilitiesBrowser", "Browse WMS Capabilities - DLR/IPA Mission Support", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("WMSCapabilitiesBrowser", "Capabilities document of:", None, QtGui.QApplication.UnicodeUTF8))
-        self.lblURL.setText(QtGui.QApplication.translate("WMSCapabilitiesBrowser", "<URL>", None, QtGui.QApplication.UnicodeUTF8))
-        self.btClose.setText(QtGui.QApplication.translate("WMSCapabilitiesBrowser", "close", None, QtGui.QApplication.UnicodeUTF8))
-
+        WMSCapabilitiesBrowser.setWindowTitle(
+            QtGui.QApplication.translate("WMSCapabilitiesBrowser", "Browse WMS Capabilities - DLR/IPA Mission Support",
+                                         None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("WMSCapabilitiesBrowser", "Capabilities document of:", None,
+                                                        QtGui.QApplication.UnicodeUTF8))
+        self.lblURL.setText(
+            QtGui.QApplication.translate("WMSCapabilitiesBrowser", "<URL>", None, QtGui.QApplication.UnicodeUTF8))
+        self.btClose.setText(
+            QtGui.QApplication.translate("WMSCapabilitiesBrowser", "close", None, QtGui.QApplication.UnicodeUTF8))

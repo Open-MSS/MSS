@@ -80,9 +80,10 @@ import mpl_toolkits.basemap
 from mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib import thermolib
 
-###############################################################################
-###                      Surface Field: CLOUDS                              ###
-###############################################################################
+"""
+Surface Field: CLOUDS
+"""
+
 
 class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -124,9 +125,9 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 cbar.set_label("Cloud cover fraction in grid box (0-1)")
             else:
                 axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                    width="3%", # width = % of parent_bbox width
-                    height="30%", # height : %
-                    loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                          width="3%",  # width = % of parent_bbox width
+                                                                          height="30%",  # height : %
+                                                                          loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
                 cbar = self.fig.colorbar(lcc, cax=axins1, orientation="vertical")
                 axins1.yaxis.set_ticks_position("left")
 
@@ -137,9 +138,10 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 self.fig.colorbar(mcc, fraction=0.05, pad=-0.02, shrink=0.7, format='')
             else:
                 axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                    width="2%" if self.style == "TOT" else "3%", # width = % of parent_bbox width
-                    height="30%", # height : %
-                    loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                          width="2%" if self.style == "TOT" else "3%",
+                                                                          # width = % of parent_bbox width
+                                                                          height="30%",  # height : %
+                                                                          loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
                 cbar = self.fig.colorbar(mcc, cax=axins1, orientation="vertical",
                                          format='' if self.style == "TOT" else "%.1f")
                 axins1.yaxis.set_ticks_position("left")
@@ -153,9 +155,10 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 self.fig.colorbar(hcc, fraction=0.05, pad=0.08, shrink=0.7, format='')
             else:
                 axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                    width="1%" if self.style == "TOT" else "3%", # width = % of parent_bbox width
-                    height="30%", # height : %
-                    loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                          width="1%" if self.style == "TOT" else "3%",
+                                                                          # width = % of parent_bbox width
+                                                                          height="30%",  # height : %
+                                                                          loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
                 cbar = self.fig.colorbar(hcc, cax=axins1, orientation="vertical",
                                          format='' if self.style == "TOT" else "%.1f")
                 axins1.yaxis.set_ticks_position("left")
@@ -175,9 +178,9 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -187,32 +190,33 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###               Surface Field: Mean Sea Level Pressure                    ###
-###############################################################################
+"""
+Surface Field: Mean Sea Level Pressure
+"""
 
-## from scipy.ndimage import minimum_filter
-## def local_minima(fits, window=15):
-##     """Find the local minima within fits, and return them and their
-##        indices.
 
-##     Returns a list of indices at which the minima were found, and a  
-##     list of the minima, sorted in order of increasing minimum. The
-##     keyword argument window determines how close two local minima
-##     are allowed to be to one another.  If two local minima are found
-##     closer together than that, then the lowest of them is taken as
-##     the real minimum.  window=1 will return all local minima.
+# from scipy.ndimage import minimum_filter
+# def local_minima(fits, window=15):
+#     """Find the local minima within fits, and return them and their
+#        indices.
 
-##     Taken from
-##     http://mail.scipy.org/pipermail/scipy-user/2008-August/017886.html
-##     """
-##     fits = np.asarray(fits)
-##     minfits = minimum_filter(fits, size=window, mode="wrap")
-##     minima_mask = fits == minfits
-##     good_indices = np.arange(len(fits))[minima_mask]
-##     good_fits = fits[minima_mask]
-##     order = good_fits.argsort()
-##     return good_indices[order], good_fits[order]
+#     Returns a list of indices at which the minima were found, and a
+#     list of the minima, sorted in order of increasing minimum. The
+#     keyword argument window determines how close two local minima
+#     are allowed to be to one another.  If two local minima are found
+#     closer together than that, then the lowest of them is taken as
+#     the real minimum.  window=1 will return all local minima.
+
+#     Taken from
+#     http://mail.scipy.org/pipermail/scipy-user/2008-August/017886.html
+#     """
+#     fits = np.asarray(fits)
+#     minfits = minimum_filter(fits, size=window, mode="wrap")
+#     minima_mask = fits == minfits
+#     good_indices = np.arange(len(fits))[minima_mask]
+#     good_fits = fits[minima_mask]
+#     order = good_fits.argsort()
+#     return good_indices[order], good_fits[order]
 
 class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -227,7 +231,6 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         ("sfc", "surface_eastward_wind"),
         ("sfc", "surface_northward_wind")]
 
-
     def _plot_style(self):
         """
         """
@@ -239,7 +242,7 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         thick_contours = np.arange(952, 1050, 8)
-        thin_contours = [c for c in np.arange(952, 1050, 2) \
+        thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
         mslp = 0.01 * data['air_pressure_at_sea_level']
@@ -258,10 +261,10 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         # Transform wind vector field to fit map.
         lons2 = ((self.lons + 180) % 360) - 180
         lons2_ind = lons2.argsort()
-        udat, vdat, xv, yv = bm.transform_vector(u[:,lons2_ind], v[:,lons2_ind],
+        udat, vdat, xv, yv = bm.transform_vector(u[:, lons2_ind], v[:, lons2_ind],
                                                  lons2[lons2_ind], self.lats,
                                                  16, 16, returnxy=True)
-        #udat, vdat, xv, yv = bm.transform_vector(u, v, self.lons, self.lats,
+        # udat, vdat, xv, yv = bm.transform_vector(u, v, self.lons, self.lats,
         #                                         16, 16, returnxy=True)
 
         # Plot wind barbs.
@@ -270,23 +273,23 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
                  linewidths=1)
 
         # Find local minima and maxima.
-##         min_indices, min_values = local_minima(mslp.ravel(), window=50)
-##         #min_indices, min_values = local_minima(mslp, window=(50,50))
-##         minfits = minimum_filter(mslp, size=(50,50), mode="wrap")
-##         logging.debug("%s", minfits)
-##         #logging.debug("%s // %s // %s", min_values, lonmesh_.ravel()[min_indices],
-##         #              latmesh_.ravel()[min_indices])
-        
-##         bm.scatter(lonmesh.ravel()[min_indices], latmesh.ravel()[min_indices],
-##                    s=20, c='blue', marker='s')
+        #         min_indices, min_values = local_minima(mslp.ravel(), window=50)
+        #         #min_indices, min_values = local_minima(mslp, window=(50,50))
+        #         minfits = minimum_filter(mslp, size=(50,50), mode="wrap")
+        #         logging.debug("%s", minfits)
+        #         #logging.debug("%s // %s // %s", min_values, lonmesh_.ravel()[min_indices],
+        #         #              latmesh_.ravel()[min_indices])
+
+        #         bm.scatter(lonmesh.ravel()[min_indices], latmesh.ravel()[min_indices],
+        #                    s=20, c='blue', marker='s')
 
         titlestring = "Mean sea level pressure (hPa) and surface wind"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -296,10 +299,10 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
+"""
+Surface Field: Solar Elevation Angle
+"""
 
-###############################################################################
-###                Surface Field: Solar Elevation Angle                     ###
-###############################################################################
 
 class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -323,9 +326,9 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         thick_contours = np.arange(-10, 95, 5)
-        thin_contours = [c for c in np.arange(0, 90, 1) \
+        thin_contours = [c for c in np.arange(0, 90, 1)
                          if c not in thick_contours]
-        neg_thin_contours = [c for c in np.arange(-10, 0, 1) \
+        neg_thin_contours = [c for c in np.arange(-10, 0, 1)
                              if c not in thick_contours]
 
         sea = data['solar_elevation_angle']
@@ -338,9 +341,9 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Solar Elevation Angle (degrees)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(scs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -360,7 +363,7 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
         # Plot title.
         titlestring = "Solar Elevation Angle "
         titlestring = titlestring + "\nValid: %s" % \
-                      self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")
+                                    self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
@@ -369,10 +372,10 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
+"""
+Surface Field: Sea Ice Cover
+"""
 
-###############################################################################
-###                    Surface Field: Sea Ice Cover                         ###
-###############################################################################
 
 class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -384,7 +387,6 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         ("default", "pseudocolor plot"),
         ("PCOL", "pseudocolor plot"),
         ("CONT", "contour plot")]
-
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -399,10 +401,10 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        if self.style == "PCOL":      
+        if self.style == "PCOL":
             # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
-            lonmesh_ = lonmesh_ - (self.lons[1]-self.lons[0])/2.
-            latmesh_ = latmesh_ - (self.lats[1]-self.lats[0])/2.
+            lonmesh_ = lonmesh_ - (self.lons[1] - self.lons[0]) / 2.
+            latmesh_ = latmesh_ - (self.lats[1] - self.lats[0]) / 2.
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         ice = data['sea_ice_area_fraction']
@@ -424,9 +426,9 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Sea Ice Cover Fraction (0-1)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(scs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -435,9 +437,9 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
@@ -446,10 +448,10 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
+"""
+Upper Air Field: Temperature
+"""
 
-###############################################################################
-###                    Upper Air Field: Temperature                         ###
-###############################################################################
 
 class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -475,7 +477,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         cmin = -72
         cmax = 42
         thick_contours = np.arange(cmin, cmax, 6)
-        thin_contours = [c for c in np.arange(cmin, cmax, 2) \
+        thin_contours = [c for c in np.arange(cmin, cmax, 2)
                          if c not in thick_contours]
 
         tempC = data['air_temperature'] - 273.15
@@ -487,9 +489,9 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Temperature (degC)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -506,9 +508,9 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -518,164 +520,164 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                Chemical Mixing Ratios (CLaMS)                           ###
-###############################################################################
+"""
+Chemical Mixing Ratios (CLaMS)
+"""
 
 CLAMS_CONFIG = {
- u'BVF': {'levels': {50: (0.00029, 0.00095),
-                     70: (0.00029, 0.00074),
-                     100: (0.00029, 0.00064),
-                     125: (0.00031, 0.00062),
-                     150: (0.0003, 0.00067),
-                     175: (0.00031, 0.00065),
-                     200: (0.00026, 0.00065),
-                     250: (5.9e-05, 0.00067),
-                     350: (-6.7e-06, 0.0005),
-                     500: (-9.4e-07, 0.00058)},
-          'units': u's**-2'},
- u'CH4': {'levels': {50: (0.5, 1.7),
-                     70: (0.81, 1.7),
-                     100: (1.1, 1.8),
-                     125: (1.2, 1.8),
-                     150: (1.3, 1.8),
-                     175: (1.4, 1.8),
-                     200: (1.5, 1.9),
-                     250: (1.6, 1.9),
-                     350: (1.6, 2.0),
-                     500: (1.7, 2.0)},
-          'units': u'ppmv'},
- u'CO': {'levels': {50: (0., 20),
-                    500: (0, 200.0)},
-          'units': u'ppbv'},
- u'F12': {'levels': {50: (0., 550.0),
-                    500: (0, 550.0)},
-          'units': u'pptv'},
- u'SEA': {'levels': {50: (0., 50.0),
-                    500: (0, 100.0)},
-          'units': u'%'},
- u'ECH': {'levels': {50: (0., 50.0),
-                    500: (0, 100.0)},
-          'units': u'%'},
- u'NIN': {'levels': {50: (0., 50.0),
-                    500: (0, 100.0)},
-          'units': u'%'},
- u'SIN': {'levels': {50: (0., 50.0),
-                    500: (0, 100.0)},
-          'units': u'%'},
- u'ICH': {'levels': {50: (0., 50.0),
-                    500: (0, 100.0)},
-          'units': u'%'},
- u'EQLAT': {'levels': {50: (9.2, 90.0),
-                       70: (8.0, 90.0),
-                       100: (-0.18, 90.0),
-                       125: (10.0, 90.0),
-                       150: (20.0, 90.0),
-                       175: (22.0, 90.0),
-                       200: (-6.7, 90.0),
-                       250: (-46.0, 90.0),
-                       350: (-42.0, 90.0),
-                       500: (-47.0, 90.0)},
-            'units': u'deg N'},
- u'F11': {'levels': {50: (0.0, 220.0),
-                     70: (0.0, 230.0),
-                     100: (32.0, 240.0),
-                     125: (65.0, 240.0),
-                     150: (110.0, 240.0),
-                     175: (150.0, 240.0),
-                     200: (180.0, 240.0),
-                     250: (210.0, 240.0),
-                     350: (220.0, 240.0),
-                     500: (220.0, 240.0)},
-          'units': u'pptv'},
- u'H2O': {'levels': {50: (3.4, 6.1),
-                     70: (3.2, 5.0),
-                     100: (3.6, 4.6),
-                     125: (3.7, 8.2),
-                     150: (3.9, 23.0),
-                     175: (4.0, 44.0),
-                     200: (0.0, 9400.0),
-                     250: (0.0, 9600.0),
-                     350: (0.0, 11000.0),
-                     500: (0.0, 9100.0)},
-          'units': u'ppmv'},
- u'N2O': {'levels': {50: (45.0, 310.0),
-                     70: (95.0, 310.0),
-                     100: (160.0, 320.0),
-                     125: (190.0, 320.0),
-                     150: (230.0, 320.0),
-                     175: (260.0, 330.0),
-                     200: (280.0, 330.0),
-                     250: (300.0, 330.0),
-                     350: (300.0, 330.0),
-                     500: (310.0, 330.0)},
-          'units': u'ppbv'},
- u'O3': {'levels': {50: (0.97, 4.8),
-                    70: (0.56, 3.4),
-                    100: (0.2, 2.4),
-                    125: (0.13, 1.9),
-                    150: (0.14, 1.6),
-                    175: (0.073, 1.2),
-                    200: (0.0, 0.83),
-                    250: (0.031, 0.33),
-                    350: (0.033, 0.24),
-                    500: (0.036, 0.21)},
-         'units': u'ppmv'},
- u'PV': {'levels': {50: (11.0, 120.0),
-                    70: (7.9, 54.0),
-                    100: (-0.31, 28.0),
-                    125: (3.4, 21.0),
-                    150: (1.6, 18.0),
-                    175: (0.74, 13.0),
-                    200: (0.0, 11.0),
-                    250: (-0.6, 9.1),
-                    350: (-0.44, 7.6),
-                    500: (-0.26, 4.4)},
-         'units': u'PVU'},
- u'TEMP': {'levels': {50: (180.0, 250.0),
-                      70: (190.0, 250.0),
-                      100: (190.0, 240.0),
-                      125: (190.0, 240.0),
-                      150: (190.0, 240.0),
-                      175: (190.0, 240.0),
-                      200: (190.0, 240.0),
-                      250: (200.0, 240.0),
-                      350: (210.0, 250.0),
-                      500: (220.0, 260.0)},
-           'units': u'K'},
- u'THETA': {'levels': {50: (440.0, 590.0),
-                       70: (400.0, 520.0),
-                       100: (370.0, 460.0),
-                       125: (350.0, 420.0),
-                       150: (330.0, 400.0),
-                       175: (320.0, 390.0),
-                       200: (310.0, 370.0),
-                       250: (290.0, 350.0),
-                       350: (280.0, 330.0),
-                       500: (270.0, 320.0)},
-            'units': u'K'},
- u'U': {'levels': {50: (-38.0, 69.0),
-                   70: (-23.0, 67.0),
-                   100: (-22.0, 70.0),
-                   125: (-20.0, 66.0),
-                   150: (-20.0, 72.0),
-                   175: (-20.0, 67.0),
-                   200: (-22.0, 76.0),
-                   250: (-37.0, 92.0),
-                   350: (-36.0, 85.0),
-                   500: (-29.0, 63.0)},
-        'units': u'm s^-1'},
- u'V': {'levels': {50: (-67.0, 50.0),
-                   70: (-56.0, 43.0),
-                   100: (-48.0, 39.0),
-                   125: (-46.0, 35.0),
-                   150: (-48.0, 36.0),
-                   175: (-47.0, 45.0),
-                   200: (-52.0, 57.0),
-                   250: (-70.0, 71.0),
-                   350: (-70.0, 78.0),
-                   500: (-46.0, 47.0)},
-        'units': u'm s^-1'}}
+    u'BVF': {'levels': {50: (0.00029, 0.00095),
+                        70: (0.00029, 0.00074),
+                        100: (0.00029, 0.00064),
+                        125: (0.00031, 0.00062),
+                        150: (0.0003, 0.00067),
+                        175: (0.00031, 0.00065),
+                        200: (0.00026, 0.00065),
+                        250: (5.9e-05, 0.00067),
+                        350: (-6.7e-06, 0.0005),
+                        500: (-9.4e-07, 0.00058)},
+             'units': u's**-2'},
+    u'CH4': {'levels': {50: (0.5, 1.7),
+                        70: (0.81, 1.7),
+                        100: (1.1, 1.8),
+                        125: (1.2, 1.8),
+                        150: (1.3, 1.8),
+                        175: (1.4, 1.8),
+                        200: (1.5, 1.9),
+                        250: (1.6, 1.9),
+                        350: (1.6, 2.0),
+                        500: (1.7, 2.0)},
+             'units': u'ppmv'},
+    u'CO': {'levels': {50: (0., 20),
+                       500: (0, 200.0)},
+            'units': u'ppbv'},
+    u'F12': {'levels': {50: (0., 550.0),
+                        500: (0, 550.0)},
+             'units': u'pptv'},
+    u'SEA': {'levels': {50: (0., 50.0),
+                        500: (0, 100.0)},
+             'units': u'%'},
+    u'ECH': {'levels': {50: (0., 50.0),
+                        500: (0, 100.0)},
+             'units': u'%'},
+    u'NIN': {'levels': {50: (0., 50.0),
+                        500: (0, 100.0)},
+             'units': u'%'},
+    u'SIN': {'levels': {50: (0., 50.0),
+                        500: (0, 100.0)},
+             'units': u'%'},
+    u'ICH': {'levels': {50: (0., 50.0),
+                        500: (0, 100.0)},
+             'units': u'%'},
+    u'EQLAT': {'levels': {50: (9.2, 90.0),
+                          70: (8.0, 90.0),
+                          100: (-0.18, 90.0),
+                          125: (10.0, 90.0),
+                          150: (20.0, 90.0),
+                          175: (22.0, 90.0),
+                          200: (-6.7, 90.0),
+                          250: (-46.0, 90.0),
+                          350: (-42.0, 90.0),
+                          500: (-47.0, 90.0)},
+               'units': u'deg N'},
+    u'F11': {'levels': {50: (0.0, 220.0),
+                        70: (0.0, 230.0),
+                        100: (32.0, 240.0),
+                        125: (65.0, 240.0),
+                        150: (110.0, 240.0),
+                        175: (150.0, 240.0),
+                        200: (180.0, 240.0),
+                        250: (210.0, 240.0),
+                        350: (220.0, 240.0),
+                        500: (220.0, 240.0)},
+             'units': u'pptv'},
+    u'H2O': {'levels': {50: (3.4, 6.1),
+                        70: (3.2, 5.0),
+                        100: (3.6, 4.6),
+                        125: (3.7, 8.2),
+                        150: (3.9, 23.0),
+                        175: (4.0, 44.0),
+                        200: (0.0, 9400.0),
+                        250: (0.0, 9600.0),
+                        350: (0.0, 11000.0),
+                        500: (0.0, 9100.0)},
+             'units': u'ppmv'},
+    u'N2O': {'levels': {50: (45.0, 310.0),
+                        70: (95.0, 310.0),
+                        100: (160.0, 320.0),
+                        125: (190.0, 320.0),
+                        150: (230.0, 320.0),
+                        175: (260.0, 330.0),
+                        200: (280.0, 330.0),
+                        250: (300.0, 330.0),
+                        350: (300.0, 330.0),
+                        500: (310.0, 330.0)},
+             'units': u'ppbv'},
+    u'O3': {'levels': {50: (0.97, 4.8),
+                       70: (0.56, 3.4),
+                       100: (0.2, 2.4),
+                       125: (0.13, 1.9),
+                       150: (0.14, 1.6),
+                       175: (0.073, 1.2),
+                       200: (0.0, 0.83),
+                       250: (0.031, 0.33),
+                       350: (0.033, 0.24),
+                       500: (0.036, 0.21)},
+            'units': u'ppmv'},
+    u'PV': {'levels': {50: (11.0, 120.0),
+                       70: (7.9, 54.0),
+                       100: (-0.31, 28.0),
+                       125: (3.4, 21.0),
+                       150: (1.6, 18.0),
+                       175: (0.74, 13.0),
+                       200: (0.0, 11.0),
+                       250: (-0.6, 9.1),
+                       350: (-0.44, 7.6),
+                       500: (-0.26, 4.4)},
+            'units': u'PVU'},
+    u'TEMP': {'levels': {50: (180.0, 250.0),
+                         70: (190.0, 250.0),
+                         100: (190.0, 240.0),
+                         125: (190.0, 240.0),
+                         150: (190.0, 240.0),
+                         175: (190.0, 240.0),
+                         200: (190.0, 240.0),
+                         250: (200.0, 240.0),
+                         350: (210.0, 250.0),
+                         500: (220.0, 260.0)},
+              'units': u'K'},
+    u'THETA': {'levels': {50: (440.0, 590.0),
+                          70: (400.0, 520.0),
+                          100: (370.0, 460.0),
+                          125: (350.0, 420.0),
+                          150: (330.0, 400.0),
+                          175: (320.0, 390.0),
+                          200: (310.0, 370.0),
+                          250: (290.0, 350.0),
+                          350: (280.0, 330.0),
+                          500: (270.0, 320.0)},
+               'units': u'K'},
+    u'U': {'levels': {50: (-38.0, 69.0),
+                      70: (-23.0, 67.0),
+                      100: (-22.0, 70.0),
+                      125: (-20.0, 66.0),
+                      150: (-20.0, 72.0),
+                      175: (-20.0, 67.0),
+                      200: (-22.0, 76.0),
+                      250: (-37.0, 92.0),
+                      350: (-36.0, 85.0),
+                      500: (-29.0, 63.0)},
+           'units': u'm s^-1'},
+    u'V': {'levels': {50: (-67.0, 50.0),
+                      70: (-56.0, 43.0),
+                      100: (-48.0, 39.0),
+                      125: (-46.0, 35.0),
+                      150: (-48.0, 36.0),
+                      175: (-47.0, 45.0),
+                      200: (-52.0, 57.0),
+                      250: (-70.0, 71.0),
+                      350: (-70.0, 78.0),
+                      500: (-46.0, 47.0)},
+           'units': u'm s^-1'}}
 
 
 class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
@@ -684,7 +686,7 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
     styles = [
         ("default", "fixed colour scale"),
         ("log", "logarithmic colour scale"),
-        ("auto", "auto colour scale"), 
+        ("auto", "auto colour scale"),
         ("autolog", "auto logcolour scale"), ]
 
     def _plot_style(self):
@@ -700,8 +702,7 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
         clevs = CLAMS_CONFIG[self.name]["levels"].keys()
         diff = np.array(clevs) - self.level
         nextlev = clevs[abs(diff).argmin()]
-        
-        
+
         # colour scale of plot
         # cmap = plt.cm.cubehelix_r
         cmap = plt.cm.gist_rainbow_r
@@ -718,7 +719,7 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
         elif self.style == "autolog":
             cmin, cmax = show_data.min(), show_data.max()
             if cmin <= 1.E-6 * cmax and cmax > 0.:
-                cmin = cmax*1.E-6
+                cmin = cmax * 1.E-6
             lncmin, lncmax = np.log([cmin, cmax])
             clevs = np.exp(np.linspace(lncmin, lncmax, 17))
             norm = matplotlib.colors.LogNorm(cmin, cmax)
@@ -752,15 +753,20 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
             tick_pos = 'left'
 
         # Format for colorbar labels
-        clev_format="%.3g"
+        clev_format = "%.3g"
         mclev = np.abs(clevs).max()
         if self.style != "log":
-            if mclev >= 100. and mclev <10000. : clev_format="%4i" 
-            if mclev >= 10. and mclev <100. : clev_format="%.1f" 
-            if mclev >= 1. and mclev <10.   : clev_format="%.2f" 
-            if mclev >= .1 and mclev <1.    : clev_format="%.3f" 
-            if mclev >= .01 and mclev <0.1  : clev_format="%.4f" 
-        
+            if mclev >= 100. and mclev < 10000.:
+                clev_format = "%4i"
+            if mclev >= 10. and mclev < 100.:
+                clev_format = "%.1f"
+            if mclev >= 1. and mclev < 10.:
+                clev_format = "%.2f"
+            if mclev >= .1 and mclev < 1.:
+                clev_format = "%.3f"
+            if mclev >= .01 and mclev < 0.1:
+                clev_format = "%.4f"
+
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
                                      norm=norm, label=cbar_label)
@@ -785,6 +791,7 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
                 x.label1.set_fontsize(fontsize)
                 x.label2.set_fontsize(fontsize)
 
+
 def make_clams_chem_class(entity):
     class fnord(HS_ChemStyle_PL):
         ln = {'ICH': 'India/China',
@@ -795,22 +802,25 @@ def make_clams_chem_class(entity):
         name = entity
         dataname = name + "_volume_mixing_ratio"
         long_name = entity + " Mixing Ratio"
-        if CLAMS_CONFIG[entity]["units"] == '%': 
+        if CLAMS_CONFIG[entity]["units"] == '%':
             long_name = ln[entity] + " Origin Tracer"
-        title = long_name+" (" + CLAMS_CONFIG[entity]["units"] + ")"
+        title = long_name + " (" + CLAMS_CONFIG[entity]["units"] + ")"
 
         required_datafields = [
-                ("pl", name + "_volume_mixing_ratio"),
-                ("pl", "ertel_potential_vorticity"), ]
+            ("pl", name + "_volume_mixing_ratio"),
+            ("pl", "ertel_potential_vorticity"), ]
+
     return fnord
+
 
 for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
             u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
-        globals()["HS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
+    globals()["HS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
 
-###############################################################################
-###                Gravity Wave Forecast                                    ###
-###############################################################################
+"""
+Gravity Wave Forecast
+"""
+
 
 class HS_GravityWaveForecast_ML(MPLBasemapHorizontalSectionStyle):
     """Pressure level version for Chemical Mixing ratios.
@@ -827,7 +837,7 @@ class HS_GravityWaveForecast_ML(MPLBasemapHorizontalSectionStyle):
     ]
     styles = [
         ("default", "fixed colour scale"),
-#        ("auto", "auto colour scale"), ]
+        #        ("auto", "auto colour scale"), ]
     ]
 
     def _plot_style(self):
@@ -887,7 +897,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         cmin = -72
         cmax = 42
         thick_contours = np.arange(cmin, cmax, 6)
-        thin_contours = [c for c in np.arange(cmin, cmax, 2) \
+        thin_contours = [c for c in np.arange(cmin, cmax, 2)
                          if c not in thick_contours]
 
         tempC = data['air_temperature'] - 273.15
@@ -899,9 +909,9 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Temperature (degC)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -921,16 +931,16 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         geop_contours = np.arange(400, 28000, 40)
         cs = bm.contour(lonmesh, latmesh, gpm,
                         geop_contours, colors="black", linewidths=1)
-        ax.clabel(cs, geop_contours[::2],fontsize=10, fmt='%i')
+        ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
-        titlestring = "Temperature (degC) and Geopotential Height (m) at "\
+        titlestring = "Temperature (degC) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -940,9 +950,10 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                Upper Air Field: Geopotential and Wind                   ###
-###############################################################################
+"""
+Upper Air Field: Geopotential and Wind
+"""
+
 
 class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
     """
@@ -962,7 +973,6 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         ("pl", "eastward_wind"),
         ("pl", "northward_wind")]
 
-
     def _plot_style(self):
         """
         """
@@ -976,14 +986,14 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         # Compute wind speed.
         u = data["eastward_wind"]
         v = data["northward_wind"]
-        wind = np.sqrt(u**2 + v**2)
+        wind = np.sqrt(u ** 2 + v ** 2)
 
         # Plot wind contours.
         # NOTE: Setting alpha=0.8 raises the transparency problem in the client
         # (the imshow issue, see ../issues/transparency; surfaces with alpha
         # values < 1 are mixed with grey). Hence, it is better to disable
         # alpha blending here until a fix has been found. (mr 2011-02-01)
-        wind_contours = np.arange(10, 90, 5) # default wind contours
+        wind_contours = np.arange(10, 90, 5)  # default wind contours
         if self.style.lower() == "wind_10_65":
             wind_contours = np.arange(10, 70, 5)
         elif self.style.lower() == "wind_20_55":
@@ -991,27 +1001,27 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         elif self.style.lower() == "wind_15_55":
             wind_contours = np.arange(15, 60, 5)
         cs = bm.contourf(lonmesh, latmesh, wind,
-                         #wind_contours, cmap=plt.cm.hot_r, alpha=0.8) 
-                         wind_contours, cmap=plt.cm.hot_r) 
+                         # wind_contours, cmap=plt.cm.hot_r, alpha=0.8)
+                         wind_contours, cmap=plt.cm.hot_r)
         if not self.noframe:
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Wind Speed (m/s)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
         # Convert wind data from m/s to knots for the wind barbs.
         u = u * 1.944
         v = v * 1.944
-        
+
         # Transform wind vector field to fit map.
         lons2 = ((self.lons + 180) % 360) - 180
         lons2_ind = lons2.argsort()
-        udat, vdat, xv, yv = bm.transform_vector(u[:,lons2_ind], v[:,lons2_ind],
+        udat, vdat, xv, yv = bm.transform_vector(u[:, lons2_ind], v[:, lons2_ind],
                                                  lons2[lons2_ind], self.lats,
                                                  16, 16, returnxy=True)
 
@@ -1029,14 +1039,14 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         ax.clabel(cs, geop_contours[::2], fontsize=14, fmt='%i')
 
         # Plot title.
-        titlestring = "Geopotential Height (m) and Horizontal Wind (m/s) "\
+        titlestring = "Geopotential Height (m) and Horizontal Wind (m/s) " \
                       "at %i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1046,11 +1056,10 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
+"""
+Upper Air Field: Relative Humidity
+"""
 
-
-###############################################################################
-###                  Upper Air Field: Relative Humidity                     ###
-###############################################################################
 
 class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Relative humidity and geopotential on pressure levels.
@@ -1065,7 +1074,6 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "geopotential_height"),
         ("pl", "specific_humidity")]
 
-
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
@@ -1073,7 +1081,6 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             thermolib.rel_hum(self.level * 100.,
                               self.data["air_temperature"],
                               self.data["specific_humidity"])
-
 
     def _plot_style(self):
         """
@@ -1097,9 +1104,9 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Relative Humidity (%)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(rhc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1117,16 +1124,16 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
                         geop_contours, colors="darkred", linewidths=2)
-        ax.clabel(cs, geop_contours[::2],fontsize=10, fmt='%i')
+        ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
-        titlestring = "Relative Humditiy (%%) and Geopotential Height (m) at "\
+        titlestring = "Relative Humditiy (%%) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1136,10 +1143,10 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
+"""
+Upper Air Field: Equivalent Potential Temperature
+"""
 
-###############################################################################
-###             Upper Air Field: Equivalent Potential Temperature           ###
-###############################################################################
 
 class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Equivalent potential temperature and geopotential on pressure levels.
@@ -1154,7 +1161,6 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "geopotential_height"),
         ("pl", "specific_humidity")]
 
-
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
@@ -1162,7 +1168,6 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             thermolib.eqpt_approx(self.level * 100.,
                                   self.data["air_temperature"],
                                   self.data["specific_humidity"])
-
 
     def _plot_style(self):
         """
@@ -1186,9 +1191,9 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Equivalent Potential Temperature (degC)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(eqptc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1197,7 +1202,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         thin_contours, colors="grey",
                         linewidths=0.5, linestyles="solid")
         ax.clabel(cs, thin_contours[::2], colors="grey", fontsize=10, fmt='%i')
-        #cs = bm.contour(lonmesh, latmesh, eqpt,
+        # cs = bm.contour(lonmesh, latmesh, eqpt,
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
@@ -1208,14 +1213,14 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         geop_contours, colors="white", linewidths=2)
         ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
-        titlestring = "Equivalent Potential Temperature (degC) and Geopotential Height (m) at "\
+        titlestring = "Equivalent Potential Temperature (degC) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1225,10 +1230,10 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
+"""
+Upper Air Field: Vertical Velocity
+"""
 
-###############################################################################
-###                    Upper Air Field: Vertical Velocity                   ###
-###############################################################################
 
 class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Vertical velocity and geopotential on pressure levels.
@@ -1243,7 +1248,6 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "air_temperature"),
         ("pl", "geopotential_height")]
 
-
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
@@ -1251,7 +1255,6 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             thermolib.omega_to_w(self.data["omega"],
                                  self.level * 100.,
                                  self.data["air_temperature"])
-
 
     def _plot_style(self):
         """
@@ -1273,9 +1276,9 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Vertical velocity (cm/s)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(wc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1286,8 +1289,8 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         cs = bm.contour(lonmesh, latmesh, w,
                         [-2], colors="blue",
                         linewidths=0.5, linestyles="solid")
-        #ax.clabel(cs, thin_contours[::2], colors="grey", fontsize=10, fmt='%i')
-        #cs = bm.contour(lonmesh, latmesh, w,
+        # ax.clabel(cs, thin_contours[::2], colors="grey", fontsize=10, fmt='%i')
+        # cs = bm.contour(lonmesh, latmesh, w,
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
@@ -1298,14 +1301,14 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         geop_contours, colors="darkgreen", linewidths=2)
         ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
-        titlestring = "Vertical Velocity (cm/s) and Geopotential Height (m) at "\
+        titlestring = "Vertical Velocity (cm/s) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1315,10 +1318,10 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
+"""
+Upper Air Field: Divergence
+"""
 
-###############################################################################
-###                        Upper Air Field: Divergence                      ###
-###############################################################################
 
 class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """Divergence and geopotential on pressure levels.
@@ -1331,7 +1334,6 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     required_datafields = [
         ("pl", "divergence_of_wind"),
         ("pl", "geopotential_height")]
-
 
     def _plot_style(self):
         """
@@ -1364,14 +1366,14 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         geop_contours, colors="darkgreen", linewidths=2)
         ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
-        titlestring = "Divergence (positive: red, negative: blue) and Geopotential Height (m) at "\
+        titlestring = "Divergence (positive: red, negative: blue) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1381,9 +1383,10 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    Upper Air Field: EMAC Tracer                         ###
-###############################################################################
+"""
+Upper Air Field: EMAC Tracer
+"""
+
 
 class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -1407,8 +1410,8 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh_ = lonmesh_ - (self.lons[1]-self.lons[0])/2.
-        latmesh_ = latmesh_ - (self.lats[1]-self.lats[0])/2.
+        lonmesh_ = lonmesh_ - (self.lons[1] - self.lons[0]) / 2.
+        latmesh_ = latmesh_ - (self.lats[1] - self.lats[0]) / 2.
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         tc = bm.pcolor(lonmesh, latmesh, tracer,
@@ -1429,9 +1432,9 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Tracer (relative)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1439,9 +1442,9 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1451,9 +1454,10 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    2D field: EMAC total column density                  ###
-###############################################################################
+"""
+2D field: EMAC total column density
+"""
+
 
 class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -1485,13 +1489,13 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         # EMAC's latitudes. The error, however, is small, thus we neglect it
         # here.
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh_ = lonmesh_ - (self.lons[1]-self.lons[0])/2.
-        latmesh_ = latmesh_ - (self.lats[1]-self.lats[0])/2.
+        lonmesh_ = lonmesh_ - (self.lons[1] - self.lons[0]) / 2.
+        latmesh_ = latmesh_ - (self.lats[1] - self.lats[0]) / 2.
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         tc = bm.pcolor(lonmesh, latmesh, tracer,
                        cmap=plt.cm.hot_r,
-                       #norm=matplotlib.colors.Normalize(vmin=0.1, vmax=1.5),
+                       # norm=matplotlib.colors.Normalize(vmin=0.1, vmax=1.5),
                        norm=matplotlib.colors.LogNorm(vmin=0.05, vmax=0.5),
                        edgecolors='none')
 
@@ -1508,9 +1512,9 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("column density (kg/m^2)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1518,9 +1522,9 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1530,9 +1534,10 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                  Dynamical (2PVU) Tropopause Fields                     ###
-###############################################################################
+"""
+Dynamical (2PVU) Tropopause Fields
+"""
+
 
 class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
     """Dynamical tropopause plots (2-PVU level). Three styles are available:
@@ -1565,7 +1570,8 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         # Default style is pressure.
-        if self.style.lower() == "default": self.style = "PRES"
+        if self.style.lower() == "default":
+            self.style = "PRES"
 
         # Define colourbars and contour levels for the three styles. For
         # pressure and height, a terrain colourmap is used (bluish colours for
@@ -1600,9 +1606,9 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1613,20 +1619,20 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         ax.clabel(cs, thin_contours[::2], colors="red", fontsize=11, fmt='%i')
 
         if self.style == "PRES":
-            titlestring = "Dynamical Tropopause Pressure (hPa) at "\
-                "%i PVU" % (int(self.level)/1000)
+            titlestring = "Dynamical Tropopause Pressure (hPa) at " \
+                          "%i PVU" % (int(self.level) / 1000)
         elif self.style == "PT":
-            titlestring = "Dynamical Tropopause Potential Temperature (K) at "\
-                "%i PVU" % (int(self.level)/1000)
+            titlestring = "Dynamical Tropopause Potential Temperature (K) at " \
+                          "%i PVU" % (int(self.level) / 1000)
         elif self.style == "GEOP":
-            titlestring = "Dynamical Tropopause Geopotential Height (m) at "\
-                "%i PVU" % (int(self.level)/1000)
+            titlestring = "Dynamical Tropopause Geopotential Height (m) at " \
+                          "%i PVU" % (int(self.level) / 1000)
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1636,10 +1642,9 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-
-###############################################################################
-###                 Surface Field: Probability of WCB                       ###
-###############################################################################
+"""
+Surface Field: Probability of WCB
+"""
 
 
 class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
@@ -1654,8 +1659,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
     required_datafields = [
         ("sfc", "air_pressure_at_sea_level"),
         ("sfc", "vertically_integrated_probability_of_wcb_occurrence")
-        ]
-
+    ]
 
     def _plot_style(self):
         """
@@ -1668,7 +1672,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         thick_contours = np.arange(952, 1050, 8)
-        thin_contours = [c for c in np.arange(952, 1050, 2) \
+        thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
         mslp = 0.01 * data["air_pressure_at_sea_level"]
@@ -1689,9 +1693,9 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1699,9 +1703,9 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1711,9 +1715,9 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###       Upper level Field: Lagranto WCB/INSITU/MIX trajectories           ###
-###############################################################################
+"""
+Upper level Field: Lagranto WCB/INSITU/MIX trajectories
+"""
 
 
 class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
@@ -1729,8 +1733,7 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "number_of_wcb_trajectories"),
         ("pl", "number_of_insitu_trajectories"),
         ("pl", "number_of_mix_trajectories")
-        ]
-
+    ]
 
     def _plot_style(self):
         """
@@ -1745,22 +1748,22 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         thick_contours = [0, 4, 8, 12]
         thin_contours = [0.1, 0.5, 1., 2., 3., 4., 5., 6., 7., 8.]
 
-        nwcb    = 1.E6 * data["number_of_wcb_trajectories"]
+        nwcb = 1.E6 * data["number_of_wcb_trajectories"]
         ninsitu = 1.E6 * data["number_of_insitu_trajectories"]
-        nmix    = 1.E6 * data["number_of_mix_trajectories"]
+        nmix = 1.E6 * data["number_of_mix_trajectories"]
 
         # Contour plot of num(INSITU).
-        #cs = bm.contour(lonmesh, latmesh, ninsitu,
+        # cs = bm.contour(lonmesh, latmesh, ninsitu,
         #                thick_contours, colors="darkred", linewidths=2)
-        #ax.clabel(cs, fontsize=12, fmt='%i')
+        # ax.clabel(cs, fontsize=12, fmt='%i')
         cs = bm.contour(lonmesh, latmesh, ninsitu,
                         thin_contours, colors="red", linewidths=1)
         ax.clabel(cs, fontsize=12, fmt='%.1f')
 
         # Contour plot of num(MIX).
-        #cs = bm.contour(lonmesh, latmesh, nmix,
+        # cs = bm.contour(lonmesh, latmesh, nmix,
         #                thick_contours, colors="darkblue", linewidths=2)
-        #ax.clabel(cs, fontsize=12, fmt='%i')
+        # ax.clabel(cs, fontsize=12, fmt='%i')
         cs = bm.contour(lonmesh, latmesh, nmix,
                         thin_contours, colors="darkblue", linewidths=1)
         ax.clabel(cs, fontsize=12, fmt='%.1f')
@@ -1773,9 +1776,9 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1783,9 +1786,9 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1795,11 +1798,10 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
+"""
+Surface Field: Boundary Layer Height
+"""
 
-
-###############################################################################
-###                 Surface Field: Boundary Layer Height                    ###
-###############################################################################
 
 class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -1813,7 +1815,6 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         ("sfc", "air_pressure_at_sea_level"),
         ("sfc", "atmosphere_boundary_layer_thickness")]
 
-
     def _plot_style(self):
         """
         """
@@ -1825,7 +1826,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         thick_contours = np.arange(952, 1050, 8)
-        thin_contours = [c for c in np.arange(952, 1050, 2) \
+        thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
         mslp = 0.01 * data["air_pressure_at_sea_level"]
@@ -1846,9 +1847,9 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1862,9 +1863,9 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                       time_step_hrs,
-                       self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                     time_step_hrs,
+                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1874,9 +1875,10 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-###############################################################################
-###                    Meteosat brightness temperature                      ###
-###############################################################################
+"""
+Meteosat brightness temperature
+"""
+
 
 class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -1916,9 +1918,9 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
             cbar.set_label("Brightness Temperature (K)")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                width="3%", # width = % of parent_bbox width
-                height="30%", # height : %
-                loc=4) # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                                                                      width="3%",  # width = % of parent_bbox width
+                                                                      height="30%",  # height : %
+                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1933,7 +1935,7 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "10.8 um Brightness Temperature (K)"
         titlestring = titlestring + '\nValid: %s' % \
-                      (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1941,4 +1943,3 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         else:
             ax.text(bm.llcrnrx, bm.llcrnry, titlestring,
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
-

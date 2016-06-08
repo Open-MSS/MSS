@@ -36,10 +36,10 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 # local application imports
 import ui_wms_capabilities as ui
 
+"""
+CLASS WMSCapabilitiesBrowser
+"""
 
-################################################################################
-###                     CLASS WMSCapabilitiesBrowser                         ###
-################################################################################
 
 class WMSCapabilitiesBrowser(QtGui.QDialog, ui.Ui_WMSCapabilitiesBrowser):
     """Dialog presenting an XML document to the user.
@@ -63,8 +63,6 @@ class WMSCapabilitiesBrowser(QtGui.QDialog, ui.Ui_WMSCapabilitiesBrowser):
         self.txtCapabilities.setPlainText(capabilities_xml)
 
 
-################################################################################
-
 if __name__ == "__main__":
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
@@ -84,4 +82,3 @@ if __name__ == "__main__":
 <WMT_MS_Capabilities version="1.1.1" updateSequence="1295028115677" xmlns:xlink="http://www.w3.org/1999/xlink">""")
     win.show()
     sys.exit(app.exec_())
-

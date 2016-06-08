@@ -39,9 +39,9 @@ from geopy import distance
 
 # local application imports
 
-###############################################################################
-###             Tangent point / Hexagon / Solar Angle utilities             ###
-###############################################################################
+"""
+Tangent point / Hexagon / Solar Angle utilities
+"""
 
 JSEC_START = datetime.datetime(2000, 1, 1)
 R = 6371.
@@ -127,7 +127,7 @@ def compute_solar_angle(jsec, lon, lat):
     eclong = np.deg2rad(eclong % 360.)
     if (eclong < 0):
         eclong += 2 * np.pi
-        assert(eclong >= 0)
+        assert (eclong >= 0)
 
     oblqec = np.deg2rad(23.439 - 0.0000004 * time)
 
@@ -160,7 +160,7 @@ def compute_solar_angle(jsec, lon, lat):
     lmst = np.deg2rad(15. * (lmst % 24.))
 
     # Hour angle
-    ha = lmst - ra;
+    ha = lmst - ra
     if ha < -np.pi:
         ha += 2 * np.pi
 
@@ -175,7 +175,7 @@ def compute_solar_angle(jsec, lon, lat):
     # Azimuth and elevation
     zenithAngle = np.arccos(np.sin(lat) * np.sin(dec) + np.cos(lat) * np.cos(dec) * np.cos(ha))
     azimuthAngle = np.arccos((np.sin(lat) * np.cos(zenithAngle) - np.sin(dec)) /
-                      (np.cos(lat) * np.sin(zenithAngle)))
+                             (np.cos(lat) * np.sin(zenithAngle)))
 
     if ha > 0:
         azimuthAngle += np.pi
@@ -210,22 +210,22 @@ def createHexagon(center_lat, center_lon, radius, angle=0.):
                     rotatePoint(coords_0, angle=360. + angle)]
     CoordsSphere_rot = [(center_lat + vec[0] / 110.,
                          center_lon + vec[1] / (110. *
-                         np.cos(np.deg2rad(vec[0] / 110. + center_lat))))
-                         for vec in CoordsCart_0]
+                                                np.cos(np.deg2rad(vec[0] / 110. + center_lat))))
+                        for vec in CoordsCart_0]
     return CoordsSphere_rot
 
 
 def convertHPAToKM(press):
-    return (288.15 / 0.0065) * (1. - (press / 1013.25)**(1. / 5.255)) / 1000.
+    return (288.15 / 0.0065) * (1. - (press / 1013.25) ** (1. / 5.255)) / 1000.
 
 
 def tangent_point_coordinates(lon_lin, lat_lin, flight_alt=14, cut_height=12):
-    lon_lin2 = np.array(lon_lin)*np.cos(np.deg2rad(np.array(lat_lin)))
+    lon_lin2 = np.array(lon_lin) * np.cos(np.deg2rad(np.array(lat_lin)))
     lins = zip(lon_lin2[0:-1], lon_lin2[1:], lat_lin[0:-1], lat_lin[1:])
     direction = [(x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
-    direction = [(_x/np.hypot(_x,_y), _y/np.hypot(_x,_y))
+    direction = [(_x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
                  for _x, _y in direction]
-    los = [rotatePoint(point,-90.) for point in direction]
+    los = [rotatePoint(point, -90.) for point in direction]
     los.append(los[-1])
 
     if isinstance(flight_alt, (collections.Sequence, np.ndarray)):
@@ -239,13 +239,14 @@ def tangent_point_coordinates(lon_lin, lat_lin, flight_alt=14, cut_height=12):
     tps = [(x0 + tp_x, y0 + tp_y) for
            ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lins, tp_dir)]
     tps = [(x0 / np.cos(np.deg2rad(y0)), y0) for
-            (x0, y0) in tps]
+           (x0, y0) in tps]
     return tps
 
 
-###############################################################################
-###         Utility functions for interpolating vertical sections.          ###
-###############################################################################
+"""
+Utility functions for interpolating vertical sections.
+"""
+
 
 def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     """
@@ -299,8 +300,8 @@ def interpolate_vertsec2(data3D, data3D_lats, data3D_lons, lats, lons):
     ind_lats = (lats - data3D_lats[0]) / dlat
     ind_lons = (lons - data3D_lons[0]) / dlon
     ind_coords = np.array([ind_lats, ind_lons])
-    #print data3D_lats, data3D_lons, lats, lons, ind_lats, ind_lons
-    
+    # print data3D_lats, data3D_lons, lats, lons, ind_lats, ind_lons
+
     # One horizontal interpolation for each model level. The order
     # parameter controls the degree of the splines used, i.e. order=1
     # stands for linear interpolation.
@@ -328,12 +329,12 @@ def interpolate_vertsec3(data3D, data3D_lats, data3D_lons, lats, lons):
     # scipy.ndimage.map_coordinates().
     interp_lat = interp1d(data3D_lats, np.arange(len(data3D_lats)), bounds_error=False)
     ind_lats = interp_lat(lats)
-    #print data3D_lats, lats, ind_lats  
+    # print data3D_lats, lats, ind_lats
     interp_lon = interp1d(data3D_lons, np.arange(len(data3D_lons)), bounds_error=False)
     ind_lons = interp_lon(lons)
-    #print data3D_lons, lons, ind_lons
+    # print data3D_lons, lons, ind_lons
     ind_coords = np.array([ind_lats, ind_lons])
-    
+
     # One horizontal interpolation for each model level. The order
     # parameter controls the degree of the splines used, i.e. order=1
     # stands for linear interpolation.
@@ -355,18 +356,19 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
 
     Returns two arrays lats, lons with intermediate latitude and longitudes.
     """
-    LAT = 0; LON = 1
+    LAT = 0
+    LON = 1
     if connection == 'linear':
-        if p2[LAT]-p1[LAT] == 0:
+        if p2[LAT] - p1[LAT] == 0:
             lats = np.ones(numpoints) * p1[LAT]
         else:
-            lat_step = float(p2[LAT]-p1[LAT])/(numpoints-1)
-            lats = np.arange(p1[LAT], p2[LAT]+lat_step/2, lat_step)
-        if p2[LON]-p1[LON] == 0:
+            lat_step = float(p2[LAT] - p1[LAT]) / (numpoints - 1)
+            lats = np.arange(p1[LAT], p2[LAT] + lat_step / 2, lat_step)
+        if p2[LON] - p1[LON] == 0:
             lons = np.ones(numpoints) * p1[LON]
         else:
-            lon_step = float(p2[LON]-p1[LON])/(numpoints-1)
-            lons = np.arange(p1[LON], p2[LON]+lon_step/2, lon_step)
+            lon_step = float(p2[LON] - p1[LON]) / (numpoints - 1)
+            lons = np.arange(p1[LON], p2[LON] + lon_step / 2, lon_step)
         return lats, lons
     elif connection == 'greatcircle':
         # Compute great circle points using the WGS84 ellipsoid. Compare to
@@ -393,28 +395,29 @@ def path_points(points, numpoints=100, connection='linear'):
     """
     if connection not in ['linear', 'greatcircle']:
         return None, None
-    LAT = 0; LON = 1
+    LAT = 0
+    LON = 1
 
     # First compute the lengths of the individual path segments, i.e.
     # the distances between the points.
     distances = []
-    for i in range(len(points)-1):
+    for i in range(len(points) - 1):
         if connection == 'linear':
             # Use Euclidean distance in lat/lon space.
-            d = np.sqrt((points[i][LAT] - points[i+1][LAT])**2 +
-                        (points[i][LON] - points[i+1][LON])**2)
+            d = np.sqrt((points[i][LAT] - points[i + 1][LAT]) ** 2 +
+                        (points[i][LON] - points[i + 1][LON]) ** 2)
         elif connection == 'greatcircle':
             # Use Vincenty distance provided by the geopy module.
-            d = distance.distance(points[i], points[i+1]).km
+            d = distance.distance(points[i], points[i + 1]).km
         distances.append(d)
     distances = np.array(distances)
 
     # Compute the total length of the path and the length of the point
     # segments to be computed.
     total_length = distances.sum()
-    length_point_segment = total_length/(numpoints + len(points) - 2)
-    #print points
-    #print distances, total_length, length_point_segment
+    length_point_segment = total_length / (numpoints + len(points) - 2)
+    # print points
+    # print distances, total_length, length_point_segment
 
     # If the total length of the path is zero, all given waypoints have the
     # same coordinates. Return arrays with numpoints points all having these
@@ -431,13 +434,13 @@ def path_points(points, numpoints=100, connection='linear'):
     # first segment to avoid double points.
     lons = []
     lats = []
-    for i in range(len(points)-1):
+    for i in range(len(points) - 1):
         segment_points = int(round(distances[i] / length_point_segment))
         # Enforce that a segment consists of at least two points
         # (otherwise latlon_points will throw an exception).
         segment_points = max(segment_points, 2)
-        #print segment_points
-        lats_, lons_ = latlon_points(points[i], points[i+1],
+        # print segment_points
+        lats_, lons_ = latlon_points(points[i], points[i + 1],
                                      numpoints=segment_points,
                                      connection=connection)
         if i == 0:
@@ -451,10 +454,9 @@ def path_points(points, numpoints=100, connection='linear'):
     return lats, lons
 
 
-
-###############################################################################
-###                     Satellite Track Predictions                         ###
-###############################################################################
+"""
+Satellite Track Predictions
+"""
 
 
 def read_nasa_satellite_prediction(fname):
@@ -501,21 +503,20 @@ def read_nasa_satellite_prediction(fname):
     # to masked arrays.
     for line in satlines[2:]:
         values = line.split()
-        time = date+(dt.strptime(values[0], "%H:%M:%S")-basedate)
+        time = date + (dt.strptime(values[0], "%H:%M:%S") - basedate)
 
-        if len(segment["utc"]) == 0 or (time-segment["utc"][-1]) < seg_diff_time:
+        if len(segment["utc"]) == 0 or (time - segment["utc"][-1]) < seg_diff_time:
             segment["utc"].append(time)
-            segment["satpos"].append([-1.*float(values[2]), float(values[1])])
+            segment["satpos"].append([-1. * float(values[2]), float(values[1])])
             segment["heading"].append(float(values[3]))
             if len(values) == 8:
-                segment["swath_left"].append([-1.*float(values[5]), float(values[4])])
-                segment["swath_right"].append([-1.*float(values[7]), float(values[6])])
+                segment["swath_left"].append([-1. * float(values[5]), float(values[4])])
+                segment["swath_right"].append([-1. * float(values[7]), float(values[6])])
             else:
-#TODO 20100504: workaround for instruments without swath                
-                segment["swath_left"].append([-1.*float(values[2]), float(values[1])])
-                segment["swath_right"].append([-1.*float(values[2]), float(values[1])])
-                
-                
+                # TODO 20100504: workaround for instruments without swath
+                segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
+                segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
+
         else:
             segment["utc"] = np.array(segment["utc"])
             segment["satpos"] = np.ma.masked_equal(segment["satpos"], -999.)
@@ -527,4 +528,3 @@ def read_nasa_satellite_prediction(fname):
                        "swath_left": [], "swath_right": []}
 
     return result
-

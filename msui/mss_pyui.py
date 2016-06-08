@@ -43,13 +43,6 @@ AUTHORS:
 
 """
 
-__version__ = "Release 1.1beta"
-
-print "***********************************************************************"
-print "\n            DLR/IPA Mission Support System User Interface\n"
-print "***********************************************************************"
-print "VERSION:", __version__
-print "\nSystem is loading.."
 
 # standard library imports
 import sys
@@ -57,8 +50,6 @@ import os
 import copy
 import logging
 
-# related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
 import ui_mainwindow as ui
@@ -71,9 +62,12 @@ import timeseriesview
 import trajectories_tool
 import loopview
 import mss_settings
+# related third party imports
+from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 try:
     import view3D
+
     enable3D = True
 except:
     enable3D = False
@@ -85,10 +79,19 @@ if enableGENESI:
     except:
         enableGENESI = False
 
+__version__ = "Release 1.1beta"
 
-###############################################################################
-###                  Template for new flight tracks                         ###
-###############################################################################
+
+print "***********************************************************************"
+print "\n            DLR/IPA Mission Support System User Interface\n"
+print "***********************************************************************"
+print "VERSION:", __version__
+print "\nSystem is loading.."
+
+
+"""
+Template for new flight tracks
+"""
 
 # Template that is used when a new flight track is created (created from
 # mss_settings).
@@ -96,10 +99,10 @@ waypoints_template = []
 for wp in mss_settings.new_flighttrack_template:
     waypoints_template.append(ft.Waypoint(flightlevel=0, location=wp))
 
+"""
+QActiveViewsListWidgetItem
+"""
 
-################################################################################
-###                    QActiveViewsListWidgetItem                            ###
-################################################################################
 
 class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
     """Subclass of QListWidgetItem, represents an open view in the list of
@@ -119,14 +122,13 @@ class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
                                  view_window.name)
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent,
                                                          type)
-        
-        view_window.setWindowTitle("(%i) %s" % \
+
+        view_window.setWindowTitle("(%i) %s" %
                                    (QActiveViewsListWidgetItem.opened_views,
                                     view_window.windowTitle()))
         view_window.setIdentifier(view_name)
         self.window = view_window
         self.parent = parent
-
 
     def view_destroyed(self):
         """Slot that removes this QListWidgetItem from the parent (the
@@ -137,9 +139,10 @@ class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
             self.parent.emit(QtCore.SIGNAL("viewsChanged()"))
 
 
-################################################################################
-###                    QFlightTrackListWidgetItem                            ###
-################################################################################
+"""
+QFlightTrackListWidgetItem
+"""
+
 
 class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
     """Subclass of QListWidgetItem, represents a flight track in the list of
@@ -152,7 +155,7 @@ class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
         """Item class for the list widget that accomodates the open flight
            tracks.
 
-        Arguments: 
+        Arguments:
         flighttrack_model -- instance of a flight track model that is
                              associated with the item
         parent -- pointer to the QListWidgetItem that accomodates this item.
@@ -163,7 +166,7 @@ class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
         view_name = flighttrack_model.name
         super(QFlightTrackListWidgetItem, self).__init__(view_name, parent,
                                                          type)
-        
+
         self.parent = parent
         self.flighttrack_model = flighttrack_model
 
@@ -172,16 +175,16 @@ class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
                            QtCore.SIGNAL("itemChanged(QListWidgetItem *)"),
                            self.nameChanged)
 
-
     def nameChanged(self, item):
         """Slot to change the name of a flight track.
         """
         item.flighttrack_model.setName(str(item.text()))
 
 
-################################################################################
-###                       About MSUI DIALOG                                  ###
-################################################################################
+"""
+About MSUI DIALOG
+"""
+
 
 class MSS_AboutDialog(QtGui.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
@@ -198,9 +201,10 @@ class MSS_AboutDialog(QtGui.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.lblVersion.setText("Version: %s" % __version__)
 
 
-################################################################################
-###                             MAIN WINDOW                                  ###
-################################################################################
+"""
+MAIN WINDOW
+"""
+
 
 class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
     """MSUI main window class. Provides user interface elements for managing
@@ -213,11 +217,11 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         # Disable the 3D view menu if OpenGL is not supported.
         self.action3DView.setEnabled(enable3D)
         self.actionDiscoverEarthObservationDataGENESI.setEnabled(enableGENESI)
-            
+
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None
-        self.lastSaveDir = os.getcwd()        
+        self.lastSaveDir = os.getcwd()
 
         # Connect Qt SIGNALs:
         # ===================
@@ -272,31 +276,29 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         self.connect(self.listTools, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
                      self.activateWindow)
 
-
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
            close all views that are open.
-           
+
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
         ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                        self.tr("Do you want to close the DLR/IPA Mission "\
-                                "Support System user interface?"),
-                        QtGui.QMessageBox.Yes,
-                        QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
+                                        self.tr("Do you want to close the DLR/IPA Mission "
+                                                "Support System user interface?"),
+                                        QtGui.QMessageBox.Yes,
+                                        QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
         if ret == QtGui.QMessageBox.Yes:
             event.accept()
         else:
             event.ignore()
-
 
     def createNewView(self):
         """Method called when the user selects a new view to be opened. Creates
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
         """
-        view_window = None        
+        view_window = None
         if self.sender() == self.actionTopView:
             # Top view.
             view_window = topview.MSSTopViewWindow(parent=self,
@@ -332,13 +334,12 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             self.listViews.setCurrentItem(listitem)
             self.listViews.emit(QtCore.SIGNAL("viewsChanged()"))
 
-
     def createNewTool(self):
         """Method called when the user selects a new tool to be opened. Creates
            a new instance of the tool and adds a QActiveViewsListWidgetItem to
            the list of open tools (self.listTools).
         """
-        tool_window = None        
+        tool_window = None
         if self.sender() == self.actionTrajectoryToolLagranto:
             # Trajectory tool.
             tool_window = trajectories_tool.MSSTrajectoriesToolWindow(
@@ -358,7 +359,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             self.connect(tool_window, QtCore.SIGNAL("moduleCloses()"),
                          listitem.view_destroyed)
 
-
     def activateWindow(self, item):
         """When the user clicks on one of the open view or tool windows, this
            window is brought to the front. This function implements the slot to
@@ -370,8 +370,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         item.window.raise_()
         item.window.activateWindow()
 
-
     new_flight_track_counter = 0
+
     def createNewFlightTrack(self, template=waypoints_template,
                              filename=None, activate=False):
         """Creates a new flight track model from a template. Adds a new entry to
@@ -381,7 +381,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         Arguments:
         template -- copy the specified template to the new flight track (so that
                     it is not empty).
-        filename -- if not None, load the flight track in the specified file. 
+        filename -- if not None, load the flight track in the specified file.
         activate -- set the new flight track to be the active flight track.
         """
         if filename:
@@ -389,8 +389,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         else:
             # Create a new flight track from the waypoints template.
             self.new_flight_track_counter += 1
-            waypoints_model = ft.WaypointsTableModel(name="new flight track (%i)" % \
-                                                     self.new_flight_track_counter)
+            waypoints_model = ft.WaypointsTableModel(name="new flight track (%i)" %
+                                                          self.new_flight_track_counter)
             # Make a copy of the template. Otherwise all new flight tracks would
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
@@ -400,13 +400,11 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         # editable.
         listitem = QFlightTrackListWidgetItem(waypoints_model,
                                               self.listFlightTracks)
-        listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable\
-                          | QtCore.Qt.ItemIsEnabled)
+        listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
         if activate:
             self.listFlightTracks.setCurrentItem(listitem)
             self.setFlightTrackActive()
-
 
     def openFlightTrack(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
@@ -414,15 +412,14 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         """
         filename = QtGui.QFileDialog.getOpenFileName(self,
                                                      "Open Flight Track", "",
-                                                     "Supported files (*.ftml *.csv *.txt)"\
-                                                     ";;Flight track XML (*.ftml)"\
-                                                     ";;CSV-file (*.csv)"\
-                                                     ";;Text-file (*.txt)");
+                                                     "Supported files (*.ftml *.csv *.txt)"
+                                                     ";;Flight track XML (*.ftml)"
+                                                     ";;CSV-file (*.csv)"
+                                                     ";;Text-file (*.txt)")
 
         if not filename.isEmpty():
             filename = str(filename)
             self.createNewFlightTrack(filename=filename, activate=True)
-
 
     def closeFlightTrack(self):
         """Slot to close the currently selected flight track. Flight tracks can
@@ -431,22 +428,21 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         """
         if self.listFlightTracks.count() < 2:
             QtGui.QMessageBox.information(self, self.tr("Flight Track Management"),
-                 self.tr("At least one flight track has to be open."))
+                                          self.tr("At least one flight track has to be open."))
             return
         item = self.listFlightTracks.currentItem()
         if item.flighttrack_model == self.active_flight_track:
             QtGui.QMessageBox.information(self, self.tr("Flight Track Management"),
-                 self.tr("Cannot close currently active flight track."))
+                                          self.tr("Cannot close currently active flight track."))
             return
         if item.flighttrack_model.modified:
             ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                        self.tr("The flight track you are about to close has "\
-                                "been modified. Close anyway?"),
-                        QtGui.QMessageBox.Yes,
-                        QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
+                                            self.tr("The flight track you are about to close has "
+                                                    "been modified. Close anyway?"),
+                                            QtGui.QMessageBox.Yes,
+                                            QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
             if ret == QtGui.QMessageBox.Yes:
                 self.listFlightTracks.takeItem(self.listFlightTracks.currentRow())
-
 
     def saveFlightTrack(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
@@ -454,8 +450,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         filename = self.active_flight_track.getFilename()
         if filename:
             sel = QtGui.QMessageBox.question(self, "Save flight track",
-                "Saving flight track to {:s}. Continue?".format(filename),
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+                                             "Saving flight track to {:s}. Continue?".format(filename),
+                                             QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
             if sel == QtGui.QMessageBox.Yes:
                 if filename.endswith('.ftml'):
                     self.active_flight_track.saveToFTML(filename)
@@ -465,11 +461,10 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                     self.active_flight_track.saveToText(filename)
                 else:
                     QtGui.QMessageBox.warning(self, "Save flight track",
-                        "Unknown file extension {:s}. Not saving!".format(filename),
-                        QtGui.QMessageBox.Ok)
+                                              "Unknown file extension {:s}. Not saving!".format(filename),
+                                              QtGui.QMessageBox.Ok)
         else:
             self.saveFlightTrackAs()
-
 
     def saveFlightTrackAs(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
@@ -477,10 +472,10 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         filename = QtGui.QFileDialog.getSaveFileName(self,
                                                      "Save Flight Track",
                                                      os.path.join(self.lastSaveDir,
-                                                        self.active_flight_track.name),
-                                                     "Flight track XML (*.ftml)"\
-                                                     ";;CSV-file (*.csv)"\
-                                                     ";;Text-file (*.txt)");
+                                                                  self.active_flight_track.name),
+                                                     "Flight track XML (*.ftml)"
+                                                     ";;CSV-file (*.csv)"
+                                                     ";;Text-file (*.txt)")
 
         if not filename.isEmpty():
             filename = str(filename)
@@ -493,9 +488,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                 self.active_flight_track.saveToText(filename)
             else:
                 QtGui.QMessageBox.warning(self, "Save flight track",
-                    "No supported file extension recognized!\n{:}".format(filename),
-                    QtGui.QMessageBox.Ok)
-
+                                          "No supported file extension recognized!\n{:}".format(filename),
+                                          QtGui.QMessageBox.Ok)
 
     def setFlightTrackActive(self):
         """Set the currently selected flight track to be the active one, i.e.
@@ -509,7 +503,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             view_item = self.listViews.item(i)
             view_item.window.setFlightTrackModel(self.active_flight_track)
 
-
     def flightTrackNameChanged(self, item):
         """Slot to react to a name change of the flight tracks in the list
            (i.e. when the user has edited a name). If the changed name
@@ -519,9 +512,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         if item.flighttrack_model == self.active_flight_track:
             self.lblActiveFlightTrack.setText(item.text())
         filename = item.flighttrack_model.filename \
-                   if item.flighttrack_model.filename else ""
+            if item.flighttrack_model.filename else ""
         item.setToolTip(filename)
-        
 
     def showAboutDlg(self):
         """Show the 'About MSUI' dialog to the user.
@@ -529,12 +521,11 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         dlg = MSS_AboutDialog(parent=self)
         dlg.setModal(True)
         dlg.exec_()
-        
-        
 
-################################################################################
-###                            MAIN PROGRAM                                  ###
-################################################################################
+
+"""
+MAIN PROGRAM
+"""
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.

@@ -35,10 +35,10 @@ import numpy
 import pylab
 import scipy.integrate
 
+"""
+EXCEPTION CLASSES
+"""
 
-################################################################################
-###                          EXCEPTION CLASSES                               ###
-################################################################################
 
 class VapourPressureError(Exception):
     """Exception class to handle error arising during the computation of vapour
@@ -47,9 +47,10 @@ class VapourPressureError(Exception):
     pass
 
 
-################################################################################
-###                           Vapour Pressure                                ###
-################################################################################
+"""
+Vapour Pressure
+"""
+
 
 def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                         force_phase='None'):
@@ -103,17 +104,17 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
     # Get indexes of input temperatures above and below freezing, to select
     # the appropriate method for each temperature.
     if force_phase == 'ice':
-        idx_ice = () # numpy.where(t is not None)
+        idx_ice = ()  # numpy.where(t is not None)
         idx_liq = None
     elif force_phase == 'liquid':
-        idx_liq = () # numpy.where(t is not None)
+        idx_liq = ()  # numpy.where(t is not None)
         idx_ice = None
     elif force_phase == 'None':
         idx_ice = numpy.where(t <= 273.15)
         idx_liq = numpy.where(t > 273.15)
     else:
-        raise VapourPressureError, "Cannot recognize the force_phase " \
-              "keyword: %s (valid are ice, liquid, None)" % force_phase
+        raise VapourPressureError("Cannot recognize the force_phase "
+                                  "keyword: %s (valid are ice, liquid, None)" % force_phase)
 
     # Initialise output field.
     e_sat = numpy.zeros(numpy.shape(t))
@@ -123,52 +124,51 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
     if not force_phase == 'ice':
 
         if liquid == 'MartiMauersberger':
-            raise VapourPressureError, "Marti and Mauersberger don't " \
-                  "have a vapour pressure curve over liquid."
+            raise VapourPressureError("Marti and Mauersberger don't "
+                                      "have a vapour pressure curve over liquid.")
 
         elif liquid == 'HylandWexler':
             # Source: Hyland, R. W. and A. Wexler, Formulations for the
             # Thermodynamic Properties of the saturated Phases of H2O
             # from 173.15K to 473.15K, ASHRAE Trans, 89(2A), 500-519, 1983.
-            e_sat[idx_liq] = numpy.exp(-0.58002206E4 / t[idx_liq]
-                                       + 0.13914993E1
-                                       - 0.48640239E-1 * t[idx_liq]
-                                       + 0.41764768E-4 * t[idx_liq]**2.
-                                       - 0.14452093E-7 * t[idx_liq]**3.
-                                       + 0.65459673E1 * numpy.log(t[idx_liq])) / 100.
+            e_sat[idx_liq] = numpy.exp(-0.58002206E4 / t[idx_liq] +
+                                       0.13914993E1 -
+                                       0.48640239E-1 * t[idx_liq] +
+                                       0.41764768E-4 * t[idx_liq] ** 2. -
+                                       0.14452093E-7 * t[idx_liq] ** 3. +
+                                       0.65459673E1 * numpy.log(t[idx_liq])) / 100.
 
         elif liquid == 'Wexler':
             # Wexler, A., Vapor pressure formulation for ice, Journal of
             # Research of the National Bureau of Standards-A. 81A, 5-20, 1977.
-            e_sat[idx_liq] = numpy.exp(-2.9912729E3 * t[idx_liq]**(-2.)
-                                       - 6.0170128E3 * t[idx_liq]**(-1.)
-                                       + 1.887643854E1 * t[idx_liq]**0.
-                                       - 2.8354721E-2 * t[idx_liq]**1.
-                                       + 1.7838301E-5 * t[idx_liq]**2.
-                                       - 8.4150417E-10 * t[idx_liq]**3.
-                                       - 4.4412543E-13 * t[idx_liq]**4.
-                                       + 2.858487 * numpy.log(t[idx_liq])) / 100.
+            e_sat[idx_liq] = numpy.exp(-2.9912729E3 * t[idx_liq] ** (-2.) -
+                                       6.0170128E3 * t[idx_liq] ** (-1.) +
+                                       1.887643854E1 * t[idx_liq] ** 0. -
+                                       2.8354721E-2 * t[idx_liq] ** 1. +
+                                       1.7838301E-5 * t[idx_liq] ** 2. -
+                                       8.4150417E-10 * t[idx_liq] ** 3. -
+                                       4.4412543E-13 * t[idx_liq] ** 4. +
+                                       2.858487 * numpy.log(t[idx_liq])) / 100.
 
         elif liquid == 'GoffGratch':
             # Goff Gratch formulation.
             # Source: Smithsonian Meteorological Tables, 5th edition,
             # p. 350, 1984
             # From original source: Goff and Gratch (1946), p. 107.
-            ts = 373.16       # steam point temperature in K
-            ews = 1013.246    # saturation pressure at steam point
-                              #temperature, normal atmosphere
-            e_sat[idx_liq] = 10. ** (-7.90298*(ts/t[idx_liq]-1.)
-                                     + 5.02808 *  numpy.log10(ts/t[idx_liq])
-                                     - 1.3816E-7 * (10.**(11.344*(1.-t[idx_liq]/ts))-1.)
-                                     + 8.1328E-3 * (10.**(-3.49149*(ts/t[idx_liq]-1)) -1.)
-                                     + numpy.log10(ews))
+            ts = 373.16  # steam point temperature in K
+            ews = 1013.246  # saturation pressure at steam point
+            # temperature, normal atmosphere
+            e_sat[idx_liq] = 10. ** (-7.90298 * (ts / t[idx_liq] - 1.) +
+                                     5.02808 * numpy.log10(ts / t[idx_liq]) -
+                                     1.3816E-7 * (10. ** (11.344 * (1. - t[idx_liq] / ts)) - 1.) +
+                                     8.1328E-3 * (10. ** (-3.49149 * (ts / t[idx_liq] - 1)) - 1.) +
+                                     numpy.log10(ews))
 
         elif liquid == 'MagnusTeten':
             # Source: Murray, F. W., On the computation of saturation
             # vapor pressure, J. Appl. Meteorol., 6, 203-204, 1967.
             tc = t - 273.15
-            e_sat[idx_liq] = 10. ** (7.5*(tc[idx_liq])/(tc[idx_liq]+237.5)
-                                     + 0.7858)
+            e_sat[idx_liq] = 10. ** (7.5 * (tc[idx_liq]) / (tc[idx_liq] + 237.5) + 0.7858)
 
         elif liquid == 'Buck_original':
             # Bucks vapor pressure formulation based on Tetens formula
@@ -176,17 +176,15 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # pressure and enhancement factor, J. Appl. Meteorol., 20,
             # 1527-1532, 1981.
             tc = t - 273.15
-            e_sat[idx_liq] = 6.1121 * numpy.exp(17.502 * tc[idx_liq] /
-                                                (240.97+tc[idx_liq]))
+            e_sat[idx_liq] = 6.1121 * numpy.exp(17.502 * tc[idx_liq] / (240.97 + tc[idx_liq]))
 
         elif liquid == 'Buck_manual':
             # Bucks vapor pressure formulation based on Tetens formula
             # Source: Buck Research, Model CR-1A Hygrometer Operating
             # Manual, Sep 2001
             tc = t - 273.15
-            e_sat[idx_liq] = 6.1121 * numpy.exp((18.678 - (tc[idx_liq]) / 234.5)
-                                                * (tc[idx_liq])
-                                                / (257.14+tc[idx_liq]))
+            e_sat[idx_liq] = 6.1121 * numpy.exp((18.678 - (tc[idx_liq]) / 234.5) *
+                                                (tc[idx_liq]) / (257.14 + tc[idx_liq]))
 
         elif liquid == 'WMO_Goff':
             # Intended WMO formulation, originally published by Goff (1957)
@@ -196,70 +194,69 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # and incorrectly referenced by WMO technical regulations,
             # WMO-NO 49, Vol I, General Meteorological Standards and
             # Recommended Practices, App. A, 1988.
-            ts    = 273.16       # steam point temperature in K
-            e_sat[idx_liq] = 10.**(10.79574*(1.-ts/t[idx_liq])
-                                   - 5.02800 * numpy.log10(t[idx_liq]/ts)
-                                   + 1.50475E-4 * (1.-10.**(-8.2969*(t[idx_liq]/ts-1.)))
-                                   + 0.42873E-3 * (10.**(+4.76955*(1.-ts/t[idx_liq]))-1.)
-                                   + 0.78614)
-
+            ts = 273.16  # steam point temperature in K
+            e_sat[idx_liq] = 10. ** (10.79574 * (1. - ts / t[idx_liq]) -
+                                     5.02800 * numpy.log10(t[idx_liq] / ts) +
+                                     1.50475E-4 * (1. - 10. ** (-8.2969 * (t[idx_liq] / ts - 1.))) +
+                                     0.42873E-3 * (10. ** (+4.76955 * (1. - ts / t[idx_liq])) - 1.) +
+                                     0.78614)
 
         elif liquid == 'WMO2000':
             # WMO formulation, which is very similar to Goff Gratch
             # Source: WMO technical regulations, WMO-NO 49, Vol I,
             # General Meteorological Standards and Recommended Practices,
             # App. A, Corrigendum Aug 2000.
-            ts    = 273.16       # steam point temperature in K
-            e_sat[idx_liq] = 10.**(10.79574*(1.-ts/t[idx_liq])
-                                   - 5.02800 * numpy.log10(t[idx_liq]/ts)
-                                   + 1.50475E-4 * (1.-10.**(-8.2969*(t[idx_liq]/ts-1.)))
-                                   + 0.42873E-3 * (10.**(-4.76955*(1.-ts/t[idx_liq]))-1.)
-                                   + 0.78614)
+            ts = 273.16  # steam point temperature in K
+            e_sat[idx_liq] = 10. ** (10.79574 * (1. - ts / t[idx_liq]) -
+                                     5.02800 * numpy.log10(t[idx_liq] / ts) +
+                                     1.50475E-4 * (1. - 10. ** (-8.2969 * (t[idx_liq] / ts - 1.))) +
+                                     0.42873E-3 * (10. ** (-4.76955 * (1. - ts / t[idx_liq])) - 1.) +
+                                     0.78614)
 
         elif liquid == 'Sonntag':
             # Source: Sonntag, D., Advancements in the field of hygrometry,
             # Meteorol. Z., N. F., 3, 51-66, 1994.
-            e_sat[idx_liq] = numpy.exp( -6096.9385 * t[idx_liq]**(-1.)
-                                        + 16.635794
-                                        - 2.711193E-2 * t[idx_liq]**1.
-                                        + 1.673952E-5 * t[idx_liq]**2.
-                                        + 2.433502 * numpy.log(t[idx_liq]))
+            e_sat[idx_liq] = numpy.exp(-6096.9385 * t[idx_liq] ** (-1.) +
+                                       16.635794 -
+                                       2.711193E-2 * t[idx_liq] ** 1. +
+                                       1.673952E-5 * t[idx_liq] ** 2. +
+                                       2.433502 * numpy.log(t[idx_liq]))
 
         elif liquid == 'Bolton':
             # Source: Bolton, D., The computation of equivalent potential
             # temperature, Monthly Weather Report, 108, 1046-1053, 1980.
             # equation (10)
             tc = t - 273.15
-            e_sat[idx_liq] = 6.112 * numpy.exp(17.67 * tc[idx_liq] / (tc[idx_liq]+243.5))
+            e_sat[idx_liq] = 6.112 * numpy.exp(17.67 * tc[idx_liq] / (tc[idx_liq] + 243.5))
 
-##         THIS CURVE LOOKS WRONG!
-##         elif liquid == 'Fukuta':
-##             # Source: Fukuta, N. and C. M. Gramada, Vapor pressure
-##             # measurement of supercooled water, J. Atmos. Sci., 60,
-##             # 1871-1875, 2003.
-##             # This paper does not give a vapor pressure formulation,
-##             # but rather a correction over the Smithsonian Tables.
-##             # Thus calculate the table value first, then use the
-##             # correction to get to the measured value.
-##             ts    = 373.16       # steam point temperature in K
-##             ews   = 1013.246     # saturation pressure at steam point
-##                                  # temperature, normal atmosphere
+        # THIS CURVE LOOKS WRONG!
+        #         elif liquid == 'Fukuta':
+        #             # Source: Fukuta, N. and C. M. Gramada, Vapor pressure
+        #             # measurement of supercooled water, J. Atmos. Sci., 60,
+        #             # 1871-1875, 2003.
+        #             # This paper does not give a vapor pressure formulation,
+        #             # but rather a correction over the Smithsonian Tables.
+        #             # Thus calculate the table value first, then use the
+        #             # correction to get to the measured value.
+        #             ts    = 373.16       # steam point temperature in K
+        #             ews   = 1013.246     # saturation pressure at steam point
+        #                                  # temperature, normal atmosphere
 
-##             e_sat[idx_liq] = 10.**(-7.90298*(ts/t[idx_liq]-1.)
-##                                    + 5.02808 * numpy.log10(ts/t[idx_liq])
-##                                    - 1.3816E-7 * (10.**(11.344*(1.-t[idx_liq]/ts))-1.)
-##                                    + 8.1328E-3*(10.**(-3.49149*(ts/t[idx_liq]-1)) -1.)
-##                                    + numpy.log10(ews))
+        #             e_sat[idx_liq] = 10.**(-7.90298*(ts/t[idx_liq]-1.)
+        #                                    + 5.02808 * numpy.log10(ts/t[idx_liq])
+        #                                    - 1.3816E-7 * (10.**(11.344*(1.-t[idx_liq]/ts))-1.)
+        #                                    + 8.1328E-3*(10.**(-3.49149*(ts/t[idx_liq]-1)) -1.)
+        #                                    + numpy.log10(ews))
 
-##             tc = t - 273.15
-##             x = tc[idx_liq] + 19
-##             e_sat[idx_liq] = e_sat[idx_liq] * (0.9992 + 7.113E-4*x
-##                                                - 1.847E-4*x**2.
-##                                                + 1.189E-5*x**3.
-##                                                + 1.130E-7*x**4.
-##                                                - 1.743E-8*x**5.)
+        #             tc = t - 273.15
+        #             x = tc[idx_liq] + 19
+        #             e_sat[idx_liq] = e_sat[idx_liq] * (0.9992 + 7.113E-4*x
+        #                                                - 1.847E-4*x**2.
+        #                                                + 1.189E-5*x**3.
+        #                                                + 1.130E-7*x**4.
+        #                                                - 1.743E-8*x**5.)
 
-##             e_sat[numpy.where(tc < -39.)] = None
+        #             e_sat[numpy.where(tc < -39.)] = None
 
         elif liquid == 'IAPWS':
             # Source: Wagner W. and A. Pruss (2002), The IAPWS
@@ -270,34 +267,34 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # Association for the Properties of Water and Steam
             # The valid range of this formulation is 273.16 <= T <=
             # 647.096 K and is based on the ITS90 temperature scale.
-            Tc = 647.096        # K   : Temperature at the critical point
-            Pc = 22.064 * 10**4 # hPa : Vapor pressure at the critical point
-            nu = (1-t[idx_liq]/Tc)
+            Tc = 647.096  # K   : Temperature at the critical point
+            Pc = 22.064 * 10 ** 4  # hPa : Vapor pressure at the critical point
+            nu = (1 - t[idx_liq] / Tc)
             a1 = -7.85951783
             a2 = 1.84408259
             a3 = -11.7866497
             a4 = 22.6807411
             a5 = -15.9618719
             a6 = 1.80122502
-            e_sat[idx_liq] = Pc * numpy.exp(Tc/t[idx_liq] *
-                                            (a1*nu + a2*nu**1.5 + a3*nu**3.
-                                             + a4*nu**3.5 + a5*nu**4. + a6*nu**7.5))
+            e_sat[idx_liq] = Pc * numpy.exp(Tc / t[idx_liq] *
+                                            (a1 * nu + a2 * nu ** 1.5 + a3 * nu ** 3. +
+                                             a4 * nu ** 3.5 + a5 * nu ** 4. + a6 * nu ** 7.5))
 
         elif liquid == 'MurphyKoop':
             # Source : Murphy and Koop, Review of the vapour pressure
             # of ice and supercooled water for atmospheric applications,
             # Q. J. R. Meteorol. Soc (2005), 131, pp. 1539-1565.
-            e_sat[idx_liq] = numpy.exp(54.842763 - 6763.22 / t[idx_liq]
-                                       - 4.210 * numpy.log(t[idx_liq])
-                                       + 0.000367 * t[idx_liq]
-                                       + numpy.tanh(0.0415 * (t[idx_liq] - 218.8))
-                                       * (53.878 - 1331.22 / t[idx_liq]
-                                          - 9.44523 * numpy.log(t[idx_liq])
-                                          + 0.014025 * t[idx_liq])) / 100.
+            e_sat[idx_liq] = numpy.exp(54.842763 - 6763.22 / t[idx_liq] -
+                                       4.210 * numpy.log(t[idx_liq]) +
+                                       0.000367 * t[idx_liq] +
+                                       numpy.tanh(0.0415 * (t[idx_liq] - 218.8)) *
+                                       (53.878 - 1331.22 / t[idx_liq] -
+                                       9.44523 * numpy.log(t[idx_liq]) +
+                                       0.014025 * t[idx_liq])) / 100.
 
         else:
-            raise VapourPressureError, "Unkown method for computing " \
-                  "the vapour pressure curve over liquid: %s" % liquid
+            raise VapourPressureError("Unkown method for computing "
+                                      "the vapour pressure curve over liquid: %s" % liquid)
 
     # =============================================================================
     #  Calculate saturation pressure over ice -------------------------------------
@@ -307,8 +304,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             ice = 'WMO_Goff'
 
         elif ice == 'IAWPS':
-            raise VapourPressureError, "IAPWS does not provide a vapour " \
-                  "pressure formulation over ice"
+            raise VapourPressureError("IAPWS does not provide a vapour "
+                                      "pressure formulation over ice")
 
         elif ice == 'MartiMauersberger':
             # Source: Marti, J. and K Mauersberger, A survey and new
@@ -320,31 +317,31 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # Source Hyland, R. W. and A. Wexler, Formulations for the
             # Thermodynamic Properties of the saturated Phases of H2O
             # from 173.15K to 473.15K, ASHRAE Trans, 89(2A), 500-519, 1983.
-            e_sat[idx_ice] = numpy.exp(-0.56745359E4 / t[idx_ice]
-                                       + 0.63925247E1
-                                       - 0.96778430E-2 * t[idx_ice]
-                                       + 0.62215701E-6 * t[idx_ice]**2.
-                                       + 0.20747825E-8 * t[idx_ice]**3.
-                                       - 0.94840240E-12 * t[idx_ice]**4.
-                                       + 0.41635019E1 * numpy.log(t[idx_ice])) / 100.
+            e_sat[idx_ice] = numpy.exp(-0.56745359E4 / t[idx_ice] +
+                                       0.63925247E1 -
+                                       0.96778430E-2 * t[idx_ice] +
+                                       0.62215701E-6 * t[idx_ice] ** 2. +
+                                       0.20747825E-8 * t[idx_ice] ** 3. -
+                                       0.94840240E-12 * t[idx_ice] ** 4. +
+                                       0.41635019E1 * numpy.log(t[idx_ice])) / 100.
 
         elif ice == 'GoffGratch':
             # Source: Smithsonian Meteorological Tables, 5th edition,
             # p. 350, 1984
 
-            ei0    = 6.1071       # mbar
-            T0     = 273.16       # freezing point in K
+            ei0 = 6.1071  # mbar
+            T0 = 273.16  # freezing point in K
 
-            e_sat[idx_ice] = 10. ** (-9.09718 * (T0 / t[idx_ice] - 1.)
-                                     - 3.56654 * numpy.log10(T0 / t[idx_ice])
-                                     + 0.876793 * (1. - t[idx_ice] / T0)
-                                     + numpy.log10(ei0))
+            e_sat[idx_ice] = 10. ** (-9.09718 * (T0 / t[idx_ice] - 1.) -
+                                     3.56654 * numpy.log10(T0 / t[idx_ice]) +
+                                     0.876793 * (1. - t[idx_ice] / T0) +
+                                     numpy.log10(ei0))
 
         elif ice == 'MagnusTeten':
             # Source: Murray, F. W., On the computation of saturation
             # vapour pressure, J. Appl. Meteorol., 6, 203-204, 1967.
             tc = t - 273.15
-            e_sat[idx_ice] = 10.**(9.5 * tc[idx_ice]/(265.5+tc[idx_ice]) + 0.7858)
+            e_sat[idx_ice] = 10. ** (9.5 * tc[idx_ice] / (265.5 + tc[idx_ice]) + 0.7858)
 
         elif ice == 'Buck_original':
             # Bucks vapor pressure formulation based on Tetens formula
@@ -352,15 +349,15 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # pressure and enhancement factor, J. Appl. Meteorol., 20,
             # 1527-1532, 1981.
             tc = t - 273.15
-            e_sat[idx_ice] = 6.1115 * numpy.exp(22.452 * tc[idx_ice] / (272.55+tc[idx_ice]))
+            e_sat[idx_ice] = 6.1115 * numpy.exp(22.452 * tc[idx_ice] / (272.55 + tc[idx_ice]))
 
         elif ice == 'Buck_manual':
             # Bucks vapor pressure formulation based on Tetens formula
             # Source: Buck Research, Model CR-1A Hygrometer Operating
             # Manual, Sep 2001
             tc = t - 273.15
-            e_sat[idx_ice] = 6.1115 * numpy.exp((23.036 - tc[idx_ice] / 333.7)
-                                                * tc[idx_ice] / (279.82+tc[idx_ice]))
+            e_sat[idx_ice] = 6.1115 * numpy.exp((23.036 - tc[idx_ice] / 333.7) *
+                                                tc[idx_ice] / (279.82 + tc[idx_ice]))
 
         elif ice == 'WMO_Goff':
             # WMO formulation, which is very similar to Goff Gratch
@@ -368,35 +365,35 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
             # General Meteorological Standards and Recommended Practices,
             # Aug 2000, App. A.
 
-            T0    = 273.16       # steam point temperature in K
+            T0 = 273.16  # steam point temperature in K
 
-            e_sat[idx_ice] = 10. ** (-9.09685 * (T0 / t[idx_ice] - 1.)
-                                     - 3.56654 * numpy.log10(T0 / t[idx_ice])
-                                     + 0.87682 * (1. - t[idx_ice] / T0) + 0.78614)
+            e_sat[idx_ice] = 10. ** (-9.09685 * (T0 / t[idx_ice] - 1.) -
+                                     3.56654 * numpy.log10(T0 / t[idx_ice]) +
+                                     0.87682 * (1. - t[idx_ice] / T0) + 0.78614)
 
         elif ice == 'Sonntag':
             # Source: Sonntag, D., Advancements in the field of hygrometry,
             # Meteorol. Z., N. F., 3, 51-66, 1994.
-            e_sat[idx_ice] = numpy.exp( -6024.5282 * t[idx_ice]**(-1.)
-                                        + 24.721994
-                                        + 1.0613868E-2 * t[idx_ice]**1.
-                                        - 1.3198825E-5 * t[idx_ice]**2.
-                                        - 0.49382577 * numpy.log(t[idx_ice]))
+            e_sat[idx_ice] = numpy.exp(-6024.5282 * t[idx_ice] ** (-1.) +
+                                       24.721994 +
+                                       1.0613868E-2 * t[idx_ice] ** 1. -
+                                       1.3198825E-5 * t[idx_ice] ** 2. -
+                                       0.49382577 * numpy.log(t[idx_ice]))
 
         elif ice == 'MurphyKoop':
             # Source: Murphy and Koop, Review of the vapour pressure of ice
             # and supercooled water for atmospheric applications, Q. J. R.
             # Meteorol. Soc (2005), 131, pp. 1539-1565.
-            e_sat[idx_ice] = numpy.exp(9.550426 - 5723.265/t[idx_ice]
-                                       + 3.53068 * numpy.log(t[idx_ice])
-                                       - 0.00728332 * t[idx_ice]) / 100.
+            e_sat[idx_ice] = numpy.exp(9.550426 - 5723.265 / t[idx_ice] +
+                                       3.53068 * numpy.log(t[idx_ice]) -
+                                       0.00728332 * t[idx_ice]) / 100.
 
         else:
-            raise VapourPressureError, "Unkown method for computing " \
-                  "the vapour pressure curve over ice: %s" % ice
+            raise VapourPressureError("Unkown method for computing "
+                                      "the vapour pressure curve over ice: %s" % ice)
 
     # Convert return value units from hPa to Pa.
-    return e_sat*100. if not input_scalar else e_sat[0]*100.
+    return e_sat * 100. if not input_scalar else e_sat[0] * 100.
 
 
 def test_vapour_pressure():
@@ -417,7 +414,7 @@ def test_vapour_pressure():
     e_sat_liq_WMO2000 = sat_vapour_pressure(t, liquid='WMO2000', force_phase='liquid')
     e_sat_liq_Sonntag = sat_vapour_pressure(t, liquid='Sonntag', force_phase='liquid')
     e_sat_liq_Bolton = sat_vapour_pressure(t, liquid='Bolton', force_phase='liquid')
-    #e_sat_liq_Fukuta = sat_vapour_pressure(t, liquid='Fukuta', force_phase='liquid')
+    # e_sat_liq_Fukuta = sat_vapour_pressure(t, liquid='Fukuta', force_phase='liquid')
     e_sat_liq_IAPWS = sat_vapour_pressure(t, liquid='IAPWS', force_phase='liquid')
     e_sat_liq_MurphyKoop = sat_vapour_pressure(t, liquid='MurphyKoop', force_phase='liquid')
 
@@ -444,7 +441,7 @@ def test_vapour_pressure():
     pylab.plot(t, e_sat_liq_WMO2000, 'c:')
     pylab.plot(t, e_sat_liq_Sonntag, 'm-')
     pylab.plot(t, e_sat_liq_Bolton, 'm:')
-    #pylab.plot(t, e_sat_liq_Fukuta, 'k-')
+    # pylab.plot(t, e_sat_liq_Fukuta, 'k-')
     pylab.plot(t, e_sat_liq_IAPWS, 'k-.')
     pylab.plot(t, e_sat_liq_MurphyKoop, 'k:')
     pylab.title("Saturation vapour pressure curves over liquid water.")
@@ -466,7 +463,6 @@ def test_vapour_pressure():
     pylab.xlabel("Temperature [K]")
     pylab.ylabel("Pressure [Pa]")
 
-
     # Plot deviation in [%] of the liquid water saturation curves to the
     # GoffGratch curve.
     def deviation_from_GoffGratch_liquid(e_sat):
@@ -483,13 +479,12 @@ def test_vapour_pressure():
     pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_WMO2000), 'c:')
     pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Sonntag), 'm-')
     pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Bolton), 'm:')
-    #pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Fukuta), 'k-')
+    # pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Fukuta), 'k-')
     pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_IAPWS), 'k-.')
     pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_MurphyKoop), 'k:')
     pylab.title("Saturation vapour pressure curves over liquid water.")
     pylab.xlabel("Temperature [K]")
     pylab.ylabel("Deviation from Goff Gratch [%]")
-
 
     # Plot deviation in [%] of the ice water saturation curves to the
     # GoffGratch curve.
@@ -511,9 +506,10 @@ def test_vapour_pressure():
     pylab.ylabel("Deviation from Goff Gratch [%]")
 
 
-################################################################################
-###                          Relative Humidity                               ###
-################################################################################
+"""
+Relative Humidity
+"""
+
 
 def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
             force_phase='None'):
@@ -544,7 +540,7 @@ def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
             q = numpy.array(q)
 
     # Compute mixing ratio w from specific humidiy q.
-    w = q / (1.-q)
+    w = q / (1. - q)
 
     # Compute saturation vapour pressure from temperature t.
     e_sat = sat_vapour_pressure(t, liquid=liquid, ice=ice,
@@ -557,9 +553,10 @@ def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
     return 100. * w / w_sat
 
 
-################################################################################
-###                         Virtual Temperature                              ###
-################################################################################
+"""
+Virtual Temperature
+"""
+
 
 def virt_temp(t, q, method='exact'):
     """Compute virtual temperature in [K] from temperature and
@@ -592,18 +589,19 @@ def virt_temp(t, q, method='exact'):
             q = numpy.array(q)
 
     if method == 'exact':
-        return t * (q + 0.622*(1.-q)) / 0.622
+        return t * (q + 0.622 * (1. - q)) / 0.622
     elif method == 'approx':
         # Compute mixing ratio w from specific humidiy q.
-        w = q / (1.-q)
-        return t * (1. + 0.61*w)
+        w = q / (1. - q)
+        return t * (1. + 0.61 * w)
     else:
-        raise TypeError, 'virtual temperature method not understood'
+        raise TypeError('virtual temperature method not understood')
 
 
-################################################################################
-###                             Geopotential                                 ###
-################################################################################
+"""
+Geopotential
+"""
+
 
 def geop_difference(p, t, method='trapz', axis=-1):
     """Compute geopotential difference in [m**2 s**-2] between the pressure
@@ -652,7 +650,7 @@ def geop_difference(p, t, method='trapz', axis=-1):
     elif method == 'simps':
         return 287.058 * scipy.integrate.simps(t, lnp, axis=axis)
     else:
-        raise TypeError, 'integration method for geopotential not understood'
+        raise TypeError('integration method for geopotential not understood')
 
 
 def geop_thickness(p, t, q=None, cumulative=False, axis=-1):
@@ -699,8 +697,7 @@ def geop_thickness(p, t, q=None, cumulative=False, axis=-1):
     # Evaluate equation 3.24 in Wallace and Hobbs:
     #     delta Z = -Rd/g0 * int( Tv,  d ln(p), p1, p2 ),
     # where Z denotes the geopotential height, Z = phi/g0.
-    return -1./9.80665 * geop_difference(p, tv, method='cumtrapz' \
-                                         if cumulative else 'trapz', axis=axis)
+    return -1. / 9.80665 * geop_difference(p, tv, method='cumtrapz' if cumulative else 'trapz', axis=axis)
 
 
 def test_geop_thickness():
@@ -708,52 +705,52 @@ def test_geop_thickness():
        atmosphere.
     """
     # Define some std. atmosphere values (height in m, T in K, p in Pa).
-    std_atm_76 = numpy.array([[0,       288.15,	101325],
-                              [500,     284.9,	95460.839342],
-                              [1000,	281.65,	89874.570502],
-                              [1500,	278.4,	84556.004841],
-                              [2000,	275.15,	79495.215511],
-                              [2500,	271.9,	74682.533661],
-                              [3000,	268.65,	70108.54467],
-                              [3500,	265.4,	65764.084371],
-                              [4000,	262.15,	61640.235304],
-                              [4500,	258.9,	57728.32297],
-                              [5000,	255.65,	54019.912104],
-                              [5500,	252.4,	50506.802952],
-                              [6000,	249.15,	47181.027568],
-                              [6500,	245.9,	44034.846117],
-                              [7000,	242.65,	41060.743191],
-                              [7500,	239.4,	38251.424142],
-                              [8000,	236.15,	35599.811423],
-                              [8500,	232.9,  33099.040939],
-                              [9000,	229.65,	30742.45842],
-                              [9500,	226.4,	28523.615797],
-                              [10000,	223.15,	26436.267594],
-                              [10500,	219.9,	24474.367338],
-                              [11000,	216.65,	22632.063973],
-                              [11500,	216.65,	20916.189034],
-                              [12000,	216.65,	19330.405049],
-                              [12500,	216.65,	17864.849029],
-                              [13000,	216.65,	16510.405758],
-                              [13500,	216.65,	15258.6511],
-                              [14000,	216.65,	14101.799606],
-                              [14500,	216.65,	13032.656085],
-                              [15000,	216.65,	12044.570862],
-                              [15500,	216.65,	11131.398413],
-                              [16000,	216.65,	10287.459141],
-                              [16500,	216.65,	9507.504058],
-                              [17000,	216.65,	8786.682132],
-                              [17500,	216.65,	8120.510116],
-                              [18000,	216.65,	7504.844668],
-                              [18500,	216.65,	6935.856576],
-                              [19000,	216.65,	6410.006945],
-                              [19500,	216.65,	5924.025185],
-                              [20000,	216.65,	5474.88867]])
+    std_atm_76 = numpy.array([[0, 288.15, 101325],
+                              [500, 284.9, 95460.839342],
+                              [1000, 281.65, 89874.570502],
+                              [1500, 278.4, 84556.004841],
+                              [2000, 275.15, 79495.215511],
+                              [2500, 271.9, 74682.533661],
+                              [3000, 268.65, 70108.54467],
+                              [3500, 265.4, 65764.084371],
+                              [4000, 262.15, 61640.235304],
+                              [4500, 258.9, 57728.32297],
+                              [5000, 255.65, 54019.912104],
+                              [5500, 252.4, 50506.802952],
+                              [6000, 249.15, 47181.027568],
+                              [6500, 245.9, 44034.846117],
+                              [7000, 242.65, 41060.743191],
+                              [7500, 239.4, 38251.424142],
+                              [8000, 236.15, 35599.811423],
+                              [8500, 232.9, 33099.040939],
+                              [9000, 229.65, 30742.45842],
+                              [9500, 226.4, 28523.615797],
+                              [10000, 223.15, 26436.267594],
+                              [10500, 219.9, 24474.367338],
+                              [11000, 216.65, 22632.063973],
+                              [11500, 216.65, 20916.189034],
+                              [12000, 216.65, 19330.405049],
+                              [12500, 216.65, 17864.849029],
+                              [13000, 216.65, 16510.405758],
+                              [13500, 216.65, 15258.6511],
+                              [14000, 216.65, 14101.799606],
+                              [14500, 216.65, 13032.656085],
+                              [15000, 216.65, 12044.570862],
+                              [15500, 216.65, 11131.398413],
+                              [16000, 216.65, 10287.459141],
+                              [16500, 216.65, 9507.504058],
+                              [17000, 216.65, 8786.682132],
+                              [17500, 216.65, 8120.510116],
+                              [18000, 216.65, 7504.844668],
+                              [18500, 216.65, 6935.856576],
+                              [19000, 216.65, 6410.006945],
+                              [19500, 216.65, 5924.025185],
+                              [20000, 216.65, 5474.88867]])
 
     # Extract p and T arrays.
-    p = std_atm_76[:,2]
+    p = std_atm_76[:, 2]
     print p
-    t = std_atm_76[:,1]
+    t = std_atm_76[:, 1]
     print t
 
     # Compute geopotential difference and layer thickness. Layer thickness
@@ -764,10 +761,10 @@ def test_geop_thickness():
     print geop
 
 
+"""
+Specific Humidity
+"""
 
-################################################################################
-###                          Specific Humidity                               ###
-################################################################################
 
 def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
     """Computes specific humidity in [kg/kg] from pressure and dew point
@@ -798,12 +795,13 @@ def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
     # Compute saturation vapour pressure from dew point temperature td.
     e_sat = sat_vapour_pressure(td, liquid=liquid)
 
-    return 0.622 * e_sat / (p + e_sat * (0.622-1.))
+    return 0.622 * e_sat / (p + e_sat * (0.622 - 1.))
 
 
-################################################################################
-###                                Dew Point                                 ###
-################################################################################
+"""
+Dew Point
+"""
+
 
 def dewpoint_approx(p, q, method='Bolton'):
     """Computes dew point in [K] from pressure and specific humidity.
@@ -832,7 +830,7 @@ def dewpoint_approx(p, q, method='Bolton'):
             q = numpy.array(q)
 
     # Compute mixing ratio w from specific humidiy q.
-    w = q / (1.-q)
+    w = q / (1. - q)
 
     # Compute vapour pressure from pressure and mixing ratio
     # (Wallace and Hobbs 2nd ed. eq. 3.59).
@@ -846,9 +844,10 @@ def dewpoint_approx(p, q, method='Bolton'):
     return td
 
 
-################################################################################
-###                        Potential Temperature                             ###
-################################################################################
+"""
+Potential Temperature
+"""
+
 
 def pot_temp(p, t):
     """Computes potential temperature in [K] from pressure and temperature.
@@ -866,8 +865,7 @@ def pot_temp(p, t):
                             theta = T * (p0/p)^(R/cp)
       with p0 = 100000. Pa, R = 287.058 JK-1kg-1, cp = 1004 JK-1kg-1.
     """
-    return t * (100000./p) ** (287.058/1004.)
-
+    return t * (100000. / p) ** (287.058 / 1004.)
 
 
 def eqpt_approx(p, t, q, liquid='HylandWexler', ice='GoffGratch',
@@ -907,9 +905,8 @@ def eqpt_approx(p, t, q, liquid='HylandWexler', ice='GoffGratch',
     cp = 1004.
 
     # Equation 3.71 from Wallace & Hobbs, 2nd ed.
-    theta_e = theta * numpy.exp((Lv*w_sat) / (cp*t))
+    theta_e = theta * numpy.exp((Lv * w_sat) / (cp * t))
     return theta_e
-
 
 
 def omega_to_w(omega, p, t):
@@ -937,9 +934,10 @@ def omega_to_w(omega, p, t):
     return omega / (-9.80665 * rho)
 
 
-###############################################################################
-###                  Flight Level / Pressure Conversion                     ###
-###############################################################################
+"""
+Flight Level / Pressure Conversion
+"""
+
 
 def flightlevel2pressure(flightlevel):
     """Conversion of flight level (given in hft) to pressure (Pa) with
@@ -971,7 +969,7 @@ def flightlevel2pressure(flightlevel):
         p0 = 101325.
 
         # Hydrostatic equation with linear temperature gradient.
-        p = p0 * ( (T0-gamma*z) / (T0-gamma*z0) ) ** (g/(gamma*R))
+        p = p0 * ((T0 - gamma * z) / (T0 - gamma * z0)) ** (g / (gamma * R))
         return p
 
     elif z <= 20000.:
@@ -982,7 +980,7 @@ def flightlevel2pressure(flightlevel):
         T = 216.65
 
         # Hydrostatic equation with constant temperature profile.
-        p = p0 * numpy.exp(-g * (z-z0) / (R*T))
+        p = p0 * numpy.exp(-g * (z - z0) / (R * T))
         return p
 
     elif z <= 32000.:
@@ -994,11 +992,11 @@ def flightlevel2pressure(flightlevel):
         p0 = 5475.006582501095
 
         # Hydrostatic equation with linear temperature gradient.
-        p = p0 * ( (T0-gamma*z) / (T0-gamma*z0) ) ** (g/(gamma*R))
+        p = p0 * ((T0 - gamma * z) / (T0 - gamma * z0)) ** (g / (gamma * R))
         return p
 
     else:
-        raise ValueError("flight level to pressure conversion not "\
+        raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 32km")
 
 
@@ -1021,7 +1019,7 @@ def pressure2flightlevel(p):
     R = 287.058
 
     if p < 1011.:
-        raise ValueError("pressure to flight level conversion not "\
+        raise ValueError("pressure to flight level conversion not "
                          "implemented for z > 32km (p ~ 10.11 hPa)")
 
     elif p < 5475.006582501095:
@@ -1033,7 +1031,7 @@ def pressure2flightlevel(p):
         p0 = 5475.006582501095
 
         # Hydrostatic equation with linear temperature gradient.
-        z = 1./gamma * (T0 - (T0-gamma*z0) * numpy.exp(gamma*R/g * numpy.log(p/p0)))
+        z = 1. / gamma * (T0 - (T0 - gamma * z0) * numpy.exp(gamma * R / g * numpy.log(p / p0)))
 
     elif p < 22632.:
         # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
@@ -1043,7 +1041,7 @@ def pressure2flightlevel(p):
         T = 216.65
 
         # Hydrostatic equation with constant temperature profile.
-        z = z0 - (R*T)/g * numpy.log(p/p0)
+        z = z0 - (R * T) / g * numpy.log(p / p0)
 
     else:
         # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
@@ -1054,7 +1052,7 @@ def pressure2flightlevel(p):
         p0 = 101325.
 
         # Hydrostatic equation with linear temperature gradient.
-        z = 1./gamma * (T0 - (T0-gamma*z0) * numpy.exp(gamma*R/g * numpy.log(p/p0)))
+        z = 1. / gamma * (T0 - (T0 - gamma * z0) * numpy.exp(gamma * R / g * numpy.log(p / p0)))
 
     # Convert from m to flight level (ft).
     flightlevel = z * 3.28083989501 / 100.
@@ -1068,7 +1066,7 @@ def flightlevel2pressure_a(flightlevel):
        standard atmosphere.
 
     Array version, the argument "p" must be a numpy array.
-       
+
     Reference:
         For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
         470pp., Sections II.1.4. and II.6.1.2.
@@ -1086,9 +1084,9 @@ def flightlevel2pressure_a(flightlevel):
     z = flightlevel * 100. / 3.28083989501
 
     if (z > 32000.).any():
-        raise ValueError("flight level to pressure conversion not "\
+        raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 32km")
-    
+
     # g and R are used by all equations below.
     g = 9.80665
     R = 287.058
@@ -1099,55 +1097,55 @@ def flightlevel2pressure_a(flightlevel):
     # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
     # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
     indices = numpy.where(z <= 11000.)
-    #print "0..11km", indices
+    # print "0..11km", indices
     z0 = 0
     T0 = 288.15
     gamma = 6.5e-3
     p0 = 101325.
 
     # Hydrostatic equation with linear temperature gradient.
-    p[indices] = p0 * ( (T0-gamma*z[indices]) / (T0-gamma*z0) ) ** (g/(gamma*R))
+    p[indices] = p0 * ((T0 - gamma * z[indices]) / (T0 - gamma * z0)) ** (g / (gamma * R))
 
     # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
     # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
     indices = numpy.where((z > 11000.) & (z <= 20000.))
-    #print "11..20km", indices
+    # print "11..20km", indices
     z0 = 11000.
     p0 = 22632.
     T = 216.65
 
     # Hydrostatic equation with constant temperature profile.
-    p[indices] = p0 * numpy.exp(-g * (z[indices]-z0) / (R*T))
+    p[indices] = p0 * numpy.exp(-g * (z[indices] - z0) / (R * T))
 
     # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
     # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
     indices = numpy.where((z > 20000.) & (z <= 32000.))
-    #print "20..32km", indices
+    # print "20..32km", indices
     z0 = 20000.
     T0 = 216.65
     gamma = -1.0e-3
     p0 = 5475.006582501095
 
     # Hydrostatic equation with linear temperature gradient.
-    p[indices] = p0 * ( (T0-gamma*z[indices]) / (T0-gamma*z0) ) ** (g/(gamma*R))
+    p[indices] = p0 * ((T0 - gamma * z[indices]) / (T0 - gamma * z0)) ** (g / (gamma * R))
 
     return p
 
-                         
+
 def pressure2flightlevel_a(p, fake_above_32km=False):
     """Conversion of pressure (Pa) to flight level (hft) with
        hydrostatic equation, according to the profile of the ICAO
        standard atmosphere.
 
     Array version, the argument "p" must be a numpy array.
-       
+
     Reference:
         For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
         470pp., Sections II.1.4. and II.6.1.2.
 
     Arguments:
         p -- numpy array of pressure (Pa)
-        fake_above_32km -- compute values above 54.75 hPa (32km) with the 
+        fake_above_32km -- compute values above 54.75 hPa (32km) with the
                            profile valid for 20..32km. WARNING: This gives
                            unphysical results. Use this option only for
                            testing purposes.
@@ -1157,18 +1155,18 @@ def pressure2flightlevel_a(p, fake_above_32km=False):
     # Make sure p is a numpy array.
     if type(p) is not numpy.ndarray:
         raise ValueError("argument p must be a numpy array")
-    
+
     # g and R are used by all equations below.
     g = 9.80665
     R = 287.058
 
     if (p < 1011.).any() and not fake_above_32km:
-        raise ValueError("pressure to flight level conversion not "\
+        raise ValueError("pressure to flight level conversion not "
                          "implemented for z > 32km (p ~ 10.11 hPa)")
 
     # Initialize the return array.
     z = numpy.zeros(p.shape)
-    
+
     # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
     # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
     indices = numpy.where(p < 5475.006582501095)
@@ -1178,8 +1176,7 @@ def pressure2flightlevel_a(p, fake_above_32km=False):
     p0 = 5475.006582501095
 
     # Hydrostatic equation with linear temperature gradient.
-    z[indices] = 1./gamma * (T0 - (T0-gamma*z0) * numpy.exp(gamma*R/g * numpy.log(p[indices]/p0)))
-
+    z[indices] = 1. / gamma * (T0 - (T0 - gamma * z0) * numpy.exp(gamma * R / g * numpy.log(p[indices] / p0)))
 
     # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
     # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
@@ -1189,9 +1186,8 @@ def pressure2flightlevel_a(p, fake_above_32km=False):
     T = 216.65
 
     # Hydrostatic equation with constant temperature profile.
-    z[indices] = z0 - (R*T)/g * numpy.log(p[indices]/p0)
+    z[indices] = z0 - (R * T) / g * numpy.log(p[indices] / p0)
 
-    
     # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
     # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
     indices = numpy.where(p >= 22632.)
@@ -1199,9 +1195,9 @@ def pressure2flightlevel_a(p, fake_above_32km=False):
     T0 = 288.15
     gamma = 6.5e-3
     p0 = 101325.
-    
+
     # Hydrostatic equation with linear temperature gradient.
-    z[indices] = 1./gamma * (T0 - (T0-gamma*z0) * numpy.exp(gamma*R/g * numpy.log(p[indices]/p0)))
+    z[indices] = 1. / gamma * (T0 - (T0 - gamma * z0) * numpy.exp(gamma * R / g * numpy.log(p[indices] / p0)))
 
     # Convert from m to flight level (ft).
     flightlevel = z * 3.28083989501 / 100.
@@ -1229,7 +1225,7 @@ def isa_temperature(flightlevel):
         # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
         T0 = 288.15
         gamma = 6.5e-3
-        return T0-gamma*z
+        return T0 - gamma * z
 
     elif z <= 20000.:
         # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
@@ -1243,20 +1239,21 @@ def isa_temperature(flightlevel):
         z0 = 20000.
         T0 = 216.65
         gamma = -1.0e-3
-        return T0-gamma*(z-z0)
+        return T0 - gamma * (z - z0)
 
     else:
-        raise ValueError("ISA temperature from flight level not "\
+        raise ValueError("ISA temperature from flight level not "
                          "implemented for z > 32km")
 
 
-###############################################################################
-###                             Schmidt/Appleman                            ###
-###############################################################################
+"""
+Schmidt/Appleman
+"""
+
 
 def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
     """Schmidt/Appleman criterion folded by relative humidity of 80%.
-    
+
     Reference: U. Schumann, "On conditions for contrail formation from
         aircraft exhausts", Met.Z. (1996) 4-23.
 
@@ -1265,14 +1262,14 @@ def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
     T_K   -- temperature in K
     rh_01 -- relative humidity mapped to 0..1
 
-    Returns: 
+    Returns:
     Temperature difference T_K - Schm./Appl.Threshold. Of interest are
     return values below 0.
 
     NOTE: The current implementation returns a value of 1. if relative
     humidity is below 80% (as used, e.g. during CONCERT and ML-Cirrus).
 
-    NOTE: This function is a port of U. Schumann's FORTRAN77 function in 
+    NOTE: This function is a port of U. Schumann's FORTRAN77 function in
     the old Metview3 scripts.
 
     mr/18Mar2014
@@ -1296,65 +1293,69 @@ def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
     #     ETA= OVERALL EFFICIENCY, E.G. 0.3 FOR A SUBSONIC JET AIRCRAFT
     #     P =  AMBIENT PRESSURE IN PA
 
-    EI=1.23
-    CP=1004.
-    R0=287.04
-    R1=461.5
-    Q=43.2e6
-    ETA=0.3
+    EI = 1.23
+    CP = 1004.
+    R0 = 287.04
+    R1 = 461.5
+    Q = 43.2e6
+    ETA = 0.3
 
-    G = EI * CP * R1 * p_Pa / (Q*(1.-ETA)*R0)
+    G = EI * CP * R1 * p_Pa / (Q * (1. - ETA) * R0)
 
     # SATURATION PRESSURE FROM SONNTAG, TT IN K, PSAT IN PA
     #    METEOROL. Z., 3 (1994) 51-66.
     def PSAT(TT):
-        return 100.*numpy.exp(-6096.9385/TT+16.635794-2.711193E-2*TT+1.673952E-5*TT*TT+2.433502*numpy.log(TT))
-    
+        return 100. * numpy.exp(
+            -6096.9385 / TT + 16.635794 - 2.711193E-2 * TT + 1.673952E-5 * TT * TT + 2.433502 * numpy.log(TT))
+
     def DPSAT(TT):
-        return (PSAT(TT+1.)-PSAT(TT-1.))/2.
+        return (PSAT(TT + 1.) - PSAT(TT - 1.)) / 2.
 
     def DDPSAT(TT):
-        return PSAT(TT+1.)+PSAT(TT-1.)-2.*PSAT(TT)
+        return PSAT(TT + 1.) + PSAT(TT - 1.) - 2. * PSAT(TT)
 
-    if (rh_01 < 0.): rh_01 = 0.
+    if (rh_01 < 0.):
+        rh_01 = 0.
 
     # TLM: THRESHOLD TEMPERATURE FOR U=1., IN K
     # COMPUTATION OF TLM BY APPROXIMATION ACCORDING TO SCHUMANN (1996)
-    TLM = 273.15-46.46+9.43*numpy.log(G-0.053)+0.720*(numpy.log(G-0.053))**2
+    TLM = 273.15 - 46.46 + 9.43 * numpy.log(G - 0.053) + 0.720 * (numpy.log(G - 0.053)) ** 2
 
-    for ITER in range(1,11):
-         F=DPSAT(TLM)-G
-         DF=DDPSAT(TLM)
-         DX=F/DF
-         TLM=TLM-DX
-         if (numpy.abs(DX) < 1.E-3): break
+    for ITER in range(1, 11):
+        F = DPSAT(TLM) - G
+        DF = DDPSAT(TLM)
+        DX = F / DF
+        TLM = TLM - DX
+        if (numpy.abs(DX) < 1.E-3):
+            break
 
-    #PRINT *,' ITER NOT LARGE ENOUGH FOR TLM, TLM,DX=',TLM,DX
+    # PRINT *,' ITER NOT LARGE ENOUGH FOR TLM, TLM,DX=',TLM,DX
 
     # TLC: THRESHOLD TEMPERATURE FOR GIVEN U, IN K
     # COMPUTATION OF TLC BY NEWTON ITERATION
     if (rh_01 < 1.E-6):
-        TLC=TLM-PSAT(TLM)/G
+        TLC = TLM - PSAT(TLM) / G
     else:
-        TLC=TLM
+        TLC = TLM
         if (rh_01 < 0.99999):
-            EM=PSAT(TLM)
-            T0=TLM-EM/G
-            E0=PSAT(T0)
-            C=1.-numpy.sqrt(1.+4.*rh_01*E0/((1.-rh_01)*EM))
-            TLC=TLM+(1.-rh_01)*(EM*(TLM-T0)/(2.*rh_01*E0))*C
-            for ITER in range(1,11):
-                DELT=TLM-TLC
-                F=PSAT(TLM)-G*DELT-rh_01*PSAT(TLC)
-                DF=G-rh_01*DPSAT(TLC)
-                DX=F/DF
-                TLC=TLC-DX
-                if(numpy.abs(DX) < 1.E-3): break
+            EM = PSAT(TLM)
+            T0 = TLM - EM / G
+            E0 = PSAT(T0)
+            C = 1. - numpy.sqrt(1. + 4. * rh_01 * E0 / ((1. - rh_01) * EM))
+            TLC = TLM + (1. - rh_01) * (EM * (TLM - T0) / (2. * rh_01 * E0)) * C
+            for ITER in range(1, 11):
+                DELT = TLM - TLC
+                F = PSAT(TLM) - G * DELT - rh_01 * PSAT(TLC)
+                DF = G - rh_01 * DPSAT(TLC)
+                DX = F / DF
+                TLC = TLC - DX
+                if (numpy.abs(DX) < 1.E-3):
+                    break
 
     # Filter values with rel.hum. < 80%.
     TMKDIFF = 1.
     if (rh_01 > 0.8):
-        TMKDIFF= T_K-TLC
+        TMKDIFF = T_K - TLC
 
     return TMKDIFF
 
@@ -1372,7 +1373,7 @@ def schmidt_appleman_tdiff_q(p, t, q, liquid='HylandWexler', ice='GoffGratch',
 
 
 def schmidt_appleman_tdiff_q_a_slow(p, t, q, liquid='HylandWexler', ice='GoffGratch',
-                               force_phase='None'):
+                                    force_phase='None'):
     """Same as schmidt_appleman_tdiff_q(), but takes arrays as arguments.
 
     NOTE: This is the slow version, using Python loops to process the
@@ -1380,7 +1381,7 @@ def schmidt_appleman_tdiff_q_a_slow(p, t, q, liquid='HylandWexler', ice='GoffGra
     """
     rh01 = rel_hum(p, t, q, liquid=liquid, ice=ice, force_phase=force_phase)
     rh01 /= 100.
-    
+
     # Remember array shape.
     shp = p.shape
 
@@ -1410,64 +1411,64 @@ def schmidt_appleman_tdiff_q_a(p_Pa, T_K, q, liquid='HylandWexler', ice='GoffGra
     rh_01 = rel_hum(p_Pa, T_K, q, liquid=liquid, ice=ice, force_phase=force_phase)
     rh_01 /= 100.
 
-    EI=1.23
-    CP=1004.
-    R0=287.04
-    R1=461.5
-    Q=43.2e6
-    ETA=0.3
+    EI = 1.23
+    CP = 1004.
+    R0 = 287.04
+    R1 = 461.5
+    Q = 43.2e6
+    ETA = 0.3
 
-    G = EI * CP * R1 * p_Pa / (Q*(1.-ETA)*R0)
+    G = EI * CP * R1 * p_Pa / (Q * (1. - ETA) * R0)
 
     def PSAT(TT):
-        return 100.*numpy.exp(-6096.9385/TT+16.635794-2.711193E-2*TT+1.673952E-5*TT*TT+2.433502*numpy.log(TT))
-    
+        return 100. * numpy.exp(
+            -6096.9385 / TT + 16.635794 - 2.711193E-2 * TT + 1.673952E-5 * TT * TT + 2.433502 * numpy.log(TT))
+
     def DPSAT(TT):
-        return (PSAT(TT+1.)-PSAT(TT-1.))/2.
+        return (PSAT(TT + 1.) - PSAT(TT - 1.)) / 2.
 
     def DDPSAT(TT):
-        return PSAT(TT+1.)+PSAT(TT-1.)-2.*PSAT(TT)
+        return PSAT(TT + 1.) + PSAT(TT - 1.) - 2. * PSAT(TT)
 
     rh_01[numpy.where(rh_01 < 0.)] = 0.
 
-    TLM = 273.15-46.46+9.43*numpy.log(G-0.053)+0.720*(numpy.log(G-0.053))**2
+    TLM = 273.15 - 46.46 + 9.43 * numpy.log(G - 0.053) + 0.720 * (numpy.log(G - 0.053)) ** 2
 
-    for ITER in range(1,11):
-         F=DPSAT(TLM)-G
-         DF=DDPSAT(TLM)
-         DX=F/DF
-         TLM=TLM-DX
-         if (numpy.abs(DX) < 1.E-3).all(): break
+    for ITER in range(1, 11):
+        F = DPSAT(TLM) - G
+        DF = DDPSAT(TLM)
+        DX = F / DF
+        TLM = TLM - DX
+        if (numpy.abs(DX) < 1.E-3).all():
+            break
 
     TLC = numpy.zeros(TLM.shape)
 
     i_rh_verysmall = numpy.where(rh_01 < 1.E-6)
-    TLC[i_rh_verysmall] = TLM[i_rh_verysmall]-PSAT(TLM[i_rh_verysmall])/G[i_rh_verysmall]
+    TLC[i_rh_verysmall] = TLM[i_rh_verysmall] - PSAT(TLM[i_rh_verysmall]) / G[i_rh_verysmall]
 
     i_rh = numpy.where(rh_01 >= 1.E-6)
-    TLC[i_rh]=TLM[i_rh]
+    TLC[i_rh] = TLM[i_rh]
 
     i_rhLT1 = numpy.where(rh_01 < 0.99999)
 
-    EM=PSAT(TLM[i_rhLT1])
-    T0=TLM[i_rhLT1]-EM/G[i_rhLT1]
-    E0=PSAT(T0)
-    C=1.-numpy.sqrt(1.+4.*rh_01[i_rhLT1]*E0/((1.-rh_01[i_rhLT1])*EM))
-    TLC[i_rhLT1]=TLM[i_rhLT1]+(1.-rh_01[i_rhLT1])*(EM*(TLM[i_rhLT1]-T0)/(2.*rh_01[i_rhLT1]*E0))*C
-    for ITER in range(1,11):
-        DELT=TLM[i_rhLT1]-TLC[i_rhLT1]
-        F=PSAT(TLM[i_rhLT1])-G[i_rhLT1]*DELT-rh_01[i_rhLT1]*PSAT(TLC[i_rhLT1])
-        DF=G[i_rhLT1]-rh_01[i_rhLT1]*DPSAT(TLC[i_rhLT1])
-        DX=F/DF
-        TLC[i_rhLT1]=TLC[i_rhLT1]-DX
-        if (numpy.abs(DX) < 1.E-3).all(): break
-                
+    EM = PSAT(TLM[i_rhLT1])
+    T0 = TLM[i_rhLT1] - EM / G[i_rhLT1]
+    E0 = PSAT(T0)
+    C = 1. - numpy.sqrt(1. + 4. * rh_01[i_rhLT1] * E0 / ((1. - rh_01[i_rhLT1]) * EM))
+    TLC[i_rhLT1] = TLM[i_rhLT1] + (1. - rh_01[i_rhLT1]) * (EM * (TLM[i_rhLT1] - T0) / (2. * rh_01[i_rhLT1] * E0)) * C
+    for ITER in range(1, 11):
+        DELT = TLM[i_rhLT1] - TLC[i_rhLT1]
+        F = PSAT(TLM[i_rhLT1]) - G[i_rhLT1] * DELT - rh_01[i_rhLT1] * PSAT(TLC[i_rhLT1])
+        DF = G[i_rhLT1] - rh_01[i_rhLT1] * DPSAT(TLC[i_rhLT1])
+        DX = F / DF
+        TLC[i_rhLT1] = TLC[i_rhLT1] - DX
+        if (numpy.abs(DX) < 1.E-3).all():
+            break
+
     TMKDIFF = T_K - TLC
-    
+
     # Filter values with rel.hum. < 80%.
     TMKDIFF[numpy.where(rh_01 < 0.8)] = 1.
 
     return TMKDIFF
-
-
-

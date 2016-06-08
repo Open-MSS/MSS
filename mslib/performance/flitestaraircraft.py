@@ -35,10 +35,10 @@ import numpy as np
 # local application imports
 from aircraft import Aircraft
 
+"""
+FLITESTAR AIRCRAFT
+"""
 
-################################################################################
-###                          FLITESTAR AIRCRAFT                              ###
-################################################################################
 
 class FliteStarExportedAircraft(Aircraft):
     """Intermediate, still abstract, Aircraft class that can be used as
@@ -51,12 +51,12 @@ class FliteStarExportedAircraft(Aircraft):
         """Reads the performance sections from the "performancefile", which is a
         textfile with performance data exported by FliteStar.
         """
-        self._performanceTables = {}    # filled below
-        self._performanceTableKeys = {} # to be defined in subclass
+        self._performanceTables = {}  # filled below
+        self._performanceTableKeys = {}  # to be defined in subclass
 
         # Read the textfile exported by FliteStar into memory.
         performancefile_object = open(performancefile)
-        performancefile_lines  = performancefile_object.readlines()
+        performancefile_lines = performancefile_object.readlines()
         performancefile_object.close()
 
         # Scan the file for performance sections. Each performance section
@@ -64,7 +64,7 @@ class FliteStarExportedAircraft(Aircraft):
         # ..]". Create a table with performance values for each section and
         # store this table in self._performanceTables.
         r = re.compile("\[Corporate Model.*\]")
-    
+
         i = 0
         while (i < len(performancefile_lines)):
             line = performancefile_lines[i]
@@ -72,7 +72,7 @@ class FliteStarExportedAircraft(Aircraft):
 
             if r.match(line):
                 # Match -- create a new table.
-                section = line.strip() # remove trailing whitespace
+                section = line.strip()  # remove trailing whitespace
                 self._performanceTables[section] = {"data": []}
                 # The line following the section header contains the names of
                 # the columns in the table that follows. Example: "# weight,
@@ -89,12 +89,12 @@ class FliteStarExportedAircraft(Aircraft):
                 while (i < len(performancefile_lines)):
                     line = performancefile_lines[i].strip()
                     i += 1
-                    if (line == ""): break
+                    if (line == ""):
+                        break
                     self._performanceTables[section]["data"].append(
                         [float(v) for v in line.split(", ")])
 
-
-    def _generatePerformanceDict(self, table_keys, target_dict, 
+    def _generatePerformanceDict(self, table_keys, target_dict,
                                  insert_zero_values=False):
         """Takes the entries in self._performanceTables that are listed in
         table_keys and generates a dictionary with keys [temp][weight][altitude]
@@ -107,14 +107,14 @@ class FliteStarExportedAircraft(Aircraft):
             # Get the indices for weight, temperature deviation and altitude in
             # the current table.
             weight_index = self._performanceTables[tkey]["columns"].index("weight")
-            temp_index   = self._performanceTables[tkey]["columns"].index("temp")
-            alt_index    = self._performanceTables[tkey]["columns"].index("alt")
-            
+            temp_index = self._performanceTables[tkey]["columns"].index("temp")
+            alt_index = self._performanceTables[tkey]["columns"].index("alt")
+
             for dataline in self._performanceTables[tkey]["data"]:
 
                 weight = dataline[weight_index]
-                temp   = dataline[temp_index]
-                alt    = dataline[alt_index]
+                temp = dataline[temp_index]
+                alt = dataline[alt_index]
 
                 # Create new sub-dicts for the current temp and weight, if no
                 # dicts exist for these values.
@@ -137,9 +137,8 @@ class FliteStarExportedAircraft(Aircraft):
                     num_values = len(target_dict[temp][weight][alts[0]])
                     target_dict[temp][weight][0.] = list([0.]) * num_values
 
-
-    def _fetchValuesFromPerformanceTable(self, table, delta_temp_ISA, 
-                                         grossweight, altitude, 
+    def _fetchValuesFromPerformanceTable(self, table, delta_temp_ISA,
+                                         grossweight, altitude,
                                          use_next_lower_altitude=False):
         """Fetch values at temperature "delta_temp_ISA" off ISA daytime
         conditions, aircraft "grossweight" and aircraft "altitude" from
@@ -155,14 +154,14 @@ class FliteStarExportedAircraft(Aircraft):
         # Error checking.
         if self._errorHandling == "strict":
             if altitude > self.maximumCruiseAltitude_ft:
-                raise ValueError("the requested altitude of %i ft is above "\
-                                     "the maximum cruise altitude of %i that "\
-                                     "this aircraft can reach" % \
-                                     (altitude, self.maximumCruiseAltitude_ft))
+                raise ValueError("the requested altitude of %i ft is above "
+                                 "the maximum cruise altitude of %i that "
+                                 "this aircraft can reach" %
+                                 (altitude, self.maximumCruiseAltitude_ft))
             if grossweight > self.maximumTakeoffWeight_lbs:
-                raise ValueError("grossweight of %i lbs exceeds maximum takeoff"\
-                                     " weight of %i lbs" % (grossweight,
-                                                            self.maximumTakeoffWeight_lbs))
+                raise ValueError("grossweight of %i lbs exceeds maximum takeoff"
+                                 " weight of %i lbs" % (grossweight,
+                                                        self.maximumTakeoffWeight_lbs))
 
         # Get a list of the available grossweight values in the performance
         # table of the current ISA temperature deviation. Convert the list to a
@@ -174,14 +173,14 @@ class FliteStarExportedAircraft(Aircraft):
         # searchsorted() returns the index of the value next larger than
         # "grossweight".
         gw_index = available_grossweights.searchsorted(grossweight)
-        grossweight_below = available_grossweights[max(gw_index-1, 0)]
-        grossweight_above = available_grossweights[min(gw_index  , len(available_grossweights)-1)]
+        grossweight_below = available_grossweights[max(gw_index - 1, 0)]
+        grossweight_above = available_grossweights[min(gw_index, len(available_grossweights) - 1)]
 
-        #print grossweight_below, grossweight_above
+        # print grossweight_below, grossweight_above
 
         # 2) Find enclosing altitude values for next larger weight.
         # =========================================================
-        
+
         # Get a list of the available grossweight values in the performance
         # table of the current ISA temperature deviation. Convert the list to a
         # numpy array to be able to use the searchsorted() method.
@@ -192,17 +191,17 @@ class FliteStarExportedAircraft(Aircraft):
         # searchsorted() returns the index of the value next larger than
         # "altitude".
         alt_index = available_altitudes.searchsorted(altitude)
-        altitude_below = available_altitudes[max(alt_index-1, 0)]
-        altitude_above = available_altitudes[min(alt_index  , len(available_altitudes)-1)]
+        altitude_below = available_altitudes[max(alt_index - 1, 0)]
+        altitude_above = available_altitudes[min(alt_index, len(available_altitudes) - 1)]
 
-        #print altitude_below, altitude_above
+        # print altitude_below, altitude_above
 
         if self._errorHandling == "strict":
             if altitude > altitude_above:
-                raise ValueError("the requested altitude of %i ft cannot be "\
-                                     "reached with the given weight; maximum "\
-                                     "altitude with weight %i lbs is %i ft" % \
-                                     (altitude, grossweight, altitude_above))
+                raise ValueError("the requested altitude of %i ft cannot be "
+                                 "reached with the given weight; maximum "
+                                 "altitude with weight %i lbs is %i ft" %
+                                 (altitude, grossweight, altitude_above))
 
         # 3a) Conservative interpretation of performance tables: We're done.
         # ==================================================================
@@ -226,18 +225,18 @@ class FliteStarExportedAircraft(Aircraft):
 
         elif (self._performanceTableInterpretation == "interpolation"):
             # Interpolation mode:
-            
+
             # Find the enclosing altitude values for the lower grossweight
             # value.
             available_altitudes = table[delta_temp_ISA][grossweight_below].keys()
             available_altitudes = np.array(available_altitudes)
             available_altitudes.sort()
             alt_index = available_altitudes.searchsorted(altitude)
-            gw_blw_altitude_below = available_altitudes[max(alt_index-1, 0)]
-            gw_blw_altitude_above = available_altitudes[min(alt_index  , len(available_altitudes)-1)]
-            
-            #print gw_blw_altitude_below, gw_blw_altitude_above
-        
+            gw_blw_altitude_below = available_altitudes[max(alt_index - 1, 0)]
+            gw_blw_altitude_above = available_altitudes[min(alt_index, len(available_altitudes) - 1)]
+
+            # print gw_blw_altitude_below, gw_blw_altitude_above
+
             # Fetch performance values for the four adjacent table entries.
             num_values = len(table[delta_temp_ISA][grossweight_above][altitude_above])
             values = np.zeros((4, num_values))
@@ -257,20 +256,19 @@ class FliteStarExportedAircraft(Aircraft):
 
             for iv in range(num_values):
                 # Linearly interpolate values between the altitudes ..
-                values[0, iv] = np.interp(altitude, 
+                values[0, iv] = np.interp(altitude,
                                           [gw_blw_altitude_below, gw_blw_altitude_above],
                                           [values[0, iv], values[1, iv]])
-                values[2, iv] = np.interp(altitude, 
+                values[2, iv] = np.interp(altitude,
                                           [altitude_below, altitude_above],
                                           [values[2, iv], values[3, iv]])
                 # .. and between the grossweights.
-                values[0, iv] = np.interp(grossweight, 
+                values[0, iv] = np.interp(grossweight,
                                           [grossweight_below, grossweight_above],
                                           [values[0, iv], values[2, iv]])
 
         # Return values as list.
         return values[0, :].tolist()
-
 
     def selectConfiguration(self, config):
         """
@@ -278,8 +276,8 @@ class FliteStarExportedAircraft(Aircraft):
         super(FliteStarExportedAircraft, self).selectConfiguration(config)
 
         # Generate performance tables for current configuration.
-        self._climbPerformanceTable   = {}
-        self._cruisePerformanceTable  = {}
+        self._climbPerformanceTable = {}
+        self._cruisePerformanceTable = {}
         self._descentPerformanceTable = {}
 
         # For climb and descent performance, zero values are added.
@@ -296,5 +294,3 @@ class FliteStarExportedAircraft(Aircraft):
             self._generatePerformanceDict(
                 self._performanceTableKeys[config]["cruise"][cruisemode],
                 self._cruisePerformanceTable[cruisemode])
-
-
