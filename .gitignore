@@ -1,4 +1,8 @@
+.cache/
+.idea/
 *.pyc
+*.swp
+*.patch
 *~
 mslib/mss_config.py
 mslib/performance/data/
@@ -8,3 +12,5 @@ msui/mss_settings.py
 msui/wms_cache/
 mswms/mss_wms_settings.py
 mswms/vt_cache/
+build/
+mss.egg-info/
