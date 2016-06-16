@@ -1,13 +1,12 @@
 # The README.txt file should be written in reST so that PyPI can use
 # it to generate your project's PyPI page. 
 long_description = open('README').read()
-import pip
 from setuptools import setup, find_packages
 
 
 setup(
     name="mss",
-    version="0.1",
+    version="1.1b1",
     description="mss gui",
     long_description=long_description,
     classifiers="Development Status :: 5 - Production/Stable",
