@@ -1,0 +1,50 @@
+package build description for anaconda
+=========================================
+
+`Anaconda <https://www.continuum.io/why-anaconda>`_ provides an enterprise-ready data analytics platform that empowers companies to adopt a modern open data science analytics architecture. 
+
+
+We have setup a channel for mss (tbd). For installation you need the conda-forge channel added to your .condarc. 
+
+.condarc
+==============
+
+channels:
+  - conda-forge
+  - defaults
+
+
+package build
+===============
+On top level dir 
+
+* conda build .
+
+
+developers installation
+================================
+
+* conda create -n mssenv path/to/mss-1.1b1-py27_1.tar.bz2
+* source activate mssenv
+* conda install --use-local mss
+
+optional you could also run for uncommited not published changes 
+python setup.py install
+
+
+users installation
+===================================
+
+* conda create -n mssenv mss
+* source activate mssenv
+
+
+Usage:
+====================
+We have to provide a path where mss_settings.py is located.
+mss_settings.py can be retrieved from `the sample file <https://bitbucket.org/wxmetvis/mss/raw/b86175bcb8cfb6e104ab7b0be650194c75b6d9da/msui/mss_settings.py.sample>`_ and adopted.
+
+export PYTHONPATH="$HOME/.config/"
+
+* source activate mssenv
+* mss 

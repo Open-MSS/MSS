@@ -47,6 +47,10 @@ AUTHORS:
 # standard library imports
 import sys
 import os
+from distutils.sysconfig import get_python_lib
+# add owslib thirdparty module path
+sys.path.extend([os.path.join(get_python_lib(), 'thirdparty')])
+
 import copy
 import logging
 
@@ -522,6 +526,15 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
+def main():
+
+    print "Launching user interface.."
+    app = QtGui.QApplication(sys.argv)
+    mainwindow = MSSMainWindow()
+    mainwindow.createNewFlightTrack(activate=True)
+    mainwindow.show()
+    sys.exit(app.exec_())
+
 
 """
 MAIN PROGRAM
@@ -536,11 +549,4 @@ if __name__ == "__main__":
                         format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
 
-    import sys
-
-    print "Launching user interface.."
-    app = QtGui.QApplication(sys.argv)
-    mainwindow = MSSMainWindow()
-    mainwindow.createNewFlightTrack(activate=True)
-    mainwindow.show()
-    sys.exit(app.exec_())
+    main()
