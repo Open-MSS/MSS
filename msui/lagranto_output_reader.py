@@ -76,12 +76,13 @@ AUTHORS:
 """
 
 # standard library imports
-import os
-import sys
 import datetime
+import sys
+
 import copy
-import pickle
 import logging
+import os
+import pickle
 
 # related third party imports
 import numpy

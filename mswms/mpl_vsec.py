@@ -32,21 +32,19 @@ AUTHORS:
 """
 
 # standard library imports
-from abc import ABCMeta, abstractmethod, abstractproperty
+import PIL.Image
 import StringIO
 import logging
-from xml.dom.minidom import getDOMImplementation
 import numpy as np
-import PIL.Image
+from abc import abstractmethod
+from xml.dom.minidom import getDOMImplementation
 
 # related third party imports
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 # local application imports
-import mss_2D_sections
-from mslib import mss_util
-
+from mswms import mss_2D_sections
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'

@@ -27,8 +27,7 @@ AUTHORS:
 """
 
 # standard library imports
-import logging
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import abstractmethod
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings

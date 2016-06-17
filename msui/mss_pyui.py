@@ -43,29 +43,28 @@ AUTHORS:
 
 """
 
-
 # standard library imports
 import sys
 import os
+import copy
+import logging
+import mss_settings
+
 from distutils.sysconfig import get_python_lib
 # add owslib thirdparty module path
 sys.path.extend([os.path.join(get_python_lib(), 'thirdparty')])
 
-import copy
-import logging
 
+from msui import ui_mainwindow as ui
+from msui import ui_about_dialog as ui_ab
+from msui import flighttrack as ft
+from msui import tableview
+from msui import topview
+from msui import sideview
+from msui import timeseriesview
+from msui import trajectories_tool
+from msui import loopview
 
-# local application imports
-import ui_mainwindow as ui
-import ui_about_dialog as ui_ab
-import flighttrack as ft
-import tableview
-import topview
-import sideview
-import timeseriesview
-import trajectories_tool
-import loopview
-import mss_settings
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -527,7 +526,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.exec_()
 
 def main():
-
     print "Launching user interface.."
     app = QtGui.QApplication(sys.argv)
     mainwindow = MSSMainWindow()

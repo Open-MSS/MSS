@@ -27,12 +27,11 @@ AUTHORS:
 """
 
 # standard library imports
-import re
 import glob
+import re
 
 # related third party imports
 import netCDF4
-import numpy
 
 # local application imports
 

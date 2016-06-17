@@ -77,7 +77,7 @@ import matplotlib.colors
 import mpl_toolkits.basemap
 
 # local application imports
-from mpl_hsec import MPLBasemapHorizontalSectionStyle
+from mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib import thermolib
 
 """

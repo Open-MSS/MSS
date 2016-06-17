@@ -37,11 +37,13 @@ AUTHORS:
 """
 
 # standard library imports
-import xml.dom.minidom
-import logging
-import urllib2
-import csv
+
 from datetime import datetime
+
+import csv
+import logging
+import xml.dom.minidom
+import mss_settings
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -53,7 +55,7 @@ from geopy import distance
 # local application imports
 from mslib import mss_util
 from mslib import thermolib
-import mss_settings
+
 
 """
 CONSTANTS (used in this module)

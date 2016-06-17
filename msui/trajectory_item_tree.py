@@ -29,10 +29,11 @@ AUTHORS:
 """
 
 # standard library imports
-import os
 import datetime
-import sys
+
 import logging
+import os
+import mss_settings
 
 # related third party imports
 from PyQt4 import QtCore, QtGui
@@ -47,8 +48,8 @@ except:
     hasNAppy = False
 
 # local application imports
-import lagranto_output_reader
-import mss_settings
+from msui import lagranto_output_reader
+
 
 """
 EXCEPTION CLASSES

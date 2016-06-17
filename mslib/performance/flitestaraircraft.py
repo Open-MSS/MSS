@@ -26,14 +26,13 @@ AUTHORS:
 """
 
 # standard library imports
-import logging
 import re
 
 # related third party imports
 import numpy as np
 
 # local application imports
-from aircraft import Aircraft
+from mslib.performance.aircraft import Aircraft
 
 """
 FLITESTAR AIRCRAFT

@@ -27,13 +27,11 @@ AUTHORS:
 
 # standard library imports
 import os
-import logging
 
 # related third party imports
-import numpy as np
 
 # local application imports
-from flitestaraircraft import FliteStarExportedAircraft
+from mslib.performance.flitestaraircraft import FliteStarExportedAircraft
 
 # Get the path of this module to locate the FliteStar performance files.
 try:

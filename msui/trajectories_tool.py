@@ -35,10 +35,10 @@ import os
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-import ui_trajectories_window as ui
-import trajectory_item_tree as titree
+from msui import ui_trajectories_window as ui
+from msui import trajectory_item_tree as titree
 # import trajectory_ts
-import mss_qt
+from msui import mss_qt
 
 """
 USER INTERFACE CLASS FlightPlanTableView
