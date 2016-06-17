@@ -50,21 +50,17 @@ AUTHORS:
 """
 
 # standard library imports
-from datetime import datetime, timedelta
-import logging
-import os
 import functools
-import StringIO
-import urllib2
+import logging
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 import numpy as np
 
 # local application imports
-import ui_loopwindow as ui
-import loopviewer_widget as imw
-import mss_qt
+from msui import ui_loopwindow as ui
+from msui import loopviewer_widget as imw
+from msui import mss_qt
 
 """
 CLASS MSSLoopWindow

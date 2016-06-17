@@ -34,16 +34,15 @@ AUTHORS:
 """
 
 # standard library imports
-import logging
 
 # related third party imports
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator
+import numpy as np
 
 # local application imports
-from mpl_vsec import AbstractVerticalSectionStyle
+from mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib import thermolib
 
 """

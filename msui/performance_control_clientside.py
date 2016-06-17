@@ -35,27 +35,29 @@ TODO:
 """
 
 # standard library imports
+import time
 from datetime import datetime
-import logging
-import re
-import threading
+
 import Queue
 import hashlib
+import logging
 import os
-import time
+import re
+import threading
 import xml.dom.minidom
+import mss_settings
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 import owslib.util
 import numpy as np
 
+
 # local application imports
-import ui_performance_widget_clientside as ui
-import wms_capabilities
-import mss_settings
-from wms_control import MSSWebMapService, MSS_WMS_AuthenticationDialog
-import flighttrack as ft
+from msui import ui_performance_widget_clientside as ui
+
+from msui.wms_control import MSSWebMapService, MSS_WMS_AuthenticationDialog
+from msui import flighttrack as ft
 from mslib import performance
 
 """

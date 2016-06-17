@@ -30,7 +30,7 @@ AUTHORS:
 # related third party imports
 
 # local application imports
-from dlraircraft import HALO, Falcon
+from mslib.performance.dlraircraft import HALO, Falcon
 
 """
 Aircraft "pool"

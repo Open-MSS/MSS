@@ -1,5 +1,6 @@
-import numpy as NX
 import math
+
+import numpy as NX
 
 __version__ = '1.0.1'
 

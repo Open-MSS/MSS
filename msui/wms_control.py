@@ -29,19 +29,20 @@ AUTHORS:
 """
 
 # standard library imports
+import time
+from datetime import datetime, timedelta
+
+import Queue
+import StringIO
+import hashlib
+import logging
+import os
+import re
+import threading
 import urllib
 import urllib2
-from datetime import datetime, timedelta
 import xml.etree.ElementTree as etree
-import re
-import logging
-import StringIO
-import threading
-import Queue
-import os
-import hashlib
-import time
-
+import mss_settings
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 import owslib.wms
@@ -49,11 +50,10 @@ import owslib.util
 import PIL.Image
 
 # local application imports
-import ui_wms_dockwidget as ui
-import ui_wms_password_dialog as ui_pw
-import wms_capabilities
-import mss_settings
-import wms_login_cache
+from msui import ui_wms_dockwidget as ui
+from msui import ui_wms_password_dialog as ui_pw
+from msui import wms_capabilities
+from msui import wms_login_cache
 from mslib.mss_util import convertHPAToKM
 
 """

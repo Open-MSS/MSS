@@ -45,13 +45,9 @@ AUTHORS:
 """
 
 # standard library imports
-import sys
 import logging
-import datetime
 
 # related third party imports
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from matplotlib.collections import LineCollection
@@ -62,7 +58,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 # local application imports
-import flighttrack as ft
+from msui import flighttrack as ft
 # from mslib.mss_util import tangent_point_coordinates, convertHPAToKM,\
 #                           datetime_to_jsec, compute_solar_angle, rotatePoint
 from mslib.mss_util import *

@@ -80,18 +80,17 @@ AUTHORS:
 """
 
 # standard library imports
-import optparse
-import logging
-import sys
 from datetime import datetime, timedelta
-import os
 
+import logging
+import optparse
+import os
+import mss_wms_settings
 # relatedthird party imports
 import numpy as np
 
 # local application imports
-import mss_wms_wsgi
-import mss_wms_settings
+from mswms import mss_wms_wsgi
 from mslib import mss_config
 
 """

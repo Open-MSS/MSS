@@ -31,10 +31,10 @@ AUTHORS:
 import logging
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from PyQt4 import QtGui  # Qt4 bindings
 
 # local application imports
-import ui_wms_capabilities as ui
+from msui import ui_wms_capabilities as ui
 
 """
 CLASS WMSCapabilitiesBrowser

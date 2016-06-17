@@ -28,16 +28,14 @@ AUTHORS:
 """
 
 # standard library imports
-import os
-import sys
 import logging
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from PyQt4 import QtGui  # Qt4 bindings
 
 # local application imports
-import ui_timeseriesview_window as ui
-import mss_qt
+from msui import ui_timeseriesview_window as ui
+from msui import mss_qt
 
 """
 CLASS TimeSeriesView

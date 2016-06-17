@@ -30,7 +30,6 @@ AUTHORS:
 """
 
 # standard library imports
-import sys
 
 # related third party imports
 

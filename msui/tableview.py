@@ -36,22 +36,21 @@ AUTHORS:
 """
 
 # standard library imports
-from datetime import datetime
-import string
-import random
-import logging
 import functools
+import logging
+import random
+import string
+import mss_settings
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-import ui_tableview_window as ui
-import performance_control as perf
-import performance_control_clientside as perf_cs
-import flighttrack as ft
-import mss_qt
-import mss_settings
+from msui import ui_tableview_window as ui
+from msui import performance_control as perf
+from msui import performance_control_clientside as perf_cs
+from msui import flighttrack as ft
+from msui import mss_qt
 
 PERFORMANCE = 0
 PERFORMANCE_OLD = 1

@@ -42,19 +42,20 @@ AUTHORS:
 
 # standard library imports
 from datetime import datetime, timedelta
+
+import StringIO
+import functools
 import logging
 import os
-import functools
-import StringIO
 import urllib2
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-import ui_imageloop_widget as ui
-import ui_imageloop_load_dialog as uipc
-from wms_control import MSS_WMS_AuthenticationDialog
+from msui import ui_imageloop_widget as ui
+from msui import ui_imageloop_load_dialog as uipc
+from msui.wms_control import MSS_WMS_AuthenticationDialog
 
 """
 Product Chooser Dialog

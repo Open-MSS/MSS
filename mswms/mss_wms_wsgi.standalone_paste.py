@@ -88,20 +88,21 @@ AUTHORS:
 """
 
 # standard library imports
-import logging
-import xml.dom.minidom
 from datetime import datetime
-import socket
 
+import logging
+import socket
+import xml.dom.minidom
+import mss_wms_settings
 # related third party imports
 import paste.request
 import paste.util.multidict
-from paste.httpexceptions import HTTPNotFound, HTTPBadRequest, HTTPServiceUnavailable
+from paste.httpexceptions import HTTPNotFound, HTTPServiceUnavailable
 
 # local application imports
 from mslib import mss_config
-import mss_plot_driver
-import mss_wms_settings
+from mswms import mss_plot_driver
+
 
 """
 CaseInsensitiveMulitDict

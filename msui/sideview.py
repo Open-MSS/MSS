@@ -32,24 +32,22 @@ AUTHORS:
 
 # standard library imports
 import functools
-import urllib2
 import logging
-import pickle
 import os
+import pickle
+import mss_settings
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
-import numpy as np
-import owslib.util
 
 # local application imports
-import ui_sideview_window as ui
-import ui_sideview_options as ui_opt
-import mss_qt
-import flighttrack as ft
-import mpl_pathinteractor as mpl_pi
-import wms_control as wms
-import mss_settings
+from msui import ui_sideview_window as ui
+from msui import ui_sideview_options as ui_opt
+from msui import mss_qt
+from msui import flighttrack as ft
+from msui import mpl_pathinteractor as mpl_pi
+from msui import wms_control as wms
+
 
 # Dock window indices.
 WMS = 0
