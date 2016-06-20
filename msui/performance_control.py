@@ -30,21 +30,22 @@ AUTHORS:
 
 # standard library imports
 from datetime import datetime
+
+import Queue
 import logging
 import re
-import Queue
-import urllib2
 import threading
-
+import urllib2
+import mss_settings
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-import ui_performance_dockwidget as ui
-import wms_capabilities
-import mss_settings
-from wms_control import MSSWebMapService
-import flighttrack as ft
+from msui import ui_performance_dockwidget as ui
+from msui import wms_capabilities
+
+from msui.wms_control import MSSWebMapService
+from msui import flighttrack as ft
 
 """
 Settings imported from mss_settings

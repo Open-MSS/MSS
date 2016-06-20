@@ -28,20 +28,20 @@ AUTHORS:
 
 """
 # standard library imports
-import logging
 from datetime import datetime
+
+import logging
+import mss_settings
 
 # related third party imports
 import numpy as np
 import matplotlib.pyplot as plt
 
 # local application imports
-import flighttrack as ft
-import mpl_pathinteractor as mpl_pi
-import mpl_map
-import trajectory_item_tree as titree
+from msui import mpl_pathinteractor as mpl_pi
+from msui import mpl_map
+from msui import trajectory_item_tree as titree
 from mslib import thermolib
-import mss_settings
 
 
 # Python Qt4 bindings for GUI objects

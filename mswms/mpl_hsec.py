@@ -32,14 +32,12 @@ AUTHORS:
 """
 
 # standard library imports
-import os
-import logging
-from datetime import datetime
-from abc import ABCMeta, abstractmethod, abstractproperty
 import StringIO
+import logging
+from abc import abstractmethod
+import mss_wms_settings
 
 # related third party imports
-import netCDF4
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import mpl_toolkits.basemap as basemap
@@ -47,9 +45,8 @@ import numpy as np
 import PIL.Image
 
 # local application imports
-from mslib import netCDF4tools
-import mss_2D_sections
-import mss_wms_settings
+from mswms import mss_2D_sections
+
 
 """
 Horizontal Section Styles

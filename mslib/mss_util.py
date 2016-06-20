@@ -26,13 +26,13 @@ AUTHORS:
 """
 
 # standard library imports
-import collections
 import datetime
 from datetime import datetime as dt
 
+import collections
 # related third party imports
 import numpy as np
-from scipy.interpolate import RectBivariateSpline, UnivariateSpline, interp1d
+from scipy.interpolate import RectBivariateSpline, interp1d
 from scipy.ndimage import map_coordinates
 from mslib import greatcircle
 from geopy import distance

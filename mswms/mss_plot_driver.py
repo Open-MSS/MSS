@@ -29,17 +29,13 @@ AUTHORS:
 """
 
 # standard library imports
-import os
-import logging
 from datetime import datetime
-from abc import ABCMeta, abstractmethod, abstractproperty
-import StringIO
+
+import logging
+import os
+from abc import ABCMeta, abstractmethod
 
 # related third party imports
-import netCDF4
-import matplotlib as mpl
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import matplotlib.pyplot as plt
 import numpy as np
 
 # local application imports

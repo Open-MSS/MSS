@@ -30,8 +30,8 @@ AUTHORS:
 """
 
 # standard library imports
-from abc import ABCMeta, abstractmethod, abstractproperty
 import logging
+from abc import ABCMeta, abstractmethod
 
 """
 Horizontal Section Styles

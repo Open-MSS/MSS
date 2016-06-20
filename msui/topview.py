@@ -31,25 +31,25 @@ AUTHORS:
 """
 
 # standard library imports
-import functools
-import os
-import sys
-import logging
-import pickle
 import datetime
+
+import functools
+import logging
+import os
+import pickle
+import mss_settings
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-import ui_topview_window as ui
-import ui_topview_mapappearance as ui_ma
-import mss_qt
-import mpl_pathinteractor as mpl_pi
-import mss_settings
-import flighttrack as ft
-import wms_control as wms
-import satellite_dockwidget as sat
+from msui import ui_topview_window as ui
+from msui import ui_topview_mapappearance as ui_ma
+from msui import mss_qt
+from msui import mpl_pathinteractor as mpl_pi
+from msui import flighttrack as ft
+from msui import wms_control as wms
+from msui import satellite_dockwidget as sat
 
 # Dock window indices.
 WMS = 0

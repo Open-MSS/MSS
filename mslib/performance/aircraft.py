@@ -32,12 +32,11 @@ TODO:
 """
 
 # standard library imports
-import os
-import logging
-import copy
-from datetime import datetime, timedelta
-from abc import ABCMeta, abstractmethod, abstractproperty
 import time as ptime
+from datetime import datetime, timedelta
+
+import copy
+from abc import ABCMeta, abstractmethod
 
 # related third party imports
 import numpy as np

@@ -35,24 +35,21 @@ AUTHORS:
 """
 
 # standard library imports
-from datetime import datetime
 import logging
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from PyQt4 import QtCore  # Qt4 bindings
 import numpy as np
 import matplotlib
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import matplotlib.mlab as mlab
 import mpl_toolkits.basemap as basemap
 import mpl_toolkits.basemap.pyproj as pyproj
 
 # local application imports
-import mpl_pathinteractor as mpl_pi
-import flighttrack as ft
-import trajectory_item_tree as titree
+from msui import mpl_pathinteractor as mpl_pi
+from msui import trajectory_item_tree as titree
 
 """
 CLASS MapCanvas
