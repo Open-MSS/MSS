@@ -47,7 +47,7 @@ import mss_settings
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
-if not 'thirdparty' in ','.join(sys.path):
+if 'thirdparty' not in ','.join(sys.path):
     from distutils.sysconfig import get_python_lib
     # add owslib thirdparty module path
     sys.path.extend([os.path.join(get_python_lib(), 'mslib', 'thirdparty')])

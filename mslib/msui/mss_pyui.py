@@ -525,6 +525,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
+
 def main():
     print "Launching user interface.."
     app = QtGui.QApplication(sys.argv)

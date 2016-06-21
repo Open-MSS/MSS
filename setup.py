@@ -1,7 +1,7 @@
 # The README.txt file should be written in reST so that PyPI can use
-# it to generate your project's PyPI page. 
-long_description = open('README').read()
+# it to generate your project's PyPI page.
 from setuptools import setup, find_packages
+long_description = open('README').read()
 
 
 setup(
@@ -22,11 +22,8 @@ setup(
     namespace_packages=[],
     include_package_data=True,
     zip_safe=False,
-    install_requires=[], # we use conda build recipe
+    install_requires=[],  # we use conda build recipe
     entry_points=dict(
-        console_scripts=[
-                         'mss = mslib.msui.mss_pyui:main',
-                         ],
+        console_scripts=['mss = mslib.msui.mss_pyui:main'],
     ),
 )
-
