@@ -1,29 +1,25 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-basemap>=1.0.7
+basemap==1.0.7
 curl>=7.45.0
 cycler=0.10.0=py27_0
 execnet=1.2.0=py27_0
 freetype>=2.5.0
 functools32>=3.2.3.2
 geopy>=1.10.0
-geos >=3.3.3
 hdf5>=1.8.15
 jpeg>=8d
-libnetcdf>=4.3.3.1
 libpng>=1.5.0
 lxml=3.6.0=py27_0
 matplotlib>=1.4.0
-mkl=11.3.1=0
 netcdf4>=1.0
-numpy>=1.8.0
+numpy==1.10.4
 pep8=1.7.0=py27_0
 pillow>=3.2.0
 pip=8.1.1=py27_1
 py=1.4.31=py27_0
 pyparsing=2.0.3=py27_0
-pyproj>=1.9.4
 pyqt>=4.11.4
 pytest=2.9.1=py27_0
 pytest-cache=1.0=py27_0
@@ -39,5 +35,3 @@ simplejson=3.8.2=py27_0
 sip=4.16.9=py27_0
 six=1.10.0=py27_0
 tk>=8.5.18
-wheel=0.29.0=py27_0
-zlib=1.2.8=0
