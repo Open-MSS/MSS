@@ -1,12 +1,10 @@
 include README
 
 recursive-include mslib *
-recursive-include mswms *
-recursive-include msui *
-recursive-include thirdparty *
 recursive-include *
 global-exclude *.pyc
 global-exclude *.pyo
 global-exclude *.orig
 global-exclude *.rej
 global-exclude *.sample
+global-exclude .gitignore

@@ -35,7 +35,7 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
 from mslib import mss_util
-from msui import ui_satellite_dockwidget as ui
+from mslib.msui import ui_satellite_dockwidget as ui
 
 """
 CLASS SatelliteControlWidgeT

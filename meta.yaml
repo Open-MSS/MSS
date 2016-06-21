@@ -6,9 +6,9 @@ source:
     git_url: https://bitbucket.org/wxmetvis/mss.git
 
 build:
-    number: 3
+    number: 4
     entry_points:
-      - mss = msui.mss_pyui:main
+      - mss = mslib.msui.mss_pyui:main
 
 requirements:
   build:

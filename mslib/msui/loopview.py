@@ -58,9 +58,9 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 import numpy as np
 
 # local application imports
-from msui import ui_loopwindow as ui
-from msui import loopviewer_widget as imw
-from msui import mss_qt
+from mslib.msui import ui_loopwindow as ui
+from mslib.msui import loopviewer_widget as imw
+from mslib.msui import mss_qt
 
 """
 CLASS MSSLoopWindow

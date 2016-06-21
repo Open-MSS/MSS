@@ -52,18 +52,18 @@ import mss_settings
 
 from distutils.sysconfig import get_python_lib
 # add owslib thirdparty module path
-sys.path.extend([os.path.join(get_python_lib(), 'thirdparty')])
+sys.path.extend([os.path.join(get_python_lib(), 'mslib', 'thirdparty')])
 
 
-from msui import ui_mainwindow as ui
-from msui import ui_about_dialog as ui_ab
-from msui import flighttrack as ft
-from msui import tableview
-from msui import topview
-from msui import sideview
-from msui import timeseriesview
-from msui import trajectories_tool
-from msui import loopview
+from mslib.msui import ui_mainwindow as ui
+from mslib.msui import ui_about_dialog as ui_ab
+from mslib.msui import flighttrack as ft
+from mslib.msui import tableview
+from mslib.msui import topview
+from mslib.msui import sideview
+from mslib.msui import timeseriesview
+from mslib.msui import trajectories_tool
+from mslib.msui import loopview
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings

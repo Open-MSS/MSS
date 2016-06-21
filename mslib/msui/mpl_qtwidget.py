@@ -38,9 +38,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # local application imports
-from msui import mpl_pathinteractor as mpl_pi
-from msui import mpl_map
-from msui import trajectory_item_tree as titree
+from mslib.msui import mpl_pathinteractor as mpl_pi
+from mslib.msui import mpl_map
+from mslib.msui import trajectory_item_tree as titree
 from mslib import thermolib
 
 

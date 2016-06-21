@@ -45,7 +45,7 @@ import numpy as np
 import PIL.Image
 
 # local application imports
-from mswms import mss_2D_sections
+from mslib.mswms import mss_2D_sections
 
 
 """

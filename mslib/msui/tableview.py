@@ -46,11 +46,11 @@ import mss_settings
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-from msui import ui_tableview_window as ui
-from msui import performance_control as perf
-from msui import performance_control_clientside as perf_cs
-from msui import flighttrack as ft
-from msui import mss_qt
+from mslib.msui import ui_tableview_window as ui
+from mslib.msui import performance_control as perf
+from mslib.msui import performance_control_clientside as perf_cs
+from mslib.msui import flighttrack as ft
+from mslib.msui import mss_qt
 
 PERFORMANCE = 0
 PERFORMANCE_OLD = 1

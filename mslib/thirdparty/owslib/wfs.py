@@ -19,5 +19,5 @@ def WebFeatureService(url, version='1.0.0', xml=None):
     if version in  ['1.0', '1.0.0']:
         return wfs100.WebFeatureService_1_0_0.__new__(wfs100.WebFeatureService_1_0_0, url, version, xml)
     elif version in ['2.0', '2.0.0']:
-        return wfs200.WebFeatureService_2_0_0.__new__(wfs200.WebFeatureService_2_0_0, url,  version, xml)
+        return wfs200.WebFeatureService_2_0_0.__new__(wfs200.WebFeatureService_2_0_0, url, version, xml)
 

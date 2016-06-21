@@ -48,8 +48,8 @@ import mpl_toolkits.basemap as basemap
 import mpl_toolkits.basemap.pyproj as pyproj
 
 # local application imports
-from msui import mpl_pathinteractor as mpl_pi
-from msui import trajectory_item_tree as titree
+from mslib.msui import mpl_pathinteractor as mpl_pi
+from mslib.msui import trajectory_item_tree as titree
 
 """
 CLASS MapCanvas

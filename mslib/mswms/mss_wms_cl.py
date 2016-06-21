@@ -90,8 +90,10 @@ import mss_wms_settings
 import numpy as np
 
 # local application imports
-from mswms import mss_wms_wsgi
-from mslib import mss_config
+import mss_config
+
+from mslib.mswms import mss_wms_wsgi
+
 
 """
 Main Program

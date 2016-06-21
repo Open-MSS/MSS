@@ -44,7 +44,7 @@ import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 # local application imports
-from mswms import mss_2D_sections
+from mslib.mswms import mss_2D_sections
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'

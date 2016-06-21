@@ -1,4 +1,4 @@
-"""Window for the display of trajectory time series.
+"""Widget to display a WMS (Web Map Service) capabilities document.
 
 ********************************************************************************
 
@@ -34,33 +34,34 @@ import logging
 from PyQt4 import QtGui  # Qt4 bindings
 
 # local application imports
-from msui import ui_timeseriesview_window as ui
-from msui import mss_qt
+from mslib.msui import ui_wms_capabilities as ui
 
 """
-CLASS TimeSeriesView
+CLASS WMSCapabilitiesBrowser
 """
 
 
-class MSSTimeSeriesViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TimeSeriesViewWindow):
-    """PyQt4 window implementing a time series view.
+class WMSCapabilitiesBrowser(QtGui.QDialog, ui.Ui_WMSCapabilitiesBrowser):
+    """Dialog presenting an XML document to the user.
     """
-    name = "Time Series View"
 
-    def __init__(self, parent=None):
-        """Set up user interface, connect signal/slots.
+    def __init__(self, parent=None, url=None, capabilities_xml=None):
         """
-        super(MSSTimeSeriesViewWindow, self).__init__(parent)
+        Arguments:
+        parent -- Qt widget that is parent to this widget.
+        capabilities_xml -- .
+        """
+        super(WMSCapabilitiesBrowser, self).__init__(parent)
         self.setupUi(self)
 
-    def setIdentifier(self, identifier):
-        super(MSSTimeSeriesViewWindow, self).setIdentifier(identifier)
-        self.mpl.canvas.setIdentifier(identifier)
+        if url is None:
+            url = ""
+        self.lblURL.setText(url)
 
+        if capabilities_xml is None:
+            capabilities_xml = ""
+        self.txtCapabilities.setPlainText(capabilities_xml)
 
-# Main program to test the window during development. The following code
-# will not be executed if the view is opened from the Mission Support
-# System user interface.
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.
@@ -74,6 +75,10 @@ if __name__ == "__main__":
     import sys
 
     app = QtGui.QApplication(sys.argv)
-    win = MSSTimeSeriesViewWindow()
+    win = WMSCapabilitiesBrowser(url="http://test.me",
+                                 capabilities_xml="""
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
+<WMT_MS_Capabilities version="1.1.1" updateSequence="1295028115677" xmlns:xlink="http://www.w3.org/1999/xlink">""")
     win.show()
     sys.exit(app.exec_())
