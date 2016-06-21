@@ -25,7 +25,7 @@ setup(
     install_requires=[], # we use conda build recipe
     entry_points=dict(
         console_scripts=[
-                         'mss = msui.mss_pyui:main',
+                         'mss = mslib.msui.mss_pyui:main',
                          ],
     ),
 )

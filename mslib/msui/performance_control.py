@@ -41,11 +41,11 @@ import mss_settings
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-from msui import ui_performance_dockwidget as ui
-from msui import wms_capabilities
+from mslib.msui import ui_performance_dockwidget as ui
+from mslib.msui import wms_capabilities
 
-from msui.wms_control import MSSWebMapService
-from msui import flighttrack as ft
+from mslib.msui.wms_control import MSSWebMapService
+from mslib.msui import flighttrack as ft
 
 """
 Settings imported from mss_settings

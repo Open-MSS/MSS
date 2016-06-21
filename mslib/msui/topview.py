@@ -43,13 +43,13 @@ import mss_settings
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-from msui import ui_topview_window as ui
-from msui import ui_topview_mapappearance as ui_ma
-from msui import mss_qt
-from msui import mpl_pathinteractor as mpl_pi
-from msui import flighttrack as ft
-from msui import wms_control as wms
-from msui import satellite_dockwidget as sat
+from mslib.msui import ui_topview_window as ui
+from mslib.msui import ui_topview_mapappearance as ui_ma
+from mslib.msui import mss_qt
+from mslib.msui import mpl_pathinteractor as mpl_pi
+from mslib.msui import flighttrack as ft
+from mslib.msui import wms_control as wms
+from mslib.msui import satellite_dockwidget as sat
 
 # Dock window indices.
 WMS = 0

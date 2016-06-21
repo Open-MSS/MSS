@@ -88,7 +88,12 @@ AUTHORS:
 """
 
 # standard library imports
+
+
 from datetime import datetime
+
+# local application imports
+import mss_config
 
 import logging
 import socket
@@ -99,9 +104,8 @@ import paste.request
 import paste.util.multidict
 from paste.httpexceptions import HTTPNotFound, HTTPServiceUnavailable
 
-# local application imports
-from mslib import mss_config
-from mswms import mss_plot_driver
+
+from mslib.mswms import mss_plot_driver
 
 
 """

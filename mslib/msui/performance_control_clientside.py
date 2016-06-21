@@ -54,10 +54,10 @@ import numpy as np
 
 
 # local application imports
-from msui import ui_performance_widget_clientside as ui
+from mslib.msui import ui_performance_widget_clientside as ui
 
-from msui.wms_control import MSSWebMapService, MSS_WMS_AuthenticationDialog
-from msui import flighttrack as ft
+from mslib.msui.wms_control import MSSWebMapService, MSS_WMS_AuthenticationDialog
+from mslib.msui import flighttrack as ft
 from mslib import performance
 
 """

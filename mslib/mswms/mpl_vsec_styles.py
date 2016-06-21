@@ -42,7 +42,7 @@ import mpl_toolkits.axes_grid1.inset_locator
 import numpy as np
 
 # local application imports
-from mswms.mpl_vsec import AbstractVerticalSectionStyle
+from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib import thermolib
 
 """

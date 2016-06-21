@@ -37,6 +37,7 @@ import StringIO
 import hashlib
 import logging
 import os
+import sys
 import re
 import threading
 import urllib
@@ -45,15 +46,21 @@ import xml.etree.ElementTree as etree
 import mss_settings
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
+
+if not 'thirdparty' in ','.join(sys.path):
+    from distutils.sysconfig import get_python_lib
+    # add owslib thirdparty module path
+    sys.path.extend([os.path.join(get_python_lib(), 'mslib', 'thirdparty')])
+
 import owslib.wms
 import owslib.util
 import PIL.Image
 
 # local application imports
-from msui import ui_wms_dockwidget as ui
-from msui import ui_wms_password_dialog as ui_pw
-from msui import wms_capabilities
-from msui import wms_login_cache
+from mslib.msui import ui_wms_dockwidget as ui
+from mslib.msui import ui_wms_password_dialog as ui_pw
+from mslib.msui import wms_capabilities
+from mslib.msui import wms_login_cache
 from mslib.mss_util import convertHPAToKM
 
 """

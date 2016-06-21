@@ -48,7 +48,7 @@ except:
     hasNAppy = False
 
 # local application imports
-from msui import lagranto_output_reader
+from mslib.msui import lagranto_output_reader
 
 
 """

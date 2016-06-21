@@ -53,9 +53,9 @@ import urllib2
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
-from msui import ui_imageloop_widget as ui
-from msui import ui_imageloop_load_dialog as uipc
-from msui.wms_control import MSS_WMS_AuthenticationDialog
+from mslib.msui import ui_imageloop_widget as ui
+from mslib.msui import ui_imageloop_load_dialog as uipc
+from mslib.msui.wms_control import MSS_WMS_AuthenticationDialog
 
 """
 Product Chooser Dialog

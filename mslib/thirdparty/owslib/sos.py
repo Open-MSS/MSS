@@ -112,7 +112,7 @@ class SensorObservationService(object):
         # FilterCapabilities
         val = self._capabilities.find('{http://www.opengis.net/sos/1.0}Filter_Capabilities')
 
-        self.filters=filter.Filter_Capabilities(val)
+        self.filters= filter.Filter_Capabilities(val)
  
         #serviceContents metadata: our assumption is that services use a top-level 
         #layer as a metadata organizer, nothing more.

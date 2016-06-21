@@ -10,8 +10,8 @@ We have setup a channel for mss (tbd). For installation you need the conda-forge
 ==============
 
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
 
 
 package build
