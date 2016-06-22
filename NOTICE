@@ -1,8 +1,9 @@
 Mission Support System (MSS)
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
 Copyright 2011-2014 Marc Rautenhaus
+Copyright 2015-2016 see AUTHORS
 
 This product mainly includes software developed by the
 
@@ -30,7 +31,7 @@ which parts are used in the MSS (see the LICENSE file for the terms and
 conditions that apply to these components):
 
 OWSLib
-======
+-----------
 
 Copyright (c) 2006, Ancient World Mapping Center
 
@@ -43,7 +44,7 @@ with "(mss)".
 
 
 pyroms
-======
+-----------
 
 mslib/greatcircle.py has been taken from the pyroms project:
 Python toolkit for the Regional Ocean Modeling System (ROMS)
@@ -52,7 +53,7 @@ http://code.google.com/p/pyroms/
 
 
 NETCDF4-PYTHON
-==============
+--------------------
 
 Copyright: 2008 by Jeffrey Whitaker
 

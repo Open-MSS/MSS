@@ -3,100 +3,64 @@ package:
   version: "1.1b1"
 
 source:
-    git_url: git@bitbucket.org:wxmetvis/mss.git
+    git_url: https://bitbucket.org/wxmetvis/mss.git
 
 build:
-    number: 2
+    number: 4
     entry_points:
-      - mss = msui.mss_pyui:main
+      - mss = mslib.msui.mss_pyui:main
 
 requirements:
   build:
-    - basemap  >=1.0.7
-    - curl  >=7.45.0
+    - basemap ==1.0.7
     - cycler ==0.10.0
     - execnet ==1.2.0
     - freetype >=2.5.0
     - functools32 >=3.2.3.2
     - geopy >=1.10.0
-    - geos >=3.3.3
     - hdf5 >=1.8.15
     - jpeg >=8d
-    - libnetcdf >=4.3.3.1
     - libpng >=1.5.0
     - lxml ==3.6.0
     - matplotlib >=1.4.0
-    - mkl ==11.3.1
     - netcdf4 >=1.0
-    - numpy >=1.8.0
-    - pep8 ==1.7.0
+    - numpy ==1.10.4
     - pillow >=3.2.0
-    - pip ==8.1.1
-    - py ==1.4.31
-    - pyparsing ==2.0.3
-    - pyproj >=1.9.4
     - pyqt >=4.11.4
-    - pytest ==2.9.1
-    - pytest-cache ==1.0
-    - pytest-pep8 ==1.0.6
     - python ==2.7.11
     - python-dateutil ==2.5.2
     - pytz ==2016.3
     - qt >=4.8.6
     - requests ==2.9.1
     - scipy >=0.17.0
-    - setuptools ==21.2.1
-    - simplejson ==3.8.2
     - sip ==4.16.9
     - six ==1.10.0
     - tk >=8.5.18
-    - wheel ==0.29.0
-    - zlib ==1.2.8
-
   run:
-
-    - basemap  >=1.0.7
-    - curl  >=7.45.0
+    - basemap ==1.0.7
     - cycler ==0.10.0
     - execnet ==1.2.0
     - freetype >=2.5.0
     - functools32 >=3.2.3.2
     - geopy >=1.10.0
-    - geos ==3.3.3
     - hdf5 >=1.8.15
     - jpeg >=8d
-    - libnetcdf >=4.3.3.1
     - libpng >=1.5.0
     - lxml ==3.6.0
     - matplotlib >=1.4.0
-    - mkl ==11.3.1
     - netcdf4 >=1.0
-    - numpy >=1.8.0
-    - pep8 ==1.7.0
+    - numpy ==1.10.4
     - pillow >=3.2.0
-    - pip ==8.1.1
-    - py ==1.4.31
-    - pyparsing ==2.0.3
-    - pyproj >=1.9.4
     - pyqt >=4.11.4
-    - pytest ==2.9.1
-    - pytest-cache ==1.0
-    - pytest-pep8 ==1.0.6
     - python ==2.7.11
     - python-dateutil ==2.5.2
     - pytz ==2016.3
     - qt >=4.8.6
     - requests ==2.9.1
     - scipy >=0.17.0
-    - setuptools ==21.2.1
-    - simplejson ==3.8.2
     - sip ==4.16.9
     - six ==1.10.0
     - tk >=8.5.18
-    - wheel ==0.29.0
-    - zlib ==1.2.8
-
-
 
 
 about:

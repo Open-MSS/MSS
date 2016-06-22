@@ -1,20 +1,20 @@
 # The README.txt file should be written in reST so that PyPI can use
-# it to generate your project's PyPI page. 
-long_description = open('README').read()
+# it to generate your project's PyPI page.
 from setuptools import setup, find_packages
+long_description = open('README').read()
 
 
 setup(
     name="mss",
     version="1.1b1",
-    description="mss gui",
+    description="MSS - Mission Support System",
     long_description=long_description,
     classifiers="Development Status :: 5 - Production/Stable",
     keywords="mslib",
     maintainer="Marc Rautenhaus",
-    maintainer_email="marc.rautenhaus@tum.de",
+    maintainer_email="wxmetvis@posteo.de",
     author="Marc Rautenahaus",
-    author_email="marc.rautenhaus@tum.de",
+    author_email="wxmetvis@posteo.de",
     license="Apache 2.0",
     url="https://bitbucket.org/wxmetvis/mss",
     platforms="any",
@@ -22,11 +22,8 @@ setup(
     namespace_packages=[],
     include_package_data=True,
     zip_safe=False,
-    install_requires=[], # we use conda build recipe
+    install_requires=[],  # we use conda build recipe
     entry_points=dict(
-        console_scripts=[
-                         'mss = msui.mss_pyui:main',
-                         ],
+        console_scripts=['mss = mslib.msui.mss_pyui:main'],
     ),
 )
-
