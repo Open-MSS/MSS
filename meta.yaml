@@ -13,7 +13,6 @@ build:
 requirements:
   build:
     - basemap ==1.0.7
-    - curl >=7.45.0
     - cycler ==0.10.0
     - execnet ==1.2.0
     - freetype >=2.5.0
@@ -27,9 +26,6 @@ requirements:
     - netcdf4 >=1.0
     - numpy ==1.10.4
     - pillow >=3.2.0
-    - pip ==8.1.1
-    - py ==1.4.31
-    - pyparsing ==2.0.3
     - pyqt >=4.11.4
     - python ==2.7.11
     - python-dateutil ==2.5.2
@@ -37,14 +33,11 @@ requirements:
     - qt >=4.8.6
     - requests ==2.9.1
     - scipy >=0.17.0
-    - setuptools ==21.2.1
-    - simplejson ==3.8.2
     - sip ==4.16.9
     - six ==1.10.0
     - tk >=8.5.18
   run:
     - basemap ==1.0.7
-    - curl >=7.45.0
     - cycler ==0.10.0
     - execnet ==1.2.0
     - freetype >=2.5.0
@@ -58,9 +51,6 @@ requirements:
     - netcdf4 >=1.0
     - numpy ==1.10.4
     - pillow >=3.2.0
-    - pip ==8.1.1
-    - py ==1.4.31
-    - pyparsing ==2.0.3
     - pyqt >=4.11.4
     - python ==2.7.11
     - python-dateutil ==2.5.2
@@ -68,8 +58,6 @@ requirements:
     - qt >=4.8.6
     - requests ==2.9.1
     - scipy >=0.17.0
-    - setuptools ==21.2.1
-    - simplejson ==3.8.2
     - sip ==4.16.9
     - six ==1.10.0
     - tk >=8.5.18
