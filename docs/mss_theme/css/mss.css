@@ -1,0 +1,16 @@
+@import url("theme.css");
+
+
+.wy-nav-content
+{
+  padding-top: 1.618em;
+  padding-right: 3.236em;
+  padding-bottom: 1.618em;
+  padding-left: 3.236em;
+  height: 100%;
+  max-width: 100%;
+  margin-top: auto;
+  margin-right: auto;
+  margin-bottom: auto;
+  margin-left: auto;
+}
