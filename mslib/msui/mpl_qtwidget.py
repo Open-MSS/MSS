@@ -785,6 +785,12 @@ class MplTopViewCanvas(MplCanvas):
                                                      marker_facecolor=settings["colour_ft_waypoints"])
             self.waypoints_interactor.set_vertices_visible(settings["draw_flighttrack"])
             self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
+            self.waypoints_interactor.set_tangent_color(settings["colour_tangents"])
+            self.waypoints_interactor.set_tangent_visible(settings["draw_tangents"])
+            self.waypoints_interactor.set_tangent_height(settings["tangent_height"])
+            self.waypoints_interactor.set_solar_angle_visible(settings["show_solar_angle"])
+            self.waypoints_interactor.set_start_time(settings["start_time"])
+
 
     def getMapAppearance(self):
         """
