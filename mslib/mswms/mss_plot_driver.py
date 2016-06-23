@@ -274,7 +274,6 @@ class MSSPlotDriver(object):
             require_reload = require_reload or (self.plot_object != plot_object)
         if require_reload:
             if self.dataset:
-                logging.debug("\tdataset %s needs to be reloaded", self.dataset.path)
                 self.dataset.close()
                 self.dataset = None
 
