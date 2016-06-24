@@ -1,7 +1,3 @@
-import sys
-sys.path.append("/path/to/trunk/mswms")
-sys.path.append("/path/to/lib64/python2.6/site-packages")
-
 import mss_wms_settings
 import hashlib
 
