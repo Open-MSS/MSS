@@ -94,6 +94,9 @@ Configuration of wsgi for wms
 
 You can setup a vhost for this service.
 
+**/home/mss/wsgi/wms.wsgi**
+
+
  .. literalinclude:: samples/wsgi/wms.wsgi
 
 
@@ -102,6 +105,9 @@ Configuration of wsgi auth
 
 To restrict access to your data use this script.
 
+**/home/mss/wsgi/auth.wsgi**
+
+
  .. literalinclude:: samples/wsgi/auth.wsgi
 
 
@@ -109,6 +115,9 @@ Configuration of your site as vhost
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You have to setup a webserver server site configuration file
+
+**/etc/apache2/sites-available/mss.yourserver.de.conf**
+
 
  .. literalinclude:: samples/sites-available/mss.yourserver.de.conf
 
@@ -122,7 +131,13 @@ Configuration files of the wms server
 Configuration for the Mission Support System Web Map Service (MSWMS).
 The configuration files have to become added to the /home/mss/config directory
 
+**/home/mss/config/mss_wms_settings.py**
+
+
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
+
+**/home/mss/config/mss_config.py**
+
  .. literalinclude:: samples/config/wms/mss_config.py.sample
 
 

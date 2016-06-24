@@ -38,6 +38,9 @@ You have to provide the path of the mss_settings.py by e.g.::
    $ export PYTHONPATH="$HOME/.config/mss"
 
 
+**/$HOME/.config/mss/mss_settings.py**
+
+
 .. literalinclude:: samples/config/mss/mss_settings.py.sample
 
 
