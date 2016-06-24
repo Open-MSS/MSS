@@ -1,4 +1,4 @@
-Web Map Service
+wms - Web Map Service
 =====================================
 
 Once installation and configuration are complete, you can start the
@@ -43,21 +43,58 @@ A few notes:
   same computer on which the input data files are hosted.
 
 
-Configuration of the mss server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+apache server setup
+--------------------------------
+Our examples are based on the following directories located in the home directory of the mss user::
 
-Configuration for the Mission Support System Web Map Service (MSWMS).
-The configuration file have to become added to the python search path.
+ .
+ ├── config
+ │   ├── mss_config.py
+ │   └── mss_wms_settings.py
+ ├── htdocs
+ │   └── xml_templates
+ │       ├── get_capabilities.pt
+ │       └── service_exception.pt
+ ├── log
+ │   └── mss_error.log
+ ├── miniconda2
+ │   ├── bin
+ │   ├── conda-bld
+ │   ├── conda-meta
+ │   ├── envs
+ │   ├── etc
+ │   ├── include
+ │   ├── lib
+ │   ├── LICENSE.txt
+ │   ├── pkgs
+ │   ├── share
+ │   ├── ssl
+ │   └── var
+ └── wsgi
+     ├── auth.wsgi
+     └── wms.wsgi
 
- .. literalinclude:: samples/mss_wms_settings.py.sample
+
+Configuration of apache mod_wsgi.conf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You have to add to mod_wsgi.conf::
+
+  WSGIPythonPath /home/mss/config:/home/mss/miniconda2/lib/python2.7/site-packages
 
 
-Configuration of wsgi vhost for apache2
+By this setting you override the PYTHONPATH environment variable. So you have also to add
+the site-packes directory of your miniconda or anaconda installation besides the config file path.
+
+
+
+
+Configuration of wsgi for wms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can setup a vhost for this service::
+You can setup a vhost for this service.
 
- .. literalinclude:: samples/wms_wsgi.sample
+ .. literalinclude:: samples/wsgi/wms.wsgi
 
 
 Configuration of wsgi auth
@@ -65,6 +102,32 @@ Configuration of wsgi auth
 
 To restrict access to your data use this script.
 
- .. literalinclude:: samples/auth.wsgi.sample
+ .. literalinclude:: samples/wsgi/auth.wsgi
+
+
+Configuration of your site as vhost
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You have to setup a webserver server site configuration file
+
+ .. literalinclude:: samples/sites-available/mss.yourserver.de.conf
+
+
+Enable it with aen2site mss.yourserver.de.conf
+
+
+Configuration files of the wms server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configuration for the Mission Support System Web Map Service (MSWMS).
+The configuration files have to become added to the /home/mss/config directory
+
+ .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
+ .. literalinclude:: samples/config/wms/mss_config.py.sample
+
+
+
+
+
 
 

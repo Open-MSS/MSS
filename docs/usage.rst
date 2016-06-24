@@ -20,8 +20,8 @@ A few options influencing the appearance of the displayed plots and
 flight tracks (colours etc.) can be set directly in the user
 interface (top view and side view).
 
-Configuration of User Interface
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Configuration of mss
+~~~~~~~~~~~~~~~~~~~~~~
 
 This file includes configuration settings central to the entire
 Mission Support User Interface (mss). Among others, define
@@ -38,6 +38,6 @@ You have to provide the path of the mss_settings.py by e.g.::
    $ export PYTHONPATH="$HOME/.config/mss"
 
 
-.. literalinclude:: samples/mss_settings.py.sample
+.. literalinclude:: samples/config/mss/mss_settings.py.sample
 
 
