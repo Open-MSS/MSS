@@ -10,7 +10,7 @@
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>3D View - DLR/IPA Mission Support</string>
+   <string>3D View - Mission Support System</string>
   </property>
   <widget class="QWidget" name="centralwidget" >
    <layout class="QVBoxLayout" name="verticalLayout_2" >

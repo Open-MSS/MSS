@@ -85,9 +85,10 @@ if enableGENESI:
 
 
 print "***********************************************************************"
-print "\n            DLR/IPA Mission Support System User Interface\n"
+print "\n            Mission Support System (mss)\n"
 print "***********************************************************************"
-print "VERSION:", __version__
+print "Documentation: http://mss.rtfd.io"
+print "Version:", __version__
 print "\nSystem is loading.."
 
 
@@ -286,8 +287,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         Qt receives a window close request for our application window.
         """
         ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                        self.tr("Do you want to close the DLR/IPA Mission "
-                                                "Support System user interface?"),
+                                        self.tr("Do you want to close the Mission "
+                                                "Support System application?"),
                                         QtGui.QMessageBox.Yes,
                                         QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
         if ret == QtGui.QMessageBox.Yes:

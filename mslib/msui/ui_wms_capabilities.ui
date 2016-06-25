@@ -10,7 +10,7 @@
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>Browse WMS Capabilities - DLR/IPA Mission Support</string>
+   <string>Browse WMS Capabilities - Mission Support System</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout" >
    <item>
