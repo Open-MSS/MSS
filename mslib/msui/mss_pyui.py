@@ -54,7 +54,7 @@ from distutils.sysconfig import get_python_lib
 # add owslib thirdparty module path
 sys.path.extend([os.path.join(get_python_lib(), 'mslib', 'thirdparty')])
 
-
+from mslib import __version__
 from mslib.msui import ui_mainwindow as ui
 from mslib.msui import ui_about_dialog as ui_ab
 from mslib.msui import flighttrack as ft
@@ -82,7 +82,6 @@ if enableGENESI:
     except:
         enableGENESI = False
 
-__version__ = "Release 1.1beta"
 
 
 print "***********************************************************************"
