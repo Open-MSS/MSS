@@ -195,5 +195,5 @@ class Ui_MSSMainWindow(object):
         self.action3DView.setText(_translate("MSSMainWindow", "&3D View", None))
         self.actionTrajectoryToolLagranto.setText(_translate("MSSMainWindow", "&Trajectory Tool (Lagranto)", None))
         self.actionDiscoverEarthObservationDataGENESI.setText(_translate("MSSMainWindow", "&Discover Earth Observation Data (GENESI)", None))
-        self.actionAboutMSUI.setText(_translate("MSSMainWindow", "&About MSUI", None))
+        self.actionAboutMSUI.setText(_translate("MSSMainWindow", "&About MSS", None))
 
