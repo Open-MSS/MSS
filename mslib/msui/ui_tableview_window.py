@@ -16,13 +16,11 @@ except AttributeError:
 
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
-
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
-
 
 class Ui_TableViewWindow(object):
     def setupUi(self, TableViewWindow):
@@ -99,7 +97,7 @@ class Ui_TableViewWindow(object):
         QtCore.QMetaObject.connectSlotsByName(TableViewWindow)
 
     def retranslateUi(self, TableViewWindow):
-        TableViewWindow.setWindowTitle(_translate("TableViewWindow", "Table View - DLR/IPA Mission Support", None))
+        TableViewWindow.setWindowTitle(_translate("TableViewWindow", "Table View - Mission Support System", None))
         self.btViewPerformance.setText(_translate("TableViewWindow", "view performance", None))
         self.lblRemainingRange.setText(_translate("TableViewWindow", "TextLabel", None))
         self.label.setText(_translate("TableViewWindow", "Waypoints:", None))
@@ -110,6 +108,6 @@ class Ui_TableViewWindow(object):
         self.menu_Controls.setTitle(_translate("TableViewWindow", "&Service Controls", None))
         self.actionClose.setText(_translate("TableViewWindow", "E&xit Module", None))
         self.actionClose.setShortcut(_translate("TableViewWindow", "Ctrl+X", None))
-        self.actionFlightPerformance_old.setText(
-            _translate("TableViewWindow", "Flight Performance (first version, depracated)", None))
+        self.actionFlightPerformance_old.setText(_translate("TableViewWindow", "Flight Performance (first version, depracated)", None))
         self.actionFlightPerformance.setText(_translate("TableViewWindow", "Flight &Performance", None))
+

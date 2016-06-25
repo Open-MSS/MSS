@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>529</width>
-    <height>232</height>
+    <width>921</width>
+    <height>334</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -50,7 +50,7 @@
    <item>
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>User Interface Application of the DLR/IPA Mission Support System</string>
+      <string>User Interface Application of the Mission Support System</string>
      </property>
     </widget>
    </item>
@@ -89,6 +89,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Copyright 2015-2016 Marc Rautenhaus, Jörn Ungermann, Jens-Uwe Grooß, Thomas Breuer, Reimar Bauer</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer_3">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -102,9 +109,9 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="label_5">
+    <widget class="QLabel" name="label_6">
      <property name="text">
-      <string>See the files README, LICENSE, NOTICE for details.</string>
+      <string>See http://mss.rtfd.io for details.</string>
      </property>
     </widget>
    </item>
