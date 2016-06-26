@@ -65,6 +65,7 @@ AUTHORS:
 * Omar Qunsul (oq)
 
 """
+import os
 import sys
 
 # standard library imports
@@ -182,12 +183,12 @@ class WMSServer(object):
         Returns an XML as string.
         """
         logging.debug("creating service exception..")
-        template = views['/home/mss/htdocs/xml_template/service_exception.pt']
+        template = views[os.path.join(mss_wms_settings.xml_template_location, 'service_exception.pt')]
         return_format = "text/xml"
         return [template(code=code, text=text), "text/xml"]
 
     def get_capabilities(self):
-        template = views['/home/mss/htdocs/xml_template/get_capabilities.pt']
+        template = views[os.path.join(mss_wms_settings.xml_template_location, 'get_capabilities.pt')]
 
         # Horizontal Layers
         hsec_layers = []
