@@ -1,11 +1,36 @@
 """Configuration for the Mission Support System Web Map Service (MSWMS).
 
+********************************************************************************
+
+   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+   Copyright 2011-2014 Marc Rautenhaus
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+********************************************************************************
+
 This file is part of the Mission Support System Web Map Service (MSWMS).
+
+AUTHORS:
+========
+
+* Marc Rautenhaus (mr)
+
 """
 
 # local application imports
-import mpl_hsec_styles
-import mpl_vsec_styles
+from mslib.mswms import mpl_hsec_styles
+from mslib.mswms import mpl_vsec_styles
 
 ###############################################################################
 ###                  Registration of horizontal layers.                     ###
@@ -49,13 +74,6 @@ register_horizontal_layers = [
     (mpl_hsec_styles.HS_Meteosat_BT108_01, ["meteosat_EUR_LL05"])
     ]
 
-    # CLaMS standard pressure level products.
-
-for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
-            u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
-    register_horizontal_layers.append(
-        (getattr(mpl_hsec_styles, "HS_ChemStyle_PL_" + ent), ["clams_INDIA"])
-    )
 
 ###############################################################################
 ###                  Registration of vertical layers.                       ###
@@ -78,13 +96,6 @@ register_vertical_layers = [
     #(mpl_vsec_styles.VS_EMACEyja_Style_01, ["emac_GLOBAL_LL1125"])
     ]
 
-# CLaMS standard pressure level products.
-
-for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
-            u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
-    register_vertical_layers.append(
-        (getattr(mpl_vsec_styles, "VS_ChemStyle_PL_" + ent), ["clams_INDIA"])
-    )
 
 ###############################################################################
 ###                       HTTP Authentication                               ###
@@ -151,7 +162,6 @@ epsg_to_mpl_basemap_table = {
     77790015: {"projection": "stere", "lat_0": 90., "lon_0": 15.},
     77790340: {"projection": "stere", "lat_0": 90., "lon_0": -20.},
     77791105: {"projection": "stere", "lat_0": 90., "lon_0": -105.},
-    77774020: {"projection": "stere", "lat_0": 74., "lon_0": 20.},
 
     77890000: {"projection": "spstere", "lat_0": 90., "lon_0": 0.},
     77890010: {"projection": "spstere", "lat_0": 90., "lon_0": 10.},
