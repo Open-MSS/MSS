@@ -7,7 +7,7 @@ visualise). The file "mss_wms_wsgi.standalone_paste.py" is an
 executable Python script starting up a Paste HTTP server with the WMS
 WSGI module. A short description of how to start the program is given
 in its docstring at the beginning of the file. The file
-"mss_wms_wsgi.wsgi" is intended to be used with an Apache web server
+"wms.wsgi" is intended to be used with an Apache web server
 installation. "mss_wms_cl.py" is the command line interface for image
 batch production.
 
@@ -45,6 +45,7 @@ A few notes:
 
 apache server setup
 --------------------------------
+
 Our examples are based on the following directories located in the home directory of the mss user::
 
  .
@@ -128,11 +129,10 @@ Enable it with aen2site mss.yourserver.de.conf
 Configuration files of the wms server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Configuration for the Mission Support System Web Map Service (MSWMS).
+Configuration for the Mission Support System Web Map Service (wms).
 The configuration files have to become added to the /home/mss/config directory
 
 **/home/mss/config/mss_wms_settings.py**
-
 
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
 
