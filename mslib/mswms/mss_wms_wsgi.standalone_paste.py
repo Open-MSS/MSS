@@ -419,7 +419,7 @@ class MSS_WMSResponse(object):
         # Parse the XML template into a xml.dom.minidom.Document object.
         capstrings = self.capabilitiesxmltemplate.splitlines()
         capstrings = [line.strip() for line in capstrings]
-        dom = xml.dom.minidom.parseString("".join(capstrings))
+        dom = xml.dom.minidom.parseString(" ".join(capstrings))
 
         # Get the root capabilities element. If vertical sections are
         # registered, we need to create a new layer element within the

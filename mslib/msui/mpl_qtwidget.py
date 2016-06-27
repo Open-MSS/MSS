@@ -791,7 +791,6 @@ class MplTopViewCanvas(MplCanvas):
             self.waypoints_interactor.set_solar_angle_visible(settings["show_solar_angle"])
             self.waypoints_interactor.set_start_time(settings["start_time"])
 
-
     def getMapAppearance(self):
         """
         """

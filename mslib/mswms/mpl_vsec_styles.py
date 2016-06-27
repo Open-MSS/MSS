@@ -43,6 +43,7 @@ import numpy as np
 
 # local application imports
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
+from mslib.mswms.utils import Targets
 from mslib import thermolib
 
 """
@@ -119,30 +120,8 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-CLAMS_CONFIG = {
-    u'BVF': {'limits': (0.00029, 0.00095), 'units': u's**-2'},
-    u'CH4': {'limits': (0.5, 1.7), 'units': u'ppmv'},
-    u'CO': {'limits': (0., 150.), 'units': u'ppbv'},
-    u'EQLAT': {'limits': (9.2, 90.0), 'units': u'deg N'},
-    u'F11': {'limits': (0.0, 220.0), 'units': u'pptv'},
-    u'F12': {'limits': (0.0, 550.0), 'units': u'pptv'},
-    u'H2O': {'limits': (3.0, 3000.), 'units': u'ppmv'},
-    u'N2O': {'limits': (45.0, 310.0), 'units': u'ppbv'},
-    u'SEA': {'limits': (0.0, 70.), 'units': u'%'},
-    u'ECH': {'limits': (0.0, 70.), 'units': u'%'},
-    u'NIN': {'limits': (0.0, 70.), 'units': u'%'},
-    u'SIN': {'limits': (0.0, 70.), 'units': u'%'},
-    u'ICH': {'limits': (0.0, 50.), 'units': u'%'},
-    u'O3': {'limits': (0.01, 3.0), 'units': u'ppmv'},
-    u'PV': {'limits': (11.0, 120.0), 'units': u'PVU'},
-    u'TEMP': {'limits': (180.0, 250.0), 'units': u'K'},
-    u'THETA': {'limits': (440.0, 590.0), 'units': u'K'},
-    u'U': {'limits': (-38.0, 69.0), 'units': u'm s^-1'},
-    u'V': {'limits': (-67.0, 50.0), 'units': u'm s^-1'}}
-
-
-class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
-    """Vertical section of chemical species
+class VS_GenericStyle_PL(AbstractVerticalSectionStyle):
+    """Vertical section of chemical species/other stuff
     """
     styles = [
         ("default", "fixed colour scale"),
@@ -151,13 +130,10 @@ class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
         ("autolog", "auto log colour scale"), ]
 
     def _plot_style(self):
-        """Make a cloud cover vertical section with temperature/potential
-           temperature overlay.
-        """
         ax = self.ax
         curtain_pt = self.data["air_potential_temperature"]
         curtain_pv = self.data["ertel_potential_vorticity"]
-        curtain_cc = self.data[self.dataname]
+        curtain_cc = self.data[self.dataname] * self.unit_scale
         curtain_p = np.empty_like(curtain_cc)
 
         for i in range(len(self.driver.vert_data.reshape(-1))):
@@ -170,9 +146,11 @@ class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
         # Filled contour plot of cloud cover.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cmap = plt.cm.gist_ncar_r
-        cmin, cmax = CLAMS_CONFIG[self.name.replace("VS_", "")]["limits"]
-        # cmin, cmax = CLAMS_CONFIG[self.species]["limits"]
+        # cmap = plt.cm.gist_ncar_r
+        cmap = plt.cm.viridis
+        cmin, cmax = Targets.get_range(self.dataname)
+        if cmin is None or cmax is None:
+            cmin, cmax = curtain_cc.min(), curtain_cc.max()
         if cmin > 0 and cmin < 0.05 * cmax and self.style != "log":
             cmin = 0.
 
@@ -180,9 +158,6 @@ class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
         if self.style == "default":
             clev = np.linspace(cmin, cmax, 24)
         elif self.style == "log":
-            # cmin = max(cmin, cmax * 0.001)
-            # clev = np.exp(np.linspace(np.log(cmin), np.log(cmax), 12))
-            # norm = matplotlib.colors.LogNorm(cmin, cmax)
             if cmin > 0:
                 clev = np.exp(np.linspace(np.log(cmin), np.log(cmax), 24))
             elif cmax < 0:
@@ -211,12 +186,16 @@ class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
                 clev = np.asarray(list(clevlo[:-1]) + list(clevhi[1:]))
 
             norm = matplotlib.colors.BoundaryNorm(clev, 255)
+        elif self.style == "nonlinear":
+            clev = Targets.get_thresholds(self.dataname)
+            norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
         else:
             clev = np.linspace(curtain_cc.min(), curtain_cc.max(), 24)
             visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
             cmin = curtain_cc[visible].min()
             cmax = curtain_cc[visible].max()
             clev = np.linspace(cmin, cmax, 24)
+            norm = None
 
         cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                          curtain_p, curtain_cc, clev, norm=norm,
@@ -276,30 +255,31 @@ class VS_ChemStyle_PL(AbstractVerticalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_clams_chem_class(entity):
-    class fnord(VS_ChemStyle_PL):
-        ln = {'ICH': 'India/China',
-              'SEA': 'SE Asia',
-              'NIN': 'North India',
-              'SIN': 'South India',
-              'ECH': 'East China'}
-        species = entity
+def make_generic_class(entity):
+    class fnord(VS_GenericStyle_PL):
         name = 'VS_' + entity
-        dataname = entity + "_volume_mixing_ratio"
-        long_name = entity + " Mixing Ratio"
-        if CLAMS_CONFIG[entity]["units"] == '%':
-            long_name = ln[entity] + " Origin Tracer"
-        title = long_name + " (" + CLAMS_CONFIG[entity]["units"] + ")"
+        dataname = entity
+        units, unit_scale = Targets.get_unit(dataname)
+        title = dataname
+        if units:
+            title += " ({})".format(units)
         required_datafields = [
-            ("pl", entity + "_volume_mixing_ratio"),
+            ("pl", entity),
             ("pl", "air_potential_temperature"),
             ("pl", "ertel_potential_vorticity"), ]
 
+    if Targets.get_thresholds(entity) is not None:
+        fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
+    if all(_x is not None for _x in Targets.get_range(entity)):
+        fnord.styles = fnord.styles + [
+            ("default", "fixed colour scale"),
+            ("log", "fixed logarithmic colour scale")]
+
     return fnord
 
+for ent in Targets.get_targets():
+    globals()["VS_GenericStyle_PL_" + ent] = make_generic_class(ent)
 
-for ent in CLAMS_CONFIG:
-    globals()["VS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
 
 """
 GW
