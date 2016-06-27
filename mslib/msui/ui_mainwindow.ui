@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>DLR/IPA Mission Support User Interface</string>
+   <string>Mission Support System</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -268,7 +268,7 @@
   </action>
   <action name="actionAboutMSUI">
    <property name="text">
-    <string>&amp;About MSUI</string>
+    <string>&amp;About MSS</string>
    </property>
   </action>
  </widget>

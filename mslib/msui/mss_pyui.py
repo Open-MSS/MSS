@@ -54,7 +54,7 @@ from distutils.sysconfig import get_python_lib
 # add owslib thirdparty module path
 sys.path.extend([os.path.join(get_python_lib(), 'mslib', 'thirdparty')])
 
-
+from mslib import __version__
 from mslib.msui import ui_mainwindow as ui
 from mslib.msui import ui_about_dialog as ui_ab
 from mslib.msui import flighttrack as ft
@@ -82,13 +82,13 @@ if enableGENESI:
     except:
         enableGENESI = False
 
-__version__ = "Release 1.1beta"
 
 
 print "***********************************************************************"
-print "\n            DLR/IPA Mission Support System User Interface\n"
+print "\n            Mission Support System (mss)\n"
 print "***********************************************************************"
-print "VERSION:", __version__
+print "Documentation: http://mss.rtfd.io"
+print "Version:", __version__
 print "\nSystem is loading.."
 
 
@@ -287,8 +287,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         Qt receives a window close request for our application window.
         """
         ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                        self.tr("Do you want to close the DLR/IPA Mission "
-                                                "Support System user interface?"),
+                                        self.tr("Do you want to close the Mission "
+                                                "Support System application?"),
                                         QtGui.QMessageBox.Yes,
                                         QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
         if ret == QtGui.QMessageBox.Yes:

@@ -2,11 +2,11 @@
 # it to generate your project's PyPI page.
 from setuptools import setup, find_packages
 long_description = open('README').read()
-
+execfile('mslib/version.py')
 
 setup(
     name="mss",
-    version="1.1b1",
+    version=__version__,
     description="MSS - Mission Support System",
     long_description=long_description,
     classifiers="Development Status :: 5 - Production/Stable",
