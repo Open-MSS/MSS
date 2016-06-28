@@ -2,7 +2,7 @@ Changelog
 ================
 
 
-Version 1.1.0 (not released yet)
+Version 1.1.0 
 ----------------------------------
 
 New Features:
@@ -11,7 +11,7 @@ New Features:
  - Reverse flight path, #11 
  - Displaying model data from CLaMS, #4
  - Visualisation of gravity wave forecasts, #14
-
+ - Improved labels in plots, #8
    
 Bug Fixes:
  - Improved debugging in standalone server, #9
@@ -24,4 +24,5 @@ Other Changes:
  - Sphinx documentation introduced, #25, #26
  - Documentation on http://mss.rtfd.io 
  - Installation recipes based on conda  
+ - First public release on June 28, 2016
 
