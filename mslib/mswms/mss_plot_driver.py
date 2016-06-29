@@ -220,6 +220,21 @@ class MSSPlotDriver(object):
                 vert_orientation = isopotvort_orientation
                 vert_units = "10^-3 PVU"
 
+        if vert_data is None:
+            isoalt_name, isoalt_var, isoalt_orientation = \
+                netCDF4tools.identify_CF_isoaltitude(dataset)
+            if isoalt_var:
+                vert_data = isoalt_var[:]
+                vert_orientation = isoalt_orientation
+                vert_units = isoalt_var.units
+
+        if vert_data is None:
+            isoalt_name, isoalt_var, isoalt_orientation = \
+                netCDF4tools.identify_CF_isopottemp(dataset)
+            if isoalt_var:
+                vert_data = isoalt_var[:]
+                vert_orientation = isoalt_orientation
+                vert_units = isoalt_var.units
         self.dataset = dataset
         self.times = times
         self.lat_data = lat_data
