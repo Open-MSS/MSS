@@ -13,6 +13,7 @@ build:
 requirements:
   build:
     - basemap ==1.0.7
+    - chameleon >=2.24
     - curl ==7.26
     - cycler ==0.10.0
     - execnet ==1.2.0
@@ -40,6 +41,7 @@ requirements:
     - tk >=8.5.18
   run:
     - basemap ==1.0.7
+    - chameleon >=2.24
     - curl ==7.26
     - cycler ==0.10.0
     - execnet ==1.2.0
