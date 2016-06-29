@@ -1,9 +1,19 @@
-
 class Targets(object):
     """This class defines the names, units, and ranges of supported generic physical
        quantities for vertical and horizontal plots.
+
+       RANGES, UNITS, and THRESHOLDS can be overwritten from outside to determine ranges for plotting in settings.
     """
 
+    """Dictionary containing valid value ranges for the different targes. The first level uses CF standard_name as key
+       to determine the target. The second level uses either the level type
+       ("pl", "ml", ...) as key or "total" for the level-overarching valid range. The level-type has a third level
+       using the level altitude as key. The leafs are made of 2-tuples indicating the lowest and the highest valid
+       value.
+    """
+    RANGES = {}
+
+    """List of supported targets using the CF standard_name as unique identifier."""
     _TARGETS = [
         "air_temperature",
         "eastward_wind",
@@ -11,9 +21,15 @@ class Targets(object):
         "ertel_potential_vorticity",
         "mean_age_of_air",
         "mole_fraction_of_carbon_monoxide_in_air",
+        "mole_fraction_of_carbon_dioxide_in_air",
+        "mole_fraction_of_carbon_tetrachloride_in_air",
+        "mole_fraction_of_chlorine_nitrate_in_air",
         "mole_fraction_of_cfc11_in_air",
+        "mole_fraction_of_cfc113_in_air",
         "mole_fraction_of_cfc12_in_air",
+        "mole_fraction_of_ethane_in_air",
         "mole_fraction_of_formaldehyde_in_air",
+        "mole_fraction_of_hcfc22_in_air",
         "mole_fraction_of_methane_in_air",
         "mole_fraction_of_nitric_acid_in_air",
         "mole_fraction_of_nitrous_oxide_in_air",
@@ -30,9 +46,9 @@ class Targets(object):
         "surface_origin_tracer_from_north_india",
         "surface_origin_tracer_from_south_india",
         "surface_origin_tracer_from_india_and_china",
-        ]
+    ]
 
-    _UNITS = {
+    UNITS = {
         "air_temperature": ("K", 1),
         "eastward_wind": ("ms$^{-1}$", 1),
         "equivalent_latitude": ("degree N", 1),
@@ -42,37 +58,54 @@ class Targets(object):
         "square_of_brunt_vaisala_frequency_in_air": ("s${^-2}$", 1),
     }
 
-    _THRESHOLDS = {
-        "mole_fraction_of_ozone_in_air":
-            (0, 0.05, 0.1, 0.13, 0.15, 0.190, 0.23, 0.3, 0.4, 0.75, 2., 6.),
-        "mole_fraction_of_water_vapor_in_air":
-            (0, 3, 4, 5, 6, 8, 10, 14, 20, 40, 60, 100, 150, 250, 500),
-        "mole_fraction_of_peroxyacetyl_nitrate_in_air":
-            (0, 50, 70, 100, 150, 200, 250, 300, 350, 400, 450, 500),
+    """The THRESHOLDS are used to determine a single colourmap suitable for all plotting purposes (that is vertical
+       and horizontal on all levels. The given thresholds have been manually designed.
+    """
+    THRESHOLDS = {
+        "ertel_potential_vorticity":
+            (-1, 0, 1, 2, 4, 6, 9, 12, 15, 25, 40),
+        "mole_fraction_of_carbon_monoxide_in_air":
+            (10e-9, 20e-9, 30e-9, 40e-9, 50e-9, 60e-9, 70e-9, 80e-9, 90e-9, 100e-9, 300e-9),
         "mole_fraction_of_nitric_acid_in_air":
-            (0.0, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2, 4)
+            (0e-9, 0.3e-9, 0.5e-9, 0.7e-9, 0.9e-9, 1.1e-9, 1.3e-9, 1.5e-9, 2e-9, 4e-9),
+        "mole_fraction_of_ozone_in_air":
+            (0e-6, 0.02e-6, 0.03e-6, 0.04e-6, 0.06e-6, 0.1e-6, 0.16e-6, 0.25e-6, 0.45e-6, 1e-6, 4e-6),
+        "mole_fraction_of_peroxyacetyl_nitrate_in_air":
+            (0, 50e-12, 70e-12, 100e-12, 150e-12, 200e-12, 250e-12, 300e-12, 350e-12, 400e-12, 450e-12, 500e-12),
+        "mole_fraction_of_water_vapor_in_air":
+            (0, 3e-6, 4e-6, 6e-6, 10e-6, 16e-6, 60e-6, 150e-6, 500e-6, 1000e-6),
     }
 
-    for ent in _TARGETS:
-        if ent.startswith("surface_origin_tracer_from_"):
-            _UNITS[ent] = ("%", 1)
+    for standard_name in _TARGETS:
+        if standard_name.startswith("surface_origin_tracer_from_"):
+            UNITS[standard_name] = ("%", 1)
 
-    for ent in [
+    for standard_name in [
             "mole_fraction_of_methane_in_air",
             "mole_fraction_of_ozone_in_air",
             "mole_fraction_of_water_vapor_in_air",
-            ]:
-        _UNITS[ent] = ("$\mu$mol mol$^{-1}$", 1e6)
+    ]:
+        UNITS[standard_name] = ("$\mu$mol mol$^{-1}$", 1e6)
 
-    for ent in [
-            ]:
-        _UNITS[ent] = ("nmol mol$^{-1}$", 1e9)
+    for standard_name in [
+            "mole_fraction_of_carbon_monoxide_in_air",
+            "mole_fraction_of_chlorine_nitrate_in_air",
+            "mole_fraction_of_nitric_acid_in_air",
+    ]:
+        UNITS[standard_name] = ("nmol mol$^{-1}$", 1e9)
 
-    for ent in [
+    for standard_name in [
+            "mole_fraction_of_carbon_tetrachloride_in_air",
             "mole_fraction_of_cfc11_in_air",
-            "mole_fraction_of_cfc12_vapor_in_air",
-            ]:
-        _UNITS[ent] = ("pmol mol$^{-1}$", 1e12)
+            "mole_fraction_of_cfc12_in_air",
+            "mole_fraction_of_ethane_in_air",
+            "mole_fraction_of_formaldehyde_in_air",
+            "mole_fraction_of_nitrogen_dioxide_in_air",
+            "mole_fraction_of_nitrogen_monoxide_in_air",
+            "mole_fraction_of_peroxyacetyl_nitrate_in_air",
+            "mole_fraction_of_sulfur_dioxide_in_air",
+    ]:
+        UNITS[standard_name] = ("pmol mol$^{-1}$", 1e12)
 
     @staticmethod
     def get_targets():
@@ -84,44 +117,55 @@ class Targets(object):
         return Targets._TARGETS
 
     @staticmethod
-    def get_unit(target):
+    def get_unit(standard_name):
         """
         Returns unit type and scaling factor for target.
         Args:
-            target: string of CF standard_name
+            standard_name: string of CF standard_name
 
         Returns:
             Tuple of string descring the unit and scaling factor to apply on data.
 
         """
-        return Targets._UNITS.get(target, (None, 1))
+        return Targets.UNITS.get(standard_name, (None, 1))
 
     @staticmethod
-    def get_range(target, level=None, type=None):
+    def get_range(standard_name, level="total", type=None):
         """
         Returns valid range of values for target at given level
         Args:
-            target: string of CF standard_name
+            standard_name: string of CF standard_name
             level (optional): horizontal level of data
             type (optional): type of data (pl, ml, tl, ...)
 
         Returns:
             Tuple of lowest and highest valid value
         """
-        if target.startswith("surface_origin_tracer_from_"):
+        if standard_name in Targets.RANGES:
+            if type in Targets.RANGES[standard_name]:
+                if level in Targets.RANGES[standard_name][type]:
+                    return [_x * Targets.get_unit(standard_name)[1] for _x in Targets.RANGES[standard_name][type][level]]
+                elif level is None:
+                    return 0, 0
+            if level == "total" and "total" in Targets.RANGES[standard_name]:
+                return Targets.RANGES[standard_name]["total"]
+        if standard_name.startswith("surface_origin_tracer_from_"):
             return 0, 100
         return None, None
 
     @staticmethod
-    def get_thresholds(target, level=None, type=None):
+    def get_thresholds(standard_name, level=None, type=None):
         """
         Returns a list of meaningful values for a BoundaryNorm for plotting.
         Args:
-            target: string of CF standard_name
+            standard_name: string of CF standard_name
             level (optional): horizontal level of data
             type (optional): type of data (pl, ml, tl, ...)
 
         Returns:
             Tuple of threshold values to be supplied to a BoundaryNorm.
         """
-        return Targets._THRESHOLDS.get(target, None)
+        try:
+            return [_x * Targets.get_unit(standard_name)[1] for _x in Targets.THRESHOLDS[standard_name]]
+        except KeyError:
+            return None
