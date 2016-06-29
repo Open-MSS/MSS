@@ -1,3 +1,6 @@
+import sys
+sys.path.extend(['/home/mss/config'])
+
 import mss_wms_settings
 import hashlib
 
