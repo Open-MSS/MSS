@@ -78,6 +78,7 @@ import mpl_toolkits.basemap
 
 # local application imports
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
+from mslib.mswms.utils import Targets
 from mslib import thermolib
 
 """
@@ -520,172 +521,11 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Chemical Mixing Ratios (CLaMS)
-"""
-
-CLAMS_CONFIG = {
-    u'BVF': {'levels': {50: (0.00029, 0.00095),
-                        70: (0.00029, 0.00074),
-                        100: (0.00029, 0.00064),
-                        125: (0.00031, 0.00062),
-                        150: (0.0003, 0.00067),
-                        175: (0.00031, 0.00065),
-                        200: (0.00026, 0.00065),
-                        250: (5.9e-05, 0.00067),
-                        350: (-6.7e-06, 0.0005),
-                        500: (-9.4e-07, 0.00058)},
-             'units': u's**-2'},
-    u'CH4': {'levels': {50: (0.5, 1.7),
-                        70: (0.81, 1.7),
-                        100: (1.1, 1.8),
-                        125: (1.2, 1.8),
-                        150: (1.3, 1.8),
-                        175: (1.4, 1.8),
-                        200: (1.5, 1.9),
-                        250: (1.6, 1.9),
-                        350: (1.6, 2.0),
-                        500: (1.7, 2.0)},
-             'units': u'ppmv'},
-    u'CO': {'levels': {50: (0., 20),
-                       500: (0, 200.0)},
-            'units': u'ppbv'},
-    u'F12': {'levels': {50: (0., 550.0),
-                        500: (0, 550.0)},
-             'units': u'pptv'},
-    u'SEA': {'levels': {50: (0., 50.0),
-                        500: (0, 100.0)},
-             'units': u'%'},
-    u'ECH': {'levels': {50: (0., 50.0),
-                        500: (0, 100.0)},
-             'units': u'%'},
-    u'NIN': {'levels': {50: (0., 50.0),
-                        500: (0, 100.0)},
-             'units': u'%'},
-    u'SIN': {'levels': {50: (0., 50.0),
-                        500: (0, 100.0)},
-             'units': u'%'},
-    u'ICH': {'levels': {50: (0., 50.0),
-                        500: (0, 100.0)},
-             'units': u'%'},
-    u'EQLAT': {'levels': {50: (9.2, 90.0),
-                          70: (8.0, 90.0),
-                          100: (-0.18, 90.0),
-                          125: (10.0, 90.0),
-                          150: (20.0, 90.0),
-                          175: (22.0, 90.0),
-                          200: (-6.7, 90.0),
-                          250: (-46.0, 90.0),
-                          350: (-42.0, 90.0),
-                          500: (-47.0, 90.0)},
-               'units': u'deg N'},
-    u'F11': {'levels': {50: (0.0, 220.0),
-                        70: (0.0, 230.0),
-                        100: (32.0, 240.0),
-                        125: (65.0, 240.0),
-                        150: (110.0, 240.0),
-                        175: (150.0, 240.0),
-                        200: (180.0, 240.0),
-                        250: (210.0, 240.0),
-                        350: (220.0, 240.0),
-                        500: (220.0, 240.0)},
-             'units': u'pptv'},
-    u'H2O': {'levels': {50: (3.4, 6.1),
-                        70: (3.2, 5.0),
-                        100: (3.6, 4.6),
-                        125: (3.7, 8.2),
-                        150: (3.9, 23.0),
-                        175: (4.0, 44.0),
-                        200: (0.0, 9400.0),
-                        250: (0.0, 9600.0),
-                        350: (0.0, 11000.0),
-                        500: (0.0, 9100.0)},
-             'units': u'ppmv'},
-    u'N2O': {'levels': {50: (45.0, 310.0),
-                        70: (95.0, 310.0),
-                        100: (160.0, 320.0),
-                        125: (190.0, 320.0),
-                        150: (230.0, 320.0),
-                        175: (260.0, 330.0),
-                        200: (280.0, 330.0),
-                        250: (300.0, 330.0),
-                        350: (300.0, 330.0),
-                        500: (310.0, 330.0)},
-             'units': u'ppbv'},
-    u'O3': {'levels': {50: (0.97, 4.8),
-                       70: (0.56, 3.4),
-                       100: (0.2, 2.4),
-                       125: (0.13, 1.9),
-                       150: (0.14, 1.6),
-                       175: (0.073, 1.2),
-                       200: (0.0, 0.83),
-                       250: (0.031, 0.33),
-                       350: (0.033, 0.24),
-                       500: (0.036, 0.21)},
-            'units': u'ppmv'},
-    u'PV': {'levels': {50: (11.0, 120.0),
-                       70: (7.9, 54.0),
-                       100: (-0.31, 28.0),
-                       125: (3.4, 21.0),
-                       150: (1.6, 18.0),
-                       175: (0.74, 13.0),
-                       200: (0.0, 11.0),
-                       250: (-0.6, 9.1),
-                       350: (-0.44, 7.6),
-                       500: (-0.26, 4.4)},
-            'units': u'PVU'},
-    u'TEMP': {'levels': {50: (180.0, 250.0),
-                         70: (190.0, 250.0),
-                         100: (190.0, 240.0),
-                         125: (190.0, 240.0),
-                         150: (190.0, 240.0),
-                         175: (190.0, 240.0),
-                         200: (190.0, 240.0),
-                         250: (200.0, 240.0),
-                         350: (210.0, 250.0),
-                         500: (220.0, 260.0)},
-              'units': u'K'},
-    u'THETA': {'levels': {50: (440.0, 590.0),
-                          70: (400.0, 520.0),
-                          100: (370.0, 460.0),
-                          125: (350.0, 420.0),
-                          150: (330.0, 400.0),
-                          175: (320.0, 390.0),
-                          200: (310.0, 370.0),
-                          250: (290.0, 350.0),
-                          350: (280.0, 330.0),
-                          500: (270.0, 320.0)},
-               'units': u'K'},
-    u'U': {'levels': {50: (-38.0, 69.0),
-                      70: (-23.0, 67.0),
-                      100: (-22.0, 70.0),
-                      125: (-20.0, 66.0),
-                      150: (-20.0, 72.0),
-                      175: (-20.0, 67.0),
-                      200: (-22.0, 76.0),
-                      250: (-37.0, 92.0),
-                      350: (-36.0, 85.0),
-                      500: (-29.0, 63.0)},
-           'units': u'm s^-1'},
-    u'V': {'levels': {50: (-67.0, 50.0),
-                      70: (-56.0, 43.0),
-                      100: (-48.0, 39.0),
-                      125: (-46.0, 35.0),
-                      150: (-48.0, 36.0),
-                      175: (-47.0, 45.0),
-                      200: (-52.0, 57.0),
-                      250: (-70.0, 71.0),
-                      350: (-70.0, 78.0),
-                      500: (-46.0, 47.0)},
-           'units': u'm s^-1'}}
-
-
-class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
-    """Pressure level version for Chemical Mixing ratios.
+class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
+    """
+    Pressure level version for Chemical Mixing ratios.
     """
     styles = [
-        ("default", "fixed colour scale"),
-        ("log", "logarithmic colour scale"),
         ("auto", "auto colour scale"),
         ("autolog", "auto logcolour scale"), ]
 
@@ -696,20 +536,16 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
-        show_data = np.ma.masked_invalid(self.data[self.dataname])
-        cbar_label = self.name + "(" + CLAMS_CONFIG[self.name]["units"] + ")"
-
-        clevs = CLAMS_CONFIG[self.name]["levels"].keys()
-        diff = np.array(clevs) - self.level
-        nextlev = clevs[abs(diff).argmin()]
+        show_data = np.ma.masked_invalid(self.data[self.dataname]) * self.unit_scale
+        cbar_label = self.title
 
         # colour scale of plot
-        # cmap = plt.cm.cubehelix_r
-        cmap = plt.cm.gist_rainbow_r
+        cmap = plt.cm.viridis
 
         # get cmin, cmax, cbar_log and cbar_format for level_key
-        cmin, cmax = CLAMS_CONFIG[self.name]["levels"][nextlev]
-
+        cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
+        if cmin is None or cmax is None:
+            cmin, cmax = show_data.min(), show_data.max()
         if self.style == "auto":
             cmin, cmax = show_data.min(), show_data.max()
             if cmin > 0 and cmin < 0.05 * cmax:
@@ -723,12 +559,14 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
             lncmin, lncmax = np.log([cmin, cmax])
             clevs = np.exp(np.linspace(lncmin, lncmax, 17))
             norm = matplotlib.colors.LogNorm(cmin, cmax)
-
         elif self.style == "log":
             cmin = max(cmin, cmax * 0.001)
             lncmin, lncmax = np.log([cmin, cmax])
             clevs = np.exp(np.linspace(lncmin, lncmax, 17))
             norm = matplotlib.colors.LogNorm(cmin, cmax)
+        elif self.style == "nonlinear":
+            clevs = Targets.get_thresholds(self.dataname)
+            norm = matplotlib.colors.BoundaryNorm(clevs, cmap.N)
         else:
             clevs = np.linspace(cmin, cmax, 17)
             norm = None
@@ -792,30 +630,33 @@ class HS_ChemStyle_PL(MPLBasemapHorizontalSectionStyle):
                 x.label2.set_fontsize(fontsize)
 
 
-def make_clams_chem_class(entity):
-    class fnord(HS_ChemStyle_PL):
-        ln = {'ICH': 'India/China',
-              'SEA': 'SE Asia',
-              'NIN': 'North India',
-              'SIN': 'South India',
-              'ECH': 'East China'}
-        name = entity
-        dataname = name + "_volume_mixing_ratio"
-        long_name = entity + " Mixing Ratio"
-        if CLAMS_CONFIG[entity]["units"] == '%':
-            long_name = ln[entity] + " Origin Tracer"
-        title = long_name + " (" + CLAMS_CONFIG[entity]["units"] + ")"
+def make_generic_class(entity, vert):
+    class fnord(HS_GenericStyle):
+        name = entity + "_" + vert
+        dataname = entity
+        title = entity
+        long_name = entity
+        units, unit_scale = Targets.get_unit(entity)
+        if units:
+            title += " ({})".format(units)
 
         required_datafields = [
-            ("pl", name + "_volume_mixing_ratio"),
-            ("pl", "ertel_potential_vorticity"), ]
+            (vert, entity),
+            (vert, "ertel_potential_vorticity"), ]
+    if Targets.get_thresholds(entity) is not None:
+        fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
+    if all(_x is not None for _x in Targets.get_range(entity, 0, vert)):
+        fnord.styles = fnord.styles + [
+            ("default", "fixed colour scale"),
+            ("log", "fixed logarithmic colour scale")]
 
     return fnord
 
 
-for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
-            u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
-    globals()["HS_ChemStyle_PL_" + ent] = make_clams_chem_class(ent)
+for ent in Targets.get_targets():
+    globals()["HS_GenericStyle_PL_" + ent] = make_generic_class(ent, "pl")
+    globals()["HS_GenericStyle_TL_" + ent] = make_generic_class(ent, "tl")
+
 
 """
 Gravity Wave Forecast

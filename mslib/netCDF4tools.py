@@ -32,7 +32,7 @@ import re
 
 # related third party imports
 import netCDF4
-
+from mslib.mswms.utils import Targets
 # local application imports
 
 
@@ -312,8 +312,12 @@ CFVariableIdentifier = {
         ("long_name", "Potential vorticity surface")
     ],
     "atmosphere_altitude_coordinate": [
+        ("standard_name", "atmosphere_altitude_coordinate"),
         ("long_name", "atmosphere_altitude_coordinate"),
         ("long_name", "altitude")],
+
+    "atmosphere_potential_temperature_coordinate": [
+        ("standard_name", "atmosphere_potential_temperature_coordinate")],
 
     # Finally, the ensemble dimension can currently (netcdf-java 4.3) only be
     # recognized from its name, "ens0".
@@ -342,13 +346,9 @@ CFVariableIdentifier = {
         ("long_name", "tropopause height")
     ]
 }
-for ent in [u'CH4', u'CO', u'F11', u'F12', u'H2O', u'N2O',
-            u'O3', u'SEA', u'ECH', u'NIN', u'SIN', u'ICH']:
-    CFVariableIdentifier[ent + "_volume_mixing_ratio"] = [
-        ("var_name", ent),
-        ("standard_name", ent),
-        ("long_name", ent + "_volume_mixing_ratio")
-    ]
+for name in Targets.get_targets():
+    CFVariableIdentifier[name] = [("standard_name", name)]
+
 
 """
 CONSTANTS
@@ -362,7 +362,7 @@ CHECK_LATLONHYB = 2048
 
 # Regular expression to match a time units string of format
 # "2010-02-01T00:00:00Z" (as used by netcdf-java).
-re_datetime = re.compile("(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z")
+re_datetime = re.compile("(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})Z")
 # Expression used to identify the time variable by its units string.
 re_timeunits = re.compile("\w+ since \d{4}-\d{1,2}-\d{1,2}.\d{1,2}")
 
@@ -524,9 +524,10 @@ def identify_CF_isopressure(ncfile, isopressurename_override=None):
 
     Returns: isopressure_name, isopressure_var, isopressure_orientation
     """
-    isopressure_name, isopressure_var = identify_CF_variable(ncfile,
-                                                             "atmosphere_pressure_coordinate",
-                                                             varname_override=isopressurename_override)
+    isopressure_name, isopressure_var = identify_CF_variable(
+        ncfile,
+        "atmosphere_pressure_coordinate",
+        varname_override=isopressurename_override)
     orientation = None
     if isopressure_var:
         orientation = hybrid_orientation(isopressure_var)
@@ -538,13 +539,44 @@ def identify_CF_isopotvort(ncfile, isopotvortname_override=None):
 
     Returns: isopotvort_name, isopotvort_var, isopotvort_orientation
     """
-    isopotvort_name, isopotvort_var = identify_CF_variable(ncfile,
-                                                           "atmosphere_ertel_potential_vorticity_coordinate",
-                                                           varname_override=isopotvortname_override)
+    isopotvort_name, isopotvort_var = identify_CF_variable(
+        ncfile,
+        "atmosphere_ertel_potential_vorticity_coordinate",
+        varname_override=isopotvortname_override)
     orientation = None
     if isopotvort_var:
         orientation = hybrid_orientation(isopotvort_var)
     return isopotvort_name, isopotvort_var, orientation
+
+
+def identify_CF_isoaltitude(ncfile, isoaltitudename_override=None):
+    """Identify the vertical variable from a CF-compliant NetCDF file.
+
+    Returns: isoaltitude_name, isoaltiude_var, isoalttiude_orientation
+    """
+    isoaltitude_name, isoaltitude_var = identify_CF_variable(
+        ncfile,
+        "atmosphere_altitude_coordinate",
+        varname_override=isoaltitudename_override)
+    orientation = None
+    if isoaltitude_var:
+        orientation = hybrid_orientation(isoaltitude_var)
+    return isoaltitude_name, isoaltitude_var, orientation
+
+
+def identify_CF_isopottemp(ncfile, isopotentialtemperature_override=None):
+    """Identify the vertical variable from a CF-compliant NetCDF file.
+
+    Returns: isoaltitude_name, isoaltiude_var, isoalttiude_orientation
+    """
+    isopottemp_name, isopottemp_var = identify_CF_variable(
+        ncfile,
+        "atmosphere_potential_temperature_coordinate",
+        varname_override=isopotentialtemperature_override)
+    orientation = None
+    if isopottemp_var:
+        orientation = hybrid_orientation(isopottemp_var)
+    return isopottemp_name, isopottemp_var, orientation
 
 
 def identify_CF_time(ncfile, timename_override=None):
