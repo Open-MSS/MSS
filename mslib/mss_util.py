@@ -36,10 +36,14 @@ import json
 import numpy as np
 from scipy.interpolate import RectBivariateSpline, interp1d
 from scipy.ndimage import map_coordinates
-from mslib import greatcircle
-from geopy import distance
-from mslib.msui import wms_login_cache
 
+try:
+    import mpl_toolkits.basemap.pyproj as pyproj
+except ImportError:
+    import pyproj
+
+from mslib import greatcircle
+from mslib.msui import wms_login_cache
 
 def config_loader(config_file="mss_settings.json", dataset=None, default=None):
     """
@@ -75,6 +79,20 @@ def config_loader(config_file="mss_settings.json", dataset=None, default=None):
                 return default
             raise KeyError("default value for key not set")
     return data
+
+def get_distance(coord0, coord1):
+    """
+    Computes the distance between two points on the Earth surface
+    Args:
+        coord0: coordinate(lat/lon) of first point
+        coord1: coordinate(lat/lon) of second point
+
+    Returns:
+        length of distance in km
+    """
+    pr = pyproj.Geod(ellps='WGS84')
+    return pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.
+
 
 """
 Tangent point / Hexagon / Solar Angle utilities
@@ -445,7 +463,7 @@ def path_points(points, numpoints=100, connection='linear'):
                         (points[i][LON] - points[i + 1][LON]) ** 2)
         elif connection == 'greatcircle':
             # Use Vincenty distance provided by the geopy module.
-            d = distance.distance(points[i], points[i + 1]).km
+            d = get_distance(points[i], points[i + 1])
         distances.append(d)
     distances = np.array(distances)
 

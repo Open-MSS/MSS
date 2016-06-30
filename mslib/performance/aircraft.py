@@ -40,7 +40,6 @@ from abc import ABCMeta, abstractmethod
 
 # related third party imports
 import numpy as np
-from geopy import distance
 
 # local application imports
 from mslib import thermolib
@@ -408,8 +407,8 @@ class Aircraft(object):
 
                 # Compute the greatcircle distance between waypoints in nautical
                 # miles.
-                segment_distance_nm = distance.distance(
-                    (ac_state.lat, ac_state.lon), (item[2], item[1])).nm
+                segment_distance_nm = get_distance(
+                    (ac_state.lat, ac_state.lon), (item[2], item[1])) / 1.852
                 print "given segment distance is %f nm." % segment_distance_nm
 
                 if dist > segment_distance_nm:
@@ -476,8 +475,8 @@ class Aircraft(object):
 
                 # Compute the greatcircle distance between waypoints in nautical
                 # miles.
-                segment_distance_nm = distance.distance(
-                    (ac_state.lat, ac_state.lon), (item[2], item[1])).nm
+                segment_distance_nm = get_distance(
+                    (ac_state.lat, ac_state.lon), (item[2], item[1])) / 1.852
                 print "given segment distance is %f nm." % segment_distance_nm
 
                 if nwp_data is None:
@@ -518,9 +517,9 @@ class Aircraft(object):
                             item[3], ac_state.alt_ft, delta_temp_ISA, ac_state.grossweight)
 
                         # Compute the length of the current sub-segment ..
-                        sub_segment_distance_nm = distance.distance(
+                        sub_segment_distance_nm = get_distance(
                             (nwp_lat[nwp_index], nwp_lon[nwp_index]),
-                            (nwp_lat[nwp_index + 1], nwp_lon[nwp_index + 1])).nm
+                            (nwp_lat[nwp_index + 1], nwp_lon[nwp_index + 1])) / 1.852
 
                         # .. and from TAS and tail wind the groundspeed.
                         groundspeed_kn = tas + tail_wind_kn  # tas in kn

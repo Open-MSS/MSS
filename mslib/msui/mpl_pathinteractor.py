@@ -52,7 +52,6 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from matplotlib.collections import LineCollection
 from matplotlib.colors import BoundaryNorm, ListedColormap
-from geopy import distance
 from PyQt4 import QtCore
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -1026,7 +1025,7 @@ class HPathInteractor(PathInteractor):
                 if old_wp is None:
                     times.append(start_jsec)
                 else:
-                    wp_dist = distance.distance((old_wp[0], old_wp[1]), (lat, lon)).m
+                    wp_dist = get_distance((old_wp[0], old_wp[1]), (lat, lon)) * 1000.
                     total_distance += wp_dist
                     times.append(start_jsec + total_distance / speed)
                 old_wp = (lat, lon)
