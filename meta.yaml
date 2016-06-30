@@ -19,7 +19,6 @@ requirements:
     - execnet ==1.2.0
     - freetype >=2.5.0
     - functools32 >=3.2.3.2
-    - geopy >=1.10.0
     - hdf5 >=1.8.15
     - jpeg >=8d
     - libpng >=1.5.0
@@ -47,7 +46,6 @@ requirements:
     - execnet ==1.2.0
     - freetype >=2.5.0
     - functools32 >=3.2.3.2
-    - geopy >=1.10.0
     - hdf5 >=1.8.15
     - jpeg >=8d
     - libpng >=1.5.0

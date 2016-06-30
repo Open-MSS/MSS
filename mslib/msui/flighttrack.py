@@ -50,7 +50,6 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import numpy as np
-from geopy import distance
 
 # local application imports
 from mslib import mss_util
@@ -479,7 +478,7 @@ class WaypointsTableModel(QAbstractTableModel):
            waypoint change involving <rows> waypoints starting at index
            <position>.
 
-        Distances are computed along great circles using the geopy library.
+        Distances are computed along great circles.
 
         If rows=1, the distance to the previous waypoint is updated for
         waypoints <position> and <position+1>. The total flight track distance
@@ -503,14 +502,14 @@ class WaypointsTableModel(QAbstractTableModel):
                 wp1.distance_total = 0.
             else:
                 wp0 = waypoints[pos - 1]
-                wp1.distance_to_prev = distance.distance((wp0.lat, wp0.lon),
-                                                         (wp1.lat, wp1.lon)).km
+                wp1.distance_to_prev = mss_util.get_distance((wp0.lat, wp0.lon),
+                                                             (wp1.lat, wp1.lon))
 
         # Update the distance of the following waypoint as well.
         if pos < len(waypoints) - 1:
             wp2 = waypoints[pos + 1]
-            wp2.distance_to_prev = distance.distance((wp1.lat, wp1.lon),
-                                                     (wp2.lat, wp2.lon)).km
+            wp2.distance_to_prev = mss_util.get_distance((wp1.lat, wp1.lon),
+                                                (wp2.lat, wp2.lon))
 
         # Update total distances of waypoint at index position and all
         # following waypoints.
