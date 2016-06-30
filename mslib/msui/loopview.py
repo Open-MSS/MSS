@@ -36,7 +36,7 @@ QSplitter class), each containing an instance of the ImageLoopWidget class
 contained in loopviewer_widget.py.
 
 Use a double click on an ImageLoopWidget to load imagery into the widget. The
-dialog that opens will offer the configuration defined in mss_settings.py.
+dialog that opens will offer the configuration defined in mss_settings.json.
 Once the images have been loaded, use the mouse wheel on one of the images
 to navigate forward and backward in time. Use the mouse wheel while the
 <Shift> key is pressed to navigate up- and downward in vertical level.
@@ -52,6 +52,7 @@ AUTHORS:
 # standard library imports
 import functools
 import logging
+import sys
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -61,6 +62,7 @@ import numpy as np
 from mslib.msui import ui_loopwindow as ui
 from mslib.msui import loopviewer_widget as imw
 from mslib.msui import mss_qt
+from mslib.mss_util import config_loader
 
 """
 CLASS MSSLoopWindow
@@ -261,10 +263,31 @@ if __name__ == "__main__":
                         format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
 
-    import sys
-    import mss_settings
-
     app = QtGui.QApplication(sys.argv)
-    win = MSSLoopWindow(mss_settings.loop_configuration)
+    loop_configuration = {
+        "ECMWF forecasts": {
+            # URL to the Mission Support website at which the batch image
+            # products are located.
+            "url": "http://www.your-server.de/forecasts",
+            # Initialisation times every init_timestep hours.
+            "init_timestep": 12,
+            # Products available on the webpage. Add new products here!
+            # Each product listed here will be loaded as one group, so
+            # that the defined times can be navigated with <wheel> and
+            # the defined levels can be navigated with <shift+wheel>.
+            # Times not found in the listed range of forecast_steps
+            # are ignored, its hence save to define the entire forecast
+            # range with the smalled available time step.
+            "products": {
+                "Geopotential and Wind": {
+                    "abbrev": "geop",
+                    "regions": {"Europe": "eur", "Germany": "de"},
+                    "levels": [200, 250, 300, 500, 700, 850, 925],
+                    "forecast_steps": range(0, 240, 3)},
+            }
+        }
+    }
+    loop_configuration = config_loader(dataset="loop_configuration", default=loop_configuration)
+    win = MSSLoopWindow(loop_configuration)
     win.show()
     sys.exit(app.exec_())

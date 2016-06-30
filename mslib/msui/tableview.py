@@ -40,8 +40,7 @@ import functools
 import logging
 import random
 import string
-import mss_settings
-
+from mslib.mss_util import config_loader
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -103,18 +102,17 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
         """
+        fps = config_loader(dataset="default_VSEC_WMS", default=["http://localhost:8081/mss_wms"])
         index = self.controlToBeCreated(index)
         if index >= 0:
             if index == PERFORMANCE:
                 # Open a flight performance control widget.
                 title = "Flight Performance Control"
-                widget = perf_cs.PerformanceControlWidget(default_FPS=mss_settings.default_VSEC_WMS,
-                                                          model=self.waypoints_model)
+                widget = perf_cs.PerformanceControlWidget(default_FPS=fps, model=self.waypoints_model)
             elif index == PERFORMANCE_OLD:
                 # Open a flight performance control widget.
                 title = "Flight Performance Service Control"
-                widget = perf.PerformanceControlWidget(default_FPS=mss_settings.default_FPS,
-                                                       model=self.waypoints_model)
+                widget = perf.PerformanceControlWidget(default_FPS=fps, model=self.waypoints_model)
             else:
                 raise IndexError("invalid control index (%i)" % index)
             # Create the actual dock widget containing <widget>.

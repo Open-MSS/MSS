@@ -43,7 +43,7 @@ from datetime import datetime
 import csv
 import logging
 import xml.dom.minidom
-import mss_settings
+from mslib.mss_util import config_loader
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -69,11 +69,6 @@ LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE, SPEED, TIME_LEG, TIME_CUM, TIME_UTC, 
 USER = 0
 PERFORMANCE = 1
 
-# Predefined locations for the table (names and coordinates of the places that
-# can be selected in the table view when double-clicking in the "location"
-# column).
-locations = mss_settings.locations
-
 """
 CLASS Waypoint
 """
@@ -86,6 +81,20 @@ class Waypoint(object):
 
     def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
         self.location = location
+        locations = {
+            "EDMO": (48.08, 11.28),
+            "Hannover": (52.37, 9.74),
+            "Hamburg": (53.55, 9.99),
+            "Juelich": (50.92, 6.36),
+            "Leipzig": (51.34, 12.37),
+            "Muenchen": (48.14, 11.57),
+            "Stuttgart": (48.78, 9.18),
+            "Wien": (48.20833, 16.373064),
+            "Zugspitze": (47.42, 10.98),
+            "Kiruna": (67.821, 20.336),
+            "Ny-Alesund": (78.928, 11.986)
+        }
+        locations = config_loader(dataset='locations', default=locations)
         if location in locations.keys():
             self.lat, self.lon = locations[location]
         else:

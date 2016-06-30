@@ -26,18 +26,55 @@ AUTHORS:
 """
 
 # standard library imports
+import os
+import logging
 import datetime
 from datetime import datetime as dt
-
 import collections
+import json
 # related third party imports
 import numpy as np
 from scipy.interpolate import RectBivariateSpline, interp1d
 from scipy.ndimage import map_coordinates
 from mslib import greatcircle
 from geopy import distance
+from mslib.msui import wms_login_cache
 
-# local application imports
+
+def config_loader(config_file="mss_settings.json", dataset=None, default=None):
+    """
+    Function for loading json config data
+
+    Args:
+        config_file: json file, parameters for initializing mss,
+        dataset: section to pull from json file
+        default: values to return if dataset was requested and don't exist or config_file is not given
+
+    Returns: a dictionary
+
+    """
+    if wms_login_cache.cached_config_file is not None:
+        config_file = wms_login_cache.cached_config_file
+    data = {}
+    try:
+        with open(os.path.join(config_file)) as source:
+            data = json.load(source)
+    except (AttributeError, IOError):
+        logging.debug("Config File used: {:} not found".format(config_file))
+        if default is not None:
+            return default
+        raise IOError("Config File not found")
+
+    if dataset:
+        try:
+            return data[dataset]
+        except KeyError:
+            logging.debug("Config File used: {:}".format(config_file))
+            logging.debug("Key not defined in config_file! {:}".format(dataset))
+            if default is not None:
+                return default
+            raise KeyError("default value for key not set")
+    return data
 
 """
 Tangent point / Hexagon / Solar Angle utilities

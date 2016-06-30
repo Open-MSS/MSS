@@ -45,7 +45,7 @@ import os
 import re
 import threading
 import xml.dom.minidom
-import mss_settings
+from mslib.mss_util import config_loader
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -60,12 +60,6 @@ from mslib.msui.wms_control import MSSWebMapService, MSS_WMS_AuthenticationDialo
 from mslib.msui import flighttrack as ft
 from mslib import performance
 
-"""
-Settings imported from mss_settings
-"""
-
-wms_cache = mss_settings.wms_cache
-num_interpolation_points = mss_settings.num_interpolation_points
 
 """
 CLASS PerformanceControlWidget
@@ -136,7 +130,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         # Check for WMS image cache directory, create if neceassary.
         if wms_cache is not None:
             self.wms_cache = os.path.join(wms_cache, "performance")
-            logging.debug("checking for WMS image cache at %s ..." % self.wms_cache)
+            logging.debug("checking for WMS image cache at %s ..." %
+                          self.wms_cache)
             if not os.path.exists(self.wms_cache):
                 logging.debug("  created new image cache directory.")
                 os.makedirs(self.wms_cache)
@@ -217,7 +212,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
             QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                       self.tr("ERROR:\n%s\n%s" %
+                                               (type(ex), ex)),
                                        QtGui.QMessageBox.Ok)
         return wms
 
@@ -260,7 +256,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                     if self.crsAllowed(layer):
                         if layer.name.endswith("VS_HV01"):
                             # TODO: We only want data from the horizontal wind section. However, hard-coding
-                            # the layer name here isn't a good solution; find a better one.. (mr, 2012Nov09)
+                            # the layer name here isn't a good solution; find a
+                            # better one.. (mr, 2012Nov09)
                             cb_string = "%s | %s" % (layer.title, layer.name)
                             # cb_string = layer.name.split(".")[0]
                             if cb_string not in filtered_layers:
@@ -343,7 +340,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         while lobj is not None:
             if "init_time" in lobj.dimensions.keys() \
                     and "init_time" in lobj.extents.keys():
-                items = [i.strip() for i in lobj.extents["init_time"]["values"]]
+                items = [i.strip()
+                         for i in lobj.extents["init_time"]["values"]]
                 if len(items) > 0:
                     # Determine time format and determine available
                     # times. Convert the list into a sorted numpy array that can
@@ -373,7 +371,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                         items[0], return_format=True)
                     self.available_valid_times = [
                         datetime.strptime(val, self.valid_time_format) for val in items]
-                    self.available_valid_times = np.array(self.available_valid_times)
+                    self.available_valid_times = np.array(
+                        self.available_valid_times)
                     self.available_valid_times.sort()
                     break
 
@@ -386,7 +385,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         """Slot that updates the <cbAircraftConfig> GUI element as well as
            weight limits when the user selects an aircraft in <cbAircraft>.
         """
-        aircraftName = str(self.cbAircraft.currentText())  # convert from QString
+        aircraftName = str(self.cbAircraft.currentText()
+                           )  # convert from QString
         if aircraftName == '':
             return
 
@@ -395,7 +395,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         self.cbAircraftConfig.clear()
         self.cbAircraftConfig.addItems(aircraft.availableConfigurations)
 
-        self.sbTakeoffWeight.setMinimum(aircraft.maximumTakeoffWeight_lbs - aircraft.fuelCapacity_lbs)
+        self.sbTakeoffWeight.setMinimum(
+            aircraft.maximumTakeoffWeight_lbs - aircraft.fuelCapacity_lbs)
         self.sbTakeoffWeight.setMaximum(aircraft.maximumTakeoffWeight_lbs)
         self.sbTakeoffWeight.setValue(aircraft.maximumTakeoffWeight_lbs)
 
@@ -484,7 +485,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             xml = None
 
             logging.debug("fetching forecast data from WMS layer %s", layer)
-            logging.debug("init_time=%s, valid_time=%s" % (init_time, valid_time))
+            logging.debug("init_time=%s, valid_time=%s" %
+                          (init_time, valid_time))
 
             try:
                 # Call the self.wms.getmap() method in a separate thread to keep
@@ -495,7 +497,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                 #    See: http://stackoverflow.com/questions/1595649/
                 #                threading-in-a-pyqt-application-use-qt-threads-or-python-threads
                 # b) To retrieve the return value of getmap, a Queue is used.
-                #    See: http://stackoverflow.com/questions/1886090/return-value-from-thread
+                # See:
+                # http://stackoverflow.com/questions/1886090/return-value-from-thread
                 kwargs = {"layers": [layer],
                           "styles": [""],
                           "srs": "VERT:LOGP",
@@ -530,13 +533,15 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                         logging.debug("  file exists, loading from cache.")
                         cache_hit = True
                     else:
-                        logging.debug("  file does not exist, retrieving from WMS server.")
+                        logging.debug(
+                            "  file does not exist, retrieving from WMS server.")
 
                 if not cache_hit:
 
                     queue = Queue.Queue()
                     kwargs["queue"] = queue
-                    thread = threading.Thread(target=self._queued_get_map, kwargs=kwargs)
+                    thread = threading.Thread(
+                        target=self._queued_get_map, kwargs=kwargs)
                     thread.start()
 
                     while thread.isAlive():
@@ -544,8 +549,10 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                         # and checks for a cancellation request by the user.
                         QtGui.QApplication.processEvents()
                         if self.pdlg.wasCanceled():
-                            logging.debug("map retrieval was canceled by the user.")
-                            raise UserWarning("map retrieval was canceled by the user.")
+                            logging.debug(
+                                "map retrieval was canceled by the user.")
+                            raise UserWarning(
+                                "map retrieval was canceled by the user.")
                         # Wait for 10 ms if the thread is still running to prevent
                         # the application from using 100% processor time.
                         thread.join(0.01)
@@ -567,7 +574,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
 
                     self.pdlg.setValue(10. * (iv + 1) / len(valid_time_list))
                     QtGui.QApplication.processEvents()
-                    # Read the image file from the URL into a string (urlobject.read()).
+                    # Read the image file from the URL into a string
+                    # (urlobject.read()).
                     xml = urlobject.read()
                     logging.debug("data layer retrieved")
                     # Store the retrieved image in the cache, if enabled.
@@ -586,7 +594,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                 self.pdlg.close()
                 logging.error("ERROR: %s", ex)
                 QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                           self.tr("ERROR:\n%s\n%s" %
+                                                   (type(ex), ex)),
                                            QtGui.QMessageBox.Ok)
                 raise ex
 
@@ -649,12 +658,13 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         removed_files = 0
         for f, fsize, fage in files:
             cum_size_bytes += fsize
-            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or \
-                fage > mss_settings.wms_cache_max_age_seconds:
+            if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes", default=20 * 1024 * 1024) or
+                    fage > config_loader(dataset="wms_cache_max_age_seconds", default=5 * 86400)):
                 os.remove(f)
                 removed_files += 1
 
-        logging.debug("cache has been cleaned (%i files removed)." % removed_files)
+        logging.debug("cache has been cleaned (%i files removed)." %
+                      removed_files)
 
     def parseXMLData(self, xml_data):
         """Parse XMl data retrieved from the WMS Server and convert the
@@ -683,11 +693,13 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
 
             lons = dom.getElementsByTagName("Longitude")[0]
             lons = getText(lons.childNodes).strip()
-            data[valid_time]["lon"] = np.array([float(f) for f in lons.split(",")])
+            data[valid_time]["lon"] = np.array(
+                [float(f) for f in lons.split(",")])
 
             lats = dom.getElementsByTagName("Latitude")[0]
             lats = getText(lats.childNodes).strip()
-            data[valid_time]["lat"] = np.array([float(f) for f in lats.split(",")])
+            data[valid_time]["lat"] = np.array(
+                [float(f) for f in lats.split(",")])
 
             data_node = dom.getElementsByTagName("Data")[0]
 
@@ -734,7 +746,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         """
         logging.debug("computing flight performance..")
 
-        aircraft_name = str(self.cbAircraft.currentText())  # convert from QString
+        aircraft_name = str(self.cbAircraft.currentText()
+                            )  # convert from QString
         if aircraft_name == '':
             return
         aircraft_config = str(self.cbAircraftConfig.currentText())
@@ -804,7 +817,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             aircraft.fly(flight_description)
         except Exception as ex:
             logging.error("ERROR: %s", ex)
-            logging.error("cannot compute performance of the given flight track.")
+            logging.error(
+                "cannot compute performance of the given flight track.")
             QtGui.QMessageBox.critical(
                 self, self.tr("Flight Performance"),
                 self.tr("ERROR:\n\n%s\n\n(DEBUG: %s)" % (ex, type(ex))),
@@ -862,7 +876,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                 return
 
             if self.available_valid_times[index_before_takeoff_time] > takeoff_time:
-                index_before_takeoff_time = max(index_before_takeoff_time - 1, 0)
+                index_before_takeoff_time = max(
+                    index_before_takeoff_time - 1, 0)
 
             landing_time = aircraft_statelist_without_nwp[-1].time_utc
             index_after_landing_time = \
@@ -880,12 +895,14 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                                            QtGui.QMessageBox.Ok)
                 return
 
-            valid_time_list = self.available_valid_times[index_before_takeoff_time:index_after_landing_time + 1]
+            valid_time_list = self.available_valid_times[
+                index_before_takeoff_time:index_after_landing_time + 1]
 
             print index_before_takeoff_time, self.available_valid_times[index_before_takeoff_time]
             print index_after_landing_time, self.available_valid_times[index_after_landing_time]
 
-            # Get lat/lon coordinates of flight track and convert to string for URL.
+            # Get lat/lon coordinates of flight track and convert to string for
+            # URL.
             path_string = ""
             for waypoint in self.model.allWaypointData():
                 # path_string += "%.2f,%.2f," % (waypoint.lat, waypoint.lon)
@@ -897,7 +914,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             xml_data = self.retrieveForecast(layer=wms_layer,
                                              init_time=init_time,
                                              valid_time_list=valid_time_list,
-                                             bbox=(num_interpolation_points, 1000, 10, 100),
+                                             bbox=(
+                                                 num_interpolation_points, 1000, 10, 100),
                                              path_string=path_string)
 
             data = self.parseXMLData(xml_data)
@@ -910,7 +928,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                 aircraft.fly(flight_description, nwp_data=data)
             except Exception as ex:
                 logging.error("ERROR: %s", ex)
-                logging.error("cannot compute performance of the given flight track.")
+                logging.error(
+                    "cannot compute performance of the given flight track.")
                 QtGui.QMessageBox.critical(
                     self, self.tr("Flight Performance"),
                     self.tr("ERROR:\n\n%s\n\n(DEBUG: %s)" % (ex, type(ex))),
@@ -947,7 +966,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         """
         logging.debug("exporting flight path to FX csv..")
 
-        aircraft_name = str(self.cbAircraft.currentText())  # convert from QString
+        aircraft_name = str(self.cbAircraft.currentText()
+                            )  # convert from QString
         if aircraft_name == '':
             return
         aircraft_config = str(self.cbAircraftConfig.currentText())
@@ -983,7 +1003,8 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
             (zero_fuel_weight_lbs,  # zero fuel weight [lbs]
              fuel_weight_lbs,  # takeoff fuel [lbs]
              3000,  # reserve fuel [lbs]
-             waypoints[-1].distance_total / 1.852,  # total flight distance [nm]
+             # total flight distance [nm]
+             waypoints[-1].distance_total / 1.852,
              waypoints[0].flightlevel * 100.,  # takeoff altitude [ft]
              waypoints[-1].flightlevel * 100.,  # landing alt
              waypoints[0].lon,  # takeoff position
@@ -1080,7 +1101,8 @@ if __name__ == "__main__":
     import sys
 
     app = QtGui.QApplication(sys.argv)
-    win = PerformanceControlWidget(default_FPS=mss_settings.default_VSEC_WMS,
+    win = PerformanceControlWidget(default_FPS=config_loader(dataset="default_VSEC_WMS",
+                                                             default=["http://localhost:8081/mss_wms"]),
                                    model=waypoints_model)
     win.show()
     sys.exit(app.exec_())
