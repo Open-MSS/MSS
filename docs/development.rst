@@ -31,8 +31,7 @@ On top level dir::
   $ source activate mssdev
   $ conda install --use-local mss
   $ mkdir "$HOME/.config/mss"
-  $ # cp mss_settings.py to "$HOME/.config/mss/"
-  $ export PYTHONPATH="$HOME/.config/mss"
+  $ # cp mss_settings.json.sample to "$HOME/.config/mss/mss_settings.json"
 
 
 To install some additional packages needed for running the tests, activate your virtual env and run::

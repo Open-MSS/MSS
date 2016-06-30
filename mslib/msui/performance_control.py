@@ -36,7 +36,7 @@ import logging
 import re
 import threading
 import urllib2
-import mss_settings
+from mslib.mss_util import config_loader
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -47,11 +47,6 @@ from mslib.msui import wms_capabilities
 from mslib.msui.wms_control import MSSWebMapService
 from mslib.msui import flighttrack as ft
 
-"""
-Settings imported from mss_settings
-"""
-
-default_FPS = mss_settings.default_FPS
 
 """
 CLASS PerformanceControlWidget
@@ -64,8 +59,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
        service.
     """
 
-    def __init__(self, parent=None, crs_filter="PERF:1",
-                 default_FPS=[], model=None):
+    def __init__(self, parent=None, crs_filter="PERF:1", default_FPS=[], model=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
@@ -116,30 +110,21 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
 
         # Connect slots and signals.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.connect(self.btGetCapabilities, QtCore.SIGNAL("clicked()"),
-                     self.getCapabilities)
-        self.connect(self.tbViewCapabilities, QtCore.SIGNAL("clicked()"),
-                     self.viewCapabilities)
+        self.connect(self.btGetCapabilities, QtCore.SIGNAL("clicked()"), self.getCapabilities)
+        self.connect(self.tbViewCapabilities, QtCore.SIGNAL("clicked()"), self.viewCapabilities)
 
-        self.connect(self.cbMode, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.modeChanged)
+        self.connect(self.cbMode, QtCore.SIGNAL("currentIndexChanged(int)"), self.modeChanged)
 
-        self.connect(self.tbInitTime_cbback, QtCore.SIGNAL("clicked()"),
-                     self.cb_init_time_back_click)
-        self.connect(self.tbInitTime_cbfwd, QtCore.SIGNAL("clicked()"),
-                     self.cb_init_time_fwd_click)
+        self.connect(self.tbInitTime_cbback, QtCore.SIGNAL("clicked()"), self.cb_init_time_back_click)
+        self.connect(self.tbInitTime_cbfwd, QtCore.SIGNAL("clicked()"), self.cb_init_time_fwd_click)
 
-        self.connect(self.tbMoreOptions, QtCore.SIGNAL("clicked()"),
-                     self.switchOptions)
-        self.connect(self.tbOptionsBack, QtCore.SIGNAL("clicked()"),
-                     self.switchOptions)
+        self.connect(self.tbMoreOptions, QtCore.SIGNAL("clicked()"), self.switchOptions)
+        self.connect(self.tbOptionsBack, QtCore.SIGNAL("clicked()"), self.switchOptions)
 
-        self.connect(self.btComputePerformance, QtCore.SIGNAL("clicked()"),
-                     self.getPerformance)
+        self.connect(self.btComputePerformance, QtCore.SIGNAL("clicked()"), self.getPerformance)
 
         # Progress dialog to inform the user about image ongoing retrievals.
-        self.pdlg = QtGui.QProgressDialog("computing flight performance...", "Cancel",
-                                          0, 10, self)
+        self.pdlg = QtGui.QProgressDialog("computing flight performance...", "Cancel", 0, 10, self)
 
     def getCapabilities(self):
         """Query the server in the URL combobox for its capabilities. Fill
@@ -147,8 +132,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
         """
         # Clear layer and style combo boxes. First disconnect the modeChanged
         # slot to avoid calls to this function.
-        self.disconnect(self.cbMode, QtCore.SIGNAL("currentIndexChanged(int)"),
-                        self.modeChanged)
+        self.disconnect(self.cbMode, QtCore.SIGNAL("currentIndexChanged(int)"), self.modeChanged)
         self.cbMode.clear()
         self.cbAircraft.clear()
 
@@ -190,8 +174,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceDockWidget):
             self.tbViewCapabilities.setEnabled(True)
 
         # Reconnect modeChanged.
-        self.connect(self.cbMode, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.modeChanged)
+        self.connect(self.cbMode, QtCore.SIGNAL("currentIndexChanged(int)"), self.modeChanged)
 
     def viewCapabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities

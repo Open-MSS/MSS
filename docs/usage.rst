@@ -32,15 +32,14 @@ Mission Support User Interface (mss). Among others, define
  - predefined waypoints for the table view
  - batch products for the loop view in this file.
 
-You have to provide the path of the mss_settings.py by e.g.::
+If you don't have a mss_settings.json then default configuration is in place.
 
-   $ mkdir "$HOME/.config/mss"
-   $ export PYTHONPATH="$HOME/.config/mss"
+Store this mss_settings.json in a path, e.g. "$HOME/.config/mss"
+The file could be loaded by the File Load Configuration dialog.
+
+**/$HOME/.config/mss/mss_settings.json**
 
 
-**/$HOME/.config/mss/mss_settings.py**
-
-
-.. literalinclude:: samples/config/mss/mss_settings.py.sample
+.. literalinclude:: samples/config/mss/mss_settings.json.sample
 
 

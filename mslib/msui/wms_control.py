@@ -43,7 +43,7 @@ import threading
 import urllib
 import urllib2
 import xml.etree.ElementTree as etree
-import mss_settings
+from mslib.mss_util import config_loader
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -63,13 +63,6 @@ from mslib.msui import wms_capabilities
 from mslib.msui import wms_login_cache
 from mslib.mss_util import convertHPAToKM
 
-"""
-Settings imported from mss_settings
-"""
-
-default_WMS = mss_settings.default_WMS
-default_VSEC_WMS = mss_settings.default_VSEC_WMS
-wms_cache = mss_settings.wms_cache
 
 """
 CLASS MSSWebMapService
@@ -1481,10 +1474,10 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         removed_files = 0
         for f, fsize, fage in files:
             cum_size_bytes += fsize
-            if (cum_size_bytes > mss_settings.wms_cache_max_size_bytes) or \
-                fage > mss_settings.wms_cache_max_age_seconds:
-                os.remove(f)
-                removed_files += 1
+            if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes", default=20971520) or
+                    fage > config_loader(dataset="wms_cache_max_age_seconds", default=432000)):
+                        os.remove(f)
+                        removed_files += 1
 
         logging.debug("cache has been cleaned (%i files removed)." % removed_files)
 
