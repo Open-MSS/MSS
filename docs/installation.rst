@@ -11,7 +11,8 @@ modern open data science analytics architecture.
 The Mission Support Web Map Service (mss) is available as anaconda package on `conda-forge <https://conda-forge.github.io/>`_ ::
 
    $ conda config --add channels conda-forge
-   $ conda install mss
+   $ conda install -c atmo mss=1.1.0
+
 
 
 
