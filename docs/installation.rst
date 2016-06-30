@@ -2,13 +2,14 @@
 Installation
 =================
 
-Install distributed version from conda-forge
+Install distributed version by conda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `Anaconda <https://www.continuum.io/why-anaconda>`_ provides an enterprise-ready data analytics platform that empowers companies to adopt a
 modern open data science analytics architecture.
 
-The Mission Support Web Map Service (mss) is available as anaconda package on `conda-forge <https://conda-forge.github.io/>`_ ::
+The Mission Support Web Map Service (mss) is available as anaconda package on `atmo <https://anaconda.org/atmo/mss>`_
+channel of anaconda::
 
    $ conda config --add channels conda-forge
    $ conda install -c atmo mss=1.1.0

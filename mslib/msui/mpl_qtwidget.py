@@ -31,7 +31,7 @@ AUTHORS:
 from datetime import datetime
 
 import logging
-import mss_settings
+from mslib.mss_util import config_loader
 
 # related third party imports
 import numpy as np
@@ -213,11 +213,13 @@ class MplSideViewCanvas(MplCanvas):
     """
 
     def __init__(self, model=None, settings=None,
-                 numlabels=mss_settings.num_labels):
+                 numlabels=None):
+
         """
         Arguments:
         model -- WaypointsTableModel defining the vertical section.
         """
+        self.numlabels = config_loader(dataset='num_labels', default=10)
         super(MplSideViewCanvas, self).__init__()
 
         # Default settings.
@@ -264,7 +266,7 @@ class MplSideViewCanvas(MplCanvas):
             # itself to the change() signals of the flight track data model.
             self.waypoints_interactor = mpl_pi.VPathInteractor(
                 self.ax, self.waypoints_model,
-                numintpoints=mss_settings.num_interpolation_points,
+                numintpoints=config_loader(dataset="num_interpolation_points", default=201),
                 redrawXAxis=self.redrawXAxis
             )
 

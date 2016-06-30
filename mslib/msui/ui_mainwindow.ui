@@ -139,7 +139,7 @@
      <x>0</x>
      <y>0</y>
      <width>424</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -152,6 +152,8 @@
     <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_Configuration"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
    </widget>
@@ -269,6 +271,11 @@
   <action name="actionAboutMSUI">
    <property name="text">
     <string>&amp;About MSS</string>
+   </property>
+  </action>
+  <action name="actionLoad_Configuration">
+   <property name="text">
+    <string>Load Configuration</string>
    </property>
   </action>
  </widget>

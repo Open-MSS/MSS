@@ -48,7 +48,6 @@ import sys
 import os
 import copy
 import logging
-import mss_settings
 
 from distutils.sysconfig import get_python_lib
 # add owslib thirdparty module path
@@ -64,7 +63,9 @@ from mslib.msui import sideview
 from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import loopview
-
+import mslib.mss_util
+from mslib.msui import wms_login_cache
+from mslib.mss_util import config_loader
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -90,16 +91,6 @@ print "Documentation: http://mss.rtfd.io"
 print "Version:", __version__
 print "\nSystem is loading.."
 
-
-"""
-Template for new flight tracks
-"""
-
-# Template that is used when a new flight track is created (created from
-# mss_settings).
-waypoints_template = []
-for wp in mss_settings.new_flighttrack_template:
-    waypoints_template.append(ft.Waypoint(flightlevel=0, location=wp))
 
 """
 QActiveViewsListWidgetItem
@@ -202,7 +193,6 @@ class MSS_AboutDialog(QtGui.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.setupUi(self)
         self.lblVersion.setText("Version: %s" % __version__)
 
-
 """
 MAIN WINDOW
 """
@@ -264,6 +254,10 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         self.connect(self.actionAboutMSUI, QtCore.SIGNAL("triggered()"),
                      self.showAboutDlg)
 
+        # Load Config
+        self.connect(self.actionLoad_Configuration, QtCore.SIGNAL("triggered()"),
+                     self.openConfigFile)
+
         # Flight Tracks.
         self.connect(self.listFlightTracks, QtCore.SIGNAL("itemChanged(QListWidgetItem *)"),
                      self.flightTrackNameChanged)
@@ -321,7 +315,31 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             view_window = timeseriesview.MSSTimeSeriesViewWindow(parent=self)
         elif self.sender() == self.actionLoopView:
             # Loop view.
-            view_window = loopview.MSSLoopWindow(mss_settings.loop_configuration, self)
+            loop_configuration = {
+                "ECMWF forecasts": {
+                    # URL to the Mission Support website at which the batch image
+                    # products are located.
+                    "url": "http://www.your-server.de/forecasts",
+                    # Initialisation times every init_timestep hours.
+                    "init_timestep": 12,
+                    # Products available on the webpage. Add new products here!
+                    # Each product listed here will be loaded as one group, so
+                    # that the defined times can be navigated with <wheel> and
+                    # the defined levels can be navigated with <shift+wheel>.
+                    # Times not found in the listed range of forecast_steps
+                    # are ignored, its hence save to define the entire forecast
+                    # range with the smalled available time step.
+                    "products": {
+                        "Geopotential and Wind": {
+                            "abbrev": "geop",
+                            "regions": {"Europe": "eur", "Germany": "de"},
+                            "levels": [200, 250, 300, 500, 700, 850, 925],
+                            "forecast_steps": range(0, 240, 3)},
+                    }
+                }
+            }
+            view_window = loopview.MSSLoopWindow(config_loader(dataset="loop_configuration",
+                                                               default=loop_configuration), self)
 
         if view_window:
             # Make sure view window will be deleted after being closed, not
@@ -374,7 +392,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
 
     new_flight_track_counter = 0
 
-    def createNewFlightTrack(self, template=waypoints_template,
+    def createNewFlightTrack(self, template=None,
                              filename=None, activate=False):
         """Creates a new flight track model from a template. Adds a new entry to
            the list of flight tracks. Called when the user selects the 'new/open
@@ -386,6 +404,13 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         filename -- if not None, load the flight track in the specified file.
         activate -- set the new flight track to be the active flight track.
         """
+
+        if template is None:
+            template = []
+            waypoints = config_loader(dataset="new_flighttrack_template", default=["Kiruna", "Ny-Alesund"])
+            for wp in waypoints:
+                template.append(ft.Waypoint(flightlevel=0, location=wp))
+
         if filename:
             waypoints_model = ft.WaypointsTableModel(filename=filename)
         else:
@@ -407,6 +432,20 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         if activate:
             self.listFlightTracks.setCurrentItem(listitem)
             self.setFlightTrackActive()
+
+    def openConfigFile(self):
+        """
+        Reads the config file
+
+        Returns:
+
+        """
+        filename = QtGui.QFileDialog.getOpenFileName(self,
+                                                     "Open Config file", "",
+                                                     "Supported files (*.json *.txt)"
+                                                     )
+        if not filename.isEmpty():
+            wms_login_cache.cached_config_file = str(filename)
 
     def openFlightTrack(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and

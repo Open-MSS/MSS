@@ -33,8 +33,7 @@ import datetime
 
 import logging
 import os
-import mss_settings
-
+from mslib.mss_util import config_loader
 # related third party imports
 from PyQt4 import QtCore, QtGui
 import numpy
@@ -458,7 +457,7 @@ class FlightTrackItem(LagrantoMapItem):
                 break
 
         self.lonVariableChild = None
-        for identifier in mss_settings.traj_nas_lon_identifier:
+        for identifier in config_loader(dataset="traj_nas_lon_identifier", default=["GPS LON", "LONGITUDE"]):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.lonVariableChild = item
@@ -469,7 +468,7 @@ class FlightTrackItem(LagrantoMapItem):
                 break
 
         self.latVariableChild = None
-        for identifier in mss_settings.traj_nas_lat_identifier:
+        for identifier in config_loader(dataset="nas_lat_identifier", default=["GPS LAT", "LATITUDE"]):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.latVariableChild = item
@@ -480,7 +479,7 @@ class FlightTrackItem(LagrantoMapItem):
                 break
 
         self.pressureVariableChild = None
-        for identifier in mss_settings.traj_nas_p_identifier:
+        for identifier in config_loader(dataset="traj_nas_p_identifier", default=["STATIC PRESSURE"]):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.pressureVariableChild = item

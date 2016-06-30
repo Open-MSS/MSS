@@ -40,6 +40,8 @@ Global cache variables
 
 global cached_usrname
 global cached_passwd
+global cached_config_file
 
 cached_usrname = None
 cached_passwd = None
+cached_config_file = None
