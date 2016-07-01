@@ -219,7 +219,8 @@ class MplSideViewCanvas(MplCanvas):
         Arguments:
         model -- WaypointsTableModel defining the vertical section.
         """
-        self.numlabels = config_loader(dataset='num_labels', default=10)
+        if numlabels is None:
+            numlabels = config_loader(dataset='num_labels', default=10)
         super(MplSideViewCanvas, self).__init__()
 
         # Default settings.
