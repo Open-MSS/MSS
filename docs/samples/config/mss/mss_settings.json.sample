@@ -1,0 +1,112 @@
+
+{
+    "locations": {
+        "EDMO": [48.08, 11.28],
+        "Hannover": [52.37, 9.74],
+        "Hamburg": [53.55, 9.99],
+        "Juelich": [50.92, 6.36],
+        "Leipzig": [51.34, 12.37],
+        "Muenchen": [48.14, 11.57],
+        "Stuttgart": [48.78, 9.18],
+        "Wien": [48.20833, 16.373064],
+        "Zugspitze": [47.42, 10.98],
+        "Kiruna": [67.821, 20.336],
+        "Ny-Alesund": [78.928, 11.986]
+    },
+
+    "predefined_map_sections": {
+        "01 Europe (cyl)": {"CRS": "EPSG:4326",
+                            "map": {"llcrnrlon": -15.0, "llcrnrlat": 35.0,
+                                    "urcrnrlon": 30.0, "urcrnrlat": 65.0}},
+        "02 Germany (cyl)": {"CRS": "EPSG:4326",
+                             "map": {"llcrnrlon": 5.0, "llcrnrlat": 45.0,
+                                     "urcrnrlon": 15.0, "urcrnrlat": 57.0}},
+        "03 Europe (stereo)": {"CRS": "EPSG:77790010",
+                               "map": {"llcrnrlon": -22.5, "llcrnrlat": 27.5,
+                                       "urcrnrlon": 55.0, "urcrnrlat": 62.5}},
+        "04 Germany (stereo)": {"CRS": "EPSG:77790010",
+                                "map": {"llcrnrlon": -4.0, "llcrnrlat": 45.5,
+                                        "urcrnrlon": 20.0, "urcrnrlat": 57.0}},
+        "05 Spitsbergen L (stereo)": {"CRS": "EPSG:77790000",
+                                      "map": {"llcrnrlon": -39.0, "llcrnrlat": 51.0,
+                                              "urcrnrlon": 82.0, "urcrnrlat": 73.5}},
+        "06 Spitsbergen S (stereo)": {"CRS": "EPSG:77790000",
+                                      "map": {"llcrnrlon": -22.0, "llcrnrlat": 73.0,
+                                              "urcrnrlon": 66.0, "urcrnrlat": 79.5}},
+        "07 Global (cyl)": {"CRS": "EPSG:4326",
+                            "map": {"llcrnrlon": -180.0, "llcrnrlat": -90.0,
+                                    "urcrnrlon": 180.0, "urcrnrlat": 90.0}},
+        "08 Northern Hemisphere (stereo)": {"CRS": "EPSG:77790000",
+                                            "map": {"llcrnrlon": -45.0, "llcrnrlat": 0.0,
+                                                    "urcrnrlon": 135.0, "urcrnrlat": 0.0}},
+        "09 Kiruna L (stereo)": {"CRS": "EPSG:77774020",
+                                            "map": {"llcrnrlon": -30.0, "llcrnrlat": 45.0,
+                                                    "urcrnrlon": 120.0, "urcrnrlat": 65.0}},
+        "10 Europe/N Africa (cyl)": {"CRS": "EPSG:77742000",
+                                            "map": {"llcrnrlon": -30.0, "llcrnrlat": 20.0,
+                                                    "urcrnrlon": 25.0, "urcrnrlat": 65.0}}
+    },
+
+    "crs_to_mpl_basemap_table" : {
+        "EPSG:4326": {"basemap": {"projection": "cyl"},
+                      "bbox": "latlon"},
+        "EPSG:9810": {"basemap": {"projection": "stere", "lat_0": 90.0, "lon_0": 0.0},
+                      "bbox": "metres"},
+        "EPSG:77790000": {"basemap": {"projection": "stere", "lat_0": 90.0, "lon_0": 0.0},
+                          "bbox": "latlon"},
+        "EPSG:77790010": {"basemap": {"projection": "stere", "lat_0": 90.0, "lon_0": 10.0},
+                          "bbox": "latlon"},
+        "EPSG:77790335": {"basemap": {"projection": "stere", "lat_0": 90.0, "lon_0": -25.0},
+                          "bbox": "latlon"},
+        "EPSG:77774020": {"basemap": {"projection": "stere", "lat_0": 74.0, "lon_0": 20.0},
+                          "bbox": "latlon"},
+        "EPSG:77742000": {"basemap": {"projection": "cyl"},
+                          "bbox": "latlon"}
+    },
+
+
+   "loop_configuration": {
+        "url": "http://www.your-server.de/forecasts",
+        "init_timestep": 12,
+        "products": {
+            "Geopotential and Wind": {
+                "abbrev": "geop",
+                "regions": {"Europe": "eur", "Germany": "de"},
+                "levels": [200, 250, 300, 500, 700, 850, 925],
+                "forecast_steps": [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120, 123, 126, 129, 132, 135, 138, 141, 144, 147, 150, 153, 156, 159, 162, 165, 168, 171, 174, 177, 180, 183, 186, 189, 192, 195, 198, 201, 204, 207, 210, 213, 216, 219, 222, 225, 228, 231, 234, 237]},
+            "Temperature": {
+                "abbrev": "temp",
+                "regions": {"Europe": "eur", "Germany": "de"},
+                "levels": [200, 250, 300, 500, 700, 850, 925],
+                "forecast_steps": [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120, 123, 126, 129, 132, 135, 138, 141, 144, 147, 150, 153, 156, 159, 162, 165, 168, 171, 174, 177, 180, 183, 186, 189, 192, 195, 198, 201, 204, 207, 210, 213, 216, 219, 222, 225, 228, 231, 234, 237]},
+            "Equivalent Potential Temperature": {
+                "abbrev": "eqpt",
+                "regions": {"Europe": "eur", "Germany": "de"},
+                "levels": [500, 700, 850, 925],
+                "forecast_steps": [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120, 123, 126, 129, 132, 135, 138, 141, 144, 147, 150, 153, 156, 159, 162, 165, 168, 171, 174, 177, 180, 183, 186, 189, 192, 195, 198, 201, 204, 207, 210, 213, 216, 219, 222, 225, 228, 231, 234, 237]},
+            "Relative Humidity": {
+                "abbrev": "rhu",
+                "regions": {"Europe": "eur", "Germany": "de"},
+                "levels": [200, 250, 300, 500, 700, 850, 925],
+                "forecast_steps": [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120, 123, 126, 129, 132, 135, 138, 141, 144, 147, 150, 153, 156, 159, 162, 165, 168, 171, 174, 177, 180, 183, 186, 189, 192, 195, 198, 201, 204, 207, 210, 213, 216, 219, 222, 225, 228, 231, 234, 237, 240]},
+            "Vertical Velocity": {
+                "abbrev": "vert",
+                "regions": {"Europe": "eur", "Germany": "de"},
+                "levels": [200, 250, 300, 500, 700, 850, 925],
+                "forecast_steps": [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120, 123, 126, 129, 132, 135, 138, 141, 144, 147, 150, 153, 156, 159, 162, 165, 168, 171, 174, 177, 180, 183, 186, 189, 192, 195, 198, 201, 204, 207, 210, 213, 216, 219, 222, 225, 228, 231, 234, 237, 240]}
+            }
+   },
+
+   "traj_nas_lon_identifier": ["GPS LON", "LONGITUDE"],
+   "traj_nas_lat_identifier": ["GPS LAT", "LATITUDE"],
+   "traj_nas_p_identifier": ["STATIC PRESSURE"],
+   "new_flighttrack_template": ["Kiruna", "Ny-Alesund"],
+   "default_FPS": ["http://localhost:8082/performance"],
+   "default_WMS": ["http://www.your-server.de/forecasts"],
+   "default_VSEC_WMS": ["http://www.your-server.de/forecasts"],
+   "num_interpolation_points": 201,
+   "num_labels": 10,
+   "wms_cache": "/tmp/.cache/.mss/msui/wms_cache",
+   "wms_cache_max_size_bytes": 20971520,
+   "wms_cache_max_age_seconds": 432000
+}
