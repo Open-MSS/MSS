@@ -11,7 +11,6 @@ modern open data science analytics architecture.
 The Mission Support Web Map Service (mss) is available as anaconda package on `atmo <https://anaconda.org/atmo/mss>`_
 channel of anaconda::
 
-   $ conda config --add channels conda-forge
    $ conda install -c atmo mss=1.1.0
 
 
@@ -31,8 +30,7 @@ For a wms server setup you may want to have a dedicated user running mss. We sug
 * set execute bit on install script
 * execute script, enable environment in .bashrc
 * login again or export PATH="/home/mss/miniconda2/bin:$PATH"
-* python --version should tell Python 2.7.11+
-* conda config --add channels conda-forge
+* python --version should tell Python 2.7.12
 * conda install conda-build
 * cd src
 * git clone git@bitbucket.org:wxmetvis/mss.git
