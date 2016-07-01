@@ -27,16 +27,12 @@ AUTHORS:
 
 """
 
-# standard library imports
-
-# related third party imports
-
-# local application imports
-
-
 """
 Global cache variables
 """
+import os
+
+MSS_SETTINGS = os.getenv('MSS_SETTINGS', "mss_settings.json")
 
 global cached_usrname
 global cached_passwd
@@ -45,3 +41,6 @@ global cached_config_file
 cached_usrname = None
 cached_passwd = None
 cached_config_file = None
+
+if os.path.exists(MSS_SETTINGS):
+    cached_config_file = MSS_SETTINGS
