@@ -323,11 +323,39 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         # Get the initial projection parameters from the tables in mss_settings.
         current_map_key = str(self.cbChangeMapSection.currentText())
-        predefined_map_sections = {"01 Europe (cyl)": {"CRS": "EPSG:4326", "map":
-                                                       {"llcrnrlon": -15.0, "llcrnrlat": 35.0,
-                                                        "urcrnrlon": 30.0, "urcrnrlat": 65.0}
-                                                       },
-                                   }
+        predefined_map_sections = {
+            "01 Europe (cyl)": {"CRS": "EPSG:4326",
+                                "map": {"llcrnrlon": -15.0, "llcrnrlat": 35.0,
+                                        "urcrnrlon": 30.0, "urcrnrlat": 65.0}},
+            "02 Germany (cyl)": {"CRS": "EPSG:4326",
+                                 "map": {"llcrnrlon": 5.0, "llcrnrlat": 45.0,
+                                         "urcrnrlon": 15.0, "urcrnrlat": 57.0}},
+            "03 Europe (stereo)": {"CRS": "EPSG:77790010",
+                                   "map": {"llcrnrlon": -22.5, "llcrnrlat": 27.5,
+                                           "urcrnrlon": 55.0, "urcrnrlat": 62.5}},
+            "04 Germany (stereo)": {"CRS": "EPSG:77790010",
+                                    "map": {"llcrnrlon": -4.0, "llcrnrlat": 45.5,
+                                            "urcrnrlon": 20.0, "urcrnrlat": 57.0}},
+            "05 Spitsbergen L (stereo)": {"CRS": "EPSG:77790000",
+                                          "map": {"llcrnrlon": -39.0, "llcrnrlat": 51.0,
+                                                  "urcrnrlon": 82.0, "urcrnrlat": 73.5}},
+            "06 Spitsbergen S (stereo)": {"CRS": "EPSG:77790000",
+                                          "map": {"llcrnrlon": -22.0, "llcrnrlat": 73.0,
+                                                  "urcrnrlon": 66.0, "urcrnrlat": 79.5}},
+            "07 Global (cyl)": {"CRS": "EPSG:4326",
+                                "map": {"llcrnrlon": -180.0, "llcrnrlat": -90.0,
+                                        "urcrnrlon": 180.0, "urcrnrlat": 90.0}},
+            "08 Northern Hemisphere (stereo)": {"CRS": "EPSG:77790000",
+                                                "map": {"llcrnrlon": -45.0, "llcrnrlat": 0.0,
+                                                        "urcrnrlon": 135.0, "urcrnrlat": 0.0}},
+            "09 Kiruna L (stereo)": {"CRS": "EPSG:77774020",
+                                     "map": {"llcrnrlon": -30.0, "llcrnrlat": 45.0,
+                                             "urcrnrlon": 120.0, "urcrnrlat": 65.0}},
+            "10 Europe/N Africa (cyl)": {"CRS": "EPSG:77742000",
+                                         "map": {"llcrnrlon": -30.0, "llcrnrlat": 20.0,
+                                                 "urcrnrlon": 25.0, "urcrnrlat": 65.0}}
+        }
+
         predefined_map_sections = config_loader(dataset="predefined_map_sections", default=predefined_map_sections)
         current_map = predefined_map_sections[current_map_key]
         crs_to_mpl_basemap_table = {"EPSG:4326": {"basemap": {"projection": "cyl"}, "bbox": "latlon"},
