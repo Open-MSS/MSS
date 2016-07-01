@@ -35,7 +35,9 @@ Mission Support User Interface (mss). Among others, define
 If you don't have a mss_settings.json then default configuration is in place.
 
 Store this mss_settings.json in a path, e.g. "$HOME/.config/mss"
-The file could be loaded by the File Load Configuration dialog.
+
+The file could be loaded by the File Load Configuration dialog or
+by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
 
 **/$HOME/.config/mss/mss_settings.json**
 
