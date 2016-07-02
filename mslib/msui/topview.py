@@ -51,6 +51,7 @@ from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import flighttrack as ft
 from mslib.msui import wms_control as wms
 from mslib.msui import satellite_dockwidget as sat
+from mslib.msui import wms_login_cache
 
 # Dock window indices.
 WMS = 0
@@ -81,8 +82,8 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
                              "fill_continents": True,
                              "draw_flighttrack": True,
                              "label_flighttrack": True,
-                             "draw_tangents": True,
-                             "show_solar_angle": True,
+                             "draw_tangents": False,
+                             "show_solar_angle": False,
                              "colour_water": (0, 0, 0, 0),
                              "colour_land": (0, 0, 0, 0),
                              "colour_ft_vertices": (0, 0, 0, 0),
@@ -90,11 +91,11 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
                              "colour_tangents": (0, 0, 0, 0)}
 
         if "draw_tangents" not in settings_dict.keys():
-            settings_dict["draw_tangents"] = True
+            settings_dict["draw_tangents"] = False
         if "tangent_height" not in settings_dict.keys():
             settings_dict["tangent_height"] = 1.
         if "show_solar_angle" not in settings_dict.keys():
-            settings_dict["show_solar_angle"] = True
+            settings_dict["show_solar_angle"] = False
         if "start_time" not in settings_dict.keys():
             settings_dict["start_time"] = datetime.datetime.now()
         if "colour_tangents" not in settings_dict.keys():
@@ -205,7 +206,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Dock windows [WMS, Satellite, Trajectories]:
         self.docks = [None, None, None]
 
-        self.settingsfile = "mss.topview.cfg"
+        self.settingsfile = os.path.join(wms_login_cache.DEFAULT_CONFIG_PATH, "mss.topview.cfg")
         self.loadSettings()
 
         # Initialise the GUI elements (map view, items of combo boxes etc.).
