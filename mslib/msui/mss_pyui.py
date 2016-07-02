@@ -66,6 +66,7 @@ from mslib.msui import loopview
 import mslib.mss_util
 from mslib.msui import wms_login_cache
 from mslib.mss_util import config_loader
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -315,32 +316,9 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             view_window = timeseriesview.MSSTimeSeriesViewWindow(parent=self)
         elif self.sender() == self.actionLoopView:
             # Loop view.
-            loop_configuration = {
-                "ECMWF forecasts": {
-                    # URL to the Mission Support website at which the batch image
-                    # products are located.
-                    "url": "http://www.your-server.de/forecasts",
-                    # Initialisation times every init_timestep hours.
-                    "init_timestep": 12,
-                    # Products available on the webpage. Add new products here!
-                    # Each product listed here will be loaded as one group, so
-                    # that the defined times can be navigated with <wheel> and
-                    # the defined levels can be navigated with <shift+wheel>.
-                    # Times not found in the listed range of forecast_steps
-                    # are ignored, its hence save to define the entire forecast
-                    # range with the smalled available time step.
-                    "products": {
-                        "Geopotential and Wind": {
-                            "abbrev": "geop",
-                            "regions": {"Europe": "eur", "Germany": "de"},
-                            "levels": [200, 250, 300, 500, 700, 850, 925],
-                            "forecast_steps": range(0, 240, 3)},
-                    }
-                }
-            }
+            # ToDo check order
             view_window = loopview.MSSLoopWindow(config_loader(dataset="loop_configuration",
-                                                               default=loop_configuration), self)
-
+                                                               default=mss_default.loop_configuration), self)
         if view_window:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -407,7 +385,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
 
         if template is None:
             template = []
-            waypoints = config_loader(dataset="new_flighttrack_template", default=["Kiruna", "Ny-Alesund"])
+            waypoints = config_loader(dataset="new_flighttrack_template", default=mss_default.new_flighttrack_template)
             for wp in waypoints:
                 template.append(ft.Waypoint(flightlevel=0, location=wp))
 
