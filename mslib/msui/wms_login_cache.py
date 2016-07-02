@@ -30,9 +30,15 @@ AUTHORS:
 """
 Global cache variables
 """
+
 import os
 
-MSS_SETTINGS = os.getenv('MSS_SETTINGS', "mss_settings.json")
+HOME = os.path.expanduser("~")
+DEFAULT_CONFIG_PATH = os.path.join(HOME, ".config", "mss")
+if not os.path.exists(DEFAULT_CONFIG_PATH):
+    os.mkdir(DEFAULT_CONFIG_PATH)
+
+MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(DEFAULT_CONFIG_PATH, "mss_settings.json"))
 
 global cached_usrname
 global cached_passwd
