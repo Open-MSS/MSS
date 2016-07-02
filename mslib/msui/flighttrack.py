@@ -44,6 +44,7 @@ import csv
 import logging
 import xml.dom.minidom
 from mslib.mss_util import config_loader
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -80,20 +81,7 @@ class Waypoint(object):
 
     def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
         self.location = location
-        locations = {
-            "EDMO": (48.08, 11.28),
-            "Hannover": (52.37, 9.74),
-            "Hamburg": (53.55, 9.99),
-            "Juelich": (50.92, 6.36),
-            "Leipzig": (51.34, 12.37),
-            "Muenchen": (48.14, 11.57),
-            "Stuttgart": (48.78, 9.18),
-            "Wien": (48.20833, 16.373064),
-            "Zugspitze": (47.42, 10.98),
-            "Kiruna": (67.821, 20.336),
-            "Ny-Alesund": (78.928, 11.986)
-        }
-        locations = config_loader(dataset='locations', default=locations)
+        locations = config_loader(dataset='locations', default=mss_default.locations)
         if location in locations.keys():
             self.lat, self.lon = locations[location]
         else:
@@ -518,7 +506,7 @@ class WaypointsTableModel(QAbstractTableModel):
         if pos < len(waypoints) - 1:
             wp2 = waypoints[pos + 1]
             wp2.distance_to_prev = mss_util.get_distance((wp1.lat, wp1.lon),
-                                                (wp2.lat, wp2.lon))
+                                                         (wp2.lat, wp2.lon))
 
         # Update total distances of waypoint at index position and all
         # following waypoints.

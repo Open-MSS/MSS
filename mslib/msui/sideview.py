@@ -37,7 +37,7 @@ import os
 import pickle
 import tempfile
 from mslib.mss_util import config_loader
-
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -261,12 +261,11 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
                 # Open a WMS control widget.
                 title = "Web Service Plot Control"
                 widget = wms.VSecWMSControlWidget(default_WMS=config_loader(dataset="default_VSEC_WMS",
-                                                                            default="http://localhost:8081/mss_wms"),
+                                                                            default=mss_default.default_VSEC_WMS),
                                                   waypoints_model=self.waypoints_model,
                                                   view=self.mpl.canvas,
                                                   wms_cache=config_loader(dataset="wms_cache",
-                                                                          default=os.path.join(tempfile.gettempdir(),
-                                                                                               "msui_wms_cache")))
+                                                                          default=mss_default.wms_cache))
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.

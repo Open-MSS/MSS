@@ -32,7 +32,7 @@ from datetime import datetime
 
 import logging
 from mslib.mss_util import config_loader
-
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 import numpy as np
 import matplotlib.pyplot as plt
@@ -220,7 +220,7 @@ class MplSideViewCanvas(MplCanvas):
         model -- WaypointsTableModel defining the vertical section.
         """
         if numlabels is None:
-            numlabels = config_loader(dataset='num_labels', default=10)
+            numlabels = config_loader(dataset='num_labels', default=mss_default.num_labels)
         super(MplSideViewCanvas, self).__init__()
 
         # Default settings.
@@ -267,7 +267,8 @@ class MplSideViewCanvas(MplCanvas):
             # itself to the change() signals of the flight track data model.
             self.waypoints_interactor = mpl_pi.VPathInteractor(
                 self.ax, self.waypoints_model,
-                numintpoints=config_loader(dataset="num_interpolation_points", default=201),
+                numintpoints=config_loader(dataset="num_interpolation_points",
+                                           default=mss_default.num_interpolation_points),
                 redrawXAxis=self.redrawXAxis
             )
 

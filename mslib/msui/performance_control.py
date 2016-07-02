@@ -36,7 +36,6 @@ import logging
 import re
 import threading
 import urllib2
-from mslib.mss_util import config_loader
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
