@@ -41,6 +41,7 @@ import logging
 import random
 import string
 from mslib.mss_util import config_loader
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -102,7 +103,7 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
         """
-        fps = config_loader(dataset="default_VSEC_WMS", default=["http://localhost:8081/mss_wms"])
+        fps = config_loader(dataset="default_VSEC_WMS", default=mss_default.default_VSEC_WMS)
         index = self.controlToBeCreated(index)
         if index >= 0:
             if index == PERFORMANCE:

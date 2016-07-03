@@ -63,6 +63,7 @@ from mslib.msui import ui_loopwindow as ui
 from mslib.msui import loopviewer_widget as imw
 from mslib.msui import mss_qt
 from mslib.mss_util import config_loader
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 """
 CLASS MSSLoopWindow
@@ -287,7 +288,7 @@ if __name__ == "__main__":
             }
         }
     }
-    loop_configuration = config_loader(dataset="loop_configuration", default=loop_configuration)
+    loop_configuration = config_loader(dataset="loop_configuration", default=mss_default.loop_configuration)
     win = MSSLoopWindow(loop_configuration)
     win.show()
     sys.exit(app.exec_())

@@ -46,6 +46,7 @@ import re
 import threading
 import xml.dom.minidom
 from mslib.mss_util import config_loader
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -658,8 +659,10 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
         removed_files = 0
         for f, fsize, fage in files:
             cum_size_bytes += fsize
-            if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes", default=20 * 1024 * 1024) or
-                    fage > config_loader(dataset="wms_cache_max_age_seconds", default=5 * 86400)):
+            if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes",
+                                               default=mss_default.wms_cache_max_size_bytes) or
+                    fage > config_loader(dataset="wms_cache_max_age_seconds",
+                                         default=mss_default.wms_cache_max_age_seconds)):
                 os.remove(f)
                 removed_files += 1
 
@@ -1102,7 +1105,7 @@ if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
     win = PerformanceControlWidget(default_FPS=config_loader(dataset="default_VSEC_WMS",
-                                                             default=["http://localhost:8081/mss_wms"]),
+                                                             default=mss_default.default_VSEC_WMS),
                                    model=waypoints_model)
     win.show()
     sys.exit(app.exec_())

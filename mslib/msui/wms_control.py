@@ -44,6 +44,7 @@ import urllib
 import urllib2
 import xml.etree.ElementTree as etree
 from mslib.mss_util import config_loader
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -1474,8 +1475,10 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         removed_files = 0
         for f, fsize, fage in files:
             cum_size_bytes += fsize
-            if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes", default=20971520) or
-                    fage > config_loader(dataset="wms_cache_max_age_seconds", default=432000)):
+            if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes",
+                                               default=mss_default.wms_cache_max_size_bytes) or
+                    fage > config_loader(dataset="wms_cache_max_age_seconds",
+                                         default=mss_default.wms_cache_max_age_seconds)):
                         os.remove(f)
                         removed_files += 1
 
