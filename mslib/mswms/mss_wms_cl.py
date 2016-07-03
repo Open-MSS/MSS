@@ -85,12 +85,11 @@ from datetime import datetime, timedelta
 import logging
 import optparse
 import os
-import mss_wms_settings
 # relatedthird party imports
 import numpy as np
 
 # local application imports
-import mss_config
+import mss_wms_settings
 
 from mslib.mswms import mss_wms_wsgi
 
@@ -198,7 +197,7 @@ if __name__ == "__main__":
                         datefmt="%H:%M:%S")
 
     # Initialise the WSGI application.
-    wsgi = mss_wms_wsgi.MSS_WMSResponse(mss_config.nwpaccess, address="COMMAND_LINE")
+    wsgi = mss_wms_wsgi.MSS_WMSResponse(mss_wms_settings.nwpaccess, address="COMMAND_LINE")
 
     # Register horizontal section layers.
     for layer, datasets in mss_wms_settings.register_horizontal_layers:
