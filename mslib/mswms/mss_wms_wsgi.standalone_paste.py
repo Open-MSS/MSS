@@ -93,8 +93,6 @@ AUTHORS:
 from datetime import datetime
 
 # local application imports
-import mss_config
-
 import logging
 import socket
 import xml.dom.minidom
@@ -935,7 +933,7 @@ if __name__ == '__main__':
             http_address = "%s:%s" % ("localhost", port)
 
     # Initialise the WSGI application.
-    app = MSS_WMSResponse(mss_config.nwpaccess, address=http_address)
+    app = MSS_WMSResponse(mss_wms_settings.nwpaccess, address=http_address)
 
     # Register horizontal section layers.
     for layer, datasets in mss_wms_settings.register_horizontal_layers:

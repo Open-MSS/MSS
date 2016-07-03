@@ -136,7 +136,7 @@ class Abstract2DSectionStyle(object):
             if len(init_times) == 0:
                 logging.error("ERROR: cannot determine initialisation time(s) "
                               "of this dataset. Check that file structure is "
-                              "in accordance with the used access class in mss_config.py!")
+                              "in accordance with the used access class in mss_wms_settings.py!")
                 return []
             time = init_times[-1]
 

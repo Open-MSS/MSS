@@ -645,7 +645,7 @@ def make_generic_class(entity, vert):
             (vert, "ertel_potential_vorticity"), ]
     if Targets.get_thresholds(entity) is not None:
         fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
-    if all(_x is not None for _x in Targets.get_range(entity, 0, vert)):
+    if all(_x is not None for _x in Targets.get_range(entity, None, vert)):
         fnord.styles = fnord.styles + [
             ("default", "fixed colour scale"),
             ("log", "fixed logarithmic colour scale")]

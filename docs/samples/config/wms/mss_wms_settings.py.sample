@@ -1,3 +1,116 @@
+"""Configuration module for programs accessing data on the MSS server.
+
+********************************************************************************
+
+   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+   Copyright 2011-2014 Marc Rautenhaus
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+********************************************************************************
+
+In this module the data organisation structure of the available forecast
+data is described. The class NWPDataAccess is subclassed for each data type
+in the system (currently ECMWF and EMAC) and provides methods to determine
+which file needs to be accessed for a given variable and time.
+
+The classes also provide methods to query the available initialisation
+times for a given variable, and the available valid times for a
+variable and a given initialisation time. As the latter methods need
+to open the NetCDF data files to determine the contained time values,
+a caching system is used to avoid re-opening already searched files.
+
+Example usage:
+==============
+
+import datetime
+import mss_config
+i = datetime.datetime(2010,07,12,00)
+v = datetime.datetime(2010,07,12,15)
+mss_config.nwpaccess['ecmwf_EUR_LL015'].get_filename('low_cloud_area_fraction',
+                                                     'sfc', i, v, fullpath=True)
+<returns the path to the data file>
+
+AUTHORS:
+========
+
+* Marc Rautenhaus (mr)
+
+"""
+
+# standard library imports
+import os
+from datetime import datetime, timedelta
+from abc import ABCMeta, abstractmethod, abstractproperty
+import re
+import logging
+import time
+import hashlib
+import pickle
+
+# related third party imports
+import netCDF4
+
+# local application imports
+from mslib import netCDF4tools
+import mslib.mswms.dataaccess
+
+##############################################################################
+###                            NWPDataAccess                               ###
+##############################################################################
+
+
+# Add additional access classes here
+
+
+
+##############################################################################
+###                              SETTINGS                                  ###
+##############################################################################
+
+
+# Valid time cache settings:
+# Path to the cache directory. Set to None to disable cache.
+#valid_time_cache = "./vt_cache"
+mslib.mswms.dataaccess.valid_time_cache = os.path.join(os.environ["HOME"], ".mss", "mswms", "vt_cache")
+if not os.path.exists(valid_time_cache): os.makedirs(valid_time_cache)
+# Maximum size of the cache in bytes.
+mslib.mswms.dataaccess.valid_time_cache_max_size_bytes = 10 * 1024 * 1024
+# Maximum age of a cached file in seconds.
+mslib.mswms.dataaccess.valid_time_cache_max_age_seconds = 10 * 86400
+
+# Paths to data directories. Process callables (the functions that are
+# executed by the dispatcher system) can access these paths, hence
+# simply define the key/value pairs that are required.
+datapath = {
+    "ecmwf":    "/path/to/data/mss/grid/ecmwf/netcdf",
+    "emac":     "/path/to/data/mss/grid/emac/netcdf",
+    "meteosat": "/path/to/data/mss/grid/meteosat/netcdf",
+    }
+
+
+# Objects that let the user query the filename in which a particular
+# variable can be found. Objects are instances of subclasses of NWPDataAccess,
+# which provides the methods fc_filename() and full_fc_path().
+nwpaccess = {
+    "ecmwf_NH_LL05": mslib.mswms.dataaccessECMWFDataAccess(datapath["ecmwf"], "NH_LL05")
+#    "ecmwf_EUR_LL015": mslib.mswms.dataaccessECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
+#    "meteosat_EUR_LL05": mslib.mswms.dataaccessMeteosatDataAccess(datapath["meteosat"], "EUR_LL05"),
+#    "emac_GLOBAL_LL1125": mslib.mswms.dataaccessEMACDataAccess(datapath["emac"])
+    }
+
+nwpaccess[nwpaccess.keys()[0]].serviceCache()
+
 """Configuration for the Mission Support System Web Map Service (MSWMS).
 
 ********************************************************************************
