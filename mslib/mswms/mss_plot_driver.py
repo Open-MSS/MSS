@@ -732,8 +732,8 @@ def test_vsec_clouds_path():
     p3 = [51.00, 15.]
     p4 = [48.00, 11.]
 
-    import mss_config
-    nwpaccess = mss_config.nwpaccess["ecmwf_EUR_LL015"]
+    import mss_wms_settings
+    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
 
     init_time = datetime(2010, 12, 14, 00)
     valid_time = datetime(2010, 12, 14, 15)
@@ -761,8 +761,8 @@ def test_hsec_clouds_total():
     #    bbox = [0,30,30,60]
     bbox = [-22.5, 27.5, 55, 62.5]
 
-    import mss_config
-    nwpaccess = mss_config.nwpaccess["ecmwf_EUR_LL015"]
+    import mss_wms_settings
+    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
 
     init_time = datetime(2010, 12, 14, 00)
     valid_time = datetime(2010, 12, 14, 15)
@@ -789,8 +789,8 @@ def test_hsec_temp():
     #    bbox = [0,30,30,60]
     bbox = [-22.5, 27.5, 55, 62.5]
 
-    import mss_config
-    nwpaccess = mss_config.nwpaccess["ecmwf_EUR_LL015"]
+    import mss_wms_settings
+    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
 
     init_time = datetime(2010, 12, 16, 00)
     valid_time = datetime(2010, 12, 16, 15)
@@ -820,8 +820,8 @@ def test_hsec_geopwind():
     # Define a bounding box for the map.
     bbox = [-22.5, 27.5, 55, 62.5]
 
-    import mss_config
-    nwpaccess = mss_config.nwpaccess["ecmwf_EUR_LL015"]
+    import mss_wms_settings
+    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
 
     init_time = datetime(2010, 12, 16, 00)
     valid_time = datetime(2010, 12, 16, 15)
