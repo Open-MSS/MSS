@@ -85,7 +85,7 @@ class NWPDataAccess(object):
     def md5_filename(self, filename):
         """
         """
-        md5_filename = hashlib.md5(filename).hexdigest()
+        md5_filename = hashlib.md5(filename + repr(os.path.getmtime(filename))).hexdigest()
         md5_filename += ".vt_cache_pickle"
         return md5_filename
 
@@ -93,8 +93,7 @@ class NWPDataAccess(object):
         """
         """
         valid_times = None
-        filename = os.path.join(valid_time_cache,
-                                self.md5_filename(filename))
+        filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if os.path.exists(filename):
             fileobj = open(filename, "r")
             valid_times = pickle.load(fileobj)
@@ -104,8 +103,7 @@ class NWPDataAccess(object):
     def save_valid_cache(self, filename, valid_times):
         """
         """
-        filename = os.path.join(valid_time_cache,
-                                self.md5_filename(filename))
+        filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if not os.path.exists(filename):
             fileobj = open(filename, "w")
             pickle.dump(valid_times, fileobj)
