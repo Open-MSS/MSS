@@ -77,6 +77,9 @@ Create that mss user first.
      └── wms.wsgi
 
 
+You have to enter your server address to the get_cababilieties.pt.
+Just replace any address of 127.0.0.1:8081 by yours.
+
 Configuration of apache mod_wsgi.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
