@@ -40,12 +40,7 @@ if not os.path.exists(DEFAULT_CONFIG_PATH):
 
 MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(DEFAULT_CONFIG_PATH, "mss_settings.json"))
 
-global cached_usrname
-global cached_passwd
-global cached_config_file
-
-cached_usrname = None
-cached_passwd = None
+wms_login_cache = {}
 cached_config_file = None
 
 if os.path.exists(MSS_SETTINGS):
