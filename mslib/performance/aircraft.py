@@ -311,7 +311,7 @@ class Aircraft(object):
 
             # climb_descent_to, land_at
             # ==================================================================
-            elif command == "climb_descent_to" or command == "land_at":
+            elif command in ["climb_descent_to", "land_at"]:
                 if ac_state.lon is None:
                     self._flyWarn("no position has been defined before.")
                     continue

@@ -191,7 +191,7 @@ class Abstract2DSectionStyle(object):
 
             # Get a list of the available levels.
             if self.driver.vert_data is not None:
-                return ["%i" % lvl for lvl in sorted(set([int(_x) for _x in self.driver.vert_data]))]
+                return ["%i" % lvl for lvl in sorted({int(_x) for _x in self.driver.vert_data})]
             else:
                 return []
         else:

@@ -894,8 +894,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         # affected a LagrantoMapItem.
         item = index1.internalPointer()
         item2 = index2.internalPointer()
-        if isinstance(item, titree.LagrantoMapItem) or \
-                isinstance(item, titree.AbstractVariableItem):
+        if isinstance(item, (titree.LagrantoMapItem, titree.AbstractVariableItem)):
             lastChange = self.traj_item_tree.getLastChange()
             if lastChange == "VISIBILITY_CHANGE":
                 lastChange = "REDRAW"

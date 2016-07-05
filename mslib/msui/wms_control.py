@@ -431,8 +431,12 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         (mr, 2011-02-25)
         """
         wms = None
-        username = None
-        password = None
+        # initialize login cache fomr config file, but do not overwrite existing keys
+        for key, value in config_loader(dataset="WMS_login", default={}).items():
+            if key not in wms_login_cache.wms_login_cache:
+                wms_login_cache.wms_login_cache[key] = value
+        username, password = wms_login_cache.wms_login_cache.get(base_url, (None, None))
+
         try:
             while wms is None:
                 try:
@@ -452,16 +456,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                         dlg.setModal(True)
                         if dlg.exec_() == QtGui.QDialog.Accepted:
                             username, password = dlg.getAuthInfo()
-                            if username == '':
-                                # If the username was left blank, restore the
-                                # last cached value, if available.
-                                if wms_login_cache.cached_usrname is not None:
-                                    username = wms_login_cache.cached_usrname
-                                    password = wms_login_cache.cached_passwd
-                            else:
-                                # If user & pw have been entered, cache them.
-                                wms_login_cache.cached_usrname = username
-                                wms_login_cache.cached_passwd = password
+                            # If user & pw have been entered, cache them.
+                            wms_login_cache.wms_login_cache[base_url] = (username, password)
                         else:
                             break
                     else:

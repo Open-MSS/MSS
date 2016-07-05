@@ -891,7 +891,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         int row, column
         QModelIndex parent
         """
-        if row < 0 or column < 0 or row >= self.rowCount(parent) or column >= self.columnCount(parent):
+        if not ((0 <= row < self.rowCount(parent)) and (0 <= column < self.columnCount(parent))):
             return QtCore.QModelIndex()
 
         if not parent.isValid():
@@ -1132,9 +1132,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                               if isinstance(child, LagrantoMapItem)])
             #
             # Only flight tracks and trajectories can be queried and selected.
-            if isinstance(item, FlightTrackItem) or \
-                    isinstance(item, TrajectoryItem):
-                #
+            if isinstance(item, (FlightTrackItem, TrajectoryItem)):
                 # Check if the item matches the query.
                 if item.query(queryTranslation):
                     #
