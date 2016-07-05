@@ -403,19 +403,16 @@ def identify_variable(ncfile, identifier_list, check=False):
                 return id_name, ncfile.variables[id_name]
         elif id_type == "standard_name":
             for var_name, variable in ncfile.variables.items():
-                if "standard_name" in variable.ncattrs():
-                    if variable.standard_name == id_name:
+                if "standard_name" in variable.ncattrs() and variable.standard_name == id_name:
                         return var_name, variable
         elif id_type == "long_name":
             for var_name, variable in ncfile.variables.items():
-                if "long_name" in variable.ncattrs():
-                    if variable.long_name == id_name:
+                if "long_name" in variable.ncattrs() and variable.long_name == id_name:
                         return var_name, variable
         elif id_type == "units":
             for var_name, variable in ncfile.variables.items():
-                if "units" in variable.ncattrs():
-                    if variable.units == id_name:
-                        return var_name, variable
+                if "units" in variable.ncattrs() and variable.units == id_name:
+                    return var_name, variable
     if check:
         raise NetCDFVariableError("cannot identify NetCDF variable "
                                   "specified by <%s>" % identifier_list)
