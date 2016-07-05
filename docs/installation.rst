@@ -11,11 +11,14 @@ modern open data science analytics architecture.
 The Mission Support Web Map Service (mss) is available as anaconda package on `atmo <https://anaconda.org/atmo/mss>`_
 channel of anaconda::
 
-   $ conda install -c atmo mss=1.1.0
+   $ conda install -c atmo mss=1.2.0
 
 
+You also could install this project into an environment::
 
-
+   $ conda create -n mssenv python=2
+   $ source activate mssenv
+   $ conda install -c atmo mss=1.2.0
 
 Install developer version based on miniconda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
