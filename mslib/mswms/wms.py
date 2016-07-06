@@ -64,12 +64,9 @@ AUTHORS:
 
 """
 import os
-
-# standard library imports
 import logging
 from datetime import datetime
 import traceback
-# related third party imports
 import paste
 import paste.request
 import paste.util.multidict
@@ -77,7 +74,6 @@ import tempfile
 import urlparse
 from chameleon import PageTemplateLoader
 
-# local application imports
 try:
     import mss_wms_settings
 except ImportError:
@@ -382,8 +378,6 @@ class WMSServer(object):
                     and not level:
                 # Use the default value.
                 level = -1
-                # return HTTPBadRequest("ELEVATION not specified (required for "\
-                #                      "layer %s)." % layer)
             elif ("sfc" in layer_datatypes) and ("ml" not in layer_datatypes) \
                     and ("pl" not in layer_datatypes) and level:
                 msg = "ELEVATION argument not applicable for layer "\
@@ -500,11 +494,7 @@ cache = {}
 def application(environ, start_response):
     try:
         # Request info
-        query = paste.request.parse_dict_querystring(environ)
-
-        #path_info = environ.get('PATH_INFO', '')
         query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))
-        #logging.debug("REQUEST: %s, %s", path_info, query)
         logging.debug("ENVIRON: %s", environ)
 
         # Processing
@@ -517,7 +507,6 @@ def application(environ, start_response):
 
         if url in cache.keys():
             return_format, return_data = cache[url]
-            # raise Exception("HEY")
         else:
             if request.lower() == 'getcapabilities':
                 return_format = 'text/xml'
