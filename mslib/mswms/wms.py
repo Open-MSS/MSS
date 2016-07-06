@@ -74,6 +74,7 @@ import paste
 import paste.request
 import paste.util.multidict
 import tempfile
+import urlparse
 from chameleon import PageTemplateLoader
 
 # local application imports
@@ -83,6 +84,19 @@ except ImportError:
     class mss_wms_settings(object):
         base_dir = os.path.abspath(os.path.dirname(__file__))
         xml_template_location = os.path.join(base_dir, "xml_templates")
+        service_name = "OGC:WMS"
+        service_title = "Mission Support System Web Map Service"
+        service_abstract = "Your Abstract"
+        service_contact_person = "Your Name"
+        service_contact_organisation = "Your Organization"
+        service_address_type = "postal"
+        service_address = "street"
+        service_city = "Your City"
+        service_state_or_province = ""
+        service_post_code = "12345"
+        service_country = "Germany"
+        service_fees = "none"
+        service_access_constraints = "This service is intended for research purposes only."
         register_horizontal_layers = []
         register_vertical_layers = []
         enable_basic_http_authentication = False
@@ -190,8 +204,9 @@ class WMSServer(object):
         return_format = "text/xml"
         return [template(code=code, text=text), "text/xml"]
 
-    def get_capabilities(self):
+    def get_capabilities(self, server_url=None):
         template = templates['get_capabilities.pt']
+        logging.debug("server-url {0}".format(server_url))
 
         # Horizontal Layers
         hsec_layers = []
@@ -207,7 +222,20 @@ class WMSServer(object):
                 vsec_layers.append((dataset, layer))
 
         return_format = 'text/xml'
-        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers)
+        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, server_url=server_url,
+                               service_name=mss_wms_settings.service_name,
+                               service_title=mss_wms_settings.service_title,
+                               service_abstract=mss_wms_settings.service_abstract,
+                               service_contact_person=mss_wms_settings.service_contact_person,
+                               service_contact_organisation=mss_wms_settings.service_contact_organisation,
+                               service_address_type=mss_wms_settings.service_address_type,
+                               service_address=mss_wms_settings.service_address,
+                               service_city=mss_wms_settings.service_city,
+                               service_state_or_province=mss_wms_settings.service_state_or_province,
+                               service_post_code=mss_wms_settings.service_post_code,
+                               service_country=mss_wms_settings.service_country,
+                               service_fees=mss_wms_settings.service_fees,
+                               service_access_constraints=mss_wms_settings.service_access_constraints)
 
         return return_data
 
@@ -485,6 +513,7 @@ def application(environ, start_response):
         return_format = 'text/plain'
 
         url = paste.request.construct_url(environ)
+        server_url = urlparse.urljoin(url, urlparse.urlparse(url).path)
 
         if url in cache.keys():
             return_format, return_data = cache[url]
@@ -492,7 +521,7 @@ def application(environ, start_response):
         else:
             if request.lower() == 'getcapabilities':
                 return_format = 'text/xml'
-                return_data = app.get_capabilities()
+                return_data = app.get_capabilities(server_url)
             elif request.lower() in ['getmap', 'getvsec']:
                 return_data, return_format = app.produce_plot(environ, request)
                 if not app.is_service_exception(return_data):
@@ -514,6 +543,7 @@ def application(environ, start_response):
     except Exception as e:
         status = '404 NOT FOUND'
         error_message = str(type(e)) + ": " + str(e)
+        # ToDo add a config var to disable output, replace by standard text, "Internal Server error"
         error_message = error_message + "\n" + traceback.format_exc()
 
         response_headers = [('Content-type', 'text/plain'),
