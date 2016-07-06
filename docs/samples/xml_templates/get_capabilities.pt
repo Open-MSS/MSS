@@ -30,7 +30,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }/?"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }?"/>
                         </Get>
                     </HTTP>
                 </DCPType>
@@ -40,7 +40,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }/?"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }?"/>
                         </Get>
                     </HTTP>
                 </DCPType>
