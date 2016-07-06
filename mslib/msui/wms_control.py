@@ -48,11 +48,6 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
-if 'thirdparty' not in ','.join(sys.path):
-    from distutils.sysconfig import get_python_lib
-    # add owslib thirdparty module path
-    sys.path.extend([os.path.join(get_python_lib(), 'mslib', 'thirdparty')])
-
 import mslib.owslib.wms
 import mslib.owslib.util
 import PIL.Image
