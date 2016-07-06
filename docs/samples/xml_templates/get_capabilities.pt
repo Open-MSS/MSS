@@ -8,7 +8,7 @@
         <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }"/>
         <ContactInformation>
             <ContactPersonPrimary>
-                <ContactPerson>${ service_contact_perspon }</ContactPerson>
+                <ContactPerson>${ service_contact_person }</ContactPerson>
                 <ContactOrganization>${ service_contact_organisation }</ContactOrganization>
             </ContactPersonPrimary>
             <ContactAddress>
