@@ -2,26 +2,26 @@
 <!DOCTYPE WMT_MS_Capabilities SYSTEM "http://www.digitalearth.gov/wmt/xml/capabilities_1_1_1.dtd">
 <WMT_MS_Capabilities version="1.1.1" updateSequence="0">
     <Service>
-        <Name>OGC:WMS</Name>
-        <Title>Mission Support System Web Map Service</Title>
-        <Abstract>Your Abstract.</Abstract>
-        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="$(server_url)"/>
+        <Name>${ service_name }</Name>
+        <Title>${ service_title }</Title>
+        <Abstract>${ service_abstract }</Abstract>
+        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }"/>
         <ContactInformation>
             <ContactPersonPrimary>
-                <ContactPerson>Your Name</ContactPerson>
-                <ContactOrganization>Your Organization</ContactOrganization>
+                <ContactPerson>${ service_contact_perspon }</ContactPerson>
+                <ContactOrganization>${ service_contact_organisation }</ContactOrganization>
             </ContactPersonPrimary>
             <ContactAddress>
-                <AddressType>postal</AddressType>
-                <Address>Your Street</Address>
-                <City>Your City</City>
-                <StateOrProvince></StateOrProvince>
-                <PostCode>12345</PostCode>
-                <Country>Germany</Country>
+                <AddressType>${ service_address_type }</AddressType>
+                <Address>${ service_address }</Address>
+                <City>${ service_city }</City>
+                <StateOrProvince>${ service_state_or_province }</StateOrProvince>
+                <PostCode>${ service_post_code }</PostCode>
+                <Country>${ service_country }</Country>
             </ContactAddress>
         </ContactInformation>
-        <Fees>none</Fees>
-        <AccessConstraints>This service is intended for research purposes only.</AccessConstraints>
+        <Fees>${ service_fees }</Fees>
+        <AccessConstraints>${ service_access_constraints }</AccessConstraints>
     </Service>
     <Capability>
         <Request>
@@ -30,7 +30,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="$(server_url)/?"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }/?"/>
                         </Get>
                     </HTTP>
                 </DCPType>
@@ -40,7 +40,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="$(server_url)/?"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }/?"/>
                         </Get>
                     </HTTP>
                 </DCPType>
