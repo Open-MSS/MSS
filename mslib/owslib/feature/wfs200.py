@@ -7,9 +7,9 @@
 # =============================================================================
 
 #owslib imports:
-from owslib.ows import ServiceIdentification, ServiceProvider, OperationsMetadata
-from owslib.etree import etree
-from owslib.util import nspath, testXMLValue
+from mslib.owslib.ows import ServiceIdentification, ServiceProvider, OperationsMetadata
+from mslib.owslib.etree import etree
+from mslib.owslib.util import nspath, testXMLValue
 
 #other imports
 import cgi

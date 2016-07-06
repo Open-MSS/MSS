@@ -12,12 +12,12 @@
 ##########NOTE: Does not conform to new interfaces yet #################
 
 from wcsBase import WCSBase, WCSCapabilitiesReader
-from owslib.util import openURL, testXMLValue
+from mslib.owslib.util import openURL, testXMLValue
 from urllib import urlencode
 from urllib2 import urlopen
-from owslib.etree import etree
+from mslib.owslib.etree import etree
 import os, errno
-from owslib.coverage import wcsdecoder
+from mslib.owslib.coverage import wcsdecoder
 
 def ns(tag):
     return '{http://www.opengis.net/wcs/1.1}'+tag

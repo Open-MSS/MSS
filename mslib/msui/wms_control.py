@@ -53,8 +53,8 @@ if 'thirdparty' not in ','.join(sys.path):
     # add owslib thirdparty module path
     sys.path.extend([os.path.join(get_python_lib(), 'mslib', 'thirdparty')])
 
-import owslib.wms
-import owslib.util
+import mslib.owslib.wms
+import mslib.owslib.util
 import PIL.Image
 
 # local application imports
@@ -70,7 +70,7 @@ CLASS MSSWebMapService
 """
 
 
-class MSSWebMapService(owslib.wms.WebMapService):
+class MSSWebMapService(mslib.owslib.wms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
 
         added parameters are
@@ -201,7 +201,7 @@ class MSSWebMapService(owslib.wms.WebMapService):
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
 
-        u = owslib.util.openURL(base_url, data, method,
+        u = mslib.owslib.util.openURL(base_url, data, method,
                                 username=self.username,
                                 password=self.password)
 
@@ -217,7 +217,7 @@ class MSSWebMapService(owslib.wms.WebMapService):
                 se_xml = u.read()
                 se_tree = etree.fromstring(se_xml)
                 err_message = str(se_tree.find('ServiceException').text).strip()
-                raise owslib.wms.ServiceException(err_message, se_xml)
+                raise mslib.owslib.wms.ServiceException(err_message, se_xml)
         return u
 
 
@@ -442,7 +442,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 try:
                     wms = MSSWebMapService(base_url, version='1.1.1',
                                            username=username, password=password)
-                except owslib.util.ServiceException as ex:
+                except mslib.owslib.util.ServiceException as ex:
                     if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
                             "401 Unauthorized") >= 0:
                         # Catch the "401 Unauthorized" error if one has been

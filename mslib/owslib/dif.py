@@ -10,8 +10,8 @@
 
 """ DIF metadata parser """
 
-from owslib.etree import etree
-from owslib import util
+from mslib.owlsib.etree import etree
+from mslib.owlsib import util
 
 # default variables
 

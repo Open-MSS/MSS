@@ -10,8 +10,8 @@
 
 """ FGDC metadata parser """
 
-from owslib.etree import etree
-from owslib import util
+from mslib.owslib.etree import etree
+from mslib.owslib import util
 
 class Metadata(object):
     """ Process metadata """

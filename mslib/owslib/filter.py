@@ -16,8 +16,8 @@ Filter Encoding: http://www.opengeospatial.org/standards/filter
 Currently supports version 1.1.0 (04-095).
 """
 
-from owslib.etree import etree
-from owslib import util
+from mslib.owslib.etree import etree
+from mslib.owslib import util
 
 # default variables
 

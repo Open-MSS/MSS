@@ -12,7 +12,7 @@ from urllib import urlencode
 from urllib2 import urlopen
 import logging
 
-from owslib.etree import etree
+from mslib.owslib.etree import etree
 
 WFS_NAMESPACE = 'http://www.opengis.net/wfs'
 OGC_NAMESPACE = 'http://www.opengis.net/ogc'

@@ -11,7 +11,7 @@
 
 from urllib import urlencode
 from urllib2 import urlopen, Request
-from owslib.etree import etree
+from mslib.owslib.etree import etree
 import cgi
 from StringIO import StringIO
 

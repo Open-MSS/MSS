@@ -50,7 +50,7 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
-import owslib.util
+import mslib.owslib.util
 import numpy as np
 
 
@@ -195,7 +195,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
                 try:
                     wms = MSSWebMapService(base_url, version='1.1.1',
                                            username=username, password=password)
-                except owslib.util.ServiceException as ex:
+                except mslib.owslib.util.ServiceException as ex:
                     if str(ex).startswith("401"):
                         # Catch the "401 Unauthorized" error if one has been
                         # returned by the server and ask the user for username
