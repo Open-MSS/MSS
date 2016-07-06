@@ -84,6 +84,19 @@ except ImportError:
     class mss_wms_settings(object):
         base_dir = os.path.abspath(os.path.dirname(__file__))
         xml_template_location = os.path.join(base_dir, "xml_templates")
+        service_name = "OGC:WMS"
+        service_title = "Mission Support System Web Map Service"
+        service_abstract = "Your Abstract"
+        service_contact_person = "Your Name"
+        service_contact_organisation = "Your Organization"
+        service_address_type = "postal"
+        service_address = "street"
+        service_city = "Your City"
+        service_state_or_province = ""
+        service_post_code = "12345"
+        service_country = "Germany"
+        service_fees = "none"
+        service_access_constraints = "This service is intended for research purposes only."
         register_horizontal_layers = []
         register_vertical_layers = []
         enable_basic_http_authentication = False
@@ -209,7 +222,20 @@ class WMSServer(object):
                 vsec_layers.append((dataset, layer))
 
         return_format = 'text/xml'
-        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, server_url=server_url)
+        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, server_url=server_url,
+                               service_name=mss_wms_settings.service_name,
+                               service_title=mss_wms_settings.service_title,
+                               service_abstract=mss_wms_settings.service_abstract,
+                               service_contact_person=mss_wms_settings.service_contact_person,
+                               service_contact_organisation=mss_wms_settings.service_contact_organisation,
+                               service_address_type=mss_wms_settings.service_address_type,
+                               service_address=mss_wms_settings.service_address,
+                               service_city=mss_wms_settings.service_city,
+                               service_state_or_province=mss_wms_settings.service_state_or_province,
+                               service_post_code=mss_wms_settings.service_post_code,
+                               service_country=mss_wms_settings.service_country,
+                               service_fees=mss_wms_settings.service_fees,
+                               service_access_constraints=mss_wms_settings.service_access_constraints)
 
         return return_data
 
