@@ -23,7 +23,7 @@ from urllib2 import install_opener
 
 from etree import etree
 
-import owslib.ows as ows
+import mslib.owslib.ows as ows
 import filter
 
 class ServiceException(Exception):

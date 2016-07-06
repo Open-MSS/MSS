@@ -8,13 +8,13 @@
 
 #example: used in conjunction with ows lib wcs:
 
-#from owslib import wcsdecoder
+#from mslib.owslib import wcsdecoder
 #u=wcs.getcoverage(identifier=['TuMYrRQ4'], timeSequence=['2792-06-01T00:00:00.0'], bbox=(-112,36,-106,41),format='application/netcdf', store='true')
 #decoder=wcsdecoder.WCSDecoder(u)
 #decoder.getCoverages()
 
 import os
-from owslib.etree import etree
+from mslib.owslib.etree import etree
 import email
 import errno
 
