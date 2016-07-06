@@ -197,8 +197,8 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         # not considered. For some reason, the check below doesn't work, though..
 
         u = mslib.owslib.util.openURL(base_url, data, method,
-                                username=self.username,
-                                password=self.password)
+                                      username=self.username,
+                                      password=self.password)
 
         # check for service exceptions, and return
         if hasattr(u, "info"):

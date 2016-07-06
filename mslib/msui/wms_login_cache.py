@@ -27,9 +27,6 @@ AUTHORS:
 
 """
 
-"""
-Global cache variables
-"""
 
 import os
 
