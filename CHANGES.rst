@@ -1,6 +1,28 @@
 Changelog
 ================
 
+Version 1.2.0 (not released yet)
+------------------------------------
+
+New Features:
+ - mss client, setup default configuration and json config file, #36, #37
+ - mss client get capabilities update without new login, #29
+ - wsgi and standalone server refactored and merged into one application,
+   mswms is the new name of the standalone server #30
+ - server configuration files simplified, #39
+ - server templates got more variables defined in mss_wms_settings.py, #44, #45
+ - geopy distance calculation dependency replaced by pyproj, #34
+ - Simplification for adding or removing CLaMS parameters, #12
+ - skipped dependency of conda-forge, because geopy function replaced, #38
+
+Bug Fixes:
+ - execute bit only on executables, #40
+
+Other Changes:
+ - Isabell Krisch added to AUTHORS
+ - https://anaconda.org/atmo/mss introduced
+ - improved documentations
+
 
 Version 1.1.0 
 ----------------------------------

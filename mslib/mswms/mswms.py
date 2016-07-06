@@ -42,7 +42,7 @@ def main():
         from paste.auth.basic import AuthBasicHandler
         import hashlib
 
-        realm = 'DLR/IPA Mission Support Web Map Service'
+        realm = 'Mission Support Web Map Service'
 
         def authfunc(environ, username, password):
             for u, p in mss_wms_settings.allowed_users:
