@@ -5,7 +5,7 @@
         <Name>OGC:WMS</Name>
         <Title>Mission Support System Web Map Service</Title>
         <Abstract>Your Abstract.</Abstract>
-        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://www.your.server"/>
+        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="$(server_url)"/>
         <ContactInformation>
             <ContactPersonPrimary>
                 <ContactPerson>Your Name</ContactPerson>
@@ -30,7 +30,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/mss_wms?"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="$(server_url)/?"/>
                         </Get>
                     </HTTP>
                 </DCPType>
@@ -40,7 +40,7 @@
                 <DCPType>
                     <HTTP>
                         <Get>
-                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/mss_wms?"/>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="$(server_url)/?"/>
                         </Get>
                     </HTTP>
                 </DCPType>

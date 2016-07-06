@@ -74,6 +74,7 @@ import paste
 import paste.request
 import paste.util.multidict
 import tempfile
+import urlparse
 from chameleon import PageTemplateLoader
 
 # local application imports
@@ -190,8 +191,9 @@ class WMSServer(object):
         return_format = "text/xml"
         return [template(code=code, text=text), "text/xml"]
 
-    def get_capabilities(self):
+    def get_capabilities(self, server_url=None):
         template = templates['get_capabilities.pt']
+        logging.debug("server-url {0}".format(server_url))
 
         # Horizontal Layers
         hsec_layers = []
@@ -207,7 +209,7 @@ class WMSServer(object):
                 vsec_layers.append((dataset, layer))
 
         return_format = 'text/xml'
-        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers)
+        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, server_url=server_url)
 
         return return_data
 
@@ -485,6 +487,7 @@ def application(environ, start_response):
         return_format = 'text/plain'
 
         url = paste.request.construct_url(environ)
+        server_url = urlparse.urljoin(url, urlparse.urlparse(url).path)
 
         if url in cache.keys():
             return_format, return_data = cache[url]
@@ -492,7 +495,7 @@ def application(environ, start_response):
         else:
             if request.lower() == 'getcapabilities':
                 return_format = 'text/xml'
-                return_data = app.get_capabilities()
+                return_data = app.get_capabilities(server_url)
             elif request.lower() in ['getmap', 'getvsec']:
                 return_data, return_format = app.produce_plot(environ, request)
                 if not app.is_service_exception(return_data):
@@ -514,6 +517,7 @@ def application(environ, start_response):
     except Exception as e:
         status = '404 NOT FOUND'
         error_message = str(type(e)) + ": " + str(e)
+        # ToDo add a config var to disable output, replace by standard text, "Internal Server error"
         error_message = error_message + "\n" + traceback.format_exc()
 
         response_headers = [('Content-type', 'text/plain'),

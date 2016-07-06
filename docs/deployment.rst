@@ -3,10 +3,10 @@ wms - Web Map Service
 
 Once installation and configuration are complete, you can start the
 Web Map Service application (provided you have forecast data to
-visualise). The file "mss_wms_wsgi.standalone_paste.py" is an
-executable Python script starting up a Paste HTTP server with the WMS
+visualise). The file "mswms" is an executable Python script starting
+ up a Paste HTTP server with the WMS
 WSGI module. A short description of how to start the program is given
-in its docstring at the beginning of the file. The file
+by the --help option. The file
 "wms.wsgi" is intended to be used with an Apache web server
 installation. "mss_wms_cl.py" is the command line interface for image
 batch production.
@@ -16,7 +16,7 @@ A few notes:
 - If you run the Paste WMS on a remote machine (e.g. on your office
   computer which you access via ssh from a campaign site), consider
   the ssh-tunnel option. Create the ssh connection with the "-L"
-  option and start the WMS with the "-ssh" option.
+  option and start the WMS with the tunneled port as option.
 
 - The Paste WMS currently cannot run multithreaded (Apache does
   support multiple processes). This is due to that a single instance
@@ -46,11 +46,12 @@ A few notes:
 apache server setup
 --------------------------------
 
+
 Our examples are based on the following directories located in the home directory of the mss user::
+Create that mss user first.
 
  .
  ├── config
- │   ├── mss_config.py
  │   └── mss_wms_settings.py
  ├── htdocs
  │   └── xml_templates
@@ -74,6 +75,8 @@ Our examples are based on the following directories located in the home director
  └── wsgi
      ├── auth.wsgi
      └── wms.wsgi
+
+
 
 
 Configuration of apache mod_wsgi.conf
@@ -136,9 +139,6 @@ The configuration files have to become added to the /home/mss/config directory
 
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
 
-**/home/mss/config/mss_config.py**
-
- .. literalinclude:: samples/config/wms/mss_config.py.sample
 
 
 
