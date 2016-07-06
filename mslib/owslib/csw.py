@@ -12,13 +12,13 @@
 
 import StringIO
 import random
-from owslib.etree import etree
-from owslib.filter import *
-from owslib import util
-from owslib.ows import *
-from owslib.iso import *
-from owslib.fgdc import *
-from owslib.dif import *
+from mslib.owslib.etree import etree
+from mslib.owslib.filter import *
+from mslib.owslib import util
+from mslib.owslib.ows import *
+from mslib.owslib.iso import *
+from mslib.owslib.fgdc import *
+from mslib.owslib.dif import *
 
 # default variables
 

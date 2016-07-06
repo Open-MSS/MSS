@@ -8,7 +8,7 @@
 # Contact email: tomkralidis@hotmail.com
 # =============================================================================
 
-from owslib.etree import etree
+from mslib.owslib.etree import etree
 import urlparse, urllib2
 from urllib2 import urlopen, HTTPError, Request
 from urllib2 import HTTPPasswordMgrWithDefaultRealm
