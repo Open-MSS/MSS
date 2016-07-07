@@ -31,6 +31,9 @@ AUTHORS:
 import os
 
 HOME = os.path.expanduser("~")
+CONFIG_PATH = os.path.join(HOME, ".config")
+if not os.path.exists(CONFIG_PATH):
+    os.mkdir(CONFIG_PATH)
 DEFAULT_CONFIG_PATH = os.path.join(HOME, ".config", "mss")
 if not os.path.exists(DEFAULT_CONFIG_PATH):
     os.mkdir(DEFAULT_CONFIG_PATH)
