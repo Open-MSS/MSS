@@ -2,12 +2,11 @@ wms - Web Map Service
 =====================================
 
 Once installation and configuration are complete, you can start the
-Web Map Service application (provided you have forecast data to
-visualise). The file "mswms" is an executable Python script starting
- up a Paste HTTP server with the WMS
-WSGI module. A short description of how to start the program is given
-by the --help option. The file
-"wms.wsgi" is intended to be used with an Apache web server
+Web Map Service application (provided you have forecast data to visualise).
+The file "mswms" is an executable Python script starting  up a Paste HTTP server
+with the WMS WSGI module.
+A short description of how to start the program is given by the --help option.
+The file "wms.wsgi" is intended to be used with an Apache web server
 installation. "mss_wms_cl.py" is the command line interface for image
 batch production.
 
@@ -48,7 +47,6 @@ apache server setup
 
 
 Our examples are based on the following directories located in the home directory of the mss user::
-Create that mss user first.
 
  .
  ├── config
@@ -76,6 +74,8 @@ Create that mss user first.
      ├── auth.wsgi
      └── wms.wsgi
 
+
+Create that mss user first.
 
 
 
