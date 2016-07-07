@@ -48,42 +48,22 @@ AUTHORS:
 
 """
 
-# standard library imports
 import os
-from datetime import datetime, timedelta
-from abc import ABCMeta, abstractmethod, abstractproperty
-import re
-import logging
-import time
-import hashlib
-import pickle
-
-# related third party imports
-import netCDF4
-
-# local application imports
-from mslib import netCDF4tools
 import mslib.mswms.dataaccess
-
-##############################################################################
-###                            NWPDataAccess                               ###
-##############################################################################
-
-
-# Add additional access classes here
+from mslib.mswms import mpl_hsec_styles
+from mslib.mswms import mpl_vsec_styles
+import mslib.mswms
 
 
-
-##############################################################################
-###                              SETTINGS                                  ###
-##############################################################################
-
-
+#
+# SETTINGS                                  ###
+#
 # Valid time cache settings:
 # Path to the cache directory. Set to None to disable cache.
-#valid_time_cache = "./vt_cache"
+# valid_time_cache = "./vt_cache"
 mslib.mswms.dataaccess.valid_time_cache = os.path.join(os.environ["HOME"], ".mss", "mswms", "vt_cache")
-if not os.path.exists(valid_time_cache): os.makedirs(valid_time_cache)
+if not os.path.exists(valid_time_cache):
+    os.makedirs(valid_time_cache)
 # Maximum size of the cache in bytes.
 mslib.mswms.dataaccess.valid_time_cache_max_size_bytes = 10 * 1024 * 1024
 # Maximum age of a cached file in seconds.
@@ -93,10 +73,10 @@ mslib.mswms.dataaccess.valid_time_cache_max_age_seconds = 10 * 86400
 # executed by the dispatcher system) can access these paths, hence
 # simply define the key/value pairs that are required.
 datapath = {
-    "ecmwf":    "/path/to/data/mss/grid/ecmwf/netcdf",
-    "emac":     "/path/to/data/mss/grid/emac/netcdf",
+    "ecmwf": "/path/to/data/mss/grid/ecmwf/netcdf",
+    "emac": "/path/to/data/mss/grid/emac/netcdf",
     "meteosat": "/path/to/data/mss/grid/meteosat/netcdf",
-    }
+}
 
 
 # Objects that let the user query the filename in which a particular
@@ -104,50 +84,17 @@ datapath = {
 # which provides the methods fc_filename() and full_fc_path().
 nwpaccess = {
     "ecmwf_NH_LL05": mslib.mswms.dataaccessECMWFDataAccess(datapath["ecmwf"], "NH_LL05")
-#    "ecmwf_EUR_LL015": mslib.mswms.dataaccessECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
-#    "meteosat_EUR_LL05": mslib.mswms.dataaccessMeteosatDataAccess(datapath["meteosat"], "EUR_LL05"),
-#    "emac_GLOBAL_LL1125": mslib.mswms.dataaccessEMACDataAccess(datapath["emac"])
-    }
+    #    "ecmwf_EUR_LL015": mslib.mswms.dataaccessECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
+    #    "meteosat_EUR_LL05": mslib.mswms.dataaccessMeteosatDataAccess(datapath["meteosat"], "EUR_LL05"),
+    #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccessEMACDataAccess(datapath["emac"])
+}
 
 nwpaccess[nwpaccess.keys()[0]].serviceCache()
 
-"""Configuration for the Mission Support System Web Map Service (MSWMS).
 
-********************************************************************************
-
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the Mission Support System Web Map Service (MSWMS).
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
-"""
-
-# local application imports
-from mslib.mswms import mpl_hsec_styles
-from mslib.mswms import mpl_vsec_styles
-
-###############################################################################
-###                  Registration of horizontal layers.                     ###
-###############################################################################
+#
+# Registration of horizontal layers.                     ###
+#
 
 # The following list contains tuples of the format (instance of
 # visualisation classes, data set). The visualisation classes are
@@ -180,17 +127,17 @@ register_horizontal_layers = [
     (mpl_hsec_styles.HS_PVTropoStyle_PV_01, ["ecmwf_EUR_LL015"]),
 
     # EMAC layers.
-    #(mpl_hsec_styles.HS_EMAC_TracerStyle_ML_01, ["emac_GLOBAL_LL1125"]),
-    #(mpl_hsec_styles.HS_EMAC_TracerStyle_SFC_01, ["emac_GLOBAL_LL1125"])
+    # (mpl_hsec_styles.HS_EMAC_TracerStyle_ML_01, ["emac_GLOBAL_LL1125"]),
+    # (mpl_hsec_styles.HS_EMAC_TracerStyle_SFC_01, ["emac_GLOBAL_LL1125"])
 
     # Meteosat products.
     (mpl_hsec_styles.HS_Meteosat_BT108_01, ["meteosat_EUR_LL05"])
-    ]
+]
 
 
-###############################################################################
-###                  Registration of vertical layers.                       ###
-###############################################################################
+#
+# Registration of vertical layers.                       ###
+#
 
 # The same as above, but for vertical cross-sections.
 
@@ -206,13 +153,13 @@ register_vertical_layers = [
     (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
 
     # EMAC layers.
-    #(mpl_vsec_styles.VS_EMACEyja_Style_01, ["emac_GLOBAL_LL1125"])
-    ]
+    # (mpl_vsec_styles.VS_EMACEyja_Style_01, ["emac_GLOBAL_LL1125"])
+]
 
 
-###############################################################################
-###                       HTTP Authentication                               ###
-###############################################################################
+#
+# HTTP Authentication                               ###
+#
 
 # If you require basic HTTP authentication, set the following variable
 # to True. Add usernames in the list "allowed:users". Note that the
@@ -226,9 +173,9 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                  ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
 
 
-###############################################################################
-###                         Server settings.                                ###
-###############################################################################
+#
+# Server settings.                                ###
+#
 
 # Here you can define to which IP addresses and ports the PASTE HTTP
 # server should bind on different machines. The WSGI program obtains
@@ -240,12 +187,12 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 # docstring of mss_wms_wsgi.py).
 paste_ip_bind = {
     "server-name": {"host": "insert-ip-number", "port": "8081", "alias": "mss.server.de"}
-    }
+}
 
 paste_use_threadpool = False
 
 # xml_template directory is a sub directory of mswms
-import mslib.mswms
+
 base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 xml_template_location = os.path.join(base_dir, "xml_templates")
 
@@ -265,9 +212,9 @@ service_fees = "none"
 service_access_constraints = "This service is intended for research purposes only."
 
 
-###############################################################################
-###              EPSG Code Definitions for Matplotlib basemap               ###
-###############################################################################
+#
+# EPSG Code Definitions for Matplotlib basemap               ###
+#
 
 # In this section you can define how EPSG codes are interpreted in
 # terms of Matplotlib basemap parameters. If you require a new EPSG
@@ -279,11 +226,11 @@ service_access_constraints = "This service is intended for research purposes onl
 #                  MetOceanDWG/MetCoordinateReferenceSystemDefinition
 epsg_to_mpl_basemap_table = {
     # EPSG:4326, the standard cylindrical lat/lon projection.
-    4326:     {"projection": "cyl"},
+    4326: {"projection": "cyl"},
 
     # EPSG:9810, polar stereographic projection with lon_0=0. NOTE: This
     # code requires the bbox to be given in metres!
-    #9810:     {"projection": "stere", "lat_0": 90., "lon_0": 0.},
+    # 9810:     {"projection": "stere", "lat_0": 90., "lon_0": 0.},
 
     # Non-standard EPSG codes, specificially defined for MSS pruposes.
     # EPSG:777llLLL, north polar stereographic projections with lat_0=ll and
@@ -302,4 +249,4 @@ epsg_to_mpl_basemap_table = {
 
     # Feel free to add other projections, e.g. a south polar projection
     # EPSG:778llLLL.
-    }
+}

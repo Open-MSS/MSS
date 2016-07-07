@@ -138,7 +138,7 @@ class NWPDataAccess(object):
         for f, fsize, fage in files:
             cum_size_bytes += fsize
             if (cum_size_bytes > valid_time_cache_max_size_bytes) or \
-                            fage > valid_time_cache_max_age_seconds:
+                fage > valid_time_cache_max_age_seconds:
                 os.remove(f)
                 removed_files += 1
 
@@ -156,10 +156,6 @@ class NWPDataAccess(object):
         """
         return self._mfDatasetArgsDict
 
-
-##############################################################################
-###                           ECMWFDataAccess                              ###
-##############################################################################
 
 class ECMWFDataAccess(NWPDataAccess):
     """Subclass to NWPDataAccess for accessing ECMWF data.
@@ -364,10 +360,6 @@ class ECMWFDataAccess(NWPDataAccess):
         return os.listdir(self._root_path)
 
 
-##############################################################################
-###                           CLAMSDataAccess                              ###
-##############################################################################
-
 class CLAMSDataAccess(NWPDataAccess):
     """Subclass to NWPDataAccess for accessing CLAMS data.
 
@@ -507,10 +499,6 @@ class CLAMSDataAccess(NWPDataAccess):
         """
         return os.listdir(self._root_path)
 
-
-##############################################################################
-###                           GWFCDataAccess                               ###
-##############################################################################
 
 class GWFCDataAccess(NWPDataAccess):
     """Subclass to NWPDataAccess for accessing CLAMS data.
@@ -657,10 +645,6 @@ class GWFCDataAccess(NWPDataAccess):
         return os.listdir(self._root_path)
 
 
-##############################################################################
-###                           EMACDataAccess                              ###
-##############################################################################
-
 class EMACDataAccess(NWPDataAccess):
     """Subclass to NWPDataAccess for accessing EMAC datasets.
 
@@ -806,10 +790,6 @@ class EMACDataAccess(NWPDataAccess):
             files.extend(os.listdir(data_dir))
         return files
 
-
-##############################################################################
-###                        MeteosatDataAccess                              ###
-##############################################################################
 
 class MeteosatDataAccess(NWPDataAccess):
     """Subclass to NWPDataAccess for accessing Meteosat data.

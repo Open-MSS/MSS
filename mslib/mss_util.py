@@ -45,6 +45,7 @@ except ImportError:
 from mslib import greatcircle
 from mslib.msui import wms_login_cache
 
+
 def config_loader(config_file="mss_settings.json", dataset=None, default=None):
     """
     Function for loading json config data
@@ -79,6 +80,7 @@ def config_loader(config_file="mss_settings.json", dataset=None, default=None):
                 return default
             raise KeyError("default value for key not set")
     return data
+
 
 def get_distance(coord0, coord1):
     """

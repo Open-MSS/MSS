@@ -10,7 +10,7 @@ you get an exception on startup, your system probably misses one of
 the required Python packages. Check the INSTALL file for information.
 
 Configuration for the user interface is located in
-"mss_settings.py". In this file, you can specify, for instance, the
+"mss_settings.json". In this file, you can specify, for instance, the
 default WMS URLs for the WMS client, the size of the local image cache
 (the MSUI caches retrieved WMS images to accelerate repeated
 retrievals), or the predefined locations that the user can select in
@@ -43,5 +43,4 @@ by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
 
 
 .. literalinclude:: samples/config/mss/mss_settings.json.sample
-
 

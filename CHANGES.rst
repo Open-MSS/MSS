@@ -13,14 +13,15 @@ New Features:
  - server templates got more variables defined in mss_wms_settings.py, #44, #45
  - geopy distance calculation dependency replaced by pyproj, #34
  - Simplification for adding or removing CLaMS parameters, #12
- - skipped dependency of conda-forge, because geopy function replaced, #38
 
 Bug Fixes:
  - execute bit only on executables, #40
 
 Other Changes:
  - Isabell Krisch added to AUTHORS
+ - skipped dependency of conda-forge, because geopy function replaced, #38
  - https://anaconda.org/atmo/mss introduced
+ - moved of mslib.thirdparty.owslib to mslib.owslib and hardcoded all imports in owslib to mslib.owslib, #1
  - improved documentations
 
 
