@@ -134,7 +134,7 @@ p, li { white-space: pre-wrap; }
    <item>
     <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>Copyright 2015-2016: Marc Rautenhaus, Jörn Ungermann, Jens-Uwe Grooß, Thomas Breuer, Reimar Bauer</string>
+      <string>Copyright 2015-2016: Marc Rautenhaus, Isabell Krisch, Jörn Ungermann, Jens-Uwe Grooß, Thomas Breuer, Reimar Bauer</string>
      </property>
     </widget>
    </item>
