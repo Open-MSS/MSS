@@ -97,7 +97,7 @@ class Ui_AboutMSUIDialog(object):
         self.label_7.setText(_translate("AboutMSUIDialog", "License: Apache License Version 2.0", None))
         self.label_3.setText(_translate("AboutMSUIDialog", "Copyright 2008-2014: Deutsches Zentrum fuer Luft- und Raumfahrt e.V.", None))
         self.label_4.setText(_translate("AboutMSUIDialog", "Copyright 2011-2014: Marc Rautenhaus", None))
-        self.label_5.setText(_translate("AboutMSUIDialog", "Copyright 2015-2016: Marc Rautenhaus, Jörn Ungermann, Jens-Uwe Grooß, Thomas Breuer, Reimar Bauer", None))
+        self.label_5.setText(_translate("AboutMSUIDialog", "Copyright 2015-2016: Marc Rautenhaus, Isabell Krisch, Jörn Ungermann, Jens-Uwe Grooß, Thomas Breuer, Reimar Bauer", None))
         self.label_6.setText(_translate("AboutMSUIDialog", "<html><head/><body><p>See <a href=\"http://mss.rtfd.io\"><span style=\" text-decoration: underline; color:#0000ff;\">http://mss.rtfd.io</span></a> for details.</p></body></html>", None))
         self.btOK.setText(_translate("AboutMSUIDialog", "Ok", None))
 
