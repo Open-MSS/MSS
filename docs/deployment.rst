@@ -41,6 +41,7 @@ A few notes:
   network. Hence, when possible, try to make sure the WMS runs on the
   same computer on which the input data files are hosted.
 
+.. _apache-deployment:
 
 apache server setup
 --------------------------------
@@ -51,10 +52,6 @@ Our examples are based on the following directories located in the home director
  .
  ├── config
  │   └── mss_wms_settings.py
- ├── htdocs
- │   └── xml_templates
- │       ├── get_capabilities.pt
- │       └── service_exception.pt
  ├── log
  │   └── mss_error.log
  ├── miniconda2
@@ -140,7 +137,7 @@ The configuration files have to become added to the /home/mss/config directory
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
 
 
-
+You have to adopt this file to your data.
 
 
 
