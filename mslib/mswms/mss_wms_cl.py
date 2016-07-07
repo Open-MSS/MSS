@@ -30,7 +30,7 @@
 
 ********************************************************************************
 
-The program is a simple wrapper around the WSGI module in mss_wms_wsgi.py. It
+The program is a simple wrapper around the WSGI module in wms.py. It
 allows the user to specify the parameters otherwise passed in the URL query
 through the command line. Python's 'optparse' module is used to parse the
 command line parameters. From these, a 'fake' URL is assembled that is passed
@@ -85,24 +85,17 @@ from datetime import datetime, timedelta
 import logging
 import optparse
 import os
-# relatedthird party imports
 import numpy as np
 
-# local application imports
-import mss_wms_settings
-
-from mslib.mswms import mss_wms_wsgi
+from wms import mss_wms_settings
+from mslib.mswms import wms
 
 
-"""
-Main Program
-"""
-
-if __name__ == "__main__":
-
+def main():
     print "*********************************************************************"
-    print "      DLR/IPA Mission Support System WMS Command Line Interface"
+    print "      Mission Support System WMS Command Line Interface"
     print "*********************************************************************\n"
+
 
     # Set up a command line parser.
     parser = optparse.OptionParser()
@@ -189,7 +182,7 @@ if __name__ == "__main__":
     # Get command line arguments.
     (options, args) = parser.parse_args()
 
-    # Initialise a WMS object from mss_wms_wsgi.py.
+    # Initialise a WMS object from wms.py.
     print "\nInitialising WMS engine...\n"
 
     logging.basicConfig(level=logging.DEBUG,
@@ -197,7 +190,7 @@ if __name__ == "__main__":
                         datefmt="%H:%M:%S")
 
     # Initialise the WSGI application.
-    wsgi = mss_wms_wsgi.MSS_WMSResponse(mss_wms_settings.nwpaccess, address="COMMAND_LINE")
+    wsgi = wms.MSS_WMSResponse(mss_wms_settings.nwpaccess, address="COMMAND_LINE")
 
     # Register horizontal section layers.
     for layer, datasets in mss_wms_settings.register_horizontal_layers:
@@ -304,3 +297,6 @@ if __name__ == "__main__":
                 f = open(filename, "w")
                 f.write(result)
                 f.close()
+
+if __name__ == "__main__":
+    main()
