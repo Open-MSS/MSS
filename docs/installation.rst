@@ -15,12 +15,14 @@ channel of anaconda::
    $ conda install -c atmo mss=1.2.0
 
 
-You also could install this project into an environment::
+You also could install this project into an environment. ::
 
    $ conda create -n mssenv python=2
    $ source activate mssenv
    $ conda install -c atmo mss=1.2.0
 
+
+For further details :ref:`mss-configuration`
 
 Server based installation using miniconda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,5 +45,9 @@ For a simple test you could start the builtin standalone server by *mswms*.
 It should tell::
 
  serving on http://127.0.0.1:8081
+
+Pointing a browser to
+`<http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
+shows the generated XML data the mss app will use.
 
 For further configuration see :ref:`apache-deployment`.
