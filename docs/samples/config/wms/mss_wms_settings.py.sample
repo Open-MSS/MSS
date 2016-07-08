@@ -34,10 +34,10 @@ Example usage:
 ==============
 
 import datetime
-import mss_config
+import mss_wms_settings
 i = datetime.datetime(2010,07,12,00)
 v = datetime.datetime(2010,07,12,15)
-mss_config.nwpaccess['ecmwf_EUR_LL015'].get_filename('low_cloud_area_fraction',
+mss_wms_settings.nwpaccess['ecmwf_EUR_LL015'].get_filename('low_cloud_area_fraction',
                                                      'sfc', i, v, fullpath=True)
 <returns the path to the data file>
 
@@ -83,10 +83,10 @@ datapath = {
 # variable can be found. Objects are instances of subclasses of NWPDataAccess,
 # which provides the methods fc_filename() and full_fc_path().
 nwpaccess = {
-    "ecmwf_NH_LL05": mslib.mswms.dataaccessECMWFDataAccess(datapath["ecmwf"], "NH_LL05")
-    #    "ecmwf_EUR_LL015": mslib.mswms.dataaccessECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
-    #    "meteosat_EUR_LL05": mslib.mswms.dataaccessMeteosatDataAccess(datapath["meteosat"], "EUR_LL05"),
-    #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccessEMACDataAccess(datapath["emac"])
+    "ecmwf_NH_LL05": mslib.mswms.dataaccess.ECMWFDataAccess(datapath["ecmwf"], "NH_LL05")
+    #    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
+    #    "meteosat_EUR_LL05": mslib.mswms.dataaccess.MeteosatDataAccess(datapath["meteosat"], "EUR_LL05"),
+    #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccess.EMACDataAccess(datapath["emac"])
 }
 
 nwpaccess[nwpaccess.keys()[0]].serviceCache()
