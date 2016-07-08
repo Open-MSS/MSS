@@ -144,7 +144,8 @@ class Targets(object):
         if standard_name in Targets.RANGES:
             if type in Targets.RANGES[standard_name]:
                 if level in Targets.RANGES[standard_name][type]:
-                    return [_x * Targets.get_unit(standard_name)[1] for _x in Targets.RANGES[standard_name][type][level]]
+                    return [_x * Targets.get_unit(standard_name)[1]
+                            for _x in Targets.RANGES[standard_name][type][level]]
                 elif level is None:
                     return 0, 0
             if level == "total" and "total" in Targets.RANGES[standard_name]:
