@@ -962,6 +962,7 @@ class WaypointDelegate(QItemDelegate):
         """
         if index.column() == LOCATION:
             combobox = QComboBox(parent)
+            locations = config_loader(dataset='locations', default=mss_default.locations)
             adds = locations.keys()
             if self.viewParent is not None:
                 for loc in [wp.location for wp in self.viewParent.waypoints_model.allWaypointData() if
@@ -994,6 +995,7 @@ class WaypointDelegate(QItemDelegate):
         """
         if index.column() == LOCATION:
             loc = str(editor.currentText())
+            locations = config_loader(dataset='locations', default=mss_default.locations)
             if loc in locations.keys():
                 lat, lon = locations[loc]
                 # Don't update distances and flight performance twice, hence
