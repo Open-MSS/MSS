@@ -123,14 +123,14 @@ You have to setup a webserver server site configuration file
  .. literalinclude:: samples/sites-available/mss.yourserver.de.conf
 
 
-Enable it with aen2site mss.yourserver.de.conf
+Enable it with a2ensite mss.yourserver.de.conf
 
 
-Configuration files of the wms server
+Configuration file of the wms server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configuration for the Mission Support System Web Map Service (wms).
-The configuration files have to become added to the /home/mss/config directory
+The configuration file have to become added to the /home/mss/config directory
 
 **/home/mss/config/mss_wms_settings.py**
 
