@@ -43,7 +43,7 @@ A few notes:
 
 .. _apache-deployment:
 
-apache server setup
+Apache server setup
 --------------------------------
 
 
@@ -139,6 +139,14 @@ The configuration file have to become added to the /home/mss/config directory
 
 You have to adopt this file to your data.
 
+.. _mswms-deployment:
+
+Standalone server setup
+------------------------------
+
+For the standalone server *mswms* you need the path of your mss_wms_settings.py added to the PYTHONPATH. E.g.::
+
+ export PYTHONPATH=/home/mss/config
 
 
 
