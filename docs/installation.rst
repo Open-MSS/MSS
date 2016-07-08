@@ -50,4 +50,4 @@ Pointing a browser to
 `<http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
 shows the generated XML data the mss app will use.
 
-For further configuration see :ref:`apache-deployment`.
+For further configuration see :ref:`apache-deployment` or :ref:`mswms-deployment`.
