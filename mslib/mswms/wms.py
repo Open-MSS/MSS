@@ -36,9 +36,6 @@ maps and (non-compliant) vertical sections.
 For more information on WMS, see
        http://www.opengeospatial.org/standards/wms
 
-The module can be run with the Python PASTE framework as a stand-alone
-server (simply execute this file with Python), or be integrated into an
-existing Apache installation (for usage in an production environment).
 
 For an introduction on WSGI and Paste, see
        http://pythonpaste.org/do-it-yourself-framework.html

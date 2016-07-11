@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+The module can be run with the Python PASTE framework as a stand-alone
+server (simply execute this file with Python).
+"""
 
 import paste.httpserver
 import argparse
