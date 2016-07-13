@@ -531,6 +531,7 @@ def application(environ, start_response):
         error_message = str(type(e)) + ": " + str(e)
         # ToDo add a config var to disable output, replace by standard text, "Internal Server error"
         error_message = error_message + "\n" + traceback.format_exc()
+        logging.error(error_message)
 
         response_headers = [('Content-type', 'text/plain'),
                             ('Content-Length', str(len(error_message)))]
