@@ -45,7 +45,10 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import mpl_toolkits.basemap as basemap
-import mpl_toolkits.basemap.pyproj as pyproj
+try:
+    import mpl_toolkits.basemap.pyproj as pyproj
+except ImportError:
+    import pyproj
 
 # local application imports
 from mslib.msui import mpl_pathinteractor as mpl_pi

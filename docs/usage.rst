@@ -5,9 +5,7 @@ The executable for the user interface application is "**mss**". It
 does not provide any command line options. Warnings about CDAT
 features are due to the NAppy package and can be ignored. The program
 should open the main window of the user interface, from which you can
-open further windows, including top view, side view and so on. In case
-you get an exception on startup, your system probably misses one of
-the required Python packages. Check the INSTALL file for information.
+open further windows, including top view, side view and so on.
 
 Configuration for the user interface is located in
 "mss_settings.json". In this file, you can specify, for instance, the
@@ -19,6 +17,8 @@ the table view.
 A few options influencing the appearance of the displayed plots and
 flight tracks (colours etc.) can be set directly in the user
 interface (top view and side view).
+
+.. _mss-configuration:
 
 Configuration of mss
 ~~~~~~~~~~~~~~~~~~~~~~

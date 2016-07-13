@@ -1,7 +1,7 @@
 Changelog
 ================
 
-Version 1.2.0 (not released yet)
+Version 1.2.0
 ------------------------------------
 
 New Features:

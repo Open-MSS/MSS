@@ -21,14 +21,14 @@ Building a development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to contribute make a fork on bitbucket of `mss <https://bitbucket.org/wxmetvis/mss>`_.
-For building you have to use the conda recipe localy and install in a new environment::
+For building you have to use the conda recipe localy and install in a new environment.
 On top level dir::
 
   $ git clone https://bitbucket.org/yourfork/mss.git
   $ cd mss
-  $ conda build .
-  $ conda create -n mssdev  path/to/mss-*.tar.bz2
+  $ conda create -n mssdev python=2
   $ source activate mssdev
+  $ conda build .
   $ conda install --use-local mss
   $ mkdir "$HOME/.config/mss"
   $ # cp mss_settings.json.sample to "$HOME/.config/mss/mss_settings.json"
@@ -37,7 +37,6 @@ On top level dir::
 To install some additional packages needed for running the tests, activate your virtual env and run::
 
   $ conda install --file requirements.d/development.txt
-
 
 
 Running pep8 tests
@@ -73,8 +72,9 @@ Creating a new release
 
    git tag -s -m "tagged/signed release X.Y.Z" X.Y.Z
 
+
 * create a release on anaconda atmo
-* announce on
-  * Mailing list
-  * Twitter (follow @ReimarBauer for these tweets)
+* announce on:
+* Mailing list
+* Twitter (follow @ReimarBauer for these tweets)
 
