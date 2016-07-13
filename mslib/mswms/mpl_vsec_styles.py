@@ -135,9 +135,7 @@ class VS_GenericStyle_PL(AbstractVerticalSectionStyle):
         curtain_pv = self.data["ertel_potential_vorticity"]
         curtain_cc = self.data[self.dataname] * self.unit_scale
         curtain_p = np.empty_like(curtain_cc)
-
-        for i in range(len(self.driver.vert_data.reshape(-1))):
-            curtain_p[i, :] = self.driver.vert_data[i] * 100
+        curtain_p[:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis] * 100
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
 
@@ -196,7 +194,6 @@ class VS_GenericStyle_PL(AbstractVerticalSectionStyle):
             cmax = curtain_cc[visible].max()
             clev = np.linspace(cmin, cmax, 24)
             norm = None
-
         cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                          curtain_p, curtain_cc, clev, norm=norm,
                          cmap=cmap)
