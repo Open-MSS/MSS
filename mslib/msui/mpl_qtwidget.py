@@ -560,7 +560,7 @@ class MplTopViewCanvas(MplCanvas):
         """
         ax = self.ax
         self.map = mpl_map.MapCanvas(appearance=self.getMapAppearance(),
-                                     resolution='i', area_thresh=1000., ax=ax,
+                                     resolution='l', area_thresh=1000., ax=ax,
                                      **kwargs)
         ax.set_autoscale_on(False)
         ax.set_title('top view')
