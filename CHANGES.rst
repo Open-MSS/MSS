@@ -1,6 +1,15 @@
 Changelog
 ================
 
+Version 1.2.1 
+----------------------------------------
+
+Bug Fixes:
+ - server throws useful messages if mss_wms_settings.py is missing necessary variables, #58
+
+Other Changes:
+ - most version pinning removed, #59. Thanks to ocefpaf (conda-forge-member)
+
 Version 1.2.0
 ------------------------------------
 
