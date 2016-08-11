@@ -120,7 +120,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-class VS_GenericStyle_PL(AbstractVerticalSectionStyle):
+class VS_GenericStyle(AbstractVerticalSectionStyle):
     """Vertical section of chemical species/other stuff
     """
     styles = [
@@ -131,16 +131,25 @@ class VS_GenericStyle_PL(AbstractVerticalSectionStyle):
 
     def _plot_style(self):
         ax = self.ax
-        curtain_pt = self.data["air_potential_temperature"]
         curtain_pv = self.data["ertel_potential_vorticity"]
         curtain_cc = self.data[self.dataname] * self.unit_scale
-        curtain_p = np.empty_like(curtain_cc)
-        curtain_p[:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis] * 100
+        curtain_cc = np.ma.masked_invalid(curtain_cc)
+        if self.name[-2:] == "pl":
+            curtain_pt = self.data["air_potential_temperature"]
+            curtain_p = np.empty_like(curtain_cc)
+            curtain_p[:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis] * 100
+        elif self.name[-2:] == "tl":
+            curtain_p = self.data["air_pressure"] * 100
+            curtain_pt = np.empty_like(curtain_cc)
+            curtain_pt[:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+        elif self.name[-2:] == "ml":
+            curtain_p = self.data["air_pressure"] * 100
+            curtain_pt = self.data["air_potential_temperature"]
+
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
 
         delta_pt = 10 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 20
-
         # Filled contour plot of cloud cover.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
@@ -194,6 +203,7 @@ class VS_GenericStyle_PL(AbstractVerticalSectionStyle):
             cmax = curtain_cc[visible].max()
             clev = np.linspace(cmin, cmax, 24)
             norm = None
+        print cmin, cmax, clev
         cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                          curtain_p, curtain_cc, clev, norm=norm,
                          cmap=cmap)
@@ -252,18 +262,26 @@ class VS_GenericStyle_PL(AbstractVerticalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_generic_class(entity):
-    class fnord(VS_GenericStyle_PL):
-        name = 'VS_' + entity
+def make_generic_class(entity, vert):
+    class fnord(VS_GenericStyle):
+        name = 'VS_' + entity + "_" + vert
         dataname = entity
         units, unit_scale = Targets.get_unit(dataname)
         title = dataname
         if units:
             title += " ({})".format(units)
         required_datafields = [
-            ("pl", entity),
-            ("pl", "air_potential_temperature"),
-            ("pl", "ertel_potential_vorticity"), ]
+            (vert, entity),
+            (vert, "ertel_potential_vorticity"), ]
+        if vert == "pl":
+            required_datafields.append((vert, "air_potential_temperature"))
+        elif vert == "tl":
+            required_datafields.append((vert, "air_pressure"))
+        elif vert == "ml":
+            required_datafields.append((vert, "air_pressure"))
+            required_datafields.append((vert, "air_potential_temperature"))
+        else:
+            raise ValueError
 
     if Targets.get_thresholds(entity) is not None:
         fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
@@ -275,8 +293,9 @@ def make_generic_class(entity):
     return fnord
 
 for ent in Targets.get_targets():
-    globals()["VS_GenericStyle_PL_" + ent] = make_generic_class(ent)
-
+    globals()["VS_GenericStyle_PL_" + ent] = make_generic_class(ent, "pl")
+    globals()["VS_GenericStyle_TL_" + ent] = make_generic_class(ent, "tl")
+    globals()["VS_GenericStyle_ML_" + ent] = make_generic_class(ent, "ml")
 
 """
 GW
