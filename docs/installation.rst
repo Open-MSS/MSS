@@ -2,15 +2,32 @@
 Installation
 =================
 
+Current Releases of mss are based on python2.
+
 Install distributed version by conda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `Anaconda <https://www.continuum.io/why-anaconda>`_ provides an enterprise-ready data analytics
-platform that empowers companies to adopt a
-modern open data science analytics architecture.
+platform that empowers companies to adopt a modern open data science analytics architecture.
 
-The Mission Support Web Map Service (mss) is available as anaconda package on `atmo <https://anaconda.org/atmo/mss>`_
-channel of anaconda::
+The Mission Support Web Map Service (mss) is available as anaconda package on two channels.
+
+ * `atmo <https://anaconda.org/atmo/mss>`_
+ * `conda-forge <https://anaconda.org/conda-forge/mss>`_
+
+The atmo channel has builds for win-64 and linux-64 and is based on anacondas default packages.
+And conda-forge packages are based on defaults and other conda-forge packages. So conda-forge has builds for ios-64, linux-64, win-64, win-32.
+
+You can choose between both channels dependent on your operation system,
+IOS will need the build package from conda-forge.
+
+`conda-forge <https://conda-forge.github.io/>`_ uses various automated continuos integration
+build processes.
+
+atmo channel
+++++++++++++++++
+
+::
 
    $ conda install -c atmo mss=1.2.1
 
@@ -20,6 +37,23 @@ You also could install this project into an environment. ::
    $ conda create -n mssenv python=2
    $ source activate mssenv
    $ conda install -c atmo mss=1.2.1
+
+
+conda-forge channel
++++++++++++++++++++++
+
+::
+
+   $ conda install -c conda-forge mss=1.2.1
+
+You also could install this project into an environment. ::
+
+   $ conda create -n mssenv python=2
+   $ source activate mssenv
+   $ conda install -c conda-forge mss=1.2.1
+
+
+
 
 
 For further details :ref:`mss-configuration`
