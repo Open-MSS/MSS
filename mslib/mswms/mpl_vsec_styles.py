@@ -203,7 +203,6 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
             cmax = curtain_cc[visible].max()
             clev = np.linspace(cmin, cmax, 24)
             norm = None
-        print cmin, cmax, clev
         cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                          curtain_p, curtain_cc, clev, norm=norm,
                          cmap=cmap)
