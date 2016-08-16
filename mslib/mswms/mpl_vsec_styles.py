@@ -246,7 +246,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                                                                       width="1%",  # width = % of parent_bbox width
-                                                                      height="40%",  # height : %
+                                                                      height="45%",  # height : %
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical",
                                      format=clev_format, norm=norm)
