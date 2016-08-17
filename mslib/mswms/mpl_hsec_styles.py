@@ -614,14 +614,14 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax,
                 width="3%",  # width = % of parent_bbox width
-                height="30%",  # height : %
+                height="40%",  # height : %
                 loc=cbar_location)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical",
                                      format=clev_format, norm=norm)
 
             # adjust colorbar fontsize to figure height
             figheight = self.fig.bbox.height
-            fontsize = figheight * 0.026
+            fontsize = figheight * 0.024
             axins1.yaxis.set_ticks_position(tick_pos)
             for x in axins1.yaxis.majorTicks:
                 x.label1.set_backgroundcolor("w")
