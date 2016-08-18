@@ -1,6 +1,20 @@
 Changelog
 ================
 
+Version 1.2.2 (not released yet)
+--------------------------------------------
+
+Bug Fixes:
+ - initialize of basemap for GUI and WMS have to use same resolution, #60
+ - resize of colorbar and its font for labels in the plots, #66
+ - style "fixed colour scale" on vertical plots contain unit scaling, #67
+
+New Features:
+ - addition of age-of-air parameters to CLaMS plots, #65
+
+Other Changes:
+ - installation with conda-forge described#63
+
 Version 1.2.1 
 ----------------------------------------
 
