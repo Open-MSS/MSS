@@ -112,13 +112,11 @@ class Targets(object):
     ]:
         UNITS[standard_name] = ("pmol mol$^{-1}$", 1e12)
 
-
     for standard_name in [
             "fraction_below_6months_of_age_of_air_spectrum",
             "fraction_above_24months_of_age_of_air_spectrum",
     ]:
         UNITS[standard_name] = ("%", 100)
-        
 
     @staticmethod
     def get_targets():
