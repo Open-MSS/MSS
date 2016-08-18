@@ -15,10 +15,10 @@ The Mission Support Web Map Service (mss) is available as anaconda package on tw
  * `conda-forge <https://anaconda.org/conda-forge/mss>`_
 
 The atmo channel has builds for win-64 and linux-64 and is based on anacondas default packages.
-And conda-forge packages are based on defaults and other conda-forge packages. So conda-forge has builds for ios-64, linux-64, win-64, win-32.
+And conda-forge packages are based on defaults and other conda-forge packages. So conda-forge has builds for osx-64, linux-64, win-64, win-32.
 
 You can choose between both channels dependent on your operation system,
-IOS will need the build package from conda-forge.
+OSX will need the build package from conda-forge.
 
 `conda-forge <https://conda-forge.github.io/>`_ uses various automated continuos integration
 build processes.
