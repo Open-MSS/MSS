@@ -1,7 +1,7 @@
 Changelog
 ================
 
-Version 1.2.2 (not released yet)
+Version 1.2.2 
 --------------------------------------------
 
 Bug Fixes:
