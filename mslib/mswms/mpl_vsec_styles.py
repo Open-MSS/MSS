@@ -153,9 +153,12 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         # Filled contour plot of cloud cover.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        # cmap = plt.cm.gist_ncar_r
         cmap = plt.cm.viridis
+        units, unit_scale = Targets.get_unit(self.dataname)
         cmin, cmax = Targets.get_range(self.dataname)
+        if unit_scale > 0.:
+            cmin *= unit_scale
+            cmax *= unit_scale
         if cmin is None or cmax is None:
             cmin, cmax = curtain_cc.min(), curtain_cc.max()
         if cmin > 0 and cmin < 0.05 * cmax and self.style != "log":
@@ -246,7 +249,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                                                                       width="1%",  # width = % of parent_bbox width
-                                                                      height="40%",  # height : %
+                                                                      height="45%",  # height : %
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical",
                                      format=clev_format, norm=norm)

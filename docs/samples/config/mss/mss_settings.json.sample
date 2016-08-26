@@ -104,6 +104,9 @@
    "default_FPS": ["http://localhost:8082/performance"],
    "default_WMS": ["http://www.your-server.de/forecasts"],
    "default_VSEC_WMS": ["http://www.your-server.de/forecasts"],
+   "WMS_login": {
+                  "http://www.your-server.de/forecasts" : ["youruser", "yourpassword"]
+                 },
    "num_interpolation_points": 201,
    "num_labels": 10,
    "wms_cache": "/tmp/.cache/.mss/msui/wms_cache",

@@ -41,11 +41,15 @@ class Targets(object):
         "mole_fraction_of_water_vapor_in_air",
         "northward_wind",
         "square_of_brunt_vaisala_frequency_in_air",
+        "surface_origin_tracer_from_india_and_china",
         "surface_origin_tracer_from_southeast_asia",
         "surface_origin_tracer_from_east_china",
         "surface_origin_tracer_from_north_india",
         "surface_origin_tracer_from_south_india",
-        "surface_origin_tracer_from_india_and_china",
+        "surface_origin_tracer_from_north_africa",
+        "median_of_age_of_air_spectrum",
+        "fraction_below_6months_of_age_of_air_spectrum",
+        "fraction_above_24months_of_age_of_air_spectrum",
     ]
 
     UNITS = {
@@ -91,6 +95,7 @@ class Targets(object):
             "mole_fraction_of_carbon_monoxide_in_air",
             "mole_fraction_of_chlorine_nitrate_in_air",
             "mole_fraction_of_nitric_acid_in_air",
+            "mole_fraction_of_nitrous_oxide_in_air",
     ]:
         UNITS[standard_name] = ("nmol mol$^{-1}$", 1e9)
 
@@ -106,6 +111,12 @@ class Targets(object):
             "mole_fraction_of_sulfur_dioxide_in_air",
     ]:
         UNITS[standard_name] = ("pmol mol$^{-1}$", 1e12)
+
+    for standard_name in [
+            "fraction_below_6months_of_age_of_air_spectrum",
+            "fraction_above_24months_of_age_of_air_spectrum",
+    ]:
+        UNITS[standard_name] = ("%", 100)
 
     @staticmethod
     def get_targets():
