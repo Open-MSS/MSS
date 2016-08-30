@@ -1,6 +1,17 @@
 Changelog
 ================
 
+Version 1.2.3
+----------------------------------------
+
+Bug Fixes:
+ - check whether variables cmin, cmax are None, #68
+
+Other Changes:
+ - version dependencies removed from documentation
+
+
+
 Version 1.2.2 
 --------------------------------------------
 
