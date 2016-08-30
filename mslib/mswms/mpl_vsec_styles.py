@@ -156,11 +156,16 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         cmap = plt.cm.viridis
         units, unit_scale = Targets.get_unit(self.dataname)
         cmin, cmax = Targets.get_range(self.dataname)
-        if unit_scale > 0.:
-            cmin *= unit_scale
-            cmax *= unit_scale
+
+        # XXX needs refactoring
+        # cmin, cmax need to be multiplied by unit_scale if determined
+        # correctly by the method get_range, otherwise min and max of the
+        # displayed data are taken.
         if cmin is None or cmax is None:
             cmin, cmax = curtain_cc.min(), curtain_cc.max()
+        elif unit_scale > 0.:
+            cmin *= unit_scale
+            cmax *= unit_scale
         if cmin > 0 and cmin < 0.05 * cmax and self.style != "log":
             cmin = 0.
 
