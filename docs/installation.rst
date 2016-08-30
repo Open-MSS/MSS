@@ -28,14 +28,14 @@ atmo channel
 
 ::
 
-   $ conda install -c atmo mss=1.2.2
+   $ conda install -c atmo mss
 
 
 You also could install this project into an environment. ::
 
    $ conda create -n mssenv python=2
    $ source activate mssenv
-   $ conda install -c atmo mss=1.2.2
+   $ conda install -c atmo mss
 
 
 conda-forge channel
@@ -43,13 +43,13 @@ conda-forge channel
 
 ::
 
-   $ conda install -c conda-forge mss=1.2.2
+   $ conda install -c conda-forge mss
 
 You also could install this project into an environment. ::
 
    $ conda create -n mssenv python=2
    $ source activate mssenv
-   $ conda install -c conda-forge mss=1.2.2
+   $ conda install -c conda-forge mss
 
 
 
@@ -72,7 +72,7 @@ We suggest to create a mss user.
 * execute script, enable environment in .bashrc
 * login again or export PATH="/home/mss/miniconda2/bin:$PATH"
 * python --version should tell Python 2.7.12
-* conda install -c atmo mss=1.2.2
+* conda install -c atmo mss
 
 For a simple test you could start the builtin standalone server by *mswms*.
 It should tell::
