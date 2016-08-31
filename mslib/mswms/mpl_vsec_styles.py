@@ -43,7 +43,7 @@ import numpy as np
 
 # local application imports
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets
+from mslib.mswms.utils import Targets, get_log_levels
 from mslib import thermolib
 
 """
@@ -124,8 +124,6 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
     """Vertical section of chemical species/other stuff
     """
     styles = [
-        ("default", "fixed colour scale"),
-        ("log", "logarithmic colour scale"),
         ("auto", "auto colour scale"),
         ("autolog", "auto log colour scale"), ]
 
@@ -154,63 +152,41 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
         cmap = plt.cm.viridis
-        units, unit_scale = Targets.get_unit(self.dataname)
         cmin, cmax = Targets.get_range(self.dataname)
+        if self.p_bot > self.p_top:
+            visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
+        else:
+            visible = (curtain_p >= self.p_bot) & (curtain_p <= self.p_top)
 
         # XXX needs refactoring
         # cmin, cmax need to be multiplied by unit_scale if determined
         # correctly by the method get_range, otherwise min and max of the
         # displayed data are taken.
         if cmin is None or cmax is None:
-            cmin, cmax = curtain_cc.min(), curtain_cc.max()
-        elif unit_scale > 0.:
-            cmin *= unit_scale
-            cmax *= unit_scale
-        if cmin > 0 and cmin < 0.05 * cmax and self.style != "log":
-            cmin = 0.
+            cmin, cmax = curtain_cc[visible].min(), curtain_cc[visible].max()
+            if cmin > 0 and cmin < 0.05 * cmax:
+                cmin = 0.
 
-        norm = None
         if self.style == "default":
-            clev = np.linspace(cmin, cmax, 24)
-        elif self.style == "log":
-            if cmin > 0:
-                clev = np.exp(np.linspace(np.log(cmin), np.log(cmax), 24))
-            elif cmax < 0:
-                clev = np.exp(np.linspace(np.log(-cmax), np.log(-cmin), 24))
-            else:
-                delta = cmax - cmin
-                clevlo = -np.exp(
-                    np.linspace(np.log(-cmin), np.log(max(-cmin, cmax) * 0.001), 1 + int(24 * -cmin / delta)))
-                clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001), np.log(cmax), 1 + int(24 * cmax / delta)))
-                clev = np.asarray(list(clevlo[:-1]) + list(clevhi[1:]))
-
-            norm = matplotlib.colors.BoundaryNorm(clev, 255)
-        elif self.style == "autolog":
-            visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
+            clev = np.linspace(cmin, cmax, 16)
+        elif self.style == "auto":
             cmin = curtain_cc[visible].min()
             cmax = curtain_cc[visible].max()
-            if cmin > 0:
-                clev = np.exp(np.linspace(np.log(cmin), np.log(cmax), 24))
-            elif cmax < 0:
-                clev = np.exp(np.linspace(np.log(-cmax), np.log(-cmin), 24))
-            else:
-                delta = cmax - cmin
-                clevlo = -np.exp(
-                    np.linspace(np.log(-cmin), np.log(max(-cmin, cmax) * 0.001), 1 + int(24 * -cmin / delta)))
-                clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001), np.log(cmax), 1 + int(24 * cmax / delta)))
-                clev = np.asarray(list(clevlo[:-1]) + list(clevhi[1:]))
-
-            norm = matplotlib.colors.BoundaryNorm(clev, 255)
+            if cmin > 0 and cmin < 0.05 * cmax:
+                cmin = 0.
+            clev = np.linspace(cmin, cmax, 16)
+        elif self.style == "log":
+            clev = get_log_levels(cmin, cmax, 16)
+        elif self.style == "autolog":
+            cmin = curtain_cc[visible].min()
+            cmax = curtain_cc[visible].max()
+            clev = get_log_levels(cmin, cmax, 16)
         elif self.style == "nonlinear":
             clev = Targets.get_thresholds(self.dataname)
-            norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
         else:
-            clev = np.linspace(curtain_cc.min(), curtain_cc.max(), 24)
-            visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
-            cmin = curtain_cc[visible].min()
-            cmax = curtain_cc[visible].max()
-            clev = np.linspace(cmin, cmax, 24)
-            norm = None
+            raise RuntimeError("Illegal plotting style?!")
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+
         cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                          curtain_p, curtain_cc, clev, norm=norm,
                          cmap=cmap)
@@ -290,8 +266,10 @@ def make_generic_class(entity, vert):
         else:
             raise ValueError
 
+    print fnord.styles
     if Targets.get_thresholds(entity) is not None:
         fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
+    print entity, "vsec", Targets.get_range(entity)
     if all(_x is not None for _x in Targets.get_range(entity)):
         fnord.styles = fnord.styles + [
             ("default", "fixed colour scale"),
