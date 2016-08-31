@@ -78,7 +78,7 @@ import mpl_toolkits.basemap
 
 # local application imports
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import Targets
+from mslib.mswms.utils import Targets, get_log_levels
 from mslib import thermolib
 
 """
@@ -546,30 +546,24 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
         if cmin is None or cmax is None:
             cmin, cmax = show_data.min(), show_data.max()
-        if self.style == "auto":
-            cmin, cmax = show_data.min(), show_data.max()
             if cmin > 0 and cmin < 0.05 * cmax:
                 cmin = 0.
-            clevs = np.linspace(cmin, cmax, 17)
-            norm = None
+
+        if self.style == "default":
+            clevs = np.linspace(cmin, cmax, 16)
+        elif self.style == "auto":
+            cmin, cmax = show_data.min(), show_data.max()
+            clevs = np.linspace(cmin, cmax, 16)
         elif self.style == "autolog":
             cmin, cmax = show_data.min(), show_data.max()
-            if cmin <= 1.E-6 * cmax and cmax > 0.:
-                cmin = cmax * 1.E-6
-            lncmin, lncmax = np.log([cmin, cmax])
-            clevs = np.exp(np.linspace(lncmin, lncmax, 17))
-            norm = matplotlib.colors.LogNorm(cmin, cmax)
+            clevs = get_log_levels(cmin, cmax, 16)
         elif self.style == "log":
-            cmin = max(cmin, cmax * 0.001)
-            lncmin, lncmax = np.log([cmin, cmax])
-            clevs = np.exp(np.linspace(lncmin, lncmax, 17))
-            norm = matplotlib.colors.LogNorm(cmin, cmax)
+            clevs = get_log_levels(cmin, cmax, 16)
         elif self.style == "nonlinear":
             clevs = Targets.get_thresholds(self.dataname)
-            norm = matplotlib.colors.BoundaryNorm(clevs, cmap.N)
         else:
-            clevs = np.linspace(cmin, cmax, 17)
-            norm = None
+            raise RuntimeError("Illegal plotting style?!")
+        norm = matplotlib.colors.BoundaryNorm(clevs, cmap.N)
 
         tc = bm.contourf(lonmesh, latmesh, show_data, levels=clevs,
                          cmap=cmap, norm=norm)
