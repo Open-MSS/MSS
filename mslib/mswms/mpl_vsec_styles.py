@@ -158,10 +158,6 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         else:
             visible = (curtain_p >= self.p_bot) & (curtain_p <= self.p_top)
 
-        # XXX needs refactoring
-        # cmin, cmax need to be multiplied by unit_scale if determined
-        # correctly by the method get_range, otherwise min and max of the
-        # displayed data are taken.
         if cmin is None or cmax is None:
             cmin, cmax = curtain_cc[visible].min(), curtain_cc[visible].max()
             if cmin > 0 and cmin < 0.05 * cmax:

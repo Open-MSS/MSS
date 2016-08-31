@@ -189,6 +189,16 @@ class Targets(object):
 
 
 def get_log_levels(cmin, cmax, levels=N_LEVELS):
+    """
+    Returns 'levels' levels in a lgarithmic spacing. Takes care of ranges crossing zero and starting/ending at zero.
+    Args:
+        cmin: minimum value
+        cmax: maximum value
+        levels (optional): number of levels to be generated
+
+    Returns:
+        numpy array of values
+    """
     assert cmin < cmax
     if cmin >= 0:
         if cmin == 0:
