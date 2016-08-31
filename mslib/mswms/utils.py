@@ -187,6 +187,7 @@ class Targets(object):
         except KeyError:
             return None
 
+
 def get_log_levels(cmin, cmax, levels=N_LEVELS):
     assert cmin < cmax
     if cmin >= 0:

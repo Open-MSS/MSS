@@ -637,11 +637,8 @@ def make_generic_class(entity, vert):
         required_datafields = [
             (vert, entity),
             (vert, "ertel_potential_vorticity"), ]
-    print fnord.styles
     if Targets.get_thresholds(entity) is not None:
         fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
-    print entity, "hsec", Targets.get_range(entity, None, vert)
-
     if all(_x is not None for _x in Targets.get_range(entity, None, vert)):
         fnord.styles = fnord.styles + [
             ("default", "fixed colour scale"),
