@@ -46,21 +46,20 @@ AUTHORS:
 
 # standard library imports
 import logging
+import numpy as np
+import datetime
 
 # related third party imports
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from matplotlib.collections import LineCollection
 from matplotlib.colors import BoundaryNorm, ListedColormap
-from PyQt4 import QtCore
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4 import QtCore, QtGui
 
 # local application imports
 from mslib.msui import flighttrack as ft
-# from mslib.mss_util import tangent_point_coordinates, convertHPAToKM,\
-#                           datetime_to_jsec, compute_solar_angle, rotatePoint
-from mslib.mss_util import *
+from mslib.mss_util import tangent_point_coordinates, datetime_to_jsec, compute_solar_angle, \
+    compute_view_angles, calc_view_rating, get_distance
 
 """
 CONSTANTS
@@ -626,16 +625,16 @@ class PathInteractor:
         """
         wps = self.waypoints_model.allWaypointData(mode=ft.USER)
         if len(wps) < 3:
-            QMessageBox.warning(None, "Remove waypoint",
+            QtGui.QMessageBox.warning(None, "Remove waypoint",
                                 "Cannot remove waypoint, the flight track needs to consist "
-                                "of at least two points.", QMessageBox.Ok)
+                                "of at least two points.", QtGui.QMessageBox.Ok)
             return False
         else:
             wp = wps[row]
-            return (QMessageBox.question(None, "Remove waypoint",
+            return (QtGui.QMessageBox.question(None, "Remove waypoint",
                                          "Remove waypoint no.%i at %.2f/%.2f, flightlevel %.2f?"
                                          % (row, wp.lat, wp.lon, wp.flightlevel),
-                                         QMessageBox.Yes | QMessageBox.No) == QMessageBox.Yes)
+                                         QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
 
     def set_path_color(self, line_color=None, marker_facecolor=None,
                        patch_facecolor=None):
@@ -726,7 +725,7 @@ class VPathInteractor(PathInteractor):
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
             # to float().
-            self.waypoints_model.setData(qt_index, QVariant(float(pressure)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure)))
 
         self._ind = None
 
@@ -896,9 +895,9 @@ class HPathInteractor(PathInteractor):
             # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
             #      twice?
             qt_index = self.waypoints_model.createIndex(self._ind, ft.LAT)
-            self.waypoints_model.setData(qt_index, QVariant(round(float(lat), 2)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(round(float(lat), 2)))
             qt_index = self.waypoints_model.createIndex(self._ind, ft.LON)
-            self.waypoints_model.setData(qt_index, QVariant(round(float(lon), 2)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(round(float(lon), 2)))
 
         self._ind = None
 
