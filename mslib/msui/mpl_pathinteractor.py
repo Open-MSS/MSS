@@ -598,6 +598,7 @@ class PathInteractor:
                              fontweight="bold",
                              zorder=4,
                              animated=True,
+                             clip_on=True,
                              visible=self.showverts and self.label_waypoints)
             self.wp_labels.append(t)
 
@@ -1083,6 +1084,7 @@ class HPathInteractor(PathInteractor):
                              fontweight="bold",
                              zorder=4,
                              animated=True,
+                             clip_on=True,
                              visible=self.showverts and self.label_waypoints)
             self.wp_labels.append(t)
 
