@@ -109,7 +109,9 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
             if index == PERFORMANCE:
                 # Open a flight performance control widget.
                 title = "Flight Performance Control"
-                widget = perf_cs.PerformanceControlWidget(default_FPS=fps, model=self.waypoints_model)
+                widget = perf_cs.PerformanceControlWidget(default_FPS=fps, model=self.waypoints_model,
+                                                          wms_cache=config_loader(dataset="wms_cache",
+                                                                                  default=mss_default.wms_cache))
             elif index == PERFORMANCE_OLD:
                 # Open a flight performance control widget.
                 title = "Flight Performance Service Control"

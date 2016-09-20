@@ -37,14 +37,10 @@ AUTHORS:
 """
 
 # standard library imports
-
 from datetime import datetime
-
 import csv
 import logging
 import xml.dom.minidom
-from mslib.mss_util import config_loader
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
@@ -55,6 +51,8 @@ import numpy as np
 # local application imports
 from mslib import mss_util
 from mslib import thermolib
+from mslib.mss_util import config_loader
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
 """
