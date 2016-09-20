@@ -74,7 +74,7 @@ class PerformanceControlWidget(QtGui.QWidget, ui.Ui_PerformanceWidget):
     """
 
     def __init__(self, parent=None, crs_filter="VERT:LOGP",
-                 default_FPS=[], model=None):
+                 default_FPS=[], model=None, wms_cache=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
