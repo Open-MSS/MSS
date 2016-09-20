@@ -73,7 +73,7 @@ Creating a new release
    git tag -s -m "tagged/signed release X.Y.Z" X.Y.Z
    git push origin X.Y.Z
 
-* create a release on anaconda atmo
+* create a release on anaconda atmo, conda-forge
 * announce on:
 * Mailing list
 * Twitter (follow @ReimarBauer for these tweets)
