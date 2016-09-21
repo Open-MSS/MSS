@@ -29,9 +29,10 @@ requirements:
         - netcdf4
         - paste
         - pillow
-        - pyqt 4.11.*
         - python-dateutil
         - pytz
+        - pyqt 4.11.*
+        - qt 4.8.*
         - requests
         - scipy
         - six
