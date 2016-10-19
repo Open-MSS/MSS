@@ -39,6 +39,7 @@ try:
 except:
     modulepath = ""
 
+from mslib.msui import wms_login_cache
 """
 HALO
 """
@@ -61,7 +62,7 @@ class HALO(FliteStarExportedAircraft):
         """Defines the performance file (exported by FliteStar) and which file
         sections map to which flight mode.
         """
-        super(HALO, self).__init__(os.path.join(modulepath, "data", "HALO_+10DC.txt"))
+        super(HALO, self).__init__(os.path.join(wms_login_cache.DEFAULT_CONFIG_PATH, "data", "HALO_+10DC.txt"))
 
         # Define a mapping from the sections in the FliteStar file to the
         # individual flight modes. Keys are:
@@ -233,7 +234,7 @@ class Falcon(FliteStarExportedAircraft):
     def __init__(self):
         """
         """
-        super(Falcon, self).__init__(os.path.join(modulepath, "data", "FALCON_Baseline.txt"))
+        super(Falcon, self).__init__(os.path.join(wms_login_cache.DEFAULT_CONFIG_PATH, "data", "FALCON_Baseline.txt"))
 
         # Define a mapping from the sections in the FliteStar file to the
         # individual flight modes. Keys are:

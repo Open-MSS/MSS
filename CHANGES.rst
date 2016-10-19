@@ -1,6 +1,17 @@
 Changelog
 ================
 
+Version 1.2.4
+----------------------------------
+
+Bug Fixes:
+  - Flight performance computation broken, #75
+
+Other Changes:
+  - pyqt version 4.11.*, #74
+
+
+
 Version 1.2.3
 ----------------------------------------
 
