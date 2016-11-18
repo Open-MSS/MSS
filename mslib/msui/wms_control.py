@@ -505,6 +505,13 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             self.btGetMap.setEnabled(True)
             self.tbViewCapabilities.setEnabled(True)
 
+        if self.cbInitTime.count() > 0:
+            self.cbInitTime.setCurrentIndex(0)
+            self.initTimeChanged()
+        if self.cbValidTime.count() > 0:
+            self.cbValidTime.setCurrentIndex(0)
+            self.validTimeChanged()
+
         # Reconnect layerChanged.
         self.connect(self.cbLayer, QtCore.SIGNAL("currentIndexChanged(int)"),
                      self.layerChanged)
