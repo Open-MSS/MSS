@@ -16,8 +16,8 @@ class TestConfigLoader(object):
     def test_default_config(self):
         data = mss_util.config_loader()
         assert isinstance(data, dict)
-        assert data['WMS_login'] == {'http://localhost:8081': ['mswms', 'forever_forecast_2016']}
         assert data["num_labels"] == 10
+        assert data["num_interpolation_points"] == 201
 
     def test_default_config_dataset(self):
         data = mss_util.config_loader(dataset="num_labels")
