@@ -87,7 +87,6 @@ class MplCanvas(FigureCanvas):
         # setup Matplotlib Figure and Axis
         self.fig = Figure(facecolor="w")  # 0.75
         self.ax = self.fig.add_subplot(111, zorder=99)
-
         # initialization of the canvas
         FigureCanvas.__init__(self, self.fig)
 
@@ -110,7 +109,6 @@ class MplCanvas(FigureCanvas):
             title += ' at %s' % level
         if type(tp) is str:
             title += ' with TP at %s' % tp
-
         if type(valid_time) is datetime and type(init_time) is datetime:
             time_step = valid_time - init_time
         else:
@@ -137,6 +135,8 @@ class MplCanvas(FigureCanvas):
         # Set title.
         self.ax.set_title(title, horizontalalignment='left', x=0)
         self.draw()
+        # without the repaint the title is not properly updated
+        self.repaint()
 
     def getPlotSizePx(self):
         """Determines the size of the current figure in pixels.
@@ -639,7 +639,6 @@ class MplTopViewCanvas(MplCanvas):
             tph = "{:.1f} km".format(self.waypoints_interactor.get_tangent_height())
         self.drawMetadata("Top view", tp=tph)
 
-        self.draw()  # without this one the graticule won't plot
         # correctly. no idea why..
         self.waypoints_interactor.update()
 
