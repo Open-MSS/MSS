@@ -1152,23 +1152,17 @@ class HPathInteractor(PathInteractor):
         self.wp_scatter.set_visible(showverts)
         PathInteractor.set_vertices_visible(self, showverts)
 
-    def set_tangent_color(self, tangentcolor='blue'):
+    def set_tangent_color(self, tangentcolor):
         self.tangentcolor = tangentcolor
 
-    def set_tangent_visible(self, visible=True):
+    def set_tangent_visible(self, visible):
         self.showtangents = visible
 
-    def is_tangent_visible(self):
-        return self.showtangents
-
-    def set_tangent_height(self, height=1.):
+    def set_tangent_height(self, height):
         self.tangent_height = height
 
-    def get_tangent_height(self):
-        return self.tangent_height
-
-    def set_start_time(self, time=datetime.datetime.now()):
+    def set_start_time(self, time):
         self.start_time = time
 
-    def set_solar_angle_visible(self, visible=False):
+    def set_solar_angle_visible(self, visible):
         self.show_solar_angle = visible

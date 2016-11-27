@@ -1572,7 +1572,6 @@ class HSecWMSControlWidget(WMSControlWidget):
                                                    default_WMS=default_WMS,
                                                    wms_cache=wms_cache,
                                                    view=view)
-        self.tp_height = None
         self.connect(self.btGetMap, QtCore.SIGNAL("clicked()"),
                      self.getMap)
 
@@ -1584,36 +1583,10 @@ class HSecWMSControlWidget(WMSControlWidget):
             lvl = float(s.split(" (")[0])
             if s.endswith("(hPa)"):
                 lvl = convertHPAToKM(lvl)
-            settings = self.view.getMapAppearance()
-            settings["tangent_height"] = lvl
-            if self.tp_height is not None:
-                self.tp_height = lvl
-            self.view.setMapAppearance(settings)
             if self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
                 self.btGetMap.click()
             else:
-                layer = self.getLayer()
-                style = self.getStyle()
-                if style != "":
-                    style_title = self.get_layer_object(layer).styles[style]["title"]
-                else:
-                    style_title = None
-                level = str(self.cbLevel.currentText())
-                init_time = self.getInitTime()
-                valid_time = self.getValidTime()
-                tph = self.tp_height
-                if tph is not None:
-                    tph = "{:.1f} km".format(tph)
-                #self.view.drawMetadata(title=self.get_layer_object(layer).title,
-                #                       init_time=init_time,
-                #                       valid_time=valid_time,
-                #                       level=level,
-                #                       style=style_title,
-                #                       tp=tph)
                 self.view.waypoints_interactor.update()
-
-    def set_tp_height(self, height=None):
-        self.tp_height = height
 
     def getMap(self):
         """Slot that retrieves the map and passes the image
@@ -1638,15 +1611,11 @@ class HSecWMSControlWidget(WMSControlWidget):
                 style_title = self.get_layer_object(layer).styles[style]["title"]
             else:
                 style_title = None
-            tph = self.tp_height
-            if tph is not None:
-                tph = "{:.1f} km".format(tph)
             self.view.drawMetadata(title=self.get_layer_object(layer).title,
                                    init_time=init_time,
                                    valid_time=valid_time,
                                    level=level,
-                                   style=style_title,
-                                   tp=tph)
+                                   style=style_title)
             self.view.drawImage(img)
             self.view.drawLegend(legend_img)
             self.view.waypoints_interactor.update()

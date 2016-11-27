@@ -16,18 +16,16 @@ except AttributeError:
 
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
-
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-
 class Ui_MapAppearanceDialog(object):
     def setupUi(self, MapAppearanceDialog):
         MapAppearanceDialog.setObjectName(_fromUtf8("MapAppearanceDialog"))
-        MapAppearanceDialog.resize(465, 336)
+        MapAppearanceDialog.resize(465, 265)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -155,52 +153,11 @@ class Ui_MapAppearanceDialog(object):
         self.cbLabelFlightTrack.setObjectName(_fromUtf8("cbLabelFlightTrack"))
         self.horizontalLayout_4.addWidget(self.cbLabelFlightTrack)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
-        self.horizontalLayout_5 = QtGui.QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
-        self.cbDrawTangents = QtGui.QCheckBox(MapAppearanceDialog)
-        self.cbDrawTangents.setMinimumSize(QtCore.QSize(145, 0))
-        self.cbDrawTangents.setObjectName(_fromUtf8("cbDrawTangents"))
-        self.horizontalLayout_5.addWidget(self.cbDrawTangents)
-        self.btTangentsColour = QtGui.QPushButton(MapAppearanceDialog)
-        self.btTangentsColour.setMinimumSize(QtCore.QSize(135, 0))
-        self.btTangentsColour.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.btTangentsColour.setObjectName(_fromUtf8("btTangentsColour"))
-        self.horizontalLayout_5.addWidget(self.btTangentsColour)
-        self.dsbTangentHeight = QtGui.QDoubleSpinBox(MapAppearanceDialog)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dsbTangentHeight.sizePolicy().hasHeightForWidth())
-        self.dsbTangentHeight.setSizePolicy(sizePolicy)
-        self.dsbTangentHeight.setMinimumSize(QtCore.QSize(0, 0))
-        self.dsbTangentHeight.setPrefix(_fromUtf8(""))
-        self.dsbTangentHeight.setObjectName(_fromUtf8("dsbTangentHeight"))
-        self.horizontalLayout_5.addWidget(self.dsbTangentHeight)
-        self.verticalLayout.addLayout(self.horizontalLayout_5)
-        self.horizontalLayout_6 = QtGui.QHBoxLayout()
-        self.horizontalLayout_6.setObjectName(_fromUtf8("horizontalLayout_6"))
-        self.cbShowSolarAngle = QtGui.QCheckBox(MapAppearanceDialog)
-        self.cbShowSolarAngle.setMinimumSize(QtCore.QSize(145, 0))
-        self.cbShowSolarAngle.setObjectName(_fromUtf8("cbShowSolarAngle"))
-        self.horizontalLayout_6.addWidget(self.cbShowSolarAngle)
-        self.lbStartTime = QtGui.QLabel(MapAppearanceDialog)
-        self.lbStartTime.setMinimumSize(QtCore.QSize(0, 0))
-        self.lbStartTime.setObjectName(_fromUtf8("lbStartTime"))
-        self.horizontalLayout_6.addWidget(self.lbStartTime)
-        self.dteStartTime = QtGui.QDateTimeEdit(MapAppearanceDialog)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dteStartTime.sizePolicy().hasHeightForWidth())
-        self.dteStartTime.setSizePolicy(sizePolicy)
-        self.dteStartTime.setObjectName(_fromUtf8("dteStartTime"))
-        self.horizontalLayout_6.addWidget(self.dteStartTime)
-        self.verticalLayout.addLayout(self.horizontalLayout_6)
         spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem3)
         self.buttonBox = QtGui.QDialogButtonBox(MapAppearanceDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.verticalLayout.addWidget(self.buttonBox)
 
@@ -221,8 +178,4 @@ class Ui_MapAppearanceDialog(object):
         self.btWaypointsColour.setText(_translate("MapAppearanceDialog", "colour of waypoints", None))
         self.btVerticesColour.setText(_translate("MapAppearanceDialog", "colour of vertices", None))
         self.cbLabelFlightTrack.setText(_translate("MapAppearanceDialog", "label flight track", None))
-        self.cbDrawTangents.setText(_translate("MapAppearanceDialog", "draw tangent paths", None))
-        self.btTangentsColour.setText(_translate("MapAppearanceDialog", "colour", None))
-        self.dsbTangentHeight.setSuffix(_translate("MapAppearanceDialog", " km", None))
-        self.cbShowSolarAngle.setText(_translate("MapAppearanceDialog", "show solar angle", None))
-        self.lbStartTime.setText(_translate("MapAppearanceDialog", "Start time:", None))
+
