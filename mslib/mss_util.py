@@ -46,7 +46,7 @@ from mslib import greatcircle
 from mslib.msui import wms_login_cache
 
 
-def config_loader(config_file="mss_settings.json", dataset=None, default=None):
+def config_loader(config_file=wms_login_cache.cached_config_file, dataset=None, default=None):
     """
     Function for loading json config data
 
@@ -58,8 +58,6 @@ def config_loader(config_file="mss_settings.json", dataset=None, default=None):
     Returns: a dictionary
 
     """
-    if wms_login_cache.cached_config_file is not None:
-        config_file = wms_login_cache.cached_config_file
     data = {}
     try:
         with open(os.path.join(config_file)) as source:
