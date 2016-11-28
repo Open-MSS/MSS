@@ -1174,7 +1174,20 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # disabled. <None> objects passed to wms.getmap will not be included
         # in the query URL that is send to the server.
         init_time = self.getInitTime()
+        if init_time is not None and init_time not in self.allowed_init_times:
+            QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                       self.tr("ERROR: Invalid init time chosen\n"
+                                               "(watch out for the strikethrough)!"),
+                                       QtGui.QMessageBox.Ok)
+            raise RuntimeError("Invalid init time")
+
         valid_time = self.getValidTime()
+        if valid_time is not None and valid_time not in self.allowed_valid_times:
+            QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                       self.tr("ERROR: Invalid valid time chosen!\n"
+                                               "(watch out for the strikethrough)!"),
+                                       QtGui.QMessageBox.Ok)
+            raise RuntimeError("Invalid valid time")
 
         logging.debug("fetching layer %s; style %s, width %i, height %i",
                       layer, style, width, height)
