@@ -62,10 +62,10 @@ class TestTimes(object):
         assert mss_util.jsec_to_datetime(-157766400.0) == datetime.datetime(1995, 1, 1, 0, 0, 0, 0)
 
     def test_compute_hour_of_day(self):
-        assert mss_util.computeHourOfDay(0) == 0
-        assert mss_util.computeHourOfDay(86400) == 0
-        assert mss_util.computeHourOfDay(3600) == 1
-        assert mss_util.computeHourOfDay(82800) == 23
+        assert mss_util.compute_hour_of_day(0) == 0
+        assert mss_util.compute_hour_of_day(86400) == 0
+        assert mss_util.compute_hour_of_day(3600) == 1
+        assert mss_util.compute_hour_of_day(82800) == 23
 
 
 class TestAngles(object):
@@ -89,10 +89,10 @@ class TestAngles(object):
         assert int(zenith_angle * 1000) == -62197
 
     def test_rotate_point(self):
-        assert mss_util.rotatePoint([0, 0], 0) == (0.0, 0.0)
-        assert mss_util.rotatePoint([0, 0], 180) == (0.0, 0.0)
-        assert mss_util.rotatePoint([1, 0], 0) == (1.0, 0.0)
-        assert mss_util.rotatePoint([100, 90], 90) == (-90, 100)
+        assert mss_util.rotate_point([0, 0], 0) == (0.0, 0.0)
+        assert mss_util.rotate_point([0, 0], 180) == (0.0, 0.0)
+        assert mss_util.rotate_point([1, 0], 0) == (1.0, 0.0)
+        assert mss_util.rotate_point([100, 90], 90) == (-90, 100)
 
 
 class TestConverter(object):

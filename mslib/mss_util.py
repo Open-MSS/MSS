@@ -30,7 +30,6 @@ import os
 import logging
 import datetime
 from datetime import datetime as dt
-import collections
 import json
 # related third party imports
 import numpy as np
@@ -99,7 +98,6 @@ Tangent point / Hexagon / Solar Angle utilities
 """
 
 JSEC_START = datetime.datetime(2000, 1, 1)
-R = 6371.
 F = 1. / 298.257223563
 E2 = (2. - F) * F
 
@@ -122,7 +120,7 @@ def jsec_to_datetime(jsecs):
     return JSEC_START + datetime.timedelta(seconds=jsecs)
 
 
-def computeHourOfDay(jsecs):
+def compute_hour_of_day(jsecs):
     date = JSEC_START + datetime.timedelta(seconds=jsecs)
     return date.hour + date.minute / 60. + date.second / 3600.
 
@@ -138,24 +136,14 @@ def fix_angle(ang):
     return ang
 
 
-def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1):
+def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1, angle):
     mlat = (lat0 + lat1) / 2.
     lon0 *= np.cos(np.deg2rad(mlat))
     lon1 *= np.cos(np.deg2rad(mlat))
     dlon = lon1 - lon0
     dlat = lat1 - lat0
-    obs_azi2 = fix_angle(90 + np.rad2deg(np.arctan2(dlon, dlat)))
+    obs_azi2 = fix_angle(angle + np.rad2deg(np.arctan2(dlon, dlat)))
     return obs_azi2, -1
-
-
-def calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, height):
-    thresh = -np.rad2deg(np.arccos(R / (height + R))) - 3
-
-    delta_azi = obs_azi - sol_azi
-    delta_ele = obs_ele + sol_ele
-    if sol_ele < thresh:
-        delta_ele = 180
-    return np.linalg.norm([delta_azi, delta_ele])
 
 
 def compute_solar_angle(jsec, lon, lat):
@@ -199,7 +187,7 @@ def compute_solar_angle(jsec, lon, lat):
     dec = np.arcsin(np.sin(oblqec) * np.sin(eclong))
     # Local coordinates
     # Greenwich mean sidereal time
-    gmst = 6.697375 + .0657098242 * time + computeHourOfDay(jsec)
+    gmst = 6.697375 + .0657098242 * time + compute_hour_of_day(jsec)
 
     gmst = gmst % 24.
     if gmst < 0:
@@ -243,7 +231,7 @@ def compute_solar_angle(jsec, lon, lat):
     return np.rad2deg(azimuthAngle), 90 - np.rad2deg(zenithAngle)
 
 
-def rotatePoint(point, angle, origin=(0, 0)):
+def rotate_point(point, angle, origin=(0, 0)):
     """Rotates a point. Angle is in degrees.
     Rotation is counter-clockwise"""
     angle = np.deg2rad(angle)
@@ -254,15 +242,15 @@ def rotatePoint(point, angle, origin=(0, 0)):
     return temp_point
 
 
-def createHexagon(center_lat, center_lon, radius, angle=0.):
+def create_hexagon(center_lat, center_lon, radius, angle=0.):
     coords_0 = (radius, 0.)
-    CoordsCart_0 = [rotatePoint(coords_0, angle=0. + angle),
-                    rotatePoint(coords_0, angle=60. + angle),
-                    rotatePoint(coords_0, angle=120. + angle),
-                    rotatePoint(coords_0, angle=180. + angle),
-                    rotatePoint(coords_0, angle=240. + angle),
-                    rotatePoint(coords_0, angle=300. + angle),
-                    rotatePoint(coords_0, angle=360. + angle)]
+    CoordsCart_0 = [rotate_point(coords_0, angle=0. + angle),
+                    rotate_point(coords_0, angle=60. + angle),
+                    rotate_point(coords_0, angle=120. + angle),
+                    rotate_point(coords_0, angle=180. + angle),
+                    rotate_point(coords_0, angle=240. + angle),
+                    rotate_point(coords_0, angle=300. + angle),
+                    rotate_point(coords_0, angle=360. + angle)]
     CoordsSphere_rot = [(center_lat + vec[0] / 110.,
                          center_lon + vec[1] / (110. *
                                                 np.cos(np.deg2rad(vec[0] / 110. + center_lat))))
@@ -272,30 +260,6 @@ def createHexagon(center_lat, center_lon, radius, angle=0.):
 
 def convertHPAToKM(press):
     return (288.15 / 0.0065) * (1. - (press / 1013.25) ** (1. / 5.255)) / 1000.
-
-
-def tangent_point_coordinates(lon_lin, lat_lin, flight_alt=14, cut_height=12):
-    lon_lin2 = np.array(lon_lin) * np.cos(np.deg2rad(np.array(lat_lin)))
-    lins = zip(lon_lin2[0:-1], lon_lin2[1:], lat_lin[0:-1], lat_lin[1:])
-    direction = [(x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
-    direction = [(_x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
-                 for _x, _y in direction]
-    los = [rotatePoint(point, -90.) for point in direction]
-    los.append(los[-1])
-
-    if isinstance(flight_alt, (collections.Sequence, np.ndarray)):
-        dist = [np.sqrt(max((R + a) ** 2 - (R + cut_height) ** 2, 0)) / 110. for a in flight_alt[:-1]]
-        dist.append(dist[-1])
-    else:
-        dist = np.sqrt((R + flight_alt) ** 2 - (R + cut_height) ** 2) / 110.
-
-    tp_dir = (np.array(los).T * dist).T
-
-    tps = [(x0 + tp_x, y0 + tp_y) for
-           ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lins, tp_dir)]
-    tps = [(x0 / np.cos(np.deg2rad(y0)), y0) for
-           (x0, y0) in tps]
-    return tps
 
 
 """

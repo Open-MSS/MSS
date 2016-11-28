@@ -777,11 +777,9 @@ class MplTopViewCanvas(MplCanvas):
             self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
 
     def setRemoteSensingAppearance(self, settings):
-        self.waypoints_interactor.set_tangent_color(settings["colour_tangents"])
+        self.waypoints_interactor.set_remote_sensing(settings["reference"])
         self.waypoints_interactor.set_tangent_visible(settings["draw_tangents"])
-        self.waypoints_interactor.set_tangent_height(settings["tangent_height"])
         self.waypoints_interactor.set_solar_angle_visible(settings["show_solar_angle"])
-        self.waypoints_interactor.set_start_time(settings["start_time"])
 
         self.waypoints_interactor.redraw_path()
 

@@ -52,14 +52,10 @@ import datetime
 # related third party imports
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
-from matplotlib.collections import LineCollection
-from matplotlib.colors import BoundaryNorm, ListedColormap
 from PyQt4 import QtCore, QtGui
 
 # local application imports
 from mslib.msui import flighttrack as ft
-from mslib.mss_util import tangent_point_coordinates, datetime_to_jsec, compute_solar_angle, \
-    compute_view_angles, calc_view_rating, get_distance
 
 """
 CONSTANTS
@@ -799,25 +795,11 @@ class HPathInteractor(PathInteractor):
         self.map = mplmap
         self.wp_scatter = None
         self.markerfacecolor = markerfacecolor
-        self.tangentlines = None
-        self.showtangents = True
-        self.tangentcolor = linecolor
-        self.tangent_height = 12.
-        self.start_time = datetime.datetime.now()
-        self.solarlines = None
+        self.tangent_lines = None
+        self.show_tangent_points = False
+        self.solar_lines = None
         self.show_solar_angle = False
-        self.solar_cmap = ListedColormap([
-            (1.0, 0.0, 0.0, 1.0),
-            (1.0, 0.44823529411764707, 0.0, 1.0),
-            (1.0, 0.75, 0.0, 1.0),
-            (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
-            (0.64666666666666672, 0.25, 1.0, 1.0),
-            (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
-            (1.0, 0.55000000000000004, 1.0, 1.0),
-            (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
-            (0.32372549019607844, 0.84941176470588231, 0.32372549019607844, 1.0),
-            (0.0, 0.69999999999999996, 0.0, 1.0)])
-        self.solar_norm = BoundaryNorm([0, 5, 10, 15, 25, 35, 45, 60, 90, 135, 180], self.solar_cmap.N)
+        self.remote_sensing = None
         PathInteractor.__init__(self, ax=mplmap.ax, waypoints=waypoints,
                                 mplpath=PathH_GC([[0, 0]], map=mplmap),
                                 facecolor='none', edgecolor='none',
@@ -962,98 +944,27 @@ class HPathInteractor(PathInteractor):
         # necessary as scatter() does not provide a set_data method.
         self.line.set_data(zip(*vertices))
 
-        fine_lines = None
         wp_heights = [(wp.flightlevel * 100) * 0.0003048 for wp in self.waypoints_model.allWaypointData()]
-        line_heights = None
-        if self.tangentlines is not None:
-            self.tangentlines.remove()
-        if self.showtangents:
-            if fine_lines is None:
-                x, y = zip(*wp_vertices)
-                wp_lons, wp_lats = self.map(x, y, inverse=True)
-                fine_lines = [self.map.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], del_s=10.,
-                                                 map_coords=False) for i in range(len(wp_lons) - 1)]
-                line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
-                                range(len(fine_lines))]
-                # fine_lines = list of tuples with x-list and y-list for each segment
-            tplines = [tangent_point_coordinates(fine_lines[i][0], fine_lines[i][1], line_heights[i],
-                                                 cut_height=self.tangent_height) for i in range(len(fine_lines))]
-            for i in range(len(tplines)):
-                l = tplines[i]
-                for j in range(len(l)):
-                    l[j] = self.map(l[j][0], l[j][1])
-                tplines[i] = l
-            self.tangentlines = LineCollection(tplines, colors=self.tangentcolor, zorder=2,
-                                               animated=True, linewidth=3, linestyles=':')
-            self.ax.add_collection(self.tangentlines)
-        else:
-            self.tangentlines = None
 
-        if self.solarlines is not None:
-            self.solarlines.remove()
+        if self.tangent_lines is not None:
+            self.tangent_lines.remove()
+        if self.show_tangent_points:
+            assert self.remote_sensing is not None
+            self.tangent_lines = self.remote_sensing.compute_tangent_lines(
+                self.map, wp_vertices, wp_heights)
+            self.ax.add_collection(self.tangent_lines)
+        else:
+            self.tangent_lines = None
+
+        if self.solar_lines is not None:
+            self.solar_lines.remove()
         if self.show_solar_angle:
-            # calculate distances and times
-            speed = 850. / 3.6  # speed in km/s
-            start_jsec = datetime_to_jsec(self.start_time)
-            if fine_lines is None:
-                x, y = zip(*wp_vertices)
-                wp_lons, wp_lats = self.map(x, y, inverse=True)
-                fine_lines = [self.map.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1]) for i in
-                              range(len(wp_lons) - 1)]
-                line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
-                                range(len(fine_lines))]
-                # fine_lines = list of tuples with x-list and y-list for each segment
-            # lines = list of tuples with lon-list and lat-list for each segment
-            heights = []
-            for i in range(len(fine_lines) - 1):
-                heights.extend(line_heights[i][:-1])
-            heights.extend(line_heights[-1])
-            solar_x = []
-            solar_y = []
-            for i in range(len(fine_lines) - 1):
-                solar_x.extend(fine_lines[i][0][:-1])
-                solar_y.extend(fine_lines[i][1][:-1])
-            solar_x.extend(fine_lines[-1][0])
-            solar_y.extend(fine_lines[-1][1])
-            points = []
-            times = []
-            old_wp = None
-            total_distance = 0
-            for i in range(len(solar_x)):
-                lon, lat = solar_x[i], solar_y[i]
-                points.append([[lon, lat]])  # append double-list for later concatenation
-                if old_wp is None:
-                    times.append(start_jsec)
-                else:
-                    wp_dist = get_distance((old_wp[0], old_wp[1]), (lat, lon)) * 1000.
-                    total_distance += wp_dist
-                    times.append(start_jsec + total_distance / speed)
-                old_wp = (lat, lon)
-            vals = []
-            for i in range(len(points) - 1):
-                p0, p1 = points[i][0], points[i + 1][0]
-                sol_azi, sol_ele = compute_solar_angle(times[i], p0[0], p0[1])
-                if sol_azi < 0:
-                    sol_azi += 360
-                obs_azi, obs_ele = compute_view_angles(p0[0], p0[1], heights[i], p1[0], p1[1], heights[i + 1])
-                if obs_azi < 0:
-                    obs_azi += 360
-
-                rating = calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, heights[i])
-
-                vals.append(rating)
-
-            # convert lon, lat to map points
-            for i in range(len(points)):
-                points[i][0][0], points[i][0][1] = self.map(points[i][0][0], points[i][0][1])
-            points = np.concatenate([points[:-1], points[1:]], axis=1)
-            # plot
-            self.solarlines = LineCollection(points, cmap=self.solar_cmap, norm=self.solar_norm,
-                                             zorder=2, linewidths=3, animated=True)
-            self.solarlines.set_array(np.array(vals))
-            self.ax.add_collection(self.solarlines)
+            assert self.remote_sensing is not None
+            self.solar_lines = self.remote_sensing.compute_solar_lines(
+                self.map, wp_vertices, wp_heights)
+            self.ax.add_collection(self.solar_lines)
         else:
-            self.solarlines = None
+            self.solar_lines = None
 
         if self.wp_scatter is not None:
             self.wp_scatter.remove()
@@ -1098,10 +1009,10 @@ class HPathInteractor(PathInteractor):
         self.ax.draw_artist(self.wp_scatter)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
-        if self.showtangents:
-            self.ax.draw_artist(self.tangentlines)
+        if self.show_tangent_points:
+            self.ax.draw_artist(self.tangent_lines)
         if self.show_solar_angle:
-            self.ax.draw_artist(self.solarlines)
+            self.ax.draw_artist(self.solar_lines)
         self.canvas.blit(self.ax.bbox)
 
     # Link redraw_figure() to redraw_path().
@@ -1152,17 +1063,11 @@ class HPathInteractor(PathInteractor):
         self.wp_scatter.set_visible(showverts)
         PathInteractor.set_vertices_visible(self, showverts)
 
-    def set_tangent_color(self, tangentcolor):
-        self.tangentcolor = tangentcolor
-
     def set_tangent_visible(self, visible):
-        self.showtangents = visible
-
-    def set_tangent_height(self, height):
-        self.tangent_height = height
-
-    def set_start_time(self, time):
-        self.start_time = time
+        self.show_tangent_points = visible
 
     def set_solar_angle_visible(self, visible):
         self.show_solar_angle = visible
+
+    def set_remote_sensing(self, ref):
+        self.remote_sensing = ref
