@@ -539,11 +539,11 @@ class MapCanvas(basemap.Basemap):
         item = index1.internalPointer()
         item2 = index2.internalPointer()
         if isinstance(item, titree.LagrantoMapItem):
-            lastChange = self.traj_item_tree.getLastChange()
+            last_change = self.traj_item_tree.getLastChange()
             # Update the given item or the entire tree if the two given
             # items are different.
             self.update_trajectory_items(item=item if item == item2 else None,
-                                         mode=lastChange)
+                                         mode=last_change)
 
     def update_trajectory_items(self, item=None, mode="DRAW_EVERYTHING"):
         """Draw or update map elements.
@@ -599,16 +599,16 @@ class MapCanvas(basemap.Basemap):
         # ancestors).
         #
         # Default values: The item is visible and inherits no other properties.
-        parentProperties = {"visible": True,
-                            "colour": None,
-                            "linestyle": None,
-                            "linewidth": None,
-                            "timeMarkerInterval": None}
+        parent_properties = {"visible": True,
+                             "colour": None,
+                             "linestyle": None,
+                             "linewidth": None,
+                             "timeMarkerInterval": None}
         parent = item.parent()  # this would be None if item == rootItem
         while parent:  # loop until root has been reached
             # Set visible to False if one item along the path to the root is
             # found to be set to invisible.
-            parentProperties["visible"] = parent.isVisible(self.identifier) and parentProperties["visible"]
+            parent_properties["visible"] = parent.isVisible(self.identifier) and parent_properties["visible"]
 
             # Inherit colour and time marker interval of the highest tree level
             # on which they are set (set the current property to the value
@@ -619,38 +619,38 @@ class MapCanvas(basemap.Basemap):
             for propName in ["colour", "linestyle", "linewidth",
                              "timeMarkerInterval"]:
                 prop = parent.getGxElementProperty("general", propName)
-                parentProperties[propName] = prop if prop \
-                    else parentProperties[propName]
+                parent_properties[propName] = prop if prop \
+                    else parent_properties[propName]
 
             # Move up one level.
             parent = parent.parent()
 
         # Iterative tree traversal: Put the item and its attributes on a
         # stack.
-        itemStack = [(item, parentProperties)]
+        item_stack = [(item, parent_properties)]
 
         # Operate on the items in the stack until the stack is empty.
-        while len(itemStack) > 0:
+        while len(item_stack) > 0:
 
             # Get a new item from the stack.
-            item, parentProperties = itemStack.pop()
+            item, parent_properties = item_stack.pop()
 
             # Its visibility is determined by its own visibility status
             # and that of its parent (i.e. the subtree it is part of).
-            itemProperties = {}
-            itemProperties["visible"] = item.isVisible(self.identifier) and parentProperties["visible"]
+            item_properties = {}
+            item_properties["visible"] = item.isVisible(self.identifier) and parent_properties["visible"]
             #
             for propName in ["colour", "linestyle", "linewidth",
                              "timeMarkerInterval"]:
-                itemProperties[propName] = parentProperties[propName] \
-                    if parentProperties[propName] \
+                item_properties[propName] = parent_properties[propName] \
+                    if parent_properties[propName] \
                     else item.getGxElementProperty("general",
                                                    propName)
 
             # Push all children of the current item onto the stack that are
             # instances of LagrantoMapItem (VariableItems are not plotted on
             # the map).
-            itemStack.extend([(child, itemProperties) for child in item.childItems
+            item_stack.extend([(child, item_properties) for child in item.childItems
                               if isinstance(child, titree.LagrantoMapItem)])
 
             # Plotting and graphics property update operations can only be
@@ -672,16 +672,16 @@ class MapCanvas(basemap.Basemap):
                         plt.setp(
                             item.getGxElementProperty(element,
                                                       "instance::%s" % self.identifier),
-                            visible=itemProperties["visible"],
-                            color=itemProperties["colour"],
-                            linestyle=itemProperties["linestyle"],
-                            linewidth=itemProperties["linewidth"])
+                            visible=item_properties["visible"],
+                            color=item_properties["colour"],
+                            linestyle=item_properties["linestyle"],
+                            linewidth=item_properties["linewidth"])
                     elif element == "timemarker":
                         plt.setp(
                             item.getGxElementProperty(element,
                                                       "instance::%s" % self.identifier),
-                            visible=itemProperties["visible"],
-                            color=itemProperties["colour"])
+                            visible=item_properties["visible"],
+                            color=item_properties["colour"])
 
             elif mode in ["FLIGHT_TRACK_ADDED", "TRAJECTORY_DIR_ADDED",
                           "MARKER_CHANGE", "DRAW_EVERYTHING"]:
@@ -703,34 +703,34 @@ class MapCanvas(basemap.Basemap):
                     except (KeyError, ValueError) as e:
                         pass
                     # Plot new instances.
-                    plotInstance = self.plot(x, y,
-                                             color=itemProperties["colour"],
-                                             visible=itemProperties["visible"],
-                                             linestyle=itemProperties["linestyle"],
-                                             linewidth=itemProperties["linewidth"])
+                    plot_instance = self.plot(x, y,
+                                              color=item_properties["colour"],
+                                              visible=item_properties["visible"],
+                                              linestyle=item_properties["linestyle"],
+                                              linewidth=item_properties["linewidth"])
                     item.setGxElementProperty("lineplot",
                                               "instance::%s" % self.identifier,
-                                              plotInstance)
+                                              plot_instance)
 
                 # Get the indexes for the time markers. If no time markers should
                 # be drawn, 'None' is returned.
                 try:
                     # Try to remove an existing time marker instance from
                     # the plot.
-                    oldScatterInstance = item.getGxElementProperty("timemarker",
-                                                                   "instance::%s" % self.identifier)
-                    plt.setp(oldScatterInstance, visible=False)
-                    oldScatterInstance.remove()
-                except (KeyError, ValueError) as e:
+                    old_scatter_instance = item.getGxElementProperty("timemarker",
+                                                                     "instance::%s" % self.identifier)
+                    plt.setp(old_scatter_instance, visible=False)
+                    old_scatter_instance.remove()
+                except (KeyError, ValueError):
                     pass
                 imarker = item.getTimeMarkerIndexes()
                 if imarker is not None:
-                    scatterInstance = self.scatter(x[imarker], y[imarker],
-                                                   s=20, c=itemProperties["colour"],
-                                                   visible=itemProperties["visible"], linewidth=0)
+                    scatter_instance = self.scatter(x[imarker], y[imarker],
+                                                    s=20, c=item_properties["colour"],
+                                                    visible=item_properties["visible"], linewidth=0)
                     item.setGxElementProperty("timemarker",
                                               "instance::%s" % self.identifier,
-                                              scatterInstance)
+                                              scatter_instance)
 
         # Update the figure canvas.
         self.ax.figure.canvas.draw()
@@ -898,3 +898,49 @@ class SatelliteOverpassPatch:
                 element.remove()
             except:
                 pass
+
+
+class KMLPatch:
+    """Represents a KML overlay.
+    """
+
+    def __init__(self, mapcanvas, kml):
+        """
+        """
+        self.map = mapcanvas
+        self.kml = kml
+        self.patches = []
+        self.draw()
+
+    def draw(self):
+        """Do the actual plotting of the patch.
+        """
+        # Plot satellite track.
+        for i in range(len(self.kml.Document.Placemark)):
+            mg = self.kml.Document.Placemark[i].MultiGeometry
+            for j in range(len(mg.Polygon)):
+                coords = str(mg.Polygon[j].outerBoundaryIs.LinearRing.coordinates).split()
+                lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
+                logging.info(u"{}".format(self.kml.Document.Placemark[i].name))
+                logging.info("{} lons {}".format(i, lons))
+                logging.info("{} lats {}".format(i, lats))
+                x, y = self.map(lons, lats)
+                self.patches.append(self.map.plot(x, y, "-k"))
+
+        self.map.ax.figure.canvas.draw()
+
+    def update(self):
+        """Removes the current plot of the patch and redraws the patch.
+           This is necessary, for instance, when the map projection and/or
+           extent has been changed.
+        """
+        self.remove()
+        self.draw()
+
+    def remove(self):
+        """Remove this satellite patch from the map canvas.
+        """
+        for patch in self.patches:
+            for element in patch:
+                element.remove()
+        self.patches = []

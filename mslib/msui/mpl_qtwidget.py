@@ -541,6 +541,7 @@ class MplTopViewCanvas(MplCanvas):
         super(MplTopViewCanvas, self).__init__()
         self.waypoints_interactor = None
         self.satoverpasspatch = None
+        self.kmloverlay = None
         self.map = None
 
         # Axes and image object to display the legend graphic, if available.
@@ -628,6 +629,9 @@ class MplTopViewCanvas(MplCanvas):
 
         if self.satoverpasspatch:
             self.satoverpasspatch.update()
+
+        if self.kmloverlay:
+            self.kmloverlay.update()
 
         self.drawMetadata("Top view")
 

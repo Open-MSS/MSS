@@ -1643,8 +1643,6 @@ if __name__ == "__main__":
                         format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
 
-    import sys
-
     app = QtGui.QApplication(sys.argv)
     win = WMSControlWidget(default_WMS=default_WMS)
     win.connect(win.btGetMap, QtCore.SIGNAL("clicked()"),

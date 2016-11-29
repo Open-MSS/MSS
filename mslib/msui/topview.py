@@ -31,13 +31,10 @@ AUTHORS:
 """
 
 # standard library imports
-import datetime
-
 import functools
 import logging
 import os
 import pickle
-import tempfile
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
@@ -52,12 +49,14 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import wms_control as wms
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
+from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui import wms_login_cache
 
 # Dock window indices.
 WMS = 0
 SATELLITE = 1
 REMOTESENSING = 2
+KMLOVERLAY = 3
 
 """
 DIALOG for map appearance
@@ -176,8 +175,8 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         super(MSSTopViewWindow, self).__init__(parent, model)
         self.setupUi(self)
 
-        # Dock windows [WMS, Satellite, Trajectories, Remote Sensing]:
-        self.docks = [None, None, None, None]
+        # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay]:
+        self.docks = [None, None, None, None, None]
 
         self.settingsfile = os.path.join(wms_login_cache.DEFAULT_CONFIG_PATH, "mss.topview.cfg")
         self.loadSettings()
@@ -218,6 +217,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         """Initialise GUI elements. (This method is called before signals/slots
            are connected).
         """
+        # toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay"]
         toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
@@ -255,6 +255,9 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
             elif index == REMOTESENSING:
                 title = "Remote Sensing Tools"
                 widget = rs.RemoteSensingControlWidget(view=self.mpl.canvas)
+            elif index == KMLOVERLAY:
+                title = "KML Overlay"
+                widget = kml.KMLOverlayControlWidget(view=self.mpl.canvas)
             else:
                 raise IndexError("invalid control index")
 
