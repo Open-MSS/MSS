@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>SatelliteDockWidget</class>
- <widget class="QWidget" name="SatelliteDockWidget" >
-  <property name="geometry" >
+ <widget class="QWidget" name="SatelliteDockWidget">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,32 +10,32 @@
     <height>104</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Satellite Tracks</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" >
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_5" >
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
-      <widget class="QLabel" name="label_5" >
-       <property name="text" >
+      <widget class="QLabel" name="label_5">
+       <property name="text">
         <string>File with predicted satellite track:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="leFile" />
+      <widget class="QLineEdit" name="leFile"/>
      </item>
      <item>
-      <widget class="QToolButton" name="btSelectFile" >
-       <property name="text" >
+      <widget class="QToolButton" name="btSelectFile">
+       <property name="text">
         <string>...</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="btLoadFile" >
-       <property name="text" >
+      <widget class="QToolButton" name="btLoadFile">
+       <property name="text">
         <string>load</string>
        </property>
       </widget>
@@ -42,24 +43,24 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7" >
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
      <item>
-      <widget class="QLabel" name="label_6" >
-       <property name="sizePolicy" >
-        <sizepolicy vsizetype="Preferred" hsizetype="Fixed" >
+      <widget class="QLabel" name="label_6">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="text" >
+       <property name="text">
         <string>Predicted satellite overpasses:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cbSatelliteOverpasses" >
-       <property name="sizePolicy" >
-        <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+      <widget class="QComboBox" name="cbSatelliteOverpasses">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -69,11 +70,18 @@
     </layout>
    </item>
    <item>
-    <spacer name="verticalSpacer" >
-     <property name="orientation" >
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Use http://www-air.larc.nasa.gov/tools/predict.htm to generate prediction files.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <property name="sizeHint" stdset="0" >
+     <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
        <height>40</height>
