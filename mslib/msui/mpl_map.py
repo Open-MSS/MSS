@@ -700,7 +700,7 @@ class MapCanvas(basemap.Basemap):
                                                               "instance::%s" % self.identifier)
                         for instance in instances:
                             instance.remove()
-                    except (KeyError, ValueError) as e:
+                    except (KeyError, ValueError):
                         pass
                     # Plot new instances.
                     plot_instance = self.plot(x, y,

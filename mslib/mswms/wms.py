@@ -194,7 +194,7 @@ class WMSServer(object):
         """
         logging.debug("creating service exception..")
         template = templates['service_exception.pt']
-        return_format = "text/xml"
+        # return_format = "text/xml"
         return [template(code=code, text=text), "text/xml"]
 
     def get_capabilities(self, server_url=None):
@@ -214,7 +214,7 @@ class WMSServer(object):
             for layer in self.vsec_layer_registry[dataset].values():
                 vsec_layers.append((dataset, layer))
 
-        return_format = 'text/xml'
+        # return_format = 'text/xml'
         return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, server_url=server_url,
                                service_name=mss_wms_settings.service_name,
                                service_title=mss_wms_settings.service_title,

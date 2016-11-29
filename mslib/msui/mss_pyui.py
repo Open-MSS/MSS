@@ -49,8 +49,6 @@ import os
 import copy
 import logging
 
-from distutils.sysconfig import get_python_lib
-
 from mslib import __version__
 from mslib.msui import ui_mainwindow as ui
 from mslib.msui import ui_about_dialog as ui_ab
@@ -61,7 +59,6 @@ from mslib.msui import sideview
 from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import loopview
-import mslib.mss_util
 from mslib.msui import wms_login_cache
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default

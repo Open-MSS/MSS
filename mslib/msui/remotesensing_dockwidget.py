@@ -259,5 +259,3 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
         if sol_ele < thresh:
             delta_ele = 180
         return np.linalg.norm([delta_azi, delta_ele])
-
-

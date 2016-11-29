@@ -47,7 +47,6 @@ AUTHORS:
 # standard library imports
 import logging
 import numpy as np
-import datetime
 
 # related third party imports
 import matplotlib.path as mpath
@@ -621,16 +620,18 @@ class PathInteractor:
         """
         wps = self.waypoints_model.allWaypointData(mode=ft.USER)
         if len(wps) < 3:
-            QtGui.QMessageBox.warning(None, "Remove waypoint",
-                                "Cannot remove waypoint, the flight track needs to consist "
-                                "of at least two points.", QtGui.QMessageBox.Ok)
+            QtGui.QMessageBox.warning(
+                None, "Remove waypoint",
+                "Cannot remove waypoint, the flight track needs to consist "
+                "of at least two points.", QtGui.QMessageBox.Ok)
             return False
         else:
             wp = wps[row]
-            return (QtGui.QMessageBox.question(None, "Remove waypoint",
-                                         "Remove waypoint no.%i at %.2f/%.2f, flightlevel %.2f?"
-                                         % (row, wp.lat, wp.lon, wp.flightlevel),
-                                         QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
+            return (QtGui.QMessageBox.question(
+                None, "Remove waypoint",
+                "Remove waypoint no.%i at %.2f/%.2f, flightlevel %.2f?"
+                % (row, wp.lat, wp.lon, wp.flightlevel),
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
 
     def set_path_color(self, line_color=None, marker_facecolor=None,
                        patch_facecolor=None):
