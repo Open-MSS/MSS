@@ -44,8 +44,8 @@ import xml.dom.minidom
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import QString, QVariant, Qt, QModelIndex, SIGNAL, QAbstractTableModel
+from PyQt4.QtGui import QItemDelegate, QComboBox
 import numpy as np
 
 # local application imports
@@ -630,7 +630,7 @@ class WaypointsTableModel(QAbstractTableModel):
         with open(filename, "r") as in_file:
             csv_reader = csv.reader(in_file, dialect='excel')
             self.name = csv_reader.next()[0]
-            header = csv_reader.next()
+            csv_reader.next()  # header
             for row in csv_reader:
                 wp = Waypoint()
                 wp.location = row[1]

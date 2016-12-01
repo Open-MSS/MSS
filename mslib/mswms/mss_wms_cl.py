@@ -96,7 +96,6 @@ def main():
     print "      Mission Support System WMS Command Line Interface"
     print "*********************************************************************\n"
 
-
     # Set up a command line parser.
     parser = optparse.OptionParser()
 
