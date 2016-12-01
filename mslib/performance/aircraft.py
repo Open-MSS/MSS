@@ -34,7 +34,6 @@ TODO:
 # standard library imports
 import time as ptime
 from datetime import datetime, timedelta
-
 import copy
 from abc import ABCMeta, abstractmethod
 
@@ -43,6 +42,8 @@ import numpy as np
 
 # local application imports
 from mslib import thermolib
+from mslib import mss_util
+
 
 """
 EXCEPTION CLASSES
@@ -407,7 +408,7 @@ class Aircraft(object):
 
                 # Compute the greatcircle distance between waypoints in nautical
                 # miles.
-                segment_distance_nm = get_distance(
+                segment_distance_nm = mss_util.get_distance(
                     (ac_state.lat, ac_state.lon), (item[2], item[1])) / 1.852
                 print "given segment distance is %f nm." % segment_distance_nm
 
@@ -475,7 +476,7 @@ class Aircraft(object):
 
                 # Compute the greatcircle distance between waypoints in nautical
                 # miles.
-                segment_distance_nm = get_distance(
+                segment_distance_nm = mss_util.get_distance(
                     (ac_state.lat, ac_state.lon), (item[2], item[1])) / 1.852
                 print "given segment distance is %f nm." % segment_distance_nm
 
@@ -517,7 +518,7 @@ class Aircraft(object):
                             item[3], ac_state.alt_ft, delta_temp_ISA, ac_state.grossweight)
 
                         # Compute the length of the current sub-segment ..
-                        sub_segment_distance_nm = get_distance(
+                        sub_segment_distance_nm = mss_util.get_distance(
                             (nwp_lat[nwp_index], nwp_lon[nwp_index]),
                             (nwp_lat[nwp_index + 1], nwp_lon[nwp_index + 1])) / 1.852
 

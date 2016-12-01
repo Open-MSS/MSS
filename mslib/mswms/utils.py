@@ -1,3 +1,7 @@
+import numpy as np
+
+N_LEVELS = 16
+
 class Targets(object):
     """This class defines the names, units, and ranges of supported generic physical
        quantities for vertical and horizontal plots.
@@ -135,7 +139,7 @@ class Targets(object):
             standard_name: string of CF standard_name
 
         Returns:
-            Tuple of string descring the unit and scaling factor to apply on data.
+            Tuple of string describing the unit and scaling factor to apply on data.
 
         """
         return Targets.UNITS.get(standard_name, (None, 1))
@@ -160,7 +164,8 @@ class Targets(object):
                 elif level is None:
                     return 0, 0
             if level == "total" and "total" in Targets.RANGES[standard_name]:
-                return Targets.RANGES[standard_name]["total"]
+                return [_x * Targets.get_unit(standard_name)[1]
+                        for _x in Targets.RANGES[standard_name]["total"]]
         if standard_name.startswith("surface_origin_tracer_from_"):
             return 0, 100
         return None, None
@@ -181,3 +186,33 @@ class Targets(object):
             return [_x * Targets.get_unit(standard_name)[1] for _x in Targets.THRESHOLDS[standard_name]]
         except KeyError:
             return None
+
+
+def get_log_levels(cmin, cmax, levels=N_LEVELS):
+    """
+    Returns 'levels' levels in a lgarithmic spacing. Takes care of ranges crossing zero and starting/ending at zero.
+    Args:
+        cmin: minimum value
+        cmax: maximum value
+        levels (optional): number of levels to be generated
+
+    Returns:
+        numpy array of values
+    """
+    assert cmin < cmax
+    if cmin >= 0:
+        if cmin == 0:
+            cmin = 0.001 * cmax
+        clev = np.exp(np.linspace(np.log(cmin), np.log(cmax), levels))
+    elif cmax <= 0:
+        if cmax == 0:
+            cmax = 0.001 * cmin
+        clev = -np.exp(np.linspace(np.log(-cmin), np.log(-cmax), levels))
+    else:
+        delta = cmax - cmin
+        clevlo = -np.exp(
+            np.linspace(np.log(-cmin), np.log(max(-cmin, cmax) * 0.001), max(2, 1 + int(levels * -cmin / delta))))
+        clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001), np.log(cmax), max(2, 1 + int(levels * cmax / delta))))
+        clev = np.asarray(list(clevlo) + list(clevhi))
+
+    return clev

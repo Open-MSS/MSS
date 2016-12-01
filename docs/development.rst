@@ -39,12 +39,15 @@ To install some additional packages needed for running the tests, activate your 
   $ conda install --file requirements.d/development.txt
 
 
-Running pep8 tests
+Running tests
 ~~~~~~~~~~~~~~~~~~~
 
 ::
 
-   $ py.test --pep8
+   $ python -m pytest --pep8
+
+
+Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
 
 
 Building the docs with Sphinx
@@ -73,7 +76,7 @@ Creating a new release
    git tag -s -m "tagged/signed release X.Y.Z" X.Y.Z
    git push origin X.Y.Z
 
-* create a release on anaconda atmo
+* create a release on anaconda atmo, conda-forge
 * announce on:
 * Mailing list
 * Twitter (follow @ReimarBauer for these tweets)

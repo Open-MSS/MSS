@@ -1,6 +1,28 @@
 Changelog
 ================
 
+Version 1.2.4
+----------------------------------
+
+Bug Fixes:
+  - Flight performance computation broken, #75
+
+Other Changes:
+  - pyqt version 4.11.*, #74
+
+
+
+Version 1.2.3
+----------------------------------------
+
+Bug Fixes:
+ - check whether variables cmin, cmax are None, #68
+
+Other Changes:
+ - version dependencies removed from documentation
+
+
+
 Version 1.2.2 
 --------------------------------------------
 
