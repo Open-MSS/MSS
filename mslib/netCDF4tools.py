@@ -32,6 +32,7 @@ import re
 
 # related third party imports
 import netCDF4
+import numpy as np
 from mslib.mswms.utils import Targets
 # local application imports
 
@@ -820,7 +821,7 @@ def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
                     if dounpackshort:
                         tmpdata = (ncvar.scale_factor * idata.astype('f') + ncvar.add_offset).astype('f')
                         if hasattr(ncvar, 'missing_value'):
-                            tmpdata = NP.where(idata == ncvar.missing_value, mval, tmpdata)
+                            tmpdata = np.where(idata == ncvar.missing_value, mval, tmpdata)
                     else:
                         tmpdata = idata
                     var[n:nmax] = tmpdata
@@ -829,7 +830,7 @@ def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
                 if dounpackshort:
                     tmpdata = (ncvar.scale_factor * idata.astype('f') + ncvar.add_offset).astype('f')
                     if hasattr(ncvar, 'missing_value'):
-                        tmpdata = NP.where(idata == ncvar.missing_value, mval, tmpdata)
+                        tmpdata = np.where(idata == ncvar.missing_value, mval, tmpdata)
                 else:
                     tmpdata = idata
                 var[0:len(unlimdim)] = tmpdata
@@ -838,7 +839,7 @@ def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
             if dounpackshort:
                 tmpdata = (ncvar.scale_factor * idata.astype('f') + ncvar.add_offset).astype('f')
                 if hasattr(ncvar, 'missing_value'):
-                    tmpdata = NP.where(idata == ncvar.missing_value, mval, tmpdata)
+                    tmpdata = np.where(idata == ncvar.missing_value, mval, tmpdata)
             else:
                 tmpdata = idata
             var[:] = tmpdata

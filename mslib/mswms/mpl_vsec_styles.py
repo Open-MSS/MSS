@@ -151,7 +151,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         # Filled contour plot of cloud cover.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cmap = plt.cm.viridis
+        cmap = plt.cm.rainbow
         cmin, cmax = Targets.get_range(self.dataname)
         if self.p_bot > self.p_top:
             visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)

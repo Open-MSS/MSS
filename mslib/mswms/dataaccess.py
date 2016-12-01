@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 import re
 import os
 import netCDF4
@@ -284,8 +284,8 @@ class ECMWFDataAccess(NWPDataAccess):
             m = self._filename_re.match(filename)
             if m:
                 # Extract information from the filename.
-                date = int(m.group(1))
-                time = int(m.group(2))
+                # date = int(m.group(1))
+                # time = int(m.group(2))
                 var = m.group(3)
                 step = int(m.group(4))
                 # dtime = int(m.group(1)+m.group(2))

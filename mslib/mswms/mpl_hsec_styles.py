@@ -540,7 +540,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         cbar_label = self.title
 
         # colour scale of plot
-        cmap = plt.cm.viridis
+        cmap = plt.cm.rainbow
 
         # get cmin, cmax, cbar_log and cbar_format for level_key
         cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
@@ -1525,7 +1525,6 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
                                np.arange(0, 101, 10), cmap=plt.cm.pink_r)
         if not self.noframe:
             cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                                                                       width="3%",  # width = % of parent_bbox width
@@ -1608,7 +1607,6 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                                thin_contours, cmap=plt.cm.gist_ncar_r, extend="max")
         if not self.noframe:
             cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                                                                       width="3%",  # width = % of parent_bbox width
@@ -1679,7 +1677,6 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
                                np.arange(0, 3000, 100), cmap=plt.cm.terrain, extend="max")
         if not self.noframe:
             cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                                                                       width="3%",  # width = % of parent_bbox width
