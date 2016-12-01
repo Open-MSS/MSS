@@ -540,7 +540,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         cbar_label = self.title
 
         # colour scale of plot
-        cmap = plt.cm.viridis
+        cmap = plt.cm.rainbow
 
         # get cmin, cmax, cbar_log and cbar_format for level_key
         cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
