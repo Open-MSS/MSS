@@ -361,7 +361,8 @@ def interpolate_vertsec3(data3D, data3D_lats, data3D_lons, lats, lons):
         data = data3D[ml, :, :]
         curtain[ml, :] = map_coordinates(data, ind_coords, order=1)
 
-    return curtain
+    curtain[:, np.isnan(ind_lats) | np.isnan(ind_lons)] = np.nan
+    return np.ma.masked_invalid(curtain)
 
 
 def latlon_points(p1, p2, numpoints=100, connection='linear'):
