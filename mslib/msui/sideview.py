@@ -35,7 +35,6 @@ import functools
 import logging
 import os
 import pickle
-import tempfile
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 

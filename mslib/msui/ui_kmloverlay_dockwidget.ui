@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SatelliteDockWidget</class>
- <widget class="QWidget" name="SatelliteDockWidget">
+ <class>KMLOverlayDockWidget</class>
+ <widget class="QWidget" name="KMLOverlayDockWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,15 +11,15 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Satellite Tracks</string>
+   <string>KML Overlay</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
-      <widget class="QLabel" name="label_5">
+      <widget class="QCheckBox" name="cbOverlay">
        <property name="text">
-        <string>File with predicted satellite track:</string>
+        <string>KML Overlay</string>
        </property>
       </widget>
      </item>
@@ -43,38 +43,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
-     <item>
-      <widget class="QLabel" name="label_6">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Predicted satellite overpasses:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="cbSatelliteOverpasses">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Use http://www-air.larc.nasa.gov/tools/predict.htm to generate prediction files.</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_7"/>
    </item>
    <item>
     <spacer name="verticalSpacer">

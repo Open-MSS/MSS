@@ -541,6 +541,7 @@ class MplTopViewCanvas(MplCanvas):
         super(MplTopViewCanvas, self).__init__()
         self.waypoints_interactor = None
         self.satoverpasspatch = None
+        self.kmloverlay = None
         self.map = None
 
         # Axes and image object to display the legend graphic, if available.
@@ -586,11 +587,6 @@ class MplTopViewCanvas(MplCanvas):
                 linecolor=appearance["colour_ft_vertices"],
                 markerfacecolor=appearance["colour_ft_waypoints"])
             self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
-            self.waypoints_interactor.set_tangent_visible(appearance["draw_tangents"])
-            self.waypoints_interactor.set_tangent_color(appearance["colour_tangents"])
-            self.waypoints_interactor.set_tangent_height(appearance["tangent_height"])
-            self.waypoints_interactor.set_solar_angle_visible(appearance["show_solar_angle"])
-            self.waypoints_interactor.set_start_time(appearance["start_time"])
 
     def setTrajectoryModel(self, model):
         """
@@ -634,10 +630,10 @@ class MplTopViewCanvas(MplCanvas):
         if self.satoverpasspatch:
             self.satoverpasspatch.update()
 
-        tph = None
-        if self.waypoints_interactor.is_tangent_visible():
-            tph = "{:.1f} km".format(self.waypoints_interactor.get_tangent_height())
-        self.drawMetadata("Top view", tp=tph)
+        if self.kmloverlay:
+            self.kmloverlay.update()
+
+        self.drawMetadata("Top view")
 
         # correctly. no idea why..
         self.waypoints_interactor.update()
@@ -762,15 +758,10 @@ class MplTopViewCanvas(MplCanvas):
                     "fill_continents": True,
                     "draw_flighttrack": True,
                     "label_flighttrack": True,
-                    "draw_tangents": False,
-                    "tangent_height": 1.,
-                    "show_solar_angle": False,
                     "colour_water": (153 / 255., 255 / 255., 255 / 255., 255 / 255.),
                     "colour_land": (204 / 255., 153 / 255., 102 / 255., 255 / 255.),
                     "colour_ft_vertices": (0, 0, 1, 1),
-                    "colour_ft_waypoints": (1, 0, 0, 1),
-                    "colour_tangents": (0, 0, 1, 1),
-                    "start_time": datetime.now()}
+                    "colour_ft_waypoints": (1, 0, 0, 1)}
         if settings_dict is not None:
             settings.update(settings_dict)
 
@@ -788,11 +779,13 @@ class MplTopViewCanvas(MplCanvas):
                                                      marker_facecolor=settings["colour_ft_waypoints"])
             self.waypoints_interactor.set_vertices_visible(settings["draw_flighttrack"])
             self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
-            self.waypoints_interactor.set_tangent_color(settings["colour_tangents"])
-            self.waypoints_interactor.set_tangent_visible(settings["draw_tangents"])
-            self.waypoints_interactor.set_tangent_height(settings["tangent_height"])
-            self.waypoints_interactor.set_solar_angle_visible(settings["show_solar_angle"])
-            self.waypoints_interactor.set_start_time(settings["start_time"])
+
+    def setRemoteSensingAppearance(self, settings):
+        self.waypoints_interactor.set_remote_sensing(settings["reference"])
+        self.waypoints_interactor.set_tangent_visible(settings["draw_tangents"])
+        self.waypoints_interactor.set_solar_angle_visible(settings["show_solar_angle"])
+
+        self.waypoints_interactor.redraw_path()
 
     def getMapAppearance(self):
         """

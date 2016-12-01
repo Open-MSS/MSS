@@ -437,7 +437,7 @@ class FlightTrackItem(LagrantoMapItem):
         # that they are added to the tree view.
         variableNames = self.nafile.VNAME
         for variable in variableNames:
-            newItem = FlightTrackVariableItem(variable, False, self)
+            FlightTrackVariableItem(variable, False, self)
 
         self.timeVariableChild = None
         for identifier in [self.nafile.XNAME[0]]:
@@ -580,7 +580,7 @@ class LagrantoOutputItem(LagrantoMapItem):
             if 'startcoordinates' in metadata.keys():
                 trname += str(['%.2f' % r for r in
                                metadata['startcoordinates']]).replace('\'', '')
-            newItem = TrajectoryItem(trname, True, self, trajectory, metadata)
+            TrajectoryItem(trname, True, self, trajectory, metadata)
 
 
 """
