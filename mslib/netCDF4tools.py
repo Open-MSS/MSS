@@ -348,7 +348,8 @@ CFVariableIdentifier = {
     ]
 }
 for name in Targets.get_targets():
-    CFVariableIdentifier[name] = [("standard_name", name)]
+    if not name in CFVariableIdentifier:
+        CFVariableIdentifier[name] = [("standard_name", name)]
 
 
 """
