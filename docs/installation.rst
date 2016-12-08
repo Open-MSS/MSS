@@ -1,7 +1,9 @@
 Installation
 =================
 
-Current Releases of mss are based on python2.
+Current Releases of mss are based on *python 2*.
+
+We are yet *not ready* for python 3.
 
 Install distributed version by conda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -9,33 +11,16 @@ Install distributed version by conda
 `Anaconda <https://www.continuum.io/why-anaconda>`_ provides an enterprise-ready data analytics
 platform that empowers companies to adopt a modern open data science analytics architecture.
 
-The Mission Support Web Map Service (mss) is available as anaconda package on two channels.
+The Mission Support Web Map Service (mss) is available as anaconda package on a channel.
 
- * `atmo <https://anaconda.org/atmo/mss>`_
  * `conda-forge <https://anaconda.org/conda-forge/mss>`_
 
-The atmo channel has builds for win-64 and linux-64 and is based on anacondas default packages.
-And conda-forge packages are based on defaults and other conda-forge packages. So conda-forge has builds for osx-64, linux-64, win-64, win-32.
+The conda-forge packages are based on defaults and other conda-forge packages.
+This channel conda-forge has builds for osx-64, linux-64, win-64, win-32.
 
-You can choose between both channels dependent on your operation system,
-OSX will need the build package from conda-forge.
 
-`conda-forge <https://conda-forge.github.io/>`_ uses various automated continuos integration
+The conda-forge `github organization <https://conda-forge.github.io/>`_ uses various automated continuos integration
 build processes.
-
-atmo channel
-++++++++++++++++
-
-::
-
-   $ conda install -c atmo mss
-
-
-You also could install this project into an environment. ::
-
-   $ conda create -n mssenv python=2
-   $ source activate mssenv
-   $ conda install -c atmo mss
 
 
 conda-forge channel
@@ -72,7 +57,7 @@ We suggest to create a mss user.
 * execute script, enable environment in .bashrc
 * login again or export PATH="/home/mss/miniconda2/bin:$PATH"
 * python --version should tell Python 2.7.12
-* conda install -c atmo mss
+* conda install -c conda-forge mss
 
 For a simple test you could start the builtin standalone server by *mswms*.
 It should tell::
