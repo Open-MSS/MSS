@@ -1,6 +1,14 @@
 Changelog
 ================
 
+Version 1.3.0 (not released)
+-----------------------------------------
+
+
+Other Changes:
+ - channel atmo deprecated and removed from documentation
+
+
 Version 1.2.4
 ----------------------------------
 
