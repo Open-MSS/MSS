@@ -4,284 +4,217 @@ from StringIO import StringIO
 import netCDF4 as nc
 import numpy as np
 
-class Range_Data(object):
+class RangeData(object):
+    """
+    Test Data Setup
+    """
     def __init__(self):
-        self.range_ecmwf_forecast_SFC_sfc = """\
+        self.forecast_sfc = """\
 Sea-ice_cover_surface
 sea_ice_cover_surface
 (0.-.1)
 3
-time
-lat
-lon
+time,lat,lon
   1.24e-04   5.21e-03
 Snow_albedo_surface
 surface_albedo_assuming_deep_snow
 (0.-.1)
 3
-time
-lat
-lon
+time,lat,lon
   8.44e-01   2.43e-02
 Sea_surface_temperature_surface
 sea_surface_temperature
 K
 3
-time
-lat
-lon
+time,lat,lon
   2.82e+02   8.97e+00
 10_metre_wind_gust_surface
 10_metre_wind_gust_surface
 m.s-1
 3
-time
-lat
-lon
+time,lat,lon
   9.11e+00   5.50e+00
 Convective_available_potential_energy_surface
 convective_available_potential_energy_surface
 J.kg-1
 3
-time
-lat
-lon
+time,lat,lon
   9.63e+01   4.71e+02
 Geopotential_surface
 surface_geopotential
 m2.s-2
 3
-time
-lat
-lon
+time,lat,lon
   2.12e+03   4.74e+03
 Surface_pressure_surface
 surface_air_pressure
 Pa
 3
-time
-lat
-lon
+time,lat,lon
   9.89e+04   5.30e+03
 Total_column_water_surface
 total_column_water
 kg.m-2
 3
-time
-lat
-lon
+time,lat,lon
   1.72e+01   8.55e+00
 Total_column_water_vapour_surface
 total_column_water_surface
 kg.m-2
 3
-time
-lat
-lon
+time,lat,lon
   1.70e+01   8.36e+00
 Snow_depth_surface
 surface_snow_thickness
 m.of.water.equivalent
 3
-time
-lat
-lon
+time,lat,lon
   3.23e-01   1.75e+00
 Stratiform_precipitation_Large-scale_precipitation_surface
 stratiform_precipitation_Large-scale_precipitation_surface
 m
 3
-time
-lat
-lon
+time,lat,lon
   1.49e-03   3.96e-03
 Convective_precipitation_surface
 lwe_thickness_of_convective_precipitation_amount
 m
 3
-time
-lat
-lon
+time,lat,lon
   1.04e-03   2.33e-03
 Snowfall_surface
 lwe_thickness_of_surface_snow_amount
 m.of.water.equivalent
 3
-time
-lat
-lon
+time,lat,lon
   1.08e-04   9.32e-04
 surface_downward_sensible_heat_flux
 surface_downward_sensible_heat_flux
 W.m-2.s
 3
-time
-lat
-lon
+time,lat,lon
  -6.25e+05   2.12e+06
 Mean_sea_level_pressure_surface
 air_pressure_at_sea_level
 Pa
 3
-time
-lat
-lon
+time,lat,lon
   1.01e+05   8.61e+02
 Boundary_layer_height_surface
 atmosphere_boundary_layer_thickness
 m
 3
-time
-lat
-lon
+time,lat,lon
   6.75e+02   4.74e+02
 Total_cloud_cover_surface
 total_cloud_cover
 (0.-.1)
 3
-time
-lat
-lon
+time,lat,lon
   6.32e-01   3.93e-01
 10_metre_U_wind_component_surface
 10_metre_u_wind_component
 m.s-1
 3
-time
-lat
-lon
+time,lat,lon
  -1.30e-01   4.31e+00
 10_metre_V_wind_component_surface
 10_metre_v_wind_component
 m.s-1
 3
-time
-lat
-lon
+time,lat,lon
  -2.15e-01   6.12e+00
 2_metre_temperature_surface
 2_metre_temperature
 K
 3
-time
-lat
-lon
+time,lat,lon
   2.85e+02   8.58e+00
 2_metre_dewpoint_temperature_surface
 2_metre_dewpoint_temperature_surface
 K
 3
-time
-lat
-lon
+time,lat,lon
   2.80e+02   7.89e+00
 Land-sea_mask_surface
 land_binary_mask
 (0.-.1)
 3
-time
-lat
-lon
+time,lat,lon
   4.20e-01   4.94e-01
 East-West_surface_stress_surface
 surface_downward_eastward_stress
 N.m-2.s
 3
-time
-lat
-lon
+time,lat,lon
   2.14e+02   1.58e+04
 North-South_surface_stress_surface
 surface_downward_northward_stress
 N.m-2.s
 3
-time
-lat
-lon
+time,lat,lon
   3.23e+03   2.07e+04
 Evaporation_surface
 lwe_thickness_of_water_evaporation_amount
 m.of.water
 3
-time
-lat
-lon
+time,lat,lon
  -1.86e-03   2.68e-03
 Low_cloud_cover_surface
 low_type_cloud_area_fraction
 (0.-.1)
 3
-time
-lat
-lon
+time,lat,lon
   3.67e-01   3.91e-01
 Medium_cloud_cover_surface
 medium_type_cloud_area_fraction
 (0.-.1)
 3
-time
-lat
-lon
+time,lat,lon
   2.95e-01   3.77e-01
 High_cloud_cover_surface
 high_type_cloud_area_fraction
 (0.-.1)
 3
-time
-lat
-lon
+time,lat,lon
   4.07e-01   4.41e-01
 Total_precipitation_surface
 lwe_thickness_of_precipitation_amount
 m
 3
-time
-lat
-lon
+time,lat,lon
   2.54e-03   5.60e-03
 Instantaneous_X_surface_stress_surface
 surface_downward_x_stress
 N.m-2
 3
-time
-lat
-lon
+time,lat,lon
   5.88e-03   2.72e-01
 Instantaneous_Y_surface_stress_surface
 surface_downward_y_stress
 N.m-2
 3
-time
-lat
-lon
+time,lat,lon
   4.89e-02   3.03e-01
 Instantaneous_surface_heat_flux_surface
 instantaneous_surface_heat_flux_surface
 W.m-2
 3
-time
-lat
-lon
+time,lat,lon
  -1.02e+01   4.08e+01
 Skin_temperature_surface
 skin_temperature_surface
 K
 3
-time
-lat
-lon
+time,lat,lon
   2.86e+02   9.49e+00
 """
-
-        self.range_ecmwf_forecast_PRESSURE_LEVELS_pl = """\
+        self.forecast_pressure_levels_pl = """\
 Potential_vorticity_isobaric
 ertel_potential_vorticity
 K.m2.kg-1.s-1
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
   1.04e-04   2.25e-05
   6.14e-05   1.03e-05
@@ -305,10 +238,7 @@ Geopotential_isobaric
 geopotential_height
 m2.s-2
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
   2.57e+05   9.22e+02
   2.33e+05   6.80e+02
@@ -332,10 +262,7 @@ Temperature_isobaric
 air_temperature
 K
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
   2.15e+02   3.79e+00
   2.13e+02   2.07e+00
@@ -359,10 +286,7 @@ U_velocity_isobaric
 eastward_wind
 m.s-1
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
   5.36e+00   7.99e+00
   3.69e+00   5.80e+00
@@ -386,10 +310,7 @@ V_velocity_isobaric
 northward_wind
 m.s-1
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
  -1.19e+00   5.11e+00
  -9.02e-01   4.34e+00
@@ -413,10 +334,7 @@ Specific_humidity_isobaric
 specific_humidity
 kg.kg-1
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
   2.94e-06   1.20e-07
   2.86e-06   1.10e-07
@@ -440,10 +358,7 @@ Vertical_velocity_isobaric
 omega
 Pa.s-1
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
  -2.45e-04   5.71e-03
  -4.91e-04   7.48e-03
@@ -467,10 +382,7 @@ Divergence_isobaric
 divergence_of_wind
 s-1
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
   2.19e-07   1.75e-05
   2.29e-07   1.73e-05
@@ -494,10 +406,7 @@ Ozone_mass_mixing_ratio_isobaric
 mass_fraction_of_ozone_in_air
 kg.kg-1
 4
-time
-isobaric
-lat
-lon
+time,isobaric,lat,lon
 18
   8.09e-06   1.21e-06
   5.70e-06   5.69e-07
@@ -518,16 +427,12 @@ lon
   6.12e-08   4.64e-09
   6.09e-08   4.65e-09
 """
-
-        self.range_ecmwf_forecast_P_derived_ml = """\
+        self.forecast_p_derived_ml = """\
 Pressure
 air_pressure
 Pa
 4
-time
-hybrid
-lat
-lon
+time,hybrid,lat,lon
 72
   1.35e+03   2.44e-04
   1.59e+03   6.10e-04
@@ -602,17 +507,12 @@ lon
   9.85e+04   5.28e+03
   9.88e+04   5.29e+03
 """
-
-
-        self.range_ecmwf_forecast_CC_ml = """\
+        self.forecast_cc_ml = """\
 Fraction_of_cloud_cover_hybrid
 cloud_area_fraction_in_atmosphere_layer
 (0.-.1)
 4
-time
-hybrid
-lat
-lon
+time,hybrid,lat,lon
 72
   0.00e+00   0.00e+00
   0.00e+00   0.00e+00
@@ -687,16 +587,12 @@ lon
   2.75e-02   1.29e-01
   1.25e-02   9.57e-02
 """
-
-        self.range_ecmwf_forecast_T_ml = """\
+        self.forecast_t_ml = """\
 Temperature_hybrid
 air_temperature
 K
 4
-time
-hybrid
-lat
-lon
+time,hybrid,lat,lon
 72
   2.16e+02   5.68e+00
   2.16e+02   5.04e+00
@@ -771,16 +667,12 @@ lon
   2.85e+02   8.34e+00
   2.85e+02   8.49e+00
 """
-
-        self.range_ecmwf_forecast_U_ml = """\
+        self.forecast_u_ml = """\
 u-component_of_wind_hybrid
 eastward_wind
 m/s
 4
-time
-hybrid
-lat
-lon
+time,hybrid,lat,lon
 72
   8.27e+00   1.04e+01
   6.90e+00   9.58e+00
@@ -855,16 +747,12 @@ lon
  -1.32e-01   4.86e+00
  -1.47e-01   4.28e+00
 """
-
-        self.range_ecmwf_forecast_V_ml = """\
+        self.forecast_v_ml = """\
 v-component_of_wind_hybrid
 northward_wind
 m/s
 4
-time
-hybrid
-lat
-lon
+time,hybrid,lat,lon
 72
  -1.87e+00   5.98e+00
  -1.52e+00   5.73e+00
@@ -939,16 +827,12 @@ lon
  -3.55e-02   6.85e+00
  -2.70e-01   6.08e+00
 """
-
-        self.range_ecmwf_forecast_W_ml = """\
+        self.forecast_w_ml = """\
 Vertical_velocity_pressure_hybrid
 omega
 Pa/s
 4
-time
-hybrid
-lat
-lon
+time,hybrid,lat,lon
 72
  -1.30e-04   5.22e-03
  -1.66e-04   5.71e-03
@@ -1023,16 +907,12 @@ lon
   2.30e-02   2.72e-01
   2.28e-02   2.24e-01
 """
-
-        self.range_ecmwf_forecast_Q_ml = """\
+        self.forecast_q_ml = """\
 Specific_humidity_hybrid
 specific_humidity
 kg/kg
 4
-time
-hybrid
-lat
-lon
+time,hybrid,lat,lon
 72
   2.98e-06   1.44e-07
   2.96e-06   1.33e-07
@@ -1107,16 +987,16 @@ lon
   6.45e-03   3.08e-03
   6.57e-03   3.12e-03
 """
+        self.data = {"CC_ml": self.forecast_cc_ml,
+                     "P_derived_ml": self.forecast_p_derived_ml,
+                     "PRESSURE_LEVELS_pl": self.forecast_pressure_levels_pl,
+                     "SFC_sfc": self.forecast_sfc,
+                     "T_ml": self.forecast_t_ml,
+                     "U_ml": self.forecast_u_ml,
+                     "V_ml": self.forecast_v_ml,
+                     "W_ml": self.forecast_w_ml,
+                     "Q_ml": self.forecast_q_ml}
 
-        self.data = {"CC_ml": self.range_ecmwf_forecast_CC_ml,
-                 "P_derived_ml": self.range_ecmwf_forecast_P_derived_ml,
-                 "PRESSURE_LEVELS_pl": self.range_ecmwf_forecast_PRESSURE_LEVELS_pl,
-                 "SFC_sfc": self.range_ecmwf_forecast_SFC_sfc,
-                 "T_ml": self.range_ecmwf_forecast_T_ml,
-                 "U_ml": self.range_ecmwf_forecast_U_ml,
-                 "V_ml": self.range_ecmwf_forecast_V_ml,
-                 "W_ml": self.range_ecmwf_forecast_W_ml,
-                 "Q_ml": self.range_ecmwf_forecast_Q_ml}
 
 class DataFiles(object):
     """
@@ -1129,326 +1009,244 @@ class DataFiles(object):
         self.outdir = os.path.join(os.path.expanduser("~"), "mss", 'testdata')
         self.inidate = '20121017_12'
         self.levtype = 'type'
-        self.range_data = Range_Data().data
+        self.range_data = RangeData().data
+        # define file dimension / geographical  range
+        self.latmin = 30
+        self.latmax = 70
+        self.lonmin = -50
+        self.lonmax = 50
+        self.dlat = 1.
+        self.dlon = 2.
+        self.lons = np.arange(self.lonmin, self.lonmax + self.dlon, self.dlon)
+        self.lats = np.arange(self.latmax, self.latmin - self.dlat, -self.dlat)
+        self.times = np.array(range(0, 39, 3))
+        self.nlons = len(self.lons)
+        self.nlats = len(self.lats)
+        self.ntimes = len(self.times)
+        self.nlevs = 0
 
     def create_outdir(self):
         if not os.path.exists(self.outdir):
             os.makedirs(self.outdir)
 
-
     def hybrid_data(self):
         self.levtype = 'ml'
         labels = ['U', 'V', 'W', 'CC', 'T', 'Q', 'P_derived']
         for label in labels:
-            filename_out = os.path.join(self.outdir, "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
+            filename_out = os.path.join(self.outdir,
+                                        "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label,
+                                                                                      self.levtype))
             text = self.range_data["%s_%s" % (label, self.levtype)]
             rangedata = StringIO(text)
             ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
-
-            # define file dimension / geographical  range
-            latmin = 30
-            latmax = 70
-            lonmin = -50
-            lonmax = 50
-            dlat = 1.
-            dlon = 2.
-
-            lons = np.arange(lonmin, lonmax + dlon, dlon)
-            lats = np.arange(latmax, latmin - dlat, -dlat)
-            times = np.array(range(0, 39, 3))
-
-            nlons = len(lons)
-            nlats = len(lats)
-            ntimes = len(times)
             hybrid_default = np.linspace(20, 91, 72)
-            nlevs = len(hybrid_default)
-
+            self.nlevs = len(hybrid_default)
             hyam = np.array([1350.3746945, 1588.4367675, 1851.7919925, 2141.014954, 2456.526978,
-                            2798.600342, 3167.3640135, 3562.810913, 3984.8062745, 4433.0964355,
-                            4907.318115, 5407.0080565, 5931.4978025, 6479.783203, 7050.598389,
-                            7642.1979985, 8253.7751465, 8886.4648435, 9540.9331055, 10216.2211915,
-                            10910.6831055, 11622.573242, 12348.279785, 13083.5615235, 13822.617676,
-                            14557.3476565, 15280.369629, 15983.807129, 16660.091797, 17301.9521485,
-                            17902.1552735, 18453.9990235, 18950.756836, 19386.029297, 19753.6552735,
-                            20047.595703, 20262.1552735, 20391.5371095, 20430.1884765, 20372.6152345,
-                            20213.0214845, 19946.194336, 19567.0664065, 19073.7988285, 18470.0595705,
-                            17763.446289, 16965.0908205, 16089.076172, 15149.605957, 14159.4326175,
-                            13130.801758, 12075.7753905, 11007.2387695, 9938.2666015, 8880.737793,
-                            7845.7087405, 6844.5427245, 5888.361816, 4986.509277, 4146.8400875,
-                            3376.805664, 2683.174805, 2070.5286255, 1541.255371, 1096.424835,
-                            735.753845, 456.5432585, 249.407898, 108.1258815, 30.391982, 3.289394,
-                            0.00158])
-
+                             2798.600342, 3167.3640135, 3562.810913, 3984.8062745, 4433.0964355,
+                             4907.318115, 5407.0080565, 5931.4978025, 6479.783203, 7050.598389,
+                             7642.1979985, 8253.7751465, 8886.4648435, 9540.9331055, 10216.2211915,
+                             10910.6831055, 11622.573242, 12348.279785, 13083.5615235, 13822.617676,
+                             14557.3476565, 15280.369629, 15983.807129, 16660.091797, 17301.9521485,
+                             17902.1552735, 18453.9990235, 18950.756836, 19386.029297, 19753.6552735,
+                             20047.595703, 20262.1552735, 20391.5371095, 20430.1884765, 20372.6152345,
+                             20213.0214845, 19946.194336, 19567.0664065, 19073.7988285, 18470.0595705,
+                             17763.446289, 16965.0908205, 16089.076172, 15149.605957, 14159.4326175,
+                             13130.801758, 12075.7753905, 11007.2387695, 9938.2666015, 8880.737793,
+                             7845.7087405, 6844.5427245, 5888.361816, 4986.509277, 4146.8400875,
+                             3376.805664, 2683.174805, 2070.5286255, 1541.255371, 1096.424835,
+                             735.753845, 456.5432585, 249.407898, 108.1258815, 30.391982, 3.289394,
+                             0.00158])
             hybm = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7e-06, 3.45e-05,
-                            9.3e-05, 0.000205, 0.0004135, 0.000774, 0.0013505, 0.002233, 0.003516,
-                            0.0052945, 0.0076785, 0.0107715, 0.014684, 0.0195245, 0.0253995,
-                            0.0324185, 0.0406865, 0.05031, 0.061395, 0.0740465, 0.0883705, 0.1044715,
-                            0.122457, 0.1424345, 0.1645125, 0.1888055, 0.2154175, 0.2444345,
-                            0.2757735, 0.309161, 0.344266, 0.380704, 0.4180555, 0.455961, 0.494148,
-                            0.532369, 0.5703875, 0.607938, 0.6447465, 0.680579, 0.715224, 0.7484515,
-                            0.780032, 0.809785, 0.8375675, 0.863234, 0.8866425, 0.907709, 0.926404,
-                            0.9427155, 0.9566405, 0.9682365, 0.977852, 0.9856955, 0.9916785,
-                            0.995917, 0.998815])
-
-            ecmwf.createDimension('lat', nlats)
+                             9.3e-05, 0.000205, 0.0004135, 0.000774, 0.0013505, 0.002233, 0.003516,
+                             0.0052945, 0.0076785, 0.0107715, 0.014684, 0.0195245, 0.0253995,
+                             0.0324185, 0.0406865, 0.05031, 0.061395, 0.0740465, 0.0883705, 0.1044715,
+                             0.122457, 0.1424345, 0.1645125, 0.1888055, 0.2154175, 0.2444345,
+                             0.2757735, 0.309161, 0.344266, 0.380704, 0.4180555, 0.455961, 0.494148,
+                             0.532369, 0.5703875, 0.607938, 0.6447465, 0.680579, 0.715224, 0.7484515,
+                             0.780032, 0.809785, 0.8375675, 0.863234, 0.8866425, 0.907709, 0.926404,
+                             0.9427155, 0.9566405, 0.9682365, 0.977852, 0.9856955, 0.9916785,
+                             0.995917, 0.998815])
+            ecmwf.createDimension('lat', self.nlats)
             newvar = ecmwf.createVariable('lat', 'f4', 'lat')
-            newvar[:] = lats
+            newvar[:] = self.lats
             newvar.units = 'degrees_north'
-
-
-            ecmwf.createDimension('lon', nlons)
+            ecmwf.createDimension('lon', self.nlons)
             newvar = ecmwf.createVariable('lon', 'f4', 'lon')
-            newvar[:] = lons
+            newvar[:] = self.lons
             newvar.units = 'degrees_east'
-
-            ecmwf.createDimension('hybrid', nlevs)
+            ecmwf.createDimension('hybrid', self.nlevs)
             newvar = ecmwf.createVariable('hybrid', 'f4', 'hybrid')
             newvar[:] = hybrid_default
             newvar.units = 'sigma'
             newvar.positive = 'down'
-
             newvar.formula = 'p(time,level,lat,lon) = ap(level) + b(level)*ps(time,lat,lon)'
             newvar.formula_terms = 'ap: hyam b: hybm ps: Surface_pressure_surface'
-
             newvar = ecmwf.createVariable('hyam', 'f4', 'hybrid')
             newvar[:] = hyam
             newvar.units = 'Pa'
-            newvar.standard_name =  "atmosphere_pressure_coordinate"
-
+            newvar.standard_name = "atmosphere_pressure_coordinate"
             newvar = ecmwf.createVariable('hybm', 'f4', 'hybrid')
             newvar[:] = hybm
             newvar.units = '1'
-
-            ecmwf.createDimension('time', ntimes)
+            ecmwf.createDimension('time', self.ntimes)
             newvar = ecmwf.createVariable('time', 'i4', 'time')
-            newvar[:] = times
+            newvar[:] = self.times
             newvar.units = 'hours since 2012-10-17T12:00:00.000Z'
-
             while True:
                 varname = rangedata.readline().strip()
                 if not varname:
                     break
-                standard_name =  rangedata.readline().strip()
+                standard_name = rangedata.readline().strip()
                 units = rangedata.readline().strip()
                 ndims = int(rangedata.readline().strip())
-                dims = []
-                for i in range(ndims):
-                    line = rangedata.readline().strip()
-                    dims.append(line)
-
-                nlev = int(rangedata.readline().strip())
+                dims = rangedata.readline().strip().split(",")
+                rangedata.readline().strip()
                 print "hybrid data: %s" % varname
                 newvar = ecmwf.createVariable(varname, 'f4', dims)
                 newvar.standard_name = standard_name
                 newvar.units = units
                 if ndims == 4:
-                    test_data = np.ndarray(shape=(ntimes, nlevs, nlats, nlons), dtype=float, order='F')
-                    for ilev in range(nlevs):
+                    test_data = np.ndarray(shape=(self.ntimes, self.nlevs, self.nlats,
+                                                  self.nlons), dtype=float, order='F')
+                    for ilev in range(self.nlevs):
                         # read range from file
                         line = rangedata.readline().strip()
                         tmean = float(line.split()[0])
                         tstd = float(line.split()[1])
-
                         # create test data arrays
-                        xarr = np.linspace(0., 10. + ilev/3., nlons)
-                        yarr = np.linspace(0., 5. + ilev/3., nlons)
-                        tarr = np.linspace(0, 2., ntimes)
-                        for ix in range(nlons):
-                            for iy in range(nlats):
-                                for it in range(ntimes):
-                                    x = xarr[ix] + tarr[it]
-                                    y = yarr[iy] - tarr[it]
-                                    test_data[it, ilev, iy, ix] = tmean + tstd * (np.sin(x) + np.cos(y))
-
+                        xarr = np.linspace(0., 10. + ilev/3., self.nlons)
+                        yarr = np.linspace(0., 5. + ilev/3., self.nlats)
+                        tarr = np.linspace(0, 2., self.ntimes)
+                        for ilons in range(self.nlons):
+                            for ilats in range(self.nlats):
+                                for itimes in range(self.ntimes):
+                                    datax = xarr[ilons] + tarr[itimes]
+                                    datay = yarr[ilats] - tarr[itimes]
+                                    test_data[itimes, ilev, ilats,
+                                              ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay))
                         if varname == 'Land-sea_mask_surface':
                             test_data = test_data.round()
                         newvar[:] = test_data
                         newvar.grid_mapping = 'LatLon_Projection'
                         newvar.missing_value = float('nan')
-
             ecmwf.close()
 
     def pressure_data(self):
         self.levtype = 'pl'
-
         label = 'PRESSURE_LEVELS'
-        filename_out = os.path.join(self.outdir, "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
+        filename_out = os.path.join(self.outdir,
+                                    "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
         print filename_out
         text = self.range_data["%s_%s" % (label, self.levtype)]
         rangedata = StringIO(text)
-
-
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
-
-        # define file dimension / geographical  range
-        latmin = 30
-        latmax = 70
-        lonmin = -50
-        lonmax = 50
-        dlat = 1.
-        dlon = 2.
-
-        lons = np.arange(lonmin, lonmax+dlon, dlon)
-        lats = np.arange(latmax, latmin-dlat, -dlat)
-        times = np.array(range(0, 39, 3))
-
-        nlons = len(lons)
-        nlats = len(lats)
-        ntimes = len(times)
         press_default = np.array([20, 30, 50, 70, 100, 150, 200, 250, 300, 400,
                                   500, 600, 700, 800, 850, 900, 925, 950])
-        nlevs = len(press_default)
-
-        ecmwf.createDimension('lat', nlats)
+        self.nlevs = len(press_default)
+        ecmwf.createDimension('lat', self.nlats)
         newvar = ecmwf.createVariable('lat', 'f4', 'lat')
-        newvar[:] = lats
+        newvar[:] = self.lats
         newvar.units = 'degrees_north'
-
-
-        ecmwf.createDimension('lon', nlons)
+        ecmwf.createDimension('lon', self.nlons)
         newvar = ecmwf.createVariable('lon', 'f4', 'lon')
-        newvar[:] = lons
+        newvar[:] = self.lons
         newvar.units = 'degrees_east'
-
-        ecmwf.createDimension('isobaric', nlevs)
+        ecmwf.createDimension('isobaric', self.nlevs)
         newvar = ecmwf.createVariable('isobaric', 'f4', 'isobaric')
         newvar[:] = press_default
         newvar.units = 'hPa'
         newvar.positive = 'down'
-        newvar.standard_name =  "atmosphere_pressure_coordinate"
-
-
-
-
-        ecmwf.createDimension('time', ntimes)
+        newvar.standard_name = "atmosphere_pressure_coordinate"
+        ecmwf.createDimension('time', self.ntimes)
         newvar = ecmwf.createVariable('time', 'i4', 'time')
-        newvar[:] = times
+        newvar[:] = self.times
         newvar.units = 'hours since 2012-10-17T12:00:00.000Z'
-
-
         while True:
             varname = rangedata.readline().strip()
             if not varname:
                 break
-            standard_name =  rangedata.readline().strip()
+            standard_name = rangedata.readline().strip()
             units = rangedata.readline().strip()
             ndims = int(rangedata.readline().strip())
-            dims = []
-            for i in range(ndims):
-                line = rangedata.readline().strip()
-                dims.append(line)
-
-            nlev = int(rangedata.readline().strip())
-
+            dims = rangedata.readline().strip().split(",")
+            rangedata.readline()
             print "pressure data: %s" % varname
             newvar = ecmwf.createVariable(varname, 'f4', dims)
             newvar.standard_name = standard_name
             newvar.units = units
-
             if ndims == 4:
-                test_data = np.ndarray(shape=(ntimes, nlevs, nlats, nlons), dtype=float, order='F')
-                for ilev in range(nlevs):
+                test_data = np.ndarray(shape=(self.ntimes, self.nlevs, self.nlats, self.nlons), dtype=float, order='F')
+                for ilev in range(self.nlevs):
                     # read range from file
                     line = rangedata.readline().strip()
                     tmean = float(line.split()[0])
                     tstd = float(line.split()[1])
-
                     # create test data arrays
-                    xarr = np.linspace(0., 10. + ilev/3., nlons)
-                    yarr = np.linspace(0., 5. + ilev/3., nlons)
-                    tarr = np.linspace(0, 2., ntimes)
-                    for ix in range(nlons):
-                            for iy in range(nlats):
-                                for it in range(ntimes):
-                                    x = xarr[ix] + tarr[it]
-                                    y = yarr[iy] - tarr[it]
-                                    test_data[it, ilev, iy, ix] = tmean + tstd * (np.sin(x) + np.cos(y))/2
-
+                    xarr = np.linspace(0., 10. + ilev/3., self.nlons)
+                    yarr = np.linspace(0., 5. + ilev/3., self.nlats)
+                    tarr = np.linspace(0, 2., self.ntimes)
+                    for ilons in range(self.nlons):
+                        for ilats in range(self.nlats):
+                            for itimes in range(self.ntimes):
+                                datax = xarr[ilons] + tarr[itimes]
+                                datay = yarr[ilats] - tarr[itimes]
+                                test_data[itimes, ilev, ilats, ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay))/2
                     if varname == 'Land-sea_mask_surface':
                         test_data = test_data.round()
                     newvar[:] = test_data
                     newvar.grid_mapping = 'LatLon_Projection'
                     newvar.missing_value = float('nan')
-
-
         ecmwf.close()
 
     def sfc_data(self):
         self.levtype = 'sfc'
         label = 'SFC'
-        filename_out = os.path.join(self.outdir, "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
+        filename_out = os.path.join(self.outdir,
+                                    "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
         text = self.range_data["%s_%s" % (label, self.levtype)]
         rangedata = StringIO(text)
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
-
-        # define file dimension / geographical  range
-        latmin = 30
-        latmax = 70
-        lonmin = -50
-        lonmax = 50
-        dlat = 1.
-        dlon = 2.
-
-        lons = np.arange(lonmin, lonmax+dlon, dlon)
-        lats = np.arange(latmax, latmin-dlat, -dlat)
-        times = np.array(range(0, 39, 3))
-
-        nlons = len(lons)
-        nlats = len(lats)
-        ntimes = len(times)
-
-        ecmwf.createDimension('lat', nlats)
+        ecmwf.createDimension('lat', self.nlats)
         newvar = ecmwf.createVariable('lat', 'f4', 'lat')
-        newvar[:] = lats
+        newvar[:] = self.lats
         newvar.units = 'degrees_north'
-
-
-        ecmwf.createDimension('lon', nlons)
+        ecmwf.createDimension('lon', self.nlons)
         newvar = ecmwf.createVariable('lon', 'f4', 'lon')
-        newvar[:] = lons
+        newvar[:] = self.lons
         newvar.units = 'degrees_east'
-
-        ecmwf.createDimension('time', ntimes)
+        ecmwf.createDimension('time', self.ntimes)
         newvar = ecmwf.createVariable('time', 'i4', 'time')
-        newvar[:] = times
+        newvar[:] = self.times
         newvar.units = 'hours since 2012-10-17T12:00:00.000Z'
-
-
         while True:
             varname = rangedata.readline().strip()
             if not varname:
                 break
-            standard_name =  rangedata.readline().strip()
+            standard_name = rangedata.readline().strip()
             units = rangedata.readline().strip()
             ndims = int(rangedata.readline().strip())
             if ndims == 3:
-                dims = []
-                for i in range(ndims):
-                    line = rangedata.readline().strip()
-                    dims.append(line)
+                dims = rangedata.readline().strip().split(",")
                 print "sfc data: %s" % varname
                 newvar = ecmwf.createVariable(varname, 'f4', dims)
                 newvar.standard_name = standard_name
-
                 newvar.units = units
-
-                test_data = np.ndarray(shape=(ntimes,  nlats, nlons), dtype=float, order='F')
+                test_data = np.ndarray(shape=(self.ntimes, self.nlats, self.nlons), dtype=float, order='F')
                 # read range from file
                 line = rangedata.readline().strip()
                 tmean = float(line.split()[0])
                 tstd = float(line.split()[1])
 
                 # create test data arrays
-                xarr = np.linspace(0., 10., nlons)
-                yarr = np.linspace(0., 5., nlons)
-                tarr = np.linspace(0, 2., ntimes)
-                for ix in range(nlons):
-                        for iy in range(nlats):
-                            for it in range(ntimes):
-                                x = xarr[ix] + tarr[it]
-                                y = yarr[iy] - tarr[it]
-                                test_data[it, iy, ix] = tmean + tstd * (np.sin(x) + np.cos(y)) / 2
-
+                xarr = np.linspace(0., 10., self.nlons)
+                yarr = np.linspace(0., 5., self.nlats)
+                tarr = np.linspace(0, 2., self.ntimes)
+                for ilons in range(self.nlons):
+                    for ilats in range(self.nlats):
+                        for itimes in range(self.ntimes):
+                            datax = xarr[ilons] + tarr[itimes]
+                            datay = yarr[ilats] - tarr[itimes]
+                            test_data[itimes, ilats, ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay)) / 2
                 if varname == 'Land-sea_mask_surface':
                     test_data = test_data.round()
                 if units == '(0.-.1)':
@@ -1459,15 +1257,17 @@ class DataFiles(object):
                 newvar[:] = test_data
                 newvar.grid_mapping = 'LatLon_Projection'
                 newvar.missing_value = float('nan')
-
         ecmwf.close()
 
-
-if __name__ == '__main__':
+def run():
     examples = DataFiles()
     examples.create_outdir()
     examples.hybrid_data()
     examples.pressure_data()
     examples.sfc_data()
+
+
+if __name__ == '__main__':
+    run()
 
 
