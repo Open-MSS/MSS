@@ -37,6 +37,7 @@ requirements:
         - scipy
         - six
         - tk 8.5.*
+        - pykml
         # FIXME: Workaround until https://github.com/conda-forge/matplotlib-feedstock/issues/36 is fixed.
         # - icu
 
