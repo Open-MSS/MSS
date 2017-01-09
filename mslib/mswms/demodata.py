@@ -10,36 +10,6 @@ class RangeData(object):
     """
     def __init__(self):
         self.forecast_sfc = """\
-Sea-ice_cover_surface
-sea_ice_cover_surface
-(0.-.1)
-3
-time,lat,lon
-  1.24e-04   5.21e-03
-Snow_albedo_surface
-surface_albedo_assuming_deep_snow
-(0.-.1)
-3
-time,lat,lon
-  8.44e-01   2.43e-02
-Sea_surface_temperature_surface
-sea_surface_temperature
-K
-3
-time,lat,lon
-  2.82e+02   8.97e+00
-10_metre_wind_gust_surface
-10_metre_wind_gust_surface
-m.s-1
-3
-time,lat,lon
-  9.11e+00   5.50e+00
-Convective_available_potential_energy_surface
-convective_available_potential_energy_surface
-J.kg-1
-3
-time,lat,lon
-  9.63e+01   4.71e+02
 Geopotential_surface
 surface_geopotential
 m2.s-2
@@ -52,114 +22,18 @@ Pa
 3
 time,lat,lon
   9.89e+04   5.30e+03
-Total_column_water_surface
-total_column_water
-kg.m-2
-3
-time,lat,lon
-  1.72e+01   8.55e+00
-Total_column_water_vapour_surface
-total_column_water_surface
-kg.m-2
-3
-time,lat,lon
-  1.70e+01   8.36e+00
-Snow_depth_surface
-surface_snow_thickness
-m.of.water.equivalent
-3
-time,lat,lon
-  3.23e-01   1.75e+00
-Stratiform_precipitation_Large-scale_precipitation_surface
-stratiform_precipitation_Large-scale_precipitation_surface
-m
-3
-time,lat,lon
-  1.49e-03   3.96e-03
-Convective_precipitation_surface
-lwe_thickness_of_convective_precipitation_amount
-m
-3
-time,lat,lon
-  1.04e-03   2.33e-03
-Snowfall_surface
-lwe_thickness_of_surface_snow_amount
-m.of.water.equivalent
-3
-time,lat,lon
-  1.08e-04   9.32e-04
-surface_downward_sensible_heat_flux
-surface_downward_sensible_heat_flux
-W.m-2.s
-3
-time,lat,lon
- -6.25e+05   2.12e+06
-Mean_sea_level_pressure_surface
-air_pressure_at_sea_level
-Pa
-3
-time,lat,lon
-  1.01e+05   8.61e+02
-Boundary_layer_height_surface
-atmosphere_boundary_layer_thickness
-m
-3
-time,lat,lon
-  6.75e+02   4.74e+02
 Total_cloud_cover_surface
 total_cloud_cover
 (0.-.1)
 3
 time,lat,lon
   6.32e-01   3.93e-01
-10_metre_U_wind_component_surface
-10_metre_u_wind_component
-m.s-1
-3
-time,lat,lon
- -1.30e-01   4.31e+00
-10_metre_V_wind_component_surface
-10_metre_v_wind_component
-m.s-1
-3
-time,lat,lon
- -2.15e-01   6.12e+00
-2_metre_temperature_surface
-2_metre_temperature
-K
-3
-time,lat,lon
-  2.85e+02   8.58e+00
-2_metre_dewpoint_temperature_surface
-2_metre_dewpoint_temperature_surface
-K
-3
-time,lat,lon
-  2.80e+02   7.89e+00
 Land-sea_mask_surface
 land_binary_mask
 (0.-.1)
 3
 time,lat,lon
   4.20e-01   4.94e-01
-East-West_surface_stress_surface
-surface_downward_eastward_stress
-N.m-2.s
-3
-time,lat,lon
-  2.14e+02   1.58e+04
-North-South_surface_stress_surface
-surface_downward_northward_stress
-N.m-2.s
-3
-time,lat,lon
-  3.23e+03   2.07e+04
-Evaporation_surface
-lwe_thickness_of_water_evaporation_amount
-m.of.water
-3
-time,lat,lon
- -1.86e-03   2.68e-03
 Low_cloud_cover_surface
 low_type_cloud_area_fraction
 (0.-.1)
@@ -178,36 +52,6 @@ high_type_cloud_area_fraction
 3
 time,lat,lon
   4.07e-01   4.41e-01
-Total_precipitation_surface
-lwe_thickness_of_precipitation_amount
-m
-3
-time,lat,lon
-  2.54e-03   5.60e-03
-Instantaneous_X_surface_stress_surface
-surface_downward_x_stress
-N.m-2
-3
-time,lat,lon
-  5.88e-03   2.72e-01
-Instantaneous_Y_surface_stress_surface
-surface_downward_y_stress
-N.m-2
-3
-time,lat,lon
-  4.89e-02   3.03e-01
-Instantaneous_surface_heat_flux_surface
-instantaneous_surface_heat_flux_surface
-W.m-2
-3
-time,lat,lon
- -1.02e+01   4.08e+01
-Skin_temperature_surface
-skin_temperature_surface
-K
-3
-time,lat,lon
-  2.86e+02   9.49e+00
 """
         self.forecast_pressure_levels_pl = """\
 Potential_vorticity_isobaric
