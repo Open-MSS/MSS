@@ -303,7 +303,6 @@ class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
         # for i in range(len(self.driver.vert_data)):
         #    curtain_p[i, :] = 102300 * np.exp(-self.driver.vert_data[i] / 7.9)
         # curtain_p = curtain_p[::-1, :]
-        tropo_p2 = 102300 * np.exp(-self.data["tropopause_altitude"].reshape(-1) / 7.9)
         curtain_p = self.data["air_pressure"] * 100
         tropo_p = np.empty_like(self.data["tropopause_altitude"].reshape(-1))
         for i in range(curtain_p.shape[1]):
@@ -466,7 +465,6 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
-        curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
         curtain_cc = self.data["cloud_area_fraction_in_atmosphere_layer"]
         curtain_v = self.data["horizontal_wind"]
@@ -475,7 +473,6 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         numpoints = len(self.lats)
 
         # Contour spacing for temperature lines.
-        delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
 
         wind_contours = np.arange(20, 70, 10)
@@ -580,9 +577,9 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
                             curtain_p, curtain_rh, thin_contours,
                             colors="grey", linestyles="solid", linewidths=0.5)  # gist_earth
         ax.clabel(cs_rh1, fontsize=8, fmt='%i')
-        cs_rh2 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                            curtain_p, curtain_rh, np.arange(100, 170, 15),
-                            colors="yellow", linestyles="solid", linewidths=1)  # gist_earth
+        ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+                   curtain_p, curtain_rh, np.arange(100, 170, 15),
+                   colors="yellow", linestyles="solid", linewidths=1)  # gist_earth
         # Contour line plot of temperature.
         cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
@@ -657,7 +654,6 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
         curtain_q = self.data["specific_humidity"] * 1000.  # convert from kg/kg to g/kg
-        curtain_v = self.data["northward_wind"]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -796,12 +792,12 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
                          curtain_p, curtain_w,
                          upward_contours, cmap=plt.cm.bwr)
         # Contour line plot of relative humidity.
-        cs_w1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_w, [2],
-                           colors="red", linestyles="solid", linewidths=0.5)
-        cs_w2 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_w, [-2],
-                           colors="blue", linestyles="solid", linewidths=0.5)
+        ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+                   curtain_p, curtain_w, [2],
+                   colors="red", linestyles="solid", linewidths=0.5)
+        ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+                   curtain_p, curtain_w, [-2],
+                   colors="blue", linestyles="solid", linewidths=0.5)
         # Contour line plot of temperature.
         cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
@@ -1123,9 +1119,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
-        curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
-        curtain_v = self.data["horizontal_wind"]
         curtain_pv = self.data["ertel_potential_vorticity"]
         curtain_clwc = self.data["specific_cloud_liquid_water_content"] * 1000.
         curtain_ciwc = self.data["specific_cloud_ice_water_content"] * 1000.
@@ -1134,7 +1128,6 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         numpoints = len(self.lats)
 
         # Contour spacing for temperature lines.
-        delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
 
         # Change PV sign on southern hemisphere.
@@ -1262,9 +1255,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
-        curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
-        curtain_v = self.data["horizontal_wind"]
         curtain_pwcb = self.data["probability_of_wcb_occurrence"] * 100.
         curtain_clwc = self.data["specific_cloud_liquid_water_content"] * 1000.
         curtain_ciwc = self.data["specific_cloud_ice_water_content"] * 1000.
@@ -1273,7 +1264,6 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         numpoints = len(self.lats)
 
         # Contour spacing for temperature lines.
-        delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
 
         pwcb_contours = np.arange(0, 101, 10)
@@ -1305,20 +1295,6 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
                            curtain_p, curtain_ciwc, [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0],
                            colors="white", linestyles="solid", linewidths=1)
         ax.clabel(cs_v1, fontsize=8, fmt='%.1f')
-
-        # Contour line plot of temperature.
-        # cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-        #                   curtain_p, curtain_t, np.arange(236, 330, delta_t),
-        #                   colors='green', linestyles='solid', linewidths=1)
-        # ax.clabel(cs_t, fontsize=8, fmt='%i')
-        # cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-        #                   curtain_p, curtain_t, [234],
-        #                   colors='green', linestyles='solid', linewidths=2)
-        # ax.clabel(cs_t, fontsize=8, fmt='%i')
-        # cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-        #                   curtain_p, curtain_t, np.arange(160, 232, delta_t),
-        #                   colors='green', linestyles='dashed', linewidths=1)
-        # ax.clabel(cs_t, fontsize=8, fmt='%i')
 
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),

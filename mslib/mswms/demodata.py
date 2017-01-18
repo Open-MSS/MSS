@@ -4,6 +4,7 @@ from StringIO import StringIO
 import netCDF4 as nc
 import numpy as np
 
+
 class RangeData(object):
     """
     Test Data Setup
@@ -958,8 +959,8 @@ class DataFiles(object):
                         tmean = float(line.split()[0])
                         tstd = float(line.split()[1])
                         # create test data arrays
-                        xarr = np.linspace(0., 10. + ilev/3., self.nlons)
-                        yarr = np.linspace(0., 5. + ilev/3., self.nlats)
+                        xarr = np.linspace(0., 10. + ilev / 3., self.nlons)
+                        yarr = np.linspace(0., 5. + ilev / 3., self.nlats)
                         tarr = np.linspace(0, 2., self.ntimes)
                         for ilons in range(self.nlons):
                             for ilats in range(self.nlats):
@@ -1026,15 +1027,15 @@ class DataFiles(object):
                     tmean = float(line.split()[0])
                     tstd = float(line.split()[1])
                     # create test data arrays
-                    xarr = np.linspace(0., 10. + ilev/3., self.nlons)
-                    yarr = np.linspace(0., 5. + ilev/3., self.nlats)
+                    xarr = np.linspace(0., 10. + ilev / 3., self.nlons)
+                    yarr = np.linspace(0., 5. + ilev / 3., self.nlats)
                     tarr = np.linspace(0, 2., self.ntimes)
                     for ilons in range(self.nlons):
                         for ilats in range(self.nlats):
                             for itimes in range(self.ntimes):
                                 datax = xarr[ilons] + tarr[itimes]
                                 datay = yarr[ilats] - tarr[itimes]
-                                test_data[itimes, ilev, ilats, ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay))/2
+                                test_data[itimes, ilev, ilats, ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay)) / 2
                     if varname == 'Land-sea_mask_surface':
                         test_data = test_data.round()
                     newvar[:] = test_data
@@ -1103,6 +1104,7 @@ class DataFiles(object):
                 newvar.missing_value = float('nan')
         ecmwf.close()
 
+
 def run():
     examples = DataFiles()
     examples.create_outdir()
@@ -1113,5 +1115,3 @@ def run():
 
 if __name__ == '__main__':
     run()
-
-
