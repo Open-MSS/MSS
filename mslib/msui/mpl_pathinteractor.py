@@ -761,7 +761,7 @@ class VPathInteractor(PathInteractor):
         # redrawn, as this affects the x-position of all points.
         if index1.column() == ft.FLIGHTLEVEL:
             i = index1.row()
-            pres = self.waypoints_model.waypointData(i, mode=ft.USER).pressure
+            pres = self.waypoints_model.waypointData(i).pressure
             # print "SideView: pressure of point %i has been changed to %f." % (i, pres)
             vertices = self.pathpatch.get_path().vertices
             vertices[i] = vertices[i][0], pres
@@ -945,7 +945,8 @@ class HPathInteractor(PathInteractor):
         # necessary as scatter() does not provide a set_data method.
         self.line.set_data(zip(*vertices))
 
-        wp_heights = [(wp.flightlevel * 100) * 0.0003048 for wp in self.waypoints_model.allWaypointData()]
+        wp_heights = [(wp.flightlevel * 0.03048) for wp in self.waypoints_model.allWaypointData()]
+        wp_times = [wp.utc_time for wp in self.waypoints_model.allWaypointData()]
 
         if self.tangent_lines is not None:
             self.tangent_lines.remove()
@@ -962,7 +963,7 @@ class HPathInteractor(PathInteractor):
         if self.show_solar_angle:
             assert self.remote_sensing is not None
             self.solar_lines = self.remote_sensing.compute_solar_lines(
-                self.map, wp_vertices, wp_heights)
+                self.map, wp_vertices, wp_heights, wp_times)
             self.ax.add_collection(self.solar_lines)
         else:
             self.solar_lines = None
