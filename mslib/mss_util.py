@@ -61,11 +61,11 @@ def config_loader(config_file=wms_login_cache.cached_config_file, dataset=None, 
     try:
         with open(os.path.join(config_file)) as source:
             data = json.load(source)
-    except (AttributeError, IOError):
-        logging.debug("Config File used: {:} not found".format(config_file))
+    except (AttributeError, IOError, TypeError):
+        logging.debug("""mss config File "{:}" not found""".format(config_file))
         if default is not None:
             return default
-        raise IOError("Config File not found")
+        raise IOError("mss config File not found")
 
     if dataset:
         try:
