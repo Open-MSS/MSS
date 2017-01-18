@@ -4,10 +4,23 @@ from StringIO import StringIO
 import netCDF4 as nc
 import numpy as np
 
+import mslib.mswms.dataaccess
+try:
+    from mslib.mswms import mpl_hsec_styles
+except ImportError:
+    mpl_hsec_styles = None
+
+try:
+    from mslib.mswms import mpl_vsec_styles
+except ImportError:
+    mpl_vsec_styles = None
+
+
 class RangeData(object):
     """
     Test Data Setup
     """
+
     def __init__(self):
         self.forecast_sfc = """\
 Geopotential_surface
@@ -851,6 +864,7 @@ class DataFiles(object):
     """
     def __init__(self):
         self.outdir = os.path.join(os.path.expanduser("~"), "mss", 'testdata')
+        self.server_config_file = os.path.join(os.path.expanduser("~"), "mss", "mss_wms_settings.py")
         self.inidate = '20121017_12'
         self.levtype = 'type'
         self.range_data = RangeData().data
@@ -872,6 +886,22 @@ class DataFiles(object):
     def create_outdir(self):
         if not os.path.exists(self.outdir):
             os.makedirs(self.outdir)
+
+    def create_server_config(self):
+        simple_server_config = '''"""
+simple server config for demodata
+"""
+from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_location,
+                                  enable_basic_http_authentication, service_name, service_title, service_abstract,
+                                  service_contact_person, service_contact_organisation, service_address_type,
+                                  service_address, service_city, service_state_or_province, service_post_code,
+                                  service_country, service_fees, service_access_constraints,
+                                  epsg_to_mpl_basemap_table, register_horizontal_layers, register_vertical_layers)
+'''
+        if not os.path.exists(self.server_config_file):
+            fid = open(self.server_config_file, 'w')
+            fid.write(simple_server_config)
+            fid.close()
 
     def hybrid_data(self):
         self.levtype = 'ml'
@@ -958,8 +988,8 @@ class DataFiles(object):
                         tmean = float(line.split()[0])
                         tstd = float(line.split()[1])
                         # create test data arrays
-                        xarr = np.linspace(0., 10. + ilev/3., self.nlons)
-                        yarr = np.linspace(0., 5. + ilev/3., self.nlats)
+                        xarr = np.linspace(0., 10. + ilev / 3., self.nlons)
+                        yarr = np.linspace(0., 5. + ilev / 3., self.nlats)
                         tarr = np.linspace(0, 2., self.ntimes)
                         for ilons in range(self.nlons):
                             for ilats in range(self.nlats):
@@ -980,7 +1010,6 @@ class DataFiles(object):
         label = 'PRESSURE_LEVELS'
         filename_out = os.path.join(self.outdir,
                                     "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
-        print filename_out
         text = self.range_data["%s_%s" % (label, self.levtype)]
         rangedata = StringIO(text)
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
@@ -1026,15 +1055,16 @@ class DataFiles(object):
                     tmean = float(line.split()[0])
                     tstd = float(line.split()[1])
                     # create test data arrays
-                    xarr = np.linspace(0., 10. + ilev/3., self.nlons)
-                    yarr = np.linspace(0., 5. + ilev/3., self.nlats)
+                    xarr = np.linspace(0., 10. + ilev / 3., self.nlons)
+                    yarr = np.linspace(0., 5. + ilev / 3., self.nlats)
                     tarr = np.linspace(0, 2., self.ntimes)
                     for ilons in range(self.nlons):
                         for ilats in range(self.nlats):
                             for itimes in range(self.ntimes):
                                 datax = xarr[ilons] + tarr[itimes]
                                 datay = yarr[ilats] - tarr[itimes]
-                                test_data[itimes, ilev, ilats, ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay))/2
+                                test_data[itimes, ilev, ilats, ilons] = tmean + tstd * (np.sin(datax) +
+                                                                                        np.cos(datay)) / 2
                     if varname == 'Land-sea_mask_surface':
                         test_data = test_data.round()
                     newvar[:] = test_data
@@ -1103,15 +1133,103 @@ class DataFiles(object):
                 newvar.missing_value = float('nan')
         ecmwf.close()
 
-def run():
+
+# Configuration for mss_wms_settings accessing data on the MSS server.
+# This is the data organisation structure of the available forecast data.
+
+vt_cache = os.path.join(os.path.expanduser("~"), "mss", "vt_cache")
+if not os.path.exists(vt_cache):
+    os.makedirs(vt_cache)
+mslib.mswms.dataaccess.valid_time_cache = vt_cache
+
+datapath = {
+    "ecmwf": os.path.join(os.path.expanduser("~"), "mss", "testdata"),
+}
+nwpaccess = {
+    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
+}
+
+nwpaccess[nwpaccess.keys()[0]].serviceCache()
+
+
+# xml_template directory is a sub directory of mswms
+
+base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
+xml_template_location = os.path.join(base_dir, "xml_templates")
+enable_basic_http_authentication = False
+service_name = "OGC:WMS"
+service_title = "Mission Support System Web Map Service"
+service_abstract = "lorem ipsum"
+service_contact_person = "Foo Bar"
+service_contact_organisation = "Your Organization"
+service_address_type = "postal"
+service_address = "street"
+service_city = "Your City"
+service_state_or_province = ""
+service_post_code = "12345"
+service_country = "Germany"
+service_fees = "none"
+service_access_constraints = "This service is intended for research purposes only."
+
+epsg_to_mpl_basemap_table = {
+    # EPSG:4326, the standard cylindrical lat/lon projection.
+    4326: {"projection": "cyl"},
+}
+#
+# Registration of horizontal layers.                     ###
+#
+
+# The following list contains tuples of the format (instance of
+# visualisation classes, data set). The visualisation classes are
+# defined in mpl_hsec.py and mpl_hsec_styles.py. Add only instances of
+# visualisation products for which data files are available. The data
+# sets must be defined in mss_config.py. The WMS will only offer
+# products registered here.
+
+if mpl_hsec_styles is not None:
+    register_horizontal_layers = [
+
+        # ECMWF standard pressure level products.
+        (mpl_hsec_styles.HS_TemperatureStyle_PL_01, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_GeopotentialWindStyle_PL, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_RelativeHumidityStyle_PL_01, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_EQPTStyle_PL_01, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_WStyle_PL_01, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_DivStyle_PL_01, ["ecmwf_EUR_LL015"]),
+    ]
+
+
+#
+# Registration of vertical layers.                       ###
+#
+
+# The same as above, but for vertical cross-sections.
+if mpl_vsec_styles is not None:
+    register_vertical_layers = [
+        # ECMWF standard vertical section styles.
+        (mpl_vsec_styles.VS_CloudsStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_ProbabilityOfWCBStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
+    ]
+
+
+def main():
+    """
+    creates various test data files and also the server configuration
+    """
     examples = DataFiles()
     examples.create_outdir()
+    examples.create_server_config()
     examples.hybrid_data()
     examples.pressure_data()
     examples.sfc_data()
 
 
 if __name__ == '__main__':
-    run()
-
-
+    main()
+    print("To use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
