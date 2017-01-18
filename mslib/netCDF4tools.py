@@ -33,8 +33,6 @@ import re
 # related third party imports
 import netCDF4
 import numpy as np
-from mslib.mswms.utils import Targets
-# local application imports
 
 
 """
@@ -46,313 +44,6 @@ class NetCDFVariableError(Exception):
     """Exception class to handle error concerning NetCDF variables.
     """
     pass
-
-
-"""
-CF convention identifier
-"""
-
-CFVariableIdentifier = {
-    # Identification of upper air variables.
-    "air_pressure": [
-        ("standard_name", "air_pressure"),
-        ("long_name", "Pressure"),
-        ("long_name", "pressure"),  # ECHAM
-        ("long_name", "Pressure @ hybrid"),
-        ("long_name", "Pressure @ potential_vorticity_surface"),
-        ("long_name", "Pressure @ Potential vorticity surface")
-    ],
-    "ensemble_mean_of_air_pressure": [
-        ("long_name", "Ensemble mean of Pressure @ hybrid")
-    ],
-    "geopotential_height": [
-        ("standard_name", "geopotential_height"),
-        ("long_name", ""),
-        ("long_name", "Geopotential_height @ hybrid"),
-        ("long_name", "Geopotential @ isobaric"),
-        ("long_name", "Geopotential @ Isobaric surface"),
-        ("long_name", "Geopotential @ potential_vorticity_surface"),
-        ("long_name", "Geopotential @ Potential vorticity surface")
-    ],
-    "air_temperature": [
-        ("standard_name", "air_temperature"),
-        ("long_name", "Temperature"),
-        ("long_name", "dry air temperature (tm1)"),  # ECHAM
-        ("long_name", "Temperature @ hybrid"),
-        ("long_name", "Temperature @ isobaric"),
-        ("long_name", "Temperature @ Isobaric surface"),
-        ("long_name", "Temperature @ Hybrid level")
-    ],
-    "air_potential_temperature": [
-        ("standard_name", "air_potential_temperature"),
-        ("long_name", "Potential temperature"),
-        ("long_name", "Potential Temperature"),
-        ("long_name", "Potential_temperature @ hybrid"),
-        ("long_name", "Potential_temperature @ isobaric"),
-        ("long_name", "Potential_temperature @ Isobaric surface"),
-        ("long_name", "Potential_temperature @ potential_vorticity_surface"),
-        ("long_name", "Potential temperature @ Potential vorticity surface")
-    ],
-    "specific_humidity": [
-        ("standard_name", "specific_humidity"),
-        ("long_name", "Specific humidity"),
-        ("long_name", "Specific_humidity @ hybrid"),
-        ("long_name", "Specific_humidity @ isobaric"),
-        ("long_name", "Specific humidity @ Hybrid level"),
-        ("long_name", "Specific humidity @ Isobaric surface")
-    ],
-    "mass_fraction_of_ozone_in_air": [
-        ("standard_name", "mass_fraction_of_ozone_in_air"),
-        ("long_name", ""),  # COMPLETE
-        ("long_name", "Ozone_mass_mixing_ratio @ hybrid"),
-        ("long_name", "Ozone_mass_mixing_ratio @ isobaric"),
-        ("long_name", "Ozone_mass_mixing_ratio @ Isobaric surface")
-    ],
-    "cloud_area_fraction_in_atmosphere_layer": [
-        ("standard_name", "cloud_area_fraction_in_atmosphere_layer"),
-        ("long_name", "UnknownParameter_32 @ hybrid"),
-        # WORKAROUND for ECMWF GRIB-2 data.. (mr 2011/05/20)
-        ("long_name", "Cloud_cover @ hybrid"),
-        ("long_name", "Fraction of cloud cover @ Hybrid level")
-    ],
-    "specific_cloud_liquid_water_content": [
-        ("standard_name", "specific_cloud_liquid_water_content"),
-        ("long_name", "Specific cloud liquid water content @ Hybrid level")
-    ],
-    "specific_cloud_ice_water_content": [
-        ("standard_name", "specific_cloud_ice_water_content"),
-        ("long_name", "Specific cloud ice water content @ Hybrid level")
-    ],
-    "eastward_wind": [
-        ("standard_name", "eastward_wind"),
-        ("long_name", "U velocity"),
-        ("long_name", "U_velocity @ hybrid"),
-        ("long_name", "U-component_of_wind @ hybrid"),
-        ("long_name", "u-component of wind @ Hybrid level"),
-        ("long_name", "U_velocity @ isobaric"),
-        ("long_name", "U velocity @ Isobaric surface"),
-        ("long_name", "U-component_of_wind @ isobaric"),
-        ("long_name", "U velocity @ Hybrid level")
-    ],
-    "northward_wind": [
-        ("standard_name", "northward_wind"),
-        ("long_name", "V velocity"),
-        ("long_name", "V_velocity @ hybrid"),
-        ("long_name", "V-component_of_wind @ hybrid"),
-        ("long_name", "v-component of wind @ Hybrid level"),
-        ("long_name", "V_velocity @ isobaric"),
-        ("long_name", "V velocity @ Isobaric surface"),
-        ("long_name", "V-component_of_wind @ isobaric"),
-        ("long_name", "V velocity @ Hybrid level")
-    ],
-    "divergence_of_wind": [
-        ("standard_name", "divergence_of_wind"),
-        ("long_name", "Divergence"),
-        ("long_name", "Divergence @ hybrid"),
-        ("long_name", "Divergence @ isobaric"),
-        ("long_name", "Divergence @ Isobaric surface")
-    ],
-    "ertel_potential_vorticity": [
-        ("standard_name", "ertel_potential_vorticity"),
-        ("long_name", "Potential Vorticity"),
-        ("long_name", "Potential_vorticity"),
-        ("long_name", "Potential_vorticity @ hybrid"),
-        ("long_name", "Potential_vorticity @ isobaric"),
-        ("long_name", "Potential vorticity @ Isobaric surface")
-    ],
-    # Vertical velocity has two identifiers..
-    "vertical_air_velocity_expressed_as_tendency_of_pressure": [
-        ("standard_name", "vertical_air_velocity_expressed_as_tendency_of_pressure"),
-        ("long_name", "Vertical_velocity"),
-        ("long_name", "Vertical_velocity @ hybrid"),
-        ("long_name", "Vertical_velocity_pressure @ hybrid"),
-        ("long_name", "Vertical velocity (pressure) @ Hybrid level"),
-        ("long_name", "Vertical_velocity @ isobaric"),
-        ("long_name", "Vertical velocity @ Isobaric surface"),
-        ("long_name", "Vertical_velocity_pressure @ isobaric")
-    ],
-    "omega": [
-        ("standard_name", "omega"),
-        ("long_name", "Vertical_velocity"),
-        ("long_name", "Vertical_velocity @ hybrid"),
-        ("long_name", "Vertical_velocity_pressure @ hybrid"),
-        ("long_name", "Vertical velocity (pressure) @ Hybrid level"),
-        ("long_name", "Vertical_velocity @ isobaric"),
-        ("long_name", "Vertical velocity @ Isobaric surface"),
-        ("long_name", "Vertical_velocity_pressure @ isobaric")
-    ],
-    "probability_of_wcb_occurrence": [
-        ("long_name", "probability of WCB occurence")
-    ],
-
-    # EMAC tracer variables.
-    "emac_R01": [("var_name", "R01")],
-    "emac_R12": [("var_name", "R12")],
-    "emac_column_density": [("long_name", "column density")],
-
-    # Lagranto gridded trajectory variables.
-    "number_of_wcb_trajectories": [("var_name", "WCB")],
-    "number_of_insitu_trajectories": [("var_name", "INSITU")],
-    "number_of_mix_trajectories": [("var_name", "MIX")],
-
-    # Identification of surface level variables.
-    "surface_air_pressure": [
-        ("standard_name", "surface_air_pressure"),
-        ("long_name", "Surface pressure"),
-        ("long_name", "Surface_pressure @ surface"),
-        ("long_name", "Surface pressure @ Ground or water surface")
-    ],
-    "surface_temperature": [
-        ("standard_name", "surface_temperature"),
-        ("long_name", "2 metre temperature"),
-        ("long_name", "N2_metre_temperature @ surface"),
-        ("long_name", "2 metre temperature @ Ground or water surface")
-    ],
-    "surface_dew_point_temperature": [
-        ("standard_name", ""),  # COMPLETE
-        ("long_name", "2 metre dewpoint temperature"),
-        ("long_name", "N2_metre_dewpoint_temperature @ surface"),
-        ("long_name", "2 metre dewpoint temperature @ Ground or water surface")
-    ],
-    "surface_geopotential": [
-        ("standard_name", "surface_geopotential"),
-        ("long_name", "Geopotential"),
-        ("long_name", "Geopotential @ surface"),
-        ("long_name", "Geopotential @ Ground or water surface")
-    ],
-    "low_cloud_area_fraction": [
-        ("standard_name", "low_cloud_area_fraction"),
-        ("long_name", "Low cloud cover"),
-        ("long_name", "Low_cloud_cover @ surface"),
-        ("long_name", "Low cloud cover @ Ground or water surface")
-    ],
-    "medium_cloud_area_fraction": [
-        ("standard_name", "medium_cloud_area_fraction"),
-        ("long_name", "Medium cloud cover"),
-        ("long_name", "Medium_cloud_cover @ surface"),
-        ("long_name", "Medium cloud cover @ Ground or water surface")
-    ],
-    "high_cloud_area_fraction": [
-        ("standard_name", "high_cloud_area_fraction"),
-        ("long_name", "High cloud cover"),
-        ("long_name", "High_cloud_cover @ surface"),
-        ("long_name", "High cloud cover @ Ground or water surface")
-    ],
-    "air_pressure_at_sea_level": [
-        ("standard_name", "air_pressure_at_sea_level"),
-        ("long_name", "Mean sea level pressure"),
-        ("long_name", "Mean_sea_level_pressure @ surface"),
-        ("long_name", "Mean sea level pressure @ Ground or water surface")
-    ],
-    "surface_eastward_wind": [
-        ("standard_name", "surface_eastward_wind"),
-        ("long_name", "N10 metre U wind component"),
-        ("long_name", "N10_metre_U_wind_component @ surface"),
-        ("long_name", "10 metre U wind component @ Ground or water surface")
-    ],
-    "surface_northward_wind": [
-        ("standard_name", "surface_northward_wind"),
-        ("long_name", "N10 metre V wind component"),
-        ("long_name", "N10_metre_V_wind_component @ surface"),
-        ("long_name", "10 metre V wind component @ Ground or water surface")
-    ],
-    "solar_elevation_angle": [
-        ("standard_name", "solar_elevation_angle")
-    ],
-    "sea_ice_area_fraction": [
-        ("standard_name", "sea_ice_area_fraction"),
-        ("long_name", ""),  # ??
-        ("long_name", "Sea-ice_cover @ surface"),
-        ("long_name", "Sea-ice cover @ Ground or water surface")
-    ],
-    "vertically_integrated_probability_of_wcb_occurrence": [
-        ("long_name", "vertically integrated probability of WCB occurence")
-    ],
-    "atmosphere_boundary_layer_thickness": [
-        ("standard_name", "atmosphere_boundary_layer_thickness"),
-        ("long_name", "Boundary_layer_height @ surface"),
-        ("long_name", "Boundary layer height @ Ground or water surface")
-    ],
-
-    # Identification of coordinate variables (dimensions).
-    # According to the CF conventions document, time should only be recognised
-    # by its units attribute. Use identify_CF_time().
-    "time": [
-        ("standard_name", "time"),
-        ("var_name", "time")
-    ],
-    "longitude": [
-        ("standard_name", "longitude"),
-        ("long_name", "longitude"),
-        ("units", "degrees_east"),
-        ("units", "degree_E")
-    ],
-    "latitude": [
-        ("standard_name", "latitude"),
-        ("long_name", "latitude"),
-        ("units", "degrees_north"),
-        ("units", "degree_N")
-    ],
-    # Model level is bit more difficult. ECMWF calls the variable "levelist"
-    # a long_name "model_level_number", Unidata's NetCDF-Java (THREDDS)
-    # "hybrid" with a long_name "Hybrid level". The CF-standard would be
-    # the long standard_name..
-    "atmosphere_hybrid_sigma_pressure_coordinate": [
-        ("standard_name", "atmosphere_hybrid_sigma_pressure_coordinate"),
-        ("standard_name", "hybrid_sigma_pressure"),  # EMAC
-        ("long_name", "Hybrid level"),
-        ("long_name", "model_level_number")
-    ],
-    "atmosphere_pressure_coordinate": [
-        ("standard_name", "atmosphere_pressure_coordinate"),
-        ("long_name", "Isobaric surface"),
-        ("long_name", "pressure_level")
-    ],
-    "atmosphere_ertel_potential_vorticity_coordinate": [
-        ("standard_name", "atmosphere_ertel_potential_vorticity_coordinate"),
-        ("long_name", "Potential vorticity surface")
-    ],
-    "atmosphere_altitude_coordinate": [
-        ("standard_name", "atmosphere_altitude_coordinate"),
-        ("long_name", "atmosphere_altitude_coordinate"),
-        ("long_name", "altitude")],
-
-    "atmosphere_potential_temperature_coordinate": [
-        ("standard_name", "atmosphere_potential_temperature_coordinate")],
-
-    # Finally, the ensemble dimension can currently (netcdf-java 4.3) only be
-    # recognized from its name, "ens0".
-    "ensemble": [
-        ("var_name", "ens0")
-    ],
-
-    # Meteosat variables.
-    "msg_brightness_temperature_108": [
-        ("standard_name", "brightness_temperature_108")
-    ],
-    "equivalent_latitude": [
-        ("var_name", "EQLAT"),
-        ("standard_name", "EQLAT"),
-        ("long_name", "Equivalent Latitude")
-    ],
-    "brunt_vaisala_frequency": [
-        ("var_name", "BVF"),
-        ("standard_name", "BVF"),
-        ("long_name", "Brunt-Vaisala Frequency")
-    ],
-    "gravity_wave_temperature_perturbation": [
-        ("long_name", "residual Temperature")
-    ],
-    "tropopause_altitude": [
-        ("long_name", "tropopause height")
-    ]
-}
-for name in Targets.get_targets():
-    tup = ("standard_name", name)
-    if name not in CFVariableIdentifier:
-        CFVariableIdentifier[name] = [tup]
-    elif tup not in CFVariableIdentifier[name]:
-        CFVariableIdentifier[name].append(tup)
 
 
 """
@@ -376,109 +67,38 @@ NETCDF FILE TOOLS
 """
 
 
-def identify_variable(ncfile, identifier_list, check=False):
+def identify_variable(ncfile, standard_name, check=False):
     """Identify the variable in ncfile that is described by specified rules.
 
     Arguments:
     ncfile -- Handle to open netCDF4.Dataset().
-    identifier_list -- List containing rules for variable identification.
-                       Each entry has to be a tuple of two elements:
-                       'var_name', 'standard_name', 'long_name', and the
-                       corresponding value.
+
     check (default False) -- Throw an exception if variable has not been
                              found. If False, return None.
 
-    The NetCDF file is searched in the order given by the elements of
-    identifier_list. The name and an netCDF4.Variable() object are returned
-    in case of matching variable name, standard_name or long_name attributes.
-
-    Example:
-    sfc_pressure_identifier = [('var_name', sfc_pressure_variable),
-                               ('standard_name', 'surface_air_pressure'),
-                               ('long_name', 'Surface pressure'),
-                               ('long_name', 'Surface_pressure @ surface')]
-    identify_variable(ncfile, sfc_pressure_identifier)
-    This will search for a variable called 'sp'. If no variable is found, the
-    standard_name attribute of all variables will be searched for
-    'surface_air_pressure' etc.
     """
-    for id_type, id_name in identifier_list:
-        if id_type == "var_name":
-            if id_name in ncfile.variables:
-                return id_name, ncfile.variables[id_name]
-        elif id_type == "standard_name":
-            for var_name, variable in ncfile.variables.items():
-                if "standard_name" in variable.ncattrs() and variable.standard_name == id_name:
-                        return var_name, variable
-        elif id_type == "long_name":
-            for var_name, variable in ncfile.variables.items():
-                if "long_name" in variable.ncattrs() and variable.long_name == id_name:
-                        return var_name, variable
-        elif id_type == "units":
-            for var_name, variable in ncfile.variables.items():
-                if "units" in variable.ncattrs() and variable.units == id_name:
-                    return var_name, variable
+
+    for var_name, variable in ncfile.variables.items():
+        if "standard_name" in variable.ncattrs() and variable.standard_name == standard_name:
+            return var_name, variable
     if check:
         raise NetCDFVariableError("cannot identify NetCDF variable "
                                   "specified by <%s>" % identifier_list)
     return None, None
 
 
-def identify_CF_variable(ncfile, standard_name, varname_override=None,
-                         check=False):
-    """Identify a variable specified by its CF standard name.
-
-    ncfile -- open netCDF4.Dataset handle
-    standard_name -- CF standard name
-    varname_override -- don't use the standard name but return the variable
-                        with name <varname_override>
-
-    Returns: varname, netCDF4.Variable
-    """
-    id_list = []
-    if varname_override:
-        id_list = [("var_name", varname_override)]
-    if standard_name in CFVariableIdentifier.keys():
-        id_list.extend(CFVariableIdentifier[standard_name])
-    var_name, var = identify_variable(ncfile, id_list)
-    if check and not var:
-        raise NetCDFVariableError("cannot identify NetCDF-CF variable <%s>" %
-                                  standard_name if not varname_override else
-                                  varname_override)
-    return var_name, var
-
-
-def identify_CF_coordhybrid(ncfile, dimname_override={}, check=CHECK_NONE):
+def identify_CF_coordhybrid(ncfile, check=CHECK_NONE):
     """Identify variables representing longitude, latitude, hybrid model levels
        in ECMWF files.
 
-    Works with CF-compliant NetCDF files, MARS-generated NetCDF files and
-    NetCDF-Java (THREDDS) generated NetCDF files.
 
     Returns:
     lon_name, lon_var, lat_name, lat_var, hybrid_name, hybrid_var
     """
-    if "longitude" in dimname_override:
-        lon_override = dimname_override["longitude"]
-    else:
-        lon_override = None
-    lon_name, lon_var = identify_CF_variable(ncfile, "longitude",
-                                             varname_override=lon_override)
+    lon_name, lon_var = identify_variable(ncfile, "longitude")
+    lat_name, lat_var = identify_variable(ncfile, "latitude")
+    hybrid_name, hybrid_var = identify_variable(ncfile, "atmosphere_hybrid_sigma_pressure_coordinate")
 
-    if "latitude" in dimname_override:
-        lat_override = dimname_override["latitude"]
-    else:
-        lat_override = None
-    lat_name, lat_var = identify_CF_variable(ncfile, "latitude",
-                                             varname_override=lat_override)
-
-    if "atmosphere_hybrid_sigma_pressure_coordinate" in dimname_override:
-        lev_override = dimname_override["atmosphere_hybrid_sigma_pressure_coordinate"]
-    else:
-        lev_override = None
-    hybrid_name, hybrid_var = identify_CF_variable(ncfile,
-                                                   "atmosphere_hybrid_sigma_pressure_coordinate",
-                                                   varname_override=lev_override)
 
     if check == CHECK_LATLON:
         if not (lat_var and lon_var):
@@ -507,29 +127,27 @@ def hybrid_orientation(hybrid_var):
         return 1
 
 
-def identify_CF_hybrid(ncfile, hybridname_override=None):
+def identify_CF_hybrid(ncfile):
     """Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: hybrid_name, hybrid_var, hybrid_orientation
     """
-    hybrid_name, hybrid_var = identify_CF_variable(ncfile,
-                                                   "atmosphere_hybrid_sigma_pressure_coordinate",
-                                                   varname_override=hybridname_override)
+    hybrid_name, hybrid_var = identify_variable(ncfile, "atmosphere_hybrid_sigma_pressure_coordinate")
+
     orientation = None
     if hybrid_var:
         orientation = hybrid_orientation(hybrid_var)
     return hybrid_name, hybrid_var, orientation
 
 
-def identify_CF_isopressure(ncfile, isopressurename_override=None):
+def identify_CF_isopressure(ncfile):
     """Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: isopressure_name, isopressure_var, isopressure_orientation
     """
-    isopressure_name, isopressure_var = identify_CF_variable(
-        ncfile,
-        "atmosphere_pressure_coordinate",
-        varname_override=isopressurename_override)
+
+    isopressure_name, isopressure_var = identify_variable(ncfile, "atmosphere_pressure_coordinate")
+
     orientation = None
     if isopressure_var:
         orientation = hybrid_orientation(isopressure_var)
@@ -541,47 +159,40 @@ def identify_CF_isopotvort(ncfile, isopotvortname_override=None):
 
     Returns: isopotvort_name, isopotvort_var, isopotvort_orientation
     """
-    isopotvort_name, isopotvort_var = identify_CF_variable(
-        ncfile,
-        "atmosphere_ertel_potential_vorticity_coordinate",
-        varname_override=isopotvortname_override)
+    isopotvort_name, isopotvort_var = identify_variable(ncfile, "atmosphere_ertel_potential_vorticity_coordinate")
+
     orientation = None
     if isopotvort_var:
         orientation = hybrid_orientation(isopotvort_var)
     return isopotvort_name, isopotvort_var, orientation
 
 
-def identify_CF_isoaltitude(ncfile, isoaltitudename_override=None):
+def identify_CF_isoaltitude(ncfile):
     """Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: isoaltitude_name, isoaltiude_var, isoalttiude_orientation
     """
-    isoaltitude_name, isoaltitude_var = identify_CF_variable(
-        ncfile,
-        "atmosphere_altitude_coordinate",
-        varname_override=isoaltitudename_override)
+    isoaltitude_name, isoaltitude_var = identify_variable(ncfile, "atmosphere_altitude_coordinate")
     orientation = None
     if isoaltitude_var:
         orientation = hybrid_orientation(isoaltitude_var)
     return isoaltitude_name, isoaltitude_var, orientation
 
 
-def identify_CF_isopottemp(ncfile, isopotentialtemperature_override=None):
+def identify_CF_isopottemp(ncfile):
     """Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: isoaltitude_name, isoaltiude_var, isoalttiude_orientation
     """
-    isopottemp_name, isopottemp_var = identify_CF_variable(
-        ncfile,
-        "atmosphere_potential_temperature_coordinate",
-        varname_override=isopotentialtemperature_override)
+    isopottemp_name, isopottemp_var = identify_variable(ncfile, "atmosphere_potential_temperature_coordinate")
+
     orientation = None
     if isopottemp_var:
         orientation = hybrid_orientation(isopottemp_var)
     return isopottemp_name, isopottemp_var, orientation
 
 
-def identify_CF_time(ncfile, timename_override=None):
+def identify_CF_time(ncfile):
     """Identify the time variable from a CF-compliant NetCDF file.
 
     From the CF-conventions document: 'A time coordinate is identifiable
@@ -592,23 +203,8 @@ def identify_CF_time(ncfile, timename_override=None):
 
     Returns: time_name, time_var
     """
-    if timename_override:
-        return identify_variable(ncfile, [('var_name', timename_override)])
-    # Identify the time variable by matching the re_timeunits regular
-    # expression to its units string.
-    for var_name, variable in ncfile.variables.items():
-        if var_name not in ncfile.dimensions:
-            continue
-        if "units" in variable.ncattrs():
-            if re_timeunits.match(variable.units):
-
-                # FIXME Hack for TNF; sfc files generated by netcdf-java 4.3 contain
-                #      a second time var time1 that is incorrectly returned as time dimension
-                if var_name == "time1":
-                    continue
-
-                return var_name, variable
-    return None, None
+    time_name, time_var = identify_variable(ncfile, "time")
+    return time_name, time_var
 
 
 def identify_CF_ensemble(ncfile, ensname_override=None):
@@ -616,8 +212,8 @@ def identify_CF_ensemble(ncfile, ensname_override=None):
 
     Returns: ens_name, ens_var
     """
-    ens_name, ens_var = identify_CF_variable(ncfile, "ensemble",
-                                             varname_override=ensname_override)
+    ens_name, ens_var = identify_variable(ncfile, "ensemble")
+
     if ens_name not in ncfile.dimensions:
         # Make sure that the found variable is a dimension variable.
         return None, None
