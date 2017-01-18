@@ -170,10 +170,13 @@ class WaypointsTableModel(QAbstractTableModel):
                 self.loadFromFTML(filename)
             elif filename.endswith(".csv"):
                 self.loadFromCSV(filename)
+                self.filename = None
             elif filename.endswith(".txt"):
                 self.loadFromText(filename)
+                self.filename = None
             else:
                 logging.debug("No known file extension! {:}".format(filename))
+
 
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
@@ -579,7 +582,7 @@ class WaypointsTableModel(QAbstractTableModel):
         if not self.filename:
             raise ValueError("filename to save flight track cannot be None")
         with open(filename, "w") as out_file:
-            csv_writer = csv.writer(out_file, dialect='excel')
+            csv_writer = csv.writer(out_file, dialect='excel', delimiter=";", lineterminator="\n")
             csv_writer.writerow([self.name])
             csv_writer.writerow(["Index", "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
                                  "Leg dist. (km)", "Cum. dist. (km)", "Comments"])
@@ -598,20 +601,22 @@ class WaypointsTableModel(QAbstractTableModel):
     def loadFromCSV(self, filename):
         waypoints_list = []
         with open(filename, "r") as in_file:
-            csv_reader = csv.reader(in_file, dialect='excel')
-            self.name = csv_reader.next()[0]
-            csv_reader.next()  # header
-            for row in csv_reader:
-                wp = Waypoint()
-                wp.location = row[1]
-                wp.lat = float(row[2])
-                wp.lon = float(row[3])
-                wp.flightlevel = float(row[4])
-                wp.pressure = float(row[5]) * 100.
-                wp.distance_to_prev = float(row[6])
-                wp.distance_total = float(row[7])
-                wp.comments = QString(row[8])
-                waypoints_list.append(wp)
+            lines = in_file.readlines()
+        dialect = csv.Sniffer().sniff(lines[-1])
+        csv_reader = csv.reader(lines, dialect=dialect)
+        self.name = csv_reader.next()[0]
+        csv_reader.next()  # header
+        for row in csv_reader:
+            wp = Waypoint()
+            wp.location = row[1]
+            wp.lat = float(row[2])
+            wp.lon = float(row[3])
+            wp.flightlevel = float(row[4])
+            wp.pressure = float(row[5]) * 100.
+            wp.distance_to_prev = float(row[6])
+            wp.distance_total = float(row[7])
+            wp.comments = QString(row[8])
+            waypoints_list.append(wp)
         self.waypoints = []
         self.insertRows(0, rows=len(waypoints_list),
                         waypoints=waypoints_list)

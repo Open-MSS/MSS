@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'msui/ui_mainwindow.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -140,12 +140,19 @@ class Ui_MSSMainWindow(object):
         self.actionAboutMSUI.setObjectName(_fromUtf8("actionAboutMSUI"))
         self.actionLoad_Configuration = QtGui.QAction(MSSMainWindow)
         self.actionLoad_Configuration.setObjectName(_fromUtf8("actionLoad_Configuration"))
+        self.actionImportFlightTrack = QtGui.QAction(MSSMainWindow)
+        self.actionImportFlightTrack.setObjectName(_fromUtf8("actionImportFlightTrack"))
+        self.actionExportActiveFlightTrack = QtGui.QAction(MSSMainWindow)
+        self.actionExportActiveFlightTrack.setObjectName(_fromUtf8("actionExportActiveFlightTrack"))
         self.menu_File.addAction(self.actionNewFlightTrack)
         self.menu_File.addAction(self.actionOpenFlightTrack)
         self.menu_File.addAction(self.actionCloseSelectedFlightTrack)
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.actionSaveActiveFlightTrack)
         self.menu_File.addAction(self.actionSaveActiveFlightTrackAs)
+        self.menu_File.addSeparator()
+        self.menu_File.addAction(self.actionImportFlightTrack)
+        self.menu_File.addAction(self.actionExportActiveFlightTrack)
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.actionLoad_Configuration)
         self.menu_File.addSeparator()
@@ -201,4 +208,6 @@ class Ui_MSSMainWindow(object):
         self.actionDiscoverEarthObservationDataGENESI.setText(_translate("MSSMainWindow", "&Discover Earth Observation Data (GENESI)", None))
         self.actionAboutMSUI.setText(_translate("MSSMainWindow", "&About MSS", None))
         self.actionLoad_Configuration.setText(_translate("MSSMainWindow", "Load Configuration", None))
+        self.actionImportFlightTrack.setText(_translate("MSSMainWindow", "Import Flight Track", None))
+        self.actionExportActiveFlightTrack.setText(_translate("MSSMainWindow", "Export Active Flight Track", None))
 
