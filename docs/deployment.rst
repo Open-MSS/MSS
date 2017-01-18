@@ -150,4 +150,33 @@ For the standalone server *mswms* you need the path of your mss_wms_settings.py 
 
 
 
+Demodata
+------------------
 
+We provide demodata by executing the dmeodata programm. This creates in your home directory data files and also
+the needed server configuration file. The program creates 70MB of examples.
+This script does not overwrite an existing mss_wms_settings.py
+
+::
+
+    mss
+    ├── mss_wms_settings.py
+    ├── testdata
+    │   ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc
+    │   ├── 20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc
+    │   ├── 20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc
+    │   └── 20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc
+    └── vt_cache
+
+
+Before starting the standalone server you should add the path where the server config is to your python search path.
+e.g. 
+
+::
+
+    $ export PYTHONPATH=~/mss
