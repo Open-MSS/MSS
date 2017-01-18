@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_tableview_window.ui'
+# Form implementation generated from reading ui file 'msui/ui_tableview_window.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -49,13 +49,6 @@ class Ui_TableViewWindow(object):
         self.btViewPerformance.setChecked(False)
         self.btViewPerformance.setObjectName(_fromUtf8("btViewPerformance"))
         self.horizontalLayout.addWidget(self.btViewPerformance)
-        self.lblRemainingRange = QtGui.QLabel(self.centralwidget)
-        font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)
-        self.lblRemainingRange.setFont(font)
-        self.lblRemainingRange.setObjectName(_fromUtf8("lblRemainingRange"))
-        self.horizontalLayout.addWidget(self.lblRemainingRange)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.label = QtGui.QLabel(self.centralwidget)
@@ -74,12 +67,10 @@ class Ui_TableViewWindow(object):
         self.verticalLayout.addLayout(self.horizontalLayout)
         TableViewWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(TableViewWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1254, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1254, 26))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menu_File = QtGui.QMenu(self.menubar)
         self.menu_File.setObjectName(_fromUtf8("menu_File"))
-        self.menu_Controls = QtGui.QMenu(self.menubar)
-        self.menu_Controls.setObjectName(_fromUtf8("menu_Controls"))
         TableViewWindow.setMenuBar(self.menubar)
         self.actionClose = QtGui.QAction(TableViewWindow)
         self.actionClose.setObjectName(_fromUtf8("actionClose"))
@@ -88,9 +79,7 @@ class Ui_TableViewWindow(object):
         self.actionFlightPerformance = QtGui.QAction(TableViewWindow)
         self.actionFlightPerformance.setObjectName(_fromUtf8("actionFlightPerformance"))
         self.menu_File.addAction(self.actionClose)
-        self.menu_Controls.addAction(self.actionFlightPerformance)
         self.menubar.addAction(self.menu_File.menuAction())
-        self.menubar.addAction(self.menu_Controls.menuAction())
 
         self.retranslateUi(TableViewWindow)
         QtCore.QObject.connect(self.actionClose, QtCore.SIGNAL(_fromUtf8("activated()")), TableViewWindow.close)
@@ -98,14 +87,12 @@ class Ui_TableViewWindow(object):
 
     def retranslateUi(self, TableViewWindow):
         TableViewWindow.setWindowTitle(_translate("TableViewWindow", "Table View - Mission Support System", None))
-        self.btViewPerformance.setText(_translate("TableViewWindow", "view performance", None))
-        self.lblRemainingRange.setText(_translate("TableViewWindow", "TextLabel", None))
+        self.btViewPerformance.setText(_translate("TableViewWindow", "performance settings", None))
         self.label.setText(_translate("TableViewWindow", "Waypoints:", None))
         self.btAddWayPointToFlightTrack.setText(_translate("TableViewWindow", "insert", None))
         self.btDeleteWayPoint.setText(_translate("TableViewWindow", "delete selected", None))
         self.btInvertDirection.setText(_translate("TableViewWindow", "reverse", None))
         self.menu_File.setTitle(_translate("TableViewWindow", "&File", None))
-        self.menu_Controls.setTitle(_translate("TableViewWindow", "&Service Controls", None))
         self.actionClose.setText(_translate("TableViewWindow", "E&xit Module", None))
         self.actionClose.setShortcut(_translate("TableViewWindow", "Ctrl+X", None))
         self.actionFlightPerformance_old.setText(_translate("TableViewWindow", "Flight Performance (first version, depracated)", None))

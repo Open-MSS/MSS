@@ -47,13 +47,9 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # local application imports
 from mslib.msui import ui_tableview_window as ui
-from mslib.msui import performance_control as perf
-from mslib.msui import performance_control_clientside as perf_cs
 from mslib.msui import flighttrack as ft
 from mslib.msui import mss_qt
-
-PERFORMANCE = 0
-PERFORMANCE_OLD = 1
+from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
 
 """
 USER INTERFACE CLASS FlightPlanTableView
@@ -75,8 +71,6 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
 
-        self.lblRemainingRange.setVisible(False)
-
         # Dock windows [Performance, Performance_Old].
         self.docks = [None, None]
 
@@ -87,40 +81,31 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
                      self.removeWayPoint)
         self.connect(self.btInvertDirection, QtCore.SIGNAL("clicked()"),
                      self.invertDirection)
-
-        self.connect(self.actionFlightPerformance,
-                     QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.openTool, PERFORMANCE + 1))
-        self.connect(self.actionFlightPerformance_old,
-                     QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.openTool, PERFORMANCE_OLD + 1))
-
         self.connect(self.btViewPerformance, QtCore.SIGNAL("clicked()"),
-                     self.viewPerformance)
+                     self.settingsDlg)
 
         self.resizeColumns()
+
+    def settingsDlg(self):
+        """
+        """
+        dlg = MSS_PerformanceSettingsDialog(parent=self, settings_dict=self.waypoints_model.performance_settings)
+        dlg.setModal(True)
+        if dlg.exec_() == QtGui.QDialog.Accepted:
+            self.waypoints_model.performance_settings = dlg.getSettings()
+            self.waypoints_model.update_distances(0)
+            self.waypoints_model.saveSettings()
+            self.resizeColumns()
+        dlg.destroy()
 
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
         """
         fps = config_loader(dataset="default_VSEC_WMS", default=mss_default.default_VSEC_WMS)
         index = self.controlToBeCreated(index)
-        if index >= 0:
-            if index == PERFORMANCE:
-                # Open a flight performance control widget.
-                title = "Flight Performance Control"
-                widget = perf_cs.PerformanceControlWidget(default_FPS=fps, model=self.waypoints_model,
-                                                          wms_cache=config_loader(dataset="wms_cache",
-                                                                                  default=mss_default.wms_cache))
-            elif index == PERFORMANCE_OLD:
-                # Open a flight performance control widget.
-                title = "Flight Performance Service Control"
-                widget = perf.PerformanceControlWidget(default_FPS=fps, model=self.waypoints_model)
-            else:
-                raise IndexError("invalid control index (%i)" % index)
-            # Create the actual dock widget containing <widget>.
-            logging.debug("opening %s" % title)
-            self.createDockWidget(index, title, widget)
+        raise IndexError("invalid control index (%i)" % index)
+        logging.debug("opening %s" % title)
+        self.createDockWidget(index, title, widget)
 
     def invertDirection(self):
         self.waypoints_model.invertDirection()
@@ -183,7 +168,7 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         If the flight track consists of only two points deleting a waypoint
         is not possible. In this case the user is informed correspondingly.
         """
-        wps = self.waypoints_model.allWaypointData(mode=ft.USER)
+        wps = self.waypoints_model.allWaypointData()
         if len(wps) < 3:
             QtGui.QMessageBox.warning(None, "Remove waypoint",
                                       "Cannot remove waypoint, the flight track needs to consist "
@@ -218,51 +203,16 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         """
         super(MSSTableViewWindow, self).setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
-        self.connect(self.waypoints_model, QtCore.SIGNAL("performanceUpdated()"),
-                     self.viewPerformance)
-        self.connect(self.waypoints_model, QtCore.SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
-                     self.viewPerformance)
-        # Set the performance mode of the flight track.
-        self.viewPerformance()
 
     def viewPerformance(self):
         """Slot to toggle the view mode of the table between 'USER' and
            'PERFORMANCE'.
         """
-        if self.btViewPerformance.isChecked():
-            self.waypoints_model.setMode(ft.PERFORMANCE)
-            # Change the button face colour to "red".
-            palette = QtGui.QPalette(self.btViewPerformance.palette())
-            colour = QtGui.QColor(255, 0, 0)
-            palette.setColor(QtGui.QPalette.Button, colour)
-            self.btViewPerformance.setPalette(palette)
-            # Set the entire table background to red if the performance
-            # computations aren't valid anymore (i.e. after a change).
-            if not self.waypoints_model.performanceValid():
-                palette = QtGui.QPalette(self.tableWayPoints.palette())
-                colour = QtGui.QColor(255, 60, 60)
-                palette.setColor(QtGui.QPalette.Base, colour)
-                colour = QtGui.QColor(255, 80, 80)
-                palette.setColor(QtGui.QPalette.AlternateBase, colour)
-                self.tableWayPoints.setPalette(palette)
-            else:
-                self.tableWayPoints.setPalette(self.palette())
-            # Disable insert/delete buttons.
-            self.btAddWayPointToFlightTrack.setEnabled(False)
-            self.btDeleteWayPoint.setEnabled(False)
-            # Show label that displays remaining range information.
-            self.lblRemainingRange.setText(self.waypoints_model.remainingRangeInfo())
-            self.lblRemainingRange.setVisible(True)
-        else:
-            self.waypoints_model.setMode(ft.USER)
-            # Restore the original button face colour (as inherited from this
-            # window's palette).
-            self.btViewPerformance.setPalette(self.palette())
-            self.tableWayPoints.setPalette(self.palette())
-            self.btAddWayPointToFlightTrack.setEnabled(True)
-            self.btDeleteWayPoint.setEnabled(True)
-            self.lblRemainingRange.setVisible(False)
-
+        # Restore the original button face colour (as inherited from this window's palette).
+        self.btViewPerformance.setPalette(self.palette())
+        self.tableWayPoints.setPalette(self.palette())
+        self.btAddWayPointToFlightTrack.setEnabled(True)
+        self.btDeleteWayPoint.setEnabled(True)
         self.resizeColumns()
 
 
