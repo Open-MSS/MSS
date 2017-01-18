@@ -178,10 +178,10 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             titlestring = "High cloud cover (0-1)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -287,10 +287,10 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Mean sea level pressure (hPa) and surface wind"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -350,9 +350,9 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Contour lines plot.
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs1 = bm.contour(lonmesh, latmesh, sea,
-                         thick_contours, colors="saddlebrown",
-                         linewidths=3, linestyles="solid")
+        bm.contour(lonmesh, latmesh, sea,
+                   thick_contours, colors="saddlebrown",
+                   linewidths=3, linestyles="solid")
         cs2 = bm.contour(lonmesh, latmesh, sea,
                          thin_contours, colors="white", linewidths=1)
         cs2.clabel(thin_contours, fontsize=14, fmt='%i')
@@ -363,8 +363,8 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Plot title.
         titlestring = "Solar Elevation Angle "
-        titlestring = titlestring + "\nValid: %s" % \
-                                    self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")
+        titlestring += "\nValid: %s" % \
+            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
@@ -437,10 +437,10 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Sea Ice Cover"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
@@ -508,10 +508,10 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Temperature (degC) at model level %i" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -546,7 +546,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
         if cmin is None or cmax is None:
             cmin, cmax = show_data.min(), show_data.max()
-            if cmin > 0 and cmin < 0.05 * cmax:
+            if 0 < cmin < 0.05 * cmax:
                 cmin = 0.
 
         if self.style == "default":
@@ -588,15 +588,15 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         clev_format = "%.3g"
         mclev = np.abs(clevs).max()
         if self.style != "log":
-            if mclev >= 100. and mclev < 10000.:
+            if 100. <= mclev < 10000.:
                 clev_format = "%4i"
-            if mclev >= 10. and mclev < 100.:
+            if 10. <= mclev < 100.:
                 clev_format = "%.1f"
-            if mclev >= 1. and mclev < 10.:
+            if 1. <= mclev < 10.:
                 clev_format = "%.2f"
-            if mclev >= .1 and mclev < 1.:
+            if .1 <= mclev < 1.:
                 clev_format = "%.3f"
-            if mclev >= .01 and mclev < 0.1:
+            if .01 <= mclev < 0.1:
                 clev_format = "%.4f"
 
         if not self.noframe:
@@ -638,9 +638,9 @@ def make_generic_class(entity, vert):
             (vert, entity),
             (vert, "ertel_potential_vorticity"), ]
     if Targets.get_thresholds(entity) is not None:
-        fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
+        fnord.styles += [("nonlinear", "nonlinear colour scale")]
     if all(_x is not None for _x in Targets.get_range(entity, None, vert)):
-        fnord.styles = fnord.styles + [
+        fnord.styles += [
             ("default", "fixed colour scale"),
             ("log", "fixed logarithmic colour scale")]
 
@@ -772,10 +772,10 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -850,8 +850,8 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
         # Convert wind data from m/s to knots for the wind barbs.
-        u = u * 1.944
-        v = v * 1.944
+        u *= 1.944
+        v *= 1.944
 
         # Transform wind vector field to fit map.
         lons2 = ((self.lons + 180) % 360) - 180
@@ -878,10 +878,10 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
                       "at %i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -965,10 +965,10 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1052,10 +1052,10 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1140,10 +1140,10 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1205,10 +1205,10 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1276,10 +1276,10 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "EMAC Eyjafjallajokull Tracer (relative) at model level %i" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1324,8 +1324,8 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         # EMAC's latitudes. The error, however, is small, thus we neglect it
         # here.
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh_ = lonmesh_ - (self.lons[1] - self.lons[0]) / 2.
-        latmesh_ = latmesh_ - (self.lats[1] - self.lats[0]) / 2.
+        lonmesh_ -= (self.lons[1] - self.lons[0]) / 2.
+        latmesh_ -= (self.lats[1] - self.lats[0]) / 2.
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         tc = bm.pcolor(lonmesh, latmesh, tracer,
@@ -1356,10 +1356,10 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "EMAC Eyjafjallajokull Tracer Total Column Density (kg/m^2)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1464,10 +1464,10 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
                           "%i PVU" % (int(self.level) / 1000)
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1524,22 +1524,22 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         contours = bm.contourf(lonmesh, latmesh, pwcb,
                                np.arange(0, 101, 10), cmap=plt.cm.pink_r)
         if not self.noframe:
-            cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
+            self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                                                                       width="3%",  # width = % of parent_bbox width
                                                                       height="30%",  # height : %
                                                                       loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
+            self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
         titlestring = "Mean sea level pressure (hPa) and total column probability of WCB (0-1)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1579,7 +1579,6 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
-        thick_contours = [0, 4, 8, 12]
         thin_contours = [0.1, 0.5, 1., 2., 3., 4., 5., 6., 7., 8.]
 
         nwcb = 1.E6 * data["number_of_wcb_trajectories"]
@@ -1606,22 +1605,22 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         contours = bm.contourf(lonmesh, latmesh, nwcb,
                                thin_contours, cmap=plt.cm.gist_ncar_r, extend="max")
         if not self.noframe:
-            cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
+            self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                                                                       width="3%",  # width = % of parent_bbox width
                                                                       height="30%",  # height : %
                                                                       loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
+            self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
         titlestring = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1676,13 +1675,13 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         contours = bm.contourf(lonmesh, latmesh, blh,
                                np.arange(0, 3000, 100), cmap=plt.cm.terrain, extend="max")
         if not self.noframe:
-            cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
+            self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
                                                                       width="3%",  # width = % of parent_bbox width
                                                                       height="30%",  # height : %
                                                                       loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
+            self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
         # Labelled thin grey contours of BLH, interval 500m.
@@ -1694,10 +1693,10 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Boundary layer height (m) and mean sea level pressure (hPa)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s (step %i hrs from %s)' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+             time_step_hrs,
+             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1766,8 +1765,8 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         #                 thin_contours, colors="saddlebrown", linewidths=1)
 
         titlestring = "10.8 um Brightness Temperature (K)"
-        titlestring = titlestring + '\nValid: %s' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: %s' % \
+            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,

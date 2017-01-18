@@ -153,6 +153,9 @@
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
     <addaction name="separator"/>
+    <addaction name="actionImportFlightTrack"/>
+    <addaction name="actionExportActiveFlightTrack"/>
+    <addaction name="separator"/>
     <addaction name="actionLoad_Configuration"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
@@ -276,6 +279,16 @@
   <action name="actionLoad_Configuration">
    <property name="text">
     <string>Load Configuration</string>
+   </property>
+  </action>
+  <action name="actionImportFlightTrack">
+   <property name="text">
+    <string>Import Flight Track</string>
+   </property>
+  </action>
+  <action name="actionExportActiveFlightTrack">
+   <property name="text">
+    <string>Export Active Flight Track</string>
    </property>
   </action>
  </widget>
