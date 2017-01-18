@@ -329,6 +329,7 @@ class WaypointsTableModel(QAbstractTableModel):
                     # Delete the location name -- it won't be valid anymore
                     # after its coordinates have been changed.
                     waypoint.location = ""
+                    index2 = self.createIndex(index.row(), LOCATION)
             elif column == LON:
                 try:
                     value, ok = float(value.toString()), True
@@ -339,6 +340,7 @@ class WaypointsTableModel(QAbstractTableModel):
                     if update:
                         self.update_distances(index.row())
                     waypoint.location = ""
+                    index2 = self.createIndex(index.row(), LOCATION)
             elif column == FLIGHTLEVEL:
                 try:
                     value, ok = float(value.toString()), True
@@ -359,7 +361,9 @@ class WaypointsTableModel(QAbstractTableModel):
                     ok = False
                 if ok:
                     waypoint.pressure = value
-                    waypoint.flightlevel = thermolib.pressure2flightlevel(value)
+                    waypoint.flightlevel = int(thermolib.pressure2flightlevel(value))
+                    if update:
+                        self.update_distances(index.row())
                     index2 = self.createIndex(index.row(), FLIGHTLEVEL)
             else:
                 waypoint.comments = value.toString()
