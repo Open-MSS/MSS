@@ -856,7 +856,7 @@ class HPathInteractor(PathInteractor):
 
             lon, lat = self.map(x, y, inverse=True)
             wpm = self.waypoints_model
-            if len(wpm.allWaypointData()) > 0 and best_index == len(wpm.allWaypointData()):
+            if len(wpm.allWaypointData()) > 0 and 0 < best_index <= len(wpm.allWaypointData()):
                 fl = wpm.waypointData(best_index - 1).flightlevel
             elif len(wpm.allWaypointData()) > 0 and best_index == 0:
                 fl = wpm.waypointData(0).flightlevel

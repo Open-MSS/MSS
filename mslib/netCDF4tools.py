@@ -348,8 +348,11 @@ CFVariableIdentifier = {
     ]
 }
 for name in Targets.get_targets():
-    if not name in CFVariableIdentifier:
-        CFVariableIdentifier[name] = [("standard_name", name)]
+    tup = ("standard_name", name)
+    if name not in CFVariableIdentifier:
+        CFVariableIdentifier[name] = [tup]
+    elif tup not in CFVariableIdentifier[name]:
+        CFVariableIdentifier[name].append(tup)
 
 
 """

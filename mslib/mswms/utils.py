@@ -2,6 +2,7 @@ import numpy as np
 
 N_LEVELS = 16
 
+
 class Targets(object):
     """This class defines the names, units, and ranges of supported generic physical
        quantities for vertical and horizontal plots.

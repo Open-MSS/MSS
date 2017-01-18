@@ -225,6 +225,10 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                      self.saveFlightTrack)
         self.connect(self.actionSaveActiveFlightTrackAs, QtCore.SIGNAL("triggered()"),
                      self.saveFlightTrackAs)
+        self.connect(self.actionImportFlightTrack, QtCore.SIGNAL("triggered()"),
+                     self.importFlightTrack)
+        self.connect(self.actionExportActiveFlightTrack, QtCore.SIGNAL("triggered()"),
+                     self.exportFlightTrack)
 
         # Views menu.
         self.connect(self.actionTopView, QtCore.SIGNAL("triggered()"),
@@ -426,14 +430,16 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         """
         filename = QtGui.QFileDialog.getOpenFileName(self,
                                                      "Open Flight Track", "",
-                                                     "Supported files (*.ftml *.csv *.txt)"
-                                                     ";;Flight track XML (*.ftml)"
-                                                     ";;CSV-file (*.csv)"
-                                                     ";;Text-file (*.txt)")
+                                                     "Flight track XML (*.ftml)")
 
         if not filename.isEmpty():
             filename = str(filename)
-            self.createNewFlightTrack(filename=filename, activate=True)
+            if filename.endswith('.ftml'):
+                self.createNewFlightTrack(filename=filename, activate=True)
+            else:
+                QtGui.QMessageBox.warning(self, "Open flight track",
+                                          "No supported file extension recognized!\n{:}".format(filename),
+                                          QtGui.QMessageBox.Ok)
 
     def closeFlightTrack(self):
         """Slot to close the currently selected flight track. Flight tracks can
@@ -469,10 +475,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             if sel == QtGui.QMessageBox.Yes:
                 if filename.endswith('.ftml'):
                     self.active_flight_track.saveToFTML(filename)
-                elif filename.endswith('.csv'):
-                    self.active_flight_track.saveToCSV(filename)
-                elif filename.endswith('.txt'):
-                    self.active_flight_track.saveToText(filename)
                 else:
                     QtGui.QMessageBox.warning(self, "Save flight track",
                                               "Unknown file extension {:s}. Not saving!".format(filename),
@@ -488,20 +490,56 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                                                      os.path.join(self.lastSaveDir,
                                                                   self.active_flight_track.name),
                                                      "Flight track XML (*.ftml)"
-                                                     ";;CSV-file (*.csv)"
-                                                     ";;Text-file (*.txt)")
+                                                     )
 
         if not filename.isEmpty():
             filename = str(filename)
             self.lastSaveDir = os.path.dirname(filename)
             if filename.endswith('.ftml'):
                 self.active_flight_track.saveToFTML(filename)
-            elif filename.endswith('.csv'):
-                self.active_flight_track.saveToCSV(filename)
-            elif filename.endswith('.txt'):
-                self.active_flight_track.saveToText(filename)
             else:
                 QtGui.QMessageBox.warning(self, "Save flight track",
+                                          "No supported file extension recognized!\n{:}".format(filename),
+                                          QtGui.QMessageBox.Ok)
+    def importFlightTrack(self):
+        """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
+           passes the result to createNewFlightTrack().
+        """
+        filename = QtGui.QFileDialog.getOpenFileName(self,
+                                                     "Open Flight Track", "",
+                                                     "Supported files (*.csv *.txt);;"
+                                                     "CSV-file (*.csv);;"
+                                                     "Text-file (*.txt)")
+
+        if not filename.isEmpty():
+            filename = str(filename)
+            if any([filename.endswith(_x) for _x in ("csv", "txt")]):
+                self.createNewFlightTrack(filename=filename, activate=True)
+            else:
+                QtGui.QMessageBox.warning(self, "Import flight track",
+                                          "No supported file extension recognized!\n{:}".format(filename),
+                                          QtGui.QMessageBox.Ok)
+
+    def exportFlightTrack(self):
+        """Slot for the 'Save Active Flight Track As' menu entry.
+        """
+        filename = QtGui.QFileDialog.getSaveFileName(self,
+                                                     "Export Flight Track",
+                                                     os.path.join(self.lastSaveDir,
+                                                                  self.active_flight_track.name),
+                                                     "Text-file (*.txt);;"
+                                                     "CSV-file (*.csv)"
+                                                     )
+
+        if not filename.isEmpty():
+            filename = str(filename)
+            self.lastSaveDir = os.path.dirname(filename)
+            if filename.endswith('.csv'):
+                self.active_flight_track.saveToCSV(filename)
+            elif filename.endswith('.txt'):
+                self.active_flight_track.saveToTXT(filename)
+            else:
+                QtGui.QMessageBox.warning(self, "Export flight track",
                                           "No supported file extension recognized!\n{:}".format(filename),
                                           QtGui.QMessageBox.Ok)
 

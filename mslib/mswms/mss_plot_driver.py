@@ -751,7 +751,7 @@ def test_vsec_clouds_path():
                              valid_time=valid_time,
                              noframe=False,
                              show=True)
-    image = vsec.plot()
+    vsec.plot()
 
 
 def test_hsec_clouds_total():
@@ -779,7 +779,7 @@ def test_hsec_clouds_total():
                              valid_time=valid_time,
                              noframe=False,
                              show=True)
-    image = hsec.plot()
+    hsec.plot()
 
 
 def test_hsec_temp():
@@ -811,7 +811,7 @@ def test_hsec_temp():
                              valid_time=valid_time,
                              noframe=True,
                              show=True)
-    image = hsec.plot()
+    hsec.plot()
 
 
 def test_hsec_geopwind():
@@ -840,7 +840,7 @@ def test_hsec_geopwind():
                              valid_time=valid_time,
                              noframe=True,
                              show=True)
-    image = hsec.plot()
+    hsec.plot()
 
 
 if __name__ == "__main__":

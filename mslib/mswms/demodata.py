@@ -1063,8 +1063,8 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
                             for itimes in range(self.ntimes):
                                 datax = xarr[ilons] + tarr[itimes]
                                 datay = yarr[ilats] - tarr[itimes]
-                                test_data[itimes, ilev, ilats, ilons] = tmean + tstd * (np.sin(datax) +
-                                                                                        np.cos(datay)) / 2
+                                test_data[itimes, ilev, ilats, ilons] = tmean + tstd * (
+                                    np.sin(datax) + np.cos(datay)) / 2
                     if varname == 'Land-sea_mask_surface':
                         test_data = test_data.round()
                     newvar[:] = test_data

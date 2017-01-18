@@ -138,7 +138,7 @@ class NWPDataAccess(object):
         for f, fsize, fage in files:
             cum_size_bytes += fsize
             if (cum_size_bytes > valid_time_cache_max_size_bytes) or \
-                fage > valid_time_cache_max_age_seconds:
+                    fage > valid_time_cache_max_age_seconds:
                 os.remove(f)
                 removed_files += 1
 
@@ -424,8 +424,6 @@ class CLAMSDataAccess(NWPDataAccess):
             m = self._filename_re.match(filename)
             if m:
                 # Extract information from the filename.
-                date = int(m.group(1))
-                time = int(m.group(2))
                 step = int(m.group(3))
                 # dtime = int(m.group(1)+m.group(2))
                 dtime = m.group(1) + m.group(2)
