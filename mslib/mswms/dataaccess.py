@@ -103,6 +103,8 @@ class NWPDataAccess(object):
     def save_valid_cache(self, filename, valid_times):
         """
         """
+        if valid_time_cache is not None and not os.path.exists(valid_time_cache):
+            os.makedirs(valid_time_cache)
         filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if not os.path.exists(filename):
             fileobj = open(filename, "w")
