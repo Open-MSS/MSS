@@ -251,6 +251,9 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
         self.connect(self.btDelWaypoint, QtCore.SIGNAL("clicked()"),
                      functools.partial(wpi.set_edit_mode, mpl_pi.DELETE))
 
+    def __del__(self):
+        del self.mpl.canvas.waypoints_interactor
+
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
         """

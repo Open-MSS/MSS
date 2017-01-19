@@ -213,6 +213,9 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.connect(self.btDelWaypoint, QtCore.SIGNAL("clicked()"),
                      functools.partial(wpi.set_edit_mode, mpl_pi.DELETE))
 
+    def __del__(self):
+        del self.mpl.canvas.waypoints_interactor
+
     def setupTopView(self):
         """Initialise GUI elements. (This method is called before signals/slots
            are connected).

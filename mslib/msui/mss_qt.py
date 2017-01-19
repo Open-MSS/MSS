@@ -66,10 +66,8 @@ class MSSViewWindow(QtGui.QMainWindow):
         if ret == QtGui.QMessageBox.Yes:
             self.emit(QtCore.SIGNAL("viewCloses()"))
             event.accept()
-            return True
         else:
             event.ignore()
-            return False
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance that the view displays.
