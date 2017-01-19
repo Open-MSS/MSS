@@ -95,6 +95,9 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
             self.waypoints_model.performance_settings = dlg.getSettings()
             self.waypoints_model.update_distances(0)
             self.waypoints_model.saveSettings()
+            self.waypoints_model.emit(QtCore.SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
+                                      self.waypoints_model.index(0, 0),
+                                      self.waypoints_model.index(0, 0))
             self.resizeColumns()
         dlg.destroy()
 

@@ -47,8 +47,6 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
 
         self.dsbTangentHeight.setValue(10.)
         self.dsbObsAngle.setValue(90.)
-        self.dteStartTime.setDate(QtCore.QDate.currentDate())
-        self.dteStartTime.setTime(QtCore.QTime.currentTime())
 
         # update plot on every value change
         self.cbDrawTangents.stateChanged.connect(self.update_settings)
@@ -57,7 +55,6 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
                      self.set_tangentpoint_colour)
         self.dsbTangentHeight.valueChanged.connect(self.update_settings)
         self.dsbObsAngle.valueChanged.connect(self.update_settings)
-        self.dteStartTime.dateTimeChanged.connect(self.update_settings)
 
         self.solar_cmap = ListedColormap([
             (1.0, 0.0, 0.0, 1.0),
@@ -130,7 +127,7 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
             colors=QtGui.QPalette(self.btTangentsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             zorder=2, animated=True, linewidth=3, linestyles=':')
 
-    def compute_solar_lines(self, bmap, wp_vertices, wp_heights):
+    def compute_solar_lines(self, bmap, wp_vertices, wp_heights, wp_times):
         """
         Computes coloured overlay over the flight path that indicates
         the danger of looking into the sun with a limb sounder aboard
@@ -147,19 +144,24 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
         """
         # calculate distances and times
         speed = 850. / 3.6  # speed in km/s
-        start_jsec = datetime_to_jsec(self.dteStartTime.dateTime().toPyDateTime())
+        times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
         x, y = zip(*wp_vertices)
         wp_lons, wp_lats = bmap(x, y, inverse=True)
         fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1]) for i in
                       range(len(wp_lons) - 1)]
         line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
                         range(len(fine_lines))]
+        line_times = [np.linspace(times[i], times[i + 1], num=len(fine_lines[i][0])) for i in
+                        range(len(fine_lines))]
         # fine_lines = list of tuples with x-list and y-list for each segment
         # lines = list of tuples with lon-list and lat-list for each segment
         heights = []
+        times = []
         for i in range(len(fine_lines) - 1):
             heights.extend(line_heights[i][:-1])
+            times.extend(line_times[i][:-1])
         heights.extend(line_heights[-1])
+        times.extend(line_times[-1])
         solar_x = []
         solar_y = []
         for i in range(len(fine_lines) - 1):
@@ -168,18 +170,14 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
         solar_x.extend(fine_lines[-1][0])
         solar_y.extend(fine_lines[-1][1])
         points = []
-        times = []
         old_wp = None
         total_distance = 0
         for i in range(len(solar_x)):
             lon, lat = solar_x[i], solar_y[i]
             points.append([[lon, lat]])  # append double-list for later concatenation
-            if old_wp is None:
-                times.append(start_jsec)
-            else:
+            if old_wp is not None:
                 wp_dist = get_distance((old_wp[0], old_wp[1]), (lat, lon)) * 1000.
                 total_distance += wp_dist
-                times.append(start_jsec + total_distance / speed)
             old_wp = (lat, lon)
         vals = []
         for i in range(len(points) - 1):
