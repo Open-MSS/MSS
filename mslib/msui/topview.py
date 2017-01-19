@@ -220,8 +220,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         """Initialise GUI elements. (This method is called before signals/slots
            are connected).
         """
-        # toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay"]
-        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing"]
+        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 

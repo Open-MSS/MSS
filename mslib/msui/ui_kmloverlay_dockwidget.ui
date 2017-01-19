@@ -46,6 +46,13 @@
     <layout class="QHBoxLayout" name="horizontalLayout_7"/>
    </item>
    <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>!Experimental Feature! Not all KML files will work.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

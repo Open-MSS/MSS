@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_kmloverlay_dockwidget.ui'
+# Form implementation generated from reading ui file 'msui/ui_kmloverlay_dockwidget.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -46,6 +46,9 @@ class Ui_KMLOverlayDockWidget(object):
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName(_fromUtf8("horizontalLayout_7"))
         self.verticalLayout.addLayout(self.horizontalLayout_7)
+        self.label = QtGui.QLabel(KMLOverlayDockWidget)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.verticalLayout.addWidget(self.label)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
 
@@ -57,4 +60,5 @@ class Ui_KMLOverlayDockWidget(object):
         self.cbOverlay.setText(_translate("KMLOverlayDockWidget", "KML Overlay", None))
         self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "...", None))
         self.btLoadFile.setText(_translate("KMLOverlayDockWidget", "load", None))
+        self.label.setText(_translate("KMLOverlayDockWidget", "!Experimental Feature! Not all KML files will work.", None))
 
