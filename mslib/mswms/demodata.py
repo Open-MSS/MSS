@@ -862,6 +862,13 @@ time,hybrid,lat,lon
                      "W_ml": self.forecast_w_ml,
                      "Q_ml": self.forecast_q_ml}
 
+        self.allow_negative = ['surface_geopotential',
+                               'ertel_potential_vorticity',
+                               'eastward_wind',
+                               'northward_wind',
+                               'omega',
+                               'divergence_of_wind' ]
+
 
 class DataFiles(object):
     """
@@ -876,6 +883,7 @@ class DataFiles(object):
         self.inidate = '20121017_12'
         self.levtype = 'type'
         self.range_data = RangeData().data
+        self.allow_negative = RangeData().allow_negative
         # define file dimension / geographical  range
         self.latmin = 30
         self.latmax = 70
@@ -1006,6 +1014,12 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                                     datay = yarr[ilats] - tarr[itimes]
                                     test_data[itimes, ilev, ilats,
                                               ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay))
+
+                        if standard_name not in self.allow_negative:
+                            # let test_data values not be negative
+                            mask = np.where(test_data < 0. )
+                            test_data[mask] = 0.
+
                         if varname == 'Land-sea_mask_surface':
                             test_data = test_data.round()
                         newvar[:] = test_data
@@ -1078,6 +1092,12 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                                     np.sin(datax) + np.cos(datay)) / 2
                     if varname == 'Land-sea_mask_surface':
                         test_data = test_data.round()
+
+                    if standard_name not in self.allow_negative:
+                        # let test_data values not be negative
+                        mask = np.where(test_data < 0.)
+                        test_data[mask] = 0.
+
                     newvar[:] = test_data
                     newvar.grid_mapping = 'LatLon_Projection'
                     newvar.missing_value = float('nan')
@@ -1142,6 +1162,12 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                     test_data[mask] = 0.
                     mask = np.where(test_data > 1.)
                     test_data[mask] = 1.
+
+                if standard_name not in self.allow_negative:
+                    # let test_data values not be negative
+                    mask = np.where(test_data < 0.)
+                    test_data[mask] = 0.
+
                 newvar[:] = test_data
                 newvar.grid_mapping = 'LatLon_Projection'
                 newvar.missing_value = float('nan')
