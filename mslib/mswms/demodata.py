@@ -944,9 +944,11 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
             newvar = ecmwf.createVariable('lat', 'f4', 'lat')
             newvar[:] = self.lats
             newvar.units = 'degrees_north'
+            newvar.standard_name = "latitude"
             ecmwf.createDimension('lon', self.nlons)
             newvar = ecmwf.createVariable('lon', 'f4', 'lon')
             newvar[:] = self.lons
+            newvar.standard_name = "longitude"
             newvar.units = 'degrees_east'
             ecmwf.createDimension('hybrid', self.nlevs)
             newvar = ecmwf.createVariable('hybrid', 'f4', 'hybrid')
@@ -962,10 +964,12 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
             newvar = ecmwf.createVariable('hybm', 'f4', 'hybrid')
             newvar[:] = hybm
             newvar.units = '1'
+            newvar.standard_name = "atmosphere_hybrid_height_coordinate"
             ecmwf.createDimension('time', self.ntimes)
             newvar = ecmwf.createVariable('time', 'i4', 'time')
             newvar[:] = self.times
             newvar.units = 'hours since 2012-10-17T12:00:00.000Z'
+            newvar.standard_name = 'time'
             while True:
                 varname = rangedata.readline().strip()
                 if not varname:
@@ -1020,10 +1024,12 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
         newvar = ecmwf.createVariable('lat', 'f4', 'lat')
         newvar[:] = self.lats
         newvar.units = 'degrees_north'
+        newvar.standard_name = "latitude"
         ecmwf.createDimension('lon', self.nlons)
         newvar = ecmwf.createVariable('lon', 'f4', 'lon')
         newvar[:] = self.lons
         newvar.units = 'degrees_east'
+        newvar.standard_name = "longitude"
         ecmwf.createDimension('isobaric', self.nlevs)
         newvar = ecmwf.createVariable('isobaric', 'f4', 'isobaric')
         newvar[:] = press_default
@@ -1034,6 +1040,7 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
         newvar = ecmwf.createVariable('time', 'i4', 'time')
         newvar[:] = self.times
         newvar.units = 'hours since 2012-10-17T12:00:00.000Z'
+        newvar.standard_name = 'time'
         while True:
             varname = rangedata.readline().strip()
             if not varname:
@@ -1084,14 +1091,17 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
         newvar = ecmwf.createVariable('lat', 'f4', 'lat')
         newvar[:] = self.lats
         newvar.units = 'degrees_north'
+        newvar.standard_name = "latitude"
         ecmwf.createDimension('lon', self.nlons)
         newvar = ecmwf.createVariable('lon', 'f4', 'lon')
         newvar[:] = self.lons
         newvar.units = 'degrees_east'
+        newvar.standard_name = "longitude"
         ecmwf.createDimension('time', self.ntimes)
         newvar = ecmwf.createVariable('time', 'i4', 'time')
         newvar[:] = self.times
         newvar.units = 'hours since 2012-10-17T12:00:00.000Z'
+        newvar.standard_name = 'time'
         while True:
             varname = rangedata.readline().strip()
             if not varname:
