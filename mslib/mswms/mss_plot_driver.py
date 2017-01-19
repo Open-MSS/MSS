@@ -259,10 +259,8 @@ class MSSPlotDriver(object):
         """
         self.data_vars = {}
         for df_type, df_name in self.plot_object.required_datafields:
-            varname, var = netCDF4tools.identify_CF_variable(self.dataset,
-                                                             df_name)
-            logging.debug("\tidentified variable <%s> for field <%s>",
-                          varname, df_name)
+            varname, var = netCDF4tools.identify_variable(self.dataset, df_name)
+            logging.debug("\tidentified variable <%s> for field <%s>", varname, df_name)
             self.data_vars[df_name] = var
 
     @abstractmethod
@@ -751,7 +749,7 @@ def test_vsec_clouds_path():
                              valid_time=valid_time,
                              noframe=False,
                              show=True)
-    image = vsec.plot()
+    vsec.plot()
 
 
 def test_hsec_clouds_total():
@@ -779,7 +777,7 @@ def test_hsec_clouds_total():
                              valid_time=valid_time,
                              noframe=False,
                              show=True)
-    image = hsec.plot()
+    hsec.plot()
 
 
 def test_hsec_temp():
@@ -811,7 +809,7 @@ def test_hsec_temp():
                              valid_time=valid_time,
                              noframe=True,
                              show=True)
-    image = hsec.plot()
+    hsec.plot()
 
 
 def test_hsec_geopwind():
@@ -840,7 +838,7 @@ def test_hsec_geopwind():
                              valid_time=valid_time,
                              noframe=True,
                              show=True)
-    image = hsec.plot()
+    hsec.plot()
 
 
 if __name__ == "__main__":

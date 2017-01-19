@@ -48,26 +48,13 @@
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>view performance</string>
+         <string>performance settings</string>
         </property>
         <property name="checkable">
          <bool>true</bool>
         </property>
         <property name="checked">
          <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblRemainingRange">
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>TextLabel</string>
         </property>
        </widget>
       </item>
@@ -131,7 +118,7 @@
      <x>0</x>
      <y>0</y>
      <width>1254</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -140,14 +127,7 @@
     </property>
     <addaction name="actionClose"/>
    </widget>
-   <widget class="QMenu" name="menu_Controls">
-    <property name="title">
-     <string>&amp;Service Controls</string>
-    </property>
-    <addaction name="actionFlightPerformance"/>
-   </widget>
    <addaction name="menu_File"/>
-   <addaction name="menu_Controls"/>
   </widget>
   <action name="actionClose">
    <property name="text">
