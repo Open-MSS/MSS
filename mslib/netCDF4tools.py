@@ -83,7 +83,7 @@ def identify_variable(ncfile, standard_name, check=False):
             return var_name, variable
     if check:
         raise NetCDFVariableError("cannot identify NetCDF variable "
-                                  "specified by <%s>" % identifier_list)
+                                  "specified by <%s>" % standard_name)
     return None, None
 
 
