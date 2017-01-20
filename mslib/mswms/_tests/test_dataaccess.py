@@ -13,7 +13,7 @@ from mslib.mswms import dataaccess
 from mslib.mswms.dataaccess import ECMWFDataAccess
 from conftest import BASE_DIR, DATA_DIR, VALID_TIME_CACHE
 
-# ToDo
+# ToDo improve
 dataaccess.valid_time_cache = VALID_TIME_CACHE
 
 
@@ -67,7 +67,7 @@ class Test_NWPDataAccess(object):
         else:
             if valid_cache is not None:
                 # follow up test can remove a cache file
-                assert valid_cache == datetime(2012, 10, 17, 12, 0)
+                assert datetime(2012, 10, 17, 12, 0) in valid_cache
 
     def test_save_valid_cache(self):
         filename = self.ECMWFDataAccess.get_filename("air_pressure", "ml",
@@ -103,3 +103,36 @@ class Test_NWPDataAccess(object):
                  u'W': u'20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc'
                  }
         }}
+
+    def test_get_valid_times(self):
+        valid_times = self.ECMWFDataAccess.get_valid_times("air_pressure", "ml", datetime(2012, 10, 17, 12, 0))
+        assert valid_times == [datetime(2012, 10, 17, 12, 0),
+                               datetime(2012, 10, 17, 15, 0),
+                               datetime(2012, 10, 17, 18, 0),
+                               datetime(2012, 10, 17, 21, 0),
+                               datetime(2012, 10, 18, 0, 0),
+                               datetime(2012, 10, 18, 3, 0),
+                               datetime(2012, 10, 18, 6, 0),
+                               datetime(2012, 10, 18, 9, 0),
+                               datetime(2012, 10, 18, 12, 0),
+                               datetime(2012, 10, 18, 15, 0),
+                               datetime(2012, 10, 18, 18, 0),
+                               datetime(2012, 10, 18, 21, 0),
+                               datetime(2012, 10, 19, 0, 0)]
+
+    def test_get_all_valid_times(self):
+        # Todo why not sorted
+        all_valid_times = self.ECMWFDataAccess.get_all_valid_times("air_pressure", "ml")
+        assert all_valid_times == [datetime(2012, 10, 17, 15, 0),
+                                   datetime(2012, 10, 17, 21, 0),
+                                   datetime(2012, 10, 18, 21, 0),
+                                   datetime(2012, 10, 18, 18, 0),
+                                   datetime(2012, 10, 18, 3, 0),
+                                   datetime(2012, 10, 18, 15, 0),
+                                   datetime(2012, 10, 18, 0, 0),
+                                   datetime(2012, 10, 17, 12, 0),
+                                   datetime(2012, 10, 18, 6, 0),
+                                   datetime(2012, 10, 17, 18, 0),
+                                   datetime(2012, 10, 18, 12, 0),
+                                   datetime(2012, 10, 18, 9, 0),
+                                   datetime(2012, 10, 19, 0, 0)]
