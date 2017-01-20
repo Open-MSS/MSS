@@ -1,9 +1,12 @@
-# Copyright: 20016 by ReimarBauer
-# License: Apache-2.0, see LICENSE.txt for details.
+# -*- coding: iso-8859-1 -*-
+"""
+    MSS - some common code for testing
 
+    @copyright: 2016 - 2017 Reimar Bauer,
+
+    @license: License: Apache-2.0, see LICENSE.txt for details.
 """
-mslib.mss_util tests
-"""
+
 
 import pytest
 import datetime

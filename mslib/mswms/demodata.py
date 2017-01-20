@@ -1199,7 +1199,7 @@ epsg_to_mpl_basemap_table = {
 # visualisation products for which data files are available. The data
 # sets must be defined in mss_config.py. The WMS will only offer
 # products registered here.
-
+register_horizontal_layers = None
 if mpl_hsec_styles is not None:
     register_horizontal_layers = [
         # ECMWF standard pressure level products.
@@ -1217,6 +1217,7 @@ if mpl_hsec_styles is not None:
 #
 
 # The same as above, but for vertical cross-sections.
+register_vertical_layers = None
 if mpl_vsec_styles is not None:
     register_vertical_layers = [
         # ECMWF standard vertical section styles.
