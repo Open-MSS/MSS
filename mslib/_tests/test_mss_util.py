@@ -1,10 +1,14 @@
-# Copyright: 20016 by ReimarBauer
-# License: Apache-2.0, see LICENSE.txt for details.
-
+# -*- coding: iso-8859-1 -*-
 """
-mslib.mss_util tests
+    MSS - some common code for testing
+
+    @copyright: 2016 - 2017 Reimar Bauer,
+
+    @license: License: Apache-2.0, see LICENSE.txt for details.
 """
 
+
+import pytest
 import datetime
 from mslib import mss_util
 
@@ -13,14 +17,21 @@ class TestConfigLoader(object):
     """
     tests config file for client
     """
+
     def test_default_config(self):
-        data = mss_util.config_loader()
+        try:
+            data = mss_util.config_loader()
+        except IOError:
+            pytest.skip("no config file found")
         assert isinstance(data, dict)
         assert data["num_labels"] == 10
         assert data["num_interpolation_points"] == 201
 
     def test_default_config_dataset(self):
-        data = mss_util.config_loader(dataset="num_labels")
+        try:
+            data = mss_util.config_loader(dataset="num_labels")
+        except IOError:
+            pytest.skip("no config file found")
         assert data == 10
         # defined value and not a default one
         data = mss_util.config_loader(dataset="num_labels", default=5)

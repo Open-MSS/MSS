@@ -1,3 +1,11 @@
+"""
+demodata - creates netCDF test data files and also a mss_wms_settings for accessing this data
+
+:copyright: Jens-Uwe Grooss 2016 - 2017,
+            Reimar Bauer 2016 - 2017
+
+"""
+
 import os
 from StringIO import StringIO
 
@@ -854,6 +862,13 @@ time,hybrid,lat,lon
                      "W_ml": self.forecast_w_ml,
                      "Q_ml": self.forecast_q_ml}
 
+        self.allow_negative = ['surface_geopotential',
+                               'ertel_potential_vorticity',
+                               'eastward_wind',
+                               'northward_wind',
+                               'omega',
+                               'divergence_of_wind' ]
+
 
 class DataFiles(object):
     """
@@ -862,12 +877,13 @@ class DataFiles(object):
     Jens-Uwe Grooss, IEK-7, Forschungszentrum Juelich, Nov 2016
 
     """
-    def __init__(self):
-        self.outdir = os.path.join(os.path.expanduser("~"), "mss", 'testdata')
-        self.server_config_file = os.path.join(os.path.expanduser("~"), "mss", "mss_wms_settings.py")
+    def __init__(self, data_dir=None, server_config_dir=None):
+        self.data_dir = data_dir
+        self.server_config_file = os.path.join(server_config_dir, "mss_wms_settings.py")
         self.inidate = '20121017_12'
         self.levtype = 'type'
         self.range_data = RangeData().data
+        self.allow_negative = RangeData().allow_negative
         # define file dimension / geographical  range
         self.latmin = 30
         self.latmax = 70
@@ -883,20 +899,16 @@ class DataFiles(object):
         self.ntimes = len(self.times)
         self.nlevs = 0
 
-    def create_outdir(self):
-        if not os.path.exists(self.outdir):
-            os.makedirs(self.outdir)
+    def create_datadir(self):
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
 
     def create_server_config(self):
         simple_server_config = '''"""
 simple server config for demodata
 """
-from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_location,
-                                  enable_basic_http_authentication, service_name, service_title, service_abstract,
-                                  service_contact_person, service_contact_organisation, service_address_type,
-                                  service_address, service_city, service_state_or_province, service_post_code,
-                                  service_country, service_fees, service_access_constraints,
-                                  epsg_to_mpl_basemap_table, register_horizontal_layers, register_vertical_layers)
+from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
+                                  register_horizontal_layers, register_vertical_layers)
 '''
         if not os.path.exists(self.server_config_file):
             fid = open(self.server_config_file, 'w')
@@ -907,7 +919,7 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
         self.levtype = 'ml'
         labels = ['U', 'V', 'W', 'CC', 'T', 'Q', 'P_derived']
         for label in labels:
-            filename_out = os.path.join(self.outdir,
+            filename_out = os.path.join(self.data_dir,
                                         "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label,
                                                                                       self.levtype))
             text = self.range_data["%s_%s" % (label, self.levtype)]
@@ -1002,6 +1014,12 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
                                     datay = yarr[ilats] - tarr[itimes]
                                     test_data[itimes, ilev, ilats,
                                               ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay))
+
+                        if standard_name not in self.allow_negative:
+                            # let test_data values not be negative
+                            mask = np.where(test_data < 0. )
+                            test_data[mask] = 0.
+
                         if varname == 'Land-sea_mask_surface':
                             test_data = test_data.round()
                         newvar[:] = test_data
@@ -1012,7 +1030,7 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
     def pressure_data(self):
         self.levtype = 'pl'
         label = 'PRESSURE_LEVELS'
-        filename_out = os.path.join(self.outdir,
+        filename_out = os.path.join(self.data_dir,
                                     "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
         text = self.range_data["%s_%s" % (label, self.levtype)]
         rangedata = StringIO(text)
@@ -1074,6 +1092,12 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
                                     np.sin(datax) + np.cos(datay)) / 2
                     if varname == 'Land-sea_mask_surface':
                         test_data = test_data.round()
+
+                    if standard_name not in self.allow_negative:
+                        # let test_data values not be negative
+                        mask = np.where(test_data < 0.)
+                        test_data[mask] = 0.
+
                     newvar[:] = test_data
                     newvar.grid_mapping = 'LatLon_Projection'
                     newvar.missing_value = float('nan')
@@ -1082,7 +1106,7 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
     def sfc_data(self):
         self.levtype = 'sfc'
         label = 'SFC'
-        filename_out = os.path.join(self.outdir,
+        filename_out = os.path.join(self.data_dir,
                                     "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
         text = self.range_data["%s_%s" % (label, self.levtype)]
         rangedata = StringIO(text)
@@ -1138,6 +1162,12 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
                     test_data[mask] = 0.
                     mask = np.where(test_data > 1.)
                     test_data[mask] = 1.
+
+                if standard_name not in self.allow_negative:
+                    # let test_data values not be negative
+                    mask = np.where(test_data < 0.)
+                    test_data[mask] = 0.
+
                 newvar[:] = test_data
                 newvar.grid_mapping = 'LatLon_Projection'
                 newvar.missing_value = float('nan')
@@ -1147,39 +1177,13 @@ from mslib.mswms.demodata import (datapath, nwpaccess, base_dir, xml_template_lo
 # Configuration for mss_wms_settings accessing data on the MSS server.
 # This is the data organisation structure of the available forecast data.
 
-vt_cache = os.path.join(os.path.expanduser("~"), "mss", "vt_cache")
-if not os.path.exists(vt_cache):
-    os.makedirs(vt_cache)
-mslib.mswms.dataaccess.valid_time_cache = vt_cache
+_vt_cache = os.path.join(os.path.expanduser("~"), "mss", "vt_cache")
+mslib.mswms.dataaccess.valid_time_cache = _vt_cache
 
-datapath = {
-    "ecmwf": os.path.join(os.path.expanduser("~"), "mss", "testdata"),
-}
+_datapath = os.path.join(os.path.expanduser("~"), "mss", "testdata")
 nwpaccess = {
-    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
+    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(_datapath, "EUR_LL015"),
 }
-
-nwpaccess[nwpaccess.keys()[0]].serviceCache()
-
-
-# xml_template directory is a sub directory of mswms
-
-base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
-xml_template_location = os.path.join(base_dir, "xml_templates")
-enable_basic_http_authentication = False
-service_name = "OGC:WMS"
-service_title = "Mission Support System Web Map Service"
-service_abstract = "lorem ipsum"
-service_contact_person = "Foo Bar"
-service_contact_organisation = "Your Organization"
-service_address_type = "postal"
-service_address = "street"
-service_city = "Your City"
-service_state_or_province = ""
-service_post_code = "12345"
-service_country = "Germany"
-service_fees = "none"
-service_access_constraints = "This service is intended for research purposes only."
 
 epsg_to_mpl_basemap_table = {
     # EPSG:4326, the standard cylindrical lat/lon projection.
@@ -1195,10 +1199,9 @@ epsg_to_mpl_basemap_table = {
 # visualisation products for which data files are available. The data
 # sets must be defined in mss_config.py. The WMS will only offer
 # products registered here.
-
+register_horizontal_layers = None
 if mpl_hsec_styles is not None:
     register_horizontal_layers = [
-
         # ECMWF standard pressure level products.
         (mpl_hsec_styles.HS_TemperatureStyle_PL_01, ["ecmwf_EUR_LL015"]),
         (mpl_hsec_styles.HS_GeopotentialWindStyle_PL, ["ecmwf_EUR_LL015"]),
@@ -1214,6 +1217,7 @@ if mpl_hsec_styles is not None:
 #
 
 # The same as above, but for vertical cross-sections.
+register_vertical_layers = None
 if mpl_vsec_styles is not None:
     register_vertical_layers = [
         # ECMWF standard vertical section styles.
@@ -1232,8 +1236,9 @@ def main():
     """
     creates various test data files and also the server configuration
     """
-    examples = DataFiles()
-    examples.create_outdir()
+    examples = DataFiles(data_dir=os.path.join(os.path.expanduser("~"), "mss", 'testdata'),
+                         server_config_dir=os.path.join(os.path.expanduser("~"), "mss"))
+    examples.create_datadir()
     examples.create_server_config()
     examples.hybrid_data()
     examples.pressure_data()
