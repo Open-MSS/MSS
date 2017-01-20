@@ -29,7 +29,7 @@ sys.path.insert(0, BASE_DIR)
 
 DATA_DIR = os.path.join(BASE_DIR, 'testdata')
 SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
-VALID_TIME_CACHE = os.path.join(BASE_DIR, 'testdata', 'vt_cache')
+VALID_TIME_CACHE = os.path.join(BASE_DIR, 'vt_cache')
 
 if not os.path.exists(DATA_DIR):
     examples = DataFiles(data_dir=DATA_DIR,
