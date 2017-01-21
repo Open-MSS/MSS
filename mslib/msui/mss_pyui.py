@@ -48,6 +48,7 @@ import sys
 import os
 import copy
 import logging
+import types
 
 from mslib import __version__
 from mslib.msui import ui_mainwindow as ui
@@ -64,6 +65,8 @@ from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
+
+import plugins
 
 try:
     import view3D
@@ -225,10 +228,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                      self.saveFlightTrack)
         self.connect(self.actionSaveActiveFlightTrackAs, QtCore.SIGNAL("triggered()"),
                      self.saveFlightTrackAs)
-        self.connect(self.actionImportFlightTrack, QtCore.SIGNAL("triggered()"),
-                     self.importFlightTrack)
-        self.connect(self.actionExportActiveFlightTrack, QtCore.SIGNAL("triggered()"),
-                     self.exportFlightTrack)
 
         # Views menu.
         self.connect(self.actionTopView, QtCore.SIGNAL("triggered()"),
@@ -271,6 +270,65 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         # Tools.
         self.connect(self.listTools, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
                      self.activateWindow)
+
+        self.addImportFilter("CSV", "csv", plugins.loadFromCSV)
+        self.addExportFilter("CSV", "csv", plugins.saveToCSV)
+
+        self.addImportFilter("FliteStar TXT", "txt", plugins.loadFromFliteStarText)
+        self.addExportFilter("FliteStar TXT", "txt", plugins.saveToFliteStarText)
+
+    def addImportFilter(self, name, extension, function):
+        full_name = "actionImportFlightTrack" + name.replace(" ", "")
+
+        if hasattr(self, full_name):
+            raise ValueError("'{}' has already been set!".format(full_name))
+
+        action =  QtGui.QAction(self)
+        action.setObjectName(ui._fromUtf8(full_name))
+        action.setText(ui._translate("MSSMainWindow", name, None))
+        self.menuImport_Flight_Track.addAction(action)
+
+        def load_function_wrapper(self):
+            filename = QtGui.QFileDialog.getOpenFileName(
+                self, "Import Flight Track", "", name + " (*." + extension + ")")
+
+            if not filename.isEmpty():
+                filename = str(filename)
+                ft_name, new_waypoints = function(filename)
+                if not ft_name:
+                    ft_name = filename
+                waypoints_model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
+
+                listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
+                listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+
+                self.listFlightTracks.setCurrentItem(listitem)
+                self.setFlightTrackActive()
+
+        setattr(self, full_name, types.MethodType(load_function_wrapper, self))
+        self.connect(action, QtCore.SIGNAL("triggered()"), getattr(self, full_name))
+
+    def addExportFilter(self, name, extension, function):
+        full_name = "actionExportFlightTrack" + name.replace(" ", "")
+
+        if hasattr(self, full_name):
+            raise ValueError("'{}' has already been set!".format(full_name))
+
+        action =  QtGui.QAction(self)
+        action.setObjectName(ui._fromUtf8(full_name))
+        action.setText(ui._translate("MSSMainWindow", name, None))
+        self.menuExport_Active_Flight_Track.addAction(action)
+
+        def save_function_wrapper(self):
+            filename = QtGui.QFileDialog.getSaveFileName(
+                self, "Export Flight Track", "", name + " (*." + extension + ")")
+
+            if not filename.isEmpty():
+                filename = str(filename)
+                function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+
+        setattr(self, full_name, types.MethodType(save_function_wrapper, self))
+        self.connect(action, QtCore.SIGNAL("triggered()"), getattr(self, full_name))
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
@@ -402,8 +460,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                                        waypoints=template_copy)
         # Create a new list entry for the flight track. Make the item name
         # editable.
-        listitem = QFlightTrackListWidgetItem(waypoints_model,
-                                              self.listFlightTracks)
+        listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
         listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
         if activate:
@@ -499,47 +556,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                 self.active_flight_track.saveToFTML(filename)
             else:
                 QtGui.QMessageBox.warning(self, "Save flight track",
-                                          "No supported file extension recognized!\n{:}".format(filename),
-                                          QtGui.QMessageBox.Ok)
-    def importFlightTrack(self):
-        """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
-           passes the result to createNewFlightTrack().
-        """
-        filename = QtGui.QFileDialog.getOpenFileName(self,
-                                                     "Open Flight Track", "",
-                                                     "Supported files (*.csv *.txt);;"
-                                                     "CSV-file (*.csv);;"
-                                                     "Text-file (*.txt)")
-
-        if not filename.isEmpty():
-            filename = str(filename)
-            if any([filename.endswith(_x) for _x in ("csv", "txt")]):
-                self.createNewFlightTrack(filename=filename, activate=True)
-            else:
-                QtGui.QMessageBox.warning(self, "Import flight track",
-                                          "No supported file extension recognized!\n{:}".format(filename),
-                                          QtGui.QMessageBox.Ok)
-
-    def exportFlightTrack(self):
-        """Slot for the 'Save Active Flight Track As' menu entry.
-        """
-        filename = QtGui.QFileDialog.getSaveFileName(self,
-                                                     "Export Flight Track",
-                                                     os.path.join(self.lastSaveDir,
-                                                                  self.active_flight_track.name),
-                                                     "Text-file (*.txt);;"
-                                                     "CSV-file (*.csv)"
-                                                     )
-
-        if not filename.isEmpty():
-            filename = str(filename)
-            self.lastSaveDir = os.path.dirname(filename)
-            if filename.endswith('.csv'):
-                self.active_flight_track.saveToCSV(filename)
-            elif filename.endswith('.txt'):
-                self.active_flight_track.saveToTXT(filename)
-            else:
-                QtGui.QMessageBox.warning(self, "Export flight track",
                                           "No supported file extension recognized!\n{:}".format(filename),
                                           QtGui.QMessageBox.Ok)
 

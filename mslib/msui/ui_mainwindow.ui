@@ -146,6 +146,16 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menuImport_Flight_Track">
+     <property name="title">
+      <string>Import Flight Track</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="menuExport_Active_Flight_Track">
+     <property name="title">
+      <string>Export Active Flight Track</string>
+     </property>
+    </widget>
     <addaction name="actionNewFlightTrack"/>
     <addaction name="actionOpenFlightTrack"/>
     <addaction name="actionCloseSelectedFlightTrack"/>
@@ -153,8 +163,8 @@
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
     <addaction name="separator"/>
-    <addaction name="actionImportFlightTrack"/>
-    <addaction name="actionExportActiveFlightTrack"/>
+    <addaction name="menuImport_Flight_Track"/>
+    <addaction name="menuExport_Active_Flight_Track"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_Configuration"/>
     <addaction name="separator"/>
@@ -281,14 +291,9 @@
     <string>Load Configuration</string>
    </property>
   </action>
-  <action name="actionImportFlightTrack">
+  <action name="actionAsdasd">
    <property name="text">
-    <string>Import Flight Track</string>
-   </property>
-  </action>
-  <action name="actionExportActiveFlightTrack">
-   <property name="text">
-    <string>Export Active Flight Track</string>
+    <string>asdasd</string>
    </property>
   </action>
  </widget>
