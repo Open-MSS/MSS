@@ -49,6 +49,7 @@ import os
 import copy
 import logging
 import types
+import importlib
 
 from mslib import __version__
 from mslib.msui import ui_mainwindow as ui
@@ -63,10 +64,14 @@ from mslib.msui import loopview
 from mslib.msui import wms_login_cache
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.msui import plugins
+
+
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
-import plugins
+# Add config path to PYTHONPATH so plugins located there may be found
+sys.path.append(wms_login_cache.DEFAULT_CONFIG_PATH)
 
 try:
     import view3D
@@ -276,6 +281,18 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
 
         self.addImportFilter("FliteStar TXT", "txt", plugins.loadFromFliteStarText)
         self.addExportFilter("FliteStar TXT", "txt", plugins.saveToFliteStarText)
+
+        import_plugins = config_loader(dataset="import_plugins", default={})
+        for name in import_plugins:
+            extension, module, function = import_plugins[name]
+            imported_module = importlib.import_module(module)
+            self.addImportFilter(name, extension, getattr(imported_module, function))
+
+        export_plugins = config_loader(dataset="export_plugins", default={})
+        for name in export_plugins:
+            extension, module, function = export_plugins[name]
+            imported_module = importlib.import_module(module)
+            self.addExportFilter(name, extension, getattr(imported_module, function))
 
     def addImportFilter(self, name, extension, function):
         full_name = "actionImportFlightTrack" + name.replace(" ", "")
