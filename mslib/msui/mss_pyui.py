@@ -300,7 +300,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         if hasattr(self, full_name):
             raise ValueError("'{}' has already been set!".format(full_name))
 
-        action =  QtGui.QAction(self)
+        action = QtGui.QAction(self)
         action.setObjectName(ui._fromUtf8(full_name))
         action.setText(ui._translate("MSSMainWindow", name, None))
         self.menuImport_Flight_Track.addAction(action)
@@ -331,7 +331,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         if hasattr(self, full_name):
             raise ValueError("'{}' has already been set!".format(full_name))
 
-        action =  QtGui.QAction(self)
+        action = QtGui.QAction(self)
         action.setObjectName(ui._fromUtf8(full_name))
         action.setText(ui._translate("MSSMainWindow", name, None))
         self.menuExport_Active_Flight_Track.addAction(action)

@@ -169,7 +169,7 @@ class WaypointsTableModel(QAbstractTableModel):
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
         self.modified = False  # for "save on exit"
-        self.waypoints = [] # user-defined waypoints
+        self.waypoints = []  # user-defined waypoints
 
         # self.aircraft.setErrorHandling("permissive")
         self.settingsfile = os.path.join(wms_login_cache.DEFAULT_CONFIG_PATH, "mss.performance.cfg")

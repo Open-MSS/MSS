@@ -152,7 +152,7 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
         line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
                         range(len(fine_lines))]
         line_times = [np.linspace(times[i], times[i + 1], num=len(fine_lines[i][0])) for i in
-                        range(len(fine_lines))]
+                      range(len(fine_lines))]
         # fine_lines = list of tuples with x-list and y-list for each segment
         # lines = list of tuples with lon-list and lat-list for each segment
         heights = []
