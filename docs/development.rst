@@ -42,12 +42,22 @@ To install some additional packages needed for running the tests, activate your 
 Running tests
 ~~~~~~~~~~~~~~~~~~~
 
+We have implemented demodata as data base for testing. On first call demodata becomes stored
+in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
+
 ::
 
    $ python -m pytest --pep8
 
 
 Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
+Similar call is py.test --pep8
+
+::
+
+   $ py.test --cov
+
+This plugin produces a coverage report.
 
 
 Building the docs with Sphinx
