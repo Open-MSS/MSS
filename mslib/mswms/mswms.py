@@ -55,7 +55,7 @@ def main():
             return False
 
         application = AuthBasicHandler(application, realm, authfunc)
-
+    logging.info("Configuration File: %s" % mss_wms_settings.__file__)
     paste.httpserver.serve(application, host=args.host, port=args.port, use_threadpool=args.use_threadpool)
 
 if __name__ == '__main__':
