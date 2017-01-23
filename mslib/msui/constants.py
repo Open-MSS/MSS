@@ -4,6 +4,7 @@
 
    Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
    Copyright 2011-2014 Marc Rautenhaus
+   Copyright 2016-2017 see AUTHORS
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -40,8 +41,8 @@ if not os.path.exists(DEFAULT_CONFIG_PATH):
 
 MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(DEFAULT_CONFIG_PATH, "mss_settings.json"))
 
-wms_login_cache = {}
-cached_config_file = None
+WMS_LOGIN_CACHE = {}
+CACHED_CONFIG_FILE = None
 
 if os.path.exists(MSS_SETTINGS):
-    cached_config_file = MSS_SETTINGS
+    CACHED_CONFIG_FILE = MSS_SETTINGS

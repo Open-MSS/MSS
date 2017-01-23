@@ -50,7 +50,7 @@ from mslib.msui import wms_control as wms
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
-from mslib.msui import wms_login_cache
+from mslib.msui import constants
 
 # Dock window indices.
 WMS = 0
@@ -178,7 +178,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay]:
         self.docks = [None, None, None, None, None]
 
-        self.settingsfile = os.path.join(wms_login_cache.DEFAULT_CONFIG_PATH, "mss.topview.cfg")
+        self.settingsfile = os.path.join(constants.DEFAULT_CONFIG_PATH, "mss.topview.cfg")
         self.loadSettings()
 
         # Initialise the GUI elements (map view, items of combo boxes etc.).
