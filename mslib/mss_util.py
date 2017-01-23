@@ -42,10 +42,10 @@ except ImportError:
     import pyproj
 
 from mslib import greatcircle
-from mslib.msui import wms_login_cache
+from mslib.msui import constants
 
 
-def config_loader(config_file=wms_login_cache.cached_config_file, dataset=None, default=None):
+def config_loader(config_file=constants.CACHED_CONFIG_FILE, dataset=None, default=None):
     """
     Function for loading json config data
 

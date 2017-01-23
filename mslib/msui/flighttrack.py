@@ -56,7 +56,7 @@ import numpy as np
 from mslib import mss_util
 from mslib import thermolib
 from mslib.mss_util import config_loader
-from mslib.msui import wms_login_cache
+from mslib.msui import constants
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
@@ -161,7 +161,7 @@ class WaypointsTableModel(QAbstractTableModel):
         self.waypoints = []  # user-defined waypoints
 
         # self.aircraft.setErrorHandling("permissive")
-        self.settingsfile = os.path.join(wms_login_cache.DEFAULT_CONFIG_PATH, "mss.performance.cfg")
+        self.settingsfile = os.path.join(constants.DEFAULT_CONFIG_PATH, "mss.performance.cfg")
         self.loadSettings()
 
         # If a filename is passed to the constructor, load data from this file.

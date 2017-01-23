@@ -59,7 +59,7 @@ from mslib.msui import sideview
 from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import loopview
-from mslib.msui import wms_login_cache
+from mslib.msui import constants
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
@@ -422,7 +422,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                                                      "Supported files (*.json *.txt)"
                                                      )
         if not filename.isEmpty():
-            wms_login_cache.cached_config_file = str(filename)
+            constants.CACHED_CONFIG_FILE = str(filename)
 
     def openFlightTrack(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and

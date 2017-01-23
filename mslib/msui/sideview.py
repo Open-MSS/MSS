@@ -48,7 +48,7 @@ from mslib.msui import mss_qt
 from mslib.msui import flighttrack as ft
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import wms_control as wms
-from mslib.msui import wms_login_cache
+from mslib.msui import constants
 
 
 # Dock window indices.
@@ -225,7 +225,7 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
 
         self.setFlightTrackModel(model)
 
-        self.settingsfile = os.path.join(wms_login_cache.DEFAULT_CONFIG_PATH, "mss.sideview.cfg")
+        self.settingsfile = os.path.join(constants.DEFAULT_CONFIG_PATH, "mss.sideview.cfg")
         self.loadSettings()
 
         # Connect slots and signals.
