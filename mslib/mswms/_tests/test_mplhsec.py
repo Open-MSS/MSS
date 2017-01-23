@@ -12,14 +12,14 @@ import os
 import importlib
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 
-from conftest import BASE_DIR, DATA_DIR, SERVER_CONFIG_FILE
+from conftest import BASE_DIR, SERVER_CONFIG_FILE
 
 
 class TestMPLBasemapHorizontalSectionStyle(object):
     def setup(self):
         if not os.path.exists(BASE_DIR):
             pytest.skip("Demo Data not existing")
-        self.mss_wms_settings = importlib.import_module("mss_wms_settings")
+        self.mss_wms_settings = importlib.import_module("mss_wms_settings", SERVER_CONFIG_FILE)
 
     def test_supported_epsg_codes(self):
         assert self.mss_wms_settings.epsg_to_mpl_basemap_table.keys() == [4326]
