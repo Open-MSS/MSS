@@ -7,7 +7,8 @@
     @license: License: Apache-2.0, see LICENSE.txt for details.
 """
 
-import sys
+
+import imp
 import os
 import tempfile
 
@@ -24,12 +25,13 @@ if git is not None:
 
 
 BASE_DIR = os.path.join(tempfile.tempdir, 'mss%s' % SHA)
-sys.path.insert(0, BASE_DIR)
-
 
 DATA_DIR = os.path.join(BASE_DIR, 'testdata')
 SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
 VALID_TIME_CACHE = os.path.join(BASE_DIR, 'vt_cache')
+
+imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
+
 
 if not os.path.exists(DATA_DIR):
     examples = DataFiles(data_dir=DATA_DIR,
