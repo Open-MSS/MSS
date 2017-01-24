@@ -212,8 +212,10 @@ def get_log_levels(cmin, cmax, levels=N_LEVELS):
     else:
         delta = cmax - cmin
         clevlo = -np.exp(
-            np.linspace(np.log(-cmin), np.log(max(-cmin, cmax) * 0.001), max(2, 1 + int(levels * -cmin / delta))))
-        clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001), np.log(cmax), max(2, 1 + int(levels * cmax / delta))))
+            np.linspace(np.log(-cmin), np.log(max(-cmin, cmax) * 0.001),
+                        max(2, 1 + int(levels * -cmin / delta))))
+        clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001),
+                                    np.log(cmax), max(2, 1 + int(levels * cmax / delta))))
         clev = np.asarray(list(clevlo) + list(clevhi))
 
     return clev

@@ -185,7 +185,8 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
             sol_azi, sol_ele = compute_solar_angle(times[i], p0[0], p0[1])
             if sol_azi < 0:
                 sol_azi += 360
-            obs_azi, obs_ele = compute_view_angles(p0[0], p0[1], heights[i], p1[0], p1[1], heights[i + 1], self.dsbObsAngle.value())
+            obs_azi, obs_ele = compute_view_angles(p0[0], p0[1], heights[i], p1[0], p1[1], heights[i + 1],
+                                                   self.dsbObsAngle.value())
             if obs_azi < 0:
                 obs_azi += 360
             rating = self.calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, heights[i])

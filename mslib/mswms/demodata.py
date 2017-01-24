@@ -76,7 +76,7 @@ time,lat,lon
 """
         self.forecast_pressure_levels_pl = """\
 Potential_vorticity_isobaric
-atmosphere_ertel_potential_vorticity_coordinate
+ertel_potential_vorticity
 K.m2.kg-1.s-1
 4
 time,isobaric,lat,lon
