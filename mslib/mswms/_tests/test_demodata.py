@@ -10,8 +10,7 @@
 
 import pytest
 import os
-import sys
-import importlib
+import imp
 from conftest import BASE_DIR, DATA_DIR, SERVER_CONFIG_FILE
 
 
@@ -28,5 +27,4 @@ class TestDemodate(object):
     def test_server_config_file(self):
         if not os.path.exists(BASE_DIR):
             pytest.skip("Demo Data not existing")
-        importlib.import_module("mss_wms_settings", SERVER_CONFIG_FILE)
-        assert "mss_wms_settings" in sys.modules
+        imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
