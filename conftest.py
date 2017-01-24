@@ -30,8 +30,10 @@ DATA_DIR = os.path.join(BASE_DIR, 'testdata')
 SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
 VALID_TIME_CACHE = os.path.join(BASE_DIR, 'vt_cache')
 
-imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
-
+try:
+    imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
+except IOError:
+    mss_wms_settings = None
 
 if not os.path.exists(DATA_DIR):
     examples = DataFiles(data_dir=DATA_DIR,
