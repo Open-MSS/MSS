@@ -102,11 +102,11 @@ class MissionSupportSystemDefaultConfig(object):
     # Also set the location of the image file cache and its size.
 
     # URLs of default WMS servers.
-    default_WMS = ["http://localhost:8081/mss_wms",
+    default_WMS = ["http://localhost:8081/",
                    ]
 
     default_VSEC_WMS = [
-        "http://localhost:8081/mss_wms"
+        "http://localhost:8081/"
     ]
 
     # WMS image cache settings:
