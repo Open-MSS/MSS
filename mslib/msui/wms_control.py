@@ -56,7 +56,7 @@ import PIL.Image
 from mslib.msui import ui_wms_dockwidget as ui
 from mslib.msui import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
-from mslib.msui import wms_login_cache
+from mslib.msui import constants
 from mslib.mss_util import convertHPAToKM
 
 
@@ -428,9 +428,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         wms = None
         # initialize login cache fomr config file, but do not overwrite existing keys
         for key, value in config_loader(dataset="WMS_login", default={}).items():
-            if key not in wms_login_cache.wms_login_cache:
-                wms_login_cache.wms_login_cache[key] = value
-        username, password = wms_login_cache.wms_login_cache.get(base_url, (None, None))
+            if key not in constants.WMS_LOGIN_CACHE:
+                constants.WMS_LOGIN_CACHE[key] = value
+        username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
         try:
             while wms is None:
@@ -452,7 +452,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                         if dlg.exec_() == QtGui.QDialog.Accepted:
                             username, password = dlg.getAuthInfo()
                             # If user & pw have been entered, cache them.
-                            wms_login_cache.wms_login_cache[base_url] = (username, password)
+                            constants.WMS_LOGIN_CACHE[base_url] = (username, password)
                         else:
                             break
                     else:

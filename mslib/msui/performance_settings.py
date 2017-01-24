@@ -11,7 +11,7 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 from mslib.mss_util import config_loader
 from mslib.msui import aircrafts
-from mslib.msui import wms_login_cache
+from mslib.msui import constants
 from mslib.msui import ui_performance_settings as ui_ps
 
 
@@ -63,7 +63,7 @@ class MSS_PerformanceSettingsDialog(QtGui.QDialog, ui_ps.Ui_PerformanceSettingsD
     def load_performance(self):
         fname = QtGui.QFileDialog.getOpenFileName(self,
                                                   "Open Aircraft Performance JSON File",
-                                                  wms_login_cache.DEFAULT_CONFIG_PATH, "(*.json)")
+                                                  constants.DEFAULT_CONFIG_PATH, "(*.json)")
         if fname.isEmpty():
             return
 
