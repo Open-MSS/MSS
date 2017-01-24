@@ -76,7 +76,7 @@ time,lat,lon
 """
         self.forecast_pressure_levels_pl = """\
 Potential_vorticity_isobaric
-ertel_potential_vorticity
+atmosphere_ertel_potential_vorticity_coordinate
 K.m2.kg-1.s-1
 4
 time,isobaric,lat,lon
@@ -867,7 +867,7 @@ time,hybrid,lat,lon
                                'eastward_wind',
                                'northward_wind',
                                'omega',
-                               'divergence_of_wind' ]
+                               'divergence_of_wind']
 
 
 class DataFiles(object):
@@ -964,6 +964,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
             newvar.units = 'degrees_east'
             ecmwf.createDimension('hybrid', self.nlevs)
             newvar = ecmwf.createVariable('hybrid', 'f4', 'hybrid')
+            newvar.standard_name = "atmosphere_hybrid_sigma_pressure_coordinate"
             newvar[:] = hybrid_default
             newvar.units = 'sigma'
             newvar.positive = 'down'
@@ -1017,7 +1018,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
 
                         if standard_name not in self.allow_negative:
                             # let test_data values not be negative
-                            mask = np.where(test_data < 0. )
+                            mask = np.where(test_data < 0.)
                             test_data[mask] = 0.
 
                         if varname == 'Land-sea_mask_surface':
