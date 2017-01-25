@@ -23,15 +23,10 @@ if git is not None:
     repo = git.Repo(search_parent_directories=True)
     SHA = repo.head.object.hexsha
 
-
 BASE_DIR = os.path.join(tempfile.tempdir, 'mss%s' % SHA)
-
 DATA_DIR = os.path.join(BASE_DIR, 'testdata')
 SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
 VALID_TIME_CACHE = os.path.join(BASE_DIR, 'vt_cache')
-
-imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
-
 
 if not os.path.exists(DATA_DIR):
     examples = DataFiles(data_dir=DATA_DIR,
@@ -41,3 +36,8 @@ if not os.path.exists(DATA_DIR):
     examples.hybrid_data()
     examples.pressure_data()
     examples.sfc_data()
+
+try:
+    imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
+except IOError:
+    pass
