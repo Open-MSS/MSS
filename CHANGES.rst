@@ -4,10 +4,19 @@ Changelog
 Version 1.3.0 (not released)
 -----------------------------------------
 
+New Features:
+ - implemented demodata, #82
+ - simplified server setup
+ - server data needs standard_name in data, #87
+ - Always provide simplified aircraft range estimates in TableView. #85
+
+Bug Fixes:
+ - Generic chemical Plots cannot be used in vertical cuts unless
+ they are given on pressure grid, #62
 
 Other Changes:
  - channel atmo deprecated and removed from documentation
-
+ - mss_wms_cl removed, #48
 
 Version 1.2.4
 ----------------------------------
