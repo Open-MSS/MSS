@@ -5,10 +5,12 @@ Version 1.3.0 (not released)
 -----------------------------------------
 
 New Features:
+ - Overplot of flight region borders, #61
  - implemented demodata, #82
  - simplified server setup
  - server data needs standard_name in data, #87
  - Always provide simplified aircraft range estimates in TableView. #85
+ - plugin infrastructure introduced for supporting file formats for flight track saving/loading, #69, #88
 
 Bug Fixes:
  - Generic chemical Plots cannot be used in vertical cuts unless

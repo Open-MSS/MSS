@@ -149,11 +149,12 @@ For the standalone server *mswms* you need the path of your mss_wms_settings.py 
  export PYTHONPATH=/home/mss/config
 
 
+.. _demodata:
 
 Demodata
 ------------------
 
-We provide demodata by executing the dmeodata programm. This creates in your home directory data files and also
+We provide demodata by executing the demodata programm. This creates in your home directory data files and also
 the needed server configuration file. The program creates 70MB of examples.
 This script does not overwrite an existing mss_wms_settings.py
 
@@ -180,3 +181,6 @@ e.g.
 ::
 
     $ export PYTHONPATH=~/mss
+
+A more detailed server configuration for this demodata can be found at
+ .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
