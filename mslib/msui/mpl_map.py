@@ -901,31 +901,58 @@ class SatelliteOverpassPatch:
 
 
 class KMLPatch:
-    """Represents a KML overlay.
+    """
+    Represents a KML overlay.
+
+    KML overlay implementation is currently very crude and basic and most features are not supported.
     """
 
     def __init__(self, mapcanvas, kml):
-        """
-        """
         self.map = mapcanvas
         self.kml = kml
         self.patches = []
         self.draw()
 
+    def add_polygon(self, polygon):
+        coords = str(polygon.outerBoundaryIs.LinearRing.coordinates).split()
+        lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
+        x, y = self.map(lons, lats)
+        self.patches.append(self.map.plot(x, y, "-k"))
+
+    def add_point(self, point):
+        coords = str(point.coordinates).split()
+        lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
+        x, y = self.map(lons, lats)
+        self.patches.append(self.map.plot(x, y, "ok"))
+
+    def parse_placemarks(self, placemarks):
+        for i in range(len(placemarks)):
+            placemark = placemarks[i]
+            if hasattr(placemark, "Polygon"):
+                self.add_polygon(placemark.Polygon)
+            if hasattr(placemark, "Point"):
+                self.add_point(placemark.Point)
+            if hasattr(placemark, "MultiGeometry"):
+                multigeometry = placemark.MultiGeometry
+                if hasattr(multigeometry, "Point"):
+                    for j in range(len(multigeometry.Point)):
+                        self.add_point(multigeometry.Point[j])
+                if hasattr(multigeometry, "Polygon"):
+                    for j in range(len(multigeometry.Polygon)):
+                        self.add_polygon(multigeometry.Polygon[j])
+
+    def search_placemarks(self, document):
+        if hasattr(document, "Placemark"):
+            self.parse_placemarks(document.Placemark)
+        if hasattr(document, "Folder"):
+            for j in range(len(document.Folder)):
+                self.search_placemarks(document.Folder[j])
+
     def draw(self):
         """Do the actual plotting of the patch.
         """
         # Plot satellite track.
-        for i in range(len(self.kml.Document.Placemark)):
-            mg = self.kml.Document.Placemark[i].MultiGeometry
-            for j in range(len(mg.Polygon)):
-                coords = str(mg.Polygon[j].outerBoundaryIs.LinearRing.coordinates).split()
-                lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
-                logging.info(u"{}".format(self.kml.Document.Placemark[i].name))
-                logging.info("{} lons {}".format(i, lons))
-                logging.info("{} lats {}".format(i, lats))
-                x, y = self.map(lons, lats)
-                self.patches.append(self.map.plot(x, y, "-k"))
+        self.search_placemarks(self.kml.Document)
 
         self.map.ax.figure.canvas.draw()
 
