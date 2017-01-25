@@ -71,7 +71,7 @@ from mslib.msui import plugins
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # Add config path to PYTHONPATH so plugins located there may be found
-sys.path.append(constants.DEFAULT_CONFIG_PATH)
+sys.path.append(constants.MSS_CONFIG_PATH)
 
 try:
     import view3D
