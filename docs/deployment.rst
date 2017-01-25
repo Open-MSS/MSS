@@ -3,12 +3,19 @@ wms - Web Map Service
 
 Once installation and configuration are complete, you can start the
 Web Map Service application (provided you have forecast data to visualise).
-The file "mswms" is an executable Python script starting  up a Paste HTTP server
+The file "mswms" is an executable Python script starting up a Paste HTTP server
 with the WMS WSGI module.
 A short description of how to start the program is given by the --help option.
 The file "wms.wsgi" is intended to be used with an Apache web server
-installation. "mss_wms_cl.py" is the command line interface for image
-batch production.
+installation.
+
+We have methods to use data for ECMWF, CLaMS, GWFC, EMAC, METEOSAT implemented.
+The data have to use for their parameters the CF attribute standard_name.
+
+Per configuration you could register horizontal (*register_horizontal_layers*)
+or vertical layers (*register_vertical_layers*), give a basemap
+table for EPSG mapping (*epsg_to_mpl_basemap_table*) and at all how to access the data (*nwpaccess*).
+
 
 A few notes:
 
@@ -182,5 +189,8 @@ e.g.
 
     $ export PYTHONPATH=~/mss
 
+ .. _detailed_mss_wms_settings:
+
 A more detailed server configuration for this demodata can be found at
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
+
