@@ -26,18 +26,20 @@ build processes.
 conda-forge channel
 +++++++++++++++++++++
 
-::
+Please add the channel conda-forge to your defaults::
 
-   $ conda install -c conda-forge mss
+  $ conda config --add channels conda-forge
+
+
+Then you could choose between as system wide installation or one in a prefered environment::
+
+   $ conda install mss
 
 You also could install this project into an environment. ::
 
    $ conda create -n mssenv python=2
    $ source activate mssenv
-   $ conda install -c conda-forge mss
-
-
-
+   $ conda install mss
 
 
 For further details :ref:`mss-configuration`
