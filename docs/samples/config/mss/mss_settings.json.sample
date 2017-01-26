@@ -104,7 +104,6 @@
    "new_flighttrack_template": ["Kiruna", "Ny-Alesund"],
    "new_flighttrack_flightlevel": 250,
 
-   "default_FPS": ["http://localhost:8082/performance"],
    "default_WMS": ["http://www.your-server.de/forecasts"],
    "default_VSEC_WMS": ["http://www.your-server.de/forecasts"],
    "WMS_login": {
