@@ -42,6 +42,7 @@ import random
 import string
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.msui import hexagon_dockwidget as hex
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
@@ -71,8 +72,12 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
 
-        # Dock windows [Performance, Performance_Old].
-        self.docks = [None, None]
+        toolitems = ["(select to open control)", "Hexagon Control"]
+        self.cbTools.clear()
+        self.cbTools.addItems(toolitems)
+
+        # Dock windows [Hexagon].
+        self.docks = [None]
 
         # Connect slots and signals.
         self.connect(self.btAddWayPointToFlightTrack, QtCore.SIGNAL("clicked()"),
@@ -83,6 +88,9 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
                      self.invertDirection)
         self.connect(self.btViewPerformance, QtCore.SIGNAL("clicked()"),
                      self.settingsDlg)
+        # Tool opener.
+        self.connect(self.cbTools, QtCore.SIGNAL("currentIndexChanged(int)"),
+                     self.openTool)
 
         self.resizeColumns()
 
@@ -104,11 +112,14 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
         """
-        fps = config_loader(dataset="default_VSEC_WMS", default=mss_default.default_VSEC_WMS)
         index = self.controlToBeCreated(index)
-        raise IndexError("invalid control index (%i)" % index)
-        logging.debug("opening %s" % title)
-        self.createDockWidget(index, title, widget)
+        if index >= 0:
+            if index == 0:
+                title = "Hexagon Control"
+                widget = hex.HexagonControlWidget(view=self)
+            else:
+                raise IndexError("invalid control index (%i)" % index)
+            self.createDockWidget(index, title, widget)
 
     def invertDirection(self):
         self.waypoints_model.invertDirection()
