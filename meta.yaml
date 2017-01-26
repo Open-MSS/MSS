@@ -28,6 +28,7 @@ requirements:
         - execnet
         - lxml
         - netcdf4
+        - hdf4 4.2.12
         - paste
         - pillow
         - python-dateutil

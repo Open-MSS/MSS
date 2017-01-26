@@ -22,6 +22,19 @@ Building a development environment
 
 If you want to contribute make a fork on bitbucket of `mss <https://bitbucket.org/wxmetvis/mss>`_.
 For building you have to use the conda recipe localy and install in a new environment.
+
+Some of used packages are in the conda-forge channel located, so we have to add this channel to the default::
+
+  $ conda config --add channels conda-forge
+
+Or add the channel by an editor to the .condarc config file::
+
+  $ more ~/.condarc
+  channels:
+  - defaults
+  - conda-forge
+
+
 On top level dir::
 
   $ git clone https://bitbucket.org/yourfork/mss.git
@@ -47,7 +60,7 @@ in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision
 
 ::
 
-   $ python -m pytest --pep8
+   $ python -m pytest
 
 
 Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
