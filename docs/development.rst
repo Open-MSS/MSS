@@ -63,14 +63,19 @@ in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision
    $ python -m pytest
 
 
-Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
-Similar call is py.test --pep8
+Use the -v option to get a verbose result. By the -k option you could select one test to execute only or
+--pep8 for PEP8 tests.
+Instead of using a run library module as a script by the -m option you may also use the py.test command.
 
 ::
 
    $ py.test --cov
 
 This plugin produces a coverage report.
+
+Profiling can be done by e.g.::
+
+   $ python -m cProfile  -s time ./demodata.py > profile.txt
 
 
 Building the docs with Sphinx
