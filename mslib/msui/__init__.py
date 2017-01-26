@@ -117,15 +117,6 @@ class MissionSupportSystemDefaultConfig(object):
     # Maximum age of a cached file in seconds.
     wms_cache_max_age_seconds = 5 * 86400
 
-    # Table view and Flight Performance.
-    # Parameters for the table view: Default URLs of the flight
-    # performance service and the predefined locations that the user can
-    # select in the table view (to quickly specify new waypoints).
-
-    default_FPS = [
-        "http://localhost:8082/performance",
-    ]
-
     locations = {
         "EDMO": (48.08, 11.28),
         "Hannover": (52.37, 9.74),
