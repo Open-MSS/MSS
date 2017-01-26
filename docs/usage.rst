@@ -44,3 +44,25 @@ by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
 
 .. literalinclude:: samples/config/mss/mss_settings.json.sample
 
+MSS may also roughly estimate the fuel consumption and thus range of the aircraft
+neglecting weather conditions given a proper configuration file specifying the
+aircraft performance. Such a file may be loaded using the 'performance settings' button
+in Table View. The aircraft performance is specified using tables given in the JSON format.
+A basic configuration looks like the following file:
+
+.. literalinclude:: samples/config/mss/performance_simple.json
+
+This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
+2900 lbs/h irrespective of flight level changes. The aircraft weight and available fuel are
+also given, but these may also be adjusted in the GUI after loading.
+
+The columns of the cruise table are aircraft weight (lbs), aircraft altitude (feet),
+speed (nm/h), and fuel consumption (lbs/h). MSS bilinearily interpolates in aircraft
+weight and altitude and extrapolates assuming a constant behaviour outside the given data.
+The climb table specifies the aircraft performance when climbing up from 0 feet altitude,
+while the descent table specifies the behaviour when descending down to 0 feet altitude.
+The column headers are aircraft weight (lbs), aircraft altitude (feet), time spent (minutes),
+distance required (nm), and fuel consumed (lbs). To compute the required data for a flight
+level change, a bilinear interpolation in the table for current aircraft weight and the
+two involved altitudes is performed and the difference of the resulting value is used in
+the calculation.
