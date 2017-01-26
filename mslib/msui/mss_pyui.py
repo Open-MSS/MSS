@@ -458,6 +458,10 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             waypoints = config_loader(dataset="new_flighttrack_template", default=mss_default.new_flighttrack_template)
             for wp in waypoints:
                 template.append(ft.Waypoint(flightlevel=0, location=wp))
+            if len(template) < 2:
+                QtGui.QMessageBox.critical(self, self.tr("flighttrack template"),
+                                           self.tr("ERROR:Flighttrack template in configuration is too short. Please add at least two valid locations."),
+                                           QtGui.QMessageBox.Ok)
 
         if filename:
             waypoints_model = ft.WaypointsTableModel(filename=filename)
