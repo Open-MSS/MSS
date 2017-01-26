@@ -503,7 +503,6 @@ class WaypointsTableModel(QAbstractTableModel):
             wp1.weight = wp0.weight - wp1.leg_fuel
 
     def invertDirection(self):
-        logging.debug("WARNING: Inverting waypoints will not invert performance waypoints!")
         self.waypoints = self.waypoints[::-1]
         if len(self.waypoints) > 0:
             self.waypoints[0].distance_to_prev = 0
@@ -514,6 +513,11 @@ class WaypointsTableModel(QAbstractTableModel):
                 wp_comm = "Hexagon {:d}".format(8 - int(wp_comm[-1]))
                 self.waypoints[i].comments = QString(wp_comm)
         self.update_distances(position=0, rows=len(self.waypoints))
+        index = self.index(0, 0)
+
+        self.emit(SIGNAL("layoutChanged()"))
+        self.emit(SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
+                  index, index)
 
     def replaceWaypoints(self, new_waypoints):
         self.waypoints = []

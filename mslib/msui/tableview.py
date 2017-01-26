@@ -112,10 +112,6 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
 
     def invertDirection(self):
         self.waypoints_model.invertDirection()
-        self.setFlightTrackModel(self.waypoints_model)
-        QtGui.QMessageBox.warning(None, "Invert waypoints",
-                                  "Please redraw the map manually, if another view is open!",
-                                  QtGui.QMessageBox.Ok)
 
     def addWayPoint(self):
         """Handler for button <btAddWayPointToFlightTrack>. Adds a new waypoint
