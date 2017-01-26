@@ -37,9 +37,9 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 from mslib import mss_util
 from mslib.msui import ui_satellite_dockwidget as ui
 
-"""
-CLASS SatelliteControlWidgeT
-"""
+#
+# CLASS SatelliteControlWidgeT
+#
 
 
 class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
@@ -76,10 +76,10 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
            available track segments.
         """
         fname = str(self.leFile.text())
-        logging.debug("loading satellite overpasses in file %s" % fname)
+        logging.debug("loading satellite overpasses in file %s", fname)
 
         overpass_segments = mss_util.read_nasa_satellite_prediction(fname)
-        logging.debug("read %i segments" % len(overpass_segments))
+        logging.debug("read %i segments", len(overpass_segments))
 
         self.cbSatelliteOverpasses.clear()
         items = ["%s to %s" % (str(seg["utc"][0]), str(seg["utc"][-1]))
@@ -93,7 +93,7 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
         """
         """
         index -= 1
-        logging.debug("plotting satellite overpass #%i" % index)
+        logging.debug("plotting satellite overpass #%i", index)
         if index == -1:
             segment = None
         else:
@@ -102,10 +102,13 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
             self.view.plotSatelliteOverpass(segment)
 
 
-if __name__ == "__main__":
+def _main():
     import sys
 
-    app = QtGui.QApplication(sys.argv)
-    win = SatelliteControlWidget()
-    win.show()
-    sys.exit(app.exec_())
+    application = QtGui.QApplication(sys.argv)
+    window = SatelliteControlWidget()
+    window.show()
+    sys.exit(application.exec_())
+
+if __name__ == "__main__":
+    _main()

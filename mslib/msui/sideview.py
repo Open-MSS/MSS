@@ -54,9 +54,9 @@ from mslib.msui import constants
 # Dock window indices.
 WMS = 0
 
-"""
-DIALOG for setting sideview options
-"""
+#
+# DIALOG for setting sideview options
+#
 
 
 class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
@@ -201,9 +201,9 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         return settings_dict
 
 
-"""
-CLASS MSSSideViewWindow
-"""
+#
+# CLASS MSSSideViewWindow
+#
 
 
 class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
@@ -283,7 +283,7 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
     def setOptions(self):
         """Slot to open a dialog that lets the user specifiy sideview options.
         """
-        settings = self.getView().getSettings()
+        settings = self.getView().get_settings()
         dlg = MSS_SV_OptionsDialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtGui.QDialog.Accepted:
@@ -298,8 +298,8 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        settings = self.getView().getSettings()
-        logging.debug("storing settings to %s" % self.settingsfile)
+        settings = self.getView().get_settings()
+        logging.debug("storing settings to %s", self.settingsfile)
         fileobj = open(self.settingsfile, "w")
         pickle.dump(settings, fileobj)
         fileobj.close()
@@ -308,14 +308,14 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
         """Load settings from the file self.settingsfile.
         """
         if os.path.exists(self.settingsfile):
-            logging.debug("loading settings from %s" % self.settingsfile)
+            logging.debug("loading settings from %s", self.settingsfile)
             fileobj = open(self.settingsfile, "r")
             settings = pickle.load(fileobj)
             fileobj.close()
             self.getView().setSettings(settings)
 
 
-if __name__ == "__main__":
+def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -335,7 +335,10 @@ if __name__ == "__main__":
     waypoints_model.insertRows(0, rows=len(initial_waypoints),
                                waypoints=initial_waypoints)
 
-    app = QtGui.QApplication(sys.argv)
-    win = MSSSideViewWindow(model=waypoints_model)
-    win.show()
-    sys.exit(app.exec_())
+    application = QtGui.QApplication(sys.argv)
+    window = MSSSideViewWindow(model=waypoints_model)
+    window.show()
+    sys.exit(application.exec_())
+
+if __name__ == "__main__":
+    _main()

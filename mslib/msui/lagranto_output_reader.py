@@ -90,9 +90,9 @@ import numpy
 # local application imports
 
 
-"""
-CLASS LagrantoOutputReader
-"""
+#
+# CLASS LagrantoOutputReader
+#
 
 
 class LagrantoOutputReader(object):

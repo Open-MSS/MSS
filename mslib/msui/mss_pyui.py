@@ -95,9 +95,9 @@ print "Version:", __version__
 print "\nSystem is loading.."
 
 
-"""
-QActiveViewsListWidgetItem
-"""
+#
+# QActiveViewsListWidgetItem
+#
 
 
 class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
@@ -135,9 +135,9 @@ class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
             self.parent.emit(QtCore.SIGNAL("viewsChanged()"))
 
 
-"""
-QFlightTrackListWidgetItem
-"""
+#
+# QFlightTrackListWidgetItem
+#
 
 
 class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
@@ -177,9 +177,9 @@ class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
         item.flighttrack_model.setName(str(item.text()))
 
 
-"""
-About MSUI DIALOG
-"""
+#
+# About MSUI DIALOG
+#
 
 
 class MSS_AboutDialog(QtGui.QDialog, ui_ab.Ui_AboutMSUIDialog):
@@ -196,9 +196,9 @@ class MSS_AboutDialog(QtGui.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.setupUi(self)
         self.lblVersion.setText("Version: %s" % __version__)
 
-"""
-MAIN WINDOW
-"""
+#
+# MAIN WINDOW
+#
 
 
 class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
@@ -456,21 +456,23 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         if template is None:
             template = []
             waypoints = config_loader(dataset="new_flighttrack_template", default=mss_default.new_flighttrack_template)
-            default_flightlevel = config_loader(dataset="new_flighttrack_flightlevel", default=mss_default.new_flighttrack_flightlevel)
+            default_flightlevel = config_loader(dataset="new_flighttrack_flightlevel",
+                                                default=mss_default.new_flighttrack_flightlevel)
             for wp in waypoints:
                 template.append(ft.Waypoint(flightlevel=default_flightlevel, location=wp))
             if len(template) < 2:
-                QtGui.QMessageBox.critical(self, self.tr("flighttrack template"),
-                                           self.tr("ERROR:Flighttrack template in configuration is too short. Please add at least two valid locations."),
-                                           QtGui.QMessageBox.Ok)
+                QtGui.QMessageBox.critical(
+                    self, self.tr("flighttrack template"),
+                    self.tr("ERROR:Flighttrack template in configuration is too short. "
+                            "Please add at least two valid locations."),
+                    QtGui.QMessageBox.Ok)
 
         if filename:
             waypoints_model = ft.WaypointsTableModel(filename=filename)
         else:
             # Create a new flight track from the waypoints template.
             self.new_flight_track_counter += 1
-            waypoints_model = ft.WaypointsTableModel(name="new flight track (%i)" %
-                                                          self.new_flight_track_counter)
+            waypoints_model = ft.WaypointsTableModel(name="new flight track (%i)" % self.new_flight_track_counter)
             # Make a copy of the template. Otherwise all new flight tracks would
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
@@ -492,10 +494,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         Returns:
 
         """
-        filename = QtGui.QFileDialog.getOpenFileName(self,
-                                                     "Open Config file", "",
-                                                     "Supported files (*.json *.txt)"
-                                                     )
+        filename = QtGui.QFileDialog.getOpenFileName(
+            self, "Open Config file", "", "Supported files (*.json *.txt)")
         if not filename.isEmpty():
             constants.CACHED_CONFIG_FILE = str(filename)
 
@@ -560,12 +560,9 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
     def saveFlightTrackAs(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
         """
-        filename = QtGui.QFileDialog.getSaveFileName(self,
-                                                     "Save Flight Track",
-                                                     os.path.join(self.lastSaveDir,
-                                                                  self.active_flight_track.name),
-                                                     "Flight track XML (*.ftml)"
-                                                     )
+        filename = QtGui.QFileDialog.getSaveFileName(
+            self, "Save Flight Track", os.path.join(self.lastSaveDir, self.active_flight_track.name),
+            "Flight track XML (*.ftml)")
 
         if not filename.isEmpty():
             filename = str(filename)
@@ -610,17 +607,17 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
 
 
 def main():
-    print "Launching user interface.."
-    app = QtGui.QApplication(sys.argv)
+    logging.info("Launching user interface...")
+    application = QtGui.QApplication(sys.argv)
     mainwindow = MSSMainWindow()
     mainwindow.createNewFlightTrack(activate=True)
     mainwindow.show()
-    sys.exit(app.exec_())
+    sys.exit(application.exec_())
 
 
-"""
-MAIN PROGRAM
-"""
+#
+# MAIN PROGRAM
+#
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.

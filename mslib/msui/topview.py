@@ -58,9 +58,9 @@ SATELLITE = 1
 REMOTESENSING = 2
 KMLOVERLAY = 3
 
-"""
-DIALOG for map appearance
-"""
+#
+# DIALOG for map appearance
+#
 
 
 class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -158,9 +158,9 @@ class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
             button.setPalette(palette)
 
 
-"""
-CLASS FlightPlanTopView
-"""
+#
+# CLASS FlightPlanTopView
+#
 
 
 class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
@@ -333,7 +333,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         settings = self.getView().getMapAppearance()
-        logging.debug("storing settings to %s" % self.settingsfile)
+        logging.debug("storing settings to %s", self.settingsfile)
         fileobj = open(self.settingsfile, "w")
         pickle.dump(settings, fileobj)
         fileobj.close()
@@ -343,7 +343,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         settings = None
         if os.path.exists(self.settingsfile):
-            logging.debug("loading settings from %s" % self.settingsfile)
+            logging.debug("loading settings from %s", self.settingsfile)
             fileobj = open(self.settingsfile, "r")
             settings = pickle.load(fileobj)
             fileobj.close()
@@ -354,7 +354,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
 # will not be executed if the view is opened from the Mission Support
 # System user interface.
 
-if __name__ == "__main__":
+def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -377,7 +377,10 @@ if __name__ == "__main__":
     waypoints_model.insertRows(0, rows=len(initial_waypoints),
                                waypoints=initial_waypoints)
 
-    app = QtGui.QApplication(sys.argv)
-    win = MSSTopViewWindow(model=waypoints_model)
-    win.show()
-    sys.exit(app.exec_())
+    application = QtGui.QApplication(sys.argv)
+    window = MSSTopViewWindow(model=waypoints_model)
+    window.show()
+    sys.exit(application.exec_())
+
+if __name__ == "__main__":
+    _main()

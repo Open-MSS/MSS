@@ -80,7 +80,7 @@ class SimpleAircraft(object):
         idx0, w0, idx1, w1 = self._get_weights(weights, grossweight)
         return self._interpolate_alt(data[idx0], altitude) * w0 + self._interpolate_alt(data[idx1], altitude) * w1
 
-    def climbPerformance(self, altitude, grossweight):
+    def get_climb_performance(self, altitude, grossweight):
         """
         Climb performance of the aircraft. Returns time [min], distance [nm] and
         fuel [lbs] required for a climb from sea level to the specified
@@ -92,7 +92,7 @@ class SimpleAircraft(object):
         """
         return self._interpolate(self._climb, altitude, grossweight)
 
-    def cruisePerformance(self, altitude, grossweight):
+    def get_cruise_performance(self, altitude, grossweight):
         """
         Cruise performance of the aircraft. Returns true airspeed [knots] and
         fuelflow [lbs/hr] required for a cruise at the specified altitude.
@@ -103,7 +103,7 @@ class SimpleAircraft(object):
         """
         return self._interpolate(self._cruise, altitude, grossweight)
 
-    def descentPerformance(self, altitude, grossweight):
+    def get_descent_performance(self, altitude, grossweight):
         """
         Descent performance of the aircraft. Returns time [min], distance [nm]
         and fuel [lbs] required for a climb from sea level to the specified

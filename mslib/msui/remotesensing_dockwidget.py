@@ -117,11 +117,10 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
         tplines = [self.tangent_point_coordinates(
             fine_lines[i][0], fine_lines[i][1], line_heights[i],
             cut_height=self.dsbTangentHeight.value()) for i in range(len(fine_lines))]
-        for i in range(len(tplines)):
-            l = tplines[i]
-            for j in range(len(l)):
-                l[j] = bmap(l[j][0], l[j][1])
-            tplines[i] = l
+        for i, line in enumerate(tplines):
+            for j in range(len(line)):
+                line[j] = bmap(line[j][0], line[j][1])
+            tplines[i] = line
         return LineCollection(
             tplines,
             colors=QtGui.QPalette(self.btTangentsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),

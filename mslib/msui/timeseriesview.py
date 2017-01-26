@@ -62,7 +62,7 @@ class MSSTimeSeriesViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TimeSeriesViewWindo
 # will not be executed if the view is opened from the Mission Support
 # System user interface.
 
-if __name__ == "__main__":
+def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -73,7 +73,10 @@ if __name__ == "__main__":
 
     import sys
 
-    app = QtGui.QApplication(sys.argv)
-    win = MSSTimeSeriesViewWindow()
-    win.show()
-    sys.exit(app.exec_())
+    application = QtGui.QApplication(sys.argv)
+    window = MSSTimeSeriesViewWindow()
+    window.show()
+    sys.exit(application.exec_())
+
+if __name__ == "__main__":
+    _main()

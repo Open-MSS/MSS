@@ -142,8 +142,8 @@ class MapCanvas(basemap.Basemap):
         if self.appearance["draw_graticule"]:
             try:
                 self._draw_auto_graticule()
-            except Exception, e:
-                logging.error("ERROR: cannot plot graticule (message: %s)" % e)
+            except Exception, ex:
+                logging.error("ERROR: cannot plot graticule (message: %s)", ex)
         else:
             self.map_parallels = None
             self.map_meridians = None
@@ -405,11 +405,9 @@ class MapCanvas(basemap.Basemap):
         self.kwargs['urcrnrlon'], self.kwargs['urcrnrlat'] = \
             self.__call__(axis[1], axis[3], inverse=True)
 
-        logging.debug("corner coordinates (lat/lon): ll(%.2f,%.2f), "
-                      "ur(%.2f,%.2f)" % (self.kwargs['llcrnrlat'],
-                                         self.kwargs['llcrnrlon'],
-                                         self.kwargs['urcrnrlat'],
-                                         self.kwargs['urcrnrlon']))
+        logging.debug("corner coordinates (lat/lon): ll(%.2f,%.2f), ur(%.2f,%.2f)",
+                      self.kwargs['llcrnrlat'], self.kwargs['llcrnrlon'],
+                      self.kwargs['urcrnrlat'], self.kwargs['urcrnrlon'])
 
         if self.kwargs["projection"] in ["cyl"]:
             # Latitudes in cylindrical projection need to be within -90..90.
@@ -453,8 +451,8 @@ class MapCanvas(basemap.Basemap):
                 # newer Matplotlib versions: this causes an exception when
                 # the user zooms/pans..
                 self.map_boundary.remove()
-            except:
-                pass
+            except Exception, ex:
+                logging.debug("wild exception catched: %s", ex)
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
@@ -579,8 +577,8 @@ class MapCanvas(basemap.Basemap):
         if not self.traj_item_tree:
             return
 
-        logging.debug("updating trajectory items on map <%s>, mode %s" %
-                      (self.identifier, mode))
+        logging.debug("updating trajectory items on map <%s>, mode %s",
+                      self.identifier, mode)
 
         # If no item is given start at the root of the 'traj_item_tree'.
         if not item:
@@ -651,7 +649,7 @@ class MapCanvas(basemap.Basemap):
             # instances of LagrantoMapItem (VariableItems are not plotted on
             # the map).
             item_stack.extend([(child, item_properties) for child in item.childItems
-                              if isinstance(child, titree.LagrantoMapItem)])
+                               if isinstance(child, titree.LagrantoMapItem)])
 
             # Plotting and graphics property update operations can only be
             # performed for flight tracks and trajectories.
@@ -806,7 +804,7 @@ CLASS SatelliteOverpassPatch
 """
 
 
-class SatelliteOverpassPatch:
+class SatelliteOverpassPatch(object):
     """Represents a satellite overpass on the top view map (satellite
        track and, if available, swath).
     """
@@ -900,7 +898,7 @@ class SatelliteOverpassPatch:
                 pass
 
 
-class KMLPatch:
+class KMLPatch(object):
     """
     Represents a KML overlay.
 
