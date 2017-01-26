@@ -971,3 +971,4 @@ class KMLPatch:
             for element in patch:
                 element.remove()
         self.patches = []
+        self.map.ax.figure.canvas.draw()
