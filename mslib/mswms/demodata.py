@@ -1357,8 +1357,8 @@ def main():
     examples.hybrid_data()
     examples.pressure_data()
     examples.sfc_data()
+    print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
 
 
 if __name__ == '__main__':
     main()
-    print("To use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
