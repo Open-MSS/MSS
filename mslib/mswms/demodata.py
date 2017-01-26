@@ -5,7 +5,7 @@ demodata - creates netCDF test data files and also a mss_wms_settings for access
             Reimar Bauer 2016 - 2017
 
 """
-
+import logging
 import os
 from StringIO import StringIO
 
@@ -903,8 +903,117 @@ class DataFiles(object):
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
 
-    def create_server_config(self):
-        simple_server_config = '''"""
+    def create_server_config(self, detailed_information=False):
+        if detailed_information:
+            simple_server_config = '''"""
+
+simple server config for demodata
+"""
+import os
+import mslib.mswms.dataaccess
+from mslib.mswms import mpl_hsec_styles
+from mslib.mswms import mpl_vsec_styles
+import mslib.mswms
+
+
+# Configuration for mss_wms_settings accessing data on the MSS server.
+# This is the data organisation structure of demodata.
+
+
+#service_name = "OGC:WMS"
+#service_title = "Mission Support System Web Map Service"
+#service_abstract = "Your Abstract"
+#service_contact_person = "Your Name"
+#service_contact_organisation = "Your Organization"
+#service_address_type = "postal"
+#service_address = "street"
+#service_city = "Your City"
+#service_state_or_province = ""
+#service_post_code = "12345"
+#service_country = "Germany"
+#service_fees = "none"
+#service_access_constraints = "This service is intended for research purposes only."
+
+
+# HTTP Authentication                               ###
+#
+
+# If you require basic HTTP authentication, set the following variable
+# to True. Add usernames in the list "allowed:users". Note that the
+# passwords are not specified in plain text but by their md5 digest.
+#enable_basic_http_authentication = False
+
+# Use the following code to create a new md5 digest of a password (e.g. in
+# ipython):
+#     import hashlib; hashlib.md5("my_new_password").hexdigest()
+#allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
+#                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
+
+
+
+
+# xml_template directory is a sub directory of mswms
+#base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
+#xml_template_location = os.path.join(base_dir, "xml_templates")
+
+
+
+_vt_cache = os.path.join(os.path.expanduser("~"), "mss", "vt_cache")
+mslib.mswms.dataaccess.valid_time_cache = _vt_cache
+
+_datapath = os.path.join(os.path.expanduser("~"), "mss", "testdata")
+nwpaccess = {
+    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(_datapath, "EUR_LL015"),
+}
+
+epsg_to_mpl_basemap_table = {
+    # EPSG:4326, the standard cylindrical lat/lon projection.
+    4326: {"projection": "cyl"},
+}
+#
+# Registration of horizontal layers.                     ###
+#
+
+# The following list contains tuples of the format (instance of
+# visualisation classes, data set). The visualisation classes are
+# defined in mpl_hsec.py and mpl_hsec_styles.py. Add only instances of
+# visualisation products for which data files are available. The data
+# sets must be defined in mss_config.py. The WMS will only offer
+# products registered here.
+
+if mpl_hsec_styles is not None:
+    register_horizontal_layers = [
+        # ECMWF standard pressure level products.
+        (mpl_hsec_styles.HS_TemperatureStyle_PL_01, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_GeopotentialWindStyle_PL, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_RelativeHumidityStyle_PL_01, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_EQPTStyle_PL_01, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_WStyle_PL_01, ["ecmwf_EUR_LL015"]),
+        (mpl_hsec_styles.HS_DivStyle_PL_01, ["ecmwf_EUR_LL015"]),
+    ]
+
+
+#
+# Registration of vertical layers.                       ###
+#
+
+# The same as above, but for vertical cross-sections.
+register_vertical_layers = None
+if mpl_vsec_styles is not None:
+    register_vertical_layers = [
+        # ECMWF standard vertical section styles.
+        (mpl_vsec_styles.VS_CloudsStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_ProbabilityOfWCBStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
+    ]
+'''
+        else:
+            simple_server_config = '''"""
 simple server config for demodata
 """
 from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
@@ -914,6 +1023,10 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
             fid = open(self.server_config_file, 'w')
             fid.write(simple_server_config)
             fid.close()
+        else:
+            print(u'''
+/!\ existing server config: "{}" for demodata not overwritten!
+            '''.format(self.server_config_file))
 
     def hybrid_data(self):
         self.levtype = 'ml'
@@ -1240,7 +1353,7 @@ def main():
     examples = DataFiles(data_dir=os.path.join(os.path.expanduser("~"), "mss", 'testdata'),
                          server_config_dir=os.path.join(os.path.expanduser("~"), "mss"))
     examples.create_datadir()
-    examples.create_server_config()
+    examples.create_server_config(detailed_information=True)
     examples.hybrid_data()
     examples.pressure_data()
     examples.sfc_data()
