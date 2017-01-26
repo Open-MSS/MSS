@@ -178,7 +178,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay]:
         self.docks = [None, None, None, None, None]
 
-        self.settingsfile = os.path.join(constants.DEFAULT_CONFIG_PATH, "mss.topview.cfg")
+        self.settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.topview.cfg")
         self.loadSettings()
 
         # Initialise the GUI elements (map view, items of combo boxes etc.).

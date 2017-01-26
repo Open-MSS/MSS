@@ -158,6 +158,9 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         else:
             visible = (curtain_p >= self.p_bot) & (curtain_p <= self.p_top)
 
+        if visible.sum() == 0:
+            visible = np.ones_like(curtain_cc, dtype=bool)
+
         if cmin is None or cmax is None:
             cmin, cmax = curtain_cc[visible].min(), curtain_cc[visible].max()
             if cmin > 0 and cmin < 0.05 * cmax:

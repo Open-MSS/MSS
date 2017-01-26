@@ -73,7 +73,9 @@ from chameleon import PageTemplateLoader
 
 try:
     import mss_wms_settings
-except ImportError:
+except ImportError, e:
+    logging.warning("Couldn't import mss_wms_settings (ImportError:'{}'), creating dummy config.".format(e))
+
     class mss_wms_settings(object):
         base_dir = os.path.abspath(os.path.dirname(__file__))
         xml_template_location = os.path.join(base_dir, "xml_templates")
@@ -96,7 +98,7 @@ except ImportError:
         nwpaccess = {
             "ecmwf_NH_LL05": os.path.join(tempfile.gettempdir(), "mss/grid/ecmwf/netcdf")
         }
-
+        __file__ = None
 
 from mslib.mswms import mss_plot_driver
 

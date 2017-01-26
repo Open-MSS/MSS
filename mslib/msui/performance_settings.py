@@ -63,7 +63,7 @@ class MSS_PerformanceSettingsDialog(QtGui.QDialog, ui_ps.Ui_PerformanceSettingsD
     def load_performance(self):
         fname = QtGui.QFileDialog.getOpenFileName(self,
                                                   "Open Aircraft Performance JSON File",
-                                                  constants.DEFAULT_CONFIG_PATH, "(*.json)")
+                                                  constants.MSS_CONFIG_PATH, "(*.json)")
         if fname.isEmpty():
             return
 
