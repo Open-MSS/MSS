@@ -44,12 +44,12 @@ AUTHORS:
 """
 
 # standard library imports
-import sys
-import os
 import copy
-import logging
-import types
 import importlib
+import logging
+import os
+import sys
+import types
 
 from mslib import __version__
 from mslib.msui import ui_mainwindow as ui
@@ -64,14 +64,13 @@ from mslib.msui import loopview
 from mslib.msui import constants
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui import plugins
-
+from mslib.plugins.io.csv import load_from_csv, save_to_csv
 
 # related third party imports
 from PyQt4 import QtGui, QtCore  # Qt4 bindings
 
 # Add config path to PYTHONPATH so plugins located there may be found
-sys.path.append(constants.DEFAULT_CONFIG_PATH)
+sys.path.append(constants.MSS_CONFIG_PATH)
 
 try:
     import view3D
@@ -276,11 +275,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         self.connect(self.listTools, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
                      self.activateWindow)
 
-        self.addImportFilter("CSV", "csv", plugins.loadFromCSV)
-        self.addExportFilter("CSV", "csv", plugins.saveToCSV)
-
-        self.addImportFilter("FliteStar TXT", "txt", plugins.loadFromFliteStarText)
-        self.addExportFilter("FliteStar TXT", "txt", plugins.saveToFliteStarText)
+        self.addImportFilter("CSV", "csv", load_from_csv)
+        self.addExportFilter("CSV", "csv", save_to_csv)
 
         import_plugins = config_loader(dataset="import_plugins", default={})
         for name in import_plugins:
