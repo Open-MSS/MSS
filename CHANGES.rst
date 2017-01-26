@@ -5,20 +5,36 @@ Version 1.3.0 (not released)
 -----------------------------------------
 
 New Features:
- - Overplot of flight region borders, #61
- - implemented demodata, #82
- - simplified server setup
- - server data needs standard_name in data, #87
+ - Suggest standard name for saving plots, #13
+ - KML Overlay introduced for overplot of flight region borders, #61, #97
+ - implemented demodata for standalone server and py.test, #80
+ - simplified server setup, added demodata. 
  - Always provide simplified aircraft range estimates in TableView. #85
+ - server data needs standard_name in data, #87
  - plugin infrastructure introduced for supporting file formats for flight track saving/loading, #69, #88
 
 Bug Fixes:
  - Generic chemical Plots cannot be used in vertical cuts unless
  they are given on pressure grid, #62
+ - config_loader overwrites internally config file, #82
+ - WMS read does not recognize temperature in ECMWF data, #83
+ - falling back to default configuration if mss_settings.json is missing, #89
+ - PathInteractors not properly deleted when View is closed, #91
 
 Other Changes:
  - channel atmo deprecated and removed from documentation
+ - flightperformance refactored to a simpler approach, cs #5bef122
  - mss_wms_cl removed, #48
+ - wms_login_cache refactored to a module of constants, #47
+
+HINT:
+~~~~~~~~~~~~~~~~
+
+We are now based on the channel *conda-forge*, as some libraries were not in defaults of anaconda::
+
+    $ conda config --add channels conda-forge
+
+
 
 Version 1.2.4
 ----------------------------------
