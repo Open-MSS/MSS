@@ -87,6 +87,8 @@ class MplCanvas(FigureCanvas):
         # setup Matplotlib Figure and Axis
         self.fig = Figure(facecolor="w")  # 0.75
         self.ax = self.fig.add_subplot(111, zorder=99)
+        self.default_filename = "_image"
+
         # initialization of the canvas
         FigureCanvas.__init__(self, self.fig)
 
@@ -98,17 +100,25 @@ class MplCanvas(FigureCanvas):
         # notify the system of updated policy
         FigureCanvas.updateGeometry(self)
 
+    def get_default_filename(self):
+        result = self.basename + self.default_filename
+        if len(result) > 100:
+            result = result[:100]
+        return result + ".png"
+
     def drawMetadata(self, title="", init_time=None, valid_time=None,
-                     level=None, style=None, tp=None):
+                     level=None, style=None):
         """Draw a title indicating the init and valid time of the
            image that has been drawn, and the vertical elevation level.
         """
+        self.default_filename = ""
+        if title:
+            self.default_filename += "_%5s" % title.split()[0]
         if type(style) is str:
             title += ' (%s)' % style
         if type(level) is str:
             title += ' at %s' % level
-        if type(tp) is str:
-            title += ' with TP at %s' % tp
+            self.default_filename += "_%s" % level.split()[0]
         if type(valid_time) is datetime and type(init_time) is datetime:
             time_step = valid_time - init_time
         else:
@@ -249,6 +259,7 @@ class MplSideViewCanvas(MplCanvas):
         self.image = None
         # If a waypoints model has been passed, create an interactor on it.
         self.waypoints_interactor = None
+        self.basename = "sideview"
         if model:
             self.setWaypointsModel(model)
 
@@ -543,6 +554,7 @@ class MplTopViewCanvas(MplCanvas):
         self.satoverpasspatch = None
         self.kmloverlay = None
         self.map = None
+        self.basename = "topview"
 
         # Axes and image object to display the legend graphic, if available.
         self.legax = None
@@ -846,6 +858,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         if traj_item_tree:
             self.setTrajectoryModel(traj_item_tree)
         self.subPlots = []
+        self.basename = "timeseries"
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
