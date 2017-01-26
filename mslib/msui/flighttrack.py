@@ -174,7 +174,7 @@ class WaypointsTableModel(QAbstractTableModel):
         self.waypoints = []  # user-defined waypoints
 
         # self.aircraft.setErrorHandling("permissive")
-        self.settingsfile = os.path.join(constants.DEFAULT_CONFIG_PATH, "mss.performance.cfg")
+        self.settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.performance.cfg")
         self.loadSettings()
 
         # If a filename is passed to the constructor, load data from this file.

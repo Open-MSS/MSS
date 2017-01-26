@@ -225,7 +225,7 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
 
         self.setFlightTrackModel(model)
 
-        self.settingsfile = os.path.join(constants.DEFAULT_CONFIG_PATH, "mss.sideview.cfg")
+        self.settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.sideview.cfg")
         self.loadSettings()
 
         # Connect slots and signals.
