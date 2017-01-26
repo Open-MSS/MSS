@@ -153,6 +153,10 @@ class MissionSupportSystemDefaultConfig(object):
     # "locations" dictionary defined above.
     new_flighttrack_template = ["Nagpur", "Delhi"]
 
+    # This configures the flight level for waypoints inserted by the
+    # flighttrack template
+    new_flighttrack_flightlevel = 0
+
     # LoopView configuration: The products defined in the following
     # dictionary are displayed by the ProductChooserDialog in the
     # loopview.

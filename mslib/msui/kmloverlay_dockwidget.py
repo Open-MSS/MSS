@@ -23,6 +23,8 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         super(KMLOverlayControlWidget, self).__init__(parent)
         self.setupUi(self)
         self.view = view
+        self.kml = None
+        self.patch = None
 
         # # Currently loaded satellite overpass segments.
         # self.overpass_segments = None
@@ -33,11 +35,17 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.connect(self.btLoadFile, QtCore.SIGNAL("clicked()"),
                      self.load_file)
         self.cbOverlay.stateChanged.connect(self.update_settings)
-
-        self.kml = None
+        self.cbOverlay.setChecked(True)
+        self.cbOverlay.setEnabled(False)
 
     def update_settings(self):
-        pass
+        if self.view and self.cbOverlay.isChecked() and self.patch:
+            self.view.kmloverlay = self.patch
+            self.patch.update()
+        else:
+            if self.patch:
+                self.patch.remove()
+            self.view.kmloverlay = None
 
     def select_file(self):
         """Slot that opens a file dialog to choose a file with satellite
@@ -51,8 +59,19 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.leFile.setText(fname)
 
     def load_file(self):
-        with open(self.leFile.text()) as kmlf:
-            self.kml = pykml.parser.parse(kmlf).getroot()
-
-        if self.view:
-            self.view.kmloverlay = KMLPatch(self.view.map, self.kml)
+        if self.patch:
+            self.patch.remove()
+            self.view.kmloverlay = None
+            self.patch = None
+            self.cbOverlay.setEnabled(False)
+        try:
+            with open(self.leFile.text()) as kmlf:
+                self.kml = pykml.parser.parse(kmlf).getroot()
+                self.patch = KMLPatch(self.view.map, self.kml)
+            self.cbOverlay.setEnabled(True)
+            if self.view and self.cbOverlay.isChecked():
+                self.view.kmloverlay = self.patch
+        except IOError, ex:
+            QtGui.QMessageBox.critical(self, self.tr("KML Overlay"),
+                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                       QtGui.QMessageBox.Ok)
