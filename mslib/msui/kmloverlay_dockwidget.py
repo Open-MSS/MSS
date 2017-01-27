@@ -19,6 +19,10 @@ import pykml.parser
 
 
 class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
+    """
+    This class provides the interface for accessing KML files and
+    adding the appropriate patches to the TopView canvas.
+    """
     def __init__(self, parent=None, view=None):
         super(KMLOverlayControlWidget, self).__init__(parent)
         self.setupUi(self)
@@ -39,6 +43,10 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.cbOverlay.setEnabled(False)
 
     def update_settings(self):
+        """
+        Called when the visibility checkbox is toggled and hides/shows
+        the overlay if loaded.
+        """
         if self.view and self.cbOverlay.isChecked() and self.patch:
             self.view.kmloverlay = self.patch
             self.patch.update()
@@ -59,6 +67,10 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.leFile.setText(fname)
 
     def load_file(self):
+        """
+        Loads an KML file selected by the leFile box and constructs the
+        corresponding patch.
+        """
         if self.patch:
             self.patch.remove()
             self.view.kmloverlay = None

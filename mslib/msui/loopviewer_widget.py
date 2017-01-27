@@ -57,9 +57,9 @@ from mslib.msui import ui_imageloop_widget as ui
 from mslib.msui import ui_imageloop_load_dialog as uipc
 from mslib.msui.wms_control import MSS_WMS_AuthenticationDialog
 
-"""
-Product Chooser Dialog
-"""
+#
+# Product Chooser Dialog
+#
 
 
 class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
@@ -155,9 +155,9 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
                                                timestep))
 
 
-"""
-CLASS LoopLabel
-"""
+#
+# CLASS LoopLabel
+#
 
 
 class LoopLabel(QtGui.QLabel):
@@ -181,9 +181,9 @@ class LoopLabel(QtGui.QLabel):
         event.accept()
 
 
-"""
-CLASS Image Viewer Widget
-"""
+#
+# CLASS Image Viewer Widget
+#
 
 
 class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
@@ -364,7 +364,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             # LOOP over TIMESTEPS **********************************************
             for istep, step in enumerate(steps):
                 retrieve = url % step
-                logging.debug("attempting to retrieve image file:\n >>> %s" % retrieve)
+                logging.debug("attempting to retrieve image file:\n >>> %s", retrieve)
                 try:
                     auth_required = True
                     while auth_required:
@@ -384,13 +384,13 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                         try:
                             urlobject = urllib2.urlopen(retrieve)
                             auth_required = False
-                        except urllib2.HTTPError as e:
-                            if e.code == 401:
+                        except urllib2.HTTPError as ex:
+                            if ex.code == 401:
                                 # Catch the "401 Unauthorized" error if one has been
                                 # returned by the server and ask the user for username
                                 # and password.
-                                realm = e.hdrs["WWW-Authenticate"].split('"')[1]
-                                logging.debug("'%s' asks for authentication." % realm)
+                                realm = ex.hdrs["WWW-Authenticate"].split('"')[1]
+                                logging.debug("'%s' asks for authentication.", realm)
                                 dlg = MSS_WMS_AuthenticationDialog(parent=self)
                                 dlg.lblMessage.setText(realm)
                                 dlg.setModal(True)
@@ -401,7 +401,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                                     cancel = True
                                     break
                             else:
-                                raise e
+                                raise ex
                     if not cancel:
                         # Read the image file from the URL into a string (urlobject.read())
                         # and wrap this string into a StringIO object that behaves like a file.
@@ -411,8 +411,8 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
 
                         valid_time = init_time + timedelta(seconds=3600 * step)
                         pixmap_cache.append((qp, valid_time))
-                except urllib2.HTTPError as e:
-                    logging.debug("timestep %03i not available (HTTP error %i)" % (step, e.code))
+                except urllib2.HTTPError as ex:
+                    logging.debug("timestep %03i not available (HTTP error %i)", step, ex.code)
 
                 # Update progress dialog.
                 self.pdlg.setValue((float(ilevel) + float(istep) / num_steps) / num_levels * 100.)
@@ -579,7 +579,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
 ################################################################################
 # Module test.
 
-if __name__ == "__main__":
+def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -590,7 +590,10 @@ if __name__ == "__main__":
 
     import sys
 
-    app = QtGui.QApplication(sys.argv)
-    win = ImageLoopWidget(config=configuration)
-    win.show()
-    sys.exit(app.exec_())
+    application = QtGui.QApplication(sys.argv)
+    window = ImageLoopWidget(config=configuration)
+    window.show()
+    sys.exit(application.exec_())
+
+if __name__ == "__main__":
+    _main()

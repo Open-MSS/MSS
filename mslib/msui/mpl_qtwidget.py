@@ -114,18 +114,18 @@ class MplCanvas(FigureCanvas):
         self.default_filename = ""
         if title:
             self.default_filename += "_%5s" % title.split()[0]
-        if type(style) is str:
+        if isinstance(style, basestring):
             title += ' (%s)' % style
-        if type(level) is str:
+        if isinstance(level, basestring):
             title += ' at %s' % level
             self.default_filename += "_%s" % level.split()[0]
-        if type(valid_time) is datetime and type(init_time) is datetime:
+        if isinstance(valid_time, datetime) and isinstance(init_time, datetime):
             time_step = valid_time - init_time
         else:
             time_step = None
-        if type(valid_time) is datetime:
+        if isinstance(valid_time, datetime):
             valid_time = valid_time.strftime('%a %Y-%m-%d %H:%M UTC')
-        if type(init_time) is datetime:
+        if isinstance(init_time, datetime):
             init_time = init_time.strftime('%a %Y-%m-%d %H:%M UTC')
 
         # Add valid time / init time information to the title.
@@ -160,9 +160,9 @@ class MplCanvas(FigureCanvas):
         return width, height
 
 
-"""
-Matplotlib Qt Widget
-"""
+#
+# Matplotlib Qt Widget
+#
 
 
 class MplWidget(QtGui.QWidget):
@@ -919,8 +919,8 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         if not self.traj_item_tree:
             return
 
-        logging.debug("updating trajectory items on view <%s>, mode %s" %
-                      (self.identifier, mode))
+        logging.debug("updating trajectory items on view <%s>, mode %s",
+                      self.identifier, mode)
 
         # Determine which items have to be plotted (these are the items that
         # own the variables that will be plotted, not the actual variables
@@ -951,7 +951,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                 else:
                     stack.extend(item.childItems)
 
-        logging.debug("Plotting elements %s" % [i.getName() for i in itemsList])
+        logging.debug("Plotting elements %s", [i.getName() for i in itemsList])
 
         if mode in ["REDRAW", "MARKER_CHANGE"]:
             # Clear the figure -- it needs to be completely redrawn.
@@ -972,7 +972,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         # Iterative list traversal no. 2: Draw / update plots.
         for item in itemsList:
 
-            logging.debug("plotting item %s" % item.getName())
+            logging.debug("plotting item %s", item.getName())
             # The variables that have to be plotted are children of self.mapItem.
             # Plot all variables whose visible-flag is set to True.
             variablesToPlot = [variable for variable in item.childItems

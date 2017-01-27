@@ -351,9 +351,9 @@ class PathH_GC(PathH):
         return j
 
 
-"""
-CLASS PathInteractor
-"""
+#
+# CLASS PathInteractor
+#
 
 
 class PathInteractor:
@@ -673,12 +673,8 @@ class VPathInteractor(PathInteractor):
         """
         self.numintpoints = numintpoints
         self.redrawXAxis = redrawXAxis
-        PathInteractor.__init__(self,
-                                ax=ax,
-                                waypoints=waypoints,
-                                mplpath=PathV([[0, 0]],
-                                              numintpoints=numintpoints)
-                                )
+        PathInteractor.__init__(
+            self, ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
 
     def get_num_interpolation_points(self):
         return self.numintpoints
@@ -850,21 +846,21 @@ class HPathInteractor(PathInteractor):
             best_index = self.pathpatch.get_path() \
                 .index_of_closest_segment(x, y, eps=self.appropriateEpsilon())
             logging.debug("TopView insert point: clicked at (%f, %f), "
-                          "best index: %i" % (x, y, best_index))
+                          "best index: %i", x, y, best_index)
             self.pathpatch.get_path().insert_vertex(best_index, [x, y],
                                                     WaypointsPath.LINETO)
 
             lon, lat = self.map(x, y, inverse=True)
             wpm = self.waypoints_model
             if len(wpm.allWaypointData()) > 0 and 0 < best_index <= len(wpm.allWaypointData()):
-                fl = wpm.waypointData(best_index - 1).flightlevel
+                flightlevel = wpm.waypointData(best_index - 1).flightlevel
             elif len(wpm.allWaypointData()) > 0 and best_index == 0:
-                fl = wpm.waypointData(0).flightlevel
+                flightlevel = wpm.waypointData(0).flightlevel
             else:
-                logging.error("Cannot copy flightlevel. best_index: {}, len: {}".format(
-                    best_index, len(wpm.allWaypointData())))
-                fl = 0
-            new_wp = ft.Waypoint(round(lat, 2), round(lon, 2), fl)
+                logging.error("Cannot copy flightlevel. best_index: %s, len: %s",
+                              best_index, len(wpm.allWaypointData()))
+                flightlevel = 0
+            new_wp = ft.Waypoint(round(lat, 2), round(lon, 2), flightlevel)
             wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
             self.redraw_path()
 

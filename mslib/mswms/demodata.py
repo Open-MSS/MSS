@@ -1121,24 +1121,19 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                         xarr = np.linspace(0., 10. + ilev / 3., self.nlons)
                         yarr = np.linspace(0., 5. + ilev / 3., self.nlats)
                         tarr = np.linspace(0, 2., self.ntimes)
-                        for ilons in range(self.nlons):
-                            for ilats in range(self.nlats):
-                                for itimes in range(self.ntimes):
-                                    datax = xarr[ilons] + tarr[itimes]
-                                    datay = yarr[ilats] - tarr[itimes]
-                                    test_data[itimes, ilev, ilats,
-                                              ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay))
+                        datax = xarr[np.newaxis, np.newaxis, :] + tarr[:, np.newaxis, np.newaxis]
+                        datay = yarr[np.newaxis, :, np.newaxis] - tarr[:, np.newaxis, np.newaxis]
+                        test_data[:, ilev, :, :] = tmean + tstd * (np.sin(datax) + np.cos(datay))
+                    if standard_name not in self.allow_negative:
+                        # let test_data values not be negative
+                        mask = np.where(test_data < 0.)
+                        test_data[mask] = 0.
 
-                        if standard_name not in self.allow_negative:
-                            # let test_data values not be negative
-                            mask = np.where(test_data < 0.)
-                            test_data[mask] = 0.
-
-                        if varname == 'Land-sea_mask_surface':
-                            test_data = test_data.round()
-                        newvar[:] = test_data
-                        newvar.grid_mapping = 'LatLon_Projection'
-                        newvar.missing_value = float('nan')
+                    if varname == 'Land-sea_mask_surface':
+                        test_data = test_data.round()
+                    newvar[:] = test_data
+                    newvar.grid_mapping = 'LatLon_Projection'
+                    newvar.missing_value = float('nan')
             ecmwf.close()
 
     def pressure_data(self):
@@ -1197,24 +1192,20 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                     xarr = np.linspace(0., 10. + ilev / 3., self.nlons)
                     yarr = np.linspace(0., 5. + ilev / 3., self.nlats)
                     tarr = np.linspace(0, 2., self.ntimes)
-                    for ilons in range(self.nlons):
-                        for ilats in range(self.nlats):
-                            for itimes in range(self.ntimes):
-                                datax = xarr[ilons] + tarr[itimes]
-                                datay = yarr[ilats] - tarr[itimes]
-                                test_data[itimes, ilev, ilats, ilons] = tmean + tstd * (
-                                    np.sin(datax) + np.cos(datay)) / 2
-                    if varname == 'Land-sea_mask_surface':
-                        test_data = test_data.round()
+                    datax = xarr[np.newaxis, np.newaxis, :] + tarr[:, np.newaxis, np.newaxis]
+                    datay = yarr[np.newaxis, :, np.newaxis] - tarr[:, np.newaxis, np.newaxis]
+                    test_data[:, ilev, :, :] = tmean + tstd * (np.sin(datax) + np.cos(datay)) / 2
+                if varname == 'Land-sea_mask_surface':
+                    test_data = test_data.round()
 
-                    if standard_name not in self.allow_negative:
-                        # let test_data values not be negative
-                        mask = np.where(test_data < 0.)
-                        test_data[mask] = 0.
+                if standard_name not in self.allow_negative:
+                    # let test_data values not be negative
+                    mask = np.where(test_data < 0.)
+                    test_data[mask] = 0.
 
-                    newvar[:] = test_data
-                    newvar.grid_mapping = 'LatLon_Projection'
-                    newvar.missing_value = float('nan')
+                newvar[:] = test_data
+                newvar.grid_mapping = 'LatLon_Projection'
+                newvar.missing_value = float('nan')
         ecmwf.close()
 
     def sfc_data(self):
@@ -1263,12 +1254,9 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 xarr = np.linspace(0., 10., self.nlons)
                 yarr = np.linspace(0., 5., self.nlats)
                 tarr = np.linspace(0, 2., self.ntimes)
-                for ilons in range(self.nlons):
-                    for ilats in range(self.nlats):
-                        for itimes in range(self.ntimes):
-                            datax = xarr[ilons] + tarr[itimes]
-                            datay = yarr[ilats] - tarr[itimes]
-                            test_data[itimes, ilats, ilons] = tmean + tstd * (np.sin(datax) + np.cos(datay)) / 2
+                datax = xarr[np.newaxis, np.newaxis, :] + tarr[:, np.newaxis, np.newaxis]
+                datay = yarr[np.newaxis, :, np.newaxis] - tarr[:, np.newaxis, np.newaxis]
+                test_data[:] = tmean + tstd * (np.sin(datax) + np.cos(datay)) / 2
                 if varname == 'Land-sea_mask_surface':
                     test_data = test_data.round()
                 if units == '(0.-.1)':

@@ -38,8 +38,7 @@ class Test_netCDF4tools():
                      ('longitude', u'lon'),
                      ('atmosphere_pressure_coordinate', 'hyam'),
                      ('atmosphere_hybrid_height_coordinate', 'hybm'),
-                     ('cloud_area_fraction_in_atmosphere_layer', 'Fraction_of_cloud_cover_hybrid')
-                    ]
+                     ('cloud_area_fraction_in_atmosphere_layer', 'Fraction_of_cloud_cover_hybrid')]
         for standard_name, short_name in checklist:
             variable = identify_variable(self.ncfile_ml, standard_name)
             assert variable[0] == short_name

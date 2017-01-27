@@ -61,15 +61,14 @@ from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
-"""
-CONSTANTS (used in this module)
-"""
+# CONSTANTS (used in this module)
+#
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = range(5)
 
 
-def secToStr(seconds):
+def seconds_to_string(seconds):
     """Format a time given in seconds to a string HH:MM:SS. Used for the
        'leg time/cum. time' columns of the table view.
     """
@@ -88,8 +87,8 @@ TABLE_FULL = [
                                                            waypoint.distance_to_prev / 1.852), False),
     ("Cum. dist.\n(km [nm])", lambda waypoint: "%d [%d]" % (waypoint.distance_total,
                                                             waypoint.distance_total / 1.852), False),
-    ("Leg time", lambda waypoint: secToStr(waypoint.leg_time), False),
-    ("Cum. time", lambda waypoint: secToStr(waypoint.cum_time), False),
+    ("Leg time", lambda waypoint: seconds_to_string(waypoint.leg_time), False),
+    ("Cum. time", lambda waypoint: seconds_to_string(waypoint.cum_time), False),
     ("Time (UTC)", lambda waypoint: waypoint.utc_time.strftime("%Y-%m-%d %H:%M:%S"), False),
     ("Rem. fuel\n(lb)", lambda waypoint: ("%d" % waypoint.rem_fuel), False),
     ("Aircraft\nweight (lb)", lambda waypoint: ("%d" % waypoint.weight), False),
@@ -119,9 +118,9 @@ class Waypoint(object):
             self.lon = lon
         self.flightlevel = flightlevel
         self.pressure = thermolib.flightlevel2pressure(flightlevel)
-        self.comments = comments
         self.distance_to_prev = 0.
         self.distance_total = 0.
+        self._comments = comments
 
         # Performance fields (for values read from the flight performance
         # service).
@@ -139,7 +138,7 @@ class Waypoint(object):
         return self._comments
 
     def set_comments(self, string):
-        if type(string) is str:
+        if isinstance(string, basestring):
             self._comments = QString(string)
         else:
             self._comments = string
@@ -182,7 +181,7 @@ class WaypointsTableModel(QAbstractTableModel):
             if filename.endswith(".ftml"):
                 self.loadFromFTML(filename)
             else:
-                logging.debug("No known file extension! {:}".format(filename))
+                logging.debug("No known file extension! %s", filename)
 
         if waypoints:
             self.replaceWaypoints(waypoints)
@@ -191,7 +190,7 @@ class WaypointsTableModel(QAbstractTableModel):
         """Load settings from the file self.settingsfile.
         """
         if os.path.exists(self.settingsfile):
-            logging.debug("loading settings from %s" % self.settingsfile)
+            logging.debug("loading settings from %s", self.settingsfile)
             with open(self.settingsfile, "r") as fileobj:
                 self.performance_settings = pickle.load(fileobj)
         else:
@@ -203,7 +202,7 @@ class WaypointsTableModel(QAbstractTableModel):
         """
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        logging.debug("storing settings to %s" % self.settingsfile)
+        logging.debug("storing settings to %s", self.settingsfile)
         with open(self.settingsfile, "w") as fileobj:
             pickle.dump(self.performance_settings, fileobj)
 
@@ -242,8 +241,7 @@ class WaypointsTableModel(QAbstractTableModel):
         """
         waypoints = self.waypoints
 
-        if not index.isValid() or \
-                not (0 <= index.row() < len(waypoints)):
+        if not index.isValid() or not (0 <= index.row() < len(waypoints)):
             return QVariant()
         waypoint = waypoints[index.row()]
         column = index.column()
@@ -435,17 +433,17 @@ class WaypointsTableModel(QAbstractTableModel):
         def get_duration_fuel(flightlevel0, flightlevel1, distance, weight):
             aircraft = self.performance_settings["aircraft"]
             if flightlevel0 == flightlevel1:
-                tas, fuelflow = aircraft.cruisePerformance(flightlevel0 * 100, weight)
+                tas, fuelflow = aircraft.get_cruise_performance(flightlevel0 * 100, weight)
                 duration = 3600. * distance / (1.852 * tas)  # convert to s (tas is in nm/h)
                 leg_fuel = duration * fuelflow / 3600.
                 return duration, leg_fuel
             else:
                 if flightlevel0 < flightlevel1:
-                    duration0, dist0, fuel0 = aircraft.climbPerformance(flightlevel0 * 100, weight)
-                    duration1, dist1, fuel1 = aircraft.climbPerformance(flightlevel1 * 100, weight)
+                    duration0, dist0, fuel0 = aircraft.get_climb_performance(flightlevel0 * 100, weight)
+                    duration1, dist1, fuel1 = aircraft.get_climb_performance(flightlevel1 * 100, weight)
                 else:
-                    duration0, dist0, fuel0 = aircraft.descentPerformance(flightlevel0 * 100, weight)
-                    duration1, dist1, fuel1 = aircraft.descentPerformance(flightlevel1 * 100, weight)
+                    duration0, dist0, fuel0 = aircraft.get_descent_performance(flightlevel0 * 100, weight)
+                    duration1, dist1, fuel1 = aircraft.get_descent_performance(flightlevel1 * 100, weight)
                 duration = (duration1 - duration0) * 60  # convert from min to s
                 dist = (dist1 - dist0) * 1.852  # convert from nm to km
                 fuel = fuel1 - fuel0
@@ -592,15 +590,15 @@ class WaypointsTableModel(QAbstractTableModel):
             waypoints_list.append(Waypoint(lat, lon, flightlevel,
                                            location=location,
                                            comments=comments))
-        self.replaceWaypoints(self, waypoints_list)
+        self.replaceWaypoints(waypoints_list)
 
     def getFilename(self):
         return self.filename
 
 
-"""
-CLASS  WaypointDelegate
-"""
+#
+# CLASS  WaypointDelegate
+#
 
 
 class WaypointDelegate(QItemDelegate):

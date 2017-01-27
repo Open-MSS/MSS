@@ -52,9 +52,9 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import mss_qt
 from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
 
-"""
-USER INTERFACE CLASS FlightPlanTableView
-"""
+#
+# USER INTERFACE CLASS FlightPlanTableView
+#
 
 
 class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
@@ -95,12 +95,10 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         self.resizeColumns()
 
     def settingsDlg(self):
-        """
-        """
         dlg = MSS_PerformanceSettingsDialog(parent=self, settings_dict=self.waypoints_model.performance_settings)
         dlg.setModal(True)
         if dlg.exec_() == QtGui.QDialog.Accepted:
-            self.waypoints_model.performance_settings = dlg.getSettings()
+            self.waypoints_model.performance_settings = dlg.get_settings()
             self.waypoints_model.update_distances(0)
             self.waypoints_model.saveSettings()
             self.waypoints_model.emit(QtCore.SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
@@ -132,10 +130,10 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         index = tableView.currentIndex()
         if not index.isValid():
             row = 0
-            fl = 0
+            flightlevel = 0
         else:
             row = index.row() + 1
-            fl = self.waypoints_model.waypointData(row - 1).flightlevel
+            flightlevel = self.waypoints_model.waypointData(row - 1).flightlevel
         # row = self.waypoints_model.rowCount() # Append to end
         locations = [str(wp.location) for wp in self.waypoints_model.allWaypointData()]
         locname = ""
@@ -160,7 +158,8 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
                 j += 1
                 if j == 10:
                     i += 1
-        self.waypoints_model.insertRows(row, waypoints=[ft.Waypoint(lat=0, lon=0, flightlevel=fl, location=locname)])
+        self.waypoints_model.insertRows(
+            row, waypoints=[ft.Waypoint(lat=0, lon=0, flightlevel=flightlevel, location=locname)])
 
         index = self.waypoints_model.index(row, 0)
         tableView = self.tableWayPoints
@@ -185,10 +184,10 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
                                       "of at least two points.", QtGui.QMessageBox.Ok)
             return False
         else:
-            wp = wps[row]
+            waypoint = wps[row]
             return (QtGui.QMessageBox.question(None, "Remove waypoint",
                                                "Remove waypoint at %.2f/%.2f, flightlevel %.2f?"
-                                               % (wp.lat, wp.lon, wp.flightlevel),
+                                               % (waypoint.lat, waypoint.lon, waypoint.flightlevel),
                                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
 
     def removeWayPoint(self):
@@ -226,7 +225,7 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         self.resizeColumns()
 
 
-if __name__ == "__main__":
+def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -248,10 +247,11 @@ if __name__ == "__main__":
     waypoints_model.insertRows(0, rows=len(initial_waypoints),
                                waypoints=initial_waypoints)
 
-    app = QtGui.QApplication(sys.argv)
-    win = MSSTableViewWindow(model=waypoints_model)
-    win.show()
+    application = QtGui.QApplication(sys.argv)
+    window = MSSTableViewWindow(model=waypoints_model)
+    window.show()
 
-    # waypoints_model.setPerformanceComputation(testperformance)
+    sys.exit(application.exec_())
 
-    sys.exit(app.exec_())
+if __name__ == "__main__":
+    _main()

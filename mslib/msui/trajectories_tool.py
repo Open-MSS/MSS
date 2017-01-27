@@ -40,9 +40,9 @@ from mslib.msui import trajectory_item_tree as titree
 # import trajectory_ts
 from mslib.msui import mss_qt
 
-"""
-USER INTERFACE CLASS FlightPlanTableView
-"""
+#
+# USER INTERFACE CLASS FlightPlanTableView
+#
 
 
 class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
@@ -131,7 +131,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                                                      "", "NASA Ames files (*.nas)")
         if not nas_file.isEmpty():
             nas_file = str(nas_file)
-            logging.debug("Loading flight track data from %s" % nas_file)
+            logging.debug("Loading flight track data from %s", nas_file)
 
             # Add the flight track to the data tree.
             new_item_index = self.traj_item_tree.addFlightTrack(nas_file)
@@ -150,7 +150,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                                                           "Open Lagranto Output Directory", "")
         if not traj_dir.isEmpty():
             traj_dir = str(traj_dir)
-            logging.debug("Loading trajectory data from %s" % traj_dir)
+            logging.debug("Loading trajectory data from %s", traj_dir)
 
             # Test if selected directory contains subdirectories (as is
             # the case with ensemble runs). If yes,
@@ -300,16 +300,16 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             colour = None
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug("Changing colour of element %s" %
+            logging.debug("Changing colour of element %s",
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing colour of selected elements")
         try:
             self.traj_item_tree.changeItemGxProperty_list(indices, 'general',
                                                           'colour', colour)
-        except Exception, e:
+        except Exception, ex:
             QtGui.QMessageBox.warning(self, self.tr('item colour'),
-                                      self.tr(str(e)), QtGui.QMessageBox.Ok)
+                                      self.tr(str(ex)), QtGui.QMessageBox.Ok)
 
     def setCurrentItemLineStyle(self):
         """Informs traj_item_tree to change the line style of the selected
@@ -320,7 +320,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             lineStyle = None
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug("Changing line style of element %s" %
+            logging.debug("Changing line style of element %s",
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing line style of selected elements")
@@ -338,7 +338,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         lineWidth = self.sbLineWidth.value()
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug("Changing line thickness of element %s" %
+            logging.debug("Changing line thickness of element %s",
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing line thickness of selected elements")
@@ -388,7 +388,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
             #
             # Now set the time marker for the current item.
             try:
-                logging.debug("Setting time marker for element %s" %
+                logging.debug("Setting time marker for element %s",
                               item.getName())
                 setInterval = self.traj_item_tree.setTimeMarker(index, interval,
                                                                 emit_change=False)
@@ -420,20 +420,20 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         if str(view_name) != "None":
             view_item = self.listviews.findItems(view_name,
                                                  QtCore.Qt.MatchContains)[0]
-            logging.debug("Plotting selected elements in view <%s>" % view_name)
+            logging.debug("Plotting selected elements in view <%s>", view_name)
             # Connect the trajectory tree to the view.
             view_window = view_item.window
             view = view_window.getView()
             if hasattr(view, "setTrajectoryModel"):
                 if view_window not in self.connected_views:
-                    logging.debug("Connecting to view window <%s>" %
+                    logging.debug("Connecting to view window <%s>",
                                   view_window.identifier)
                     self.connected_views.append(view_window)
                     view.setTrajectoryModel(self.traj_item_tree)
                 self.traj_item_tree.setItemVisibleInView_list(
                     self.selectedMapElements(), view_item.window, True)
             else:
-                logging.error("View window <%s> does not support display of trajectories" %
+                logging.error("View window <%s> does not support display of trajectories",
                               view_window.identifier)
 
     def removeCurrentItemFromView(self):
@@ -443,7 +443,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         if str(view_name) != "None":
             view_item = self.listviews.findItems(view_name,
                                                  QtCore.Qt.MatchContains)[0]
-            logging.debug("Removing selected elements from view <%s>" % view_name)
+            logging.debug("Removing selected elements from view <%s>", view_name)
             self.traj_item_tree.setItemVisibleInView_list(
                 self.selectedMapElements(), view_item.window, False)
             # TODO: Disconnect tree model from view if no item is displayed!! (2010-08-27)
@@ -482,7 +482,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
 
 ################################################################################
 
-if __name__ == "__main__":
+def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -493,7 +493,10 @@ if __name__ == "__main__":
 
     import sys
 
-    app = QtGui.QApplication(sys.argv)
-    win = MSSTrajectoriesToolWindow()
-    win.show()
-    sys.exit(app.exec_())
+    application = QtGui.QApplication(sys.argv)
+    window = MSSTrajectoriesToolWindow()
+    window.show()
+    sys.exit(application.exec_())
+
+if __name__ == "__main__":
+    _main()
