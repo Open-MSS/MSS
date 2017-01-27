@@ -50,7 +50,13 @@ class MSS_PerformanceSettingsDialog(QtGui.QDialog, ui_ps.Ui_PerformanceSettingsD
         self.connect(self.pbLoadPerformance, QtCore.SIGNAL("clicked()"),
                      self.load_performance)
 
-    def getSettings(self):
+    def get_settings(self):
+        """
+        Encapsulates GUI selections in a python dictionary.
+
+        :return:
+         Dictionary of all setting informations
+        """
         settings_dict = {
             "aircraft": self.aircraft,
             "visible": self.cbShowPerformance.isChecked(),
@@ -61,6 +67,9 @@ class MSS_PerformanceSettingsDialog(QtGui.QDialog, ui_ps.Ui_PerformanceSettingsD
         return settings_dict
 
     def load_performance(self):
+        """
+        Gets a filename for a JSON file specifying aircraft performance and initializes an SimpleAircraft model.
+        """
         fname = QtGui.QFileDialog.getOpenFileName(self,
                                                   "Open Aircraft Performance JSON File",
                                                   constants.MSS_CONFIG_PATH, "(*.json)")
@@ -74,11 +83,11 @@ class MSS_PerformanceSettingsDialog(QtGui.QDialog, ui_ps.Ui_PerformanceSettingsD
             self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
             self.dsbFuel.setValue(self.aircraft.fuel)
 
-        except KeyError, e:
+        except KeyError, ex:
             QtGui.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                       self.tr("JSON File missing '{}' entry".format(e)),
+                                       self.tr("JSON File missing '{}' entry".format(ex)),
                                        QtGui.QMessageBox.Ok)
-        except ValueError, e:
+        except ValueError, ex:
             QtGui.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                       self.tr("JSON File has Syntax Problems:\n{}".format(e)),
+                                       self.tr("JSON File has Syntax Problems:\n{}".format(ex)),
                                        QtGui.QMessageBox.Ok)

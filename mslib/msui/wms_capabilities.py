@@ -36,9 +36,9 @@ from PyQt4 import QtGui  # Qt4 bindings
 # local application imports
 from mslib.msui import ui_wms_capabilities as ui
 
-"""
-CLASS WMSCapabilitiesBrowser
-"""
+#
+# CLASS WMSCapabilitiesBrowser
+#
 
 
 class WMSCapabilitiesBrowser(QtGui.QDialog, ui.Ui_WMSCapabilitiesBrowser):
@@ -63,7 +63,7 @@ class WMSCapabilitiesBrowser(QtGui.QDialog, ui.Ui_WMSCapabilitiesBrowser):
         self.txtCapabilities.setPlainText(capabilities_xml)
 
 
-if __name__ == "__main__":
+def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -74,11 +74,14 @@ if __name__ == "__main__":
 
     import sys
 
-    app = QtGui.QApplication(sys.argv)
-    win = WMSCapabilitiesBrowser(url="http://test.me",
-                                 capabilities_xml="""
+    application = QtGui.QApplication(sys.argv)
+    window = WMSCapabilitiesBrowser(url="http://test.me",
+                                    capabilities_xml="""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
 <WMT_MS_Capabilities version="1.1.1" updateSequence="1295028115677" xmlns:xlink="http://www.w3.org/1999/xlink">""")
-    win.show()
-    sys.exit(app.exec_())
+    window.show()
+    sys.exit(application.exec_())
+
+if __name__ == "__main__":
+    _main()

@@ -51,9 +51,9 @@ except:
 from mslib.msui import lagranto_output_reader
 
 
-"""
-EXCEPTION CLASSES
-"""
+#
+# EXCEPTION CLASSES
+#
 
 
 class LagrantoTreeModelUnsupportedOperationError(Exception):
@@ -62,9 +62,9 @@ class LagrantoTreeModelUnsupportedOperationError(Exception):
     pass
 
 
-"""
-CLASS AbstractLagrantoDataItem
-"""
+#
+# CLASS AbstractLagrantoDataItem
+#
 
 
 class AbstractLagrantoDataItem:
@@ -119,10 +119,11 @@ class AbstractLagrantoDataItem:
         elif column == 2:
             # Item line properties (if not applicable return empty string).
             try:
-                return str(self.gxElements['general']['colour']
-                           ) + '/' + str(self.gxElements['general']['linestyle']) + '/' + str(
-                    self.gxElements['general']['linewidth'])
-            except:
+                return str(self.gxElements['general']['colour']) + '/' + str(
+                    self.gxElements['general']['linestyle']) + '/' + str(
+                        self.gxElements['general']['linewidth'])
+            except Exception, ex:
+                logging.debug("caught a wildcard Exception: %s, %s", type(ex), ex)
                 return ''
         elif column == 3:
             # Item markers.
@@ -130,8 +131,8 @@ class AbstractLagrantoDataItem:
             try:
                 s += 'time(%s)' % self.gxElements['general'][
                     'timeMarkerInterval'].strftime('%H:%M')
-            except:
-                pass
+            except Exception, ex:
+                logging.debug("caught a wildcard Exception: %s, %s", type(ex), ex)
             return s
         else:
             return ''
@@ -208,9 +209,9 @@ class AbstractLagrantoDataItem:
         raise NotImplementedError("Abstract AbstractLagrantoDataItem.getMetadataValue called.")
 
 
-"""
-CLASS LagrantoMapItem
-"""
+#
+# CLASS LagrantoMapItem
+#
 
 
 class LagrantoMapItem(AbstractLagrantoDataItem):
@@ -401,9 +402,9 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         return eval(qstring)
 
 
-"""
-CLASS FlightTrackItem
-"""
+#
+# CLASS FlightTrackItem
+#
 
 
 class FlightTrackItem(LagrantoMapItem):
@@ -540,9 +541,9 @@ class FlightTrackItem(LagrantoMapItem):
         return datetime.datetime(nas_date[0], nas_date[1], nas_date[2])
 
 
-"""
-CLASS LagrantoOutputItem
-"""
+#
+# CLASS LagrantoOutputItem
+#
 
 
 class LagrantoOutputItem(LagrantoMapItem):
@@ -583,9 +584,9 @@ class LagrantoOutputItem(LagrantoMapItem):
             TrajectoryItem(trname, True, self, trajectory, metadata)
 
 
-"""
-CLASS TrajectoryItem
-"""
+#
+# CLASS TrajectoryItem
+#
 
 
 class TrajectoryItem(LagrantoMapItem):
@@ -687,9 +688,9 @@ class TrajectoryItem(LagrantoMapItem):
             return None
 
 
-"""
-CLASS AbstractVariableItem
-"""
+#
+# CLASS AbstractVariableItem
+#
 
 
 class AbstractVariableItem(AbstractLagrantoDataItem):
@@ -770,9 +771,9 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
                                                           eproperty, value)
 
 
-"""
-CLASS FlightTrackVariableItem
-"""
+#
+# CLASS FlightTrackVariableItem
+#
 
 
 class FlightTrackVariableItem(AbstractVariableItem):
@@ -799,9 +800,9 @@ class FlightTrackVariableItem(AbstractVariableItem):
                                                              eproperty)
 
 
-"""
-CLASS TrajectoryVariableItem
-"""
+#
+# CLASS TrajectoryVariableItem
+#
 
 
 class TrajectoryVariableItem(AbstractVariableItem):
@@ -816,9 +817,9 @@ class TrajectoryVariableItem(AbstractVariableItem):
         return self.parentItem.data[self.itemName]
 
 
-"""
-CLASS LagrantoMapItemsTreeModel
-"""
+#
+# CLASS LagrantoMapItemsTreeModel
+#
 
 
 class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):

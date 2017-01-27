@@ -59,25 +59,24 @@ class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
         params = self._get_parameters()
 
         if params["radius"] < 0.01:
-            QtGui.QMessageBox.warning(self, "Add hexagon",
-                "You cannot create a hexagon with zero radius!",
+            QtGui.QMessageBox.warning(
+                self, "Add hexagon", "You cannot create a hexagon with zero radius!",
                 QtGui.QMessageBox.Ok)
             return
         points = create_hexagon(params["center_lat"], params["center_lon"], params["radius"], params["angle"])
         index = table_view.currentIndex()
         if not index.isValid():
             row = 0
-            fl = config_loader(dataset="new_flighttrack_flightlevel",
-                               default=mss_default.new_flighttrack_flightlevel)
+            flightlevel = config_loader(dataset="new_flighttrack_flightlevel",
+                                        default=mss_default.new_flighttrack_flightlevel)
         else:
             row = index.row() + 1
-            fl = waypoints_model.waypointData(row - 1).flightlevel
+            flightlevel = waypoints_model.waypointData(row - 1).flightlevel
         waypoints = []
-        for i, p in enumerate(points):
-            waypoints.append(ft.Waypoint(lon=float(round(p[1], 2)),
-                                         lat=float(round(p[0], 2)),
-                                         flightlevel=float(fl),
-                                         comments="Hexagon {:d}".format(i + 1)))
+        for i, point in enumerate(points):
+            waypoints.append(
+                ft.Waypoint(lon=float(round(point[1], 2)), lat=float(round(point[0], 2)),
+                            flightlevel=float(flightlevel), comments="Hexagon {:d}".format(i + 1)))
         waypoints_model.insertRows(row, rows=len(waypoints), waypoints=waypoints)
         index = waypoints_model.index(row, 0)
         table_view.setCurrentIndex(index)
@@ -107,7 +106,7 @@ class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
                 else:
                     found_one = False
                     for i in range(0, row_max - row_min):
-                        if str(waypoints_model.waypointData(row_min + i).comments) != "Hexagon {:d}".format(i+1):
+                        if str(waypoints_model.waypointData(row_min + i).comments) != "Hexagon {:d}".format(i + 1):
                             found_one = True
                             break
                     if found_one:
@@ -117,11 +116,11 @@ class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
                         sel = QtGui.QMessageBox.question(
                             None, "Remove hexagon",
                             "This will remove waypoints {:d}-{:d}. Continue?".format(row_min, row_max),
-                            QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
+                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
                         if sel == QtGui.QMessageBox.Yes:
                             waypoints_model.removeRows(row_min, rows=7)
             else:
                 raise HexagonException("Cannot remove hexagon, please select a hexagon "
                                        "waypoint ('Hexagon x' in comments field)")
-        except HexagonException, e:
-            QtGui.QMessageBox.warning(self  , "Remove hexagon", str(e), QtGui.QMessageBox.Ok)
+        except HexagonException, ex:
+            QtGui.QMessageBox.warning(self, "Remove hexagon", str(ex), QtGui.QMessageBox.Ok)

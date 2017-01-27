@@ -160,19 +160,19 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         # If the parameters time and init_time are given as datetime objects,
         # create formatted strings with the given formatter. If they are
         # given as strings, use these strings directly as WMS arguments.
-        if type(time) is datetime:
+        if isinstance(time, datetime):
             if time_format is None:
                 raise ValueError("Could not determine date/time format. Please "
                                  "check dimension tag in capabiltites document.")
             request[time_name] = time.strftime(time_format)
-        elif type(time) is str:
+        elif isinstance(time, basestring):
             request[time_name] = time
-        if type(init_time) is datetime:
+        if isinstance(init_time, datetime):
             if init_time_format is None:
                 raise ValueError("Could not determine date/time format. Please "
                                  "check dimension tag in capabiltites document.")
             request[init_time_name] = init_time.strftime(init_time_format)
-        elif type(init_time) is str:
+        elif isinstance(init_time, basestring):
             request[init_time_name] = init_time
 
         if level is not None:
@@ -188,7 +188,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         complete_url = "%s%s" % (base_url, data)
         if return_only_url:
             return complete_url
-        logging.debug("Retrieving: %s" % complete_url)
+        logging.debug("Retrieving: %s", complete_url)
         # --(mss)
 
         # (mss) owslib.util.openURL checks for ServiceExceptions and raises a
@@ -216,9 +216,9 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         return u
 
 
-"""
-DIALOG for WMS Authentication
-"""
+#
+# DIALOG for WMS Authentication
+#
 
 
 class MSS_WMS_AuthenticationDialog(QtGui.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
@@ -241,9 +241,9 @@ class MSS_WMS_AuthenticationDialog(QtGui.QDialog, ui_pw.Ui_WMSAuthenticationDial
                 str(self.lePassword.text()))
 
 
-"""
-CLASS WMSControlWidget
-"""
+#
+# CLASS WMSControlWidget
+#
 
 
 class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
@@ -319,7 +319,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # Check for WMS image cache directory, create if neceassary.
         if wms_cache is not None:
             self.wms_cache = os.path.join(wms_cache, "")
-            logging.debug("checking for WMS image cache at %s ..." % self.wms_cache)
+            logging.debug("checking for WMS image cache at %s ...", self.wms_cache)
             if not os.path.exists(self.wms_cache):
                 logging.debug("  created new image cache directory.")
                 os.makedirs(self.wms_cache)
@@ -480,7 +480,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
         base_url = str(self.cbWMS_URL.currentText())
-        logging.debug("requesting capabilities from %s" % base_url)
+        logging.debug("requesting capabilities from %s", base_url)
         wms = self.initialiseWMS(base_url)
         if wms is not None:
             # Parse layer tree of the wms object and discover usable layers.
@@ -496,7 +496,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                             filtered_layers.append(cb_string)
                 else:
                     stack.extend(layer.layers)
-            logging.debug("discovered %i layers that can be used in this view" %
+            logging.debug("discovered %i layers that can be used in this view",
                           len(filtered_layers))
             filtered_layers.sort()
             self.cbLayer.addItems(filtered_layers)
@@ -753,7 +753,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
                             if not interpretation_successful:
                                 logging.error("Can't understand time string %s."
-                                              " Please check the implementation." % time_item)
+                                              " Please check the implementation.", time_item)
 
             # No time extent tag was found: Set allowed_valid_times to None
             # (used by validTimeChanged()).
@@ -771,7 +771,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("determined init time format: %s", self.init_time_format)
         if enable_inittime and self.init_time_format is None:
             msg = "cannot determine init time format."
-            logging.warning("WARNING: %s" % msg)
+            logging.warning("WARNING: %s", msg)
             if self.cbInitTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
@@ -783,7 +783,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("determined valid time format: %s", self.valid_time_format)
         if enable_validtime and self.valid_time_format is None:
             msg = "cannot determine valid time format."
-            logging.warning("WARNING: %s" % msg)
+            logging.warning("WARNING: %s", msg)
             if self.cbValidTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
@@ -979,7 +979,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             if init_time is not None:
                 self.dteInitTime.setDateTime(init_time)
         self.autoUpdate()
-        return (init_time == "" or init_time is not None)
+        return init_time == "" or init_time is not None
 
     def validTimeChanged(self):
         """Same as initTimeChanged(), but for the valid time elements.
@@ -990,7 +990,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             if valid_time is not None:
                 self.dteValidTime.setDateTime(valid_time)
         self.autoUpdate()
-        return (valid_time == "" or valid_time is not None)
+        return valid_time == "" or valid_time is not None
 
     def levelChanged(self):
         self.autoUpdate()
@@ -1118,9 +1118,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             urlobject = self.wms.getmap(**kwargs)
             if queue is not None:
                 queue.put(urlobject)
-        except Exception as e:
+        except Exception as ex:
             if queue is not None:
-                queue.put(e)
+                queue.put(ex)
 
     def cachingEnabled(self):
         """Returns if the image cache is enabled.
@@ -1192,9 +1192,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("fetching layer %s; style %s, width %i, height %i",
                       layer, style, width, height)
         logging.debug("crs=%s, path=%s", crs, path_string)
-        logging.debug("init_time=%s, valid_time=%s" % (init_time, valid_time))
-        logging.debug("level=%s" % level)
-        logging.debug("transparent=%s" % transparent)
+        logging.debug("init_time=%s, valid_time=%s", init_time, valid_time)
+        logging.debug("level=%s", level)
+        logging.debug("transparent=%s", transparent)
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1233,7 +1233,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 # as the filename.
                 md5_filename = hashlib.md5(urlstr).hexdigest()
                 md5_filename += ".png"
-                logging.debug("checking cache for image file %s ..." %
+                logging.debug("checking cache for image file %s ...",
                               md5_filename)
                 md5_filename = os.path.join(self.wms_cache, md5_filename)
                 if os.path.exists(md5_filename):
@@ -1289,7 +1289,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 # PIL.Image.open(). See
                 #    http://www.pythonware.com/library/pil/handbook/image.htm
                 img = PIL.Image.open(imageIO)
-                logging.debug("layer retrieved, image size is %i bytes." % imageIO.len)
+                logging.debug("layer retrieved, image size is %i bytes.", imageIO.len)
                 # Store the retrieved image in the cache, if enabled.
                 if self.cachingEnabled():
                     logging.debug("storing retrieved image file in cache.")
@@ -1336,9 +1336,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             urlobject = urllib2.urlopen(url)
             if queue is not None:
                 queue.put(urlobject)
-        except Exception as e:
+        except Exception as ex:
             if queue is not None:
-                queue.put(e)
+                queue.put(ex)
 
     def retrieveLegendGraphic(self):
         """Retrieves the legend graphic of the currently selected layer and
@@ -1356,7 +1356,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         if style != "" and "legend" in layerobj.styles[style].keys():
             urlstr = layerobj.styles[style]["legend"]
-            logging.debug("fetching legend graphic from %s" % urlstr)
+            logging.debug("fetching legend graphic from %s", urlstr)
 
             # If caching is enabled, check the image cache
             # directory for the suitable image file.
@@ -1366,7 +1366,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 # as the filename.
                 md5_filename = hashlib.md5(urlstr).hexdigest()
                 md5_filename += ".png"
-                logging.debug("checking cache for image file %s ..." %
+                logging.debug("checking cache for image file %s ...",
                               md5_filename)
                 md5_filename = os.path.join(self.wms_cache, md5_filename)
                 if os.path.exists(md5_filename):
@@ -1410,7 +1410,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 #    http://www.pythonware.com/library/pil/handbook/image.htm
                 img_ = PIL.Image.open(imageIO)
                 img = img_.crop(img_.getbbox())
-                logging.debug("legend retrieved, legend graphic size is %i bytes." % imageIO.len)
+                logging.debug("legend retrieved, legend graphic size is %i bytes.", imageIO.len)
                 # Store the retrieved image in the cache, if enabled.
                 if self.cachingEnabled():
                     logging.debug("storing retrieved legend graphics file in cache.")
@@ -1447,13 +1447,13 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             # Delete all files in cache.
             if self.wms_cache is not None:
                 cached_files = os.listdir(self.wms_cache)
-                logging.debug("clearing cache; deleting %i files.."
-                              % len(cached_files))
+                logging.debug("clearing cache; deleting %i files..",
+                              len(cached_files))
                 for f in cached_files:
                     try:
                         os.remove(os.path.join(self.wms_cache, f))
-                    except Exception as e:
-                        logging.error("ERROR: %s" % e)
+                    except Exception as ex:
+                        logging.error("ERROR: %s", ex)
                 logging.debug("cache has been cleared.")
             else:
                 logging.debug("no cache exists that can be cleared.")
@@ -1490,10 +1490,10 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                                                default=mss_default.wms_cache_max_size_bytes) or
                     fage > config_loader(dataset="wms_cache_max_age_seconds",
                                          default=mss_default.wms_cache_max_age_seconds)):
-                        os.remove(f)
-                        removed_files += 1
+                os.remove(f)
+                removed_files += 1
 
-        logging.debug("cache has been cleaned (%i files removed)." % removed_files)
+        logging.debug("cache has been cleaned (%i files removed).", removed_files)
 
         ################################################################################
 
@@ -1554,7 +1554,7 @@ class VSecWMSControlWidget(WMSControlWidget):
                 self.retrieveImage(crs=crs, path_string=path_string, bbox=bbox,
                                    width=width, height=height)
         except Exception as ex:
-            logging.error("an error occurred. no image retrieved. (%s)" % ex)
+            logging.error("an error occurred. no image retrieved. (%s)", ex)
         else:
             # Plot the image on the view canvas.
             self.view.drawImage(img)
@@ -1617,7 +1617,7 @@ class HSecWMSControlWidget(WMSControlWidget):
             img, legend_img, layer, style, init_time, valid_time, level = \
                 self.retrieveImage(crs=crs, bbox=bbox, width=width, height=height)
         except Exception as ex:
-            logging.error("an error occurred. no image retried. (%s)" % ex)
+            logging.error("an error occurred. no image retried. (%s)", ex)
         else:
             # Plot the image on the view canvas.
             if style != "":
@@ -1634,7 +1634,7 @@ class HSecWMSControlWidget(WMSControlWidget):
             self.view.waypoints_interactor.update()
 
 
-if __name__ == "__main__":
+def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
     # on the Python logging module.
@@ -1643,13 +1643,15 @@ if __name__ == "__main__":
                         format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
 
-    app = QtGui.QApplication(sys.argv)
-    win = WMSControlWidget(default_WMS=default_WMS)
-    win.connect(win.btGetMap, QtCore.SIGNAL("clicked()"),
-                win.getMap)
-    win.show()
-    sys.exit(app.exec_())
+    application = QtGui.QApplication(sys.argv)
+    window = WMSControlWidget(default_WMS=default_WMS)
+    window.connect(window.btGetMap, QtCore.SIGNAL("clicked()"),
+                   window.getMap)
+    window.show()
+    sys.exit(application.exec_())
 
+if __name__ == "__main__":
+    _main()
 
 # IPYTHON TEST LINES.
 
