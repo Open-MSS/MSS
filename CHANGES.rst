@@ -1,7 +1,7 @@
 Changelog
 ================
 
-Version 1.3.0 (not released)
+Version 1.3.0
 -----------------------------------------
 
 New Features:
@@ -14,8 +14,7 @@ New Features:
  - plugin infrastructure introduced for supporting file formats for flight track saving/loading, #69, #88
 
 Bug Fixes:
- - Generic chemical Plots cannot be used in vertical cuts unless
- they are given on pressure grid, #62
+ - Generic chemical Plots cannot be used in vertical cuts unless they are given on pressure grid, #62
  - config_loader overwrites internally config file, #82
  - WMS read does not recognize temperature in ECMWF data, #83
  - falling back to default configuration if mss_settings.json is missing, #89
@@ -26,6 +25,7 @@ Other Changes:
  - flightperformance refactored to a simpler approach, cs #5bef122
  - mss_wms_cl removed, #48
  - wms_login_cache refactored to a module of constants, #47
+ - Reimplemented Hexagon Tools from Stefan using a docking widget for TableView. #18
 
 HINT:
 ~~~~~~~~~~~~~~~~
