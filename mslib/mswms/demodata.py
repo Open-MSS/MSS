@@ -1004,8 +1004,6 @@ if mpl_vsec_styles is not None:
         # ECMWF standard vertical section styles.
         (mpl_vsec_styles.VS_CloudsStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_vsec_styles.VS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_vsec_styles.VS_ProbabilityOfWCBStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
@@ -1325,8 +1323,6 @@ if mpl_vsec_styles is not None:
         # ECMWF standard vertical section styles.
         (mpl_vsec_styles.VS_CloudsStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_vsec_styles.VS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_vsec_styles.VS_ProbabilityOfWCBStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
