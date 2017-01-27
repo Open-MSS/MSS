@@ -283,7 +283,7 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
     def setOptions(self):
         """Slot to open a dialog that lets the user specifiy sideview options.
         """
-        settings = self.getView().get_settings()
+        settings = self.getView().getSettings()
         dlg = MSS_SV_OptionsDialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtGui.QDialog.Accepted:
@@ -298,7 +298,7 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        settings = self.getView().get_settings()
+        settings = self.getView().getSettings()
         logging.debug("storing settings to %s", self.settingsfile)
         fileobj = open(self.settingsfile, "w")
         pickle.dump(settings, fileobj)
