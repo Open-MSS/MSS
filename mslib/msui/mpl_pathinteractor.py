@@ -769,9 +769,9 @@ class VPathInteractor(PathInteractor):
             self.redraw_figure()
 
 
-"""
-CLASS HPathInteractor
-"""
+#
+# CLASS HPathInteractor
+#
 
 
 class HPathInteractor(PathInteractor):
@@ -1005,6 +1005,7 @@ class HPathInteractor(PathInteractor):
             pass  # silently ignore "ValueError: Invalid codes array."
         self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
+
         for t in self.wp_labels:
             self.ax.draw_artist(t)
         if self.show_tangent_points:
