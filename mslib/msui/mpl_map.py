@@ -823,7 +823,7 @@ class SatelliteOverpassPatch(object):
         # way the indexes in self.utc correspond to those in self.sat.
         # np.ma.getmaskarray is necessary as ..mask only returns a scalar
         # "False" if the array contains no masked entries.
-        self.utc = segment["utc"][np.where(np.ma.getmaskarray(segment["satpos"])[:, 0] is False)]
+        self.utc = segment["utc"][~np.ma.getmaskarray(segment["satpos"])[:, 0]]
         self.sat = np.ma.compress_rows(segment["satpos"])
         self.sw_l = np.ma.compress_rows(segment["swath_left"])
         self.sw_r = np.ma.compress_rows(segment["swath_right"])

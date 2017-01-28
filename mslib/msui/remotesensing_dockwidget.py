@@ -109,8 +109,9 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
         """
         x, y = zip(*wp_vertices)
         wp_lons, wp_lats = bmap(x, y, inverse=True)
-        fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], del_s=10.,
-                                     map_coords=False) for i in range(len(wp_lons) - 1)]
+        fine_lines = [bmap.gcpoints2(
+                      wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], del_s=10., map_coords=False)
+                      for i in range(len(wp_lons) - 1)]
         line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0]))
                         for i in range(len(fine_lines))]
         # fine_lines = list of tuples with x-list and y-list for each segment
@@ -146,7 +147,8 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
         times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
         x, y = zip(*wp_vertices)
         wp_lons, wp_lats = bmap(x, y, inverse=True)
-        fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1]) for i in
+
+        fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], map_coords=False) for i in
                       range(len(wp_lons) - 1)]
         line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
                         range(len(fine_lines))]
