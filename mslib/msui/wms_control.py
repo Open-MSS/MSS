@@ -1228,19 +1228,23 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             if self.cachingEnabled():
                 kwargs["return_only_url"] = True
                 urlstr = self.wms.getmap(**kwargs)
-                kwargs["return_only_url"] = False
-                # Get an md5 digest of the URL string. The digest is used
-                # as the filename.
-                md5_filename = hashlib.md5(urlstr).hexdigest()
-                md5_filename += ".png"
-                logging.debug("checking cache for image file %s ...",
-                              md5_filename)
-                md5_filename = os.path.join(self.wms_cache, md5_filename)
-                if os.path.exists(md5_filename):
-                    logging.debug("  file exists, loading from cache.")
-                    cache_hit = True
+                if urlstr.startswith(self.cbWMS_URL.currentText()):
+                    kwargs["return_only_url"] = False
+                    # Get an md5 digest of the URL string. The digest is used
+                    # as the filename.
+                    md5_filename = hashlib.md5(urlstr).hexdigest()
+                    md5_filename += ".png"
+                    logging.debug("checking cache for image file %s ...",
+                                  md5_filename)
+                    md5_filename = os.path.join(self.wms_cache, md5_filename)
+                    if os.path.exists(md5_filename):
+                        logging.debug("  file exists, loading from cache.")
+                        cache_hit = True
+                    else:
+                        logging.debug("  file does not exist, retrieving from WMS server.")
                 else:
-                    logging.debug("  file does not exist, retrieving from WMS server.")
+                    logging.debug("  Url does not match, use get capabilities first.")
+                    raise RuntimeError("Url does not match, use get capabilities first.")
 
             if not cache_hit:
 
