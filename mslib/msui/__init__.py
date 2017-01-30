@@ -35,15 +35,7 @@ class MissionSupportSystemDefaultConfig(object):
     crs_to_mpl_basemap_table = {
         "EPSG:4326": {"basemap": {"projection": "cyl"},
                       "bbox": "latlon"},
-        "EPSG:9810": {"basemap": {"projection": "stere", "lat_0": 90., "lon_0": 0.},
-                      "bbox": "metres"},
         "EPSG:77790000": {"basemap": {"projection": "stere", "lat_0": 90., "lon_0": 0.},
-                          "bbox": "latlon"},
-        "EPSG:77790010": {"basemap": {"projection": "stere", "lat_0": 90., "lon_0": 10.},
-                          "bbox": "latlon"},
-        "EPSG:77790335": {"basemap": {"projection": "stere", "lat_0": 90., "lon_0": -25.},
-                          "bbox": "latlon"},
-        "EPSG:77774020": {"basemap": {"projection": "stere", "lat_0": 74., "lon_0": 20.},
                           "bbox": "latlon"}
     }
 
@@ -55,33 +47,12 @@ class MissionSupportSystemDefaultConfig(object):
         "02 Germany (cyl)": {"CRS": "EPSG:4326",
                              "map": {"llcrnrlon": 5.0, "llcrnrlat": 45.0,
                                      "urcrnrlon": 15.0, "urcrnrlat": 57.0}},
-        "03 Europe (stereo)": {"CRS": "EPSG:77790010",
-                               "map": {"llcrnrlon": -22.5, "llcrnrlat": 27.5,
-                                       "urcrnrlon": 55.0, "urcrnrlat": 62.5}},
-        "04 Germany (stereo)": {"CRS": "EPSG:77790010",
-                                "map": {"llcrnrlon": -4.0, "llcrnrlat": 45.5,
-                                        "urcrnrlon": 20.0, "urcrnrlat": 57.0}},
-        "05 Spitsbergen L (stereo)": {"CRS": "EPSG:77790000",
-                                      "map": {"llcrnrlon": -39.0, "llcrnrlat": 51.0,
-                                              "urcrnrlon": 82.0, "urcrnrlat": 73.5}},
-        "06 Spitsbergen S (stereo)": {"CRS": "EPSG:77790000",
-                                      "map": {"llcrnrlon": -22.0, "llcrnrlat": 73.0,
-                                              "urcrnrlon": 66.0, "urcrnrlat": 79.5}},
-        "07 Global (cyl)": {"CRS": "EPSG:4326",
+        "03 Global (cyl)": {"CRS": "EPSG:4326",
                             "map": {"llcrnrlon": -180.0, "llcrnrlat": -90.0,
                                     "urcrnrlon": 180.0, "urcrnrlat": 90.0}},
-        "08 Northern Hemisphere (stereo)": {"CRS": "EPSG:77790000",
+        "04 Northern Hemisphere (stereo)": {"CRS": "EPSG:77790000",
                                             "map": {"llcrnrlon": -45.0, "llcrnrlat": 0.0,
-                                                    "urcrnrlon": 135.0, "urcrnrlat": 0.0}},
-        "09 Kiruna L (stereo)": {"CRS": "EPSG:77774020",
-                                 "map": {"llcrnrlon": -30.0, "llcrnrlat": 45.0,
-                                         "urcrnrlon": 120.0, "urcrnrlat": 65.0}},
-        "10 Europe/N Africa (cyl)": {"CRS": "EPSG:4326",
-                                            "map": {"llcrnrlon": -30.0, "llcrnrlat": 20.0,
-                                                    "urcrnrlon": 25.0, "urcrnrlat": 65.0}},
-        "11 INDIA": {"CRS": "EPSG:4326",
-                     "map": {"llcrnrlon": 65.0, "llcrnrlat": 2.0,
-                             "urcrnrlon": 96.0, "urcrnrlat": 36.0}}
+                                                    "urcrnrlon": 135.0, "urcrnrlat": 0.0}}
     }
 
     # Side View.

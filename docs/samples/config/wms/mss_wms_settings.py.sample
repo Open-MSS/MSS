@@ -228,24 +228,20 @@ epsg_to_mpl_basemap_table = {
     # EPSG:4326, the standard cylindrical lat/lon projection.
     4326: {"projection": "cyl"},
 
-    # EPSG:9810, polar stereographic projection with lon_0=0. NOTE: This
-    # code requires the bbox to be given in metres!
-    # 9810:     {"projection": "stere", "lat_0": 90., "lon_0": 0.},
-
-    # Non-standard EPSG codes, specificially defined for MSS pruposes.
+    # Non-standard EPSG codes, specifically defined for MSS pruposes.
     # EPSG:777llLLL, north polar stereographic projections with lat_0=ll and
     # lon_0=LLL.
     77790000: {"projection": "stere", "lat_0": 90., "lon_0": 0.},
     77790010: {"projection": "stere", "lat_0": 90., "lon_0": 10.},
     77790015: {"projection": "stere", "lat_0": 90., "lon_0": 15.},
     77790340: {"projection": "stere", "lat_0": 90., "lon_0": -20.},
-    77791105: {"projection": "stere", "lat_0": 90., "lon_0": -105.},
+    77790105: {"projection": "stere", "lat_0": 90., "lon_0": -105.},
 
     77890000: {"projection": "spstere", "lat_0": 90., "lon_0": 0.},
     77890010: {"projection": "spstere", "lat_0": 90., "lon_0": 10.},
     77890015: {"projection": "spstere", "lat_0": 90., "lon_0": 15.},
     77890340: {"projection": "spstere", "lat_0": 90., "lon_0": -20.},
-    77891105: {"projection": "spstere", "lat_0": 90., "lon_0": -105.}
+    77890105: {"projection": "spstere", "lat_0": 90., "lon_0": -105.}
 
     # Feel free to add other projections, e.g. a south polar projection
     # EPSG:778llLLL.
