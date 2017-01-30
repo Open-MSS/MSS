@@ -29,7 +29,10 @@ conda-forge channel
 Please add the channel conda-forge to your defaults::
 
   $ conda config --add channels conda-forge
+  $ conda config --add channels defaults
 
+The last channel added gets on top of the list. This gives the order: First search in default packages
+then in conda-forge.
 
 Then you could choose between as system wide installation or one in a prefered environment::
 
