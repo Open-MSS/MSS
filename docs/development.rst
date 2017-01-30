@@ -98,7 +98,7 @@ Creating a new release
 * make sure all issues for this milestone are closed or moved to the next milestone
 * update CHANGES.rst, based on git log
 * check version number of upcoming release in CHANGES.rst
-* verify that meta.yaml, MANIFEST.in and setup.py are complete
+* verify that version.py, meta.yaml, MANIFEST.in and setup.py are complete
 * tag the release::
 
    git tag -s -m "tagged/signed release X.Y.Z" X.Y.Z
