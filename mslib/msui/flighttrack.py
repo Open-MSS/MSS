@@ -210,9 +210,6 @@ class WaypointsTableModel(QAbstractTableModel):
         self.name = name
         self.modified = True
 
-    def performanceValid(self):
-        return self.performance_valid
-
     def flags(self, index):
         """Used to specify which table columns can be edited by the user;
            overrides the corresponding QAbstractTableModel method.
@@ -376,7 +373,6 @@ class WaypointsTableModel(QAbstractTableModel):
                 waypoint.comments = value.toString()
             self.modified = True
             # Performance computations loose their validity if a change is made.
-            self.performance_valid = False
             self.emit(SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
                       index, index2)
             return True
