@@ -337,6 +337,7 @@ class MplSideViewCanvas(MplCanvas):
         # Draw ticks and tick labels.
         ax.set_yticks(minor_ticks, minor=True)
         ax.set_yticks(major_ticks, minor=False)
+        ax.set_yticklabels([], minor=True, fontsize=10)
         ax.set_yticklabels(labels, minor=False, fontsize=10)
 
         # Set axis limits and draw grid for major ticks.
