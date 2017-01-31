@@ -1,6 +1,17 @@
 Changelog
 ================
 
+Version 1.3.1
+--------------------------------------
+
+Bug Fixes:
+ - Inconsistent projections employed in default/sample data for client and server, #109
+ - local caching needs to take care of wms url, #107
+ - options of side view fails, #105
+ - flight track saving shows on linux an extension problem, #102
+ - Export Active Flight Track as CSV, #103
+
+
 Version 1.3.0
 -----------------------------------------
 
