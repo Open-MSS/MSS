@@ -1023,6 +1023,11 @@ class HPathInteractor(PathInteractor):
         """
         PathInteractor.draw_callback(self, event)
         self.ax.draw_artist(self.wp_scatter)
+        if self.show_solar_angle:
+            self.ax.draw_artist(self.solar_lines)
+        if self.show_tangent_points:
+            self.ax.draw_artist(self.tangent_lines)
+
 
     def get_ind_under_point(self, event):
         """Get the index of the waypoint vertex under the point
