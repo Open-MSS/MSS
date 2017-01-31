@@ -65,9 +65,9 @@ from mslib.msui import mss_qt
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
-"""
-CLASS MSSLoopWindow
-"""
+#
+# CLASS MSSLoopWindow
+#
 
 
 class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):

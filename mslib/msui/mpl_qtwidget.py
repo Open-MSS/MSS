@@ -71,9 +71,9 @@ if _matplotlib_version >= '1.2':
 else:
     PIL_image_origin = "lower"
 
-"""
-Matplotlib Qt Canvas
-"""
+#
+# Matplotlib Qt Canvas
+#
 
 
 class MplCanvas(FigureCanvas):
@@ -212,9 +212,9 @@ class MplNavBarWidget(QtGui.QWidget):
         self.setLayout(self.vbl)
 
 
-"""
-Side View Canvas and Widget
-"""
+#
+# Side View Canvas and Widget
+#
 
 
 class MplSideViewCanvas(MplCanvas):
@@ -536,9 +536,9 @@ class MplSideViewWidget(MplNavBarWidget):
                 action.setEnabled(False)
 
 
-"""
-Top View Canvas and Widget
-"""
+#
+# Top View Canvas and Widget
+#
 
 
 class MplTopViewCanvas(MplCanvas):
@@ -565,8 +565,7 @@ class MplTopViewCanvas(MplCanvas):
         self.setMapAppearance(settings)
 
         # Progress dialog to inform the user about map redraws.
-        self.pdlg = QtGui.QProgressDialog("redrawing map...", "Cancel",
-                                          0, 10, self)
+        self.pdlg = QtGui.QProgressDialog("redrawing map...", "Cancel", 0, 10, self)
 
     def initMap(self, model=None, **kwargs):
         """Set up the map view.
@@ -646,9 +645,6 @@ class MplTopViewCanvas(MplCanvas):
             self.kmloverlay.update()
 
         self.drawMetadata("Top view")
-
-        # correctly. no idea why..
-        self.waypoints_interactor.update()
 
         self.pdlg.setValue(10)
         QtGui.QApplication.processEvents()
@@ -840,9 +836,9 @@ class MplTopViewWidget(MplNavBarWidget):
         self.canvas.redrawMap()
 
 
-"""
-Time Series View Canvas and Widget
-"""
+#
+# Time Series View Canvas and Widget
+#
 
 
 class MplTimeSeriesViewCanvas(MplCanvas):

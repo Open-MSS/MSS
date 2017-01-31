@@ -54,9 +54,9 @@ except ImportError:
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import trajectory_item_tree as titree
 
-"""
-CLASS MapCanvas
-"""
+#
+# CLASS MapCanvas
+#
 
 
 class MapCanvas(basemap.Basemap):
@@ -452,7 +452,7 @@ class MapCanvas(basemap.Basemap):
                 # the user zooms/pans..
                 self.map_boundary.remove()
             except Exception, ex:
-                logging.debug("wild exception catched: %s", ex)
+                logging.debug("wild exception caught - please make this more specific: %s", ex)
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
@@ -799,9 +799,9 @@ class MapCanvas(basemap.Basemap):
         return self.plot(x, y, **kwargs)
 
 
-"""
-CLASS SatelliteOverpassPatch
-"""
+#
+# CLASS SatelliteOverpassPatch
+#
 
 
 class SatelliteOverpassPatch(object):
