@@ -56,16 +56,16 @@ from PyQt4 import QtCore, QtGui
 # local application imports
 from mslib.msui import flighttrack as ft
 
-"""
-CONSTANTS
-"""
+#
+# CONSTANTS
+#
 
 # Constants to specify the current editing mode.
 MOVE, DELETE, INSERT = range(3)
 
-"""
-HELPER ROUTINES
-"""
+#
+# HELPER ROUTINES
+#
 
 
 def distance_point_linesegment(p, l1, l2):
@@ -98,9 +98,9 @@ def distance_point_linesegment(p, l1, l2):
         return np.linalg.norm(p - p_on_line)
 
 
-"""
-CLASS WaypointsPath
-"""
+#
+# CLASS WaypointsPath
+#
 
 
 class WaypointsPath(mpath.Path):
@@ -191,9 +191,9 @@ class WaypointsPath(mpath.Path):
         self.vertices = np.array(self.vertices)
 
 
-"""
-CLASS PathV
-"""
+#
+# CLASS PathV
+#
 
 
 class PathV(WaypointsPath):
@@ -255,9 +255,9 @@ class PathV(WaypointsPath):
         return (self.intermediate_indexes[index], wps_list[index].pressure)
 
 
-"""
-CLASS PathH, PathH_GC
-"""
+#
+# CLASS PathH, PathH_GC
+#
 
 
 class PathH(WaypointsPath):
@@ -650,9 +650,9 @@ class PathInteractor:
             self.pathpatch.set_facecolor(patch_facecolor)
 
 
-"""
-CLASS VPathInteractor
-"""
+#
+# CLASS VPathInteractor
+#
 
 
 class VPathInteractor(PathInteractor):
@@ -1023,6 +1023,11 @@ class HPathInteractor(PathInteractor):
         """
         PathInteractor.draw_callback(self, event)
         self.ax.draw_artist(self.wp_scatter)
+        if self.show_solar_angle:
+            self.ax.draw_artist(self.solar_lines)
+        if self.show_tangent_points:
+            self.ax.draw_artist(self.tangent_lines)
+
 
     def get_ind_under_point(self, event):
         """Get the index of the waypoint vertex under the point

@@ -48,14 +48,11 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         the overlay if loaded.
         """
         if self.view and self.cbOverlay.isChecked() and self.patch:
-            self.view.kmloverlay = self.patch
+            self.view.plotKML(self.patch)
             self.patch.update()
-            self.view.waypoints_interactor.update()
         else:
             if self.patch:
-                self.patch.remove()
-            self.view.kmloverlay = None
-            self.view.waypoints_interactor.update()
+                self.view.plotKML(None)
 
     def select_file(self):
         """Slot that opens a file dialog to choose a file with satellite
@@ -75,7 +72,7 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if self.patch:
             self.patch.remove()
-            self.view.kmloverlay = None
+            self.view.plotKML(None)
             self.patch = None
             self.cbOverlay.setEnabled(False)
         try:
@@ -84,8 +81,7 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.patch = KMLPatch(self.view.map, self.kml)
             self.cbOverlay.setEnabled(True)
             if self.view and self.cbOverlay.isChecked():
-                self.view.kmloverlay = self.patch
-            self.view.waypoints_interactor.update()
+                self.view.plotKML(self.patch)
         except IOError, ex:
             QtGui.QMessageBox.critical(self, self.tr("KML Overlay"),
                                        self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),

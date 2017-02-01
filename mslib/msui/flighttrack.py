@@ -210,9 +210,6 @@ class WaypointsTableModel(QAbstractTableModel):
         self.name = name
         self.modified = True
 
-    def performanceValid(self):
-        return self.performance_valid
-
     def flags(self, index):
         """Used to specify which table columns can be edited by the user;
            overrides the corresponding QAbstractTableModel method.
@@ -376,21 +373,24 @@ class WaypointsTableModel(QAbstractTableModel):
                 waypoint.comments = value.toString()
             self.modified = True
             # Performance computations loose their validity if a change is made.
-            self.performance_valid = False
             self.emit(SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
                       index, index2)
             return True
         return False
 
     def insertRows(self, position, rows=1, index=QModelIndex(),
-                   waypoints=[None]):
+                   waypoints=None):
         """Insert waypoint; overrides the corresponding QAbstractTableModel
            method.
         """
+        if not waypoints:
+            waypoints = [Waypoint(0, 0, 0)] * rows
+
+        assert len(waypoints) == rows, (waypoints, rows)
+
         self.beginInsertRows(QModelIndex(), position,
                              position + rows - 1)
-        for row in range(rows):
-            wp = waypoints[row] if waypoints[row] else Waypoint(0, 0, 0)
+        for row, wp in enumerate(waypoints):
             self.waypoints.insert(position + row, wp)
 
         self.update_distances(position, rows=rows)

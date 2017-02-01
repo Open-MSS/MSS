@@ -37,9 +37,9 @@ from PyQt4 import QtGui  # Qt4 bindings
 from mslib.msui import ui_timeseriesview_window as ui
 from mslib.msui import mss_qt
 
-"""
-CLASS TimeSeriesView
-"""
+#
+# CLASS TimeSeriesView
+#
 
 
 class MSSTimeSeriesViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TimeSeriesViewWindow):
