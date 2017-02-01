@@ -129,7 +129,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
-        if styles:
+        if styles is not None:
             assert len(styles) == len(layers)
             request['styles'] = ','.join(styles)
         else:
@@ -276,7 +276,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
         # Initial list of WMS servers.
         self.cbWMS_URL.clear()
-        if default_WMS:
+        if default_WMS is not None:
             self.cbWMS_URL.addItems(default_WMS)
 
         # Compile regular expression used in crsAllowed() to filter
