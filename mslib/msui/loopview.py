@@ -87,8 +87,8 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
     name = "Loop View"
     max_views = 4  # maximum number of views
 
-    def __init__(self, config, *args):
-        super(MSSLoopWindow, self).__init__(*args)
+    def __init__(self, config, parent=None, *args):
+        super(MSSLoopWindow, self).__init__(parent, *args)
         self.setupUi(self)
         self.statusBar.addPermanentWidget(QtGui.QLabel(
             "Use wheel on image for time navigation, "

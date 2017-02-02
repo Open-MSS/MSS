@@ -247,11 +247,11 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
 
         # Views.
         self.connect(self.listViews, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
-                     self.activateWindow)
+                     self.activateSubWindow)
 
         # Tools.
         self.connect(self.listTools, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
-                     self.activateWindow)
+                     self.activateSubWindow)
 
         self.addImportFilter("CSV", "csv", load_from_csv)
         self.addExportFilter("CSV", "csv", save_to_csv)
@@ -330,12 +330,14 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
-        ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                        self.tr("Do you want to close the Mission "
-                                                "Support System application?"),
-                                        QtGui.QMessageBox.Yes,
-                                        QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
+        ret = QtGui.QMessageBox.warning(
+            self, self.tr("Mission Support System"),
+            self.tr("Do you want to close the Mission Support System application?"),
+            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
+
         if ret == QtGui.QMessageBox.Yes:
+            self.listViews.clear()
+            self.listTools.clear()
             event.accept()
         else:
             event.ignore()
@@ -361,8 +363,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         elif self.sender() == self.actionLoopView:
             # Loop view.
             # ToDo check order
-            view_window = loopview.MSSLoopWindow(config_loader(dataset="loop_configuration",
-                                                               default=mss_default.loop_configuration), self)
+            view_window = loopview.MSSLoopWindow(
+                config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
         if view_window:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -384,8 +386,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         tool_window = None
         if self.sender() == self.actionTrajectoryToolLagranto:
             # Trajectory tool.
-            tool_window = trajectories_tool.MSSTrajectoriesToolWindow(
-                parent=self, listviews=self.listViews)
+            tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews)
 
         if tool_window:
             # Make sure view window will be deleted after being closed, not
@@ -398,7 +399,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             self.connect(tool_window, QtCore.SIGNAL("moduleCloses()"),
                          listitem.view_destroyed)
 
-    def activateWindow(self, item):
+    def activateSubWindow(self, item):
         """When the user clicks on one of the open view or tool windows, this
            window is brought to the front. This function implements the slot to
            activate a window if the user selects it in the list of views or
