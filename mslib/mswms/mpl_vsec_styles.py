@@ -39,6 +39,7 @@ AUTHORS:
 import matplotlib
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator
+from matplotlib import patheffects
 import numpy as np
 
 # local application imports
@@ -239,8 +240,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
             fontsize = figheight * 0.035
             axins1.yaxis.set_ticks_position("left")
             for x in axins1.yaxis.majorTicks:
-                x.label1.set_backgroundcolor("w")
-                x.label1.set_backgroundcolor("w")
+                x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
                 x.label1.set_fontsize(fontsize)
 
 
