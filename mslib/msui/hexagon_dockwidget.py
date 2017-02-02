@@ -35,7 +35,6 @@ class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
         """
         super(HexagonControlWidget, self).__init__(parent)
         self.setupUi(self)
-        self.parent = parent
         self.view = view
 
         self.dsbHexgaonRadius.setValue(200)

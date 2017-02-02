@@ -30,8 +30,6 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.kml = None
         self.patch = None
 
-        # # Currently loaded satellite overpass segments.
-        # self.overpass_segments = None
         palette = QtGui.QPalette(self.pbSelectColour.palette())
         colour = QtGui.QColor()
         colour.setRgbF(0, 0, 0, 1)
@@ -78,9 +76,8 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         """Slot that opens a file dialog to choose a file with satellite
            overpass predictions.
         """
-        fname = QtGui.QFileDialog.getOpenFileName(self,
-                                                  "Open KML Polygonal File",
-                                                  "", "(*.kml)")
+        fname = QtGui.QFileDialog.getOpenFileName(
+            self, "Open KML Polygonal File", "", "(*.kml)")
         if fname.isEmpty():
             return
         self.leFile.setText(fname)

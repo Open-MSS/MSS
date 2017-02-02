@@ -249,8 +249,8 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
                 widget = wms.HSecWMSControlWidget(
                     default_WMS=config_loader(dataset="default_WMS", default=mss_default.default_WMS),
                     view=self.mpl.canvas,
-                    wms_cache=config_loader(dataset="wms_cache",
-                                            default=mss_default.wms_cache))
+                    parent=self,
+                    wms_cache=config_loader(dataset="wms_cache", default=mss_default.wms_cache))
             elif index == SATELLITE:
                 title = "Satellite Track Prediction"
                 widget = sat.SatelliteControlWidget(view=self.mpl.canvas)

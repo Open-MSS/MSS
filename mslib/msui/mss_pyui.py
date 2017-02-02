@@ -72,20 +72,6 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
 
-try:
-    import view3D
-
-    enable3D = True
-except:
-    enable3D = False
-
-enableGENESI = False
-if enableGENESI:
-    try:
-        import genesi_tool
-    except:
-        enableGENESI = False
-
 
 print "***********************************************************************"
 print "\n            Mission Support System (mss)\n"
@@ -208,9 +194,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
     def __init__(self, *args):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
-        # Disable the 3D view menu if OpenGL is not supported.
-        self.action3DView.setEnabled(enable3D)
-        self.actionDiscoverEarthObservationDataGENESI.setEnabled(enableGENESI)
 
         # Reference to the flight track that is currently displayed in the
         # views.
@@ -243,13 +226,9 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                      self.createNewView)
         self.connect(self.actionTimeSeriesViewTrajectories, QtCore.SIGNAL("triggered()"),
                      self.createNewView)
-        self.connect(self.action3DView, QtCore.SIGNAL("triggered()"),
-                     self.createNewView)
 
         # Tools menu.
         self.connect(self.actionTrajectoryToolLagranto, QtCore.SIGNAL("triggered()"),
-                     self.createNewTool)
-        self.connect(self.actionDiscoverEarthObservationDataGENESI, QtCore.SIGNAL("triggered()"),
                      self.createNewTool)
 
         # Help menu.
@@ -376,9 +355,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         elif self.sender() == self.actionTableView:
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
-        elif self.sender() == self.action3DView:
-            # 3D view.
-            view_window = view3D.MSS3DViewWindow()
         elif self.sender() == self.actionTimeSeriesViewTrajectories:
             # Time series view.
             view_window = timeseriesview.MSSTimeSeriesViewWindow()
@@ -410,9 +386,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             # Trajectory tool.
             tool_window = trajectories_tool.MSSTrajectoriesToolWindow(
                 parent=self, listviews=self.listViews)
-        elif self.sender() == self.actionDiscoverEarthObservationDataGENESI:
-            # GENESI client tool.
-            tool_window = genesi_tool.MSSGenesiToolWindow(parent=self)
 
         if tool_window:
             # Make sure view window will be deleted after being closed, not

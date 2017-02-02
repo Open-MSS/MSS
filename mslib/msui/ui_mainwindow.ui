@@ -266,19 +266,9 @@
     <string>T&amp;ime Series View (Trajectories)</string>
    </property>
   </action>
-  <action name="action3DView">
-   <property name="text">
-    <string>&amp;3D View</string>
-   </property>
-  </action>
   <action name="actionTrajectoryToolLagranto">
    <property name="text">
     <string>&amp;Trajectory Tool (Lagranto)</string>
-   </property>
-  </action>
-  <action name="actionDiscoverEarthObservationDataGENESI">
-   <property name="text">
-    <string>&amp;Discover Earth Observation Data (GENESI)</string>
    </property>
   </action>
   <action name="actionAboutMSUI">
