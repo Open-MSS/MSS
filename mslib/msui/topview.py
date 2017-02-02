@@ -305,6 +305,7 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
             settings = dlg.getSettings()
             self.getView().setMapAppearance(settings)
             self.saveSettings()
+            title = "Top View"
             if self.docks[WMS]:
                 wms_widget = self.docks[WMS].widget()
                 layer = wms_widget.getLayer()
@@ -316,13 +317,16 @@ class MSSTopViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TopViewWindow):
                 level = wms_widget.getLevel()
                 init_time = wms_widget.getInitTime()
                 valid_time = wms_widget.getValidTime()
-                self.mpl.canvas.drawMetadata(title=wms_widget.get_layer_object(layer).title,
+                layer_object = wms_widget.get_layer_object(layer)
+                if layer_object is not None:
+                    title = layer_object.title
+                self.mpl.canvas.drawMetadata(title=title,
                                              init_time=init_time,
                                              valid_time=valid_time,
                                              level=level,
                                              style=style_title)
             else:
-                self.mpl.canvas.drawMetadata(title="Top view")
+                self.mpl.canvas.drawMetadata(title=title)
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
 

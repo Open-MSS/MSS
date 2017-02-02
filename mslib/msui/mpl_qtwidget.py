@@ -576,7 +576,7 @@ class MplTopViewCanvas(MplCanvas):
                                      resolution='l', area_thresh=1000., ax=ax,
                                      **kwargs)
         ax.set_autoscale_on(False)
-        ax.set_title('top view')
+        ax.set_title('Top view', horizontalalignment='left', x=0)
         self.draw()  # necessary?
 
         if model:
