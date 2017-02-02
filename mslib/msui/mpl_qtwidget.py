@@ -647,6 +647,9 @@ class MplTopViewCanvas(MplCanvas):
 
         self.drawMetadata("Top view")
 
+        # Update in case of a projection change
+        self.waypoints_interactor.update()
+
         self.pdlg.setValue(10)
         QtGui.QApplication.processEvents()
 
