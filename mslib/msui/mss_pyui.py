@@ -369,22 +369,19 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         view_window = None
         if self.sender() == self.actionTopView:
             # Top view.
-            view_window = topview.MSSTopViewWindow(parent=self,
-                                                   model=self.active_flight_track)
+            view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
         elif self.sender() == self.actionSideView:
             # Side view.
-            view_window = sideview.MSSSideViewWindow(parent=self,
-                                                     model=self.active_flight_track)
+            view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
         elif self.sender() == self.actionTableView:
             # Table view.
-            view_window = tableview.MSSTableViewWindow(parent=self,
-                                                       model=self.active_flight_track)
+            view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
         elif self.sender() == self.action3DView:
             # 3D view.
-            view_window = view3D.MSS3DViewWindow(parent=self)
+            view_window = view3D.MSS3DViewWindow()
         elif self.sender() == self.actionTimeSeriesViewTrajectories:
             # Time series view.
-            view_window = timeseriesview.MSSTimeSeriesViewWindow(parent=self)
+            view_window = timeseriesview.MSSTimeSeriesViewWindow()
         elif self.sender() == self.actionLoopView:
             # Loop view.
             # ToDo check order
