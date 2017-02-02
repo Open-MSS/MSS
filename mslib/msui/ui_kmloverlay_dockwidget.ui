@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>649</width>
-    <height>104</height>
+    <height>120</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,12 +43,33 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7"/>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QPushButton" name="pbSelectColour">
+       <property name="text">
+        <string>Colour</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>!Experimental Feature! Not all KML files will work.</string>
+      <string>!Experimental Feature! Not all KML files and contained features will work.</string>
      </property>
     </widget>
    </item>

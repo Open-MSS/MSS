@@ -32,15 +32,25 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         # # Currently loaded satellite overpass segments.
         # self.overpass_segments = None
+        palette = QtGui.QPalette(self.pbSelectColour.palette())
+        colour = QtGui.QColor()
+        colour.setRgbF(0, 0, 0, 1)
+        palette.setColor(QtGui.QPalette.Button, colour)
+        self.pbSelectColour.setPalette(palette)
 
         # # Connect slots and signals.
         self.connect(self.btSelectFile, QtCore.SIGNAL("clicked()"),
                      self.select_file)
         self.connect(self.btLoadFile, QtCore.SIGNAL("clicked()"),
                      self.load_file)
+        self.pbSelectColour.clicked.connect(self.select_colour)
         self.cbOverlay.stateChanged.connect(self.update_settings)
         self.cbOverlay.setChecked(True)
         self.cbOverlay.setEnabled(False)
+
+    def get_color(self):
+        button = self.pbSelectColour
+        return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button).getRgbF()
 
     def update_settings(self):
         """
@@ -49,10 +59,20 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if self.view and self.cbOverlay.isChecked() and self.patch:
             self.view.plotKML(self.patch)
-            self.patch.update()
-        else:
-            if self.patch:
+            self.patch.update(self.get_color())
+        elif self.patch:
                 self.view.plotKML(None)
+
+    def select_colour(self):
+        button = self.pbSelectColour
+
+        palette = QtGui.QPalette(button.palette())
+        colour = palette.color(QtGui.QPalette.Button)
+        colour = QtGui.QColorDialog.getColor(colour)
+        if colour.isValid():
+            palette.setColor(QtGui.QPalette.Button, colour)
+            button.setPalette(palette)
+        self.update_settings()
 
     def select_file(self):
         """Slot that opens a file dialog to choose a file with satellite
@@ -78,7 +98,7 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         try:
             with open(self.leFile.text()) as kmlf:
                 self.kml = pykml.parser.parse(kmlf).getroot()
-                self.patch = KMLPatch(self.view.map, self.kml)
+                self.patch = KMLPatch(self.view.map, self.kml, self.get_color())
             self.cbOverlay.setEnabled(True)
             if self.view and self.cbOverlay.isChecked():
                 self.view.plotKML(self.patch)
