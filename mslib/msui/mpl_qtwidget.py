@@ -547,6 +547,8 @@ class MplTopViewCanvas(MplCanvas):
        flight track, trajectories and other items.
     """
 
+    redrawn = QtCore.pyqtSignal(name="redrawn")
+
     def __init__(self, settings=None):
         """
         """
@@ -657,7 +659,7 @@ class MplTopViewCanvas(MplCanvas):
         self.pdlg.close()
 
         # Emit signal so other parts of the module can react to a redraw event.
-        self.emit(QtCore.SIGNAL("redrawn()"))
+        self.redrawn.emit()
 
     def getCRS(self):
         """Get the coordinate reference system of the displayed map.
@@ -833,8 +835,7 @@ class MplTopViewWidget(MplNavBarWidget):
             if action.text() in ["Subplots", "Customize"]:
                 action.setEnabled(False)
             elif action.text() in ["Home", "Back", "Forward"]:
-                self.connect(action, QtCore.SIGNAL("triggered()"),
-                             self.historyEvent)
+                action.triggered.connect(self.historyEvent)
         # Identify zoom events to redraw the map, if necessary.
         self.canvas.mpl_connect('button_release_event', self.zoomEvent)
 
@@ -889,10 +890,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                 self.updateFromTrajectoryTree)
         # Set and connect new tree.
         self.traj_item_tree = tree
-        self.traj_item_tree.connect(
-            self.traj_item_tree,
-            QtCore.SIGNAL("dataChanged(QModelIndex, QModelIndex)"),
-            self.updateFromTrajectoryTree)
+        self.traj_item_tree.dataChanged.connect(self.updateFromTrajectoryTree)
         # Draw tree items.
         self.updateTrajectoryItems()
 

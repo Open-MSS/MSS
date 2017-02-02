@@ -38,7 +38,7 @@ AUTHORS:
 import logging
 
 # related third party imports
-from PyQt4 import QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtCore  # Qt4 bindings
 import numpy as np
 import matplotlib
 import matplotlib.path as mpath
