@@ -72,20 +72,6 @@ from PyQt4 import QtGui, QtCore  # Qt4 bindings
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
 
-try:
-    import view3D
-
-    enable3D = True
-except:
-    enable3D = False
-
-enableGENESI = False
-if enableGENESI:
-    try:
-        import genesi_tool
-    except:
-        enableGENESI = False
-
 
 print "***********************************************************************"
 print "\n            Mission Support System (mss)\n"
@@ -208,9 +194,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
     def __init__(self, *args):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
-        # Disable the 3D view menu if OpenGL is not supported.
-        self.action3DView.setEnabled(enable3D)
-        self.actionDiscoverEarthObservationDataGENESI.setEnabled(enableGENESI)
 
         # Reference to the flight track that is currently displayed in the
         # views.
@@ -243,13 +226,9 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                      self.createNewView)
         self.connect(self.actionTimeSeriesViewTrajectories, QtCore.SIGNAL("triggered()"),
                      self.createNewView)
-        self.connect(self.action3DView, QtCore.SIGNAL("triggered()"),
-                     self.createNewView)
 
         # Tools menu.
         self.connect(self.actionTrajectoryToolLagranto, QtCore.SIGNAL("triggered()"),
-                     self.createNewTool)
-        self.connect(self.actionDiscoverEarthObservationDataGENESI, QtCore.SIGNAL("triggered()"),
                      self.createNewTool)
 
         # Help menu.
@@ -268,11 +247,11 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
 
         # Views.
         self.connect(self.listViews, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
-                     self.activateWindow)
+                     self.activateSubWindow)
 
         # Tools.
         self.connect(self.listTools, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
-                     self.activateWindow)
+                     self.activateSubWindow)
 
         self.addImportFilter("CSV", "csv", load_from_csv)
         self.addExportFilter("CSV", "csv", save_to_csv)
@@ -351,12 +330,14 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
-        ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                        self.tr("Do you want to close the Mission "
-                                                "Support System application?"),
-                                        QtGui.QMessageBox.Yes,
-                                        QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
+        ret = QtGui.QMessageBox.warning(
+            self, self.tr("Mission Support System"),
+            self.tr("Do you want to close the Mission Support System application?"),
+            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
+
         if ret == QtGui.QMessageBox.Yes:
+            self.listViews.clear()
+            self.listTools.clear()
             event.accept()
         else:
             event.ignore()
@@ -369,27 +350,21 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         view_window = None
         if self.sender() == self.actionTopView:
             # Top view.
-            view_window = topview.MSSTopViewWindow(parent=self,
-                                                   model=self.active_flight_track)
+            view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
         elif self.sender() == self.actionSideView:
             # Side view.
-            view_window = sideview.MSSSideViewWindow(parent=self,
-                                                     model=self.active_flight_track)
+            view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
         elif self.sender() == self.actionTableView:
             # Table view.
-            view_window = tableview.MSSTableViewWindow(parent=self,
-                                                       model=self.active_flight_track)
-        elif self.sender() == self.action3DView:
-            # 3D view.
-            view_window = view3D.MSS3DViewWindow(parent=self)
+            view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
         elif self.sender() == self.actionTimeSeriesViewTrajectories:
             # Time series view.
-            view_window = timeseriesview.MSSTimeSeriesViewWindow(parent=self)
+            view_window = timeseriesview.MSSTimeSeriesViewWindow()
         elif self.sender() == self.actionLoopView:
             # Loop view.
             # ToDo check order
-            view_window = loopview.MSSLoopWindow(config_loader(dataset="loop_configuration",
-                                                               default=mss_default.loop_configuration), self)
+            view_window = loopview.MSSLoopWindow(
+                config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
         if view_window:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -411,11 +386,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         tool_window = None
         if self.sender() == self.actionTrajectoryToolLagranto:
             # Trajectory tool.
-            tool_window = trajectories_tool.MSSTrajectoriesToolWindow(
-                parent=self, listviews=self.listViews)
-        elif self.sender() == self.actionDiscoverEarthObservationDataGENESI:
-            # GENESI client tool.
-            tool_window = genesi_tool.MSSGenesiToolWindow(parent=self)
+            tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews)
 
         if tool_window:
             # Make sure view window will be deleted after being closed, not
@@ -428,7 +399,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             self.connect(tool_window, QtCore.SIGNAL("moduleCloses()"),
                          listitem.view_destroyed)
 
-    def activateWindow(self, item):
+    def activateSubWindow(self, item):
         """When the user clicks on one of the open view or tool windows, this
            window is brought to the front. This function implements the slot to
            activate a window if the user selects it in the list of views or

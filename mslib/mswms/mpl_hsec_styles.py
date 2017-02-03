@@ -75,6 +75,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator
 import matplotlib.colors
 import mpl_toolkits.basemap
+from matplotlib import patheffects
 
 # local application imports
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
@@ -618,8 +619,8 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
             fontsize = figheight * 0.024
             axins1.yaxis.set_ticks_position(tick_pos)
             for x in axins1.yaxis.majorTicks:
-                x.label1.set_backgroundcolor("w")
-                x.label2.set_backgroundcolor("w")
+                x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
+                x.label2.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
                 x.label1.set_fontsize(fontsize)
                 x.label2.set_fontsize(fontsize)
 

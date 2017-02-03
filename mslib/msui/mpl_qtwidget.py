@@ -576,7 +576,7 @@ class MplTopViewCanvas(MplCanvas):
                                      resolution='l', area_thresh=1000., ax=ax,
                                      **kwargs)
         ax.set_autoscale_on(False)
-        ax.set_title('top view')
+        ax.set_title('Top view', horizontalalignment='left', x=0)
         self.draw()  # necessary?
 
         if model:
@@ -646,6 +646,9 @@ class MplTopViewCanvas(MplCanvas):
             self.kmloverlay.update()
 
         self.drawMetadata("Top view")
+
+        # Update in case of a projection change
+        self.waypoints_interactor.update()
 
         self.pdlg.setValue(10)
         QtGui.QApplication.processEvents()

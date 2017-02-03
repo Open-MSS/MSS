@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_KMLOverlayDockWidget(object):
     def setupUi(self, KMLOverlayDockWidget):
         KMLOverlayDockWidget.setObjectName(_fromUtf8("KMLOverlayDockWidget"))
-        KMLOverlayDockWidget.resize(649, 104)
+        KMLOverlayDockWidget.resize(649, 120)
         self.verticalLayout = QtGui.QVBoxLayout(KMLOverlayDockWidget)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.horizontalLayout_5 = QtGui.QHBoxLayout()
@@ -45,12 +45,17 @@ class Ui_KMLOverlayDockWidget(object):
         self.verticalLayout.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName(_fromUtf8("horizontalLayout_7"))
+        self.pbSelectColour = QtGui.QPushButton(KMLOverlayDockWidget)
+        self.pbSelectColour.setObjectName(_fromUtf8("pbSelectColour"))
+        self.horizontalLayout_7.addWidget(self.pbSelectColour)
+        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_7.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout_7)
         self.label = QtGui.QLabel(KMLOverlayDockWidget)
         self.label.setObjectName(_fromUtf8("label"))
         self.verticalLayout.addWidget(self.label)
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem)
+        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout.addItem(spacerItem1)
 
         self.retranslateUi(KMLOverlayDockWidget)
         QtCore.QMetaObject.connectSlotsByName(KMLOverlayDockWidget)
@@ -60,5 +65,6 @@ class Ui_KMLOverlayDockWidget(object):
         self.cbOverlay.setText(_translate("KMLOverlayDockWidget", "KML Overlay", None))
         self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "...", None))
         self.btLoadFile.setText(_translate("KMLOverlayDockWidget", "load", None))
-        self.label.setText(_translate("KMLOverlayDockWidget", "!Experimental Feature! Not all KML files will work.", None))
+        self.pbSelectColour.setText(_translate("KMLOverlayDockWidget", "Colour", None))
+        self.label.setText(_translate("KMLOverlayDockWidget", "!Experimental Feature! Not all KML files and contained features will work.", None))
 
