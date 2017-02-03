@@ -7,7 +7,7 @@ AUTHORS:
 """
 import logging
 
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 from mslib.mss_util import config_loader
 from mslib.msui import aircrafts
@@ -47,8 +47,7 @@ class MSS_PerformanceSettingsDialog(QtGui.QDialog, ui_ps.Ui_PerformanceSettingsD
         self.dsbFuel.setValue(settings_dict["fuel"])
         self.dteTakeoffTime.setDateTime(settings_dict["takeoff_time"])
 
-        self.connect(self.pbLoadPerformance, QtCore.SIGNAL("clicked()"),
-                     self.load_performance)
+        self.pbLoadPerformance.clicked.connect(self.load_performance)
 
     def get_settings(self):
         """

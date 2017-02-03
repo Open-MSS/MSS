@@ -447,12 +447,9 @@ class PathInteractor:
         self.waypoints_model = waypoints
         # Connect to the new model's signals.
         wpm = self.waypoints_model
-        wpm.connect(wpm, QtCore.SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
-                    self.qt_data_changed_listener)
-        wpm.connect(wpm, QtCore.SIGNAL("rowsInserted(QModelIndex, int, int)"),
-                    self.qt_insert_remove_point_listener)
-        wpm.connect(wpm, QtCore.SIGNAL("rowsRemoved(QModelIndex, int, int)"),
-                    self.qt_insert_remove_point_listener)
+        wpm.dataChanged.connect(self.qt_data_changed_listener)
+        wpm.rowsInserted.connect(self.qt_insert_remove_point_listener)
+        wpm.rowsRemoved.connect(self.qt_insert_remove_point_listener)
         # Redraw.
         self.pathpatch.get_path().update_from_WaypointsTableModel(wpm)
         self.redraw_figure()

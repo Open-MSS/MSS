@@ -11,7 +11,7 @@ AUTHORS:
 """
 
 import numpy as np
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 from mslib.msui import ui_remotesensing_dockwidget as ui
 from mslib.mss_util import datetime_to_jsec, compute_solar_angle, \
     compute_view_angles, get_distance, rotate_point
@@ -51,8 +51,7 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
         # update plot on every value change
         self.cbDrawTangents.stateChanged.connect(self.update_settings)
         self.cbShowSolarAngle.stateChanged.connect(self.update_settings)
-        self.connect(self.btTangentsColour, QtCore.SIGNAL("clicked()"),
-                     self.set_tangentpoint_colour)
+        self.btTangentsColour.clicked.connect(self.set_tangentpoint_colour)
         self.dsbTangentHeight.valueChanged.connect(self.update_settings)
         self.dsbObsAngle.valueChanged.connect(self.update_settings)
 

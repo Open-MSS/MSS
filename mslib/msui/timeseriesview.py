@@ -31,18 +31,18 @@ AUTHORS:
 import logging
 
 # related third party imports
-from PyQt4 import QtGui  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui  # Qt4 bindings
 
 # local application imports
 from mslib.msui import ui_timeseriesview_window as ui
-from mslib.msui import mss_qt
+from mslib.msui.viewwindows import MSSMplViewWindow
 
 #
 # CLASS TimeSeriesView
 #
 
 
-class MSSTimeSeriesViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_TimeSeriesViewWindow):
+class MSSTimeSeriesViewWindow(MSSMplViewWindow, ui.Ui_TimeSeriesViewWindow):
     """PyQt4 window implementing a time series view.
     """
     name = "Time Series View"

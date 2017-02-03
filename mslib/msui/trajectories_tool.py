@@ -32,24 +32,25 @@ import logging
 import os
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 # local application imports
 from mslib.msui import ui_trajectories_window as ui
 from mslib.msui import trajectory_item_tree as titree
 # import trajectory_ts
-from mslib.msui import mss_qt
+from mslib.msui.viewwindows import MSSViewWindow
 
 #
 # USER INTERFACE CLASS FlightPlanTableView
 #
 
 
-class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
+class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
     """Implements a trajectory tool.
     """
 
     name = "Trajectories Tool"
+    moduleCloses = QtCore.pyqtSignal(name="moduleCloses")
 
     def __init__(self, parent=None, listviews=None):
         """
@@ -83,33 +84,23 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # ===================
 
         # Menu.
-        self.connect(self.actionOpenTrajectories, QtCore.SIGNAL("triggered()"),
-                     self.loadTrajectories)
-        self.connect(self.actionOpenFlightTrack, QtCore.SIGNAL("triggered()"),
-                     self.loadFlightTrack)
+        self.actionOpenTrajectories.triggered.connect(self.loadTrajectories)
+        self.actionOpenFlightTrack.triggered.connect(self.loadFlightTrack)
 
         # Item selection.
-        self.connect(self.btSelectMapElements, QtCore.SIGNAL("clicked()"),
-                     self.selectMapElements)
+        self.btSelectMapElements.clicked.connect(self.selectMapElements)
 
         # Item style.
-        self.connect(self.btColour, QtCore.SIGNAL("clicked()"),
-                     self.setCurrentItemColour)
-        self.connect(self.btLineStyle, QtCore.SIGNAL("clicked()"),
-                     self.setCurrentItemLineStyle)
-        self.connect(self.btLineWidth, QtCore.SIGNAL("clicked()"),
-                     self.setCurrentItemLineWidth)
-        self.connect(self.btTimeMarker, QtCore.SIGNAL("clicked()"),
-                     self.setCurrentItemTimeMarker)
+        self.btColour.clicked.connect(self.setCurrentItemColour)
+        self.btLineStyle.clicked.connect(self.setCurrentItemLineStyle)
+        self.btLineWidth.clicked.connect(self.setCurrentItemLineWidth)
+        self.btTimeMarker.clicked.connect(self.setCurrentItemTimeMarker)
 
         # View control.
-        self.connect(self.btPlotInView, QtCore.SIGNAL("clicked()"),
-                     self.plotCurrentItemInView)
-        self.connect(self.btRemoveFromView, QtCore.SIGNAL("clicked()"),
-                     self.removeCurrentItemFromView)
+        self.btPlotInView.clicked.connect(self.plotCurrentItemInView)
+        self.btRemoveFromView.clicked.connect(self.removeCurrentItemFromView)
         if self.listviews:
-            self.connect(self.listviews, QtCore.SIGNAL("viewsChanged()"),
-                         self.updateViews)
+            self.listviews.viewsChanged.connect(self.updateViews)
             self.updateViews()
 
     def closeEvent(self, event):
@@ -119,7 +110,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         'moduleCloses()'.
         """
         if super(MSSTrajectoriesToolWindow, self).closeEvent(event):
-            self.emit(QtCore.SIGNAL("moduleCloses()"))
+            self.moduleCloses.emit()
 
     def loadFlightTrack(self):
         """Slot for the 'Open Flight Track..' menu entry. Opens a file dialog

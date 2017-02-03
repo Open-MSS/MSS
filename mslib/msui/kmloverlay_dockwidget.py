@@ -10,7 +10,7 @@ AUTHORS:
 import logging
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 # local application imports
 from mslib.msui import ui_kmloverlay_dockwidget as ui
@@ -37,10 +37,8 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.pbSelectColour.setPalette(palette)
 
         # # Connect slots and signals.
-        self.connect(self.btSelectFile, QtCore.SIGNAL("clicked()"),
-                     self.select_file)
-        self.connect(self.btLoadFile, QtCore.SIGNAL("clicked()"),
-                     self.load_file)
+        self.btSelectFile.clicked.connect(self.select_file)
+        self.btLoadFile.clicked.connect(self.load_file)
         self.pbSelectColour.clicked.connect(self.select_colour)
         self.cbOverlay.stateChanged.connect(self.update_settings)
         self.cbOverlay.setChecked(True)

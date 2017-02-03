@@ -11,7 +11,7 @@ AUTHORS:
 
 """
 
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 from mslib.msui import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.mss_util import create_hexagon
@@ -39,10 +39,8 @@ class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
 
         self.dsbHexgaonRadius.setValue(200)
 
-        self.connect(self.pbAddHexagon, QtCore.SIGNAL("clicked()"),
-                     self._add_hexagon)
-        self.connect(self.pbRemoveHexagon, QtCore.SIGNAL("clicked()"),
-                     self._remove_hexagon)
+        self.pbAddHexagon.clicked.connect(self._add_hexagon)
+        self.pbRemoveHexagon.clicked.connect(self._remove_hexagon)
 
     def _get_parameters(self):
         return {
