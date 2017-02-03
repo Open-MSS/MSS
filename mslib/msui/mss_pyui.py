@@ -50,6 +50,7 @@ import logging
 import os
 import sys
 import types
+import functools
 
 from mslib import __version__
 from mslib.msui import ui_mainwindow as ui
@@ -67,7 +68,7 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
@@ -117,7 +118,8 @@ class QActiveViewsListWidgetItem(QtGui.QListWidgetItem):
         """
         if self.parent:
             self.parent.takeItem(self.parent.row(self))
-            self.parent.emit(QtCore.SIGNAL("viewsChanged()"))
+            if hasattr(self.parent, "viewsChanged"):
+                self.parent.viewsChanged.emit()
 
 
 #
@@ -151,10 +153,8 @@ class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
         self.parent = parent
         self.flighttrack_model = flighttrack_model
 
-        if parent:
-            parent.connect(parent,
-                           QtCore.SIGNAL("itemChanged(QListWidgetItem *)"),
-                           self.nameChanged)
+        if parent is not None:
+            parent.itemChanged.connect(self.nameChanged)
 
     def nameChanged(self, item):
         """Slot to change the name of a flight track.
@@ -204,54 +204,37 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         # ===================
 
         # File menu.
-        self.connect(self.actionNewFlightTrack, QtCore.SIGNAL("triggered()"),
-                     self.createNewFlightTrack)
-        self.connect(self.actionOpenFlightTrack, QtCore.SIGNAL("triggered()"),
-                     self.openFlightTrack)
-        self.connect(self.actionCloseSelectedFlightTrack, QtCore.SIGNAL("triggered()"),
-                     self.closeFlightTrack)
-        self.connect(self.actionSaveActiveFlightTrack, QtCore.SIGNAL("triggered()"),
-                     self.saveFlightTrack)
-        self.connect(self.actionSaveActiveFlightTrackAs, QtCore.SIGNAL("triggered()"),
-                     self.saveFlightTrackAs)
+        self.actionNewFlightTrack.triggered.connect(functools.partial(self.createNewFlightTrack, None, None, False))
+        self.actionOpenFlightTrack.triggered.connect(self.openFlightTrack)
+        self.actionCloseSelectedFlightTrack.triggered.connect(self.closeFlightTrack)
+        self.actionSaveActiveFlightTrack.triggered.connect(self.saveFlightTrack)
+        self.actionSaveActiveFlightTrackAs.triggered.connect(self.saveFlightTrackAs)
 
         # Views menu.
-        self.connect(self.actionTopView, QtCore.SIGNAL("triggered()"),
-                     self.createNewView)
-        self.connect(self.actionSideView, QtCore.SIGNAL("triggered()"),
-                     self.createNewView)
-        self.connect(self.actionTableView, QtCore.SIGNAL("triggered()"),
-                     self.createNewView)
-        self.connect(self.actionLoopView, QtCore.SIGNAL("triggered()"),
-                     self.createNewView)
-        self.connect(self.actionTimeSeriesViewTrajectories, QtCore.SIGNAL("triggered()"),
-                     self.createNewView)
+        self.actionTopView.triggered.connect(self.createNewView)
+        self.actionSideView.triggered.connect(self.createNewView)
+        self.actionTableView.triggered.connect(self.createNewView)
+        self.actionLoopView.triggered.connect(self.createNewView)
+        self.actionTimeSeriesViewTrajectories.triggered.connect(self.createNewView)
 
         # Tools menu.
-        self.connect(self.actionTrajectoryToolLagranto, QtCore.SIGNAL("triggered()"),
-                     self.createNewTool)
+        self.actionTrajectoryToolLagranto.triggered.connect(self.createNewTool)
 
         # Help menu.
-        self.connect(self.actionAboutMSUI, QtCore.SIGNAL("triggered()"),
-                     self.showAboutDlg)
+        self.actionAboutMSUI.triggered.connect(self.showAboutDlg)
 
         # Load Config
-        self.connect(self.actionLoad_Configuration, QtCore.SIGNAL("triggered()"),
-                     self.openConfigFile)
+        self.actionLoad_Configuration.triggered.connect(self.openConfigFile)
 
         # Flight Tracks.
-        self.connect(self.listFlightTracks, QtCore.SIGNAL("itemChanged(QListWidgetItem *)"),
-                     self.flightTrackNameChanged)
-        self.connect(self.btSelectFlightTrack, QtCore.SIGNAL("clicked()"),
-                     self.setFlightTrackActive)
+        self.listFlightTracks.itemChanged.connect(self.flightTrackNameChanged)
+        self.btSelectFlightTrack.clicked.connect(self.setFlightTrackActive)
 
         # Views.
-        self.connect(self.listViews, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
-                     self.activateSubWindow)
+        self.listViews.itemActivated.connect(self.activateWindow)
 
         # Tools.
-        self.connect(self.listTools, QtCore.SIGNAL("itemActivated(QListWidgetItem *)"),
-                     self.activateSubWindow)
+        self.listTools.itemActivated.connect(self.activateWindow)
 
         self.addImportFilter("CSV", "csv", load_from_csv)
         self.addExportFilter("CSV", "csv", save_to_csv)
@@ -299,7 +282,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                 self.setFlightTrackActive()
 
         setattr(self, full_name, types.MethodType(load_function_wrapper, self))
-        self.connect(action, QtCore.SIGNAL("triggered()"), getattr(self, full_name))
+        action.triggered.connect(getattr(self, full_name))
 
     def addExportFilter(self, name, extension, function):
         full_name = "actionExportFlightTrack" + name.replace(" ", "")
@@ -321,7 +304,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                 function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
 
         setattr(self, full_name, types.MethodType(save_function_wrapper, self))
-        self.connect(action, QtCore.SIGNAL("triggered()"), getattr(self, full_name))
+        action.triggered.connect(getattr(self, full_name))
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
@@ -373,10 +356,10 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             view_window.show()
             # Add an entry referencing the new view to the list of views.
             listitem = QActiveViewsListWidgetItem(view_window, self.listViews)
-            self.connect(view_window, QtCore.SIGNAL("viewCloses()"),
-                         listitem.view_destroyed)
+            view_window.viewCloses.connect(listitem.view_destroyed)
             self.listViews.setCurrentItem(listitem)
-            self.listViews.emit(QtCore.SIGNAL("viewsChanged()"))
+            if hasattr(self.listViews, "viewsChanged"):
+                self.listViews.viewsChanged.emit()
 
     def createNewTool(self):
         """Method called when the user selects a new tool to be opened. Creates
@@ -396,8 +379,8 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             tool_window.show()
             # Add an entry referencing the new view to the list of views.
             listitem = QActiveViewsListWidgetItem(tool_window, self.listTools)
-            self.connect(tool_window, QtCore.SIGNAL("moduleCloses()"),
-                         listitem.view_destroyed)
+            if hasattr(tool_window, "moduleCloses"):
+                tool_window.moduleCloses.connect(listitem.view_destroyed)
 
     def activateSubWindow(self, item):
         """When the user clicks on one of the open view or tool windows, this
@@ -412,8 +395,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
 
     new_flight_track_counter = 0
 
-    def createNewFlightTrack(self, template=None,
-                             filename=None, activate=False):
+    def createNewFlightTrack(self, template=None, filename=None, activate=False):
         """Creates a new flight track model from a template. Adds a new entry to
            the list of flight tracks. Called when the user selects the 'new/open
            flight track' menu entries.
@@ -424,7 +406,6 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         filename -- if not None, load the flight track in the specified file.
         activate -- set the new flight track to be the active flight track.
         """
-
         if template is None:
             template = []
             waypoints = config_loader(dataset="new_flighttrack_template", default=mss_default.new_flighttrack_template)

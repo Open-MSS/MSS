@@ -47,9 +47,8 @@ import xml.dom.minidom
 
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
-from PyQt4.QtCore import QString, QVariant, Qt, QModelIndex, SIGNAL, QAbstractTableModel
-from PyQt4.QtGui import QItemDelegate, QComboBox
+from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QString, QVariant, Qt, QModelIndex, SIGNAL, QAbstractTableModel, QItemDelegate, QComboBox
 import numpy as np
 
 # local application imports

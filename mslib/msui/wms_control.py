@@ -46,7 +46,7 @@ import xml.etree.ElementTree as etree
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 import mslib.owslib.wms
 import mslib.owslib.util
@@ -342,16 +342,12 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
         # Connect slots and signals.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.connect(self.btGetCapabilities, QtCore.SIGNAL("clicked()"),
-                     self.getCapabilities)
-        self.connect(self.tbViewCapabilities, QtCore.SIGNAL("clicked()"),
-                     self.viewCapabilities)
+        self.btGetCapabilities.clicked.connect(self.getCapabilities)
+        self.tbViewCapabilities.clicked.connect(self.viewCapabilities)
 
-        self.connect(self.cbLayer, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.layerChanged)
+        self.cbLayer.currentIndexChanged.connect(self.layerChanged)
 
-        self.connect(self.cbLevel, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.levelChanged)
+        self.cbLevel.currentIndexChanged.connect(self.levelChanged)
         # Connecting both activated() and currentIndexChanged() signals leads
         # to **TimeChanged() being called twice when the user selects a new
         # item in the combobox. However, currentIndexChanged alone doesn't
@@ -359,46 +355,30 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # (e.g. to confirm the time). activated() doesn't trigger the event
         # if the index has been changed programmatically (e.g. through the
         # back/forward buttons).
-        self.connect(self.cbInitTime, QtCore.SIGNAL("activated(int)"),
-                     self.initTimeChanged)
+        self.cbInitTime.activated.connect(self.initTimeChanged)
         # self.connect(self.cbInitTime, QtCore.SIGNAL("currentIndexChanged(int)"),
         #             self.initTimeChanged)
-        self.connect(self.cbValidTime, QtCore.SIGNAL("activated(int)"),
-                     self.validTimeChanged)
+        self.cbValidTime.activated.connect(self.validTimeChanged)
         # self.connect(self.cbValidTime, QtCore.SIGNAL("currentIndexChanged(int)"),
         #             self.validTimeChanged)
 
-        self.connect(self.tbInitTime_back, QtCore.SIGNAL("clicked()"),
-                     self.init_time_back_click)
-        self.connect(self.tbInitTime_fwd, QtCore.SIGNAL("clicked()"),
-                     self.init_time_fwd_click)
-        self.connect(self.tbInitTime_cbback, QtCore.SIGNAL("clicked()"),
-                     self.cb_init_time_back_click)
-        self.connect(self.tbInitTime_cbfwd, QtCore.SIGNAL("clicked()"),
-                     self.cb_init_time_fwd_click)
-        self.connect(self.dteInitTime, QtCore.SIGNAL("dateTimeChanged(const QDateTime&)"),
-                     self.check_init_time)
-        self.connect(self.tbValidTime_back, QtCore.SIGNAL("clicked()"),
-                     self.valid_time_back_click)
-        self.connect(self.tbValidTime_fwd, QtCore.SIGNAL("clicked()"),
-                     self.valid_time_fwd_click)
-        self.connect(self.tbValidTime_cbback, QtCore.SIGNAL("clicked()"),
-                     self.cb_valid_time_back_click)
-        self.connect(self.tbValidTime_cbfwd, QtCore.SIGNAL("clicked()"),
-                     self.cb_valid_time_fwd_click)
-        self.connect(self.dteValidTime, QtCore.SIGNAL("dateTimeChanged(const QDateTime&)"),
-                     self.check_valid_time)
-        self.connect(self.tbLevel_back, QtCore.SIGNAL("clicked()"),
-                     self.level_back_click)
-        self.connect(self.tbLevel_fwd, QtCore.SIGNAL("clicked()"),
-                     self.level_fwd_click)
+        self.tbInitTime_back.clicked.connect(self.init_time_back_click)
+        self.tbInitTime_fwd.clicked.connect(self.init_time_fwd_click)
+        self.tbInitTime_cbback.clicked.connect(self.cb_init_time_back_click)
+        self.tbInitTime_cbfwd.clicked.connect(self.cb_init_time_fwd_click)
+        self.dteInitTime.dateTimeChanged.connect(self.check_init_time)
+        self.tbValidTime_back.clicked.connect(self.valid_time_back_click)
+        self.tbValidTime_fwd.clicked.connect(self.valid_time_fwd_click)
+        self.tbValidTime_cbback.clicked.connect(self.cb_valid_time_back_click)
+        self.tbValidTime_cbfwd.clicked.connect(self.cb_valid_time_fwd_click)
+        self.dteValidTime.dateTimeChanged.connect(self.check_valid_time)
+        self.tbLevel_back.clicked.connect(self.level_back_click)
+        self.tbLevel_fwd.clicked.connect(self.level_fwd_click)
 
-        self.connect(self.btClearCache, QtCore.SIGNAL("clicked()"),
-                     self.clearCache)
+        self.btClearCache.clicked.connect(self.clearCache)
 
-        if view is not None:
-            self.connect(view, QtCore.SIGNAL("redrawn()"),
-                         self.afterRedraw)
+        if view is not None and hasattr(view, "redrawn"):
+            self.view.redrawn.connect(self.afterRedraw)
 
         # Progress dialog to inform the user about image ongoing retrievals.
         self.pdlg = QtGui.QProgressDialog("retrieving image...", "Cancel",
@@ -514,8 +494,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             self.validTimeChanged()
 
         # Reconnect layerChanged.
-        self.connect(self.cbLayer, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.layerChanged)
+        self.cbLayer.currentIndexChanged.connect(self.layerChanged)
 
     def viewCapabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities
@@ -569,6 +548,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         """Returns the object from the layer tree that fits the given
            layer name.
         """
+        if self.wms is None:
+            return None
         if layername in self.wms.contents.keys():
             return self.wms.contents[layername]
         else:
@@ -1523,8 +1504,7 @@ class VSecWMSControlWidget(WMSControlWidget):
                                                    view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.setText("get vertical section")
-        self.connect(self.btGetMap, QtCore.SIGNAL("clicked()"),
-                     self.getVSec)
+        self.btGetMap.clicked.connect(self.getVSec)
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance from which the waypoints
@@ -1590,8 +1570,7 @@ class HSecWMSControlWidget(WMSControlWidget):
                                                    default_WMS=default_WMS,
                                                    wms_cache=wms_cache,
                                                    view=view)
-        self.connect(self.btGetMap, QtCore.SIGNAL("clicked()"),
-                     self.getMap)
+        self.btGetMap.clicked.connect(self.getMap)
 
     def levelChanged(self):
         if self.cbLevelOn.isChecked():
@@ -1650,8 +1629,7 @@ def _main():
 
     application = QtGui.QApplication(sys.argv)
     window = WMSControlWidget(default_WMS=[])
-    window.connect(window.btGetMap, QtCore.SIGNAL("clicked()"),
-                   window.getMap)
+    window.btGetMap.clicked.connect(window.getMap)
     window.show()
     sys.exit(application.exec_())
 
