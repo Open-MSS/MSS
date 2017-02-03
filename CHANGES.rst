@@ -1,8 +1,8 @@
 Changelog
-================
+=========
 
 Version 1.3.1
---------------------------------------
+-------------
 
 Bug Fixes:
  - Inconsistent projections employed in default/sample data for client and server, #109
@@ -13,7 +13,7 @@ Bug Fixes:
 
 
 Version 1.3.0
------------------------------------------
+-------------
 
 New Features:
  - Suggest standard name for saving plots, #13
@@ -39,7 +39,7 @@ Other Changes:
  - Reimplemented Hexagon Tools from Stefan using a docking widget for TableView. #18
 
 HINT:
-~~~~~~~~~~~~~~~~
+~~~~~
 
 We are now based on the channel *conda-forge*, as some libraries were not in defaults of anaconda::
 
@@ -48,7 +48,7 @@ We are now based on the channel *conda-forge*, as some libraries were not in def
 
 
 Version 1.2.4
-----------------------------------
+-------------
 
 Bug Fixes:
   - Flight performance computation broken, #75
@@ -59,7 +59,7 @@ Other Changes:
 
 
 Version 1.2.3
-----------------------------------------
+-------------
 
 Bug Fixes:
  - check whether variables cmin, cmax are None, #68
@@ -70,7 +70,7 @@ Other Changes:
 
 
 Version 1.2.2 
---------------------------------------------
+-------------
 
 Bug Fixes:
  - initialize of basemap for GUI and WMS have to use same resolution, #60
@@ -84,7 +84,7 @@ Other Changes:
  - installation with conda-forge described#63
 
 Version 1.2.1 
-----------------------------------------
+-------------
 
 Bug Fixes:
  - server throws useful messages if mss_wms_settings.py is missing necessary variables, #58
@@ -93,7 +93,7 @@ Other Changes:
  - most version pinning removed, #59. Thanks to ocefpaf (conda-forge-member)
 
 Version 1.2.0
-------------------------------------
+-------------
 
 New Features:
  - mss client, setup default configuration and json config file, #36, #37
@@ -117,7 +117,7 @@ Other Changes:
 
 
 Version 1.1.0 
-----------------------------------
+-------------
 
 New Features:
  - Vertical section styles supported in standalone server, #10
