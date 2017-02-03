@@ -100,7 +100,6 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
             segment = self.overpass_segments[index]
         if self.view:
             self.view.plotSatelliteOverpass(segment)
-        self.view.waypoints_interactor.update()
 
 
 def _main():

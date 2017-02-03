@@ -44,6 +44,7 @@ import matplotlib
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+from matplotlib import patheffects
 import mpl_toolkits.basemap as basemap
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -54,9 +55,9 @@ except ImportError:
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import trajectory_item_tree as titree
 
-"""
-CLASS MapCanvas
-"""
+#
+# CLASS MapCanvas
+#
 
 
 class MapCanvas(basemap.Basemap):
@@ -452,7 +453,7 @@ class MapCanvas(basemap.Basemap):
                 # the user zooms/pans..
                 self.map_boundary.remove()
             except Exception, ex:
-                logging.debug("wild exception catched: %s", ex)
+                logging.debug("wild exception caught - please make this more specific: %s", ex)
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
@@ -778,9 +779,7 @@ class MapCanvas(basemap.Basemap):
             # projection, gc.npts() returns lons that connect lon1 and lat2, not lon1 and
             # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
             # of pyproj?? (mr, 16Oct2012)
-            # print lons[i],lats[i],lons[i+1],lats[i+1],npoints
             lonlats = gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
-            # print lonlats
             for lon, lat in lonlats:
                 gclons.append(lon)
                 gclats.append(lat)
@@ -799,9 +798,9 @@ class MapCanvas(basemap.Basemap):
         return self.plot(x, y, **kwargs)
 
 
-"""
-CLASS SatelliteOverpassPatch
-"""
+#
+# CLASS SatelliteOverpassPatch
+#
 
 
 class SatelliteOverpassPatch(object):
@@ -905,60 +904,66 @@ class KMLPatch(object):
     KML overlay implementation is currently very crude and basic and most features are not supported.
     """
 
-    def __init__(self, mapcanvas, kml):
+    def __init__(self, mapcanvas, kml, color):
         self.map = mapcanvas
         self.kml = kml
         self.patches = []
+        self.color = color
         self.draw()
 
-    def add_polygon(self, polygon):
+    def add_polygon(self, polygon, _):
         coords = str(polygon.outerBoundaryIs.LinearRing.coordinates).split()
         lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
         x, y = self.map(lons, lats)
-        self.patches.append(self.map.plot(x, y, "-k"))
+        self.patches.append(self.map.plot(x, y, "-", color=self.color))
 
-    def add_point(self, point):
+    def add_point(self, point, name):
         coords = str(point.coordinates).split()
         lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
+        x, y = self.map(lons[0], lats[0])
+        self.patches.append(self.map.plot(x, y, "o", color=self.color))
+        if name is not None:
+            self.patches.append([self.map.ax.annotate(name, xy=(x, y), xycoords="data",
+                                xytext=(5, 5), textcoords='offset points',
+                                path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
+
+    def add_line(self, line, _):
+        coords = str(line.coordinates).split()
+        lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
         x, y = self.map(lons, lats)
-        self.patches.append(self.map.plot(x, y, "ok"))
+        self.patches.append(self.map.plot(x, y, "-", color=self.color))
 
-    def parse_placemarks(self, placemarks):
-        for i in range(len(placemarks)):
-            placemark = placemarks[i]
-            if hasattr(placemark, "Polygon"):
-                self.add_polygon(placemark.Polygon)
-            if hasattr(placemark, "Point"):
-                self.add_point(placemark.Point)
-            if hasattr(placemark, "MultiGeometry"):
-                multigeometry = placemark.MultiGeometry
-                if hasattr(multigeometry, "Point"):
-                    for j in range(len(multigeometry.Point)):
-                        self.add_point(multigeometry.Point[j])
-                if hasattr(multigeometry, "Polygon"):
-                    for j in range(len(multigeometry.Polygon)):
-                        self.add_polygon(multigeometry.Polygon[j])
+    def parse_geometries(self, placemark, name=None):
+        for attr_name, method in (
+                ("Point", self.add_point),
+                ("Polygon", self.add_polygon),
+                ("LineString", self.add_line),
+                ("MultiGeometry", self.parse_geometries)):
+            for attr in getattr(placemark, attr_name, []):
+                method(attr, name)
 
-    def search_placemarks(self, document):
-        if hasattr(document, "Placemark"):
-            self.parse_placemarks(document.Placemark)
-        if hasattr(document, "Folder"):
-            for j in range(len(document.Folder)):
-                self.search_placemarks(document.Folder[j])
+    def parse_placemarks(self, level):
+        for placemark in getattr(level, "Placemark", []):
+            name = getattr(placemark, "name", None)
+            self.parse_geometries(placemark, name)
+        for folder in getattr(level, "Folder", []):
+            self.parse_placemarks(folder)
 
     def draw(self):
         """Do the actual plotting of the patch.
         """
         # Plot satellite track.
-        self.search_placemarks(self.kml.Document)
+        self.parse_placemarks(self.kml.Document)
 
         self.map.ax.figure.canvas.draw()
 
-    def update(self):
+    def update(self, color=None):
         """Removes the current plot of the patch and redraws the patch.
            This is necessary, for instance, when the map projection and/or
            extent has been changed.
         """
+        if color is not None:
+            self.color=color
         self.remove()
         self.draw()
 

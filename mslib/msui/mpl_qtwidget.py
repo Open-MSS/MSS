@@ -71,9 +71,9 @@ if _matplotlib_version >= '1.2':
 else:
     PIL_image_origin = "lower"
 
-"""
-Matplotlib Qt Canvas
-"""
+#
+# Matplotlib Qt Canvas
+#
 
 
 class MplCanvas(FigureCanvas):
@@ -212,9 +212,9 @@ class MplNavBarWidget(QtGui.QWidget):
         self.setLayout(self.vbl)
 
 
-"""
-Side View Canvas and Widget
-"""
+#
+# Side View Canvas and Widget
+#
 
 
 class MplSideViewCanvas(MplCanvas):
@@ -337,6 +337,7 @@ class MplSideViewCanvas(MplCanvas):
         # Draw ticks and tick labels.
         ax.set_yticks(minor_ticks, minor=True)
         ax.set_yticks(major_ticks, minor=False)
+        ax.set_yticklabels([], minor=True, fontsize=10)
         ax.set_yticklabels(labels, minor=False, fontsize=10)
 
         # Set axis limits and draw grid for major ticks.
@@ -536,9 +537,9 @@ class MplSideViewWidget(MplNavBarWidget):
                 action.setEnabled(False)
 
 
-"""
-Top View Canvas and Widget
-"""
+#
+# Top View Canvas and Widget
+#
 
 
 class MplTopViewCanvas(MplCanvas):
@@ -565,8 +566,7 @@ class MplTopViewCanvas(MplCanvas):
         self.setMapAppearance(settings)
 
         # Progress dialog to inform the user about map redraws.
-        self.pdlg = QtGui.QProgressDialog("redrawing map...", "Cancel",
-                                          0, 10, self)
+        self.pdlg = QtGui.QProgressDialog("redrawing map...", "Cancel", 0, 10, self)
 
     def initMap(self, model=None, **kwargs):
         """Set up the map view.
@@ -576,7 +576,7 @@ class MplTopViewCanvas(MplCanvas):
                                      resolution='l', area_thresh=1000., ax=ax,
                                      **kwargs)
         ax.set_autoscale_on(False)
-        ax.set_title('top view')
+        ax.set_title('Top view', horizontalalignment='left', x=0)
         self.draw()  # necessary?
 
         if model:
@@ -647,7 +647,7 @@ class MplTopViewCanvas(MplCanvas):
 
         self.drawMetadata("Top view")
 
-        # correctly. no idea why..
+        # Update in case of a projection change
         self.waypoints_interactor.update()
 
         self.pdlg.setValue(10)
@@ -755,8 +755,20 @@ class MplTopViewCanvas(MplCanvas):
                 self.draw()
         if segment:
             # Create a new patch.
-            self.satoverpasspatch = mpl_map.SatelliteOverpassPatch(self.map,
-                                                                   segment)
+            self.satoverpasspatch = mpl_map.SatelliteOverpassPatch(self.map, segment)
+
+    def plotKML(self, kmloverlay):
+        """Plots a satellite track on top of the map.
+        """
+        if self.kmloverlay:
+            # If track is currently plotted on the map, remove it.
+            self.kmloverlay.remove()
+            if not kmloverlay:
+                self.kmloverlay = None
+                self.draw()
+        if kmloverlay:
+            # Create a new patch.
+            self.kmloverlay = kmloverlay
 
     def setMapAppearance(self, settings_dict):
         """Apply settings from dictionary 'settings_dict' to the view.
@@ -840,9 +852,9 @@ class MplTopViewWidget(MplNavBarWidget):
         self.canvas.redrawMap()
 
 
-"""
-Time Series View Canvas and Widget
-"""
+#
+# Time Series View Canvas and Widget
+#
 
 
 class MplTimeSeriesViewCanvas(MplCanvas):

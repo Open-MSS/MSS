@@ -60,9 +60,9 @@ from mslib.msui import constants
 from mslib.mss_util import convertHPAToKM
 
 
-"""
-CLASS MSSWebMapService
-"""
+#
+# CLASS MSSWebMapService
+#
 
 
 class MSSWebMapService(mslib.owslib.wms.WebMapService):
@@ -129,7 +129,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
-        if styles:
+        if styles is not None:
             assert len(styles) == len(layers)
             request['styles'] = ','.join(styles)
         else:
@@ -256,7 +256,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
     """
 
     def __init__(self, parent=None, crs_filter=".*",
-                 default_WMS=[], wms_cache=None, view=None):
+                 default_WMS=None, wms_cache=None, view=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
@@ -276,7 +276,8 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
         # Initial list of WMS servers.
         self.cbWMS_URL.clear()
-        self.cbWMS_URL.addItems(default_WMS)
+        if default_WMS is not None:
+            self.cbWMS_URL.addItems(default_WMS)
 
         # Compile regular expression used in crsAllowed() to filter
         # layers accordings to their CRS.
@@ -1502,9 +1503,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         ################################################################################
 
 
-"""
-CLASS VSecWMSControlWidget
-"""
+#
+# CLASS VSecWMSControlWidget
+#
 
 
 class VSecWMSControlWidget(WMSControlWidget):
@@ -1513,7 +1514,7 @@ class VSecWMSControlWidget(WMSControlWidget):
     """
 
     def __init__(self, parent=None, crs_filter="VERT:.*",
-                 default_WMS=[], waypoints_model=None,
+                 default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
         super(VSecWMSControlWidget, self).__init__(parent=parent,
                                                    crs_filter=crs_filter,
@@ -1572,9 +1573,9 @@ class VSecWMSControlWidget(WMSControlWidget):
                                    style=style_title)
 
 
-"""
-CLASS HSecWMSControlWidget
-"""
+#
+# CLASS HSecWMSControlWidget
+#
 
 
 class HSecWMSControlWidget(WMSControlWidget):
@@ -1583,7 +1584,7 @@ class HSecWMSControlWidget(WMSControlWidget):
     """
 
     def __init__(self, parent=None, crs_filter="EPSG:.*",
-                 default_WMS=[], view=None, wms_cache=None):
+                 default_WMS=None, view=None, wms_cache=None):
         super(HSecWMSControlWidget, self).__init__(parent=parent,
                                                    crs_filter=crs_filter,
                                                    default_WMS=default_WMS,
@@ -1648,7 +1649,7 @@ def _main():
                         datefmt="%Y-%m-%d %H:%M:%S")
 
     application = QtGui.QApplication(sys.argv)
-    window = WMSControlWidget(default_WMS=default_WMS)
+    window = WMSControlWidget(default_WMS=[])
     window.connect(window.btGetMap, QtCore.SIGNAL("clicked()"),
                    window.getMap)
     window.show()

@@ -65,9 +65,9 @@ from mslib.msui import mss_qt
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
-"""
-CLASS MSSLoopWindow
-"""
+#
+# CLASS MSSLoopWindow
+#
 
 
 class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
@@ -87,8 +87,8 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
     name = "Loop View"
     max_views = 4  # maximum number of views
 
-    def __init__(self, config, *args):
-        super(MSSLoopWindow, self).__init__(*args)
+    def __init__(self, config, parent=None, *args):
+        super(MSSLoopWindow, self).__init__(parent, *args)
         self.setupUi(self)
         self.statusBar.addPermanentWidget(QtGui.QLabel(
             "Use wheel on image for time navigation, "
