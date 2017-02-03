@@ -50,11 +50,11 @@ import os
 import urllib2
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
 
 # local application imports
-from mslib.msui import ui_imageloop_widget as ui
-from mslib.msui import ui_imageloop_load_dialog as uipc
+from mslib.msui.mss_qt import ui_imageloop_widget as ui
+from mslib.msui.mss_qt import ui_imageloop_load_dialog as uipc
 from mslib.msui.wms_control import MSS_WMS_AuthenticationDialog
 
 #
@@ -62,7 +62,7 @@ from mslib.msui.wms_control import MSS_WMS_AuthenticationDialog
 #
 
 
-class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
+class ProductChooserDialog(QtWidgets.QDialog, uipc.Ui_ProductChooserDialog):
     """Dialog to let the user choose a product to load (e.g. ECMWF Europe
        relative humidity).
 
@@ -154,7 +154,7 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
 #
 
 
-class LoopLabel(QtGui.QLabel):
+class LoopLabel(QtWidgets.QLabel):
     """This is a label that is used to display an image, extended by a method
        that observes mouse wheel events (for time and level navigation).
     """
@@ -182,7 +182,7 @@ class LoopLabel(QtGui.QLabel):
 #
 
 
-class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
+class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
     """Widget that includes a LoopLabel for an image. Additionally
        provides GUI elements to control zoom and vertical level navigation.
        A double click on the widget opens a ProductChooserDialog.
@@ -227,7 +227,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         # central widget of the scroll area.
         self.imageLabel = LoopLabel()
         self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
-        self.imageLabel.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
+        self.imageLabel.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         self.imageLabel.setScaledContents(True)
         self.imageLabel.setText("double click to select a product for retrieval.")
         self.imageLabel.adjustSize()
@@ -256,7 +256,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         self.imageLabel.shiftWheelOnImage.connect(self.changeLevel)
 
         # Progress dialog to inform the user about image ongoing retrievals.
-        self.pdlg = QtGui.QProgressDialog("retrieving images...", "Cancel", 0, 100, self)
+        self.pdlg = QtWidgets.QProgressDialog("retrieving images...", "Cancel", 0, 100, self)
 
     def zoomIn(self):
         """Slot connected to the '+' button (zooms in).
@@ -384,7 +384,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                                 dlg = MSS_WMS_AuthenticationDialog(parent=self)
                                 dlg.lblMessage.setText(realm)
                                 dlg.setModal(True)
-                                if dlg.exec_() == QtGui.QDialog.Accepted:
+                                if dlg.exec_() == QtWidgets.QDialog.Accepted:
                                     username, password = dlg.getAuthInfo()
                                     auth_installed = False
                                 else:
@@ -407,7 +407,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
                 # Update progress dialog.
                 self.pdlg.setValue((float(ilevel) + float(istep) / num_steps) / num_levels * 100.)
                 self.pdlg.repaint()
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 if self.pdlg.wasCanceled() or cancel:
                     break
 
@@ -532,8 +532,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         # Emit a changeValidTime signal to inform the other image views
         # of the time change.
         if time is None:
-            self.emit(QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"), forward,
-                      self.valid_time)
+            self.changeValidTime.emit(forward, self.valid_time)
 
     def changeLevel(self, up):
         """Change the current level. Called on either
@@ -555,7 +554,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
            and lets the user load new images.
         """
         result = self.products_dialog.exec_()
-        if result == QtGui.QDialog.Accepted:
+        if result == QtWidgets.QDialog.Accepted:
             self.loadDataFromHTTP(self.products_dialog.type(),
                                   self.products_dialog.product(),
                                   self.products_dialog.region(),
@@ -578,7 +577,7 @@ def _main():
 
     import sys
 
-    application = QtGui.QApplication(sys.argv)
+    application = QtWidgets.QApplication(sys.argv)
     window = ImageLoopWidget(config=configuration)
     window.show()
     sys.exit(application.exec_())

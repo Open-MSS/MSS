@@ -30,12 +30,12 @@ AUTHORS:
 from abc import abstractmethod
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
 
 
 # local application imports
 
-class MSSViewWindow(QtGui.QMainWindow):
+class MSSViewWindow(QtWidgets.QMainWindow):
     """Derives QMainWindow to provide some common functionality to all
        MSUI view windows.
     """
@@ -60,11 +60,11 @@ class MSSViewWindow(QtGui.QMainWindow):
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
-        ret = QtGui.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                        self.tr("Do you want to close this %s?" % self.name),
-                                        QtGui.QMessageBox.Yes,
-                                        QtGui.QMessageBox.No | QtGui.QMessageBox.Default)
-        if ret == QtGui.QMessageBox.Yes:
+        ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
+                                            self.tr("Do you want to close this %s?" % self.name),
+                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                            QtWidgets.QMessageBox.No)
+        if ret == QtWidgets.QMessageBox.Yes:
             self.viewCloses.emit()
             event.accept()
         else:
@@ -95,7 +95,7 @@ class MSSViewWindow(QtGui.QMainWindow):
            stored in self.docks[index]. The dock will have the title <title>
            and contain the Qt widget <widget>.
         """
-        self.docks[index] = QtGui.QDockWidget(title, self)
+        self.docks[index] = QtWidgets.QDockWidget(title, self)
         self.docks[index].setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
         # setWidget transfers the widget's ownership to Qt -- no setParent()
         # call is necessary:

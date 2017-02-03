@@ -159,7 +159,7 @@
   <customwidget>
    <class>MplSideViewWidget</class>
    <extends>QWidget</extends>
-   <header>mpl_qtwidget</header>
+   <header>mslib.msui.mpl_qtwidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

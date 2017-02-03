@@ -31,18 +31,18 @@ AUTHORS:
 import logging
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
 
 # local application imports
 from mslib import mss_util
-from mslib.msui import ui_satellite_dockwidget as ui
+from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
 
 #
 # CLASS SatelliteControlWidgeT
 #
 
 
-class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
+class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
     def __init__(self, parent=None, view=None):
         super(SatelliteControlWidget, self).__init__(parent)
         self.setupUi(self)
@@ -60,12 +60,12 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
         """Slot that opens a file dialog to choose a file with satellite
            overpass predictions.
         """
-        fname = QtGui.QFileDialog.getOpenFileName(self,
-                                                  "Open NASA satellite overpass prediction",
-                                                  "", "(*.*)")
-        if fname.isEmpty():
+        filename = QtGui.QFileDialog.getOpenFileName(
+            self, "Open NASA satellite overpass prediction", "", "(*.*)")
+        filename = filename[0] if USE_PYQT5 else str(filename)
+        if not filename:
             return
-        self.leFile.setText(fname)
+        self.leFile.setText(filename)
 
     def loadFile(self):
         """Load the file specified in leFile and fill the combobox with the
@@ -101,7 +101,7 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
 def _main():
     import sys
 
-    application = QtGui.QApplication(sys.argv)
+    application = QtWidgets.QApplication(sys.argv)
     window = SatelliteControlWidget()
     window.show()
     sys.exit(application.exec_())

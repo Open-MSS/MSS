@@ -38,11 +38,11 @@ import pickle
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString
 
 # local application imports
-from mslib.msui import ui_topview_window as ui
-from mslib.msui import ui_topview_mapappearance as ui_ma
+from mslib.msui.mss_qt import ui_topview_window as ui
+from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import flighttrack as ft
@@ -63,7 +63,7 @@ KMLOVERLAY = 3
 #
 
 
-class MSS_TV_MapAppearanceDialog(QtGui.QDialog, ui_ma.Ui_MapAppearanceDialog):
+class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
     """Dialog to set map appearance parameters. User interface is
        defined in "ui_topview_mapappearance.py".
     """
@@ -290,7 +290,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         settings = self.getView().getMapAppearance()
         dlg = MSS_TV_MapAppearanceDialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
-        if dlg.exec_() == QtGui.QDialog.Accepted:
+        if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.getSettings()
             self.getView().setMapAppearance(settings)
             self.saveSettings()
@@ -366,11 +366,11 @@ def _main():
                          ft.Waypoint(60., -10., 0),
                          ft.Waypoint(40., 10, 0)]
 
-    waypoints_model = ft.WaypointsTableModel(QtCore.QString(""))
+    waypoints_model = ft.WaypointsTableModel(QString(""))
     waypoints_model.insertRows(0, rows=len(initial_waypoints),
                                waypoints=initial_waypoints)
 
-    application = QtGui.QApplication(sys.argv)
+    application = QtWidgets.QApplication(sys.argv)
     window = MSSTopViewWindow(model=waypoints_model)
     window.show()
     sys.exit(application.exec_())

@@ -45,16 +45,7 @@ from mslib import thermolib
 
 
 # Python Qt4 bindings for GUI objects
-from PyQt4 import QtGui, QtCore
-
-# import the Qt4Agg FigureCanvas object, that binds Figure to
-# Qt4Agg backend. It also inherits from QWidget
-from matplotlib.backends.backend_qt4agg \
-    import FigureCanvasQTAgg as FigureCanvas
-
-# import the NavigationToolbar Qt4Agg widget
-from matplotlib.backends.backend_qt4agg \
-    import NavigationToolbar2QT as NavigationToolbar
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, FigureCanvas, NavigationToolbar
 
 # Matplotlib Figure object
 from matplotlib.figure import Figure
@@ -94,8 +85,8 @@ class MplCanvas(FigureCanvas):
 
         # we define the widget as expandable
         FigureCanvas.setSizePolicy(self,
-                                   QtGui.QSizePolicy.Expanding,
-                                   QtGui.QSizePolicy.Expanding)
+                                   QtWidgets.QSizePolicy.Expanding,
+                                   QtWidgets.QSizePolicy.Expanding)
 
         # notify the system of updated policy
         FigureCanvas.updateGeometry(self)
@@ -165,18 +156,18 @@ class MplCanvas(FigureCanvas):
 #
 
 
-class MplWidget(QtGui.QWidget):
+class MplWidget(QtWidgets.QWidget):
     """Matplotlib canvas widget defined in Qt Designer"""
 
     def __init__(self, parent=None):
         # initialization of Qt MainWindow widget
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
         # set the canvas to the Matplotlib widget
         self.canvas = MplCanvas()
 
         # create a vertical box layout
-        self.vbl = QtGui.QVBoxLayout()
+        self.vbl = QtWidgets.QVBoxLayout()
 
         # add mpl widget to vertical box
         self.vbl.addWidget(self.canvas)
@@ -185,12 +176,12 @@ class MplWidget(QtGui.QWidget):
         self.setLayout(self.vbl)
 
 
-class MplNavBarWidget(QtGui.QWidget):
+class MplNavBarWidget(QtWidgets.QWidget):
     """Matplotlib canvas widget with navigation toolbar defined in Qt Designer"""
 
     def __init__(self, parent=None, canvas=None):
         # initialization of Qt MainWindow widget
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
         # set the canvas to the Matplotlib widget
         if canvas:
@@ -202,7 +193,7 @@ class MplNavBarWidget(QtGui.QWidget):
         self.navbar = NavigationToolbar(self.canvas, self)
 
         # create a vertical box layout
-        self.vbl = QtGui.QVBoxLayout()
+        self.vbl = QtWidgets.QVBoxLayout()
 
         # add mpl widget to vertical box
         self.vbl.addWidget(self.navbar)
@@ -568,7 +559,8 @@ class MplTopViewCanvas(MplCanvas):
         self.setMapAppearance(settings)
 
         # Progress dialog to inform the user about map redraws.
-        self.pdlg = QtGui.QProgressDialog("redrawing map...", "Cancel", 0, 10, self)
+        self.pdlg = QtWidgets.QProgressDialog("redrawing map...", "Cancel", 0, 10, self)
+        self.pdlg.close()
 
     def initMap(self, model=None, **kwargs):
         """Set up the map view.
@@ -618,7 +610,7 @@ class MplTopViewCanvas(MplCanvas):
         # Show the progress dialog, since the retrieval can take a few seconds.
         self.pdlg.setValue(0)
         self.pdlg.show()
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         logging.debug("redrawing map")
 
@@ -626,7 +618,7 @@ class MplTopViewCanvas(MplCanvas):
 
         # (Currently none.)
         self.pdlg.setValue(1)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         # 2) UPDATE MAP.
         self.map.update_with_coordinate_change(kwargs_update)
@@ -635,11 +627,11 @@ class MplTopViewCanvas(MplCanvas):
         # in waypoints_interactor()
 
         self.pdlg.setValue(5)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         # 3) UPDATE COORDINATES OF NON-MAP OBJECTS.
         self.pdlg.setValue(8)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         if self.satoverpasspatch:
             self.satoverpasspatch.update()
@@ -653,7 +645,7 @@ class MplTopViewCanvas(MplCanvas):
         self.waypoints_interactor.update()
 
         self.pdlg.setValue(10)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
         logging.debug("finished redrawing map")
         self.pdlg.close()
@@ -884,10 +876,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         logging.debug("registering trajectory tree model")
         # Disconnect old tree, if defined.
         if self.traj_item_tree:
-            self.traj_item_tree.disconnect(
-                self.traj_item_tree,
-                QtCore.SIGNAL("dataChanged(QModelIndex, QModelIndex)"),
-                self.updateFromTrajectoryTree)
+            self.traj_item_tree.dataChanged.disconnect(self.updateFromTrajectoryTree)
         # Set and connect new tree.
         self.traj_item_tree = tree
         self.traj_item_tree.dataChanged.connect(self.updateFromTrajectoryTree)

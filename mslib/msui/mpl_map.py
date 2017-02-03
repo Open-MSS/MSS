@@ -510,16 +510,10 @@ class MapCanvas(basemap.Basemap):
         logging.debug("registering trajectory tree model")
         # Disconnect old tree, if defined.
         if self.traj_item_tree:
-            self.traj_item_tree.disconnect(
-                self.traj_item_tree,
-                QtCore.SIGNAL("dataChanged(QModelIndex, QModelIndex)"),
-                self.update_from_trajectory_tree)
+            self.traj_item_tree.dataChanged.disconnect(self.update_from_trajectory_tree)
         # Set and connect new tree.
         self.traj_item_tree = tree
-        self.traj_item_tree.connect(
-            self.traj_item_tree,
-            QtCore.SIGNAL("dataChanged(QModelIndex, QModelIndex)"),
-            self.update_from_trajectory_tree)
+        self.traj_item_tree.dataChanged.connect(self.update_from_trajectory_tree)
         # Draw tree items.
         self.update_trajectory_items()
 
@@ -963,7 +957,7 @@ class KMLPatch(object):
            extent has been changed.
         """
         if color is not None:
-            self.color=color
+            self.color = color
         self.remove()
         self.draw()
 
