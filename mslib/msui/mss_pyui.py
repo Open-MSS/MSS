@@ -321,6 +321,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         if ret == QtGui.QMessageBox.Yes:
             self.listViews.clear()
             self.listTools.clear()
+            self.listFlightTracks.clear()
             event.accept()
         else:
             event.ignore()

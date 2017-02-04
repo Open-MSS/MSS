@@ -608,7 +608,6 @@ class WaypointDelegate(QItemDelegate):
 
     def __init__(self, parent=None):
         super(WaypointDelegate, self).__init__(parent)
-        self.viewParent = parent
 
     def paint(self, painter, option, index):
         """Colours waypoints with a minor waypoint number (i.e. intermediate
@@ -632,8 +631,8 @@ class WaypointDelegate(QItemDelegate):
             combobox = QComboBox(parent)
             locations = config_loader(dataset='locations', default=mss_default.locations)
             adds = locations.keys()
-            if self.viewParent is not None:
-                for loc in [wp.location for wp in self.viewParent.waypoints_model.allWaypointData() if
+            if self.parent() is not None:
+                for loc in [wp.location for wp in self.parent().waypoints_model.allWaypointData() if
                             wp.location != ""]:
                     if loc not in adds:
                         adds.append(loc)
@@ -672,7 +671,7 @@ class WaypointDelegate(QItemDelegate):
                               update=False)
                 model.setData(index.sibling(index.row(), LON), QVariant(lon))
             else:
-                for wp in self.viewParent.waypoints_model.allWaypointData():
+                for wp in self.parent().waypoints_model.allWaypointData():
                     if loc == wp.location:
                         lat, lon = wp.lat, wp.lon
                         # Don't update distances and flight performance twice, hence
