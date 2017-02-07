@@ -130,7 +130,7 @@ class Abstract2DSectionStyle(object):
         """
         logging.debug("checking vertical dimensions for layer %s.." % self.name)
         successful = False
-        if self.driver is not None:
+        if self.driver is not None and not all([_x[0] in ["sfc"] for _x in self.required_datafields]):
             # Get the latest init time.
             init_times = self.driver.get_init_times()
             if len(init_times) == 0:
