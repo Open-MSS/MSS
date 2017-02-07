@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'msui/ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -140,8 +140,8 @@ class Ui_MSSMainWindow(object):
         self.actionAboutMSUI.setObjectName(_fromUtf8("actionAboutMSUI"))
         self.actionLoad_Configuration = QtGui.QAction(MSSMainWindow)
         self.actionLoad_Configuration.setObjectName(_fromUtf8("actionLoad_Configuration"))
-        self.actionAsdasd = QtGui.QAction(MSSMainWindow)
-        self.actionAsdasd.setObjectName(_fromUtf8("actionAsdasd"))
+        self.actionOnlineHelp = QtGui.QAction(MSSMainWindow)
+        self.actionOnlineHelp.setObjectName(_fromUtf8("actionOnlineHelp"))
         self.menu_File.addAction(self.actionNewFlightTrack)
         self.menu_File.addAction(self.actionOpenFlightTrack)
         self.menu_File.addAction(self.actionCloseSelectedFlightTrack)
@@ -163,6 +163,7 @@ class Ui_MSSMainWindow(object):
         self.menu_View.addSeparator()
         self.menu_View.addAction(self.actionTimeSeriesViewTrajectories)
         self.menu_Tools.addAction(self.actionTrajectoryToolLagranto)
+        self.menu_Help.addAction(self.actionOnlineHelp)
         self.menu_Help.addAction(self.actionAboutMSUI)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menu_View.menuAction())
@@ -206,5 +207,5 @@ class Ui_MSSMainWindow(object):
         self.actionTrajectoryToolLagranto.setText(_translate("MSSMainWindow", "&Trajectory Tool (Lagranto)", None))
         self.actionAboutMSUI.setText(_translate("MSSMainWindow", "&About MSS", None))
         self.actionLoad_Configuration.setText(_translate("MSSMainWindow", "Load Configuration", None))
-        self.actionAsdasd.setText(_translate("MSSMainWindow", "asdasd", None))
+        self.actionOnlineHelp.setText(_translate("MSSMainWindow", "Online &Help", None))
 
