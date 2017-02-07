@@ -231,10 +231,10 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         self.btSelectFlightTrack.clicked.connect(self.setFlightTrackActive)
 
         # Views.
-        self.listViews.itemActivated.connect(self.activateWindow)
+        self.listViews.itemActivated.connect(self.activateSubWindow)
 
         # Tools.
-        self.listTools.itemActivated.connect(self.activateWindow)
+        self.listTools.itemActivated.connect(self.activateSubWindow)
 
         self.addImportFilter("CSV", "csv", load_from_csv)
         self.addExportFilter("CSV", "csv", save_to_csv)
