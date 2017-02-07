@@ -221,6 +221,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionTrajectoryToolLagranto.triggered.connect(self.createNewTool)
 
         # Help menu.
+        self.actionOnlineHelp.triggered.connect(self.showOnlineHelp)
         self.actionAboutMSUI.triggered.connect(self.showAboutDlg)
 
         # Load Config
@@ -546,6 +547,11 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         filename = item.flighttrack_model.filename \
             if item.flighttrack_model.filename else ""
         item.setToolTip(filename)
+
+    def showOnlineHelp(self):
+        """Open Documentation in a browser"""
+        QtGui.QDesktopServices.openUrl(
+            QtCore.QUrl("http://mss.readthedocs.io/en/stable"))
 
     def showAboutDlg(self):
         """Show the 'About MSUI' dialog to the user.
