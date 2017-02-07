@@ -490,10 +490,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         for name, var in self.data_vars.items():
             if len(var.shape) == 4:
                 var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
-                print var_data.shape, lon_indices.max(), "oo"
             else:
                 var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
-                print var_data.shape, lon_indices.max()
             logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %i." %
                           (var_data.nbytes / 1048576., name, timestep))
             logging.debug("\tVertical dimension direction is %s." %

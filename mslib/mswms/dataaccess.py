@@ -511,7 +511,8 @@ class GWFCDataAccess(NWPDataAccess):
     _data_organisation_table = {
         "gravity_wave_temperature_perturbation": {"ml": "ALTITUDE_LEVELS"},
         "air_pressure": {"ml": "ALTITUDE_LEVELS"},
-        "tropopause_altitude": {"sfc": "ALTITUDE_LEVELS"},
+        "brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
+        "tropopause_altitude": {"sfc": "SFC"},
     }
 
     # Workaround for the numerical issue concering the lon dimension in
@@ -555,14 +556,14 @@ class GWFCDataAccess(NWPDataAccess):
             name = self._file_template % (variable_dict[vartype],
                                           self._domain_id,
                                           fc_step,
-                                          "ml")  # vartype)
+                                          vartype)  # vartype)
         elif type(variable_dict[vartype]) == tuple:
             # The tuple stored for the given variable type contains the
             # variable identifier and an override level identifier.
             name = self._file_template % (variable_dict[vartype][0],
                                           self._domain_id,
                                           fc_step,
-                                          "ml")  # variable_dict[vartype][1])
+                                          variable_dict[vartype][1])
 
         # Substitute init time and time step interval identifiers.
         name = name.replace('$', '%')
