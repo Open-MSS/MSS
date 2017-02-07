@@ -44,12 +44,12 @@ from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui import hexagon_dockwidget as hex
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 # local application imports
 from mslib.msui import ui_tableview_window as ui
 from mslib.msui import flighttrack as ft
-from mslib.msui import mss_qt
+from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
 
 #
@@ -57,7 +57,7 @@ from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
 #
 
 
-class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
+class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
     """Implements the table view of the flight plan. Data comes from a
        flight track data model.
     """
@@ -80,17 +80,12 @@ class MSSTableViewWindow(mss_qt.MSSViewWindow, ui.Ui_TableViewWindow):
         self.docks = [None]
 
         # Connect slots and signals.
-        self.connect(self.btAddWayPointToFlightTrack, QtCore.SIGNAL("clicked()"),
-                     self.addWayPoint)
-        self.connect(self.btDeleteWayPoint, QtCore.SIGNAL("clicked()"),
-                     self.removeWayPoint)
-        self.connect(self.btInvertDirection, QtCore.SIGNAL("clicked()"),
-                     self.invertDirection)
-        self.connect(self.btViewPerformance, QtCore.SIGNAL("clicked()"),
-                     self.settingsDlg)
+        self.btAddWayPointToFlightTrack.clicked.connect(self.addWayPoint)
+        self.btDeleteWayPoint.clicked.connect(self.removeWayPoint)
+        self.btInvertDirection.clicked.connect(self.invertDirection)
+        self.btViewPerformance.clicked.connect(self.settingsDlg)
         # Tool opener.
-        self.connect(self.cbTools, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.openTool)
+        self.cbTools.currentIndexChanged.connect(self.openTool)
 
         self.resizeColumns()
 

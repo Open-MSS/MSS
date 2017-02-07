@@ -31,7 +31,7 @@ AUTHORS:
 import logging
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 # local application imports
 from mslib import mss_util
@@ -52,13 +52,9 @@ class SatelliteControlWidget(QtGui.QWidget, ui.Ui_SatelliteDockWidget):
         self.overpass_segments = None
 
         # Connect slots and signals.
-        self.connect(self.btSelectFile, QtCore.SIGNAL("clicked()"),
-                     self.selectFile)
-        self.connect(self.btLoadFile, QtCore.SIGNAL("clicked()"),
-                     self.loadFile)
-        self.connect(self.cbSatelliteOverpasses,
-                     QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.plotOverpassTrack)
+        self.btSelectFile.clicked.connect(self.selectFile)
+        self.btLoadFile.clicked.connect(self.loadFile)
+        self.cbSatelliteOverpasses.currentIndexChanged.connect(self.plotOverpassTrack)
 
     def selectFile(self):
         """Slot that opens a file dialog to choose a file with satellite

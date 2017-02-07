@@ -192,6 +192,7 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
+    <addaction name="actionOnlineHelp"/>
     <addaction name="actionAboutMSUI"/>
    </widget>
    <addaction name="menu_File"/>
@@ -281,9 +282,9 @@
     <string>Load Configuration</string>
    </property>
   </action>
-  <action name="actionAsdasd">
+  <action name="actionOnlineHelp">
    <property name="text">
-    <string>asdasd</string>
+    <string>Online &amp;Help</string>
    </property>
   </action>
  </widget>

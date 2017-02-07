@@ -55,13 +55,13 @@ import logging
 import sys
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
 import numpy as np
 
 # local application imports
+from mslib.msui.mss_qt import QtGui, QtCore
 from mslib.msui import ui_loopwindow as ui
 from mslib.msui import loopviewer_widget as imw
-from mslib.msui import mss_qt
+from mslib.msui.viewwindows import MSSViewWindow
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
@@ -70,7 +70,7 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 #
 
 
-class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
+class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
     """MSUI view that can load and display batch images. No interactive
        modification of the images is possible, the intent of this module
        is to let the user navigate comfortably in time and vertical level
@@ -86,6 +86,7 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
     """
     name = "Loop View"
     max_views = 4  # maximum number of views
+    signalChangeValidTime = QtCore.pyqtSignal([bool, object])
 
     def __init__(self, config, parent=None, *args):
         super(MSSLoopWindow, self).__init__(parent, *args)
@@ -103,8 +104,7 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
         for i in xrange(self.max_views):
             widget = imw.ImageLoopWidget(config, self)
             self.imageWidgets.append(widget)
-            self.connect(widget, QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"),
-                         self.changeValidTime)
+            widget.signalChangeValidTime.connect(self.changeValidTime)
 
         # Create the splitter objects that are necessary to implement
         # the layouts.
@@ -127,26 +127,14 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
 
         # Connect slots and signals ("Layout" menu and global fwd/back
         # buttons).
-        self.connect(self.actionSingleView,
-                     QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.setLayout, 0))
-        self.connect(self.actionDualView,
-                     QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.setLayout, 1))
-        self.connect(self.actionOneLargeTwoSmall,
-                     QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.setLayout, 2))
-        self.connect(self.actionOneLargeThreeSmall,
-                     QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.setLayout, 3))
-        self.connect(self.actionQuadView,
-                     QtCore.SIGNAL("triggered()"),
-                     functools.partial(self.setLayout, 4))
+        self.actionSingleView.triggered.connect(functools.partial(self.setLayout, 0))
+        self.actionDualView.triggered.connect(functools.partial(self.setLayout, 1))
+        self.actionOneLargeTwoSmall.triggered.connect(functools.partial(self.setLayout, 2))
+        self.actionOneLargeThreeSmall.triggered.connect(functools.partial(self.setLayout, 3))
+        self.actionQuadView.triggered.connect(functools.partial(self.setLayout, 4))
 
-        self.connect(self.tbValidTime_fwd, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.changeValidTime, True))
-        self.connect(self.tbValidTime_back, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.changeValidTime, False))
+        self.tbValidTime_fwd.clicked.connect(functools.partial(self.changeValidTime, True, time=None))
+        self.tbValidTime_back.clicked.connect(functools.partial(self.changeValidTime, False, time=None))
 
     def setLayout(self, index):
         """Set the layout of the displayed image labels. This slot is called
@@ -248,7 +236,7 @@ class MSSLoopWindow(mss_qt.MSSViewWindow, ui.Ui_ImageLoopWindow):
             time = self.dteValidTime.dateTime().toPyDateTime()
 
         # Notify the other widgets of the change.
-        self.emit(QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"), forward, time)
+        self.signalChangeValidTime.emit(forward, time)
 
 
 ################################################################################

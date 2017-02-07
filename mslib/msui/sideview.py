@@ -39,12 +39,12 @@ from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 # local application imports
 from mslib.msui import ui_sideview_window as ui
 from mslib.msui import ui_sideview_options as ui_opt
-from mslib.msui import mss_qt
+from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import flighttrack as ft
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import wms_control as wms
@@ -110,20 +110,14 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             button.setPalette(palette)
 
         # Connect colour button signals.
-        self.connect(self.btFillColour, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.setColour, "ft_fill"))
-        self.connect(self.btWaypointsColour, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.setColour, "ft_waypoints"))
-        self.connect(self.btVerticesColour, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.setColour, "ft_vertices"))
+        self.btFillColour.clicked.connect(functools.partial(self.setColour, "ft_fill"))
+        self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
+        self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
 
-        self.connect(self.btAdd, QtCore.SIGNAL("clicked()"),
-                     self.addItem)
-        self.connect(self.btDelete, QtCore.SIGNAL("clicked()"),
-                     self.deleteSelected)
+        self.btAdd.clicked.connect(self.addItem)
+        self.btDelete.clicked.connect(self.deleteSelected)
 
-        self.connect(self.tableWidget, QtCore.SIGNAL("itemChanged(QTableWidgetItem *)"),
-                     self.itemChanged)
+        self.tableWidget.itemChanged.connect(self.itemChanged)
 
     def setColour(self, which):
         """Slot for the colour buttons: Opens a QColorDialog and sets the
@@ -206,7 +200,7 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
 #
 
 
-class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
+class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
     """PyQt4 window implementing a matplotlib canvas as an interactive
        side view flight track editor.
     """
@@ -232,24 +226,19 @@ class MSSSideViewWindow(mss_qt.MSSMplViewWindow, ui.Ui_SideViewWindow):
         # ==========================
 
         # Buttons to set sideview options.
-        self.connect(self.btOptions, QtCore.SIGNAL("clicked()"),
-                     self.setOptions)
+        self.btOptions.clicked.connect(self.setOptions)
 
         # Tool opener.
-        self.connect(self.cbTools, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.openTool)
+        self.cbTools.currentIndexChanged.connect(self.openTool)
 
         # Controls to interact with the flight track.
         # (For usage of the functools.partial() function, see Chapter 4 (Section
         # Signals and Slots) of 'Rapid GUI Programming with Python and Qt: The
         # Definitive Guide to PyQt Programming' (Mark Summerfield).)
         wpi = self.mpl.canvas.waypoints_interactor
-        self.connect(self.btMvWaypoint, QtCore.SIGNAL("clicked()"),
-                     functools.partial(wpi.set_edit_mode, mpl_pi.MOVE))
-        self.connect(self.btInsWaypoint, QtCore.SIGNAL("clicked()"),
-                     functools.partial(wpi.set_edit_mode, mpl_pi.INSERT))
-        self.connect(self.btDelWaypoint, QtCore.SIGNAL("clicked()"),
-                     functools.partial(wpi.set_edit_mode, mpl_pi.DELETE))
+        self.btMvWaypoint.clicked.connect(functools.partial(wpi.set_edit_mode, mpl_pi.MOVE))
+        self.btInsWaypoint.clicked.connect(functools.partial(wpi.set_edit_mode, mpl_pi.INSERT))
+        self.btDelWaypoint.clicked.connect(functools.partial(wpi.set_edit_mode, mpl_pi.DELETE))
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor

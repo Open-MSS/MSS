@@ -50,7 +50,7 @@ import os
 import urllib2
 
 # related third party imports
-from PyQt4 import QtGui, QtCore  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtCore
 
 # local application imports
 from mslib.msui import ui_imageloop_widget as ui
@@ -83,17 +83,11 @@ class ProductChooserDialog(QtGui.QDialog, uipc.Ui_ProductChooserDialog):
                                       microsecond=0)))
 
         # Connect slots and signals.
-        self.connect(self.cbType,
-                     QtCore.SIGNAL("currentIndexChanged (const QString&)"),
-                     self.loadProducts)
-        self.connect(self.cbProduct,
-                     QtCore.SIGNAL("currentIndexChanged (const QString&)"),
-                     self.loadRegions)
+        self.cbType.currentIndexChanged.connect(self.loadProducts)
+        self.cbProduct.currentIndexChanged.connect(self.loadRegions)
 
-        self.connect(self.tbInitTime_back, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.changeInitTime, False))
-        self.connect(self.tbInitTime_fwd, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.changeInitTime, True))
+        self.tbInitTime_back.clicked.connect(functools.partial(self.changeInitTime, False))
+        self.tbInitTime_fwd.clicked.connect(functools.partial(self.changeInitTime, True))
 
     def type(self):
         return str(self.cbType.currentText())
@@ -165,6 +159,9 @@ class LoopLabel(QtGui.QLabel):
        that observes mouse wheel events (for time and level navigation).
     """
 
+    wheelOnImage = QtCore.pyqtSignal([bool], name="wheelOnImage")
+    shiftWheelOnImage = QtCore.pyqtSignal([bool], name="shiftWheelOnImage")
+
     def wheelEvent(self, event):
         """Called when the mouse wheel has been moved above the label.
 
@@ -174,10 +171,9 @@ class LoopLabel(QtGui.QLabel):
         been moved upwards, False if it has been moved downwards.
         """
         if event.modifiers() == QtCore.Qt.ShiftModifier:
-            self.emit(QtCore.SIGNAL("shiftWheelOnImage(bool)"),
-                      event.delta() > 0)
+            self.shiftWheelOnImage.emit(event.delta() > 0)
         else:
-            self.emit(QtCore.SIGNAL("wheelOnImage(bool)"), event.delta() > 0)
+            self.wheelOnImage.emit(event.delta() > 0)
         event.accept()
 
 
@@ -204,6 +200,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
     """
 
     num = 0
+    signalChangeValidTime = QtCore.pyqtSignal([bool, object])
 
     def __init__(self, config=None, *args):
         super(ImageLoopWidget, self).__init__(*args)
@@ -247,26 +244,19 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
         self.products_dialog = ProductChooserDialog(config=config)
 
         # Connect slots and signals.
-        self.connect(self.btZoomIn, QtCore.SIGNAL("clicked()"), self.zoomIn)
-        self.connect(self.btZoomOut, QtCore.SIGNAL("clicked()"), self.zoomOut)
-        self.connect(self.btZoomNormalSize, QtCore.SIGNAL("clicked()"),
-                     self.normalSize)
-        self.connect(self.btFitToWindow, QtCore.SIGNAL("clicked()"),
-                     self.fitToWindow)
+        self.btZoomIn.clicked.connect(self.zoomIn)
+        self.btZoomOut.clicked.connect(self.zoomOut)
+        self.btZoomNormalSize.clicked.connect(self.normalSize)
+        self.btFitToWindow.clicked.connect(self.fitToWindow)
 
-        self.connect(self.tbLevel_down, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.changeLevel, False))
-        self.connect(self.tbLevel_up, QtCore.SIGNAL("clicked()"),
-                     functools.partial(self.changeLevel, True))
+        self.tbLevel_down.clicked.connect(functools.partial(self.changeLevel, False))
+        self.tbLevel_up.clicked.connect(functools.partial(self.changeLevel, True))
 
-        self.connect(self.imageLabel, QtCore.SIGNAL("wheelOnImage(bool)"),
-                     self.changeValidTime)
-        self.connect(self.imageLabel, QtCore.SIGNAL("shiftWheelOnImage(bool)"),
-                     self.changeLevel)
+        self.imageLabel.wheelOnImage.connect(self.changeValidTime)
+        self.imageLabel.shiftWheelOnImage.connect(self.changeLevel)
 
         # Progress dialog to inform the user about image ongoing retrievals.
-        self.pdlg = QtGui.QProgressDialog("retrieving images...", "Cancel",
-                                          0, 100, self)
+        self.pdlg = QtGui.QProgressDialog("retrieving images...", "Cancel", 0, 100, self)
 
     def zoomIn(self):
         """Slot connected to the '+' button (zooms in).
@@ -443,10 +433,9 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             self.lblInfo.setToolTip("Initialisation time: %s" %
                                     self.init_time.strftime("%Y-%m-%d %H:%M UTC"))
             self.updateImage()
-            self.emit(QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"), True,
-                      self.valid_time)
-            self.emit(QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"), False,
-                      self.valid_time)
+            self.signalChangeValidTime.emit(True, self.valid_time)
+            self.signalChangeValidTime.emit(False, self.valid_time)
+
             # TODO: Resize the window so that the image fits exactly. Also make the image
             #      keep its aspect ratio on fit-to-window resizes (mr, 2010-09-02):
             #      http://lists.trolltech.com/qt-interest/2005-11/thread01034-0.html
@@ -454,8 +443,7 @@ class ImageLoopWidget(QtGui.QWidget, ui.Ui_ImageLoopWidget):
             pxm = self.imageLabel.pixmap()
             self.resize(pxm.width() + 50, pxm.height() + 150)
 
-            self.connect(self.viewer_parent, QtCore.SIGNAL("changeValidTime(bool, PyQt_PyObject)"),
-                         self.changeValidTime)
+            self.viewer_parent.signalChangeValidTime.connect(self.changeValidTime)
 
         else:
             self.imageLabel.clear()

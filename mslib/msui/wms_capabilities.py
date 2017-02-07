@@ -31,7 +31,7 @@ AUTHORS:
 import logging
 
 # related third party imports
-from PyQt4 import QtGui  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui  # Qt4 bindings
 
 # local application imports
 from mslib.msui import ui_wms_capabilities as ui
