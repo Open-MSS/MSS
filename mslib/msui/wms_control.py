@@ -46,15 +46,15 @@ import xml.etree.ElementTree as etree
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
 
 import mslib.owslib.wms
 import mslib.owslib.util
 import PIL.Image
 
 # local application imports
-from mslib.msui import ui_wms_dockwidget as ui
-from mslib.msui import ui_wms_password_dialog as ui_pw
+from mslib.msui.mss_qt import ui_wms_dockwidget as ui
+from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.mss_util import convertHPAToKM
@@ -221,7 +221,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
 #
 
 
-class MSS_WMS_AuthenticationDialog(QtGui.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
+class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
     """Dialog to ask the user for username/password should this be
        required by a WMS server.
     """
@@ -246,7 +246,7 @@ class MSS_WMS_AuthenticationDialog(QtGui.QDialog, ui_pw.Ui_WMSAuthenticationDial
 #
 
 
-class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
+class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     """The base class of the WMS control widget: Provides the GUI
        elements and common functionality to access a WMS. This class
        is not instantiated directly, see HSecWMSControlWidget and
@@ -356,11 +356,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # if the index has been changed programmatically (e.g. through the
         # back/forward buttons).
         self.cbInitTime.activated.connect(self.initTimeChanged)
-        # self.connect(self.cbInitTime, QtCore.SIGNAL("currentIndexChanged(int)"),
-        #             self.initTimeChanged)
         self.cbValidTime.activated.connect(self.validTimeChanged)
-        # self.connect(self.cbValidTime, QtCore.SIGNAL("currentIndexChanged(int)"),
-        #             self.validTimeChanged)
 
         self.tbInitTime_back.clicked.connect(self.init_time_back_click)
         self.tbInitTime_fwd.clicked.connect(self.init_time_fwd_click)
@@ -381,8 +377,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             self.view.redrawn.connect(self.afterRedraw)
 
         # Progress dialog to inform the user about image ongoing retrievals.
-        self.pdlg = QtGui.QProgressDialog("retrieving image...", "Cancel",
-                                          0, 10, self)
+        self.pdlg = QtWidgets.QProgressDialog("retrieving image...", "Cancel",
+                                              0, 10, self)
+        self.pdlg.close()
 
     def __del__(self):
         """Destructor.
@@ -430,7 +427,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                         # the string "Error 401"...
                         dlg = MSS_WMS_AuthenticationDialog(parent=self)
                         dlg.setModal(True)
-                        if dlg.exec_() == QtGui.QDialog.Accepted:
+                        if dlg.exec_() == QtWidgets.QDialog.Accepted:
                             username, password = dlg.getAuthInfo()
                             # If user & pw have been entered, cache them.
                             constants.WMS_LOGIN_CACHE[base_url] = (username, password)
@@ -442,9 +439,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             logging.error("ERROR: %s", ex)
             logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
-            QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
-                                       QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                           self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                           QtWidgets.QMessageBox.Ok)
         return wms
 
     def getCapabilities(self):
@@ -453,8 +450,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         """
         # Clear layer and style combo boxes. First disconnect the layerChanged
         # slot to avoid calls to this function.
-        self.disconnect(self.cbLayer, QtCore.SIGNAL("currentIndexChanged(int)"),
-                        self.layerChanged)
+        self.cbLayer.currentIndexChanged.disconnect(self.layerChanged)
         self.cbLayer.clear()
         self.cbStyle.clear()
 
@@ -757,9 +753,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             if self.cbInitTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
-                QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR: %s" % msg),
-                                           QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                               self.tr("ERROR: %s" % msg),
+                                               QtWidgets.QMessageBox.Ok)
             self.init_time_format = ""
 
         logging.debug("determined valid time format: %s", self.valid_time_format)
@@ -769,9 +765,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             if self.cbValidTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
-                QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR: %s" % msg),
-                                           QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                               self.tr("ERROR: %s" % msg),
+                                               QtWidgets.QMessageBox.Ok)
             self.valid_time_format = ""
 
         self.enableLevelElements(enable_elevation)
@@ -1047,14 +1043,23 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         self.tbValidTime_cbfwd.setEnabled(enable)
 
     def getLayer(self):
-        return unicode(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
+        if USE_PYQT5:
+            return self.cbLayer.currentText().split(" | ")[-1]
+        else:
+            return unicode(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
 
     def getStyle(self):
-        return unicode(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
+        if USE_PYQT5:
+            return self.cbStyle.currentText().split(" |")[0]
+        else:
+            return unicode(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
 
     def getLevel(self):
         if self.cbLevelOn.isChecked():
-            return unicode(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
+            if USE_PYQT5:
+                return self.cbLevel.currentText().split(" (")[0]
+            else:
+                return unicode(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
         else:
             return None
 
@@ -1157,18 +1162,18 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         # in the query URL that is send to the server.
         init_time = self.getInitTime()
         if init_time is not None and init_time not in self.allowed_init_times:
-            QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                       self.tr("ERROR: Invalid init time chosen\n"
-                                               "(watch out for the strikethrough)!"),
-                                       QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                           self.tr("ERROR: Invalid init time chosen\n"
+                                                   "(watch out for the strikethrough)!"),
+                                           QtWidgets.QMessageBox.Ok)
             raise RuntimeError("Invalid init time")
 
         valid_time = self.getValidTime()
         if valid_time is not None and valid_time not in self.allowed_valid_times:
-            QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                       self.tr("ERROR: Invalid valid time chosen!\n"
-                                               "(watch out for the strikethrough)!"),
-                                       QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                           self.tr("ERROR: Invalid valid time chosen!\n"
+                                                   "(watch out for the strikethrough)!"),
+                                           QtWidgets.QMessageBox.Ok)
             raise RuntimeError("Invalid valid time")
 
         logging.debug("fetching layer %s; style %s, width %i, height %i",
@@ -1231,9 +1236,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
             if not cache_hit:
 
                 self.pdlg.show()
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 self.pdlg.setValue(1)
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
 
                 queue = Queue.Queue()
                 kwargs["queue"] = queue
@@ -1243,7 +1248,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 while thread.isAlive():
                     # This loop keeps the GUI alive while the thread is executing,
                     # and checks for a cancellation request by the user.
-                    QtGui.QApplication.processEvents()
+                    QtWidgets.QApplication.processEvents()
                     if self.pdlg.wasCanceled():
                         logging.debug("map retrieval was canceled by the user.")
                         raise UserWarning("map retrieval was canceled by the user.")
@@ -1267,7 +1272,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                         raise qreturn
 
                 self.pdlg.setValue(8)
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 # Read the image file from the URL into a string (urlobject.read())
                 # and wrap this string into a StringIO object that behaves like a file.
                 imageIO = StringIO.StringIO(urlobject.read())
@@ -1295,9 +1300,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         except Exception as ex:
             self.pdlg.close()
             logging.error("ERROR: %s", ex)
-            QtGui.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
-                                       QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                           self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                           QtWidgets.QMessageBox.Ok)
             raise ex
 
         legend_img = self.retrieveLegendGraphic()
@@ -1372,7 +1377,7 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
                 while thread.isAlive():
                     # This loop keeps the GUI alive while the thread is executing,
                     # and checks for a cancellation request by the user.
-                    QtGui.QApplication.processEvents()
+                    QtWidgets.QApplication.processEvents()
                     if self.pdlg.wasCanceled():
                         logging.debug("legend retrieval was canceled by the user.")
                         raise UserWarning("legend retrieval was canceled by the user.")
@@ -1424,11 +1429,11 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         """Clear the image file cache. First ask the user for confirmation.
         """
         # User confirmation to clear the cache.
-        clear = (QtGui.QMessageBox.question(
+        clear = (QtWidgets.QMessageBox.question(
             self, "Clear Cache",
             "Do you really want to clear the cache? All stored image "
             "files will be deleted.",
-            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes)
         if clear:
             # Delete all files in cache.
             if self.wms_cache is not None:
@@ -1574,7 +1579,10 @@ class HSecWMSControlWidget(WMSControlWidget):
 
     def levelChanged(self):
         if self.cbLevelOn.isChecked():
-            s = unicode(self.cbLevel.currentText(), errors="ignore")
+            if USE_PYQT5:
+                s = self.cbLevel.currentText()
+            else:
+                s = unicode(self.cbLevel.currentText(), errors="ignore")
             if s == "":
                 return
             lvl = float(s.split(" (")[0])
@@ -1627,7 +1635,7 @@ def _main():
                         format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
 
-    application = QtGui.QApplication(sys.argv)
+    application = QtWidgets.QApplication(sys.argv)
     window = WMSControlWidget(default_WMS=[])
     window.btGetMap.clicked.connect(window.getMap)
     window.show()

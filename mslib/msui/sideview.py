@@ -39,11 +39,11 @@ from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString
 
 # local application imports
-from mslib.msui import ui_sideview_window as ui
-from mslib.msui import ui_sideview_options as ui_opt
+from mslib.msui.mss_qt import ui_sideview_window as ui
+from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import flighttrack as ft
 from mslib.msui import mpl_pathinteractor as mpl_pi
@@ -59,7 +59,7 @@ WMS = 0
 #
 
 
-class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
+class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     """Dialog to specify sideview options. User interface is specified
        in "ui_sideview_options.py".
     """
@@ -92,7 +92,7 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.tableWidget.setRowCount(len(flightlevels))
         flightlevels.sort()
         for i, level in enumerate(flightlevels):
-            tableitem = QtGui.QTableWidgetItem("%3i" % level)
+            tableitem = QtWidgets.QTableWidgetItem("%3i" % level)
             self.tableWidget.setItem(i, 0, tableitem)
 
         self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
@@ -132,7 +132,7 @@ class MSS_SV_OptionsDialog(QtGui.QDialog, ui_opt.Ui_SideViewOptionsDialog):
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
-        colour = QtGui.QColorDialog.getColor(colour)
+        colour = QtWidgets.QColorDialog.getColor(colour)
         if colour.isValid():
             if which == "ft_fill":
                 # Fill colour is transparent with an alpha value of 0.15. If
@@ -275,7 +275,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         settings = self.getView().getSettings()
         dlg = MSS_SV_OptionsDialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
-        if dlg.exec_() == QtGui.QDialog.Accepted:
+        if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.getSettings()
             self.getView().setSettings(settings)
             self.saveSettings()
@@ -320,11 +320,11 @@ def _main():
                          ft.Waypoint(52.32, 09.21, 200),
                          ft.Waypoint(48.10, 11.27, 0, comments="landing")]
 
-    waypoints_model = ft.WaypointsTableModel(QtCore.QString(""))
+    waypoints_model = ft.WaypointsTableModel(QString(""))
     waypoints_model.insertRows(0, rows=len(initial_waypoints),
                                waypoints=initial_waypoints)
 
-    application = QtGui.QApplication(sys.argv)
+    application = QtWidgets.QApplication(sys.argv)
     window = MSSSideViewWindow(model=waypoints_model)
     window.show()
     sys.exit(application.exec_())
