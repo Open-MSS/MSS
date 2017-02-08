@@ -237,8 +237,8 @@ class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
     def getAuthInfo(self):
         """Return the entered username and password.
         """
-        return (str(self.leUsername.text()),
-                str(self.lePassword.text()))
+        return (unicode(self.leUsername.text()),
+                unicode(self.lePassword.text()))
 
 
 #
@@ -456,7 +456,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
-        base_url = str(self.cbWMS_URL.currentText())
+        base_url = unicode(self.cbWMS_URL.currentText())
         logging.debug("requesting capabilities from %s", base_url)
         wms = self.initialiseWMS(base_url)
         if wms is not None:

@@ -12,14 +12,14 @@ def save_to_csv(filename, name, waypoints):
         csv_writer.writerow(["Index", "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
                              "Leg dist. (km)", "Cum. dist. (km)", "Comments"])
         for i, wp in enumerate(waypoints):
-            loc = str(wp.location)
+            loc = unicode(wp.location)
             lat = "{:.3f}".format(wp.lat)
             lon = "{:.3f}".format(wp.lon)
             lvl = "{:.3f}".format(wp.flightlevel)
             pre = "{:.3f}".format(wp.pressure / 100.)
             leg = "{:.3f}".format(wp.distance_to_prev)
             cum = "{:.3f}".format(wp.distance_total)
-            com = str(wp.comments)
+            com = unicode(wp.comments)
             csv_writer.writerow([i, loc, lat, lon, lvl, pre, leg, cum, com])
 
 

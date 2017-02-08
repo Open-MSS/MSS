@@ -130,7 +130,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             row = index.row() + 1
             flightlevel = self.waypoints_model.waypointData(row - 1).flightlevel
         # row = self.waypoints_model.rowCount() # Append to end
-        locations = [str(wp.location) for wp in self.waypoints_model.allWaypointData()]
+        locations = [unicode(wp.location) for wp in self.waypoints_model.allWaypointData()]
         locname = ""
         for letter in string.ascii_uppercase:
             if letter not in locations:

@@ -88,7 +88,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
             if not index.isValid():
                 raise HexagonException("A waypoint of the hexagon must be selected.")
             row = index.row()
-            comm = str(waypoints_model.waypointData(row).comments)
+            comm = unicode(waypoints_model.waypointData(row).comments)
             if len(comm) == 9 and comm.startswith("Hexagon "):
                 if (len(waypoints_model.allWaypointData()) - 7) < 2:  # = 3 waypoints + 7 hexagon points
                     raise HexagonException("Cannot remove hexagon, the flight track needs to consist "
@@ -102,7 +102,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                 else:
                     found_one = False
                     for i in range(0, row_max - row_min):
-                        if str(waypoints_model.waypointData(row_min + i).comments) != "Hexagon {:d}".format(i + 1):
+                        if unicode(waypoints_model.waypointData(row_min + i).comments) != "Hexagon {:d}".format(i + 1):
                             found_one = True
                             break
                     if found_one:
