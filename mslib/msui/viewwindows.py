@@ -85,6 +85,7 @@ class MSSViewWindow(QtGui.QMainWindow):
                 # The widget has already been created, but is not visible at
                 # the moment.
                 self.docks[index].show()
+                self.docks[index].raise_()
                 index = -1
         if hasattr(self, "cbTools"):
             self.cbTools.setCurrentIndex(0)
@@ -101,12 +102,15 @@ class MSSViewWindow(QtGui.QMainWindow):
         # call is necessary:
         self.docks[index].setWidget(widget)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.docks[index])
+
         # Check if another dock widget occupies the dock area. If yes,
         # tabbify the old and the new widget.
         for dock in self.docks:
             if dock and not dock == self.docks[index] and not dock.isFloating():
                 self.tabifyDockWidget(dock, self.docks[index])
                 break
+        self.docks[index].show()
+        self.docks[index].raise_()
 
     @abstractmethod
     def getView(self):
