@@ -202,7 +202,7 @@ def identify_CF_time(ncfile):
 
     Returns: time_name, time_var
     """
-    time_name, time_var = identify_variable(ncfile, "time")
+    time_name, time_var = identify_variable(ncfile, "time", check=True)
     return time_name, time_var
 
 
@@ -545,8 +545,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                 if dimName not in skipDimCheck:
                     if dimName not in masterDims:
                         raise IOError("dimension %s not defined in master %s" % (dimName, master))
-                    if len(part.variables[dimName]) != len(cdfm.variables[dimName]) or \
-                            (part.variables[dimName][:] != cdfm.variables[dimName][:]).all():
+                    if len(part.dimensions[dimName]) != len(cdfm.dimensions[dimName]) or \
+                            (part.variables[dimName][:] != cdfm.variables[dimName][:]).any():
                         raise IOError("dimension %s differs in master %s and "
                                       "file %s" % (dimName, master, f))
 
