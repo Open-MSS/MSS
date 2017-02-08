@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_wms_dockwidget.ui'
+# Form implementation generated from reading ui file 'msui/ui_wms_dockwidget.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -40,9 +40,9 @@ class Ui_WMSDockWidget(object):
         self.btGetCapabilities = QtWidgets.QPushButton(WMSDockWidget)
         self.btGetCapabilities.setObjectName("btGetCapabilities")
         self.horizontalLayout_9.addWidget(self.btGetCapabilities)
-        self.tbViewCapabilities = QtWidgets.QToolButton(WMSDockWidget)
-        self.tbViewCapabilities.setObjectName("tbViewCapabilities")
-        self.horizontalLayout_9.addWidget(self.tbViewCapabilities)
+        self.pbViewCapabilities = QtWidgets.QPushButton(WMSDockWidget)
+        self.pbViewCapabilities.setObjectName("pbViewCapabilities")
+        self.horizontalLayout_9.addWidget(self.pbViewCapabilities)
         self.line_4 = QtWidgets.QFrame(WMSDockWidget)
         self.line_4.setFrameShape(QtWidgets.QFrame.VLine)
         self.line_4.setFrameShadow(QtWidgets.QFrame.Sunken)
@@ -139,7 +139,7 @@ class Ui_WMSDockWidget(object):
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.cbLevelOn = QtWidgets.QCheckBox(WMSDockWidget)
         self.cbLevelOn.setEnabled(False)
-        self.cbLevelOn.setMinimumSize(QtCore.QSize(95, 0))
+        self.cbLevelOn.setMinimumSize(QtCore.QSize(105, 0))
         self.cbLevelOn.setMaximumSize(QtCore.QSize(120, 16777215))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(20, 19, 18))
@@ -203,7 +203,7 @@ class Ui_WMSDockWidget(object):
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.cbInitialisationOn = QtWidgets.QCheckBox(WMSDockWidget)
         self.cbInitialisationOn.setEnabled(False)
-        self.cbInitialisationOn.setMinimumSize(QtCore.QSize(95, 0))
+        self.cbInitialisationOn.setMinimumSize(QtCore.QSize(105, 0))
         self.cbInitialisationOn.setMaximumSize(QtCore.QSize(120, 16777215))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(20, 19, 18))
@@ -264,7 +264,7 @@ class Ui_WMSDockWidget(object):
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         self.cbValidOn = QtWidgets.QCheckBox(WMSDockWidget)
         self.cbValidOn.setEnabled(False)
-        self.cbValidOn.setMinimumSize(QtCore.QSize(95, 0))
+        self.cbValidOn.setMinimumSize(QtCore.QSize(105, 0))
         self.cbValidOn.setMaximumSize(QtCore.QSize(120, 16777215))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(20, 19, 18))
@@ -298,10 +298,10 @@ class Ui_WMSDockWidget(object):
         self.dteValidTime = QtWidgets.QDateTimeEdit(WMSDockWidget)
         self.dteValidTime.setMinimumSize(QtCore.QSize(160, 0))
         self.dteValidTime.setMaximumSize(QtCore.QSize(160, 16777215))
-        self.dteValidTime.setDate(QtCore.QDate(2010, 1, 22))
-        self.dteValidTime.setMinimumDateTime(QtCore.QDateTime(QtCore.QDate(2000, 1, 1), QtCore.QTime(12, 0, 0)))
+        self.dteValidTime.setDate(QtCore.QDate(2010, 1, 21))
+        self.dteValidTime.setMinimumDateTime(QtCore.QDateTime(QtCore.QDate(2000, 1, 1), QtCore.QTime(11, 0, 0)))
         self.dteValidTime.setMinimumDate(QtCore.QDate(2000, 1, 1))
-        self.dteValidTime.setMinimumTime(QtCore.QTime(12, 0, 0))
+        self.dteValidTime.setMinimumTime(QtCore.QTime(11, 0, 0))
         self.dteValidTime.setCalendarPopup(False)
         self.dteValidTime.setTimeSpec(QtCore.Qt.UTC)
         self.dteValidTime.setObjectName("dteValidTime")
@@ -338,7 +338,7 @@ class Ui_WMSDockWidget(object):
         self.cbWMS_URL.setItemText(1, _translate("WMSDockWidget", "http://osm.omniscale.net/proxy/service"))
         self.btGetCapabilities.setToolTip(_translate("WMSDockWidget", "Request the capabilities from the WMS server."))
         self.btGetCapabilities.setText(_translate("WMSDockWidget", "get capabilities"))
-        self.tbViewCapabilities.setText(_translate("WMSDockWidget", "view"))
+        self.pbViewCapabilities.setText(_translate("WMSDockWidget", "view"))
         self.cbAutoUpdate.setToolTip(_translate("WMSDockWidget", "Automatically request an updated map when the layer parameters have changed."))
         self.cbAutoUpdate.setText(_translate("WMSDockWidget", "update on changes"))
         self.btGetMap.setToolTip(_translate("WMSDockWidget", "Request a map with the specifed parameters."))
@@ -352,8 +352,8 @@ class Ui_WMSDockWidget(object):
         self.teLayerAbstract.setHtml(_translate("WMSDockWidget", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'Sans Serif\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"></p></body></html>"))
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:7.8pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\'; font-size:10pt;\"><br /></p></body></html>"))
         self.cbLevelOn.setText(_translate("WMSDockWidget", "Level:"))
         self.cbLevel.setToolTip(_translate("WMSDockWidget", "Elevation values provided by the WMS server."))
         self.tbLevel_back.setText(_translate("WMSDockWidget", "<"))
