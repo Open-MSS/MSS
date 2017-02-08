@@ -88,6 +88,12 @@ class MissionSupportSystemDefaultConfig(object):
     # Maximum age of a cached file in seconds.
     wms_cache_max_age_seconds = 5 * 86400
 
+    wms_prefetch_enable = False
+    wms_prefetch_time_fwd = 4
+    wms_prefetch_time_bck = 1
+    wms_prefetch_level_up = 0
+    wms_prefetch_level_down = 0
+
     locations = {
         "EDMO": (48.08, 11.28),
         "Hannover": (52.37, 9.74),
