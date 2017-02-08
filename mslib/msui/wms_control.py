@@ -314,7 +314,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enableValidTimeElements(False)
         self.enableInitTimeElements(False)
         self.btGetMap.setEnabled(False)
-        self.tbViewCapabilities.setEnabled(False)
+        self.pbViewCapabilities.setEnabled(False)
         self.cbTransparent.setChecked(False)
 
         # Check for WMS image cache directory, create if neceassary.
@@ -343,7 +343,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Connect slots and signals.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.btGetCapabilities.clicked.connect(self.getCapabilities)
-        self.tbViewCapabilities.clicked.connect(self.viewCapabilities)
+        self.pbViewCapabilities.clicked.connect(self.viewCapabilities)
 
         self.cbLayer.currentIndexChanged.connect(self.layerChanged)
 
@@ -480,7 +480,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.wms = wms
             self.layerChanged(0)
             self.btGetMap.setEnabled(True)
-            self.tbViewCapabilities.setEnabled(True)
+            self.pbViewCapabilities.setEnabled(True)
 
         if self.cbInitTime.count() > 0:
             self.cbInitTime.setCurrentIndex(0)
