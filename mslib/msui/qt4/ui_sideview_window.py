@@ -100,4 +100,4 @@ class Ui_SideViewWindow(object):
         self.btDelWaypoint.setText(_translate("SideViewWindow", "Del", None))
         self.btDelWaypoint.setShortcut(_translate("SideViewWindow", "D", None))
 
-from mpl_qtwidget import MplSideViewWidget
+from mslib.msui.mpl_qtwidget import MplSideViewWidget

@@ -132,4 +132,4 @@ class Ui_TopViewWindow(object):
         self.btDelWaypoint.setText(_translate("TopViewWindow", "&Del", None))
         self.btDelWaypoint.setShortcut(_translate("TopViewWindow", "D", None))
 
-from mpl_qtwidget import MplTopViewWidget
+from mslib.msui.mpl_qtwidget import MplTopViewWidget

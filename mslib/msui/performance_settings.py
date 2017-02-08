@@ -7,12 +7,12 @@ AUTHORS:
 """
 import logging
 
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
 
 from mslib.mss_util import config_loader
 from mslib.msui import aircrafts
 from mslib.msui import constants
-from mslib.msui import ui_performance_settings as ui_ps
+from mslib.msui.mss_qt import ui_performance_settings as ui_ps
 
 
 DEFAULT_PERFORMANCE = {
@@ -24,7 +24,7 @@ DEFAULT_PERFORMANCE = {
 }
 
 
-class MSS_PerformanceSettingsDialog(QtGui.QDialog, ui_ps.Ui_PerformanceSettingsDialog):
+class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSettingsDialog):
     """Dialog to set map appearance parameters. User interface is
        defined in "ui_topview_mapappearance.py".
     """
@@ -69,24 +69,22 @@ class MSS_PerformanceSettingsDialog(QtGui.QDialog, ui_ps.Ui_PerformanceSettingsD
         """
         Gets a filename for a JSON file specifying aircraft performance and initializes an SimpleAircraft model.
         """
-        fname = QtGui.QFileDialog.getOpenFileName(self,
-                                                  "Open Aircraft Performance JSON File",
-                                                  constants.MSS_CONFIG_PATH, "(*.json)")
-        if fname.isEmpty():
-            return
+        filename = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Open Aircraft Performance JSON File", constants.MSS_CONFIG_PATH, "(*.json)")
+        filename = filename[0] if USE_PYQT5 else str(filename)
 
         try:
-            performance = config_loader(config_file=str(fname))
+            performance = config_loader(config_file=filename)
             self.aircraft = aircrafts.SimpleAircraft(performance)
             self.lbAircraftName.setText(self.aircraft.name)
             self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
             self.dsbFuel.setValue(self.aircraft.fuel)
 
         except KeyError, ex:
-            QtGui.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                       self.tr("JSON File missing '{}' entry".format(ex)),
-                                       QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                           self.tr("JSON File missing '{}' entry".format(ex)),
+                                           QtWidgets.QMessageBox.Ok)
         except ValueError, ex:
-            QtGui.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                       self.tr("JSON File has Syntax Problems:\n{}".format(ex)),
-                                       QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                           self.tr("JSON File has Syntax Problems:\n{}".format(ex)),
+                                           QtWidgets.QMessageBox.Ok)

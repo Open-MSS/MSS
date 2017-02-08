@@ -950,9 +950,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         # in the data structure. self.lastChange is set to "FLIGHT_TRACK_ADDED"
         # so LagrantoMap can query the kind of change that occured.
         self.lastChange = "FLIGHT_TRACK_ADDED"
-        self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
-                  index, index)
-        self.emit(QtCore.SIGNAL('layoutChanged()'))
+        self.dataChanged.emit(index, index)
+        self.layoutChanged.emit()
 
         return index
 
@@ -977,9 +976,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
         # in the data structure. self.lastChange is set to "FLIGHT_TRACK_ADDED"
         # so LagrantoMap can query the kind of change that occured.
         self.lastChange = "TRAJECTORY_DIR_ADDED"
-        self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
-                  index, index)
-        self.emit(QtCore.SIGNAL('layoutChanged()'))
+        self.dataChanged.emit(index, index)
+        self.layoutChanged.emit()
 
         return index
 
@@ -992,9 +990,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                                                      visible)
             if emit_change:
                 self.lastChange = "VISIBILITY_CHANGE"
-                self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
-                          index, index)
-                self.emit(QtCore.SIGNAL('layoutChanged()'))
+                self.dataChanged.emit(index, index)
+                self.layoutChanged.emit()
 
     def setItemVisibleInView_list(self, indices, view_window, visible,
                                   emit_change=True):
@@ -1008,15 +1005,13 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                 indices.remove(index)
         if emit_change:
             self.lastChange = "VISIBILITY_CHANGE"
-            self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
-                      indices[0], indices[-1])
-            self.emit(QtCore.SIGNAL('layoutChanged()'))
+            self.dataChanged.emit(indices[0], indices[-1])
+            self.layoutChanged.emit()
 
     def emitChange(self, index1, index2, mode="GXPROPERTY_CHANGE"):
         self.lastChange = mode
-        self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
-                  index1, index2)
-        self.emit(QtCore.SIGNAL('layoutChanged()'))
+        self.dataChanged.emit(index1, index2)
+        self.layoutChanged.emit()
 
     def getLastChange(self):
         """Returns a description of the last change that has been made
@@ -1043,9 +1038,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
             item = index.internalPointer()
             item.setGxElementProperty(element, eproperty, value)
             self.lastChange = "GXPROPERTY_CHANGE"
-            self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
-                      index, index)
-            self.emit(QtCore.SIGNAL('layoutChanged()'))
+            self.dataChanged.emit(index, index)
+            self.layoutChanged.emit()
 
     def changeItemGxProperty_list(self, indices, element, eproperty, value):
         """Change a graphics property of the items given by the list indices.
@@ -1061,9 +1055,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                 indices.remove(index)
         if len(indices) > 0:
             self.lastChange = "GXPROPERTY_CHANGE"
-            self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
-                      indices[0], indices[-1])
-            self.emit(QtCore.SIGNAL('layoutChanged()'))
+            self.dataChanged.emit(indices[0], indices[-1])
+            self.layoutChanged.emit()
 
     def setTimeMarker(self, index, interval, emit_change=True):
         """Set the time marker interval property of the item given by the
@@ -1078,9 +1071,8 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                                       interval)
             if emit_change:
                 self.lastChange = "MARKER_CHANGE"
-                self.emit(QtCore.SIGNAL('dataChanged(QModelIndex,QModelIndex)'),
-                          index, index)
-                self.emit(QtCore.SIGNAL('layoutChanged()'))
+                self.dataChanged.emit(index, index)
+                self.layoutChanged.emit()
 
             return item.getGxElementProperty("general", "timeMarkerInterval")
 

@@ -44,10 +44,10 @@ from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui import hexagon_dockwidget as hex
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString
 
 # local application imports
-from mslib.msui import ui_tableview_window as ui
+from mslib.msui.mss_qt import ui_tableview_window as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
@@ -69,6 +69,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         super(MSSTableViewWindow, self).__init__(parent)
         self.setupUi(self)
+
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
 
@@ -92,13 +93,12 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
     def settingsDlg(self):
         dlg = MSS_PerformanceSettingsDialog(parent=self, settings_dict=self.waypoints_model.performance_settings)
         dlg.setModal(True)
-        if dlg.exec_() == QtGui.QDialog.Accepted:
+        if dlg.exec_() == QtWidgets.QDialog.Accepted:
             self.waypoints_model.performance_settings = dlg.get_settings()
             self.waypoints_model.update_distances(0)
             self.waypoints_model.saveSettings()
-            self.waypoints_model.emit(QtCore.SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
-                                      self.waypoints_model.index(0, 0),
-                                      self.waypoints_model.index(0, 0))
+            self.waypoints_model.dataChanged.emit(
+                self.waypoints_model.index(0, 0), self.waypoints_model.index(0, 0))
             self.resizeColumns()
         dlg.destroy()
 
@@ -174,16 +174,16 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         wps = self.waypoints_model.allWaypointData()
         if len(wps) < 3:
-            QtGui.QMessageBox.warning(None, "Remove waypoint",
-                                      "Cannot remove waypoint, the flight track needs to consist "
-                                      "of at least two points.", QtGui.QMessageBox.Ok)
+            QtWidgets.QtMessageBox.warning(
+                None, "Remove waypoint",
+                "Cannot remove waypoint, the flight track needs to consist of at least two points.")
             return False
         else:
             waypoint = wps[row]
-            return (QtGui.QMessageBox.question(None, "Remove waypoint",
-                                               "Remove waypoint at %.2f/%.2f, flightlevel %.2f?"
-                                               % (waypoint.lat, waypoint.lon, waypoint.flightlevel),
-                                               QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
+            return QtWidgets.QtMessageBox.question(
+                None, "Remove waypoint",
+                "Remove waypoint at %.2f/%.2f, flightlevel %.2f?" % (waypoint.lat, waypoint.lon, waypoint.flightlevel),
+                QtWidgets.QtMessageBox.Yes | QtWidgets.QtMessageBox.No) == QtWidgets.QtMessageBox.Yes
 
     def removeWayPoint(self):
         """Handler for button <btDeleteWayPoint>. Deletes the currently selected
@@ -238,11 +238,11 @@ def _main():
                          ft.Waypoint(52.55, 09.99, 200),
                          ft.Waypoint(flightlevel=0, location="Hamburg", comments="landing HH")]
 
-    waypoints_model = ft.WaypointsTableModel(QtCore.QString(""))
+    waypoints_model = ft.WaypointsTableModel(QString(""))
     waypoints_model.insertRows(0, rows=len(initial_waypoints),
                                waypoints=initial_waypoints)
 
-    application = QtGui.QApplication(sys.argv)
+    application = QtWidgets.QApplication(sys.argv)
     window = MSSTableViewWindow(model=waypoints_model)
     window.show()
 

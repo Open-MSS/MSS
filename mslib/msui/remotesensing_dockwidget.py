@@ -11,8 +11,8 @@ AUTHORS:
 """
 
 import numpy as np
-from mslib.msui.mss_qt import QtGui, QtCore
-from mslib.msui import ui_remotesensing_dockwidget as ui
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
+from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
 from mslib.mss_util import datetime_to_jsec, compute_solar_angle, \
     compute_view_angles, get_distance, rotate_point
 from matplotlib.collections import LineCollection
@@ -23,7 +23,7 @@ import collections
 R = 6371.
 
 
-class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
+class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidget):
     """This class implements the remote sensing functionality as dockable widget.
     """
 
@@ -86,10 +86,9 @@ class RemoteSensingControlWidget(QtGui.QWidget, ui.Ui_RemoteSensingDockWidget):
            new button face colour.
         """
         button = self.btTangentsColour
-
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
-        colour = QtGui.QColorDialog.getColor(colour)
+        colour = QtWidgets.QColorDialog.getColor(colour)
         if colour.isValid():
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
