@@ -347,6 +347,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         self.cbLayer.currentIndexChanged.connect(self.layerChanged)
 
+        self.cbStyle.currentIndexChanged.connect(self.styleChanged)
+
         self.cbLevel.currentIndexChanged.connect(self.levelChanged)
         # Connecting both activated() and currentIndexChanged() signals leads
         # to **TimeChanged() being called twice when the user selects a new
@@ -971,6 +973,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return valid_time == "" or valid_time is not None
 
     def levelChanged(self):
+        self.autoUpdate()
+
+    def styleChanged(self, index):
         self.autoUpdate()
 
     def enableLevelElements(self, enable):
