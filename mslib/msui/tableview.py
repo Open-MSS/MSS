@@ -40,6 +40,7 @@ import functools
 import logging
 import random
 import string
+import pyproj
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui import hexagon_dockwidget as hex
@@ -123,38 +124,21 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         tableView = self.tableWayPoints
         index = tableView.currentIndex()
+        lonlat = 0, 0
         if not index.isValid():
             row = 0
             flightlevel = 0
         else:
             row = index.row() + 1
             flightlevel = self.waypoints_model.waypointData(row - 1).flightlevel
-        # row = self.waypoints_model.rowCount() # Append to end
-        locations = [unicode(wp.location) for wp in self.waypoints_model.allWaypointData()]
-        locname = ""
-        for letter in string.ascii_uppercase:
-            if letter not in locations:
-                locname = letter
-                break
-        if locname == "":
-            for fletter in string.ascii_uppercase:
-                for sletter in string.ascii_uppercase:
-                    if fletter + sletter not in locations:
-                        locname = fletter + sletter
-                        break
-                if locname != "":
-                    break
-        if locname == "":
-            i = 3
-            j = 0
-            locname = random.sample(string.ascii_uppercase, i)
-            while locname in locations:
-                locname = random.sample(string.ascii_uppercase, i)
-                j += 1
-                if j == 10:
-                    i += 1
+            if row <  len(self.waypoints_model.allWaypointData()):
+                wp_prev = self.waypoints_model.waypointData(row - 1)
+                wp_next = self.waypoints_model.waypointData(row)
+                gc = pyproj.Geod(ellps="WGS84")  # a=40e6, b=40e6)
+                lonlat = gc.npts(wp_prev.lon, wp_prev.lat, wp_next.lon, wp_next.lat, 3)[1]
+
         self.waypoints_model.insertRows(
-            row, waypoints=[ft.Waypoint(lat=0, lon=0, flightlevel=flightlevel, location=locname)])
+            row, waypoints=[ft.Waypoint(lat=round(lonlat[1], 2), lon=round(lonlat[0], 2), flightlevel=flightlevel)])
 
         index = self.waypoints_model.index(row, 0)
         tableView = self.tableWayPoints
