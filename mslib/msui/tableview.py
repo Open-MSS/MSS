@@ -174,16 +174,16 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         wps = self.waypoints_model.allWaypointData()
         if len(wps) < 3:
-            QtWidgets.QtMessageBox.warning(
+            QtWidgets.QMessageBox.warning(
                 None, "Remove waypoint",
                 "Cannot remove waypoint, the flight track needs to consist of at least two points.")
             return False
         else:
             waypoint = wps[row]
-            return QtWidgets.QtMessageBox.question(
+            return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
                 "Remove waypoint at %.2f/%.2f, flightlevel %.2f?" % (waypoint.lat, waypoint.lon, waypoint.flightlevel),
-                QtWidgets.QtMessageBox.Yes | QtWidgets.QtMessageBox.No) == QtWidgets.QtMessageBox.Yes
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
     def removeWayPoint(self):
         """Handler for button <btDeleteWayPoint>. Deletes the currently selected

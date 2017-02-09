@@ -485,16 +485,16 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             return
         item = self.listFlightTracks.currentItem()
         if item.flighttrack_model == self.active_flight_track:
-            QtWidgets.QtMessageBox.information(self, self.tr("Flight Track Management"),
-                                               self.tr("Cannot close currently active flight track."))
+            QtWidgets.QMessageBox.information(self, self.tr("Flight Track Management"),
+                                              self.tr("Cannot close currently active flight track."))
             return
         if item.flighttrack_model.modified:
-            ret = QtWidgets.QtMessageBox.warning(self, self.tr("Mission Support System"),
-                                                 self.tr("The flight track you are about to close has "
-                                                         "been modified. Close anyway?"),
-                                                 QtWidgets.QtMessageBox.Yes | QtWidgets.QtMessageBox.No,
-                                                 QtWidgets.QtMessageBox.No)
-            if ret == QtWidgets.QtMessageBox.Yes:
+            ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
+                                                self.tr("The flight track you are about to close has "
+                                                        "been modified. Close anyway?"),
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.Yes:
                 self.listFlightTracks.takeItem(self.listFlightTracks.currentRow())
 
     def saveFlightTrack(self):
@@ -502,10 +502,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         filename = self.active_flight_track.getFilename()
         if filename and filename.endswith('.ftml'):
-            sel = QtWidgets.QtMessageBox.question(self, "Save flight track",
-                                                  "Saving flight track to {:s}. Continue?".format(filename),
-                                                  QtWidgets.QtMessageBox.Yes | QtWidgets.QtMessageBox.No)
-            if sel == QtWidgets.QtMessageBox.Yes:
+            sel = QtWidgets.QMessageBox.question(self, "Save flight track",
+                                                 "Saving flight track to {:s}. Continue?".format(filename),
+                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            if sel == QtWidgets.QMessageBox.Yes:
                 self.active_flight_track.saveToFTML(filename)
         else:
             self.saveFlightTrackAs()
@@ -523,9 +523,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename.endswith('.ftml'):
                 self.active_flight_track.saveToFTML(filename)
             else:
-                QtWidgets.QtMessageBox.warning(self, "Save flight track",
-                                               "File extension is not '.ftml'!\n{:}".format(filename),
-                                               QtWidgets.QtMessageBox.Ok)
+                QtWidgets.QMessageBox.warning(self, "Save flight track",
+                                              "File extension is not '.ftml'!\n{:}".format(filename),
+                                              QtWidgets.QMessageBox.Ok)
 
     def setFlightTrackActive(self):
         """Set the currently selected flight track to be the active one, i.e.
