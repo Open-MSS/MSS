@@ -160,7 +160,7 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
     def nameChanged(self, item):
         """Slot to change the name of a flight track.
         """
-        item.flighttrack_model.setName(str(item.text()))
+        item.flighttrack_model.setName(unicode(item.text()))
 
 
 #
@@ -271,7 +271,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         def load_function_wrapper(self):
             filename = QtWidgets.QFileDialog.getOpenFileName(
                 self, "Import Flight Track", "", name + " (*." + extension + ")")
-            filename = filename[0] if USE_PYQT5 else str(filename)
+            filename = filename[0] if USE_PYQT5 else unicode(filename)
 
             if filename:
                 ft_name, new_waypoints = function(filename)
@@ -302,7 +302,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         def save_function_wrapper(self):
             filename = QtWidgets.QFileDialog.getSaveFileName(
                 self, "Export Flight Track", "", name + " (*." + extension + ")")
-            filename = filename[0] if USE_PYQT5 else str(filename)
+            filename = filename[0] if USE_PYQT5 else unicode(filename)
 
             if filename:
                 function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
@@ -454,9 +454,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         filename = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open Config file", "", "Supported files (*.json *.txt)")
-        filename = filename[0] if USE_PYQT5 else str(filename)
+        filename = filename[0] if USE_PYQT5 else unicode(filename)
         if filename:
-            constants.CACHED_CONFIG_FILE = str(filename)
+            constants.CACHED_CONFIG_FILE = filename
 
     def openFlightTrack(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
@@ -465,7 +465,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         filename = QtWidgets.QFileDialog.getOpenFileName(self,
                                                          "Open Flight Track", "",
                                                          "Flight track XML (*.ftml)")
-        filename = filename[0] if USE_PYQT5 else str(filename)
+        filename = filename[0] if USE_PYQT5 else unicode(filename)
 
         if filename:
             if filename.endswith('.ftml'):
@@ -516,7 +516,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         default_filename = os.path.join(self.lastSaveDir, self.active_flight_track.name + ".ftml")
         filename = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save Flight Track", default_filename, "Flight track XML (*.ftml)")
-        filename = filename[0] if USE_PYQT5 else str(filename)
+        filename = filename[0] if USE_PYQT5 else unicode(filename)
 
         if filename:
             self.lastSaveDir = os.path.dirname(filename)

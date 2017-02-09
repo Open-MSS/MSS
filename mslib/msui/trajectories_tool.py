@@ -120,7 +120,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # QString to str.
         nas_file = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open NASA Ames File", "", "NASA Ames files (*.nas)")
-        nas_file = nas_file[0] if USE_PYQT5 else str(nas_file)
+        nas_file = nas_file[0] if USE_PYQT5 else unicode(nas_file)
         if nas_file:
             logging.debug("Loading flight track data from %s", nas_file)
 
@@ -139,7 +139,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Ask for a directory to open.
         traj_dir = QtWidgets.QFileDialog.getExistingDirectory(
             self, "Open Lagranto Output Directory", "")
-        traj_dir = traj_dir[0] if USE_PYQT5 else str(traj_dir)
+        traj_dir = traj_dir[0] if USE_PYQT5 else unicode(traj_dir)
         if traj_dir:
             logging.debug("Loading trajectory data from %s", traj_dir)
 
@@ -258,7 +258,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Generally, an instance of this class will contain a list of
         # non-overlapping selection ranges.
         itemSelection = self.traj_item_tree.selectionFromQuery(
-            str(self.leSelectionQuery.text()),
+            unicode(self.leSelectionQuery.text()),
             index=rootIndex)
 
         # Items can be selected in the tree view by using the select()
@@ -399,7 +399,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         view_name = self.cbPlotInView.currentText()
-        if str(view_name) != "None":
+        if unicode(view_name) != "None":
             view_item = self.listviews.findItems(view_name,
                                                  QtCore.Qt.MatchContains)[0]
             logging.debug("Plotting selected elements in view <%s>", view_name)
@@ -422,7 +422,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         view_name = self.cbRemoveFromView.currentText()
-        if str(view_name) != "None":
+        if unicode(view_name) != "None":
             view_item = self.listviews.findItems(view_name,
                                                  QtCore.Qt.MatchContains)[0]
             logging.debug("Removing selected elements from view <%s>", view_name)

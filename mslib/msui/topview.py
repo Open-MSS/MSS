@@ -259,7 +259,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """Change the current map section to one of the predefined regions.
         """
         # Get the initial projection parameters from the tables in mss_settings.
-        current_map_key = str(self.cbChangeMapSection.currentText())
+        current_map_key = unicode(self.cbChangeMapSection.currentText())
         predefined_map_sections = config_loader(dataset="predefined_map_sections",
                                                 default=mss_default.predefined_map_sections)
         current_map = predefined_map_sections[current_map_key]

@@ -159,7 +159,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
            values are corrected.
         """
         try:
-            flightlevel = int(float(str(item.text())))
+            flightlevel = int(float(unicode(item.text())))
         except:
             flightlevel = 0
         if flightlevel < 0:
@@ -172,7 +172,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     def getFlightLevels(self):
         """Returns the flight level values contained in the table.
         """
-        return [int(str(self.tableWidget.item(row, 0).text()))
+        return [int(unicode(self.tableWidget.item(row, 0).text()))
                 for row in range(self.tableWidget.rowCount())]
 
     def getSettings(self):

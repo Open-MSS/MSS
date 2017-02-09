@@ -513,7 +513,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             self.waypoints[0].distance_to_prev = 0
             self.waypoints[0].distance_total = 0
         for i in range(1, len(self.waypoints)):
-            wp_comm = str(self.waypoints[i].comments)
+            wp_comm = unicode(self.waypoints[i].comments)
             if len(wp_comm) == 9 and wp_comm.startswith("Hexagon "):
                 wp_comm = "Hexagon {:d}".format(8 - int(wp_comm[-1]))
                 self.waypoints[i].comments = QString(wp_comm)
@@ -557,12 +557,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         for wp in self.waypoints:
             element = doc.createElement("Waypoint")
             wp_el.appendChild(element)
-            element.setAttribute("location", str(wp.location))
+            element.setAttribute("location", unicode(wp.location))
             element.setAttribute("lat", str(wp.lat))
             element.setAttribute("lon", str(wp.lon))
             element.setAttribute("flightlevel", str(wp.flightlevel))
             comments = doc.createElement("Comments")
-            comments.appendChild(doc.createTextNode(str(wp.comments)))
+            comments.appendChild(doc.createTextNode(unicode(wp.comments)))
             element.appendChild(comments)
 
         file_object = open(self.filename, 'w')
@@ -670,7 +670,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
            combobox, get the corresponding coordinates.
         """
         if index.column() == LOCATION:
-            loc = str(editor.currentText())
+            loc = unicode(editor.currentText())
             locations = config_loader(dataset='locations', default=mss_default.locations)
             if loc in locations.keys():
                 lat, lon = locations[loc]

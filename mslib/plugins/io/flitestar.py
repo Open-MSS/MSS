@@ -10,10 +10,10 @@ def save_to_txt(filename, name, waypoints):
         raise ValueError("filename to save flight track cannot be None")
     max_loc_len, max_com_len = len("Location"), len("Comments")
     for wp in waypoints:
-        if len(str(wp.location)) > max_loc_len:
-            max_loc_len = len(str(wp.location))
-        if len(str(wp.comments)) > max_com_len:
-            max_com_len = len(str(wp.comments))
+        if len(unicode(wp.location)) > max_loc_len:
+            max_loc_len = len(unicode(wp.location))
+        if len(unicode(wp.comments)) > max_com_len:
+            max_com_len = len(unicode(wp.comments))
     with open(filename, "w") as out_file:
         out_file.write("# Do not modify if you plan to import this file again!\n")
         out_file.write("Track name: {:}\n".format(name))
@@ -23,14 +23,14 @@ def save_to_txt(filename, name, waypoints):
                                                                      max_com_len)
         out_file.write(header)
         for i, wp in enumerate(waypoints):
-            loc = str(wp.location)
+            loc = unicode(wp.location)
             lat = wp.lat
             lon = wp.lon
             lvl = wp.flightlevel
             pre = wp.pressure / 100.
             leg = wp.distance_to_prev
             cum = wp.distance_total
-            com = str(wp.comments)
+            com = unicode(wp.comments)
             out_file.write(line.format(i, loc, max_loc_len, lat, lon, lvl, pre, leg, cum, com, max_com_len))
 
 

@@ -62,7 +62,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """
         filename = QtGui.QFileDialog.getOpenFileName(
             self, "Open NASA satellite overpass prediction", "", "(*.*)")
-        filename = filename[0] if USE_PYQT5 else str(filename)
+        filename = filename[0] if USE_PYQT5 else unicode(filename)
         if not filename:
             return
         self.leFile.setText(filename)
@@ -71,7 +71,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """Load the file specified in leFile and fill the combobox with the
            available track segments.
         """
-        fname = str(self.leFile.text())
+        fname = unicode(self.leFile.text())
         logging.debug("loading satellite overpasses in file %s", fname)
 
         overpass_segments = mss_util.read_nasa_satellite_prediction(fname)
