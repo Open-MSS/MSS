@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_performance_settings.ui'
+# Form implementation generated from reading ui file 'msui/ui_performance_settings.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -30,13 +30,13 @@ class Ui_PerformanceSettingsDialog(object):
         self.dsbTakeoffWeight = QtWidgets.QDoubleSpinBox(PerformanceSettingsDialog)
         self.dsbTakeoffWeight.setGeometry(QtCore.QRect(160, 130, 141, 22))
         self.dsbTakeoffWeight.setDecimals(0)
-        self.dsbTakeoffWeight.setMaximum(99999.0)
+        self.dsbTakeoffWeight.setMaximum(9999999.0)
         self.dsbTakeoffWeight.setSingleStep(1000.0)
         self.dsbTakeoffWeight.setObjectName("dsbTakeoffWeight")
         self.dsbFuel = QtWidgets.QDoubleSpinBox(PerformanceSettingsDialog)
         self.dsbFuel.setGeometry(QtCore.QRect(160, 160, 141, 22))
         self.dsbFuel.setDecimals(0)
-        self.dsbFuel.setMaximum(99999.0)
+        self.dsbFuel.setMaximum(9999999.0)
         self.dsbFuel.setSingleStep(1000.0)
         self.dsbFuel.setObjectName("dsbFuel")
         self.label_2 = QtWidgets.QLabel(PerformanceSettingsDialog)
