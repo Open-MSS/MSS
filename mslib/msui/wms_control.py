@@ -351,6 +351,10 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
 
         self.connect(self.cbLevel, QtCore.SIGNAL("currentIndexChanged(int)"),
                      self.levelChanged)
+
+        self.connect(self.cbStyle, QtCore.SIGNAL("currentIndexChanged(int)"),
+                     self.styleChanged)
+
         # Connecting both activated() and currentIndexChanged() signals leads
         # to **TimeChanged() being called twice when the user selects a new
         # item in the combobox. However, currentIndexChanged alone doesn't
@@ -993,6 +997,9 @@ class WMSControlWidget(QtGui.QWidget, ui.Ui_WMSDockWidget):
         return valid_time == "" or valid_time is not None
 
     def levelChanged(self):
+        self.autoUpdate()
+
+    def styleChanged(self, index):
         self.autoUpdate()
 
     def enableLevelElements(self, enable):

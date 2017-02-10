@@ -173,7 +173,7 @@ class QFlightTrackListWidgetItem(QtGui.QListWidgetItem):
     def nameChanged(self, item):
         """Slot to change the name of a flight track.
         """
-        item.flighttrack_model.setName(str(item.text()))
+        item.flighttrack_model.setName(unicode(item.text()))
 
 
 #
@@ -307,7 +307,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                 self, "Import Flight Track", "", name + " (*." + extension + ")")
 
             if not filename.isEmpty():
-                filename = str(filename)
+                filename = unicode(filename)
                 ft_name, new_waypoints = function(filename)
                 if not ft_name:
                     ft_name = filename
@@ -338,7 +338,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                 self, "Export Flight Track", "", name + " (*." + extension + ")")
 
             if not filename.isEmpty():
-                filename = str(filename)
+                filename = unicode(filename)
                 function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
 
         setattr(self, full_name, types.MethodType(save_function_wrapper, self))
@@ -498,7 +498,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
         filename = QtGui.QFileDialog.getOpenFileName(
             self, "Open Config file", "", "Supported files (*.json *.txt)")
         if not filename.isEmpty():
-            constants.CACHED_CONFIG_FILE = str(filename)
+            constants.CACHED_CONFIG_FILE = unicode(filename)
 
     def openFlightTrack(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
@@ -509,7 +509,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
                                                      "Flight track XML (*.ftml)")
 
         if not filename.isEmpty():
-            filename = str(filename)
+            filename = unicode(filename)
             if filename.endswith('.ftml'):
                 self.createNewFlightTrack(filename=filename, activate=True)
             else:
@@ -561,7 +561,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             self, "Save Flight Track", default_filename, "Flight track XML (*.ftml)")
 
         if not filename.isEmpty():
-            filename = str(filename)
+            filename = unicode(filename)
             self.lastSaveDir = os.path.dirname(filename)
             if filename.endswith('.ftml'):
                 self.active_flight_track.saveToFTML(filename)

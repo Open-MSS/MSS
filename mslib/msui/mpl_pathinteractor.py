@@ -618,7 +618,7 @@ class PathInteractor:
         If the flight track consists of only two points deleting a waypoint
         is not possible. In this case the user is informed correspondingly.
         """
-        wps = self.waypoints_model.allWaypointData(mode=ft.USER)
+        wps = self.waypoints_model.allWaypointData()
         if len(wps) < 3:
             QtGui.QMessageBox.warning(
                 None, "Remove waypoint",

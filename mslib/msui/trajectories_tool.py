@@ -130,7 +130,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         nas_file = QtGui.QFileDialog.getOpenFileName(self, "Open NASA Ames File",
                                                      "", "NASA Ames files (*.nas)")
         if not nas_file.isEmpty():
-            nas_file = str(nas_file)
+            nas_file = unicode(nas_file)
             logging.debug("Loading flight track data from %s", nas_file)
 
             # Add the flight track to the data tree.
@@ -149,7 +149,7 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
         traj_dir = QtGui.QFileDialog.getExistingDirectory(self,
                                                           "Open Lagranto Output Directory", "")
         if not traj_dir.isEmpty():
-            traj_dir = str(traj_dir)
+            traj_dir = unicode(traj_dir)
             logging.debug("Loading trajectory data from %s", traj_dir)
 
             # Test if selected directory contains subdirectories (as is
