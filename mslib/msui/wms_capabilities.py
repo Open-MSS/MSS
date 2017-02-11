@@ -31,17 +31,17 @@ AUTHORS:
 import logging
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui, QtWidgets  # Qt4 bindings
 
 # local application imports
-from mslib.msui import ui_wms_capabilities as ui
+from mslib.msui.mss_qt import ui_wms_capabilities as ui
 
 #
 # CLASS WMSCapabilitiesBrowser
 #
 
 
-class WMSCapabilitiesBrowser(QtGui.QDialog, ui.Ui_WMSCapabilitiesBrowser):
+class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
     """Dialog presenting an XML document to the user.
     """
 
@@ -74,7 +74,7 @@ def _main():
 
     import sys
 
-    application = QtGui.QApplication(sys.argv)
+    application = QtWidgets.QApplication(sys.argv)
     window = WMSCapabilitiesBrowser(url="http://test.me",
                                     capabilities_xml="""
 <?xml version="1.0" encoding="UTF-8"?>

@@ -10,15 +10,15 @@ AUTHORS:
 import logging
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
 
 # local application imports
-from mslib.msui import ui_kmloverlay_dockwidget as ui
+from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
 import pykml.parser
 
 
-class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
+class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     """
     This class provides the interface for accessing KML files and
     adding the appropriate patches to the TopView canvas.
@@ -64,7 +64,7 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
-        colour = QtGui.QColorDialog.getColor(colour)
+        colour = QtWidgets.QColorDialog.getColor(colour)
         if colour.isValid():
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
@@ -74,11 +74,13 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
         """Slot that opens a file dialog to choose a file with satellite
            overpass predictions.
         """
-        fname = QtGui.QFileDialog.getOpenFileName(
+        filename = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open KML Polygonal File", "", "(*.kml)")
-        if fname.isEmpty():
+        filename = filename[0] if USE_PYQT5 else unicode(filename)
+
+        if not filename:
             return
-        self.leFile.setText(fname)
+        self.leFile.setText(filename)
 
     def load_file(self):
         """
@@ -98,6 +100,6 @@ class KMLOverlayControlWidget(QtGui.QWidget, ui.Ui_KMLOverlayDockWidget):
             if self.view and self.cbOverlay.isChecked():
                 self.view.plotKML(self.patch)
         except IOError, ex:
-            QtGui.QMessageBox.critical(self, self.tr("KML Overlay"),
-                                       self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
-                                       QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, self.tr("KML Overlay"),
+                                           self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                           QtWidgets.QMessageBox.Ok)

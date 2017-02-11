@@ -86,7 +86,7 @@ class Ui_TableViewWindow(object):
         self.actionFlightPerformance.setObjectName(_fromUtf8("actionFlightPerformance"))
 
         self.retranslateUi(TableViewWindow)
-        QtCore.QObject.connect(self.actionClose, QtCore.SIGNAL(_fromUtf8("activated()")), TableViewWindow.close)
+        QtCore.QObject.connect(self.actionClose, QtCore.SIGNAL(_fromUtf8("triggered()")), TableViewWindow.close)
         QtCore.QMetaObject.connectSlotsByName(TableViewWindow)
 
     def retranslateUi(self, TableViewWindow):

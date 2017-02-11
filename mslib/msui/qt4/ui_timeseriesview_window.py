@@ -54,4 +54,4 @@ class Ui_TimeSeriesViewWindow(object):
     def retranslateUi(self, TimeSeriesViewWindow):
         TimeSeriesViewWindow.setWindowTitle(_translate("TimeSeriesViewWindow", "Time Series View - Mission Support System", None))
 
-from mpl_qtwidget import MplTimeSeriesViewWidget
+from mslib.msui.mpl_qtwidget import MplTimeSeriesViewWidget

@@ -34,7 +34,7 @@ import logging
 from mslib.msui.mss_qt import QtGui  # Qt4 bindings
 
 # local application imports
-from mslib.msui import ui_timeseriesview_window as ui
+from mslib.msui.mss_qt import ui_timeseriesview_window as ui
 from mslib.msui.viewwindows import MSSMplViewWindow
 
 #

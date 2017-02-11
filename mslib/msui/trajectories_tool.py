@@ -32,10 +32,10 @@ import logging
 import os
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
 
 # local application imports
-from mslib.msui import ui_trajectories_window as ui
+from mslib.msui.mss_qt import ui_trajectories_window as ui
 from mslib.msui import trajectory_item_tree as titree
 # import trajectory_ts
 from mslib.msui.viewwindows import MSSViewWindow
@@ -52,13 +52,14 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
     name = "Trajectories Tool"
     moduleCloses = QtCore.pyqtSignal(name="moduleCloses")
 
-    def __init__(self, parent=None, listviews=None):
+    def __init__(self, parent=None, listviews=None, viewsChanged=None):
         """
         """
         super(MSSTrajectoriesToolWindow, self).__init__(parent)
         self.setupUi(self)
 
         self.actionOpenFlightTrack.setEnabled(titree.hasNAppy)
+        self.viewsChanged = viewsChanged
 
         # traj_item_tree stores all data corresponding to the map, i.e. flight
         # tracks, trajectories, etc. The design follows Qt's model/view
@@ -99,9 +100,8 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # View control.
         self.btPlotInView.clicked.connect(self.plotCurrentItemInView)
         self.btRemoveFromView.clicked.connect(self.removeCurrentItemFromView)
-        if self.listviews:
-            self.listviews.viewsChanged.connect(self.updateViews)
-            self.updateViews()
+        self.viewsChanged.connect(self.updateViews)
+        self.updateViews()
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the window.
@@ -118,10 +118,10 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         # Ask for a file to open, convert the return file name from type
         # QString to str.
-        nas_file = QtGui.QFileDialog.getOpenFileName(self, "Open NASA Ames File",
-                                                     "", "NASA Ames files (*.nas)")
-        if not nas_file.isEmpty():
-            nas_file = str(nas_file)
+        nas_file = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Open NASA Ames File", "", "NASA Ames files (*.nas)")
+        nas_file = nas_file[0] if USE_PYQT5 else unicode(nas_file)
+        if nas_file:
             logging.debug("Loading flight track data from %s", nas_file)
 
             # Add the flight track to the data tree.
@@ -137,10 +137,10 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
            and reads the selected trajectory file using lagrantooutputreader.
         """
         # Ask for a directory to open.
-        traj_dir = QtGui.QFileDialog.getExistingDirectory(self,
-                                                          "Open Lagranto Output Directory", "")
-        if not traj_dir.isEmpty():
-            traj_dir = str(traj_dir)
+        traj_dir = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Open Lagranto Output Directory", "")
+        traj_dir = traj_dir[0] if USE_PYQT5 else unicode(traj_dir)
+        if traj_dir:
             logging.debug("Loading trajectory data from %s", traj_dir)
 
             # Test if selected directory contains subdirectories (as is
@@ -240,9 +240,8 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         else:
             selectedIndexes = self.selectedMapElements()
             if len(selectedIndexes) != 1:
-                QtGui.QMessageBox.warning(self, self.tr("select map elements"),
-                                          self.tr("Please select a single element for this operation."),
-                                          QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.warning(self, self.tr("select map elements"),
+                                              self.tr("Please select a single element for this operation."))
                 return
             else:
                 rootIndex = selectedIndexes[0]
@@ -259,7 +258,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Generally, an instance of this class will contain a list of
         # non-overlapping selection ranges.
         itemSelection = self.traj_item_tree.selectionFromQuery(
-            str(self.leSelectionQuery.text()),
+            unicode(self.leSelectionQuery.text()),
             index=rootIndex)
 
         # Items can be selected in the tree view by using the select()
@@ -274,13 +273,12 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         selectionModel = self.tvVisibleElements.selectionModel()
         if itemSelection.isEmpty():
             # If no item matches the query we can't select anything.
-            QtGui.QMessageBox.warning(self, self.tr("select map elements"),
-                                      self.tr("No matching items have been found."),
-                                      QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, self.tr("select map elements"),
+                                          self.tr("No matching items have been found."))
         else:
             selectionModel.select(itemSelection,
-                                  QtGui.QItemSelectionModel.ClearAndSelect |
-                                  QtGui.QItemSelectionModel.Rows)
+                                  QtWidgets.QItemSelectionModel.ClearAndSelect |
+                                  QtWidgets.QItemSelectionModel.Rows)
 
     def setCurrentItemColour(self):
         """Informs traj_item_tree to change the colour of the selected elements
@@ -299,8 +297,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             self.traj_item_tree.changeItemGxProperty_list(indices, 'general',
                                                           'colour', colour)
         except Exception, ex:
-            QtGui.QMessageBox.warning(self, self.tr('item colour'),
-                                      self.tr(str(ex)), QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, self.tr('item colour'), self.tr(str(ex)))
 
     def setCurrentItemLineStyle(self):
         """Informs traj_item_tree to change the line style of the selected
@@ -319,8 +316,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             self.traj_item_tree.changeItemGxProperty_list(indices, 'general',
                                                           'linestyle', lineStyle)
         except Exception, e:
-            QtGui.QMessageBox.warning(self, self.tr('item line style'),
-                                      self.tr(str(e)), QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, self.tr('item line style'), self.tr(str(e)))
 
     def setCurrentItemLineWidth(self):
         """Informs traj_item_tree to change the line width of the selected
@@ -337,8 +333,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             self.traj_item_tree.changeItemGxProperty_list(indices, 'general',
                                                           'linewidth', lineWidth)
         except Exception, e:
-            QtGui.QMessageBox.warning(self, self.tr('item line width'),
-                                      self.tr(str(e)), QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, self.tr('item line width'), self.tr(str(e)))
 
     def setCurrentItemTimeMarker(self):
         """Set the given time markers for the selected item and all its
@@ -359,13 +354,13 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # a number of trajectory items) ask the user if he wants to
             # set/change the time marker for all children.
             if isinstance(item, titree.LagrantoOutputItem):
-                ret = QtGui.QMessageBox.warning(self, self.tr("Time Marker"),
-                                                self.tr("Do you want to set the interval " +
-                                                        interval.strftime("%H:%M") +
-                                                        "\nfor all children of " + item.getName()),
-                                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.Default,
-                                                QtGui.QMessageBox.No)
-                if ret == QtGui.QMessageBox.No:
+                ret = QtWidgets.QMessageBox.warning(self, self.tr("Time Marker"),
+                                                    self.tr("Do you want to set the interval " +
+                                                            interval.strftime("%H:%M") +
+                                                            "\nfor all children of " + item.getName()),
+                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                    QtWidgets.QMessageBox.No)
+                if ret == QtWidgets.QMessageBox.No:
                     #
                     # If the answer is no, continue with the next item on
                     # the stack.
@@ -384,31 +379,27 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
                 setInterval = self.traj_item_tree.setTimeMarker(index, interval,
                                                                 emit_change=False)
                 if not setInterval:
-                    QtGui.QMessageBox.warning(self, self.tr("Time marker"),
-                                              self.tr("Time markers have been deleted."),
-                                              QtGui.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.warning(self, self.tr("Time marker"),
+                                                  self.tr("Time markers have been deleted."))
                 elif setInterval != interval:
-                    QtGui.QMessageBox.warning(self, self.tr("Time marker"),
-                                              self.tr("Warning: The minimum time interval for the"
-                                                      "selected variable is " +
-                                                      setInterval.strftime("%H:%M") +
-                                                      ".\nThe interval has been set to this value."),
-                                              QtGui.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.warning(self, self.tr("Time marker"),
+                                                  self.tr("Warning: The minimum time interval for the"
+                                                          "selected variable is " +
+                                                          setInterval.strftime("%H:%M") +
+                                                          ".\nThe interval has been set to this value."))
                 if not first_index:
                     first_index = index
                 last_index = index
             except Exception, e:
-                QtGui.QMessageBox.warning(self, self.tr("Time marker"),
-                                          self.tr(str(e)), QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.warning(self, self.tr("Time marker"), self.tr(str(e)))
 
-        self.traj_item_tree.emitChange(first_index, last_index,
-                                       mode="MARKER_CHANGE")
+        self.traj_item_tree.emitChange(first_index, last_index, mode="MARKER_CHANGE")
 
     def plotCurrentItemInView(self):
         """
         """
         view_name = self.cbPlotInView.currentText()
-        if str(view_name) != "None":
+        if unicode(view_name) != "None":
             view_item = self.listviews.findItems(view_name,
                                                  QtCore.Qt.MatchContains)[0]
             logging.debug("Plotting selected elements in view <%s>", view_name)
@@ -431,7 +422,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         view_name = self.cbRemoveFromView.currentText()
-        if str(view_name) != "None":
+        if unicode(view_name) != "None":
             view_item = self.listviews.findItems(view_name,
                                                  QtCore.Qt.MatchContains)[0]
             logging.debug("Removing selected elements from view <%s>", view_name)
@@ -484,7 +475,7 @@ def _main():
 
     import sys
 
-    application = QtGui.QApplication(sys.argv)
+    application = QtWidgets.QApplication(sys.argv)
     window = MSSTrajectoriesToolWindow()
     window.show()
     sys.exit(application.exec_())

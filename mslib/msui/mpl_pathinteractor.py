@@ -51,7 +51,7 @@ import numpy as np
 # related third party imports
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
-from PyQt4 import QtCore, QtGui
+from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, USE_PYQT5
 
 # local application imports
 from mslib.msui import flighttrack as ft
@@ -437,12 +437,9 @@ class PathInteractor:
         # If a model exists, disconnect from the old change() signals.
         wpm = self.waypoints_model
         if wpm:
-            wpm.disconnect(wpm, QtCore.SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
-                           self.qt_data_changed_listener)
-            wpm.disconnect(wpm, QtCore.SIGNAL("rowsInserted(QModelIndex, int, int)"),
-                           self.qt_insert_remove_point_listener)
-            wpm.disconnect(wpm, QtCore.SIGNAL("rowsRemoved(QModelIndex, int, int)"),
-                           self.qt_insert_remove_point_listener)
+            wpm.dataChanged.disconnect(self.qt_data_changed_listener)
+            wpm.rowsInserted.disconnect(self.qt_insert_remove_point_listener)
+            wpm.rowsRemoved.disconnect(self.qt_insert_remove_point_listener)
         # Set the new waypoints model.
         self.waypoints_model = waypoints
         # Connect to the new model's signals.
@@ -615,20 +612,20 @@ class PathInteractor:
         If the flight track consists of only two points deleting a waypoint
         is not possible. In this case the user is informed correspondingly.
         """
-        wps = self.waypoints_model.allWaypointData(mode=ft.USER)
+        wps = self.waypoints_model.allWaypointData()
         if len(wps) < 3:
-            QtGui.QMessageBox.warning(
+            QtWidgets.QMessageBox.warning(
                 None, "Remove waypoint",
                 "Cannot remove waypoint, the flight track needs to consist "
-                "of at least two points.", QtGui.QMessageBox.Ok)
+                "of at least two points.")
             return False
         else:
             wp = wps[row]
-            return (QtGui.QMessageBox.question(
+            return (QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
                 "Remove waypoint no.%i at %.2f/%.2f, flightlevel %.2f?"
                 % (row, wp.lat, wp.lon, wp.flightlevel),
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes)
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes)
 
     def set_path_color(self, line_color=None, marker_facecolor=None,
                        patch_facecolor=None):
@@ -1024,7 +1021,6 @@ class HPathInteractor(PathInteractor):
             self.ax.draw_artist(self.solar_lines)
         if self.show_tangent_points:
             self.ax.draw_artist(self.tangent_lines)
-
 
     def get_ind_under_point(self, event):
         """Get the index of the waypoint vertex under the point

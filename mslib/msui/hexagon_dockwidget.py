@@ -11,8 +11,8 @@ AUTHORS:
 
 """
 
-from mslib.msui.mss_qt import QtGui, QtCore
-from mslib.msui import ui_hexagon_dockwidget as ui
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
+from mslib.msui.mss_qt import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.mss_util import create_hexagon
 from mslib.mss_util import config_loader
@@ -23,7 +23,7 @@ class HexagonException(Exception):
     pass
 
 
-class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
+class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
     """This class implements the remote sensing functionality as dockable widget.
     """
 
@@ -56,9 +56,8 @@ class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
         params = self._get_parameters()
 
         if params["radius"] < 0.01:
-            QtGui.QMessageBox.warning(
-                self, "Add hexagon", "You cannot create a hexagon with zero radius!",
-                QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(
+                self, "Add hexagon", "You cannot create a hexagon with zero radius!")
             return
         points = create_hexagon(params["center_lat"], params["center_lon"], params["radius"], params["angle"])
         index = table_view.currentIndex()
@@ -89,7 +88,7 @@ class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
             if not index.isValid():
                 raise HexagonException("A waypoint of the hexagon must be selected.")
             row = index.row()
-            comm = str(waypoints_model.waypointData(row).comments)
+            comm = unicode(waypoints_model.waypointData(row).comments)
             if len(comm) == 9 and comm.startswith("Hexagon "):
                 if (len(waypoints_model.allWaypointData()) - 7) < 2:  # = 3 waypoints + 7 hexagon points
                     raise HexagonException("Cannot remove hexagon, the flight track needs to consist "
@@ -103,21 +102,21 @@ class HexagonControlWidget(QtGui.QWidget, ui.Ui_HexagonDockWidget):
                 else:
                     found_one = False
                     for i in range(0, row_max - row_min):
-                        if str(waypoints_model.waypointData(row_min + i).comments) != "Hexagon {:d}".format(i + 1):
+                        if unicode(waypoints_model.waypointData(row_min + i).comments) != "Hexagon {:d}".format(i + 1):
                             found_one = True
                             break
                     if found_one:
                         raise HexagonException("Cannot remove hexagon, hexagon comments are not found in all "
                                                "points (min, max = {:d}, {:d})".format(row_min, row_max))
                     else:
-                        sel = QtGui.QMessageBox.question(
+                        sel = QtWidgets.QMessageBox.question(
                             None, "Remove hexagon",
                             "This will remove waypoints {:d}-{:d}. Continue?".format(row_min, row_max),
-                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-                        if sel == QtGui.QMessageBox.Yes:
+                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                        if sel == QtWidgets.QMessageBox.Yes:
                             waypoints_model.removeRows(row_min, rows=7)
             else:
                 raise HexagonException("Cannot remove hexagon, please select a hexagon "
                                        "waypoint ('Hexagon x' in comments field)")
         except HexagonException, ex:
-            QtGui.QMessageBox.warning(self, "Remove hexagon", str(ex), QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, "Remove hexagon", str(ex))

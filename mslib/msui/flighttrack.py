@@ -47,8 +47,7 @@ import xml.dom.minidom
 
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore
-from mslib.msui.mss_qt import QString, QVariant, Qt, QModelIndex, SIGNAL, QAbstractTableModel, QItemDelegate, QComboBox
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
 import numpy as np
 
 # local application imports
@@ -152,7 +151,7 @@ class Waypoint(object):
                                                     self.flightlevel)
 
 
-class WaypointsTableModel(QAbstractTableModel):
+class WaypointsTableModel(QtCore.QAbstractTableModel):
     """Qt-QAbstractTableModel-derived data structure representing a flight
        track composed of a number of waypoints.
 
@@ -163,6 +162,8 @@ class WaypointsTableModel(QAbstractTableModel):
     distances between the individual waypoints, and to interpret the results of
     flight performance calculations.
     """
+
+    dataChanged = QtCore.pyqtSignal([QtCore.QModelIndex, QtCore.QModelIndex])
 
     def __init__(self, name="", filename=None, waypoints=None):
         super(WaypointsTableModel, self).__init__()
@@ -190,8 +191,12 @@ class WaypointsTableModel(QAbstractTableModel):
         """
         if os.path.exists(self.settingsfile):
             logging.debug("loading settings from %s", self.settingsfile)
-            with open(self.settingsfile, "r") as fileobj:
-                self.performance_settings = pickle.load(fileobj)
+            try:
+                with open(self.settingsfile, "r") as fileobj:
+                    self.performance_settings = pickle.load(fileobj)
+            except ImportError, ex:
+                logging.error("Problems reloading stored settings (%s: %s). Switching to default", type(ex), ex)
+                self.performance_settings = DEFAULT_PERFORMANCE
         else:
             self.performance_settings = DEFAULT_PERFORMANCE
 
@@ -215,17 +220,17 @@ class WaypointsTableModel(QAbstractTableModel):
 
         """
         if not index.isValid():
-            return Qt.ItemIsEnabled
+            return QtCore.Qt.ItemIsEnabled
         column = index.column()
         table = TABLE_SHORT
         if self.performance_settings["visible"]:
             table = TABLE_FULL
         if table[column][2]:
-            return Qt.ItemFlags(QAbstractTableModel.flags(self, index) | Qt.ItemIsEditable)
+            return QtCore.Qt.ItemFlags(QtCore.QAbstractTableModel.flags(self, index) | QtCore.Qt.ItemIsEditable)
         else:
-            return Qt.ItemFlags(QAbstractTableModel.flags(self, index))
+            return QtCore.Qt.ItemFlags(QtCore.QAbstractTableModel.flags(self, index))
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=QtCore.Qt.DisplayRole):
         """Return a data field at the given index (of type QModelIndex,
            specifying row and column); overrides the corresponding
            QAbstractTableModel method.
@@ -238,17 +243,17 @@ class WaypointsTableModel(QAbstractTableModel):
         waypoints = self.waypoints
 
         if not index.isValid() or not (0 <= index.row() < len(waypoints)):
-            return QVariant()
+            return QtCore.QVariant()
         waypoint = waypoints[index.row()]
         column = index.column()
-        if role == Qt.DisplayRole:
+        if role == QtCore.Qt.DisplayRole:
             if self.performance_settings["visible"]:
-                return QVariant(TABLE_FULL[column][1](waypoint))
+                return QtCore.QVariant(TABLE_FULL[column][1](waypoint))
             else:
-                return QVariant(TABLE_SHORT[column][1](waypoint))
-        elif role == Qt.TextAlignmentRole:
-            return QVariant(int(Qt.AlignLeft | Qt.AlignVCenter))
-        return QVariant()
+                return QtCore.QVariant(TABLE_SHORT[column][1](waypoint))
+        elif role == QtCore.Qt.TextAlignmentRole:
+            return QtCore.QVariant(int(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter))
+        return QtCore.QVariant()
 
     def waypointData(self, row):
         """Get the waypoint object defining the given row.
@@ -272,53 +277,57 @@ class WaypointsTableModel(QAbstractTableModel):
             path, numpoints=numpoints, connection=connection)
         return lats, lons
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
         """Return data describing the table header; overrides the
            corresponding QAbstractTableModel method.
         """
-        if role == Qt.TextAlignmentRole:
-            if orientation == Qt.Horizontal:
-                return QVariant(int(Qt.AlignLeft | Qt.AlignVCenter))
-            return QVariant(int(Qt.AlignRight | Qt.AlignVCenter))
-        if role != Qt.DisplayRole:
-            return QVariant()
+        if role == QtCore.Qt.TextAlignmentRole:
+            if orientation == QtCore.Qt.Horizontal:
+                return QtCore.QVariant(int(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter))
+            return QtCore.QVariant(int(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter))
+        if role != QtCore.Qt.DisplayRole:
+            return QtCore.QVariant()
         # Return the names of the table columns.
-        if orientation == Qt.Horizontal:
+        if orientation == QtCore.Qt.Horizontal:
             if self.performance_settings["visible"]:
-                return QVariant(TABLE_FULL[section][0])
+                return QtCore.QVariant(TABLE_FULL[section][0])
             else:
-                return QVariant(TABLE_SHORT[section][0])
+                return QtCore.QVariant(TABLE_SHORT[section][0])
         # Table rows (waypoints) are labelled with their number (= number of
         # waypoint).
-        return QVariant(int(section))
+        return QtCore.QVariant(int(section))
 
-    def rowCount(self, index=QModelIndex()):
+    def rowCount(self, index=QtCore.QModelIndex()):
         """Number of waypoints in the model.
         """
         return len(self.waypoints)
 
-    def columnCount(self, index=QModelIndex()):
+    def columnCount(self, index=QtCore.QModelIndex()):
         return len(TABLE_FULL)
 
-    def setData(self, index, value, role=Qt.EditRole, update=True):
+    def setData(self, index, value, role=QtCore.Qt.EditRole, update=True):
         """Change a data element of the flight track; overrides the
            corresponding QAbstractTableModel method.
 
         NOTE: Performance computations loose their validity if a change is made.
         """
         if index.isValid() and 0 <= index.row() < len(self.waypoints):
+            if not USE_PYQT5:
+                value = value.toString()
+            elif isinstance(value, QtCore.QVariant):
+                value = value.value()
             # print "\n>> SetData()"
             waypoint = self.waypoints[index.row()]
             column = index.column()
             index2 = index  # in most cases only one field is being changed
             if column == LOCATION:
-                waypoint.location = value.toString()
+                waypoint.location = value
             elif column == LAT:
                 # In Qt4.6 and higher, value.toFloat() is available:
                 # value, ok = value.toFloat()
                 # For lower versions, we need to use try..except.
                 try:
-                    value, ok = float(value.toString()), True
+                    value, ok = float(value), True
                 except:
                     ok = False
                 if ok:
@@ -335,7 +344,7 @@ class WaypointsTableModel(QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == LON:
                 try:
-                    value, ok = float(value.toString()), True
+                    value, ok = float(value), True
                 except:
                     ok = False
                 if ok:
@@ -346,7 +355,7 @@ class WaypointsTableModel(QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == FLIGHTLEVEL:
                 try:
-                    value, ok = float(value.toString()), True
+                    value, ok = float(value), True
                 except:
                     ok = False
                 if ok:
@@ -359,7 +368,7 @@ class WaypointsTableModel(QAbstractTableModel):
                     index2 = self.createIndex(index.row(), PRESSURE)
             elif column == PRESSURE:
                 try:
-                    value, ok = float(value.toString()), True
+                    value, ok = float(value), True
                 except:
                     ok = False
                 if ok:
@@ -369,15 +378,14 @@ class WaypointsTableModel(QAbstractTableModel):
                         self.update_distances(index.row())
                     index2 = self.createIndex(index.row(), FLIGHTLEVEL)
             else:
-                waypoint.comments = value.toString()
+                waypoint.comments = value
             self.modified = True
             # Performance computations loose their validity if a change is made.
-            self.emit(SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
-                      index, index2)
+            self.dataChanged.emit(index, index2)
             return True
         return False
 
-    def insertRows(self, position, rows=1, index=QModelIndex(),
+    def insertRows(self, position, rows=1, index=QtCore.QModelIndex(),
                    waypoints=None):
         """Insert waypoint; overrides the corresponding QAbstractTableModel
            method.
@@ -387,7 +395,7 @@ class WaypointsTableModel(QAbstractTableModel):
 
         assert len(waypoints) == rows, (waypoints, rows)
 
-        self.beginInsertRows(QModelIndex(), position,
+        self.beginInsertRows(QtCore.QModelIndex(), position,
                              position + rows - 1)
         for row, wp in enumerate(waypoints):
             self.waypoints.insert(position + row, wp)
@@ -397,12 +405,12 @@ class WaypointsTableModel(QAbstractTableModel):
         self.modified = True
         return True
 
-    def removeRows(self, position, rows=1, index=QModelIndex()):
+    def removeRows(self, position, rows=1, index=QtCore.QModelIndex()):
         """Remove waypoint; overrides the corresponding QAbstractTableModel
            method.
         """
         # beginRemoveRows emits rowsAboutToBeRemoved(index, first, last).
-        self.beginRemoveRows(QModelIndex(), position,
+        self.beginRemoveRows(QtCore.QModelIndex(), position,
                              position + rows - 1)
         self.waypoints = self.waypoints[:position] + self.waypoints[position + rows:]
         if position < len(self.waypoints):
@@ -505,16 +513,15 @@ class WaypointsTableModel(QAbstractTableModel):
             self.waypoints[0].distance_to_prev = 0
             self.waypoints[0].distance_total = 0
         for i in range(1, len(self.waypoints)):
-            wp_comm = str(self.waypoints[i].comments)
+            wp_comm = unicode(self.waypoints[i].comments)
             if len(wp_comm) == 9 and wp_comm.startswith("Hexagon "):
                 wp_comm = "Hexagon {:d}".format(8 - int(wp_comm[-1]))
                 self.waypoints[i].comments = QString(wp_comm)
         self.update_distances(position=0, rows=len(self.waypoints))
         index = self.index(0, 0)
 
-        self.emit(SIGNAL("layoutChanged()"))
-        self.emit(SIGNAL("dataChanged(QModelIndex,QModelIndex)"),
-                  index, index)
+        self.layoutChanged.emit()
+        self.dataChanged.emit(index, index)
 
     def replaceWaypoints(self, new_waypoints):
         self.waypoints = []
@@ -550,12 +557,12 @@ class WaypointsTableModel(QAbstractTableModel):
         for wp in self.waypoints:
             element = doc.createElement("Waypoint")
             wp_el.appendChild(element)
-            element.setAttribute("location", str(wp.location))
+            element.setAttribute("location", unicode(wp.location))
             element.setAttribute("lat", str(wp.lat))
             element.setAttribute("lon", str(wp.lon))
             element.setAttribute("flightlevel", str(wp.flightlevel))
             comments = doc.createElement("Comments")
-            comments.appendChild(doc.createTextNode(str(wp.comments)))
+            comments.appendChild(doc.createTextNode(unicode(wp.comments)))
             element.appendChild(comments)
 
         file_object = open(self.filename, 'w')
@@ -600,7 +607,7 @@ class WaypointsTableModel(QAbstractTableModel):
 #
 
 
-class WaypointDelegate(QItemDelegate):
+class WaypointDelegate(QtWidgets.QItemDelegate):
     """Qt delegate class for the appearance of the table view. Based on the
        'ships' example in chapter 14/16 of 'Rapid GUI Programming with Python
        and Qt: The Definitive Guide to PyQt Programming' (Mark Summerfield).
@@ -621,14 +628,14 @@ class WaypointDelegate(QItemDelegate):
             colour = QtGui.QColor(255, 255, 0)  # yellow
             newpalette.setColor(QtGui.QPalette.HighlightedText, colour)
             option.palette = newpalette
-        QItemDelegate.paint(self, painter, option, index)
+        QtWidgets.QItemDelegate.paint(self, painter, option, index)
 
     def createEditor(self, parent, option, index):
         """Create a combobox listing predefined locations in the LOCATION
            column.
         """
         if index.column() == LOCATION:
-            combobox = QComboBox(parent)
+            combobox = QtWidgets.QComboBox(parent)
             locations = config_loader(dataset='locations', default=mss_default.locations)
             adds = locations.keys()
             if self.parent() is not None:
@@ -643,43 +650,45 @@ class WaypointDelegate(QItemDelegate):
             return combobox
         else:
             # All other columns get the standard editor.
-            return QItemDelegate.createEditor(self, parent, option,
-                                              index)
+            return QtWidgets.QItemDelegate.createEditor(self, parent, option, index)
 
     def setEditorData(self, editor, index):
-        text = index.model().data(index, Qt.DisplayRole).toString()
+        if USE_PYQT5:
+            text = index.model().data(index, QtCore.Qt.DisplayRole).value()
+        else:
+            text = index.model().data(index, QtCore.Qt.DisplayRole).toString()
         if index.column() in (LOCATION,):
             i = editor.findText(text)
             if i == -1:
                 i = 0
             editor.setCurrentIndex(i)
         else:
-            QItemDelegate.setEditorData(self, editor, index)
+            QtWidgets.QItemDelegate.setEditorData(self, editor, index)
 
     def setModelData(self, editor, model, index):
         """For the LOCATION column: If the user selects a location from the
            combobox, get the corresponding coordinates.
         """
         if index.column() == LOCATION:
-            loc = str(editor.currentText())
+            loc = unicode(editor.currentText())
             locations = config_loader(dataset='locations', default=mss_default.locations)
             if loc in locations.keys():
                 lat, lon = locations[loc]
                 # Don't update distances and flight performance twice, hence
                 # set update=False for LAT.
-                model.setData(index.sibling(index.row(), LAT), QVariant(lat),
+                model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat),
                               update=False)
-                model.setData(index.sibling(index.row(), LON), QVariant(lon))
+                model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
             else:
                 for wp in self.parent().waypoints_model.allWaypointData():
                     if loc == wp.location:
                         lat, lon = wp.lat, wp.lon
                         # Don't update distances and flight performance twice, hence
                         # set update=False for LAT.
-                        model.setData(index.sibling(index.row(), LAT), QVariant(lat),
+                        model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat),
                                       update=False)
-                        model.setData(index.sibling(index.row(), LON), QVariant(lon))
+                        model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
 
-            model.setData(index, QVariant(editor.currentText()))
+            model.setData(index, QtCore.QVariant(editor.currentText()))
         else:
-            QItemDelegate.setModelData(self, editor, model, index)
+            QtWidgets.QItemDelegate.setModelData(self, editor, model, index)

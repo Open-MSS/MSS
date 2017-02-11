@@ -45,7 +45,7 @@ from mslib import greatcircle
 from mslib.msui import constants
 
 
-def config_loader(config_file=constants.CACHED_CONFIG_FILE, dataset=None, default=None):
+def config_loader(config_file=None, dataset=None, default=None):
     """
     Function for loading json config data
 
@@ -57,6 +57,8 @@ def config_loader(config_file=constants.CACHED_CONFIG_FILE, dataset=None, defaul
     Returns: a dictionary
 
     """
+    if config_file is None:
+        config_file = constants.CACHED_CONFIG_FILE
     data = {}
     try:
         with open(os.path.join(config_file)) as source:
@@ -76,6 +78,7 @@ def config_loader(config_file=constants.CACHED_CONFIG_FILE, dataset=None, defaul
             if default is not None:
                 return default
             raise KeyError("default value for key not set")
+
     return data
 
 
