@@ -246,14 +246,42 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         import_plugins = config_loader(dataset="import_plugins", default={})
         for name in import_plugins:
             extension, module, function = import_plugins[name]
-            imported_module = importlib.import_module(module)
-            self.addImportFilter(name, extension, getattr(imported_module, function))
+            try:
+                imported_module = importlib.import_module(module)
+            except Exception, ex:
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("file io plugin error import plugins"),
+                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                        import_plugins, type(ex), ex)))
+                continue
+            try:
+                self.addImportFilter(name, extension, getattr(imported_module, function))
+            except AttributeError, ex:
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("file io plugin error import plugins"),
+                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                        import_plugins, type(ex), ex)))
+                continue
 
         export_plugins = config_loader(dataset="export_plugins", default={})
         for name in export_plugins:
             extension, module, function = export_plugins[name]
-            imported_module = importlib.import_module(module)
-            self.addExportFilter(name, extension, getattr(imported_module, function))
+            try:
+                imported_module = importlib.import_module(module)
+            except Exception, ex:
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("file io plugin error import plugins"),
+                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                        import_plugins, type(ex), ex)))
+                continue
+            try:
+                    self.addExportFilter(name, extension, getattr(imported_module, function))
+            except Exception, ex:
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("file io plugin error"),
+                    self.tr("ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
+                        export_plugins, type(ex), ex)))
+                continue
 
         # self.actionLoopView.setVisible(config_loader(dataset="enable_loopview", default=False))
 
@@ -290,7 +318,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
                     self.listFlightTracks.setCurrentItem(listitem)
                     self.setFlightTrackActive()
-
 
         setattr(self, full_name, types.MethodType(load_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))
