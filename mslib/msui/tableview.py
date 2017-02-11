@@ -124,21 +124,21 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         tableView = self.tableWayPoints
         index = tableView.currentIndex()
-        lonlat = 0, 0
+        lon, lat = 0, 0
         if not index.isValid():
             row = 0
             flightlevel = 0
         else:
             row = index.row() + 1
             flightlevel = self.waypoints_model.waypointData(row - 1).flightlevel
-            if row <  len(self.waypoints_model.allWaypointData()):
+            if row < len(self.waypoints_model.allWaypointData()):
                 wp_prev = self.waypoints_model.waypointData(row - 1)
                 wp_next = self.waypoints_model.waypointData(row)
                 gc = pyproj.Geod(ellps="WGS84")  # a=40e6, b=40e6)
-                lonlat = gc.npts(wp_prev.lon, wp_prev.lat, wp_next.lon, wp_next.lat, 3)[1]
+                lon, lat = gc.npts(wp_prev.lon, wp_prev.lat, wp_next.lon, wp_next.lat, 3)[1]
 
         self.waypoints_model.insertRows(
-            row, waypoints=[ft.Waypoint(lat=round(lonlat[1], 2), lon=round(lonlat[0], 2), flightlevel=flightlevel)])
+            row, waypoints=[ft.Waypoint(lat=round(lat, 2), lon=round(lon, 2), flightlevel=flightlevel)])
 
         index = self.waypoints_model.index(row, 0)
         tableView = self.tableWayPoints
