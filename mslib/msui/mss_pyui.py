@@ -274,16 +274,23 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             filename = filename[0] if USE_PYQT5 else unicode(filename)
 
             if filename:
-                ft_name, new_waypoints = function(filename)
-                if not ft_name:
-                    ft_name = filename
-                waypoints_model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
+                try:
+                    ft_name, new_waypoints = function(filename)
+                except SyntaxError, e:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("file io plugin error"),
+                        self.tr("ERROR: {}".format(e)))
+                else:
+                    if not ft_name:
+                        ft_name = filename
+                    waypoints_model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
 
-                listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
-                listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
+                    listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
-                self.listFlightTracks.setCurrentItem(listitem)
-                self.setFlightTrackActive()
+                    self.listFlightTracks.setCurrentItem(listitem)
+                    self.setFlightTrackActive()
+
 
         setattr(self, full_name, types.MethodType(load_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))

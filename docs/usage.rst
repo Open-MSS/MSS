@@ -86,22 +86,30 @@ from the File menu of the Main Window.
 
 MSS currently offers several import/export filters in the mslib.plugins.io module, which may serve
 as an example for the definition of own plugins. The CSV plugin is enabled by default. Enabling the
-experimental FliteStar text format plugins would require those line in the UI settings file:
+experimental FliteStar text import plugin would require those lines in the UI settings file:
 
 .. code-block:: json
 
     "import_plugins": {
-        "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_txt"]
+        "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"]
     },
-    "export_plugins": {
-        "FliteStar": ["txt", "mslib.plugins.io.flitestar", "save_to_txt"]
-    },
-
 
 The dictionary entry defines the name of the filter in the File menu. The list specifies in this
 order the extension, the python module implementing the function, and finally the function name.
 The module may be placed in any location of the PYTHONPATH or into the configuration directory
-path. Both the csv and the FliteStar plugin demonstrate well, how additional plugins may be
-implemented. Please be advised that several attributes of the waypoints are automatically computed
-by MSS (for example all time and performance data) and will be overwritten after reading back the
-file.
+path.
+
+An exemplary test file format that can be ex- and imported may be activated by:
+
+.. code-block:: json
+
+    "import_plugins": {
+        "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"]
+    },
+    "export_plugins": {
+        "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"]
+    },
+
+The given plugins demonstrate, how additional plugins may be implemented. Please be advised that several
+attributes of the waypoints are automatically computed by MSS (for example all time and performance data)
+and will be overwritten after reading back the file.
