@@ -7,6 +7,7 @@ AUTHORS:
 """
 
 import importlib
+import logging
 import traceback
 import sys
 
@@ -26,6 +27,7 @@ try:
     _qt_ui_prefix = "mslib.msui.qt4."
 
 except ImportError:
+    logging.warning("Did not find PyQt4. Switching to PyQt5.")
     # import the Qt5Agg FigureCanvas object, that binds Figure to
     # Qt5Agg backend. It also inherits from QWidget
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -34,10 +36,6 @@ except ImportError:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
     from PyQt5 import QtGui, QtCore, QtWidgets
-    from PyQt5.QtCore import QVariant, Qt, QModelIndex, QAbstractTableModel
-    from PyQt5.QtWidgets import QItemDelegate, QComboBox, QDialog, QWidget, QMainWindow, QLabel, QListWidgetItem, \
-        QApplication, QAction, QFileDialog, QMessageBox, QProgressDialog, QVBoxLayout
-
     QString = unicode  # QString is not exposed anymore but is used transparently by PyQt5
 
     _qt_ui_prefix = "mslib.msui.qt5."
