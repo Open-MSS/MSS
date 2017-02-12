@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 """
+@Copyrigh: 2016-2017 see AUTHORS
+
 The module can be run with the Python PASTE framework as a stand-alone
 server (simply execute this file with Python).
 """
@@ -55,7 +57,7 @@ def main():
             return False
 
         application = AuthBasicHandler(application, realm, authfunc)
-    logging.info("Configuration File: %s" % mss_wms_settings.__file__)
+    logging.info(u"Configuration File: {}".format(mss_wms_settings.__file__))
     paste.httpserver.serve(application, host=args.host, port=args.port, use_threadpool=args.use_threadpool)
 
 if __name__ == '__main__':

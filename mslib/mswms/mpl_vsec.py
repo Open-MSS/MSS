@@ -4,6 +4,7 @@
 ********************************************************************************
 
    Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+             2016-2017 see AUTHORS
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -77,7 +78,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
         tick_index_step = len(self.lat_inds) / int(self.numlabels)
         ax.set_xticks(self.lat_inds[::tick_index_step])
-        ax.set_xticklabels(["%2.1f, %2.1f" % (d[0], d[1])
+        ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
                             for d in zip(self.lats[::tick_index_step],
                                          self.lons[::tick_index_step])],
                            rotation=25, fontsize=10, horizontalalignment='right')
@@ -113,7 +114,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                                     len_major_ticks + len(major_ticks2) - 1)
             major_ticks[len_major_ticks:] = major_ticks2[1:]
 
-        labels = ['%i' % (l / 100.) for l in major_ticks]
+        labels = ['{:d}'.format(l / 100.) for l in major_ticks]
 
         # .. the same for the minor ticks ..
         p_top_minor = max(label_distance, self.p_top)
@@ -143,11 +144,11 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Plot title (either in image axes or above).
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += " [%i..%i hPa]" % (self.p_bot / 100, self.p_top / 100)
-        titlestring = titlestring + '\nValid: %s (step %i hrs from %s)' % \
-                                    (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                     time_step_hrs,
-                                     self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += " [{:d}..{:d} hPa]".format(self.p_bot / 100, self.p_top / 100)
+        titlestring = "{0}{1}".format(titlestring, '\nValid: {} (step {:d} hrs from {})' \
+                                      .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                                              time_step_hrs,
+                                              self.init_time.strftime('%a %Y-%m-%d %H:%M UTC')))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -155,8 +156,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             ax.set_xlabel('Latitude, longitude (degrees)')
             ax.set_ylabel('Pressure (hPa)')
             if self.resolution != (-1, -1):
-                self.fig.text(0.99, 0.01, 'model resolution %.2fx%.2f deg' %
-                              (self.resolution[0], self.resolution[1]),
+                self.fig.text(0.99, 0.01, "model resolution {:.2f}x{:.2f} deg"
+                              .format(self.resolution[0], self.resolution[1]),
                               fontsize=10, horizontalalignment='right',
                               transform=self.fig.transFigure)
         else:
@@ -181,7 +182,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
             if dataitem not in data.keys():
-                raise KeyError("required data field %s not found" % dataitem)
+                raise KeyError(u"required data field {} not found".format(dataitem))
 
         # Copy parameters to properties.
         self.data = data
@@ -300,7 +301,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             # Longitude data.
             node = xmldoc.createElement("Longitude")
-            node.setAttribute("num_waypoints", "%s" % len(self.lons))
+            node.setAttribute("num_waypoints", "{}".format(len(self.lons)))
 
             data_str = ""
             for value in self.lons:
@@ -312,7 +313,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             # Latitude data.
             node = xmldoc.createElement("Latitude")
-            node.setAttribute("num_waypoints", "%s" % len(self.lats))
+            node.setAttribute("num_waypoints", "{}".format(len(self.lats)))
 
             data_str = ""
             for value in self.lats:
@@ -328,8 +329,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             for var in self.data.keys():
                 node = xmldoc.createElement(var)
                 data_shape = self.data[var].shape
-                node.setAttribute("num_levels", "%s" % data_shape[0])
-                node.setAttribute("num_waypoints", "%s" % data_shape[1])
+                node.setAttribute("num_levels", u"{}".format(data_shape[0]))
+                node.setAttribute("num_waypoints", u"{}".format(data_shape[1]))
 
                 data_str = ""
                 for data_row in self.data[var]:

@@ -4,6 +4,7 @@
 
    Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
    Copyright 2011-2014 Marc Rautenhaus
+             2016-2017 see AUTHORS
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -179,10 +180,10 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             titlestring = "High cloud cover (0-1)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -288,10 +289,10 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Mean sea level pressure (hPa) and surface wind"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -364,8 +365,8 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Plot title.
         titlestring = "Solar Elevation Angle "
-        titlestring += "\nValid: %s" % \
-            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")
+        titlestring += u"\nValid: {}" \
+            .format(self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
@@ -438,10 +439,10 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Sea Ice Cover"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
@@ -509,10 +510,10 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Temperature (degC) at model level %i" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -773,10 +774,10 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -879,10 +880,10 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
                       "at %i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -966,10 +967,10 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1053,10 +1054,10 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1141,10 +1142,10 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1206,10 +1207,10 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1277,10 +1278,10 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "EMAC Eyjafjallajokull Tracer (relative) at model level %i" % self.level
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1357,10 +1358,10 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "EMAC Eyjafjallajokull Tracer Total Column Density (kg/m^2)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1465,10 +1466,10 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
                           "%i PVU" % (int(self.level) / 1000)
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1537,10 +1538,10 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Mean sea level pressure (hPa) and total column probability of WCB (0-1)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1618,10 +1619,10 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1694,10 +1695,10 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Boundary layer height (m) and mean sea level pressure (hPa)"
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {} (step {:d} hrs from {})' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
+                    time_step_hrs,
+                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1766,8 +1767,8 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         #                 thin_contours, colors="saddlebrown", linewidths=1)
 
         titlestring = "10.8 um Brightness Temperature (K)"
-        titlestring += '\nValid: %s' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += u'\nValid: {}' \
+            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
