@@ -287,7 +287,7 @@ GW
 class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
     """Vertical section of chemical species
     """
-    name = "GW"
+    name = "VS_GW"
     title = "Gravity Wave Temperature Residual (K)"
 
     required_datafields = [
@@ -322,7 +322,86 @@ class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
         cs = ax.pcolormesh(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                            curtain_p, curtain_cc, norm=norm,
                            cmap=cmap)
-        ax.plot(self.lat_inds, tropo_p.reshape(-1), color="gray", zorder=100)
+        pl_trop = ax.plot(self.lat_inds, tropo_p.reshape(-1), "o", color="k", zorder=100)
+        plt.setp(pl_trop, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
+
+        # Pressure decreases with index, i.e. orography is stored at the
+        # zero-p-index (data field is flipped in mss_plot_driver.py if
+        # pressure increases with index).
+        self._latlon_logp_setup(titlestring=self.title)
+
+        # Add colorbar.
+        if not self.noframe:
+            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
+            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
+            cbar.set_label(self.cbar_label)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="1%", height="30%", loc=1)
+            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical", ticks=[-3, -2, -1, 1, 2, 3], extend="both")
+            axins1.yaxis.set_ticks_position("left")
+            for x in axins1.yaxis.majorTicks:
+                x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
+
+
+class VS_BruntVaisala_ML(AbstractVerticalSectionStyle):
+    """Vertical section of chemical species
+    """
+    name = "VS_BruntVaisala"
+    title = "Brunt Vaisala Frequency (1e4/s$^2$)"
+
+    required_datafields = [
+        ("ml", "brunt_vaisala_frequency_in_air"),
+        ("ml", "air_pressure"),
+        ("sfc", "tropopause_altitude"),
+    ]
+
+    def _plot_style(self):
+        """Make a cloud cover vertical section with temperature/potential
+           temperature overlay.
+        """
+        ax = self.ax
+        curtain_cc = self.data["brunt_vaisala_frequency_in_air"]
+        # curtain_p = np.empty_like(curtain_cc)
+        # for i in range(len(self.driver.vert_data)):
+        #    curtain_p[i, :] = 102300 * np.exp(-self.driver.vert_data[i] / 7.9)
+        # curtain_p = curtain_p[::-1, :]
+        curtain_p = self.data["air_pressure"] * 100
+        tropo_p = np.empty_like(self.data["tropopause_altitude"].reshape(-1))
+        for i in range(curtain_p.shape[1]):
+            z = self.data["tropopause_altitude"].reshape(-1)[i]
+            tropo_p[i] = np.interp(z, self.driver.vert_data[:], curtain_p[::-1, i])
+        numlevel = curtain_p.shape[0]
+        numpoints = len(self.lats)
+
+        # Filled contour plot of cloud cover.
+        # INFO on COLORMAPS:
+        #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
+        cmap = plt.cm.colors.ListedColormap(
+            [(1.0, 0.55000000000000004, 1.0, 1.0),
+             (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
+             (0.64666666666666672, 0.25, 1.0, 1.0),
+             (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
+             (0.69999999999999996, 1.0, 1.0, 1.0),
+             (0.0, 0.20000000000000001, 1.0, 1.0),
+             (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
+             (0.0, 0.69999999999999996, 0.0, 1.0),
+             (1.0, 1.0, 0.0, 1.0),
+             (1.0, 0.73529411764705888, 0.0, 1.0),
+             (1.0, 0.46323529411764708, 0.0, 1.0),
+             (1.0, 0.21568627450980393, 0.0, 1.0),
+             (1.0, 0.034313725490196068, 0.0, 1.0),
+             (0.8294117647058824, 0.0, 0.071078431372549017, 1.0),
+             (0.61176470588235299, 0.0, 0.16176470588235295, 1.0),
+             (0.40000000000000002, 0.0, 0.25, 1.0)], name="n2_map")
+        cmap.set_over((0.8, 0.8, 0.8, 1.0))
+        norm = matplotlib.colors.BoundaryNorm(np.arange(0, 8.5, 0.5), cmap.N)
+
+        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+                           curtain_p, (curtain_cc ** 2) * 1e4, np.arange(0, 8.5, 0.5),
+                           cmap=cmap, extend="max")
+        pl_trop = ax.plot(self.lat_inds, tropo_p.reshape(-1), "o", color="k", zorder=100)
+        plt.setp(pl_trop, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -339,11 +418,10 @@ class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
                                                                       width="1%",  # width = % of parent_bbox width
                                                                       height="30%",  # height : %
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
+            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical", extend="max")
             axins1.yaxis.set_ticks_position("left")
             for x in axins1.yaxis.majorTicks:
-                x.label1.set_backgroundcolor("w")
-
+                x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
 
 """
 CLOUDS

@@ -486,11 +486,14 @@ class VerticalSectionDriver(MSSPlotDriver):
         # print lon_data
 
         for name, var in self.data_vars.items():
-            var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
-            logging.debug("\tLoaded {:.2f} Mbytes from data field <{}> at timestep {:d}."
-                          .format(var_data.nbytes / 1048576., name, timestep))
-            logging.debug("\tVertical dimension direction is {}."
-                          .format("up" if self.vert_order == 1 else "down"))
+            if len(var.shape) == 4:
+                var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
+            else:
+                var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
+            logging.debug("\tLoaded {:.2f} Mbytes from data field <{:}> at timestep {:i}.".format(
+                          (var_data.nbytes / 1048576., name, timestep)))
+            logging.debug("\tVertical dimension direction is {}.".format(
+                          ("up" if self.vert_order == 1 else "down")))
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
@@ -654,7 +657,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
         logging.debug("loading data for time step {} ({}), level index {} (level {})".format(
                       timestep, self.fc_time, level, self.level))
         for name, var in self.data_vars.items():
-            if level is None:
+            if level is None or len(var.shape) == 3:
                 # 2D fields: time, lat, lon.
                 var_data = var[timestep, ::self.lat_order, :]
             else:
