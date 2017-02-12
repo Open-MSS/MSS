@@ -51,6 +51,7 @@ import os
 import sys
 import types
 import functools
+import argparse
 
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
@@ -72,14 +73,6 @@ from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8, U
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
-
-
-print "***********************************************************************"
-print "\n            Mission Support System (mss)\n"
-print "***********************************************************************"
-print "Documentation: http://mss.rtfd.io"
-print "Version:", __version__
-print "\nSystem is loading.."
 
 
 #
@@ -572,6 +565,17 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--version", help="show version", action="store_true", default=False
+                        )
+    args = parser.parse_args()
+    if args.version:
+        print "***********************************************************************"
+        print "\n            Mission Support System (mss)\n"
+        print "***********************************************************************"
+        print "Documentation: http://mss.rtfd.io"
+        print "Version:", __version__
+        print "\nSystem is loading.."
     logging.info("Launching user interface...")
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = MSSMainWindow()
