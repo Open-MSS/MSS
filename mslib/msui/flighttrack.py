@@ -148,8 +148,8 @@ class Waypoint(object):
         """String representation of the waypoint (e.g., when used with the print
            statement).
         """
-        return "WAYPOINT(LAT=%f, LON=%f, FL=%f)" % (self.lat, self.lon,
-                                                    self.flightlevel)
+        return "WAYPOINT(LAT={:f}, LON={:f}, FL={:f})".format(self.lat, self.lon,
+                                                              self.flightlevel)
 
 
 class WaypointsTableModel(QtCore.QAbstractTableModel):
@@ -182,7 +182,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if filename.endswith(".ftml"):
                 self.loadFromFTML(filename)
             else:
-                logging.debug("No known file extension! %s", filename)
+                logging.debug("No known file extension! {}".format(filename))
 
         if waypoints:
             self.replaceWaypoints(waypoints)
@@ -190,12 +190,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
         """
-        logging.debug("loading settings from %s", self.settingsfile)
+        logging.debug("loading settings from {}".format(self.settingsfile))
         try:
             with open(self.settingsfile, "r") as fileobj:
                 settings = pickle.load(fileobj)
         except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
-            logging.warn("Problems reloading stored Performance settings (%s: %s). Switching to default", type(ex), ex)
+            logging.warn("Problems reloading stored Performance settings ({}: {}). Switching to default".format(type(ex), ex))
             self.performance_settings = DEFAULT_PERFORMANCE
         else:
             self.performance_settings = settings
@@ -206,12 +206,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        logging.debug("storing settings to %s", self.settingsfile)
+        logging.debug("storing settings to {}".format(self.settingsfile))
         try:
             with open(self.settingsfile, "w") as fileobj:
                 pickle.dump(self.performance_settings, fileobj)
         except (OSError, IOError), ex:
-            logging.warn("Problems storing Performance settings (%s: %s).", type(ex), ex)
+            logging.warn("Problems storing Performance settings ({}: {}).".format(type(ex), ex))
 
     def setName(self, name):
         self.name = name

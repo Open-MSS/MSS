@@ -299,7 +299,7 @@ def half_level_pressure(surface_pressure, num_levels=91):
           full_level_pressure_fast() on how to implement array support.
     """
     if num_levels not in [31, 62, 91, 137]:
-        raise ValueError("num_levels must be one of 31, 62, 91, 137, not %i" % num_levels)
+        raise ValueError("num_levels must be one of 31, 62, 91, 137, not {:d}".format(num_levels))
     # NOTE that the ak/bk coefficients are defined for units [hPa], hence
     # the internal pressure units in this function are hPa.
     surface_pressure /= 100.
@@ -384,7 +384,7 @@ def full_level_pressure_fast(surface_pressure, levelaxis=-1, num_levels=91):
              levelaxis=1.
     """
     if num_levels not in [137, 91, 62, 31]:
-        raise ValueError("num_levels must be one of 31, 62, 91, 137, not %i" % num_levels)
+        raise ValueError("num_levels must be one of 31, 62, 91, 137, not {:d}".format(num_levels))
 
     # Make sure that the input parameter 'surface pressure' is a NumPy array
     # and store its shape in order to restore it below.
@@ -450,8 +450,8 @@ def scale_variable(nc_var):
     # Test if all attributes required by the CF-conventions are present.
     test = [b in dir(nc_var) for b in ['long_name', 'units']]
     if not numpy.array(test).all():
-        raise ECMWFInvalidNetCDFVariableError("NetCDF variable %s does not "
-                                              "represent a valid CF-compliant data field." % nc_var.long_name)
+        raise ECMWFInvalidNetCDFVariableError(u"NetCDF variable {} does not "
+                                              u"represent a valid CF-compliant data field.".format(nc_var.long_name))
 
     # Get the data array of the variable object and test if missing
     # values are present in the field (values that correspond to the _FillValue
@@ -466,9 +466,9 @@ def scale_variable(nc_var):
         data = nc_var[:]  # netCDF4 version
     if '_FillValue' in dir(nc_var):
         if not (data - nc_var._FillValue).all():
-            raise ECMWFMissingValueError("NetCDF variable %s contains "
-                                         "mssing values. Please implement a method using masked "
-                                         "arrays for this kind of data." % nc_var.long_name)
+            raise ECMWFMissingValueError(u"NetCDF variable {} contains "
+                                         u"mssing values. Please implement a method using masked "
+                                         u"arrays for this kind of data.".format(nc_var.long_name))
 
     # If the above tests succeeded, check if scale and offset attributes
     # are specified -- if not, return the data as-is as a numpy.ndarray

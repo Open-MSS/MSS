@@ -43,6 +43,7 @@ except ImportError:
 
 from mslib import greatcircle
 from mslib.msui import constants
+from mslib.msui.mss_qt import QtWidgets
 
 
 def config_loader(config_file=None, dataset=None, default=None):
@@ -63,11 +64,17 @@ def config_loader(config_file=None, dataset=None, default=None):
     try:
         with open(os.path.join(config_file)) as source:
             data = json.load(source)
-    except (AttributeError, IOError, TypeError):
-        logging.debug("""mss config File "{:}" not found""".format(config_file))
+    except (AttributeError, IOError, TypeError), ex:
+        logging.error("MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
         if default is not None:
             return default
-        raise IOError("mss config File not found")
+        raise IOError("MSS config File not found")
+    except ValueError, ex:
+        logging.error("MSS config File '{:}' has a Syntax(?) error: '{}'".format(config_file, ex))
+        QtWidgets.QMessageBox.critical(
+            None, "MSS config error",
+            "ERROR in file '{}': '{}'".format(config_file, ex))
+        raise
 
     if dataset:
         try:
