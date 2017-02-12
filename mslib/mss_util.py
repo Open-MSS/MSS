@@ -43,8 +43,9 @@ except ImportError:
 
 from mslib import greatcircle
 from mslib.msui import constants
-from mslib.msui.mss_qt import QtWidgets
 
+class FatalUserError(Exception):
+    pass
 
 def config_loader(config_file=None, dataset=None, default=None):
     """
@@ -70,12 +71,8 @@ def config_loader(config_file=None, dataset=None, default=None):
             return default
         raise IOError("MSS config File not found")
     except ValueError, ex:
-        logging.error("MSS config File '{:}' has a Syntax(?) error: '{}'".format(config_file, ex))
-        QtWidgets.QMessageBox.critical(
-            None, "MSS config error",
-            "ERROR in file '{}': '{}'".format(config_file, ex))
-        raise
-
+        error_message ="MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
+        raise FatalUserError(error_message)
     if dataset:
         try:
             return data[dataset]
