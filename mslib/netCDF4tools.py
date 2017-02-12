@@ -82,8 +82,8 @@ def identify_variable(ncfile, standard_name, check=False):
         if "standard_name" in variable.ncattrs() and variable.standard_name == standard_name:
             return var_name, variable
     if check:
-        raise NetCDFVariableError("cannot identify NetCDF variable "
-                                  "specified by <%s>" % standard_name)
+        raise NetCDFVariableError(u"cannot identify NetCDF variable "
+                                  u"specified by <{}>".format(standard_name))
     return None, None
 
 
@@ -532,7 +532,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
             cdfVar[vName] = v
             cdfOrigin[vName] = (master, cdfm)
         if len(cdfVar) == 0:
-            raise IOError("master dataset %s does not have any variable" % master)
+            raise IOError(u"master dataset {} does not have any variable".format(master))
 
         # Open each remaining file in read-only mode.
         # Make sure each file defines the same record variables as the master
@@ -544,16 +544,16 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                 # (..except those that shall not be tested..)
                 if dimName not in skipDimCheck:
                     if dimName not in masterDims:
-                        raise IOError("dimension %s not defined in master %s" % (dimName, master))
+                        raise IOError("dimension {} not defined in master {}".format(dimName, master))
                     if len(part.dimensions[dimName]) != len(cdfm.dimensions[dimName]) or \
                             (part.variables[dimName][:] != cdfm.variables[dimName][:]).any():
-                        raise IOError("dimension %s differs in master %s and "
-                                      "file %s" % (dimName, master, f))
+                        raise IOError("dimension {} differs in master {} and "
+                                      "file {}".format(dimName, master, f))
 
             if requireDimNum:
                 if len(part.dimensions) != len(masterDims):
                     raise IOError("number of dimensions not consistent in master "
-                                  "%s and %s" % (master, f))
+                                  "{} and {}".format(master, f))
 
             for vName, v in part.variables.items():
                 # Exclude dimension variables.

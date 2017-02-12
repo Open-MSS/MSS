@@ -1032,9 +1032,9 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
         labels = ['U', 'V', 'W', 'CC', 'T', 'Q', 'P_derived']
         for label in labels:
             filename_out = os.path.join(self.data_dir,
-                                        "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label,
-                                                                                      self.levtype))
-            text = self.range_data["%s_%s" % (label, self.levtype)]
+                                        "{}_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(self.inidate, label,
+                                                                                          self.levtype))
+            text = self.range_data["{}_{}".format(label, self.levtype)]
             rangedata = StringIO(text)
             ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
             hybrid_default = np.linspace(20, 91, 72)
@@ -1104,7 +1104,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 ndims = int(rangedata.readline().strip())
                 dims = rangedata.readline().strip().split(",")
                 rangedata.readline().strip()
-                print "hybrid data: %s" % varname
+                print "hybrid data: {}".format(varname)
                 newvar = ecmwf.createVariable(varname, 'f4', dims)
                 newvar.standard_name = standard_name
                 newvar.units = units
@@ -1139,8 +1139,9 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
         self.levtype = 'pl'
         label = 'PRESSURE_LEVELS'
         filename_out = os.path.join(self.data_dir,
-                                    "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
-        text = self.range_data["%s_%s" % (label, self.levtype)]
+                                    "{}_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(self.inidate, label,
+                                                                                      self.levtype))
+        text = self.range_data["{}_{}".format(label, self.levtype)]
         rangedata = StringIO(text)
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
         press_default = np.array([20, 30, 50, 70, 100, 150, 200, 250, 300, 400,
@@ -1176,7 +1177,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
             ndims = int(rangedata.readline().strip())
             dims = rangedata.readline().strip().split(",")
             rangedata.readline()
-            print "pressure data: %s" % varname
+            print "pressure data: {}".format(varname)
             newvar = ecmwf.createVariable(varname, 'f4', dims)
             newvar.standard_name = standard_name
             newvar.units = units
@@ -1211,8 +1212,9 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
         self.levtype = 'sfc'
         label = 'SFC'
         filename_out = os.path.join(self.data_dir,
-                                    "%s_ecmwf_forecast.%s.EUR_LL015.036.%s.nc" % (self.inidate, label, self.levtype))
-        text = self.range_data["%s_%s" % (label, self.levtype)]
+                                    "{}_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(self.inidate, label,
+                                                                                      self.levtype))
+        text = self.range_data["{}_{}".format(label, self.levtype)]
         rangedata = StringIO(text)
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
         ecmwf.createDimension('lat', self.nlats)
@@ -1239,7 +1241,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
             ndims = int(rangedata.readline().strip())
             if ndims == 3:
                 dims = rangedata.readline().strip().split(",")
-                print "sfc data: %s" % varname
+                print "sfc data: {}".format(varname)
                 newvar = ecmwf.createVariable(varname, 'f4', dims)
                 newvar.standard_name = standard_name
                 newvar.units = units

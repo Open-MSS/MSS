@@ -3,6 +3,7 @@
 ********************************************************************************
 
    Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+             2016-2017 see AUTHORS
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -115,9 +116,8 @@ class MSSPlotDriver(object):
         fc_step = fc_time - init_time
         fc_step = fc_step.days * 24 + fc_step.seconds / 3600
         self.fc_time = fc_time
-        logging.debug("\trequested initialisation time %s", init_time)
-        logging.debug("\trequested forecast valid time %s (step %i hrs)",
-                      fc_time, fc_step)
+        logging.debug("\trequested initialisation time {}".format(init_time))
+        logging.debug("\trequested forecast valid time {} (step {} hrs)".format(fc_time, fc_step))
 
         # Check if a dataset is open and if it contains the requested times.
         # (a dataset will only be open if the used layer has not changed,
@@ -125,9 +125,9 @@ class MSSPlotDriver(object):
         if self.dataset:
             logging.debug("checking on open dataset.")
             if self.init_time == init_time:
-                logging.debug("\tinitialisation time ok (%s).", init_time)
+                logging.debug("\tinitialisation time ok ({}).".format(init_time))
                 if fc_time in self.times:
-                    logging.debug("\tforecast valid time contained (%s).", fc_time)
+                    logging.debug("\tforecast valid time contained ({}).".format(fc_time))
                     return
             logging.debug("need to re-open input files.")
             self.dataset.close()
@@ -149,11 +149,10 @@ class MSSPlotDriver(object):
             short_filename = os.path.basename(filename)
             if filename not in filenames:
                 filenames.append(filename)
-            logging.debug("\tvariable %s requires input file %s", var,
-                          short_filename)
+            logging.debug("\tvariable {} requires input file {}".format(var, short_filename))
             if short_filename not in available_files:
-                logging.error("ERROR: file %s does not exist" % short_filename)
-                raise IOError("file %s does not exist" % short_filename)
+                logging.error(u"ERROR: file {} does not exist".format(short_filename))
+                raise IOError(u"file {} does not exist".format(short_filename))
 
         if len(filenames) == 0:
             raise ValueError("no files found that correspond to the specified "
@@ -175,7 +174,7 @@ class MSSPlotDriver(object):
             raise ValueError("wrong initialisation time in input")
 
         if fc_time not in times:
-            msg = "Forecast valid time %s is not available." % fc_time
+            msg = u"Forecast valid time {} is not available.".format(fc_time)
             logging.error(msg)
             dataset.close()
             raise ValueError(msg)
@@ -185,7 +184,7 @@ class MSSPlotDriver(object):
             lat_data, lon_data, lat_order = \
                 netCDF4tools.get_latlon_data(dataset)
         except Exception as e:
-            logging.error("ERROR: %s" % e)
+            logging.error("ERROR: {}".format(e))
             dataset.close()
             raise e
 
@@ -260,7 +259,7 @@ class MSSPlotDriver(object):
         self.data_vars = {}
         for df_type, df_name in self.plot_object.required_datafields:
             varname, var = netCDF4tools.identify_variable(self.dataset, df_name)
-            logging.debug("\tidentified variable <%s> for field <%s>", varname, df_name)
+            logging.debug("\tidentified variable <{}> for field <{}>".format(varname, df_name))
             self.data_vars[df_name] = var
 
     @abstractmethod
@@ -278,8 +277,8 @@ class MSSPlotDriver(object):
         Derived methods need to call the super method before all other
         statements.
         """
-        logging.debug("using plot object '%s'", plot_object.name)
-        logging.debug("\tfigure size %s in pixels", figsize)
+        logging.debug("using plot object '{}'".format(plot_object.name))
+        logging.debug("\tfigure size {} in pixels".format(figsize))
 
         # If the plot object has been changed, the dataset needs to be reloaded
         # (the required variables could have changed).
@@ -438,8 +437,8 @@ class VerticalSectionDriver(MSSPlotDriver):
                                    vsec_path_connection='linear'):
         """
         """
-        logging.debug("computing %i interpolation points, connection: %s" %
-                      (vsec_numpoints, vsec_path_connection))
+        logging.debug("computing {:d} interpolation points, connection: {}"
+                      .format(vsec_numpoints, vsec_path_connection))
         self.lats, self.lons = mss_util.path_points(vsec_path,
                                                     numpoints=vsec_numpoints,
                                                     connection=vsec_path_connection)
@@ -464,16 +463,15 @@ class VerticalSectionDriver(MSSPlotDriver):
             return {}
         data = {}
         timestep = self.times.searchsorted(self.fc_time)
-        logging.debug("loading data for time step %i (%s)", timestep,
-                      self.fc_time)
+        logging.debug("loading data for time step {} ({})".format(timestep, self.fc_time))
 
         # Determine the westmost longitude in the cross-section path. Subtract
         # one gridbox size to obtain "left_longitude".
         dlon = self.lon_data[1] - self.lon_data[0]
         left_longitude = self.lons.min() - dlon
         logging.debug("shifting data grid to gridpoint west of westmost "
-                      "longitude in path: %.2f (path %.2f).."
-                      % (left_longitude, self.lons.min()))
+                      "longitude in path: {:.2f} (path {:.2f}).."
+                      .format(left_longitude, self.lons.min()))
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
@@ -489,10 +487,10 @@ class VerticalSectionDriver(MSSPlotDriver):
 
         for name, var in self.data_vars.items():
             var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
-            logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %i." %
-                          (var_data.nbytes / 1048576., name, timestep))
-            logging.debug("\tVertical dimension direction is %s." %
-                          ("up" if self.vert_order == 1 else "down"))
+            logging.debug("\tLoaded {:.2f} Mbytes from data field <{}> at timestep {:d}."
+                          .format(var_data.nbytes / 1048576., name, timestep))
+            logging.debug("\tVertical dimension direction is {}."
+                          .format("up" if self.vert_order == 1 else "down"))
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
@@ -516,8 +514,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         # Determine the leftmost longitude in the plot.
         left_longitude = self.lons.min()
-        logging.debug("shifting data grid to leftmost longitude in path "
-                      "(%.2f).." % left_longitude)
+        logging.debug(u"shifting data grid to leftmost longitude in path "
+                      u"({:.2f})..".format(left_longitude))
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
@@ -543,7 +541,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         data = self._load_interpolate_timestep()
 
         d2 = datetime.now()
-        logging.debug("Loaded and interpolated data (required time %s)." % (d2 - d1))
+        logging.debug("Loaded and interpolated data (required time {}).".format(d2 - d1))
         logging.debug("Plotting interpolated curtain.")
 
         if len(self.lat_data) > 1 and len(self.lon_data) > 1:
@@ -570,8 +568,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         del data
 
         d3 = datetime.now()
-        logging.debug("Finished plotting (required time %s; total "
-                      "time %s).\n" % (d3 - d2, d3 - d1))
+        logging.debug("Finished plotting (required time {}; total "
+                      "time {}).\n".format(d3 - d2, d3 - d1))
 
         return image
 
@@ -653,9 +651,8 @@ class HorizontalSectionDriver(MSSPlotDriver):
             if self.vert_order == -1:
                 level = len(self.vert_data) - 1 - level
             self.actual_level = self.vert_data[level]
-        logging.debug("loading data for time step %i (%s), level index "
-                      "%s (level %s)",
-                      timestep, self.fc_time, level, self.level)
+        logging.debug("loading data for time step {} ({}), level index {} (level {})".format(
+                      timestep, self.fc_time, level, self.level))
         for name, var in self.data_vars.items():
             if level is None:
                 # 2D fields: time, lat, lon.
@@ -663,8 +660,8 @@ class HorizontalSectionDriver(MSSPlotDriver):
             else:
                 # 3D fields: time, level, lat, lon.
                 var_data = var[timestep, level, ::self.lat_order, :]
-            logging.debug("\tLoaded %.2f Mbytes from data field <%s>." %
-                          (var_data.nbytes / 1048576., name))
+            logging.debug("\tLoaded {:.2f} Mbytes from data field <{}>."
+                          .format(var_data.nbytes / 1048576., name))
             data[name] = var_data
             # Free memory.
             del var_data
@@ -710,8 +707,8 @@ class HorizontalSectionDriver(MSSPlotDriver):
         del data
 
         d3 = datetime.now()
-        logging.debug("Finished plotting (required time %s; total "
-                      "time %s).\n" % (d3 - d2, d3 - d1))
+        logging.debug("Finished plotting (required time {}; total "
+                      "time {}).\n".format(d3 - d2, d3 - d1))
 
         return image
 

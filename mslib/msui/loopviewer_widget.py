@@ -348,13 +348,13 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
 
             pixmap_cache = []
 
-            filename = "%s_%s_%s" % (prod_abbrev, reg_abbrev, str(level))
-            url = os.path.join(base_url, init_time_str, filename) + "_%03i.png"
+            filename = "{}_{}_{}".format(prod_abbrev, reg_abbrev, str(level))
+            url = "{0}_%03i.png".format(os.path.join(base_url, init_time_str, filename))
 
             # LOOP over TIMESTEPS **********************************************
             for istep, step in enumerate(steps):
-                retrieve = url % step
-                logging.debug("attempting to retrieve image file:\n >>> %s", retrieve)
+                retrieve = url.format(step)
+                logging.debug("attempting to retrieve image file:\n >>> {}".format(retrieve))
                 try:
                     auth_required = True
                     while auth_required:
@@ -380,7 +380,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                                 # returned by the server and ask the user for username
                                 # and password.
                                 realm = ex.hdrs["WWW-Authenticate"].split('"')[1]
-                                logging.debug("'%s' asks for authentication.", realm)
+                                logging.debug("'{}' asks for authentication.".format(realm))
                                 dlg = MSS_WMS_AuthenticationDialog(parent=self)
                                 dlg.lblMessage.setText(realm)
                                 dlg.setModal(True)
@@ -402,7 +402,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                         valid_time = init_time + timedelta(seconds=3600 * step)
                         pixmap_cache.append((qp, valid_time))
                 except urllib2.HTTPError as ex:
-                    logging.debug("timestep %03i not available (HTTP error %i)", step, ex.code)
+                    logging.debug("timestep {:03d} not available (HTTP error {d})".format(step, ex.code))
 
                 # Update progress dialog.
                 self.pdlg.setValue((float(ilevel) + float(istep) / num_steps) / num_levels * 100.)
@@ -430,8 +430,8 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
             self.synchronized = True
             self.levels = levels
             self.init_time = init_time
-            self.lblInfo.setToolTip("Initialisation time: %s" %
-                                    self.init_time.strftime("%Y-%m-%d %H:%M UTC"))
+            self.lblInfo.setToolTip(u"Initialisation time: {}"
+                                    .format(self.init_time.strftime("%Y-%m-%d %H:%M UTC")))
             self.updateImage()
             self.signalChangeValidTime.emit(True, self.valid_time)
             self.signalChangeValidTime.emit(False, self.valid_time)
@@ -467,10 +467,10 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
             else:
                 self.synchronized = True
         colour = "black" if self.synchronized else "red"
-        self.lblInfo.setText("<font style='color: %s;'><b>VT: %s, LVL: %s</b></font>" %
-                             (colour,
-                              self.valid_time.strftime("%Y-%m-%d %H:%M UTC"),
-                              self.levels[self.current_level]))
+        self.lblInfo.setText("<font style='color: {};'><b>VT: {}, LVL: {}</b></font>"
+                             .format(colour,
+                                     self.valid_time.strftime("%Y-%m-%d %H:%M UTC"),
+                                     self.levels[self.current_level]))
 
     def updateImage(self, time=None):
         """Update the displayed pixmap.
