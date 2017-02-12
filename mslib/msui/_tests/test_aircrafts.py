@@ -35,7 +35,8 @@ class Test_SimpleAircraft(object):
         assert cruise_performance[1] == 2900.
 
     def test_get_decent_performance(self):
-        decent_performance = self.SimpleAircraft.get_cruise_performance(200, 85000.)
-        assert len(decent_performance) == 2
-        assert decent_performance[0] == 400.
-        assert decent_performance[1] == 2900.
+        descent_performance = self.SimpleAircraft.get_descent_performance(200, 85000.)
+        assert len(descent_performance) == 3
+        assert descent_performance[0] == 0.
+        assert descent_performance[1] == 0
+        assert descent_performance[2] == 0
