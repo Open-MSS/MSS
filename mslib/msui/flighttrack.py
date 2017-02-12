@@ -81,7 +81,7 @@ TABLE_FULL = [
     ("Lat\n(+-90)", lambda waypoint: waypoint.lat, True),
     ("Lon\n(+-180)", lambda waypoint: waypoint.lon, True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
-    ("Pressure\n(hPa)", lambda waypoint: "%.2f" % (waypoint.pressure / 100.), False),
+    ("Pressure\n(hPa)", lambda waypoint: "%.2f" % (waypoint.pressure / 100.), True),
     ("Leg dist.\n(km [nm])", lambda waypoint: "%d [%d]" % (waypoint.distance_to_prev,
                                                            waypoint.distance_to_prev / 1.852), False),
     ("Cum. dist.\n(km [nm])", lambda waypoint: "%d [%d]" % (waypoint.distance_total,
@@ -326,14 +326,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if column == LOCATION:
                 waypoint.location = value
             elif column == LAT:
-                # In Qt4.6 and higher, value.toFloat() is available:
-                # value, ok = value.toFloat()
-                # For lower versions, we need to use try..except.
                 try:
-                    value, ok = float(value), True
+                    value = float(value)
                 except:
-                    ok = False
-                if ok:
+                    pass
+                else:
                     waypoint.lat = value
                     # A change of position requires an update of the distances.
                     if update:
@@ -347,10 +344,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == LON:
                 try:
-                    value, ok = float(value), True
+                    value = float(value)
                 except:
-                    ok = False
-                if ok:
+                    pass
+                else:
                     waypoint.lon = value
                     if update:
                         self.update_distances(index.row())
@@ -358,12 +355,15 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == FLIGHTLEVEL:
                 try:
-                    value, ok = float(value), True
-                except:
-                    ok = False
-                if ok:
-                    waypoint.flightlevel = value
-                    waypoint.pressure = thermolib.flightlevel2pressure(value)
+                    flightlevel = float(value)
+                    pressure = thermolib.flightlevel2pressure(flightlevel)
+                    if flightlevel < 0:
+                        raise ValueError
+                except ValueError:
+                    pass
+                else:
+                    waypoint.flightlevel = flightlevel
+                    waypoint.pressure = pressure
                     if update:
                         self.update_distances(index.row())
                     # need to notify view of the second item that has been
@@ -371,12 +371,16 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), PRESSURE)
             elif column == PRESSURE:
                 try:
-                    value, ok = float(value), True
-                except:
-                    ok = False
-                if ok:
-                    waypoint.pressure = value
-                    waypoint.flightlevel = int(thermolib.pressure2flightlevel(value))
+                    pressure = float(value) * 100
+                    flightlevel = round(thermolib.pressure2flightlevel(pressure))
+                    pressure = thermolib.flightlevel2pressure(flightlevel)
+                    if flightlevel < 0:
+                        raise ValueError
+                except ValueError:
+                    pass
+                else:
+                    waypoint.pressure = pressure
+                    waypoint.flightlevel = flightlevel
                     if update:
                         self.update_distances(index.row())
                     index2 = self.createIndex(index.row(), FLIGHTLEVEL)
