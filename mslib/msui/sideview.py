@@ -39,7 +39,7 @@ from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString
+from mslib.msui.mss_qt import QtGui, QtWidgets, QString
 
 # local application imports
 from mslib.msui.mss_qt import ui_sideview_window as ui

@@ -44,8 +44,10 @@ except ImportError:
 from mslib import greatcircle
 from mslib.msui import constants
 
+
 class FatalUserError(Exception):
     pass
+
 
 def config_loader(config_file=None, dataset=None, default=None):
     """
@@ -71,7 +73,7 @@ def config_loader(config_file=None, dataset=None, default=None):
             return default
         raise IOError("MSS config File not found")
     except ValueError, ex:
-        error_message ="MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
+        error_message = "MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
         raise FatalUserError(error_message)
     if dataset:
         try:

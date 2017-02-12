@@ -578,7 +578,7 @@ def _main():
     import sys
 
     application = QtWidgets.QApplication(sys.argv)
-    window = ImageLoopWidget(config=configuration)
+    window = ImageLoopWidget(config=None)
     window.show()
     sys.exit(application.exec_())
 

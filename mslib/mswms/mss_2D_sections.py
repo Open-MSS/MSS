@@ -168,7 +168,6 @@ class Abstract2DSectionStyle(object):
                     valid_times = self.driver.get_valid_times(varname, vartype, it)
                     for vt in valid_times:
                         try:
-                            time = init_times[i]
                             self.driver.set_plot_parameters(self,
                                                             init_time=it,
                                                             valid_time=vt)
