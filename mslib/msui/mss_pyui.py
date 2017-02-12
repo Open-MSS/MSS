@@ -284,7 +284,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self.listFlightTracks.setCurrentItem(listitem)
                     self.setFlightTrackActive()
 
-
         setattr(self, full_name, types.MethodType(load_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))
 
@@ -375,7 +374,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         tool_window = None
         if self.sender() == self.actionTrajectoryToolLagranto:
             # Trajectory tool.
-            tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews, viewsChanged=self.viewsChanged)
+            tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews,
+                                                                      viewsChanged=self.viewsChanged)
 
         if tool_window:
             # Make sure view window will be deleted after being closed, not

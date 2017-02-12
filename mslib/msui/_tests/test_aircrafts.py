@@ -9,6 +9,7 @@
 
 from mslib.msui.aircrafts import SimpleAircraft, AIRCRAFT_DUMMY
 
+
 class Test_SimpleAircraft(object):
     def setup(self):
         self.SimpleAircraft = SimpleAircraft(AIRCRAFT_DUMMY)
@@ -32,7 +33,6 @@ class Test_SimpleAircraft(object):
         assert len(cruise_performance) == 2
         assert cruise_performance[0] == 400.
         assert cruise_performance[1] == 2900.
-
 
     def test_get_decent_performance(self):
         decent_performance = self.SimpleAircraft.get_cruise_performance(200, 85000.)
