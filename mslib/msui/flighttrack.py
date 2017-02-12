@@ -44,7 +44,8 @@ import pickle
 import csv
 import logging
 import xml.dom.minidom
-
+import string
+import random
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
@@ -398,6 +399,23 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.beginInsertRows(QtCore.QModelIndex(), position,
                              position + rows - 1)
         for row, wp in enumerate(waypoints):
+            if wp.location == "":
+                locations = [unicode(_wp.location) for _wp in self.allWaypointData()]
+                locname = ""
+                for letter in string.ascii_uppercase:
+                    if letter not in locations:
+                        locname = letter
+                        break
+                if locname == "":
+                    for fletter in string.ascii_uppercase:
+                        for sletter in string.ascii_uppercase:
+                            if fletter + sletter not in locations:
+                                locname = fletter + sletter
+                                break
+                        if locname != "":
+                            break
+                wp.location = locname
+
             self.waypoints.insert(position + row, wp)
 
         self.update_distances(position, rows=rows)
