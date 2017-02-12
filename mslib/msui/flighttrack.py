@@ -190,16 +190,15 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
         """
-        if os.path.exists(self.settingsfile):
-            logging.debug("loading settings from %s", self.settingsfile)
-            try:
-                with open(self.settingsfile, "r") as fileobj:
-                    self.performance_settings = pickle.load(fileobj)
-            except ImportError, ex:
-                logging.error("Problems reloading stored settings (%s: %s). Switching to default", type(ex), ex)
-                self.performance_settings = DEFAULT_PERFORMANCE
-        else:
+        logging.debug("loading settings from %s", self.settingsfile)
+        try:
+            with open(self.settingsfile, "r") as fileobj:
+                settings = pickle.load(fileobj)
+        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
+            logging.warn("Problems reloading stored Performance settings (%s: %s). Switching to default", type(ex), ex)
             self.performance_settings = DEFAULT_PERFORMANCE
+        else:
+            self.performance_settings = settings
 
     def saveSettings(self):
         """Save the current settings (map appearance) to the file
@@ -208,8 +207,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         logging.debug("storing settings to %s", self.settingsfile)
-        with open(self.settingsfile, "w") as fileobj:
-            pickle.dump(self.performance_settings, fileobj)
+        try:
+            with open(self.settingsfile, "w") as fileobj:
+                pickle.dump(self.performance_settings, fileobj)
+        except (OSError, IOError), ex:
+            logging.warn("Problems storing Performance settings (%s: %s).", type(ex), ex)
 
     def setName(self, name):
         self.name = name
