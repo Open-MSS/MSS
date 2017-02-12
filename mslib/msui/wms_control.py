@@ -4,6 +4,7 @@
 
    Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
    Copyright 2011-2014 Marc Rautenhaus
+             2016-2017 see AUTHORS
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -573,7 +574,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         styles = layerobj.styles
         self.cbStyle.clear()
-        self.cbStyle.addItems(["%s | %s" % (s, styles[s]["title"])
+        self.cbStyle.addItems(["{} | {}".format(s, styles[s]["title"])
                                for s in styles])
         abstract_text = layerobj.abstract if layerobj.abstract else ""
         abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
@@ -595,7 +596,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         while lobj is not None:
             if "elevation" in lobj.dimensions.keys() and "elevation" in lobj.extents.keys():
                 units = lobj.dimensions["elevation"]["units"]
-                elev_list = ["%s (%s)" % (e.strip(), units) for e in
+                elev_list = ["{} ({})".format(e.strip(), units) for e in
                              lobj.extents["elevation"]["values"]]
                 self.cbLevel.addItems(elev_list)
                 enable_elevation = True
@@ -732,8 +733,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                     interpretation_successful = False
 
                             if not interpretation_successful:
-                                logging.error("Can't understand time string %s."
-                                              " Please check the implementation.", time_item)
+                                logging.error("Can't understand time string {}."
+                                              " Please check the implementation.".format(time_item))
 
             # No time extent tag was found: Set allowed_valid_times to None
             # (used by validTimeChanged()).
@@ -748,27 +749,27 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # parent.
             lobj = lobj.parent
 
-        logging.debug("determined init time format: %s", self.init_time_format)
+        logging.debug("determined init time format: {}".format(self.init_time_format))
         if enable_inittime and self.init_time_format is None:
             msg = "cannot determine init time format."
-            logging.warning("WARNING: %s", msg)
+            logging.warning("WARNING: {}".format(msg))
             if self.cbInitTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
                 QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                               self.tr("ERROR: %s" % msg),
+                                               self.tr("ERROR: {}".format(msg)),
                                                QtWidgets.QMessageBox.Ok)
             self.init_time_format = ""
 
-        logging.debug("determined valid time format: %s", self.valid_time_format)
+        logging.debug("determined valid time format: {}".format(self.valid_time_format))
         if enable_validtime and self.valid_time_format is None:
             msg = "cannot determine valid time format."
-            logging.warning("WARNING: %s", msg)
+            logging.warning("WARNING: {}".format(msg))
             if self.cbValidTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
                 QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                               self.tr("ERROR: %s" % msg),
+                                               self.tr("ERROR: {}".format(msg)),
                                                QtWidgets.QMessageBox.Ok)
             self.valid_time_format = ""
 
@@ -823,8 +824,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             days = int(timestep_string.split(" days")[0])
             return days * 86400
         except:
-            raise ValueError("cannot convert %s to seconds: wrong format."
-                             % timestep_string)
+            raise ValueError(u"cannot convert {} to seconds: wrong format."
+                             .format(timestep_string))
 
     def init_time_back_click(self):
         """Slot for the tbInitTime_back button.
@@ -1181,12 +1182,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            QtWidgets.QMessageBox.Ok)
             raise RuntimeError("Invalid valid time")
 
-        logging.debug("fetching layer %s; style %s, width %i, height %i",
-                      layer, style, width, height)
-        logging.debug("crs=%s, path=%s", crs, path_string)
-        logging.debug("init_time=%s, valid_time=%s", init_time, valid_time)
-        logging.debug("level=%s", level)
-        logging.debug("transparent=%s", transparent)
+        logging.debug("fetching layer {}; style {}, width {:d}, height {:d}".format(layer, style, width, height))
+        logging.debug("crs={}, path={}".format(crs, path_string))
+        logging.debug("init_time={}, valid_time={}".format(init_time, valid_time))
+        logging.debug("level={}".format(level))
+        logging.debug("transparent={}".formt(transparent))
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1226,8 +1226,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     # as the filename.
                     md5_filename = hashlib.md5(urlstr).hexdigest()
                     md5_filename += ".png"
-                    logging.debug("checking cache for image file %s ...",
-                                  md5_filename)
+                    logging.debug("checking cache for image file {} ...".format(md5_filename))
                     md5_filename = os.path.join(self.wms_cache, md5_filename)
                     if os.path.exists(md5_filename):
                         logging.debug("  file exists, loading from cache.")
@@ -1285,7 +1284,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 # PIL.Image.open(). See
                 #    http://www.pythonware.com/library/pil/handbook/image.htm
                 img = PIL.Image.open(imageIO)
-                logging.debug("layer retrieved, image size is %i bytes.", imageIO.len)
+                logging.debug("layer retrieved, image size is {:d} bytes.".format(imageIO.len))
                 # Store the retrieved image in the cache, if enabled.
                 if self.cachingEnabled():
                     logging.debug("storing retrieved image file in cache.")
@@ -1304,9 +1303,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         except Exception as ex:
             self.pdlg.close()
-            logging.error("ERROR: %s", ex)
+            logging.error("ERROR: {}".format(ex))
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)),
                                            QtWidgets.QMessageBox.Ok)
             raise ex
 
@@ -1352,7 +1351,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         if style != "" and "legend" in layerobj.styles[style].keys():
             urlstr = layerobj.styles[style]["legend"]
-            logging.debug("fetching legend graphic from %s", urlstr)
+            logging.debug("fetching legend graphic from {}".format(urlstr))
 
             # If caching is enabled, check the image cache
             # directory for the suitable image file.
@@ -1362,8 +1361,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 # as the filename.
                 md5_filename = hashlib.md5(urlstr).hexdigest()
                 md5_filename += ".png"
-                logging.debug("checking cache for image file %s ...",
-                              md5_filename)
+                logging.debug("checking cache for image file {} ...".format(md5_filename))
                 md5_filename = os.path.join(self.wms_cache, md5_filename)
                 if os.path.exists(md5_filename):
                     img = PIL.Image.open(md5_filename)
@@ -1449,7 +1447,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     try:
                         os.remove(os.path.join(self.wms_cache, f))
                     except Exception as ex:
-                        logging.error("ERROR: %s", ex)
+                        logging.error("ERROR: {}".format(ex))
                 logging.debug("cache has been cleared.")
             else:
                 logging.debug("no cache exists that can be cleared.")
@@ -1549,7 +1547,7 @@ class VSecWMSControlWidget(WMSControlWidget):
                 self.retrieveImage(crs=crs, path_string=path_string, bbox=bbox,
                                    width=width, height=height)
         except Exception as ex:
-            logging.error("an error occurred. no image retrieved. (%s)", ex)
+            logging.error("an error occurred. no image retrieved. ({})".format(ex))
         else:
             # Plot the image on the view canvas.
             self.view.drawImage(img)
@@ -1614,7 +1612,7 @@ class HSecWMSControlWidget(WMSControlWidget):
             img, legend_img, layer, style, init_time, valid_time, level = \
                 self.retrieveImage(crs=crs, bbox=bbox, width=width, height=height)
         except Exception as ex:
-            logging.error("an error occurred. no image retried. (%s)", ex)
+            logging.error("an error occurred. no image retried. ({})".format(ex))
         else:
             # Plot the image on the view canvas.
             if style != "":

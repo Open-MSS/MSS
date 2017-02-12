@@ -245,8 +245,8 @@ class ECMWFDataAccess(NWPDataAccess):
 
         # Substitute variable identifiers in the template filename.
         if vartype not in variable_dict.keys():
-            raise ValueError("variable type %s not available for variable %s"
-                             % (vartype, variable))
+            raise ValueError("variable type {} not available for variable {}"
+                             .format(vartype, variable))
 
         if type(variable_dict[vartype]) == str:
             # The string stored for the given variable type contains the
@@ -547,8 +547,8 @@ class GWFCDataAccess(NWPDataAccess):
 
         # Substitute variable identifiers in the template filename.
         if vartype not in variable_dict.keys():
-            raise ValueError("variable type %s not available for variable %s"
-                             % (vartype, variable))
+            raise ValueError("variable type {} not available for variable {}"
+                             .format(vartype, variable))
 
         if type(variable_dict[vartype]) == str:
             # The string stored for the given variable type contains the
@@ -708,8 +708,8 @@ class EMACDataAccess(NWPDataAccess):
 
         # Substitute variable identifiers in the template filename.
         if vartype not in variable_dict.keys():
-            raise ValueError("variable type %s not available for variable %s"
-                             % (vartype, variable))
+            raise ValueError("variable type {} not available for variable {}"
+                             .format(vartype, variable))
 
         name = self._file_template % variable_dict[vartype]
         if "replace" in variable_dict.keys():

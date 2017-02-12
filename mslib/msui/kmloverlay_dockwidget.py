@@ -101,5 +101,5 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.view.plotKML(self.patch)
         except IOError, ex:
             QtWidgets.QMessageBox.critical(self, self.tr("KML Overlay"),
-                                           self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
+                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)),
                                            QtWidgets.QMessageBox.Ok)

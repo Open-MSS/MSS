@@ -155,7 +155,7 @@ class LagrantoOutputReader(object):
         fname -- file name of the lsl-file, without path (i.e. only 'lsl_...').
         """
 
-        logging.debug("Parsing output file %s" % fname)
+        logging.debug(u"Parsing output file {}".format(fname))
 
         #
         # Open the lsl text file and read its contents into the list 'lines',
@@ -167,14 +167,14 @@ class LagrantoOutputReader(object):
         # Open and read the metadata file, if existent.
         metafile = os.path.join(self.lagrantoOutputPath, fname) + '.meta.pyl'
         if os.path.exists(metafile):
-            logging.debug("Reading metadata file %s" % os.path.basename(metafile))
+            logging.debug(u"Reading metadata file {}".format(os.path.basename(metafile)))
             filehandler = open(metafile, 'r')
             startCoordinates = pickle.load(filehandler)
             startTime = pickle.load(filehandler)
             duration = pickle.load(filehandler)
             filehandler.close()
         else:
-            logging.debug("No metadata file %s found." % metafile)
+            logging.debug(u"No metadata file {} found.".format(metafile))
             startCoordinates = None
             startTime = None
             duration = None

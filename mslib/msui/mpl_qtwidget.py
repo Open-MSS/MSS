@@ -104,12 +104,12 @@ class MplCanvas(FigureCanvas):
         """
         self.default_filename = ""
         if title:
-            self.default_filename += "_%5s" % title.split()[0]
+            self.default_filename += "_{:>5}".format(title.split()[0])
         if isinstance(style, basestring):
-            title += ' (%s)' % style
+            title += u' ({})'.format(style)
         if isinstance(level, basestring):
-            title += ' at %s' % level
-            self.default_filename += "_%s" % level.split()[0]
+            title += u' at {}'.format(level)
+            self.default_filename += "_{}".format(level.split()[0])
         if isinstance(valid_time, datetime) and isinstance(init_time, datetime):
             time_step = valid_time - init_time
         else:
@@ -123,15 +123,15 @@ class MplCanvas(FigureCanvas):
         if valid_time:
             if init_time:
                 if time_step is not None:
-                    title += '\nValid: %s (step %i hrs from %s)' % \
-                             (valid_time,
-                              (time_step.days * 86400 + time_step.seconds) / 3600,
-                              init_time)
+                    title += '\nValid: {} (step {:d} hrs from {})' \
+                        .format(valid_time,
+                                (time_step.days * 86400 + time_step.seconds) / 3600,
+                                init_time)
                 else:
-                    title += '\nValid: %s (initialisation: %s)' % \
-                             (valid_time, init_time)
+                    title += '\nValid: {} (initialisation: {})' \
+                        .format(valid_time, init_time)
             else:
-                title += '\nValid: %s' % valid_time
+                title += u'\nValid: {}'.format(valid_time)
 
         # Set title.
         self.ax.set_title(title, horizontalalignment='left', x=0)
@@ -398,7 +398,7 @@ class MplSideViewCanvas(MplCanvas):
         for level in self.flightlevels:
             pressure = thermolib.flightlevel2pressure(level)
             self.fl_label_list.append(ax.axhline(pressure, color='k'))
-            self.fl_label_list.append(ax.text(0.1, pressure, "FL%i" % level))
+            self.fl_label_list.append(ax.text(0.1, pressure, u"FL{:d}".format(level)))
         self.draw()
 
     def getFlightLevels(self):
@@ -479,7 +479,7 @@ class MplSideViewCanvas(MplCanvas):
         """
         logging.debug("plotting vertical section image..")
         ix, iy = img.size
-        logging.debug("  image size is %ix%i px, format is %s", ix, iy, img.format)
+        logging.debug("  image size is {:d}{:d} px, format is {}".format(ix, iy, img.format))
         # Test if the image axes exist. If not, create them.
         if self.imgax is None:
             # Disable old white figure background so that the new underlying
@@ -971,7 +971,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         # Iterative list traversal no. 2: Draw / update plots.
         for item in itemsList:
 
-            logging.debug("plotting item %s", item.getName())
+            logging.debug("plotting item {}".format(item.getName()))
             # The variables that have to be plotted are children of self.mapItem.
             # Plot all variables whose visible-flag is set to True.
             variablesToPlot = [variable for variable in item.childItems
@@ -1017,7 +1017,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                                            linewidth=item.getGxElementProperty("general",
                                                                                "linewidth"))
                     variable.setGxElementProperty("timeseries",
-                                                  "instance::%s" % self.identifier,
+                                                  u"instance::{}".format(self.identifier),
                                                   plotInstance)
                     #
                     # If we've just plotted the pressure variable flip the y-axis
@@ -1044,9 +1044,9 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # The topmost subplot gets the title (the name of self.mapItem).
                     if index == 0:
                         if len(itemsList) > 1:
-                            ax.set_title("Ensemble: %s to %s" %
-                                         (itemsList[0].getName(),
-                                          itemsList[-1].getName()))
+                            ax.set_title("Ensemble: {} to {}"
+                                         .format(itemsList[0].getName(),
+                                                 itemsList[-1].getName()))
                         else:
                             ax.set_title("Single item: %s" %
                                          itemsList[0].getName())

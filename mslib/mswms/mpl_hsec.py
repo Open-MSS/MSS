@@ -96,7 +96,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         crs_list = []
         epsg_codes = self.supported_epsg_codes()
         for code in epsg_codes:
-            crs_list.append("EPSG:%i" % code)
+            crs_list.append("EPSG:{:d}".format(code))
         return crs_list
 
     def _draw_auto_graticule(self, bm):
@@ -216,14 +216,14 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             try:
                 proj_params = mss_wms_settings.epsg_to_mpl_basemap_table[epsg]
             except:
-                raise ValueError("unknown EPSG code: %i", epsg)
+                raise ValueError("unknown EPSG code: {:d}".format(epsg))
 
         logging.debug("plotting data..")
 
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
             if dataitem not in data.keys():
-                raise KeyError("required data field %s not found" % dataitem)
+                raise KeyError(u"required data field {} not found".format(dataitem))
 
         # Copy parameters to properties.
         self.data = data
@@ -344,8 +344,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                 facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
             facecolor_index = lut.index(tuple(facecolor_rgb))
 
-            logging.debug("saving figure as transparent PNG with transparency index %i.",
-                          facecolor_index)
+            logging.debug("saving figure as transparent PNG with transparency index {:d}.".format(facecolor_index))
             palette_img.save(output, format="PNG", transparency=facecolor_index)
 
         logging.debug("returning figure..")
@@ -365,8 +364,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)
         left_longitude = min(self.bm.llcrnrlon, ulcrnrlon)
-        logging.debug("shifting data grid to leftmost longitude in map "
-                      "(%.2f).." % left_longitude)
+        logging.debug(u"shifting data grid to leftmost longitude in map "
+                      u"({:.2f})..".format(left_longitude))
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.

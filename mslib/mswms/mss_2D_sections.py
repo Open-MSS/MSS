@@ -4,6 +4,7 @@
 ********************************************************************************
 
    Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+             2016-2017 see AUTHORS
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -128,7 +129,7 @@ class Abstract2DSectionStyle(object):
         Assumes that the same elevation levels are available for all time
         steps.
         """
-        logging.debug("checking vertical dimensions for layer %s.." % self.name)
+        logging.debug(u"checking vertical dimensions for layer {}..".format(self.name))
         successful = False
         if self.driver is not None and not all([_x[0] in ["sfc"] for _x in self.required_datafields]):
             # Get the latest init time.
@@ -150,9 +151,9 @@ class Abstract2DSectionStyle(object):
                                                     init_time=time,
                                                     valid_time=time)
                 except (IOError, ValueError) as e:
-                    logging.debug("WARNING: unsuccessfully examined data for "
-                                  "init time %s.. trying next time." % time)
-                    logging.debug("(Error message: %s)" % e)
+                    logging.debug(u"WARNING: unsuccessfully examined data for "
+                                  u"init time {}.. trying next time.".format(time))
+                    logging.debug(u"(Error message: {})".format(e))
                 else:
                     successful = True
                     break
@@ -173,9 +174,9 @@ class Abstract2DSectionStyle(object):
                                                             valid_time=vt)
                         except (IOError, ValueError) as e:
                             logging.debug("WARNING: unsuccessfully examined data for "
-                                          "init time %s, valid time %s.. trying next "
-                                          "time." % (it, vt))
-                            logging.debug("(Error message: %s)" % e)
+                                          "init time {}, valid time {}.. trying next "
+                                          "time.".format(it, vt))
+                            logging.debug(u"(Error message: {})".format(e))
                         else:
                             successful = True
                             break
@@ -189,7 +190,7 @@ class Abstract2DSectionStyle(object):
 
             # Get a list of the available levels.
             if self.driver.vert_data is not None:
-                return ["%i" % lvl for lvl in sorted({int(_x) for _x in self.driver.vert_data})]
+                return [u"{:d}".format(lvl) for lvl in sorted({int(_x) for _x in self.driver.vert_data})]
             else:
                 return []
         else:
