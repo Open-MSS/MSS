@@ -328,7 +328,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             elif column == LAT:
                 try:
                     value = float(value)
-                except:
+                except ValueError:
                     pass
                 else:
                     waypoint.lat = value
@@ -345,7 +345,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             elif column == LON:
                 try:
                     value = float(value)
-                except:
+                except ValueError:
                     pass
                 else:
                     waypoint.lon = value
@@ -357,8 +357,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 try:
                     flightlevel = float(value)
                     pressure = thermolib.flightlevel2pressure(flightlevel)
-                    if flightlevel < 0:
-                        raise ValueError
                 except ValueError:
                     pass
                 else:
@@ -371,11 +369,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), PRESSURE)
             elif column == PRESSURE:
                 try:
-                    pressure = float(value) * 100
+                    pressure = float(value) * 100  # convert hPa to Pa
                     flightlevel = round(thermolib.pressure2flightlevel(pressure))
                     pressure = thermolib.flightlevel2pressure(flightlevel)
-                    if flightlevel < 0:
-                        raise ValueError
                 except ValueError:
                     pass
                 else:
