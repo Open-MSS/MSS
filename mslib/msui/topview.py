@@ -327,19 +327,22 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         settings = self.getView().getMapAppearance()
         logging.debug("storing settings to %s", self.settingsfile)
-        fileobj = open(self.settingsfile, "w")
-        pickle.dump(settings, fileobj)
-        fileobj.close()
+        try:
+            with open(self.settingsfile, "w") as fileobj:
+                pickle.dump(settings, fileobj)
+        except (OSError, IOError), ex:
+            logging.warn("Problems storing TopView settings (%s: %s).", type(ex), ex)
 
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
         """
         settings = None
-        if os.path.exists(self.settingsfile):
-            logging.debug("loading settings from %s", self.settingsfile)
-            fileobj = open(self.settingsfile, "r")
-            settings = pickle.load(fileobj)
-            fileobj.close()
+        logging.debug("loading settings from %s", self.settingsfile)
+        try:
+            with open(self.settingsfile, "r") as fileobj:
+                settings = pickle.load(fileobj)
+        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
+            logging.warn("Problems reloading stored TopView settings (%s: %s). Switching to default", type(ex), ex)
         self.getView().setMapAppearance(settings)
 
 
