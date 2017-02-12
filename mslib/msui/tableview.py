@@ -36,13 +36,8 @@ AUTHORS:
 """
 
 # standard library imports
-import functools
+
 import logging
-import random
-import string
-import pyproj
-from mslib.mss_util import config_loader
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui import hexagon_dockwidget as hex
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString
@@ -52,6 +47,11 @@ from mslib.msui.mss_qt import ui_tableview_window as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
+
+try:
+    import mpl_toolkits.basemap.pyproj as pyproj
+except ImportError:
+    import pyproj
 
 #
 # USER INTERFACE CLASS FlightPlanTableView
