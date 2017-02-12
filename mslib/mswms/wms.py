@@ -181,7 +181,7 @@ class WMSServer(object):
         """Returns True if the given parameter is an XML that contains
            a service exception.
         """
-        if isinstance(var, str) or isinstance(var, unicode):
+        if isinstance(var, (str, unicode)):
             if var.find("<ServiceException") > 1:
                 return True
         return False
@@ -276,7 +276,7 @@ class WMSServer(object):
         logging.debug("  requested style = %s" % style)
 
         # Forecast initialisation time.
-        init_time = query.get('DIM_INIT_TIME', None)
+        init_time = query.get('DIM_INIT_TIME')
         if init_time is not None:
             try:
                 init_time = datetime.strptime(init_time, "%Y-%m-%dT%H:%M:%SZ")
@@ -287,7 +287,7 @@ class WMSServer(object):
         logging.debug("  requested initialisation time = %s" % init_time)
 
         # Forecast valid time.
-        valid_time = query.get('TIME', None)
+        valid_time = query.get('TIME')
         if valid_time is not None:
             try:
                 valid_time = datetime.strptime(valid_time, "%Y-%m-%dT%H:%M:%SZ")
@@ -376,7 +376,7 @@ class WMSServer(object):
                 return self.service_exception(text=msg)
 
             # Vertical level, if applicable.
-            level = query.get('ELEVATION', None)
+            level = query.get('ELEVATION')
             level = int(level) if level else None
             layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
             if (("ml" in layer_datatypes) or ("pl" in layer_datatypes)) \
@@ -414,7 +414,7 @@ class WMSServer(object):
         elif mode == "GetVSec":
 
             # Vertical secton path.
-            path = query.get("PATH", None)
+            path = query.get("PATH")
             if not path:
                 return self.service_exception(text="PATH not specified")
             try:
@@ -503,7 +503,7 @@ def application(environ, start_response):
         logging.debug("ENVIRON: %s", environ)
 
         # Processing
-        request = str(query.get('request', None))
+        request = str(query.get('request'))
         return_data = ""
         return_format = 'text/plain'
 
