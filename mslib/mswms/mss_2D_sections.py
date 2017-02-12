@@ -138,16 +138,14 @@ class Abstract2DSectionStyle(object):
                               "of this dataset. Check that file structure is "
                               "in accordance with the used access class in mss_wms_settings.py!")
                 return []
-            time = init_times[-1]
 
             # Open the data files for the analysis (valid time = init time).
             # It can happen that not all required files are available for
             # all init times. The try..except block takes care of this
             # problem and tries to find a time at which all required
             # files are available.
-            for i in range(len(init_times)):
+            for time in init_times:
                 try:
-                    time = init_times[i]
                     self.driver.set_plot_parameters(self,
                                                     init_time=time,
                                                     valid_time=time)
