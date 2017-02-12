@@ -1288,18 +1288,22 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # directory for the suitable image file.
             cache_hit = False
             if self.cachingEnabled():
-                if config_loader(dataset="wms_prefetch_enable", default=mss_default.wms_prefetch_enable):
-                    pre_tfwd = config_loader(dataset="wms_prefetch_time_fwd", default=mss_default.wms_prefetch_time_fwd)
-                    pre_tbck = config_loader(dataset="wms_prefetch_time_bck", default=mss_default.wms_prefetch_time_bck)
-                    pre_lfwd = config_loader(dataset="wms_prefetch_level_up", default=mss_default.wms_prefetch_level_up)
-                    pre_lbck = config_loader(dataset="wms_prefetch_level_down", default=mss_default.wms_prefetch_level_down)
-                    if pre_tfwd < 0 or pre_tbck < 0:
-                        raise ValueError("a wms_prefetch_time value was negative!")
-                    if pre_lfwd < 0 or pre_lbck < 0:
-                        raise ValueError("a wms_prefetch_level value was negative!")
+                prefetch_config = config_loader(dataset="wms_prefetch", default=mss_default.wms_prefetch)
+                prefetch_entries = ["validtime_fwd", "validtime_bck", "level_up", "level_down"]
+                for _x in prefetch_entries:
+                    if _x in prefetch_config:
+                        try:
+                            value = int(prefetch_config[_x])
+                        except ValueError:
+                            value = 0
+                        prefetch_config[_x] = max(0, value)
+                    else:
+                        prefetch_config[_x] = 0
+                fetch_nr = sum([prefetch_config[_x] for _x in prefetch_entries])
+                if fetch_nr > 0:
+                    pre_tfwd, pre_tbck, pre_lfwd, pre_lbck = [prefetch_config[_x] for _x in prefetch_entries]
 
                     prefetch_maps = []
-
                     ci = self.cbValidTime.currentIndex()
                     times = [unicode(self.cbValidTime.itemText(ci_p))
                              for ci_p in range(ci, ci + 1 + pre_tfwd) + range(ci - pre_tbck, ci)
@@ -1317,8 +1321,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         kwargs["level"] = new_level
                         prefetch_maps.append(kwargs.copy())
                     kwargs["level"] = level
-
-                    self.prefetch.emit(prefetch_maps)
+                    if len(prefetch_maps) > 0:
+                        self.prefetch.emit(prefetch_maps)
 
                 kwargs["return_only_url"] = True
                 urlstr = self.wms.getmap(**kwargs)
