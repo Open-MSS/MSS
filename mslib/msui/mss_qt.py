@@ -75,12 +75,6 @@ if USE_PYQT5:
 
     _translate = QtCore.QCoreApplication.translate
 
-    # PyQt5 silently aborts on a Python Exception
-    def excepthook(type_, value, traceback_):
-        traceback.print_exception(type_, value, traceback_)
-        QtCore.qFatal('')
-    sys.excepthook = excepthook
-
 else:
     try:
         _fromUtf8 = QtCore.QString.fromUtf8
@@ -96,3 +90,25 @@ else:
     except AttributeError:
         def _translate(context, text, disambig):
             return QtGui.QApplication.translate(context, text, disambig)
+
+
+# PyQt5 silently aborts on a Python Exception and PyQt4 does not inform GUI users
+def excepthook(type_, value, traceback_):
+    """
+    This dumps the error to console, logging (i.e. logfile), and tries to open a MessageBox for GUI users.
+    """
+    tb = "".join(traceback.format_exception(type_, value, traceback_))
+    traceback.print_exception(type_, value, traceback_)
+    logging.critical("Fatal error: %s", tb)
+    QtWidgets.QMessageBox.critical(
+        None, "fatal error",
+        "Fatal error\n"
+        "\n"
+        "Please report bugs in MSS to https://bitbucket.org/wxmetvis/mss\n"
+        "\n"
+        "Information about the fatal error:\n"
+        "\n"
+        "{}".format(tb))
+    QtCore.qFatal('')
+
+sys.excepthook = excepthook
