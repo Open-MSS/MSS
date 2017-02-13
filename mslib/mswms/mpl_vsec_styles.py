@@ -395,11 +395,11 @@ class VS_BruntVaisala_ML(AbstractVerticalSectionStyle):
              (0.61176470588235299, 0.0, 0.16176470588235295, 1.0),
              (0.40000000000000002, 0.0, 0.25, 1.0)], name="n2_map")
         cmap.set_over((0.8, 0.8, 0.8, 1.0))
-        norm = matplotlib.colors.BoundaryNorm(np.arange(0, 8.5, 0.5), cmap.N)
+        # norm = matplotlib.colors.BoundaryNorm(np.arange(0, 8.5, 0.5), cmap.N)
 
         cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, (curtain_cc ** 2) * 1e4, np.arange(0, 8.5, 0.5),
-                           cmap=cmap, extend="max")
+                         curtain_p, (curtain_cc ** 2) * 1e4, np.arange(0, 8.5, 0.5),
+                         cmap=cmap, extend="max")
         pl_trop = ax.plot(self.lat_inds, tropo_p.reshape(-1), "o", color="k", zorder=100)
         plt.setp(pl_trop, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
 

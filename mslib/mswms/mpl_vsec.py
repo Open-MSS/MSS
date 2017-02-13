@@ -145,7 +145,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
         titlestring += " [{:d}..{:d} hPa]".format(self.p_bot / 100, self.p_top / 100)
-        titlestring = "{0}{1}".format(titlestring, '\nValid: {} (step {:d} hrs from {})' \
+        titlestring = "{0}{1}".format(titlestring, '\nValid: {} (step {:d} hrs from {})'
                                       .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                                               time_step_hrs,
                                               self.init_time.strftime('%a %Y-%m-%d %H:%M UTC')))

@@ -40,7 +40,7 @@ AUTHORS:
 import logging
 from mslib.msui import hexagon_dockwidget as hex
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString
+from mslib.msui.mss_qt import QtWidgets, QString
 
 # local application imports
 from mslib.msui.mss_qt import ui_tableview_window as ui

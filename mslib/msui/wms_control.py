@@ -47,7 +47,7 @@ import xml.etree.ElementTree as etree
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
 
 import mslib.owslib.wms
 import mslib.owslib.util

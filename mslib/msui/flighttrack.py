@@ -37,19 +37,15 @@ AUTHORS:
 """
 
 # standard library imports
-from datetime import datetime, timedelta
-
+import datetime
 import os
 import pickle
-import csv
 import logging
 import xml.dom.minidom
 import string
-import random
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
-import numpy as np
 
 # local application imports
 from mslib import mss_util
@@ -500,7 +496,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 time, fuel = get_duration_fuel(wp0.flightlevel, wp1.flightlevel, wp1.distance_to_prev, wp0.weight)
                 wp1.leg_time = time
                 wp1.cum_time = wp0.cum_time + wp1.leg_time
-                wp1.utc_time = wp0.utc_time + timedelta(seconds=wp1.leg_time)
+                wp1.utc_time = wp0.utc_time + datetime.timedelta(seconds=wp1.leg_time)
                 wp1.leg_fuel = fuel
                 wp1.rem_fuel = wp0.rem_fuel - wp1.leg_fuel
                 wp1.weight = wp0.weight - wp1.leg_fuel
@@ -522,7 +518,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
             wp1.leg_time = time
             wp1.cum_time = wp0.cum_time + wp1.leg_time
-            wp1.utc_time = wp0.utc_time + timedelta(seconds=wp1.leg_time)
+            wp1.utc_time = wp0.utc_time + datetime.timedelta(seconds=wp1.leg_time)
             wp1.leg_fuel = fuel
             wp1.rem_fuel = wp0.rem_fuel - wp1.leg_fuel
             wp1.weight = wp0.weight - wp1.leg_fuel
