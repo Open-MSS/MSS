@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import re
 import os
+import logging
 import netCDF4
 from datetime import datetime, timedelta
 import time
@@ -95,9 +96,13 @@ class NWPDataAccess(object):
         valid_times = None
         filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if os.path.exists(filename):
-            fileobj = open(filename, "r")
-            valid_times = pickle.load(fileobj)
-            fileobj.close()
+            try:
+                with open(filename, "r") as fileobj:
+                    valid_times = pickle.load(fileobj)
+            except (pickle.UnpicklingError, OSError, IOError), ex:
+                logging.error("Error reading cache file '{}': {} - {}".format(filename, type(ex), ex))
+                logging.error("os.stat: {}".format(os.stat(filename)))
+
         return valid_times
 
     def save_valid_cache(self, filename, valid_times):
@@ -107,9 +112,11 @@ class NWPDataAccess(object):
             os.makedirs(valid_time_cache)
         filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if not os.path.exists(filename):
-            fileobj = open(filename, "w")
-            pickle.dump(valid_times, fileobj)
-            fileobj.close()
+            try:
+                with open(filename, "w") as fileobj:
+                    pickle.dump(valid_times, fileobj)
+            except (pickle.PicklingError, OSError, IOError), ex:
+                logging.error("Error writing cache file '{}': {} - {}".format(filename, type(ex), ex))
 
     def serviceCache(self):
         """Service the cache: Remove all files older than the maximum file
@@ -119,8 +126,7 @@ class NWPDataAccess(object):
         # logging.debug("servicing cache..")
 
         # Create a list of all files in the cache.
-        files = [os.path.join(valid_time_cache, f)
-                 for f in os.listdir(valid_time_cache)]
+        files = [os.path.join(valid_time_cache, f) for f in os.listdir(valid_time_cache)]
         # Add the ages of the files (via modification times in sec since epoch)
         # and the file sizes.
         # (current time in sec since epoch)
@@ -137,14 +143,17 @@ class NWPDataAccess(object):
         # file age will also be removed.
         cum_size_bytes = 0
         removed_files = 0
-        for f, fsize, fage in files:
-            cum_size_bytes += fsize
-            if (cum_size_bytes > valid_time_cache_max_size_bytes) or \
-                    fage > valid_time_cache_max_age_seconds:
-                os.remove(f)
-                removed_files += 1
-
-                # logging.debug("cache has been cleaned (%i files removed)." % removed_files)
+        for filename, filesize, fileage in files:
+            cum_size_bytes += filesize
+            if (cum_size_bytes > valid_time_cache_max_size_bytes) or fileage > valid_time_cache_max_age_seconds:
+                try:
+                    os.remove(filename)
+                except (OSError, IOError), ex:
+                    logging.error("Could not remove {:}: {:} - {:}".format(filename, type(ex), ex))
+                    logging.error("os.stat: {}".format(os.stat(filename)))
+                else:
+                    removed_files += 1
+        logging.info("cache has been cleaned ({:d} files removed).".format(removed_files))
 
     _mfDatasetArgsDict = {}
 
