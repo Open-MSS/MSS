@@ -35,7 +35,7 @@ import functools
 import logging
 import os
 import pickle
-from mslib.mss_util import config_loader
+from mslib.mss_util import config_loader, get_projection_params
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtWidgets, QString
@@ -265,13 +265,18 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         current_map = predefined_map_sections[current_map_key]
         crs_to_mpl_basemap_table = config_loader(dataset="crs_to_mpl_basemap_table",
                                                  default=mss_default.crs_to_mpl_basemap_table)
+        proj_params = crs_to_mpl_basemap_table.get(current_map["CRS"])
+        if proj_params is None:
+            proj_params = get_projection_params(current_map["CRS"])
+        if proj_params is None:
+            raise ValueError("unknown EPSG code: {:}".format(current_map["CRS"]))
 
         # Create a keyword arguments dictionary for basemap that contains
         # the projection parameters.
         kwargs = current_map["map"]
         kwargs.update({"CRS": current_map["CRS"]})
-        kwargs.update({"BBOX_UNITS": crs_to_mpl_basemap_table[current_map["CRS"]]["bbox"]})
-        kwargs.update(crs_to_mpl_basemap_table[current_map["CRS"]]["basemap"])
+        kwargs.update({"BBOX_UNITS": proj_params["bbox"]})
+        kwargs.update(proj_params["basemap"])
 
         if only_kwargs:
             # Return kwargs dictionary and do NOT redraw the map.
