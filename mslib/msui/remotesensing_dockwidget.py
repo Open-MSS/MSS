@@ -11,7 +11,7 @@ AUTHORS:
 """
 
 import numpy as np
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
+from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
 from mslib.mss_util import datetime_to_jsec, compute_solar_angle, \
     compute_view_angles, get_distance, rotate_point
@@ -141,7 +141,6 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
                  angle
         """
         # calculate distances and times
-        speed = 850. / 3.6  # speed in km/s
         times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
         x, y = zip(*wp_vertices)
         wp_lons, wp_lats = bmap(x, y, inverse=True)

@@ -51,7 +51,7 @@ import numpy as np
 # related third party imports
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
-from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets
 
 # local application imports
 from mslib.msui import flighttrack as ft
@@ -621,11 +621,11 @@ class PathInteractor:
             return False
         else:
             wp = wps[row]
-            return (QtWidgets.QMessageBox.question(
+            return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
                 "Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
-                    .format(row, wp.lat, wp.lon, wp.flightlevel),
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes)
+                .format(row, wp.lat, wp.lon, wp.flightlevel),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
     def set_path_color(self, line_color=None, marker_facecolor=None,
                        patch_facecolor=None):

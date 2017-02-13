@@ -5,9 +5,7 @@ AUTHORS:
 * Joern Ungermann (ju)
 
 """
-import logging
-
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
 
 from mslib.mss_util import config_loader
 from mslib.msui import aircrafts

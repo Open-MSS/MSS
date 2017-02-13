@@ -37,20 +37,16 @@ AUTHORS:
 """
 
 # standard library imports
-from datetime import datetime, timedelta
+import datetime
 import codecs
-
 import os
 import pickle
-import csv
 import logging
 import xml.dom.minidom
 import string
-import random
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
-import numpy as np
 
 # local application imports
 from mslib import mss_util
@@ -82,7 +78,7 @@ TABLE_FULL = [
     ("Lat\n(+-90)", lambda waypoint: waypoint.lat, True),
     ("Lon\n(+-180)", lambda waypoint: waypoint.lon, True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
-    ("Pressure\n(hPa)", lambda waypoint: "%.2f" % (waypoint.pressure / 100.), False),
+    ("Pressure\n(hPa)", lambda waypoint: "%.2f" % (waypoint.pressure / 100.), True),
     ("Leg dist.\n(km [nm])", lambda waypoint: "%d [%d]" % (waypoint.distance_to_prev,
                                                            waypoint.distance_to_prev / 1.852), False),
     ("Cum. dist.\n(km [nm])", lambda waypoint: "%d [%d]" % (waypoint.distance_total,
@@ -327,14 +323,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if column == LOCATION:
                 waypoint.location = value
             elif column == LAT:
-                # In Qt4.6 and higher, value.toFloat() is available:
-                # value, ok = value.toFloat()
-                # For lower versions, we need to use try..except.
                 try:
-                    value, ok = float(value), True
-                except:
-                    ok = False
-                if ok:
+                    value = float(value)
+                except ValueError:
+                    pass
+                else:
                     waypoint.lat = value
                     # A change of position requires an update of the distances.
                     if update:
@@ -348,10 +341,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == LON:
                 try:
-                    value, ok = float(value), True
-                except:
-                    ok = False
-                if ok:
+                    value = float(value)
+                except ValueError:
+                    pass
+                else:
                     waypoint.lon = value
                     if update:
                         self.update_distances(index.row())
@@ -359,12 +352,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == FLIGHTLEVEL:
                 try:
-                    value, ok = float(value), True
-                except:
-                    ok = False
-                if ok:
-                    waypoint.flightlevel = value
-                    waypoint.pressure = thermolib.flightlevel2pressure(value)
+                    flightlevel = float(value)
+                    pressure = thermolib.flightlevel2pressure(flightlevel)
+                except ValueError:
+                    pass
+                else:
+                    waypoint.flightlevel = flightlevel
+                    waypoint.pressure = pressure
                     if update:
                         self.update_distances(index.row())
                     # need to notify view of the second item that has been
@@ -372,12 +366,14 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), PRESSURE)
             elif column == PRESSURE:
                 try:
-                    value, ok = float(value), True
-                except:
-                    ok = False
-                if ok:
-                    waypoint.pressure = value
-                    waypoint.flightlevel = int(thermolib.pressure2flightlevel(value))
+                    pressure = float(value) * 100  # convert hPa to Pa
+                    flightlevel = round(thermolib.pressure2flightlevel(pressure))
+                    pressure = thermolib.flightlevel2pressure(flightlevel)
+                except ValueError:
+                    pass
+                else:
+                    waypoint.pressure = pressure
+                    waypoint.flightlevel = flightlevel
                     if update:
                         self.update_distances(index.row())
                     index2 = self.createIndex(index.row(), FLIGHTLEVEL)
@@ -501,7 +497,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 time, fuel = get_duration_fuel(wp0.flightlevel, wp1.flightlevel, wp1.distance_to_prev, wp0.weight)
                 wp1.leg_time = time
                 wp1.cum_time = wp0.cum_time + wp1.leg_time
-                wp1.utc_time = wp0.utc_time + timedelta(seconds=wp1.leg_time)
+                wp1.utc_time = wp0.utc_time + datetime.timedelta(seconds=wp1.leg_time)
                 wp1.leg_fuel = fuel
                 wp1.rem_fuel = wp0.rem_fuel - wp1.leg_fuel
                 wp1.weight = wp0.weight - wp1.leg_fuel
@@ -523,7 +519,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
             wp1.leg_time = time
             wp1.cum_time = wp0.cum_time + wp1.leg_time
-            wp1.utc_time = wp0.utc_time + timedelta(seconds=wp1.leg_time)
+            wp1.utc_time = wp0.utc_time + datetime.timedelta(seconds=wp1.leg_time)
             wp1.leg_fuel = fuel
             wp1.rem_fuel = wp0.rem_fuel - wp1.leg_fuel
             wp1.weight = wp0.weight - wp1.leg_fuel

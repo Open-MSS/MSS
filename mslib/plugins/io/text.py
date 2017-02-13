@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 
 import mslib.msui.flighttrack as ft
 from mslib import thermolib

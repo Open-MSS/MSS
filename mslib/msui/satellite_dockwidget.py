@@ -31,7 +31,7 @@ AUTHORS:
 import logging
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 
 # local application imports
 from mslib import mss_util

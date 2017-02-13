@@ -11,7 +11,7 @@ AUTHORS:
 
 """
 
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
+from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.mss_util import create_hexagon

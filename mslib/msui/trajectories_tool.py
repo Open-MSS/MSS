@@ -32,7 +32,7 @@ import logging
 import os
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
 
 # local application imports
 from mslib.msui.mss_qt import ui_trajectories_window as ui

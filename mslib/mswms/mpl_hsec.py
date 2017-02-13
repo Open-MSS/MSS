@@ -46,6 +46,7 @@ import PIL.Image
 
 # local application imports
 from mslib.mswms import mss_2D_sections
+from mslib.mss_util import get_projection_params
 
 
 """
@@ -85,9 +86,13 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         pass
 
     def supported_epsg_codes(self):
+        return mss_wms_settings.epsg_to_mpl_basemap_table.keys()
+
+    def support_epsg_code(self, epsg):
         """Returns a list of supported EPSG codes.
         """
-        return mss_wms_settings.epsg_to_mpl_basemap_table.keys()
+        return (epsg in mss_wms_settings.epsg_to_mpl_basemap_table.keys() or
+                get_projection_params(str(epsg)) is not None)
 
     def supported_crs(self):
         """Returns a list of the coordinate reference systems supported by
@@ -213,9 +218,10 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         """
         # Projection parameters from EPSG code.
         if epsg is not None:
-            try:
-                proj_params = mss_wms_settings.epsg_to_mpl_basemap_table[epsg]
-            except:
+            proj_params = mss_wms_settings.epsg_to_mpl_basemap_table.get(epsg)
+            if proj_params is None:
+                proj_params = get_projection_params(str(epsg))["basemap"]
+            if proj_params is None:
                 raise ValueError("unknown EPSG code: {:d}".format(epsg))
 
         logging.debug("plotting data..")

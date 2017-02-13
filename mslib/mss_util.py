@@ -44,8 +44,10 @@ except ImportError:
 from mslib import greatcircle
 from mslib.msui import constants
 
+
 class FatalUserError(Exception):
     pass
+
 
 def config_loader(config_file=None, dataset=None, default=None):
     """
@@ -71,7 +73,7 @@ def config_loader(config_file=None, dataset=None, default=None):
             return default
         raise IOError("MSS config File not found")
     except ValueError, ex:
-        error_message ="MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
+        error_message = "MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
         raise FatalUserError(error_message)
     if dataset:
         try:
@@ -267,6 +269,23 @@ def create_hexagon(center_lat, center_lon, radius, angle=0.):
 
 def convertHPAToKM(press):
     return (288.15 / 0.0065) * (1. - (press / 1013.25) ** (1. / 5.255)) / 1000.
+
+
+def get_projection_params(epsg):
+    if epsg.startswith("EPSG:"):
+        epsg = epsg[5:]
+    proj_params = None
+    if epsg == "4326":
+        proj_params = {"basemap": {"projection": "cyl"}, "bbox": "latlon"}
+    elif epsg == "9810":
+        proj_params = {"basemap": {"projection": "stere", "lat_0": 90.0, "lon_0": 0.0}, "bbox": "metres"}
+    elif epsg.startswith("777") and len(epsg) == 8:
+        lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
+        proj_params = {"basemap": {"projection": "stere", "lat_0": lat_0, "lon_0": lon_0}, "bbox": "latlon"}
+    elif epsg.startswith("778") and len(epsg) == 8:
+        lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
+        proj_params = {"basemap": {"projection": "stere", "lat_0": -lat_0, "lon_0": lon_0}, "bbox": "latlon"}
+    return proj_params
 
 
 """

@@ -47,7 +47,7 @@ import xml.etree.ElementTree as etree
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
 
 import mslib.owslib.wms
 import mslib.owslib.util
@@ -245,6 +245,67 @@ class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
 #
 # CLASS WMSControlWidget
 #
+class MapPrefetcher(QtCore.QObject):
+    """
+    This class is supposed to run in a background thread to prefetch map images that may be used later on.
+
+    This class uses code that is very similar to the actual code in the getMap call. Might be refactored
+    in some way...
+    """
+
+    process = QtCore.pyqtSignal()
+
+    def __init__(self, wms, wms_cache, parent=None):
+        super(MapPrefetcher, self).__init__(parent)
+        self.wms = wms
+        self.wms_cache = wms_cache
+        self.process.connect(self.process_map, QtCore.Qt.QueuedConnection)
+
+    @QtCore.pyqtSlot(list)
+    def fetch_maps(self, map_list):
+        """
+        Initializes the list of maps to be fetched. Overwrites any remaining ones.
+        Starts processing loop
+        """
+        self.maps = map_list
+        self.process.emit()
+
+    @QtCore.pyqtSlot()
+    def process_map(self):
+        """
+        Processing. Self emits into event queue until list is empty. In this way,
+        fetch_map events may interrupt.
+        """
+        if len(self.maps) == 0:
+            return
+        kwargs = self.maps[0]
+        self.maps = self.maps[1:]
+        if "queue" in kwargs:
+            del kwargs["queue"]
+        kwargs["return_only_url"] = True
+        urlstr = self.wms.getmap(**kwargs)
+        md5_filename = os.path.join(
+            unicode(self.wms_cache), hashlib.md5(urlstr).hexdigest() + ".png")
+        logging.info("MapPrefetcher %s %s.", kwargs["time"], kwargs["level"])
+        if os.path.exists(md5_filename):
+            logging.info("MapPrefetcher %s - file exists: %s.", self, md5_filename)
+        else:
+            kwargs["return_only_url"] = False
+            urlobject = self.wms.getmap(**kwargs)
+            imageIO = StringIO.StringIO(urlobject.read())
+
+            img = PIL.Image.open(imageIO)
+            # Check if the image is stored as indexed palette
+            # with a transparent colour. Store correspondingly.
+            if img.mode == "P" and "transparency" in img.info.keys():
+                img.save(md5_filename, transparency=img.info["transparency"])
+            else:
+                img.save(md5_filename)
+            assert os.path.exists(md5_filename)
+
+            logging.info("MapPrefetcher %s - saved filed: %s.", self, md5_filename)
+        if len(self.maps) > 0:
+            self.process.emit()
 
 
 class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
@@ -255,6 +316,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     NOTE: Currently this class can only handle WMS 1.1.1 servers.
     """
+
+    prefetch = QtCore.pyqtSignal([list], name="prefetch")
 
     def __init__(self, parent=None, crs_filter=".*",
                  default_WMS=None, wms_cache=None, view=None):
@@ -384,6 +447,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                               0, 10, self)
         self.pdlg.close()
 
+        self.thread = QtCore.QThread()  # no parent!
+        self.thread.start()
+
+        self.prefetcher = None
+
     def __del__(self):
         """Destructor.
         """
@@ -484,6 +552,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.layerChanged(0)
             self.btGetMap.setEnabled(True)
             self.pbViewCapabilities.setEnabled(True)
+
+            if self.prefetcher is not None:
+                self.prefetch.disconnect(self.prefetcher.fetch_maps)
+
+            self.prefetcher = MapPrefetcher(self.wms, self.wms_cache)
+            self.prefetcher.moveToThread(self.thread)
+            self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
 
         if self.cbInitTime.count() > 0:
             self.cbInitTime.setCurrentIndex(0)
@@ -1186,7 +1261,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("crs={}, path={}".format(crs, path_string))
         logging.debug("init_time={}, valid_time={}".format(init_time, valid_time))
         logging.debug("level={}".format(level))
-        logging.debug("transparent={}".formt(transparent))
+        logging.debug("transparent={}".format(transparent))
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1218,6 +1293,42 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # directory for the suitable image file.
             cache_hit = False
             if self.cachingEnabled():
+                prefetch_config = config_loader(dataset="wms_prefetch", default=mss_default.wms_prefetch)
+                prefetch_entries = ["validtime_fwd", "validtime_bck", "level_up", "level_down"]
+                for _x in prefetch_entries:
+                    if _x in prefetch_config:
+                        try:
+                            value = int(prefetch_config[_x])
+                        except ValueError:
+                            value = 0
+                        prefetch_config[_x] = max(0, value)
+                    else:
+                        prefetch_config[_x] = 0
+                fetch_nr = sum([prefetch_config[_x] for _x in prefetch_entries])
+                if fetch_nr > 0:
+                    pre_tfwd, pre_tbck, pre_lfwd, pre_lbck = [prefetch_config[_x] for _x in prefetch_entries]
+
+                    prefetch_maps = []
+                    ci = self.cbValidTime.currentIndex()
+                    times = [unicode(self.cbValidTime.itemText(ci_p))
+                             for ci_p in range(ci, ci + 1 + pre_tfwd) + range(ci - pre_tbck, ci)
+                             if 0 <= ci_p < self.cbValidTime.count()]
+                    for new_time in times:
+                        kwargs["time"] = new_time
+                        prefetch_maps.append(kwargs.copy())
+                    kwargs["time"] = valid_time
+
+                    ci = self.cbLevel.currentIndex()
+                    levels = [unicode(self.cbLevel.itemText(ci_p), errors="ignore").split(" (")[0]
+                              for ci_p in range(ci - pre_lbck, ci + 1 + pre_lfwd)
+                              if ci_p != ci and 0 <= ci_p < self.cbLevel.count()]
+                    for new_level in levels:
+                        kwargs["level"] = new_level
+                        prefetch_maps.append(kwargs.copy())
+                    kwargs["level"] = level
+                    if len(prefetch_maps) > 0:
+                        self.prefetch.emit(prefetch_maps)
+
                 kwargs["return_only_url"] = True
                 urlstr = self.wms.getmap(**kwargs)
                 if urlstr.startswith(self.cbWMS_URL.currentText()):
@@ -1238,7 +1349,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     raise RuntimeError("Url does not match, use get capabilities first.")
 
             if not cache_hit:
-
                 self.pdlg.show()
                 QtWidgets.QApplication.processEvents()
                 self.pdlg.setValue(1)

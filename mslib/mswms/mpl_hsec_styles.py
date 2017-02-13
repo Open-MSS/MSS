@@ -795,11 +795,9 @@ class HS_ThermalTropoStyle_ML(MPLBasemapHorizontalSectionStyle):
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
         ("sfc", "tropopause_altitude")]
-        #("ml", "air_pressure")]
 
     styles = [
-        ("default", "fixed colour scale"),
-]
+        ("default", "fixed colour scale")]
 
     def _plot_style(self):
         """
