@@ -1186,7 +1186,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("crs={}, path={}".format(crs, path_string))
         logging.debug("init_time={}, valid_time={}".format(init_time, valid_time))
         logging.debug("level={}".format(level))
-        logging.debug("transparent={}".formt(transparent))
+        logging.debug("transparent={}".format(transparent))
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep

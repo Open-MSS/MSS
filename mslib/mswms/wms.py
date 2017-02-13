@@ -70,6 +70,7 @@ import paste.request
 import paste.util.multidict
 import tempfile
 import urlparse
+from mslib.mss_util import get_projection_params
 from chameleon import PageTemplateLoader
 
 try:
@@ -259,7 +260,7 @@ class WMSServer(object):
 
         # Image size.
         figsize = float(query.get('WIDTH', 900)), float(query.get('HEIGHT', 600))
-        logging.debug("  requested image size = {:d}x{:d}".format(figsize[0], figsize[1]))
+        logging.debug("  requested image size = {:}x{:}".format(figsize[0], figsize[1]))
 
         # Requested layers.
         layers = [layer for layer in query.get('LAYERS', '').strip().split(',') if layer]
@@ -308,9 +309,9 @@ class WMSServer(object):
             try:
                 epsg = int(crs[5:])
             except ValueError:
-                msg = u"The requested CRS {} is not supported.".format(crs)
+                msg = u"The requested CRS '{}' is not supported.".format(crs)
         else:
-            msg = u"The requested CRS {} is not supported.".format(crs)
+            msg = u"The requested CRS '{}' is not supported.".format(crs)
 
         if msg is not None:
             logging.error(msg)
@@ -361,8 +362,8 @@ class WMSServer(object):
                     return self.service_exception(code="MissingDimensionValue", text=msg)
 
             # Check if the requested coordinate system is supported.
-            if epsg not in self.hsec_layer_registry[dataset][layer].supported_epsg_codes():
-                msg = "The requested CRS EPSG:{:d} is not supported.".format(epsg)
+            if not self.hsec_layer_registry[dataset][layer].support_epsg_code(epsg):
+                msg = "The requested CRS 'EPSG:{:d}' is not supported.".format(epsg)
                 logging.error(msg)
                 return self.service_exception(code="InvalidSRS", text=msg)
 
