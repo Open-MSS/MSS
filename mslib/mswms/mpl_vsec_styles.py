@@ -265,6 +265,7 @@ def make_generic_class(entity, vert):
         else:
             raise ValueError
 
+    fnord.styles = list(fnord.styles)
     if Targets.get_thresholds(entity) is not None:
         fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
     if all(_x is not None for _x in Targets.get_range(entity)):
