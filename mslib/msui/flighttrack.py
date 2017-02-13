@@ -38,6 +38,7 @@ AUTHORS:
 
 # standard library imports
 from datetime import datetime, timedelta
+import codecs
 
 import os
 import pickle
@@ -585,9 +586,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             comments.appendChild(doc.createTextNode(unicode(wp.comments)))
             element.appendChild(comments)
 
-        file_object = open(self.filename, 'w')
-        doc.writexml(file_object, indent="  ", addindent="  ", newl="\n")
-        file_object.close()
+        with codecs.open(self.filename, 'w', encoding="utf-8") as file_object:
+            doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
 
     def loadFromFTML(self, filename):
         """Load a flight track from an XML file at <filename>.
