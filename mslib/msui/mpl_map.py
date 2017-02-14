@@ -77,7 +77,7 @@ class MapCanvas(basemap.Basemap):
 
         """
         # Coordinate reference system identifier and coordinate system units.
-        self.crs = CRS if CRS else self.crs if hasattr(self, "crs") else None
+        self.crs = CRS if CRS is not None else self.crs if hasattr(self, "crs") else None
         self.bbox_units = BBOX_UNITS if BBOX_UNITS else self.bbox_units \
             if hasattr(self, "bbox_units") else None
 
@@ -133,7 +133,7 @@ class MapCanvas(basemap.Basemap):
         self.image = None
 
         # Print CRS identifier into the figure.
-        if self.crs:
+        if self.crs is not None:
             if hasattr(self, "crs_text"):
                 self.crs_text.set_text(self.crs)
             else:
@@ -152,9 +152,9 @@ class MapCanvas(basemap.Basemap):
         self.ax.set_autoscale_on(False)
 
         # Connect to the trajectory item tree, if defined.
-        self.traj_item_tree = traj_item_tree if traj_item_tree else self.traj_item_tree if hasattr(
+        self.traj_item_tree = traj_item_tree if traj_item_tree is not None else self.traj_item_tree if hasattr(
             self, "traj_item_tree") else None
-        if traj_item_tree:
+        if traj_item_tree is not None:
             self.set_trajectory_tree(traj_item_tree)
 
     def set_identifier(self, identifier):
@@ -296,7 +296,7 @@ class MapCanvas(basemap.Basemap):
             self._draw_auto_graticule()
             # Update the figure canvas.
             self.ax.figure.canvas.draw()
-        elif not visible and self.map_parallels and self.map_meridians:
+        elif not visible and self.map_parallels is not None and self.map_meridians is not None:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
@@ -334,14 +334,14 @@ class MapCanvas(basemap.Basemap):
                                                       lake_color=self.appearance["colour_water"],
                                                       zorder=0)
             self.ax.figure.canvas.draw()
-        elif not visible and self.map_continents:
+        elif not visible and self.map_continents is not None:
             # Remove current fills. They are stored as a list of polygon patches
             # in self.map_continents.
             for patch in self.map_continents:
                 patch.remove()
             self.map_continents = None
             self.ax.figure.canvas.draw()
-        elif visible and self.map_continents:
+        elif visible and self.map_continents is not None:
             # Colours have changed: Remove the old fill and redraw.
             for patch in self.map_continents:
                 patch.remove()
@@ -358,7 +358,7 @@ class MapCanvas(basemap.Basemap):
             self.map_coastlines = self.drawcoastlines()
             self.map_countries = self.drawcountries()
             self.ax.figure.canvas.draw()
-        elif not visible and self.map_coastlines and self.map_countries:
+        elif not visible and self.map_coastlines is not None and self.map_countries is not None:
             self.map_coastlines.remove()
             self.map_countries.remove()
             del self.cntrysegs
@@ -375,7 +375,7 @@ class MapCanvas(basemap.Basemap):
         self.appearance["fill_waterbodies"] = visible
         self.appearance["colour_water"] = bg_color
 
-        if not visible and self.map_boundary:
+        if not visible and self.map_boundary is not None:
             self.map_boundary.remove()
             self.map_boundary = None
             self.ax.figure.canvas.draw()
@@ -429,23 +429,23 @@ class MapCanvas(basemap.Basemap):
         grat_vis = self.appearance["draw_graticule"]
         self.set_graticule_visible(False)
         self.appearance["draw_graticule"] = grat_vis
-        if self.map_coastlines:
+        if self.map_coastlines is not None:
             self.map_coastlines.remove()
 
-        if self.image:
+        if self.image is not None:
             self.image.remove()
             self.image = None
 
         # Refer to Basemap.drawcountries() on how to remove country borders.
         # In addition to the matplotlib lines, the loaded country segment data
         # needs to be loaded. THE SAME NEEDS TO BE DONE WITH RIVERS ETC.
-        if self.map_countries:
+        if self.map_countries is not None:
             self.map_countries.remove()
             del self.cntrysegs
 
         # map_boundary is None for rectangular projections (basemap simply sets
         # the backgorund colour).
-        if self.map_boundary:
+        if self.map_boundary is not None:
             try:
                 # FIX (mr, 15Oct2012) -- something seems to have changed in
                 # newer Matplotlib versions: this causes an exception when
@@ -495,7 +495,7 @@ class MapCanvas(basemap.Basemap):
         """Overloads basemap.imshow(). Deletes any existing image and
            redraws the figure after the new image has been plotted.
         """
-        if self.image:
+        if self.image is not None:
             self.image.remove()
         self.image = super(MapCanvas, self).imshow(X, **kwargs)
         self.ax.figure.canvas.draw()
@@ -508,7 +508,7 @@ class MapCanvas(basemap.Basemap):
         """
         logging.debug("registering trajectory tree model")
         # Disconnect old tree, if defined.
-        if self.traj_item_tree:
+        if self.traj_item_tree is not None:
             self.traj_item_tree.dataChanged.disconnect(self.update_from_trajectory_tree)
         # Set and connect new tree.
         self.traj_item_tree = tree
@@ -524,7 +524,7 @@ class MapCanvas(basemap.Basemap):
               found out so far how to get all the items between the two
               indices).
         """
-        if not self.traj_item_tree:
+        if self.traj_item_tree is None:
             return
         # Update the map elements if the change that occured in traj_item_tree
         # affected a LagrantoMapItem.
@@ -568,14 +568,14 @@ class MapCanvas(basemap.Basemap):
                 VISIBILITY_CHANGE -- same action as for GXPROPERTY_CHANGE
         """
         # If no trajectory item tree is defined exit the method.
-        if not self.traj_item_tree:
+        if self.traj_item_tree is None:
             return
 
         logging.debug("updating trajectory items on map <%s>, mode %s",
                       self.identifier, mode)
 
         # If no item is given start at the root of the 'traj_item_tree'.
-        if not item:
+        if item is None:
             item = self.traj_item_tree.getRootItem()
             logging.debug("processing all trajectory items")
 
@@ -597,7 +597,7 @@ class MapCanvas(basemap.Basemap):
                              "linewidth": None,
                              "timeMarkerInterval": None}
         parent = item.parent()  # this would be None if item == rootItem
-        while parent:  # loop until root has been reached
+        while parent is not None:  # loop until root has been reached
             # Set visible to False if one item along the path to the root is
             # found to be set to invisible.
             parent_properties["visible"] = parent.isVisible(self.identifier) and parent_properties["visible"]
@@ -874,11 +874,11 @@ class SatelliteOverpassPatch(object):
     def remove(self):
         """Remove this satellite patch from the map canvas.
         """
-        if self.trackline:
+        if self.trackline is not None:
             for element in self.trackline:
                 element.remove()
             self.trackline = None
-        if self.patch:
+        if self.patch is not None:
             self.patch.remove()
             self.patch = None
         for element in self.texts:

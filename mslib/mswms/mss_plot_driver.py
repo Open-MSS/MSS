@@ -80,7 +80,7 @@ class MSSPlotDriver(object):
         """Closes the open NetCDF dataset, if existing.
         """
         logging.debug("closing plot driver")
-        if self.dataset:
+        if self.dataset is not None:
             self.dataset.close()
 
     def _set_time(self, init_time, fc_time):
@@ -122,7 +122,7 @@ class MSSPlotDriver(object):
         # Check if a dataset is open and if it contains the requested times.
         # (a dataset will only be open if the used layer has not changed,
         # i.e. the required variables have not changed as well).
-        if self.dataset:
+        if self.dataset is not None:
             logging.debug("checking on open dataset.")
             if self.init_time == init_time:
                 logging.debug("\tinitialisation time ok ({}).".format(init_time))
@@ -198,7 +198,7 @@ class MSSPlotDriver(object):
 
         hybrid_name, hybrid_var, hybrid_orientation = \
             netCDF4tools.identify_CF_hybrid(dataset)
-        if hybrid_var:
+        if hybrid_var is not None:
             vert_data = hybrid_var[:]
             vert_orientation = hybrid_orientation
             vert_units = "model_level"
@@ -206,7 +206,7 @@ class MSSPlotDriver(object):
         if vert_data is None:
             isopressure_name, isopressure_var, isopressure_orientation = \
                 netCDF4tools.identify_CF_isopressure(dataset)
-            if isopressure_var:
+            if isopressure_var is not None:
                 vert_data = isopressure_var[:]
                 vert_orientation = isopressure_orientation
                 vert_units = "hPa"
@@ -214,7 +214,7 @@ class MSSPlotDriver(object):
         if vert_data is None:
             isopotvort_name, isopotvort_var, isopotvort_orientation = \
                 netCDF4tools.identify_CF_isopotvort(dataset)
-            if isopotvort_var:
+            if isopotvort_var is not None:
                 vert_data = isopotvort_var[:]
                 vert_orientation = isopotvort_orientation
                 vert_units = "10^-3 PVU"
@@ -222,7 +222,7 @@ class MSSPlotDriver(object):
         if vert_data is None:
             isoalt_name, isoalt_var, isoalt_orientation = \
                 netCDF4tools.identify_CF_isoaltitude(dataset)
-            if isoalt_var:
+            if isoalt_var is not None:
                 vert_data = isoalt_var[:]
                 vert_orientation = isoalt_orientation
                 vert_units = isoalt_var.units
@@ -230,7 +230,7 @@ class MSSPlotDriver(object):
         if vert_data is None:
             isoalt_name, isoalt_var, isoalt_orientation = \
                 netCDF4tools.identify_CF_isopottemp(dataset)
-            if isoalt_var:
+            if isoalt_var is not None:
                 vert_data = isoalt_var[:]
                 vert_orientation = isoalt_orientation
                 vert_units = isoalt_var.units
@@ -282,7 +282,7 @@ class MSSPlotDriver(object):
 
         # If the plot object has been changed, the dataset needs to be reloaded
         # (the required variables could have changed).
-        if self.plot_object:
+        if self.plot_object is not None:
             require_reload = require_reload or (self.plot_object != plot_object)
         if require_reload:
             if self.dataset:
@@ -314,13 +314,13 @@ class MSSPlotDriver(object):
         Derived methods need to call the super method before all other
         statements.
         """
-        plot_object = plot_object if plot_object else self.plot_object
-        figsize = figsize if figsize else self.figsize
+        plot_object = plot_object if plot_object is not None else self.plot_object
+        figsize = figsize if figsize is not None else self.figsize
         noframe = noframe if noframe is not None else self.noframe
-        init_time = init_time if init_time else self.init_time
-        valid_time = valid_time if valid_time else self.valid_time
-        style = style if style else self.style
-        bbox = bbox if bbox else self.bbox
+        init_time = init_time if init_time is not None else self.init_time
+        valid_time = valid_time if valid_time is not None else self.valid_time
+        style = style if style is not None else self.style
+        bbox = bbox if bbox is not None else self.bbox
         transparent = transparent if transparent is not None else self.transparent
         return_format = return_format if return_format is not None else self.return_format
         # Explicitly call MSSPlotDriver's set_plot_parameters(). A "self.--"
@@ -403,17 +403,17 @@ class VerticalSectionDriver(MSSPlotDriver):
                                transparent=None, return_format=None):
         """
         """
-        plot_object = plot_object if plot_object else self.plot_object
-        figsize = figsize if figsize else self.figsize
+        plot_object = plot_object if plot_object is not None else self.plot_object
+        figsize = figsize if figsize is not None else self.figsize
         noframe = noframe if noframe is not None else self.noframe
-        init_time = init_time if init_time else self.init_time
-        valid_time = valid_time if valid_time else self.valid_time
-        style = style if style else self.style
-        bbox = bbox if bbox else self.bbox
-        vsec_path = vsec_path if vsec_path else self.vsec_path
-        vsec_numpoints = vsec_numpoints if vsec_numpoints else self.vsec_numpoints
-        vsec_numlabels = vsec_numlabels if vsec_numlabels else self.vsec_numlabels
-        vsec_path_connection = vsec_path_connection if vsec_path_connection \
+        init_time = init_time if init_time is not None else self.init_time
+        valid_time = valid_time if valid_time is not None else self.valid_time
+        style = style if style is not None else self.style
+        bbox = bbox if bbox is not None else self.bbox
+        vsec_path = vsec_path if vsec_path is not None else self.vsec_path
+        vsec_numpoints = vsec_numpoints if vsec_numpoints is not None else self.vsec_numpoints
+        vsec_numlabels = vsec_numlabels if vsec_numlabels is not None else self.vsec_numlabels
+        vsec_path_connection = vsec_path_connection if vsec_path_connection is not None \
             else self.vsec_path_connection
         show = show if show else self.show
         transparent = transparent if transparent is not None else self.transparent
@@ -459,7 +459,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         cross section crosses the data longitude boundaries (e.g. data is
         stored on a 0..360 grid, but the path is in the range -10..+20).
         """
-        if not self.dataset:
+        if self.dataset is None:
             return {}
         data = {}
         timestep = self.times.searchsorted(self.fc_time)
@@ -615,16 +615,16 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                transparent=None, return_format=None):
         """
         """
-        plot_object = plot_object if plot_object else self.plot_object
-        figsize = figsize if figsize else self.figsize
-        noframe = noframe if noframe else self.noframe
-        init_time = init_time if init_time else self.init_time
-        valid_time = valid_time if valid_time else self.valid_time
-        style = style if style else self.style
-        bbox = bbox if bbox else self.bbox
-        level = level if level else self.level
-        epsg = epsg if epsg else self.epsg
-        show = show if show else self.show
+        plot_object = plot_object if plot_object is not None else self.plot_object
+        figsize = figsize if figsize is not None else self.figsize
+        noframe = noframe if noframe is not None else self.noframe
+        init_time = init_time if init_time is not None else self.init_time
+        valid_time = valid_time if valid_time is not None else self.valid_time
+        style = style if style is not None else self.style
+        bbox = bbox if bbox is not None else self.bbox
+        level = level if level is not None else self.level
+        epsg = epsg if epsg is not None else self.epsg
+        show = show if show is not None else self.show
         transparent = transparent if transparent is not None else self.transparent
         return_format = return_format if return_format is not None else self.return_format
         self.set_plot_parameters(plot_object=plot_object,
@@ -644,7 +644,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
         """Load the data fields as required by the horizontal section style
            instance at the current timestep.
         """
-        if not self.dataset:
+        if self.dataset is None:
             return {}
         data = {}
         timestep = self.times.searchsorted(self.fc_time)

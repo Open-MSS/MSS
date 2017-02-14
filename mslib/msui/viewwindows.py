@@ -81,7 +81,7 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         """
         index -= 1
         if index >= 0:
-            if self.docks[index]:
+            if self.docks[index] is not None:
                 # The widget has already been created, but is not visible at
                 # the moment.
                 self.docks[index].show()
@@ -136,7 +136,7 @@ class MSSMplViewWindow(MSSViewWindow):
         """Set the QAbstractItemModel instance that the view displays.
         """
         self.waypoints_model = model
-        if self.mpl:
+        if self.mpl is not None:
             self.mpl.canvas.setWaypointsModel(model)
 
     def getView(self):
