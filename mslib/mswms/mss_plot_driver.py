@@ -437,7 +437,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                    vsec_path_connection='linear'):
         """
         """
-        logging.debug("computing {:d} interpolation points, connection: {}"
+        logging.debug("computing {:} interpolation points, connection: {}"
                       .format(vsec_numpoints, vsec_path_connection))
         self.lats, self.lons = mss_util.path_points(vsec_path,
                                                     numpoints=vsec_numpoints,
@@ -490,10 +490,10 @@ class VerticalSectionDriver(MSSPlotDriver):
                 var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
             else:
                 var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
-            logging.debug("\tLoaded {:.2f} Mbytes from data field <{:}> at timestep {:i}.".format(
-                          (var_data.nbytes / 1048576., name, timestep)))
+            logging.debug("\tLoaded {:.2f} Mbytes from data field <{:}> at timestep {:}.".format(
+                          var_data.nbytes / 1048576., name, timestep))
             logging.debug("\tVertical dimension direction is {}.".format(
-                          ("up" if self.vert_order == 1 else "down")))
+                          "up" if self.vert_order == 1 else "down"))
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
