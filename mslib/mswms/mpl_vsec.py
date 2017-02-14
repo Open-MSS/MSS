@@ -114,7 +114,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                                     len_major_ticks + len(major_ticks2) - 1)
             major_ticks[len_major_ticks:] = major_ticks2[1:]
 
-        labels = ['{:d}'.format(l / 100.) for l in major_ticks]
+        labels = ['{:.0f}'.format(l / 100.) for l in major_ticks]
 
         # .. the same for the minor ticks ..
         p_top_minor = max(label_distance, self.p_top)
@@ -144,7 +144,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Plot title (either in image axes or above).
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += " [{:d}..{:d} hPa]".format(self.p_bot / 100, self.p_top / 100)
+        titlestring += " [{:.0f}..{:.0f} hPa]".format(self.p_bot / 100, self.p_top / 100)
         titlestring = "{0}{1}".format(titlestring, '\nValid: {} (step {:d} hrs from {})'
                                       .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                                               time_step_hrs,
