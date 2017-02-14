@@ -94,7 +94,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
             segment = None
         else:
             segment = self.overpass_segments[index]
-        if self.view:
+        if self.view is not None:
             self.view.plotSatelliteOverpass(segment)
 
 

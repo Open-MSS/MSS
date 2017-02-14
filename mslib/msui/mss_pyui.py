@@ -110,9 +110,9 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """Slot that removes this QListWidgetItem from the parent (the
            QListWidget) if the corresponding view has been deleted.
         """
-        if self.parent:
+        if self.parent is not None:
             self.parent.takeItem(self.parent.row(self))
-            if self.parent.parent:
+            if self.parent.parent is not None:
                 self.viewsChanged.emit()
 
 
@@ -382,7 +382,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # ToDo check order
             view_window = loopview.MSSLoopWindow(
                 config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
-        if view_window:
+        if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
             view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -405,7 +405,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews,
                                                                       viewsChanged=self.viewsChanged)
 
-        if tool_window:
+        if tool_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
             tool_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)

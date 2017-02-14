@@ -95,7 +95,7 @@ class AbstractLagrantoDataItem:
 
         # If this item has a parent, register it as a child in the parent
         # node.
-        if parent:
+        if parent is not None:
             parent.appendChild(self)
 
     def appendChild(self, item):
@@ -141,7 +141,7 @@ class AbstractLagrantoDataItem:
         return self.parentItem
 
     def row(self):
-        if self.parentItem:
+        if self.parentItem is not None:
             return self.parentItem.childItems.index(self)
         else:
             return 0

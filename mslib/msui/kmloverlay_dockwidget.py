@@ -50,11 +50,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Called when the visibility checkbox is toggled and hides/shows
         the overlay if loaded.
         """
-        if self.view and self.cbOverlay.isChecked() and self.patch:
+        if self.view is not None and self.cbOverlay.isChecked() and self.patch is not None:
             self.view.plotKML(self.patch)
             self.patch.update(self.get_color())
-        elif self.patch:
-                self.view.plotKML(None)
+        elif self.patch is not None:
+            self.view.plotKML(None)
 
     def select_colour(self):
         button = self.pbSelectColour
@@ -84,7 +84,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Loads an KML file selected by the leFile box and constructs the
         corresponding patch.
         """
-        if self.patch:
+        if self.patch is not None:
             self.patch.remove()
             self.view.plotKML(None)
             self.patch = None
@@ -94,7 +94,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.kml = pykml.parser.parse(kmlf).getroot()
                 self.patch = KMLPatch(self.view.map, self.kml, self.get_color())
             self.cbOverlay.setEnabled(True)
-            if self.view and self.cbOverlay.isChecked():
+            if self.view is not None and self.cbOverlay.isChecked():
                 self.view.plotKML(self.patch)
         except IOError, ex:
             QtWidgets.QMessageBox.critical(self, self.tr("KML Overlay"),
