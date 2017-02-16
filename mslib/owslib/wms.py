@@ -28,6 +28,7 @@ import cgi
 from urllib import urlencode
 from etree import etree
 from .util import openURL
+from collections import OrderedDict
 
 
 class ServiceException(Exception):
@@ -127,7 +128,7 @@ class WebMapService(object):
             self.contents[cm.id]=cm       
             for subelem in elem.findall('Layer'):
                 subcm=ContentMetadata(subelem, cm)
-                self.contents[subcm.id]=subcm 
+                self.contents[subcm.id]=subcm
         
         #exceptions
         self.exceptions = [f.text for f \
@@ -404,14 +405,15 @@ class ContentMetadata:
             self.crsOptions=None
             
         #Styles
-        self.styles = {}
+        self.styles = OrderedDict()
         
         #Copy any parent styles (they are inheritable properties)
         if self.parent:
             self.styles = self.parent.styles.copy()
- 
+
         #Get the styles for this layer (items with the same name are replaced)
         for s in elem.findall('Style'):
+
             name = s.find('Name')
             title = s.find('Title')
             if name is None or title is None:
