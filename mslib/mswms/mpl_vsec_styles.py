@@ -130,31 +130,25 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
 
     def _plot_style(self):
         ax = self.ax
-        curtain_pv = self.data["ertel_potential_vorticity"]
         curtain_cc = self.data[self.dataname] * self.unit_scale
         curtain_cc = np.ma.masked_invalid(curtain_cc)
         if self.name[-2:] == "pl":
-            curtain_pt = self.data["air_potential_temperature"]
             curtain_p = np.empty_like(curtain_cc)
             curtain_p[:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis] * 100
         elif self.name[-2:] == "tl":
             curtain_p = self.data["air_pressure"] * 100
-            curtain_pt = np.empty_like(curtain_cc)
-            curtain_pt[:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+            self.data["air_potential_temperature"] = np.empty_like(curtain_cc)
+            self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
         elif self.name[-2:] == "ml":
             curtain_p = self.data["air_pressure"] * 100
-            curtain_pt = self.data["air_potential_temperature"]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
         curtain_lat = self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose()
 
-        delta_pt = 10 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 20
         # Filled contour plot of cloud cover.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cmap = plt.cm.rainbow
-        cmin, cmax = Targets.get_range(self.dataname)
         if self.p_bot > self.p_top:
             visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
         else:
@@ -163,18 +157,17 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         if visible.sum() == 0:
             visible = np.ones_like(curtain_cc, dtype=bool)
 
-        cmin, cmax, clev, cmap, norm = get_style_parameters(self.dataname, self.style, cmin, cmax, curtain_cc[visible])
+        cmin, cmax = Targets.get_range(self.dataname)
+        cmin, cmax, clevs, cmap, norm = get_style_parameters(self.dataname, self.style, cmin, cmax, curtain_cc[visible])
 
-        cs = ax.contourf(curtain_lat, curtain_p, curtain_cc, clev, cmap=cmap, extend="both", norm=norm)
+        cs = ax.contourf(curtain_lat, curtain_p, curtain_cc, clevs, cmap=cmap, extend="both", norm=norm)
 
         # Contour line plot of PV.
-        for (cont_data, cont_levels, cont_colour, cont_style) in (
-                [curtain_pv, [2, 4, 8, 16], "dimgrey", "dashed"],
-                [curtain_pt, np.arange(200, 700, delta_pt), "dimgrey", "solid"]):
-            cs_pv = ax.contour(curtain_lat, curtain_p, cont_data, cont_levels,
-                               colors=cont_colour, linestyles=cont_style, linewidths=2)
-            plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
-            cs_pv_lab = ax.clabel(cs_pv, fontsize=8, fmt='%i')
+        for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
+            cs_pv = ax.contour(curtain_lat, curtain_p, self.data[cont_data], cont_levels,
+                               colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
+            plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+            cs_pv_lab = ax.clabel(cs_pv, colours=cont_label_colour, fontsize=8, fmt='%i')
             plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # Pressure decreases with index, i.e. orography is stored at the
@@ -183,7 +176,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         self._latlon_logp_setup(titlestring=self.title)
 
         # Format for colorbar labels
-        cbar_format = get_cbar_label_format(self.style, np.abs(clev).max())
+        cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
         cbar_label = self.title
 
         # Add colorbar.
@@ -203,7 +196,14 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_generic_class(entity, vert):
+def make_generic_class(entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None):
+    if add_data is None:
+        add_data = [(vert, "ertel_potential_vorticity")]
+    if add_contours is None:
+        add_contours = [  # ("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
+            ("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "dashed", 2, True),
+            ("air_potential_temperature", np.arange(200, 700, 10), "dimgrey", "dimgrey", "solid", 2, True)]
+
     class fnord(VS_GenericStyle):
         name = u"VS_{}_{}".format(entity, vert)
         dataname = entity
@@ -211,18 +211,8 @@ def make_generic_class(entity, vert):
         title = Targets.TITLES.get(entity, entity)
         if units:
             title += u" ({})".format(units)
-        required_datafields = [
-            (vert, entity),
-            (vert, "ertel_potential_vorticity"), ]
-        if vert == "pl":
-            required_datafields.append((vert, "air_potential_temperature"))
-        elif vert == "tl":
-            required_datafields.append((vert, "air_pressure"))
-        elif vert == "ml":
-            required_datafields.append((vert, "air_pressure"))
-            required_datafields.append((vert, "air_potential_temperature"))
-        else:
-            raise ValueError
+        required_datafields = [(vert, entity)] + add_data
+        contours = add_contours
 
     fnord.styles = list(fnord.styles)
     if Targets.get_thresholds(entity) is not None:
@@ -231,17 +221,38 @@ def make_generic_class(entity, vert):
         fnord.styles = fnord.styles + [
             ("default", "fixed colour scale"),
             ("log", "fixed logarithmic colour scale")]
-    if entity == "ertel_potential_vorticity":
-        fnord.styles = [("ertel_potential_vorticity", "PV style")] + fnord.styles
+
+    if add_styles is not None:
+        fnord.styles += add_styles
+    if fix_styles is not None:
+        fnord.styles = fix_styles
 
     return fnord
 
-for ent in Targets.get_targets():
-    globals()["VS_GenericStyle_PL_" + ent] = make_generic_class(ent, "pl")
-    globals()["VS_GenericStyle_TL_" + ent] = make_generic_class(ent, "tl")
-    globals()["VS_GenericStyle_ML_" + ent] = make_generic_class(ent, "ml")
+_ADD_DATA = {
+    "pl": [("pl", "ertel_potential_vorticity"), ("pl", "air_potential_temperature")],
+    "ml": [("ml", "ertel_potential_vorticity"), ("ml", "air_pressure"), ("ml", "air_potential_temperature")],
+    "tl": [("tl", "ertel_potential_vorticity"), ("tl", "air_pressure")]
+}
 
-"""
+for vert in ["pl", "ml", "tl"]:
+    for ent in Targets.get_targets():
+        globals()["VS_GenericStyle_{}_{}".format(vert.upper(), ent)] = make_generic_class(
+            ent, vert, add_data=_ADD_DATA[vert])
+    globals()["VS_GenericStyle_{}_{}".format(vert.upper(), "ertel_potential_vorticity")] = make_generic_class(
+        "ertel_potential_vorticity", vert, add_data=_ADD_DATA[vert],
+        fix_styles=[("ertel_potential_vorticity_nh", "northern hemisphere"),
+                    ("ertel_potential_vorticity_sh", "southern hemisphere")])
+    globals()["VS_GenericStyle_{}_{}".format(vert.upper(), "equivalent_latitude")] = make_generic_class(
+        "equivalent_latitude", vert, add_data=_ADD_DATA[vert],
+        fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
+                    ("equivalent_latitude_sh", "southern hemisphere")])
+    globals()["VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air")] = \
+        make_generic_class(
+            "square_of_brunt_vaisala_frequency_in_air", vert, add_data=_ADD_DATA[vert],
+            fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
+
+""""
 GW
 """
 
@@ -282,8 +293,7 @@ class VS_GravityWaveForecast_ML(AbstractVerticalSectionStyle):
         cmap = plt.cm.Spectral_r
         norm = matplotlib.colors.BoundaryNorm([-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3], cmap.N)
         cs = ax.pcolormesh(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_cc, norm=norm,
-                           cmap=cmap)
+                           curtain_p, curtain_cc, norm=norm, cmap=cmap)
         pl_trop = ax.plot(self.lat_inds, tropo_p.reshape(-1), "o", color="k", zorder=100)
         plt.setp(pl_trop, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
 
@@ -310,10 +320,10 @@ class VS_BruntVaisala_ML(AbstractVerticalSectionStyle):
     """Vertical section of chemical species
     """
     name = "VS_BruntVaisala"
-    title = "Brunt Vaisala Frequency (1e4/s$^2$)"
+    title = "Brunt Vaisala Frequency (1/s$^2$)"
 
     required_datafields = [
-        ("ml", "brunt_vaisala_frequency_in_air"),
+        ("ml", "square_of_brunt_vaisala_frequency_in_air"),
         ("ml", "air_pressure"),
         ("sfc", "tropopause_altitude"),
     ]
@@ -323,7 +333,7 @@ class VS_BruntVaisala_ML(AbstractVerticalSectionStyle):
            temperature overlay.
         """
         ax = self.ax
-        curtain_cc = self.data["brunt_vaisala_frequency_in_air"]
+        curtain_cc = self.data["square_of_brunt_vaisala_frequency_in_air"]
         # curtain_p = np.empty_like(curtain_cc)
         # for i in range(len(self.driver.vert_data)):
         #    curtain_p[i, :] = 102300 * np.exp(-self.driver.vert_data[i] / 7.9)
@@ -360,7 +370,7 @@ class VS_BruntVaisala_ML(AbstractVerticalSectionStyle):
         # norm = matplotlib.colors.BoundaryNorm(np.arange(0, 8.5, 0.5), cmap.N)
 
         cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, (curtain_cc ** 2) * 1e4, np.arange(0, 8.5, 0.5),
+                         curtain_p, curtain_cc, np.arange(0, 8.5 / 1e4, 0.5 / 1e4),
                          cmap=cmap, extend="max")
         pl_trop = ax.plot(self.lat_inds, tropo_p.reshape(-1), "o", color="k", zorder=100)
         plt.setp(pl_trop, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
