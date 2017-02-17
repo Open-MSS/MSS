@@ -1,4 +1,4 @@
-{% set version = "1.3.1" %}
+{% set version = "1.3.2" %}
 
 package:
     name: mss
@@ -22,7 +22,6 @@ requirements:
         - setuptools
     run:
         - python
-        # defaults has no basemap-data-hires for win-64
         - basemap 1.0.7
         - chameleon
         - execnet
@@ -40,8 +39,6 @@ requirements:
         - six
         - tk 8.5.*
         - pykml
-        # FIXME: Workaround until https://github.com/conda-forge/matplotlib-feedstock/issues/36 is fixed.
-        # - icu
 
 test:
     imports:
