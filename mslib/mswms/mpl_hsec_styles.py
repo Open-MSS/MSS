@@ -80,7 +80,7 @@ from matplotlib import patheffects
 
 # local application imports
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import Targets, get_log_levels
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib import thermolib
 
 """
@@ -539,44 +539,19 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         show_data = np.ma.masked_invalid(self.data[self.dataname]) * self.unit_scale
-        cbar_label = self.title
-
-        # colour scale of plot
-        cmap = plt.cm.rainbow
-
         # get cmin, cmax, cbar_log and cbar_format for level_key
         cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
-        if cmin is None or cmax is None:
-            cmin, cmax = show_data.min(), show_data.max()
-            if 0 < cmin < 0.05 * cmax:
-                cmin = 0.
+        cmin, cmax, clevs, cmap, norm = get_style_parameters(self.dataname, self.style, cmin, cmax, show_data)
 
-        if self.style == "default":
-            clevs = np.linspace(cmin, cmax, 16)
-        elif self.style == "auto":
-            cmin, cmax = show_data.min(), show_data.max()
-            clevs = np.linspace(cmin, cmax, 16)
-        elif self.style == "autolog":
-            cmin, cmax = show_data.min(), show_data.max()
-            clevs = get_log_levels(cmin, cmax, 16)
-        elif self.style == "log":
-            clevs = get_log_levels(cmin, cmax, 16)
-        elif self.style == "nonlinear":
-            clevs = Targets.get_thresholds(self.dataname)
-        else:
-            raise RuntimeError("Illegal plotting style?!")
-        norm = matplotlib.colors.BoundaryNorm(clevs, cmap.N)
+        tc = bm.contourf(lonmesh, latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
 
-        tc = bm.contourf(lonmesh, latmesh, show_data, levels=clevs,
-                         cmap=cmap, norm=norm)
-        pv = bm.contour(lonmesh, latmesh, self.data["ertel_potential_vorticity"],
-                        [2, 4, 8, 16],
-                        colors=(1.0, 1.0, 1.0, 1), linewidths=5, zorder=50)
-        ax.clabel(pv, fmt="%d", zorder=200)
-        pv = bm.contour(lonmesh, latmesh, self.data["ertel_potential_vorticity"],
-                        [2, 4, 8, 16],
-                        colors=(0.4, 0.4, 0.4, 1), linewidths=2, zorder=100)
-        ax.clabel(pv, fmt="%d", zorder=200)
+        for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in (self.contours):
+            cs_pv = ax.contour(lonmesh, latmesh, self.data[cont_data], cont_levels,
+                               colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
+            cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
+            if pe:
+                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
         if self.epsg == 77774020:
@@ -587,37 +562,21 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
             tick_pos = 'left'
 
         # Format for colorbar labels
-        clev_format = "%.3g"
-        mclev = np.abs(clevs).max()
-        if self.style != "log":
-            if 100. <= mclev < 10000.:
-                clev_format = "%4i"
-            if 10. <= mclev < 100.:
-                clev_format = "%.1f"
-            if 1. <= mclev < 10.:
-                clev_format = "%.2f"
-            if .1 <= mclev < 1.:
-                clev_format = "%.3f"
-            if .01 <= mclev < 0.1:
-                clev_format = "%.4f"
+        cbar_label = self.title
+        cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
 
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
-                                     norm=norm, label=cbar_label)
+                                     norm=norm, label=cbar_label, format=cbar_format)
             cbar.set_ticklabels(clevs)
             cbar.set_ticks(clevs)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax,
-                width="3%",  # width = % of parent_bbox width
-                height="40%",  # height : %
-                loc=cbar_location)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical",
-                                     format=clev_format, norm=norm)
+                ax, width="3%", height="40%", loc=cbar_location)
+            self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format)
 
             # adjust colorbar fontsize to figure height
-            figheight = self.fig.bbox.height
-            fontsize = figheight * 0.024
+            fontsize = self.fig.bbox.height * 0.024
             axins1.yaxis.set_ticks_position(tick_pos)
             for x in axins1.yaxis.majorTicks:
                 x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
@@ -626,19 +585,23 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
                 x.label2.set_fontsize(fontsize)
 
 
-def make_generic_class(entity, vert):
+def make_generic_class(entity, vert, add_data=None, add_contours=None, fix_styles=None):
+    if add_data is None:
+        add_data = [(vert, "ertel_potential_vorticity")]
+    if add_contours is None:
+        add_contours = [("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
+
     class fnord(HS_GenericStyle):
         name = entity + "_" + vert
         dataname = entity
-        title = entity
+        title = Targets.TITLES.get(entity, entity)
         long_name = entity
         units, unit_scale = Targets.get_unit(entity)
         if units:
             title += " ({})".format(units)
 
-        required_datafields = [
-            (vert, entity),
-            (vert, "ertel_potential_vorticity"), ]
+        required_datafields = [(vert, entity)] + add_data
+        contours = add_contours
 
     fnord.styles = list(fnord.styles)
     if Targets.get_thresholds(entity) is not None:
@@ -648,213 +611,41 @@ def make_generic_class(entity, vert):
             ("default", "fixed colour scale"),
             ("log", "fixed logarithmic colour scale")]
 
+    if fix_styles is not None:
+        fnord.styles = fix_styles
+
     return fnord
 
 
-for ent in Targets.get_targets():
-    globals()["HS_GenericStyle_PL_" + ent] = make_generic_class(ent, "pl")
-    globals()["HS_GenericStyle_TL_" + ent] = make_generic_class(ent, "tl")
+for type in ["pl", "ml", "tl"]:
+    for ent in Targets.get_targets():
+        globals()["HS_GenericStyle_{}_{}".format(type.upper(), ent)] = make_generic_class(ent, type)
 
+    globals()["HS_GenericStyle_{}_{}".format(type.upper(), "equivalent_latitude")] = make_generic_class(
+        "equivalent_latitude", type, [], [],
+        fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
+                    ("equivalent_latitude_sh", "southern hemisphere")])
+    globals()["HS_GenericStyle_{}_{}".format(type.upper(), "ertel_potential_vorticity")] = make_generic_class(
+        "ertel_potential_vorticity", type, [], [],
+        fix_styles=[("ertel_potential_vorticity_nh", "northern hemisphere"),
+                    ("ertel_potential_vorticity_sh", "southern hemisphere")])
 
-"""
-Gravity Wave Forecast
-"""
+    globals()["HS_GenericStyle_{}_{}".format(type.upper(), "square_of_brunt_vaisala_frequency_in_air")] = \
+        make_generic_class(
+            "square_of_brunt_vaisala_frequency_in_air", type, [], [],
+            fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 
+    globals()["HS_GenericStyle_{}_{}".format(type.upper(), "gravity_wave_temperature_perturbation")] = \
+        make_generic_class(
+            "gravity_wave_temperature_perturbation", type,
+            [("sfc", "tropopause_altitude")],
+            [("tropopause_altitude", [8, 10, 12, 14, 16], "dimgrey", "dimgrey", "solid", 2, True)],
+            fix_styles=[("gravity_wave_temperature_perturbation", "")])
 
-class HS_GravityWaveForecast_ML(MPLBasemapHorizontalSectionStyle):
-    """Pressure level version for Chemical Mixing ratios.
-    """
-    name = "GW"
-
-    title = "Gravity Wave Temperature Residual (K)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "gravity_wave_temperature_perturbation"),
-        ("sfc", "tropopause_altitude"),
-    ]
-    styles = [
-        ("default", "fixed colour scale"),
-        #        ("auto", "auto colour scale"), ]
-    ]
-
-    def _plot_style(self):
-        """
-        """
-        bm = self.bm
-        ax = self.bm.ax
-        data = self.data
-
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
-        show_data = np.ma.masked_invalid(data["gravity_wave_temperature_perturbation"])
-
-        cmap = plt.cm.Spectral_r
-        tc = bm.contourf(lonmesh, latmesh, show_data, [-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3], cmap=cmap)
-        tr = bm.contour(lonmesh, latmesh, data["tropopause_altitude"], [8, 10, 12, 14, 16],
-                        colors="dimgray", linewidths=2, zorder=100)
-        plt.setp(tr.collections, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
-        tr_lab = ax.clabel(tr, fmt="%d")
-        plt.setp(tr_lab, path_effects=[patheffects.withStroke(linewidth=2, foreground="w")])
-
-        if not self.noframe:
-            self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7, label="gw")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax,
-                width="1%",  # width = % of parent_bbox width
-                height="30%",  # height : %
-            )
-            self.fig.colorbar(tc, cax=axins1, ticks=[-3, -2, -1, 1, 2, 3], orientation="vertical", extend="both")
-            axins1.yaxis.set_ticks_position("left")
-            for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
-
-
-class HS_BruntVaisala_ML(MPLBasemapHorizontalSectionStyle):
-    """Pressure level version for Chemical Mixing ratios.
-    """
-    name = "BruntVaisala"
-
-    title = "Brunt Vaisala Frequency"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "brunt_vaisala_frequency_in_air"),
-        ("sfc", "tropopause_altitude"),
-    ]
-    styles = [
-        ("default", "fixed colour scale"),
-        #        ("auto", "auto colour scale"), ]
-    ]
-
-    def _plot_style(self):
-        """
-        """
-        bm = self.bm
-        ax = self.bm.ax
-        data = self.data
-
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
-        show_data = np.ma.masked_invalid(data["brunt_vaisala_frequency_in_air"])
-
-        cmap = plt.cm.Spectral_r
-        cmap = plt.cm.colors.ListedColormap(
-            [(1.0, 0.55000000000000004, 1.0, 1.0),
-             (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
-             (0.64666666666666672, 0.25, 1.0, 1.0),
-             (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
-             (0.69999999999999996, 1.0, 1.0, 1.0),
-             (0.0, 0.20000000000000001, 1.0, 1.0),
-             (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
-             (0.0, 0.69999999999999996, 0.0, 1.0),
-             (1.0, 1.0, 0.0, 1.0),
-             (1.0, 0.73529411764705888, 0.0, 1.0),
-             (1.0, 0.46323529411764708, 0.0, 1.0),
-             (1.0, 0.21568627450980393, 0.0, 1.0),
-             (1.0, 0.034313725490196068, 0.0, 1.0),
-             (0.8294117647058824, 0.0, 0.071078431372549017, 1.0),
-             (0.61176470588235299, 0.0, 0.16176470588235295, 1.0),
-             (0.40000000000000002, 0.0, 0.25, 1.0),
-             ], name="n2_map")
-        cmap.set_over((0.8, 0.8, 0.8, 1.0))
-        tr = bm.contour(lonmesh, latmesh, data["tropopause_altitude"], [8, 10, 12, 14, 16],
-                        colors="dimgrey", linewidths=2, zorder=100)
-        plt.setp(tr.collections, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
-        tr_lab = ax.clabel(tr, fmt="%d")
-        plt.setp(tr_lab, path_effects=[patheffects.withStroke(linewidth=2, foreground="w")])
-        show_data = (show_data ** 2) * 1e4
-        tc = bm.contourf(lonmesh, latmesh, show_data, np.arange(0, 8.5, 0.5),
-                         cmap=cmap, extend="max")
-
-        if not self.noframe:
-            self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7, label="gw")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax,
-                width="1%",  # width = % of parent_bbox width
-                height="30%",  # height : %
-            )
-            self.fig.colorbar(tc, cax=axins1, orientation="vertical", extend="max")
-            axins1.yaxis.set_ticks_position("left")
-            for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
-
-
-class HS_ThermalTropoStyle_ML(MPLBasemapHorizontalSectionStyle):
-    """Dynamical tropopause plots (2-PVU level). Three styles are available:
-       Pressure, potential temperature, and geopotential height.
-    """
-    name = "ThermTropo01"
-    title = "Thermal Tropopause"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("sfc", "tropopause_altitude")]
-
-    styles = [
-        ("default", "fixed colour scale")]
-
-    def _plot_style(self):
-        """
-        """
-        bm = self.bm
-        ax = self.bm.ax
-        data = self.data
-
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
-        # Default style is pressure.
-        filled_contours = np.arange(5, 15, 0.25)
-        thin_contours = np.arange(5, 15, 0.500)
-        vardata = data["tropopause_altitude"]
-        label = "Thermal Tropopause Altitude (km)"
-        fcmap = plt.cm.terrain
-
-        # Filled contour plot of pressure/geop./pot.temp. Extend the colourbar
-        # to fill regions whose values exceed the colourbar range.
-        contours = bm.contourf(lonmesh, latmesh, vardata,
-                               filled_contours, cmap=fcmap, extend="both")
-        if not self.noframe:
-            cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label(label)
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
-
-        # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, vardata,
-                        thin_contours, colors="yellow",
-                        linewidths=0.5, linestyles="solid")
-        ax.clabel(cs, thin_contours[::2], colors="red", fontsize=11, fmt='%i')
-
-        titlestring = "Thermal Tropopause Geopotential Height (km)"
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += '\nValid: %s (step %i hrs from %s)' % \
-            (self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-             time_step_hrs,
-             self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
-
-        if not self.noframe:
-            ax.set_title(titlestring,
-                         horizontalalignment='left', x=0, fontsize=14)
-        else:
-            ax.text(bm.llcrnrx, bm.llcrnry, titlestring,
-                    fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
+HS_GenericStyle_SFC_tropopause_altitude = make_generic_class(
+    "tropopause_altitude", "sfc", [],
+    [("tropopause_altitude", np.arange(5, 16.1, 0.500), "yellow", "red", "solid", 0.5, False)],
+    fix_styles=[("tropopause_altitude", "tropopause_altitude")])
 
 
 class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
