@@ -105,7 +105,7 @@ class MplCanvas(FigureCanvas):
         self.default_filename = ""
         if title:
             self.default_filename += "_{:>5}".format(title.split()[0])
-        if isinstance(style, basestring):
+        if isinstance(style, basestring) and style:
             title += u' ({})'.format(style)
         if isinstance(level, basestring):
             title += u' at {}'.format(level)
