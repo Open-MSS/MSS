@@ -158,8 +158,6 @@ class Ui_MSSMainWindow(object):
         self.menu_View.addAction(self.actionTopView)
         self.menu_View.addAction(self.actionSideView)
         self.menu_View.addAction(self.actionTableView)
-        self.menu_View.addSeparator()
-        self.menu_View.addSeparator()
         self.menu_Tools.addAction(self.actionTrajectoryToolLagranto)
         self.menu_Tools.addAction(self.actionTimeSeriesViewTrajectories)
         self.menu_Tools.addSeparator()

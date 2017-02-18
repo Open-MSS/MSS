@@ -177,8 +177,6 @@
     <addaction name="actionTopView"/>
     <addaction name="actionSideView"/>
     <addaction name="actionTableView"/>
-    <addaction name="separator"/>
-    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menu_Tools">
     <property name="title">
