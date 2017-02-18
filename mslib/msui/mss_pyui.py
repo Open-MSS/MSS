@@ -210,11 +210,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionTopView.triggered.connect(self.createNewView)
         self.actionSideView.triggered.connect(self.createNewView)
         self.actionTableView.triggered.connect(self.createNewView)
-        self.actionLoopView.triggered.connect(self.createNewView)
-        self.actionTimeSeriesViewTrajectories.triggered.connect(self.createNewView)
 
         # Tools menu.
         self.actionTrajectoryToolLagranto.triggered.connect(self.createNewTool)
+        self.actionTimeSeriesViewTrajectories.triggered.connect(self.createNewTool)
+        self.actionLoopView.triggered.connect(self.createNewTool)
 
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.showOnlineHelp)
@@ -374,14 +374,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         elif self.sender() == self.actionTableView:
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
-        elif self.sender() == self.actionTimeSeriesViewTrajectories:
-            # Time series view.
-            view_window = timeseriesview.MSSTimeSeriesViewWindow()
-        elif self.sender() == self.actionLoopView:
-            # Loop view.
-            # ToDo check order
-            view_window = loopview.MSSLoopWindow(
-                config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -404,6 +396,14 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Trajectory tool.
             tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews,
                                                                       viewsChanged=self.viewsChanged)
+        elif self.sender() == self.actionTimeSeriesViewTrajectories:
+            # Time series view.
+            tool_window = timeseriesview.MSSTimeSeriesViewWindow()
+        elif self.sender() == self.actionLoopView:
+            # Loop view.
+            # ToDo check order
+            tool_window = loopview.MSSLoopWindow(
+                config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
 
         if tool_window is not None:
             # Make sure view window will be deleted after being closed, not

@@ -139,7 +139,7 @@
      <x>0</x>
      <y>0</y>
      <width>424</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -177,16 +177,15 @@
     <addaction name="actionTopView"/>
     <addaction name="actionSideView"/>
     <addaction name="actionTableView"/>
-    <addaction name="separator"/>
-    <addaction name="actionLoopView"/>
-    <addaction name="separator"/>
-    <addaction name="actionTimeSeriesViewTrajectories"/>
    </widget>
    <widget class="QMenu" name="menu_Tools">
     <property name="title">
      <string>&amp;Tools</string>
     </property>
     <addaction name="actionTrajectoryToolLagranto"/>
+    <addaction name="actionTimeSeriesViewTrajectories"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoopView"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
