@@ -112,8 +112,8 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """
         if self.parent is not None:
             self.parent.takeItem(self.parent.row(self))
-            if self.parent.parent is not None:
-                self.viewsChanged.emit()
+        if self.viewsChanged is not None:
+            self.viewsChanged.emit()
 
 
 #
@@ -395,13 +395,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if self.sender() == self.actionTrajectoryToolLagranto:
             # Trajectory tool.
             tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews,
+                                                                      listtools=self.listTools,
                                                                       viewsChanged=self.viewsChanged)
         elif self.sender() == self.actionTimeSeriesViewTrajectories:
             # Time series view.
             tool_window = timeseriesview.MSSTimeSeriesViewWindow()
         elif self.sender() == self.actionLoopView:
             # Loop view.
-            # ToDo check order
             tool_window = loopview.MSSLoopWindow(
                 config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
 
@@ -412,9 +412,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Open as a non-modal window.
             tool_window.show()
             # Add an entry referencing the new view to the list of views.
-            listitem = QActiveViewsListWidgetItem(tool_window, self.listTools)
-            if hasattr(tool_window, "moduleCloses"):
-                tool_window.moduleCloses.connect(listitem.view_destroyed)
+            listitem = QActiveViewsListWidgetItem(tool_window, self.listTools, self.viewsChanged)
+            tool_window.viewCloses.connect(listitem.view_destroyed)
+            self.viewsChanged.emit()
 
     def activateSubWindow(self, item):
         """When the user clicks on one of the open view or tool windows, this
