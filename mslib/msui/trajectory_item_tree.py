@@ -650,7 +650,7 @@ class TrajectoryItem(LagrantoMapItem):
         if column < 5:
             return LagrantoMapItem.treeViewData(self, column)
         elif column == 5:
-            return '{} for {:d} hrs' \
+            return '{} for {:f} hrs' \
                 .format(self.getStartTime().strftime('%Y-%m-%d %H:%M UTC'),
                         self.timeVariableChild.getVariableData()[-1])
         elif column == 6:
