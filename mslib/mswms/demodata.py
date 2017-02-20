@@ -880,6 +880,7 @@ class DataFiles(object):
     def __init__(self, data_dir=None, server_config_dir=None):
         self.data_dir = data_dir
         self.server_config_file = os.path.join(server_config_dir, "mss_wms_settings.py")
+        self.server_auth_config_file = os.path.join(server_config_dir, "mss_wms_auth.py")
         self.inidate = '20121017_12'
         self.levtype = 'type'
         self.range_data = RangeData().data
@@ -904,6 +905,25 @@ class DataFiles(object):
             os.makedirs(self.data_dir)
 
     def create_server_config(self, detailed_information=False):
+        simple_auth_config = '''
+#
+# HTTP Authentication                               ###
+#
+
+# If you require basic HTTP authentication, set the following variable
+# to True. Add usernames in the list "allowed:users". Note that the
+# passwords are not specified in plain text but by their md5 digest.
+enable_basic_http_authentication = False
+
+
+#
+# Use the following code to create a new md5 digest of a password (e.g. in
+# ipython):
+#     import hashlib; hashlib.md5("my_new_password").hexdigest()
+allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
+                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
+
+        '''
         if detailed_information:
             simple_server_config = '''"""
 
@@ -1026,6 +1046,14 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
             print(u'''
 /!\ existing server config: "{}" for demodata not overwritten!
             '''.format(self.server_config_file))
+        if not os.path.exists(self.server_auth_config_file):
+            fid = open(self.server_auth_config_file, 'w')
+            fid.write(simple_auth_config)
+            fid.close()
+        else:
+            print(u'''
+/!\ existing server auth config: "{}" for demodata not overwritten!
+                '''.format(self.server_auth_config_file))
 
     def hybrid_data(self):
         self.levtype = 'ml'

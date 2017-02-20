@@ -26,29 +26,9 @@ import mslib.mswms
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
 
-
-# HTTP Authentication                               ###
-#
-
-# If you require basic HTTP authentication, set the following variable
-# to True. Add usernames in the list "allowed:users". Note that the
-# passwords are not specified in plain text but by their md5 digest.
-#enable_basic_http_authentication = False
-
-# Use the following code to create a new md5 digest of a password (e.g. in
-# ipython):
-#     import hashlib; hashlib.md5("my_new_password").hexdigest()
-#allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
-#                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
-
-
-
-
 # xml_template directory is a sub directory of mswms
 #base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 #xml_template_location = os.path.join(base_dir, "xml_templates")
-
-
 
 _vt_cache = os.path.join(os.path.expanduser("~"), "mss", "vt_cache")
 mslib.mswms.dataaccess.valid_time_cache = _vt_cache

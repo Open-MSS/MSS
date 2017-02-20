@@ -96,10 +96,20 @@ except ImportError, e:
         service_access_constraints = "This service is intended for research purposes only."
         register_horizontal_layers = []
         register_vertical_layers = []
-        enable_basic_http_authentication = False
         nwpaccess = {
             "ecmwf_NH_LL05": os.path.join(tempfile.gettempdir(), "mss/grid/ecmwf/netcdf")
         }
+        __file__ = None
+
+try:
+    import mss_wms_auth
+except ImportError, e:
+    logging.warning("Couldn't import mss_wms_auth (ImportError:'{}'), creating dummy config.".format(e))
+
+    class mss_wms_auth(object):
+        enable_basic_http_authentication = False
+        allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
+                         ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
 from mslib.mswms import mss_plot_driver
