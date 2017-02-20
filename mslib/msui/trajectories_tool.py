@@ -112,14 +112,6 @@ class MSSTrajectoriesToolWindow(mss_qt.MSSViewWindow, ui.Ui_TrajectoriesWindow):
                          self.updateViews)
             self.updateViews()
 
-    def closeEvent(self, event):
-        """Ask user if he/she wants to close the window.
-
-        Overloads MSSViewWindow.closeEvent() and emits the signal
-        'moduleCloses()'.
-        """
-        if super(MSSTrajectoriesToolWindow, self).closeEvent(event):
-            self.emit(QtCore.SIGNAL("moduleCloses()"))
 
     def loadFlightTrack(self):
         """Slot for the 'Open Flight Track..' menu entry. Opens a file dialog
