@@ -425,7 +425,7 @@ class MSSMainWindow(QtGui.QMainWindow, ui.Ui_MSSMainWindow):
             tool_window.show()
             # Add an entry referencing the new view to the list of views.
             listitem = QActiveViewsListWidgetItem(tool_window, self.listTools)
-            self.connect(tool_window, QtCore.SIGNAL("moduleCloses()"),
+            self.connect(tool_window, QtCore.SIGNAL("viewCloses()"),
                          listitem.view_destroyed)
 
     def activateWindow(self, item):
