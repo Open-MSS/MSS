@@ -52,7 +52,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
     name = "Trajectories Tool"
     moduleCloses = QtCore.pyqtSignal(name="moduleCloses")
 
-    def __init__(self, parent=None, listviews=None, viewsChanged=None):
+    def __init__(self, parent=None, listviews=None, listtools=None, viewsChanged=None):
         """
         """
         super(MSSTrajectoriesToolWindow, self).__init__(parent)
@@ -80,6 +80,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Pointer to the QListWidget that accomodates the views that are
         # open in the MSUI.
         self.listviews = listviews
+        self.listtools = listtools
 
         # Connect Qt SIGNALs:
         # ===================
@@ -399,32 +400,29 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         view_name = self.cbPlotInView.currentText()
-        if unicode(view_name) != "None":
-            view_item = self.listviews.findItems(view_name,
-                                                 QtCore.Qt.MatchContains)[0]
+        selection = self.selectedMapElements()
+        if unicode(view_name) != "None" and len(selection) > 0:
+            view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
+                         self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
             logging.debug("Plotting selected elements in view <%s>", view_name)
             # Connect the trajectory tree to the view.
             view_window = view_item.window
             view = view_window.getView()
-            if hasattr(view, "setTrajectoryModel"):
-                if view_window not in self.connected_views:
-                    logging.debug("Connecting to view window <%s>",
-                                  view_window.identifier)
-                    self.connected_views.append(view_window)
-                    view.setTrajectoryModel(self.traj_item_tree)
-                self.traj_item_tree.setItemVisibleInView_list(
-                    self.selectedMapElements(), view_item.window, True)
-            else:
-                logging.error("View window <%s> does not support display of trajectories",
+            if view_window not in self.connected_views:
+                logging.debug("Connecting to view window <%s>",
                               view_window.identifier)
+                self.connected_views.append(view_window)
+                view.setTrajectoryModel(self.traj_item_tree)
+            self.traj_item_tree.setItemVisibleInView_list(
+                selection, view_item.window, True)
 
     def removeCurrentItemFromView(self):
         """
         """
         view_name = self.cbRemoveFromView.currentText()
         if unicode(view_name) != "None":
-            view_item = self.listviews.findItems(view_name,
-                                                 QtCore.Qt.MatchContains)[0]
+            view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
+                         self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
             logging.debug("Removing selected elements from view <%s>", view_name)
             self.traj_item_tree.setItemVisibleInView_list(
                 self.selectedMapElements(), view_item.window, False)
@@ -446,9 +444,12 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         self.cbPlotInView.addItem("None")
         self.cbRemoveFromView.addItem("None")
         # Add all available views.
-        for i in self.listviews.findItems("(", QtCore.Qt.MatchContains):
-            self.cbPlotInView.addItem(i.text())
-            self.cbRemoveFromView.addItem(i.text())
+        for i in (self.listviews.findItems("(", QtCore.Qt.MatchContains) +
+                  self.listtools.findItems("(", QtCore.Qt.MatchContains)):
+            i_view = i.window.getView()
+            if hasattr(i_view, "setTrajectoryModel"):
+                self.cbPlotInView.addItem(i.text())
+                self.cbRemoveFromView.addItem(i.text())
         # Restore the old selection (set "None" if the selected view was
         # closed).
         index = self.cbPlotInView.findText(item_plot)
