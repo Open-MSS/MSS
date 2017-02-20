@@ -10,7 +10,7 @@ server (simply execute this file with Python).
 import paste.httpserver
 import argparse
 import logging
-from wms import mss_wms_settings
+from wms import mss_wms_settings, mss_wms_auth
 
 
 def main():
@@ -41,7 +41,7 @@ def main():
                             datefmt="%Y-%m-%d %H:%M:%S")
 
     from mslib.mswms.wms import application
-    if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
+    if mss_wms_auth.__dict__.get('enable_basic_http_authentication', False):
         logging.debug("Enabling basic HTTP authentication. Username and "
                       "password required to access the service.")
 
@@ -51,7 +51,7 @@ def main():
         realm = 'Mission Support Web Map Service'
 
         def authfunc(environ, username, password):
-            for u, p in mss_wms_settings.allowed_users:
+            for u, p in mss_wms_auth.allowed_users:
                 if (u == username) and (p == hashlib.md5(password).hexdigest()):
                     return True
             return False

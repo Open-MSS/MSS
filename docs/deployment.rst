@@ -59,6 +59,7 @@ Our examples are based on the following directories located in the home director
  .
  ├── config
  │   └── mss_wms_settings.py
+ |   └── mss_wms_auth.py
  ├── log
  │   └── mss_error.log
  ├── miniconda2
@@ -108,6 +109,8 @@ You can setup a vhost for this service.
  .. literalinclude:: samples/wsgi/wms.wsgi
 
 
+
+
 Configuration of wsgi auth
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -117,6 +120,10 @@ To restrict access to your data use this script.
 
 
  .. literalinclude:: samples/wsgi/auth.wsgi
+
+This needs also a configuration script.
+
+ .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
 
 
 Configuration of your site as vhost
@@ -169,6 +176,7 @@ This script does not overwrite an existing mss_wms_settings.py
 
     mss
     ├── mss_wms_settings.py
+    ├── mss_wms_auth.py
     ├── testdata
     │   ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
     │   ├── 20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc
@@ -189,8 +197,10 @@ e.g.
 
     $ export PYTHONPATH=~/mss
 
- .. _detailed_mss_wms_settings:
+
 
 A more detailed server configuration for this demodata can be found at
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
 
+For setting authentication see
+ .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
