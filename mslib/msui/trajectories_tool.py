@@ -287,7 +287,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         colour = str(self.cbColour.currentText())
         if colour == 'None':
-            colour = None
+            colour = "blue"
         indices = self.selectedMapElements()
         if len(indices) == 1:
             logging.debug("Changing colour of element %s",
@@ -306,7 +306,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         lineStyle = str(self.cbLineStyle.currentText())
         if lineStyle == 'None':
-            lineStyle = None
+            lineStyle = "-"
         indices = self.selectedMapElements()
         if len(indices) == 1:
             logging.debug("Changing line style of element %s",
@@ -408,13 +408,13 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # Connect the trajectory tree to the view.
             view_window = view_item.window
             view = view_window.getView()
+            self.traj_item_tree.setItemVisibleInView_list(
+                selection, view_item.window, True)
             if view_window not in self.connected_views:
                 logging.debug("Connecting to view window <%s>",
                               view_window.identifier)
                 self.connected_views.append(view_window)
                 view.setTrajectoryModel(self.traj_item_tree)
-            self.traj_item_tree.setItemVisibleInView_list(
-                selection, view_item.window, True)
 
     def removeCurrentItemFromView(self):
         """
@@ -426,7 +426,6 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             logging.debug("Removing selected elements from view <%s>", view_name)
             self.traj_item_tree.setItemVisibleInView_list(
                 self.selectedMapElements(), view_item.window, False)
-            # TODO: Disconnect tree model from view if no item is displayed!! (2010-08-27)
 
     def updateViews(self):
         """Update the list of views in the comboboxes cbPlotInView and
@@ -438,6 +437,8 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Remember the currently selected views in the comboboxes.
         item_plot = self.cbPlotInView.currentText()
         item_remove = self.cbRemoveFromView.currentText()
+
+        old_views = [self.cbPlotInView.itemText(i) for i in range(self.cbPlotInView.count())]
         # Clear the boxes, add the "None" view.
         self.cbPlotInView.clear()
         self.cbRemoveFromView.clear()
@@ -456,6 +457,19 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         self.cbPlotInView.setCurrentIndex(index if index >= 0 else 0)
         index = self.cbRemoveFromView.findText(item_remove)
         self.cbRemoveFromView.setCurrentIndex(index if index >= 0 else 0)
+
+        new_views = [self.cbPlotInView.itemText(i) for i in range(self.cbPlotInView.count())]
+        missing_views = [unicode(_x) for _x in old_views if _x not in new_views]
+        stack = [_x for _x in self.traj_item_tree.getRootItem().childItems]
+        while len(stack) > 0:
+            # Downwards traversal of the tree to determine all visible items
+            # below the items that are on the stack.
+            item = stack.pop()
+            if hasattr(item, "views"):
+                item.views = [_x for _x in item.views if _x not in missing_views]
+            if hasattr(item, "childItems"):
+                stack.extend(item.childItems)
+        self.connected_views = [_x for _x in self.connected_views if _x not in missing_views]
 
     def getItemTree(self):
         """

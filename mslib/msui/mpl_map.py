@@ -157,6 +157,10 @@ class MapCanvas(basemap.Basemap):
         if traj_item_tree is not None:
             self.set_trajectory_tree(traj_item_tree)
 
+        # The View may be destroyed and then this class is left dangling due to the connected
+        # trajectories unless we disconnect it.
+        self.ax.figure.canvas.destroyed.connect(self.disconnectTrajectories)
+
     def set_identifier(self, identifier):
         self.identifier = identifier
 
@@ -515,6 +519,10 @@ class MapCanvas(basemap.Basemap):
         self.traj_item_tree.dataChanged.connect(self.update_from_trajectory_tree)
         # Draw tree items.
         self.update_trajectory_items()
+
+    def disconnectTrajectories(self):
+        if self.traj_item_tree is not None:
+            self.traj_item_tree.dataChanged.disconnect(self.update_from_trajectory_tree)
 
     def update_from_trajectory_tree(self, index1, index2):
         """This method should be connected to the 'dataChanged()' signal
