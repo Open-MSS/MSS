@@ -293,7 +293,7 @@ class WMSMapFetcher(QtCore.QObject):
             if len(self.maps) > 0:
                 self.process.emit()
             self.finished.emit(
-                map_img, legend_img,  kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"], kwargs["time"],
+                map_img, legend_img, kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"], kwargs["time"],
                 md5_filename)
         except Exception, ex:
             logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
@@ -578,7 +578,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     @QtCore.pyqtSlot()
     def displayProgressDialog(self):
+        logging.debug("showing progress dialog")
+        self.pdlg.reset()
         self.pdlg.setValue(5)
+        self.pdlg.setModal(True)
         self.pdlg.show()
 
     def getCapabilities(self):
@@ -1289,24 +1292,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         bbox -- bounding box as list of four floats
         width, height -- width and height of requested image in pixels
 
-        Returns: a lot..
-        return img, legend_img, layer, style, init_time, valid_time, complete_level
-        with
-        img, legend_img -- PIL image objects
-        layer, style, complete_level -- string objects
-        init_time, valid_time -- datetime objects
         """
-
-        # Show the progress dialog, (a) since the retrieval can take a few
-        # seconds, and (b) to allow for cancellation of the request by the
-        # user.
-        self.pdlg.setValue(0)
-        self.pdlg.setModal(True)
-        self.pdlg.reset()
-
-        # Stores the image to be returned. If an error occurs, None will be
-        # returned.
-        img = None
 
         # Get layer and style names.
         layer = self.getLayer()
@@ -1371,7 +1357,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
             # If caching is enabled, get the URL and check the image cache
             # directory for the suitable image file.
-            cache_hit = False
             if self.cachingEnabled():
                 prefetch_config = config_loader(dataset="wms_prefetch", default=mss_default.wms_prefetch)
                 prefetch_entries = ["validtime_fwd", "validtime_bck", "level_up", "level_down"]
@@ -1406,6 +1391,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
             md5_filename = self.getMD5Filename(kwargs)
             self.expected_img = md5_filename
+            self.pdlg.reset()
             self.fetch.emit([(kwargs, md5_filename, self.cachingEnabled(), legend_kwargs)])
 
         except Exception as ex:
@@ -1413,6 +1399,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     @QtCore.pyqtSlot(object, object, object, object, object, object, object)
     def continueRetrieveImage(self, img, legend_img, layer, style, init_time, valid_time, md5_filename):
+        logging.debug("{} {} {}".format(self.pdlg.wasCanceled(), self.expected_img != md5_filename, md5_filename))
         if self.pdlg.wasCanceled() or self.expected_img != md5_filename:
             return
         self.pdlg.close()
