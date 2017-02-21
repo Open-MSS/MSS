@@ -99,6 +99,7 @@ except ImportError, e:
         nwpaccess = {
             "ecmwf_NH_LL05": os.path.join(tempfile.gettempdir(), "mss/grid/ecmwf/netcdf")
         }
+        enable_basic_http_authentication = False
         __file__ = None
 
 try:
@@ -107,7 +108,6 @@ except ImportError, e:
     logging.warning("Couldn't import mss_wms_auth (ImportError:'{}'), creating dummy config.".format(e))
 
     class mss_wms_auth(object):
-        enable_basic_http_authentication = False
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None

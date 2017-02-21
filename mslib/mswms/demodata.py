@@ -909,13 +909,6 @@ class DataFiles(object):
 #
 # HTTP Authentication                               ###
 #
-
-# If you require basic HTTP authentication, set the following variable
-# to True. Add usernames in the list "allowed:users". Note that the
-# passwords are not specified in plain text but by their md5 digest.
-enable_basic_http_authentication = False
-
-
 #
 # Use the following code to create a new md5 digest of a password (e.g. in
 # ipython):
@@ -954,22 +947,13 @@ import mslib.mswms
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
 
-
+#
 # HTTP Authentication                               ###
 #
-
 # If you require basic HTTP authentication, set the following variable
 # to True. Add usernames in the list "allowed:users". Note that the
 # passwords are not specified in plain text but by their md5 digest.
 #enable_basic_http_authentication = False
-
-# Use the following code to create a new md5 digest of a password (e.g. in
-# ipython):
-#     import hashlib; hashlib.md5("my_new_password").hexdigest()
-#allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
-#                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
-
-
 
 
 # xml_template directory is a sub directory of mswms

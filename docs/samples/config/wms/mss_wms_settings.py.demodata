@@ -8,6 +8,15 @@ from mslib.mswms import mpl_vsec_styles
 import mslib.mswms
 
 
+#
+# HTTP Authentication                               ###
+#
+
+# If you require basic HTTP authentication, set the following variable
+# to True. Add usernames in the list "allowed:users". Note that the
+# passwords are not specified in plain text but by their md5 digest.
+#enable_basic_http_authentication = False
+
 # Configuration for mss_wms_settings accessing data on the MSS server.
 # This is the data organisation structure of demodata.
 
