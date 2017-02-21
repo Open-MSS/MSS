@@ -7,12 +7,13 @@ AUTHORS:
 """
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
+import logging
+import pykml.parser
 
 # local application imports
+from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
-import pykml.parser
 
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
@@ -90,13 +91,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.patch = None
             self.cbOverlay.setEnabled(False)
         try:
-            with open(self.leFile.text()) as kmlf:
+            with open(unicode(self.leFile.text())) as kmlf:
                 self.kml = pykml.parser.parse(kmlf).getroot()
                 self.patch = KMLPatch(self.view.map, self.kml, self.get_color())
             self.cbOverlay.setEnabled(True)
             if self.view is not None and self.cbOverlay.isChecked():
                 self.view.plotKML(self.patch)
-        except IOError, ex:
-            QtWidgets.QMessageBox.critical(self, self.tr("KML Overlay"),
-                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)),
-                                           QtWidgets.QMessageBox.Ok)
+        except (IOError, pykml.parser.etree.XMLSyntaxError), ex:
+            logging.error("KML Overlay - %s: %s", type(ex), ex)
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("KML Overlay"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))

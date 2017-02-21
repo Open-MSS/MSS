@@ -36,7 +36,7 @@ import os
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtCore, QtGui
+from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets
 import numpy
 
 try:
@@ -130,7 +130,7 @@ class AbstractLagrantoDataItem:
             s = ''
             try:
                 s += u'time({})'.format(self.gxElements['general'][
-                                            'timeMarkerInterval'].strftime('%H:%M'))
+                                        'timeMarkerInterval'].strftime('%H:%M'))
             except Exception, ex:
                 logging.debug("caught a wildcard Exception: {}, {}".format(type(ex), ex))
             return s
@@ -431,7 +431,7 @@ class FlightTrackItem(LagrantoMapItem):
 
         if self.nafile is None:
             logging.error("could not read NASA Ames file")
-            return
+            raise RuntimeError("could not read NASA Ames file")
 
         #
         # Add all variable names contained in self.data as child nodes, so
@@ -499,8 +499,13 @@ class FlightTrackItem(LagrantoMapItem):
             return
         #
         # Open the NASA Ames file and read the data.
-        self.nafile = nappy.openNAFile(self.nasFileName)
-        self.nafile.readData()
+        try:
+            self.nafile = nappy.openNAFile(self.nasFileName)
+            self.nafile.readData()
+        except TypeError, ex:  # catch TypeError as nappy itself triggers Exception when raising
+            self.nafile = None
+            logging.error(u"%s %s", type(ex), ex)
+            return
         #
         # Convert variable array of nafile from 'list' to 'NumPy array' for
         # faster access (the array can be large!).
