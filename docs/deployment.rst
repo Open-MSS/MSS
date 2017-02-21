@@ -121,7 +121,7 @@ To restrict access to your data use this script.
 
  .. literalinclude:: samples/wsgi/auth.wsgi
 
-This needs also a configuration script.
+This needs also a configuration **/home/mss/config/mss_wms_auth.py** script.
 
  .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
 
@@ -165,8 +165,8 @@ For the standalone server *mswms* you need the path of your mss_wms_settings.py 
 
 .. _demodata:
 
-Demodata
-------------------
+demodata - simulated data
+==============================
 
 We provide demodata by executing the demodata programm. This creates in your home directory data files and also
 the needed server configuration file. The program creates 70MB of examples.
@@ -199,8 +199,10 @@ e.g.
 
 
 
-A more detailed server configuration for this demodata can be found at
+Detailed server configuration *mss_wms_settings.py* for this demodata
+
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
 
-For setting authentication see
+For setting authentication see *mss_wms_auth.py*
+
  .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample

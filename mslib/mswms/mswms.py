@@ -41,7 +41,7 @@ def main():
                             datefmt="%Y-%m-%d %H:%M:%S")
 
     from mslib.mswms.wms import application
-    if mss_wms_auth.__dict__.get('enable_basic_http_authentication', False):
+    if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
         logging.debug("Enabling basic HTTP authentication. Username and "
                       "password required to access the service.")
 
