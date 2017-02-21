@@ -916,13 +916,27 @@ class DataFiles(object):
 allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                  ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
 
-        '''
+'''
         if detailed_information:
             simple_server_config = '''"""
 
 simple server config for demodata
 """
 import os
+import sys
+
+# Configuration of Python's code search path
+# If you already have set up the PYTHONPATH environment variable for the
+# stuff you see below, you don't need to do a1) and a2).
+
+# a1) Path of the directory where the mss code package is located.
+# sys.path.insert(0, '/home/mss/miniconda2/lib/python2.7/site-packages')
+
+# a2) Path of the directory where mss_wms_settings.py is located
+#MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
+#sys.path.insert(0, MSSCONFIGPATH)
+#os.chdir(MSSCONFIGPATH)
+
 import mslib.mswms.dataaccess
 from mslib.mswms import mpl_hsec_styles
 from mslib.mswms import mpl_vsec_styles
