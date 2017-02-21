@@ -594,9 +594,25 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", help="show version", action="store_true", default=False
-                        )
+    parser.add_argument("--version", help="show version", action="store_true", default=False)
+    parser.add_argument("--debug", help="show debugging log messages", action="store_true", default=False)
     args = parser.parse_args()
+
+    # Log everything, and send it to stderr.
+    # See http://docs.python.org/library/logging.html for more information
+    # on the Python logging module.
+    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
+    logger = logging.getLogger()
+    # this is necessary as "someone" has already initialized logging, preventing basicConfig from doing stuff
+    for h in logger.handlers:
+        logger.removeHandler(h)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG,
+                            format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
+                            datefmt="%Y-%m-%d %H:%M:%S")
+    else:
+        logging.basicConfig(level=logging.INFO)
+
     if args.version:
         print "***********************************************************************"
         print "\n            Mission Support System (mss)\n"
@@ -604,6 +620,7 @@ def main():
         print "Documentation: http://mss.rtfd.io"
         print "Version:", __version__
         print "\nSystem is loading.."
+
     logging.info("Launching user interface...")
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = MSSMainWindow()
@@ -617,11 +634,4 @@ def main():
 #
 
 if __name__ == "__main__":
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
     main()
