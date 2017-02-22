@@ -129,8 +129,7 @@ class AbstractLagrantoDataItem:
             # Item markers.
             s = ''
             try:
-                s += u'time({})'.format(self.gxElements['general'][
-                                        'timeMarkerInterval'].strftime('%H:%M'))
+                s += u'time({})'.format(self.gxElements['general']['timeMarkerInterval'].strftime('%H:%M'))
             except Exception, ex:
                 logging.debug("caught a wildcard Exception: {}, {}".format(type(ex), ex))
             return s
