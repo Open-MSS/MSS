@@ -345,7 +345,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         norm = None
         clev = np.arange(5, 16.1, 0.25)
     else:
-        raise RuntimeError("Illegal plotting style?! ({})".format(style))
+        raise RuntimeError(u"Illegal plotting style?! ({})".format(style))
 
     return cmin, cmax, clev, cmap, norm
 

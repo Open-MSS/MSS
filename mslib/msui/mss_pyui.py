@@ -94,13 +94,11 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """Add ID number to the title of the corresponing view window.
         """
         QActiveViewsListWidgetItem.opened_views += 1
-        view_name = "(%i) %s" % (QActiveViewsListWidgetItem.opened_views,
-                                 view_window.name)
+        view_name = u"({:d}) {}".format(QActiveViewsListWidgetItem.opened_views, view_window.name)
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, type)
 
-        view_window.setWindowTitle("(%i) %s" %
-                                   (QActiveViewsListWidgetItem.opened_views,
-                                    view_window.windowTitle()))
+        view_window.setWindowTitle(u"({:d}) {}".format(
+            QActiveViewsListWidgetItem.opened_views, view_window.windowTitle()))
         view_window.setIdentifier(view_name)
         self.window = view_window
         self.parent = parent
@@ -173,7 +171,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         """
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
-        self.lblVersion.setText("Version: %s" % __version__)
+        self.lblVersion.setText(u"Version: {}".format(__version__))
 
 #
 # MAIN WINDOW
@@ -244,7 +242,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except Exception, ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         import_plugins, type(ex), ex)))
                 continue
             try:
@@ -252,7 +250,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except AttributeError, ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         import_plugins, type(ex), ex)))
                 continue
 
@@ -264,7 +262,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except Exception, ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         import_plugins, type(ex), ex)))
                 continue
             try:
@@ -272,7 +270,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except Exception, ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error"),
-                    self.tr("ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
+                    self.tr(u"ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
                         export_plugins, type(ex), ex)))
                 continue
 
@@ -282,7 +280,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         full_name = "actionImportFlightTrack" + name.replace(" ", "")
 
         if hasattr(self, full_name):
-            raise ValueError("'{}' has already been set!".format(full_name))
+            raise ValueError(u"'{}' has already been set!".format(full_name))
 
         action = QtWidgets.QAction(self)
         action.setObjectName(_fromUtf8(full_name))
@@ -297,10 +295,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
-                except (SyntaxError, IndexError), e:
+                except (SyntaxError, IndexError), ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
-                        self.tr("ERROR: {}".format(e)))
+                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
                 else:
                     if not ft_name:
                         ft_name = filename
@@ -319,7 +317,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         full_name = "actionExportFlightTrack" + name.replace(" ", "")
 
         if hasattr(self, full_name):
-            raise ValueError("'{}' has already been set!".format(full_name))
+            raise ValueError(u"'{}' has already been set!".format(full_name))
 
         action = QtWidgets.QAction(self)
         action.setObjectName(_fromUtf8(full_name))
@@ -458,7 +456,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         else:
             # Create a new flight track from the waypoints template.
             self.new_flight_track_counter += 1
-            waypoints_model = ft.WaypointsTableModel(name="new flight track (%i)" % self.new_flight_track_counter)
+            waypoints_model = ft.WaypointsTableModel(
+                name="new flight track ({:d})".format(self.new_flight_track_counter))
             # Make a copy of the template. Otherwise all new flight tracks would
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
@@ -500,7 +499,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.createNewFlightTrack(filename=filename, activate=True)
             else:
                 QtWidgets.QMessageBox.warning(self, "Open flight track",
-                                              "No supported file extension recognized!\n{:}".format(filename))
+                                              u"No supported file extension recognized!\n{:}".format(filename))
 
     def closeFlightTrack(self):
         """Slot to close the currently selected flight track. Flight tracks can
@@ -531,7 +530,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         filename = self.active_flight_track.getFilename()
         if filename and filename.endswith('.ftml'):
             sel = QtWidgets.QMessageBox.question(self, "Save flight track",
-                                                 "Saving flight track to {:s}. Continue?".format(filename),
+                                                 u"Saving flight track to '{:s}'. Continue?".format(filename),
                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if sel == QtWidgets.QMessageBox.Yes:
                 self.active_flight_track.saveToFTML(filename)
@@ -552,8 +551,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.active_flight_track.saveToFTML(filename)
             else:
                 QtWidgets.QMessageBox.warning(self, "Save flight track",
-                                              "File extension is not '.ftml'!\n{:}".format(filename),
-                                              QtWidgets.QMessageBox.Ok)
+                                              u"File extension is not '.ftml'!\n{:}".format(filename))
 
     def setFlightTrackActive(self):
         """Set the currently selected flight track to be the active one, i.e.

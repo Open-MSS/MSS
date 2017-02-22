@@ -92,7 +92,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.tableWidget.setRowCount(len(flightlevels))
         flightlevels.sort()
         for i, level in enumerate(flightlevels):
-            tableitem = QtWidgets.QTableWidgetItem("%3i" % level)
+            tableitem = QtWidgets.QTableWidgetItem("{:3d}".format(int(level)))
             self.tableWidget.setItem(i, 0, tableitem)
 
         self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
@@ -166,7 +166,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             flightlevel = 0
         if flightlevel > 999:
             flightlevel = 999
-        item.setText("%3i" % flightlevel)
+        item.setText("{:3d}".format(int(flightlevel)))
         self.tableWidget.sortItems(0)
 
     def getFlightLevels(self):

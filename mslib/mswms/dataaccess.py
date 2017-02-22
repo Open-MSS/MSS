@@ -100,8 +100,8 @@ class NWPDataAccess(object):
                 with open(filename, "r") as fileobj:
                     valid_times = pickle.load(fileobj)
             except (pickle.UnpicklingError, OSError, IOError), ex:
-                logging.error("Error reading cache file '{}': {} - {}".format(filename, type(ex), ex))
-                logging.error("os.stat: {}".format(os.stat(filename)))
+                logging.error(u"Error reading cache file '{}': {} - {}".format(filename, type(ex), ex))
+                logging.error(u"os.stat: {}".format(os.stat(filename)))
 
         return valid_times
 
@@ -116,7 +116,7 @@ class NWPDataAccess(object):
                 with open(filename, "w") as fileobj:
                     pickle.dump(valid_times, fileobj)
             except (pickle.PicklingError, OSError, IOError), ex:
-                logging.error("Error writing cache file '{}': {} - {}".format(filename, type(ex), ex))
+                logging.error(u"Error writing cache file '{}': {} - {}".format(filename, type(ex), ex))
 
     def serviceCache(self):
         """Service the cache: Remove all files older than the maximum file
@@ -149,11 +149,11 @@ class NWPDataAccess(object):
                 try:
                     os.remove(filename)
                 except (OSError, IOError), ex:
-                    logging.error("Could not remove {:}: {:} - {:}".format(filename, type(ex), ex))
-                    logging.error("os.stat: {}".format(os.stat(filename)))
+                    logging.error(u"Could not remove {:}: {:} - {:}".format(filename, type(ex), ex))
+                    logging.error(u"os.stat: {}".format(os.stat(filename)))
                 else:
                     removed_files += 1
-        logging.info("cache has been cleaned ({:d} files removed).".format(removed_files))
+        logging.info(u"cache has been cleaned ({:d} files removed).".format(removed_files))
 
     _mfDatasetArgsDict = {}
 
@@ -254,7 +254,7 @@ class ECMWFDataAccess(NWPDataAccess):
 
         # Substitute variable identifiers in the template filename.
         if vartype not in variable_dict.keys():
-            raise ValueError("variable type {} not available for variable {}"
+            raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
         if type(variable_dict[vartype]) == str:
@@ -556,7 +556,7 @@ class GWFCDataAccess(NWPDataAccess):
 
         # Substitute variable identifiers in the template filename.
         if vartype not in variable_dict.keys():
-            raise ValueError("variable type {} not available for variable {}"
+            raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
         if type(variable_dict[vartype]) == str:
@@ -717,7 +717,7 @@ class EMACDataAccess(NWPDataAccess):
 
         # Substitute variable identifiers in the template filename.
         if vartype not in variable_dict.keys():
-            raise ValueError("variable type {} not available for variable {}"
+            raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
         name = self._file_template % variable_dict[vartype]

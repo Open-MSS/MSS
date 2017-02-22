@@ -143,7 +143,7 @@ class MapCanvas(basemap.Basemap):
             try:
                 self._draw_auto_graticule()
             except Exception, ex:
-                logging.error("ERROR: cannot plot graticule (message: {})".format(ex))
+                logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
         else:
             self.map_parallels = None
             self.map_meridians = None
@@ -671,7 +671,7 @@ class MapCanvas(basemap.Basemap):
                     elif element == "lineplot":
                         plt.setp(
                             item.getGxElementProperty(element,
-                                                      "instance::{}".format(self.identifier)),
+                                                      u"instance::{}".format(self.identifier)),
                             visible=item_properties["visible"],
                             color=item_properties["colour"],
                             linestyle=item_properties["linestyle"],
