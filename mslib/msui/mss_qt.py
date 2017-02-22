@@ -106,7 +106,7 @@ def excepthook(type_, value, traceback_):
             None, "fatal error",
             "Fatal error\n"
             "\n"
-            "{}".format(value))
+            u"{}".format(value))
     else:
         QtWidgets.QMessageBox.critical(
             None, "fatal error",
@@ -116,7 +116,7 @@ def excepthook(type_, value, traceback_):
             "\n"
             "Information about the fatal error:\n"
             "\n"
-            "{}".format(tb))
+            u"{}".format(tb))
     QtCore.qFatal('')
 
 sys.excepthook = excepthook

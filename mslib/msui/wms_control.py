@@ -210,7 +210,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
             if u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
                 se_xml = u.read()
                 se_tree = etree.fromstring(se_xml)
-                err_message = str(se_tree.find('ServiceException').text).strip()
+                err_message = unicode(se_tree.find('ServiceException').text).strip()
                 raise mslib.owslib.wms.ServiceException(err_message, se_xml)
         return u
 
@@ -539,6 +539,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
         try:
+            _ = str(base_url)  # to Provoke early Unicode Error
             while wms is None:
                 try:
                     wms = MSSWebMapService(base_url, version='1.1.1',
@@ -563,6 +564,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                             break
                     else:
                         raise
+        except UnicodeEncodeError:
+            logging.error(u"got a unicode url?!: '{}'".format(base_url))
+            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                           self.tr("ERROR: We cannot parse unicode URLs!"))
         except Exception as ex:
             logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")

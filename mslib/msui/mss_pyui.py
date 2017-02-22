@@ -297,7 +297,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
-                except SyntaxError, e:
+                except (SyntaxError, IndexError), e:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr("ERROR: {}".format(e)))

@@ -7,7 +7,7 @@ AUTHORS:
 """
 from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
 
-from mslib.mss_util import config_loader
+from mslib.mss_util import config_loader, FatalUserError
 from mslib.msui import aircrafts
 from mslib.msui import constants
 from mslib.msui.mss_qt import ui_performance_settings as ui_ps
@@ -80,9 +80,7 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
 
         except KeyError, ex:
             QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                           self.tr("JSON File missing '{}' entry".format(ex)),
-                                           QtWidgets.QMessageBox.Ok)
-        except ValueError, ex:
+                                           self.tr(u"JSON File missing '{}' entry".format(ex)))
+        except (FatalUserError, ValueError), ex:
             QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                           self.tr("JSON File has Syntax Problems:\n{}".format(ex)),
-                                           QtWidgets.QMessageBox.Ok)
+                                           self.tr(u"JSON File has Syntax Problems:\n{}".format(ex)))

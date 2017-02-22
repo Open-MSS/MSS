@@ -575,7 +575,7 @@ class PathInteractor:
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
-                textlabel = "{:}".format(wpd[i].location)
+                textlabel = u"{:}".format(wpd[i].location)
             t = self.ax.text(x[i] + label_offset,
                              y[i] + label_offset,
                              textlabel,
@@ -975,7 +975,7 @@ class HPathInteractor(PathInteractor):
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
-                textlabel = "{:}".format(wpd[i].location)
+                textlabel = u"{:}".format(wpd[i].location)
             t = self.ax.text(x[i] + label_offset,
                              y[i] + label_offset,
                              textlabel,
