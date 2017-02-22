@@ -905,66 +905,128 @@ class KMLPatch(object):
     KML overlay implementation is currently very crude and basic and most features are not supported.
     """
 
-    def __init__(self, mapcanvas, kml, color):
+    def __init__(self, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
         self.map = mapcanvas
         self.kml = kml
         self.patches = []
         self.color = color
+        self.linewidth = linewidth
+        self.overwrite = overwrite
         self.draw()
 
-    def add_polygon(self, polygon, _):
-        coords = str(polygon.outerBoundaryIs.LinearRing.coordinates).split()
+    def computeXY(self, coordinates):
+        coords = str(coordinates).split()
         lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
-        x, y = self.map(lons, lats)
-        self.patches.append(self.map.plot(x, y, "-", color=self.color))
+        return self.map(lons, lats)
 
-    def add_point(self, point, name):
-        coords = str(point.coordinates).split()
-        lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
-        x, y = self.map(lons[0], lats[0])
-        self.patches.append(self.map.plot(x, y, "o", color=self.color))
+    def add_polygon(self, polygon, style, _):
+        """
+        Plot KML polygons
+
+        :param polygon: pykml object specifying a polygon
+        """
+        kwargs = self.styles.get(style, {}).get("PolyStyle", {"linewidth": self.linewidth, "color": self.color})
+        for boundary in ["outerBoundaryIs", "innerBoundaryIs"]:
+            if hasattr(polygon, boundary):
+                x, y = self.computeXY(getattr(polygon, boundary).LinearRing.coordinates)
+                self.patches.append(self.map.plot(x, y, "-", **kwargs))
+
+    def add_point(self, point, style, name):
+        """
+        Plot KML point
+
+        :param point: pykml object specifying point
+        :param name: name of placemark for annotation
+        """
+        x, y = self.computeXY(point.coordinates)
+        self.patches.append(self.map.plot(x[0], y[0], "o", color=self.color))
         if name is not None:
-            self.patches.append([self.map.ax.annotate(name, xy=(x, y), xycoords="data",
+            self.patches.append([self.map.ax.annotate(name, xy=(x[0], y[0]), xycoords="data",
                                 xytext=(5, 5), textcoords='offset points',
                                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
 
-    def add_line(self, line, _):
-        coords = str(line.coordinates).split()
-        lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
-        x, y = self.map(lons, lats)
-        self.patches.append(self.map.plot(x, y, "-", color=self.color))
+    def add_line(self, line, style, _):
+        """
+        Plot KML line
 
-    def parse_geometries(self, placemark, name=None):
+        :param line: pykml LineString object
+        """
+        kwargs = self.styles.get(style, {}).get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
+        x, y = self.computeXY(line.coordinates)
+        self.patches.append(self.map.plot(x, y, "-", **kwargs))
+
+    def parse_geometries(self, placemark, style=None, name=None):
+        if style.startswith("#"):
+            # Remove # at beginning of style marking a locally defined style.
+            # general urls for styles are not supported
+            style = style[1:]
         for attr_name, method in (
                 ("Point", self.add_point),
                 ("Polygon", self.add_polygon),
                 ("LineString", self.add_line),
                 ("MultiGeometry", self.parse_geometries)):
             for attr in getattr(placemark, attr_name, []):
-                method(attr, name)
+                logging.debug("Found %s", attr_name)
+                method(attr, style, name)
 
     def parse_placemarks(self, level):
         for placemark in getattr(level, "Placemark", []):
             name = getattr(placemark, "name", None)
-            self.parse_geometries(placemark, name)
+            style = unicode(getattr(placemark, "styleUrl", ""))
+            logging.debug("Placemark: %s %s", style, name)
+            self.parse_geometries(placemark, style, name)
         for folder in getattr(level, "Folder", []):
+            name = getattr(folder, "name", None)
+            logging.debug("Folder: %s", name)
             self.parse_placemarks(folder)
+
+    def get_style_params(self, style):
+        result = {
+            "color": unicode(getattr(style, "color", "")),
+            "linewidth": float(getattr(style, "width", self.linewidth))
+        }
+        if not result["color"] or len(result["color"]) != 8:
+            result["color"] = self.color
+        else:
+            result["color"] = [int(result["color"][i:i + 2], 16) / 255. for i in range(0, 8, 2)]
+        return result
+
+    def parse_styles(self, level):
+        for style in getattr(level, "Style", []):
+            name = style.attrib.get("id", None)
+            if name is None:
+                continue
+            self.styles[name] = {
+                "LineStyle": self.get_style_params(getattr(style, "LineStyle", None)),
+                "PolyStyle": self.get_style_params(getattr(style, "PolyStyle", None))
+            }
+        for folder in getattr(level, "Folder", []):
+            name = getattr(folder, "name", None)
+            logging.debug("Folder: %s", name)
+            self.parse_styles(folder)
 
     def draw(self):
         """Do the actual plotting of the patch.
         """
         # Plot satellite track.
+        self.styles = {}
+        if not self.overwrite:
+            self.parse_styles(self.kml.Document)
         self.parse_placemarks(self.kml.Document)
 
         self.map.ax.figure.canvas.draw()
 
-    def update(self, color=None):
+    def update(self, overwrite=None, color=None, linewidth=None):
         """Removes the current plot of the patch and redraws the patch.
            This is necessary, for instance, when the map projection and/or
            extent has been changed.
         """
+        if overwrite is not None:
+            self.overwrite = overwrite
         if color is not None:
             self.color = color
+        if linewidth is not None:
+            self.linewidth = linewidth
         self.remove()
         self.draw()
 
