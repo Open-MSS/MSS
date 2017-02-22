@@ -282,24 +282,24 @@ class WMSMapFetcher(QtCore.QObject):
         Processing. Self emits into event queue until list is empty. In this way,
         fetch_map events may interrupt.
         """
+        if len(self.maps) == 0:
+            return
+        kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
+        self.maps = self.maps[1:]
         try:
-            if len(self.maps) == 0:
-                return
-            kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
-            self.maps = self.maps[1:]
-
             map_img = self.fetch_map(kwargs, use_cache, md5_filename)
             legend_img = self.fetch_legend(use_cache=use_cache, **legend_kwargs)
-            if len(self.maps) > 0:
-                self.process.emit()
-            self.finished.emit(
-                map_img, legend_img, kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"], kwargs["time"],
-                md5_filename)
         except Exception, ex:
             logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
             # emit finished so progress dialog will be closed
             self.finished.emit(None, None, None, None, None, None, md5_filename)
             self.exception.emit(ex)
+        else:
+            if len(self.maps) > 0:
+                self.process.emit()
+            self.finished.emit(
+                map_img, legend_img, kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"], kwargs["time"],
+                md5_filename)
 
     def fetch_map(self, kwargs, use_cache, md5_filename):
         """
