@@ -220,13 +220,24 @@ class WMSServer(object):
         hsec_layers = []
         for dataset in self.hsec_layer_registry.keys():
             for layer in self.hsec_layer_registry[dataset].values():
+                if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
+                    logging.error("layer %s/%s has no init times!", layer, dataset)
+                    continue
+                if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
+                    logging.error("layer %s/%s has no valid times!", layer, dataset)
+                    continue
                 hsec_layers.append((dataset, layer))
 
         # Vertical Layers
         vsec_layers = []
-
         for dataset in self.vsec_layer_registry.keys():
             for layer in self.vsec_layer_registry[dataset].values():
+                if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
+                    logging.error("layer %s/%s has no init times!", layer, dataset)
+                    continue
+                if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
+                    logging.error("layer %s/%s has no valid times!", layer, dataset)
+                    continue
                 vsec_layers.append((dataset, layer))
 
         # return_format = 'text/xml'
