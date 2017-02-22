@@ -74,16 +74,22 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         fname = unicode(self.leFile.text())
         logging.debug("loading satellite overpasses in file %s", fname)
 
-        overpass_segments = mss_util.read_nasa_satellite_prediction(fname)
-        logging.debug("read %i segments", len(overpass_segments))
+        try:
+            overpass_segments = mss_util.read_nasa_satellite_prediction(fname)
+        except (IOError, OSError, ValueError), ex:
+            logging.error("Problem accessing '%s' file", fname)
+            QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
+                                           self.tr("ERROR:\n%s\n%s" % (type(ex), ex)))
+        else:
+            logging.debug("read %i segments", len(overpass_segments))
 
-        self.cbSatelliteOverpasses.clear()
-        items = ["%s to %s" % (str(seg["utc"][0]), str(seg["utc"][-1]))
-                 for seg in overpass_segments]
-        items.insert(0, "None (select item to plot)")
-        self.cbSatelliteOverpasses.addItems(items)
+            self.cbSatelliteOverpasses.clear()
+            items = ["%s to %s" % (str(seg["utc"][0]), str(seg["utc"][-1]))
+                     for seg in overpass_segments]
+            items.insert(0, "None (select item to plot)")
+            self.cbSatelliteOverpasses.addItems(items)
 
-        self.overpass_segments = overpass_segments
+            self.overpass_segments = overpass_segments
 
     def plotOverpassTrack(self, index):
         """

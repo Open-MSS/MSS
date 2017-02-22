@@ -126,12 +126,16 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             logging.debug("Loading flight track data from %s", nas_file)
 
             # Add the flight track to the data tree.
-            new_item_index = self.traj_item_tree.addFlightTrack(nas_file)
+            try:
+                new_item_index = self.traj_item_tree.addFlightTrack(nas_file)
 
-            # Scroll the tree view so that the new item is visible and resize
-            # the first column to be wide enough for the text.
-            self.tvVisibleElements.scrollTo(new_item_index)
-            self.tvVisibleElements.resizeColumnToContents(0)
+                # Scroll the tree view so that the new item is visible and resize
+                # the first column to be wide enough for the text.
+                self.tvVisibleElements.scrollTo(new_item_index)
+                self.tvVisibleElements.resizeColumnToContents(0)
+            except RuntimeError:
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("Trajectory Tool"), self.tr(u"ERROR:\nCould not read file\n{}".format(nas_file)))
 
     def loadTrajectories(self):
         """Slot for the 'Open Trajectories..' menu entry. Opens a QFileDialog
