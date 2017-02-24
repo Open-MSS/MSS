@@ -11,6 +11,7 @@
                 <ContactPerson>${ service_contact_person }</ContactPerson>
                 <ContactOrganization>${ service_contact_organisation }</ContactOrganization>
             </ContactPersonPrimary>
+            <ContactPosition>${ service_contact_position }</ContactPosition>
             <ContactAddress>
                 <AddressType>${ service_address_type }</AddressType>
                 <Address>${ service_address }</Address>
@@ -19,6 +20,7 @@
                 <PostCode>${ service_post_code }</PostCode>
                 <Country>${ service_country }</Country>
             </ContactAddress>
+            <ContactElectronicMailAddress>${ service_email }</ContactElectronicMailAddress>
         </ContactInformation>
         <Fees>${ service_fees }</Fees>
         <AccessConstraints>${ service_access_constraints }</AccessConstraints>
