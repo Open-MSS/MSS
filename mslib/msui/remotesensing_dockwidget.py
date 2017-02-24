@@ -117,8 +117,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             fine_lines[i][0], fine_lines[i][1], line_heights[i],
             cut_height=self.dsbTangentHeight.value()) for i in range(len(fine_lines))]
         for i, line in enumerate(tplines):
-            for j in range(len(line)):
-                line[j] = bmap(line[j][0], line[j][1])
+            for j, (lon, lat) in enumerate(line):
+                line[j] = bmap(lon, lat)
             tplines[i] = line
         return LineCollection(
             tplines,
@@ -235,7 +235,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
                (x0, y0) in tps]
         return tps
 
-    def calc_view_rating(self, obs_azi, obs_ele, sol_azi, sol_ele, height):
+    @staticmethod
+    def calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, height):
         """
         Calculates the angular distance between given directions under the
         condition that the sun is above the horizon.

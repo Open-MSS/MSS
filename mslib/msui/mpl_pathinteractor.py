@@ -183,7 +183,7 @@ class WaypointsPath(mpath.Path):
         wps = wps_model.allWaypointData()
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
-            for i in range(len(wps[1:])):
+            for i, _ in enumerate(wps[1:]):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
 
         self.codes, self.vertices = zip(*pathdata)

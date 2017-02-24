@@ -305,8 +305,7 @@ class LagrantoOutputReader(object):
         #
         # Process the data section.
         for dataLine in lines[firstBlank + 3:secondBlank]:
-            for varName, strValue in zip(varNames[:len(varNames) - 1],
-                                         dataLine.split()):
+            for varName, strValue in zip(varNames[:-1], dataLine.split()):
                 self.stats[dataKey][varName].append(float(strValue))
 
         #
@@ -370,20 +369,17 @@ class LagrantoOutputReader(object):
         # return this value, otherwise try YYYYMMDD_hh.
         timeFormat = ["%Y%m%d_%H%M", "%Y%m%d_%H"]  # YYYYMMDD_hh[mm]
         timeFormatLen = [13, 11]
-        time = None
 
         for tf, tflen in zip(timeFormat, timeFormatLen):
-            try:
-                for i in range(len(name) - tflen):
-                    try:
-                        time = datetime.datetime.strptime(name[i:i + tflen], tf)
-                        break
-                    except:
-                        pass
-            except:
-                pass
+            for i in range(len(name) - tflen):
+                try:
+                    time = datetime.datetime.strptime(name[i:i + tflen], tf)
+                except ValueError:
+                    pass
+                else:
+                    return time
+        return None
 
-        return time
 
 
 #

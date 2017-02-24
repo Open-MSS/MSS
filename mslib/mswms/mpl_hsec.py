@@ -207,7 +207,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                                             labels=[0, 0, 0, 1],
                                             color='0.5', dashes=[5, 5])
 
-    def plot_hsection(self, data, lats, lons, bbox=[-180, -90, 180, 90],
+    def plot_hsection(self, data, lats, lons, bbox=(-180, -90, 180, 90),
                       level=None, figsize=(960, 640), epsg=None,
                       proj_params={"projection": "cyl"},
                       valid_time=None, init_time=None, style=None,

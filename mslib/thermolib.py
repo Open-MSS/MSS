@@ -1392,7 +1392,7 @@ def schmidt_appleman_tdiff_q_a_slow(p, t, q, liquid='HylandWexler', ice='GoffGra
 
     # Compute Schmidt-Applement threshold difference for each value.
     result = numpy.zeros(p_r.shape)
-    for i in range(len(p_r)):
+    for i, _ in enumerate(p_r):
         result[i] = schmidt_appleman_tdiff(p_r[i], t_r[i], rh01_r[i])
 
     # Return the result in the shape of the input arrays.

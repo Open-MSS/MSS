@@ -941,8 +941,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             # below the items that are on the stack.
             item = stack.pop()
             if item.isVisible(self.identifier):
-                if isinstance(item, titree.FlightTrackItem) \
-                        or isinstance(item, titree.TrajectoryItem):
+                if isinstance(item, (titree.FlightTrackItem, titree.TrajectoryItem)):
                     itemsList.append(item)
                 else:
                     stack.extend(item.childItems)
@@ -959,8 +958,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             earliestStartTime = datetime(3000, 1, 1)
             self.subPlots = []
             for item in itemsList:
-                earliestStartTime = min(earliestStartTime,
-                                        item.getStartTime())
+                earliestStartTime = min(earliestStartTime, item.getStartTime())
                 for variable in item.childItems:
                     if variable.isVisible(self.identifier) and variable.getVariableName() not in self.subPlots:
                         self.subPlots.append(variable.getVariableName())
