@@ -712,7 +712,7 @@ class VPathInteractor(PathInteractor):
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
             # to float().
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure / 100.)))
 
         self._ind = None
 
@@ -749,7 +749,7 @@ class VPathInteractor(PathInteractor):
         # profile needs to be redrawn (redraw_path()). If the horizontal
         # position of a waypoint has changed, the entire figure needs to be
         # redrawn, as this affects the x-position of all points.
-        if index1.column() == ft.FLIGHTLEVEL:
+        if index1.column() == ft.FLIGHTLEVEL or index1.column() == ft.PRESSURE:
             i = index1.row()
             pres = self.waypoints_model.waypointData(i).pressure
             # print "SideView: pressure of point %i has been changed to %f." % (i, pres)
