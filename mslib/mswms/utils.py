@@ -230,7 +230,6 @@ def get_log_levels(cmin, cmax, levels=N_LEVELS):
         clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001),
                                     np.log(cmax), max(2, 1 + int(levels * cmax / delta))))
         clev = np.asarray(list(clevlo) + list(clevhi))
-
     return clev
 
 
@@ -346,7 +345,6 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         clev = np.arange(5, 16.1, 0.25)
     else:
         raise RuntimeError(u"Illegal plotting style?! ({})".format(style))
-
     return cmin, cmax, clev, cmap, norm
 
 
