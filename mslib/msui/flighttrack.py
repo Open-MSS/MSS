@@ -367,6 +367,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             elif column == PRESSURE:
                 try:
                     pressure = float(value) * 100  # convert hPa to Pa
+                    if pressure > 200000:
+                        raise ValueError
                     flightlevel = round(thermolib.pressure2flightlevel(pressure))
                     pressure = thermolib.flightlevel2pressure(flightlevel)
                 except ValueError:
