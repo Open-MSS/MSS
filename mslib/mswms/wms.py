@@ -75,8 +75,8 @@ from chameleon import PageTemplateLoader
 
 try:
     import mss_wms_settings
-except ImportError, e:
-    logging.warning("Couldn't import mss_wms_settings (ImportError:'{}'), creating dummy config.".format(e))
+except ImportError, ex:
+    logging.warning(u"Couldn't import mss_wms_settings (ImportError:'{}'), creating dummy config.".format(ex))
 
     class mss_wms_settings(object):
         base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -96,10 +96,20 @@ except ImportError, e:
         service_access_constraints = "This service is intended for research purposes only."
         register_horizontal_layers = []
         register_vertical_layers = []
-        enable_basic_http_authentication = False
         nwpaccess = {
             "ecmwf_NH_LL05": os.path.join(tempfile.gettempdir(), "mss/grid/ecmwf/netcdf")
         }
+        enable_basic_http_authentication = False
+        __file__ = None
+
+try:
+    import mss_wms_auth
+except ImportError, ex:
+    logging.warning(u"Couldn't import mss_wms_auth (ImportError:'{}'), creating dummy config.".format(ex))
+
+    class mss_wms_auth(object):
+        allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
+                         ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
 from mslib.mswms import mss_plot_driver
@@ -145,15 +155,15 @@ class WMSServer(object):
         # instances with the datasets.
         for dataset in datasets:
             layer = layer_class()
-            logging.debug("registering horizontal section layer {} with "
-                          "dataset {}".format(layer.name, dataset))
+            logging.debug("registering horizontal section layer '{}' with "
+                          "dataset '{}'".format(layer.name, dataset))
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
             if dataset not in self.hsec_layer_registry.keys():
                 if dataset in self.hsec_drivers.keys():
                     self.hsec_layer_registry[dataset] = {}
                 else:
-                    raise ValueError(u"dataset {} not available".format(dataset))
+                    raise ValueError(u"dataset '{}' not available".format(dataset))
             layer.set_driver(self.hsec_drivers[dataset])
             self.hsec_layer_registry[dataset][layer.name] = layer
 
@@ -167,14 +177,14 @@ class WMSServer(object):
         # instances with the datasets.
         for dataset in datasets:
             layer = layer_class()
-            logging.debug("registering vertical section layer {} with dataset {}".format(layer.name, dataset))
+            logging.debug(u"registering vertical section layer '{}' with dataset '{}'".format(layer.name, dataset))
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
             if dataset not in self.vsec_layer_registry.keys():
                 if dataset in self.vsec_drivers.keys():
                     self.vsec_layer_registry[dataset] = {}
                 else:
-                    raise ValueError(u"dataset {} not available".format(dataset))
+                    raise ValueError(u"dataset '{}' not available".format(dataset))
             layer.set_driver(self.vsec_drivers[dataset])
             self.vsec_layer_registry[dataset][layer.name] = layer
 
@@ -204,19 +214,30 @@ class WMSServer(object):
 
     def get_capabilities(self, server_url=None):
         template = templates['get_capabilities.pt']
-        logging.debug("server-url {0}".format(server_url))
+        logging.debug("server-url '{0}'".format(server_url))
 
         # Horizontal Layers
         hsec_layers = []
         for dataset in self.hsec_layer_registry.keys():
             for layer in self.hsec_layer_registry[dataset].values():
+                if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
+                    logging.error("layer %s/%s has no init times!", layer, dataset)
+                    continue
+                if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
+                    logging.error("layer %s/%s has no valid times!", layer, dataset)
+                    continue
                 hsec_layers.append((dataset, layer))
 
         # Vertical Layers
         vsec_layers = []
-
         for dataset in self.vsec_layer_registry.keys():
             for layer in self.vsec_layer_registry[dataset].values():
+                if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
+                    logging.error("layer %s/%s has no init times!", layer, dataset)
+                    continue
+                if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
+                    logging.error("layer %s/%s has no valid times!", layer, dataset)
+                    continue
                 vsec_layers.append((dataset, layer))
 
         # return_format = 'text/xml'
@@ -269,12 +290,12 @@ class WMSServer(object):
             dataset, layer = layer.split(".")
         else:
             dataset = None
-        logging.debug("  requested dataset = {}, layer = {}".format(dataset, layer))
+        logging.debug(u"  requested dataset = '{}', layer = '{}'".format(dataset, layer))
 
         # Requested style(s).
         styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
         style = styles[0] if len(styles) > 0 else None
-        logging.debug(u"  requested style = {}".format(style))
+        logging.debug(u"  requested style = '{}'".format(style))
 
         # Forecast initialisation time.
         init_time = query.get('DIM_INIT_TIME')
@@ -285,7 +306,7 @@ class WMSServer(object):
                 return self.service_exception(code="InvalidDimensionValue",
                                               text="DIM_INIT_TIME has wrong format "
                                               "(needs to be 2005-08-29T13:00:00Z)")
-        logging.debug(u"  requested initialisation time = {}".format(init_time))
+        logging.debug(u"  requested initialisation time = '{}'".format(init_time))
 
         # Forecast valid time.
         valid_time = query.get('TIME')
@@ -296,7 +317,7 @@ class WMSServer(object):
                 return self.service_exception(code="InvalidDimensionValue",
                                               text="TIME has wrong format "
                                               "(needs to be 2005-08-29T13:00:00Z)")
-        logging.debug(u"  requested (valid) time = {}".format(valid_time))
+        logging.debug(u"  requested (valid) time = '{}'".format(valid_time))
 
         # Coordinate reference system.
         crs = query.get('SRS', 'EPSG:4326')
@@ -330,7 +351,7 @@ class WMSServer(object):
 
         # Return format (image/png, text/xml, etc.).
         return_format = query.get('FORMAT', 'IMAGE/PNG').lower()
-        logging.debug(u"  requested return format = {}".format(return_format))
+        logging.debug(u"  requested return format = '{}'".format(return_format))
         if return_format not in ["image/png", "text/xml"]:
             msg = u"unsupported FORMAT: {}".format(return_format)
             logging.error(msg)
@@ -345,7 +366,7 @@ class WMSServer(object):
             # Check requested layer.
             if (dataset not in self.hsec_layer_registry.keys()) or \
                (layer not in self.hsec_layer_registry[dataset].keys()):
-                msg = "Invalid LAYER '{}.{}' requested".format(dataset, layer)
+                msg = u"Invalid LAYER '{}.{}' requested".format(dataset, layer)
                 logging.error(msg)
                 return self.service_exception(code="LayerNotDefined", text=msg)
 
@@ -363,7 +384,7 @@ class WMSServer(object):
 
             # Check if the requested coordinate system is supported.
             if not self.hsec_layer_registry[dataset][layer].support_epsg_code(epsg):
-                msg = "The requested CRS 'EPSG:{:d}' is not supported.".format(epsg)
+                msg = u"The requested CRS 'EPSG:{:d}' is not supported.".format(epsg)
                 logging.error(msg)
                 return self.service_exception(code="InvalidSRS", text=msg)
 
@@ -387,7 +408,7 @@ class WMSServer(object):
             elif ("sfc" in layer_datatypes) and ("ml" not in layer_datatypes) \
                     and ("pl" not in layer_datatypes) and level:
                 msg = u"ELEVATION argument not applicable for layer " \
-                      u"{}. Please omit this argument.".format(layer)
+                      u"'{}'. Please omit this argument.".format(layer)
                 logging.error(msg)
                 return self.service_exception(text=msg)
 
@@ -404,12 +425,12 @@ class WMSServer(object):
                                                 noframe=noframe,
                                                 transparent=transparent,
                                                 return_format=return_format)
-            except (IOError, ValueError) as e:
-                logging.error(u"ERROR: {}".format(e))
+            except (IOError, ValueError) as ex:
+                logging.error(u"ERROR: {}".format(ex))
                 msg = u"The data corresponding to your request " \
                       u"is not available. Please check the " \
                       u"times and/or levels you have specified." \
-                      u"\n\nError message: {}".format(e)
+                      u"\n\nError message: '{}'".format(ex)
                 return self.service_exception(text=msg)
 
         elif mode == "GetVSec":
@@ -425,12 +446,12 @@ class WMSServer(object):
                 msg = u"Invalid PATH: {}".format(path)
                 logging.error(msg)
                 return self.service_exception(text=msg)
-            logging.debug("VSEC PATH: {}".format(path))
+            logging.debug(u"VSEC PATH: {}".format(path))
 
             # Check requested layers.
             if (dataset not in self.vsec_layer_registry.keys()) or \
                     (layer not in self.vsec_layer_registry[dataset].keys()):
-                msg = "Invalid LAYER '{}.{}' requested".format(dataset, layer)
+                msg = u"Invalid LAYER '{}.{}' requested".format(dataset, layer)
                 return self.service_exception(code="LayerNotDefined", text=msg)
 
             # Check if the layer requires time information and if they are given.
@@ -468,12 +489,12 @@ class WMSServer(object):
                                                 noframe=noframe,
                                                 transparent=transparent,
                                                 return_format=return_format)
-            except (IOError, ValueError) as e:
-                logging.error(u"ERROR: {}".format(e))
+            except (IOError, ValueError) as ex:
+                logging.error(u"ERROR: {}".format(ex))
                 msg = u"The data corresponding to your request " \
                       u"is not available. Please check the " \
                       u"times and/or path you have specified." \
-                      u"\n\nError message: {}".format(e)
+                      u"\n\nError message: {}".format(ex)
                 return self.service_exception(text=msg)
 
         # Produce the image.
@@ -501,7 +522,7 @@ def application(environ, start_response):
     try:
         # Request info
         query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))
-        logging.debug("ENVIRON: {}".format(environ))
+        logging.debug(u"ENVIRON: {}".format(environ))
 
         # Processing
         request = str(query.get('request'))
@@ -535,9 +556,9 @@ def application(environ, start_response):
 
         return [output]
 
-    except Exception as e:
+    except Exception as ex:
         status = '404 NOT FOUND'
-        error_message = str(type(e)) + ": " + str(e)
+        error_message = u"{}: {}".format(type(ex), ex)
         # ToDo add a config var to disable output, replace by standard text, "Internal Server error"
         error_message = error_message + "\n" + traceback.format_exc()
         logging.error(error_message)

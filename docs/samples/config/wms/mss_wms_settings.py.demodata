@@ -2,11 +2,34 @@
 simple server config for demodata
 """
 import os
+import sys
+
+# Configuration of Python's code search path
+# If you already have set up the PYTHONPATH environment variable for the
+# stuff you see below, you don't need to do a1) and a2).
+
+# a1) Path of the directory where the mss code package is located.
+# sys.path.insert(0, '/home/mss/miniconda2/lib/python2.7/site-packages')
+
+# a2) Path of the directory where mss_wms_settings.py is located
+MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
+sys.path.insert(0, MSSCONFIGPATH)
+os.chdir(MSSCONFIGPATH)
+
 import mslib.mswms.dataaccess
 from mslib.mswms import mpl_hsec_styles
 from mslib.mswms import mpl_vsec_styles
 import mslib.mswms
 
+
+#
+# HTTP Authentication                               ###
+#
+
+# If you require basic HTTP authentication, set the following variable
+# to True. Add usernames in the list "allowed:users". Note that the
+# passwords are not specified in plain text but by their md5 digest.
+#enable_basic_http_authentication = False
 
 # Configuration for mss_wms_settings accessing data on the MSS server.
 # This is the data organisation structure of demodata.
@@ -26,29 +49,9 @@ import mslib.mswms
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
 
-
-# HTTP Authentication                               ###
-#
-
-# If you require basic HTTP authentication, set the following variable
-# to True. Add usernames in the list "allowed:users". Note that the
-# passwords are not specified in plain text but by their md5 digest.
-#enable_basic_http_authentication = False
-
-# Use the following code to create a new md5 digest of a password (e.g. in
-# ipython):
-#     import hashlib; hashlib.md5("my_new_password").hexdigest()
-#allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
-#                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
-
-
-
-
 # xml_template directory is a sub directory of mswms
 #base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 #xml_template_location = os.path.join(base_dir, "xml_templates")
-
-
 
 _vt_cache = os.path.join(os.path.expanduser("~"), "mss", "vt_cache")
 mslib.mswms.dataaccess.valid_time_cache = _vt_cache

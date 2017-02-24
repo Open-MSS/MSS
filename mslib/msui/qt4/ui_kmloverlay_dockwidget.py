@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'msui/ui_kmloverlay_dockwidget.ui'
+# Form implementation generated from reading ui file 'ui_kmloverlay_dockwidget.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -45,9 +45,20 @@ class Ui_KMLOverlayDockWidget(object):
         self.verticalLayout.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName(_fromUtf8("horizontalLayout_7"))
+        self.cbManualStyle = QtGui.QCheckBox(KMLOverlayDockWidget)
+        self.cbManualStyle.setObjectName(_fromUtf8("cbManualStyle"))
+        self.horizontalLayout_7.addWidget(self.cbManualStyle)
         self.pbSelectColour = QtGui.QPushButton(KMLOverlayDockWidget)
         self.pbSelectColour.setObjectName(_fromUtf8("pbSelectColour"))
         self.horizontalLayout_7.addWidget(self.pbSelectColour)
+        self.label_2 = QtGui.QLabel(KMLOverlayDockWidget)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.horizontalLayout_7.addWidget(self.label_2)
+        self.dsbLineWidth = QtGui.QDoubleSpinBox(KMLOverlayDockWidget)
+        self.dsbLineWidth.setSingleStep(0.5)
+        self.dsbLineWidth.setProperty("value", 1.0)
+        self.dsbLineWidth.setObjectName(_fromUtf8("dsbLineWidth"))
+        self.horizontalLayout_7.addWidget(self.dsbLineWidth)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout_7)
@@ -65,6 +76,8 @@ class Ui_KMLOverlayDockWidget(object):
         self.cbOverlay.setText(_translate("KMLOverlayDockWidget", "KML Overlay", None))
         self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "...", None))
         self.btLoadFile.setText(_translate("KMLOverlayDockWidget", "load", None))
+        self.cbManualStyle.setText(_translate("KMLOverlayDockWidget", "manual style", None))
         self.pbSelectColour.setText(_translate("KMLOverlayDockWidget", "Colour", None))
+        self.label_2.setText(_translate("KMLOverlayDockWidget", "line width", None))
         self.label.setText(_translate("KMLOverlayDockWidget", "!Experimental Feature! Not all KML files and contained features will work.", None))
 

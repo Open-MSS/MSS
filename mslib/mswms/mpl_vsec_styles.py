@@ -44,7 +44,7 @@ import numpy as np
 
 # local application imports
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets, get_log_levels
+from mslib.mswms.utils import Targets, get_log_levels, get_style_parameters, get_cbar_label_format
 from mslib import thermolib
 
 """
@@ -147,6 +147,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
+        curtain_lat = self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose()
 
         delta_pt = 10 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 20
         # Filled contour plot of cloud cover.
@@ -162,44 +163,19 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         if visible.sum() == 0:
             visible = np.ones_like(curtain_cc, dtype=bool)
 
-        if cmin is None or cmax is None:
-            cmin, cmax = curtain_cc[visible].min(), curtain_cc[visible].max()
-            if cmin > 0 and cmin < 0.05 * cmax:
-                cmin = 0.
+        cmin, cmax, clev, cmap, norm = get_style_parameters(self.dataname, self.style, cmin, cmax, curtain_cc[visible])
 
-        if self.style == "default":
-            clev = np.linspace(cmin, cmax, 16)
-        elif self.style == "auto":
-            cmin = curtain_cc[visible].min()
-            cmax = curtain_cc[visible].max()
-            if cmin > 0 and cmin < 0.05 * cmax:
-                cmin = 0.
-            clev = np.linspace(cmin, cmax, 16)
-        elif self.style == "log":
-            clev = get_log_levels(cmin, cmax, 16)
-        elif self.style == "autolog":
-            cmin = curtain_cc[visible].min()
-            cmax = curtain_cc[visible].max()
-            clev = get_log_levels(cmin, cmax, 16)
-        elif self.style == "nonlinear":
-            clev = Targets.get_thresholds(self.dataname)
-        else:
-            raise RuntimeError("Illegal plotting style?!")
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+        cs = ax.contourf(curtain_lat, curtain_p, curtain_cc, clev, cmap=cmap, extend="both", norm=norm)
 
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_cc, clev, norm=norm,
-                         cmap=cmap)
         # Contour line plot of PV.
-        cs_pv = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_pv, [2, 4, 8, 16],
-                           colors='lightgrey', linestyles='dashed', linewidths=2)
-        ax.clabel(cs_pv, fontsize=8, fmt='%i')
-        # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='lightgrey',
-                           linestyles='solid', linewidths=2)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        for (cont_data, cont_levels, cont_colour, cont_style) in (
+                [curtain_pv, [2, 4, 8, 16], "dimgrey", "dashed"],
+                [curtain_pt, np.arange(200, 700, delta_pt), "dimgrey", "solid"]):
+            cs_pv = ax.contour(curtain_lat, curtain_p, cont_data, cont_levels,
+                               colors=cont_colour, linestyles=cont_style, linewidths=2)
+            plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
+            cs_pv_lab = ax.clabel(cs_pv, fontsize=8, fmt='%i')
+            plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -207,37 +183,20 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         self._latlon_logp_setup(titlestring=self.title)
 
         # Format for colorbar labels
-        clev_format = "%.3g"
-        mclev = np.abs(clev).max()
-        if self.style != "log":
-            if mclev >= 100. and mclev < 10000.:
-                clev_format = "%4i"
-            if mclev >= 10. and mclev < 100.:
-                clev_format = "%.1f"
-            if mclev >= 1. and mclev < 10.:
-                clev_format = "%.2f"
-            if mclev >= .1 and mclev < 1.:
-                clev_format = "%.3f"
-            if mclev >= .01 and mclev < 0.1:
-                clev_format = "%.4f"
+        cbar_format = get_cbar_label_format(self.style, np.abs(clev).max())
+        cbar_label = self.title
 
-            # Add colorbar.
+        # Add colorbar.
         if not self.noframe:
             self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01,
-                                     format=clev_format, norm=norm)
-            cbar.set_label(self.cbar_label)
+            self.fig.colorbar(cs, fraction=0.05, pad=0.01, format=cbar_format, label=cbar_label)
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="45%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical",
-                                     format=clev_format, norm=norm)
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="1%", height="45%", loc=1)
+            self.fig.colorbar(cs, cax=axins1, orientation="vertical", format=cbar_format)
 
             # adjust colorbar fontsize to figure height
-            figheight = self.fig.bbox.height
-            fontsize = figheight * 0.035
+            fontsize = self.fig.bbox.height * 0.035
             axins1.yaxis.set_ticks_position("left")
             for x in axins1.yaxis.majorTicks:
                 x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
@@ -246,12 +205,12 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
 
 def make_generic_class(entity, vert):
     class fnord(VS_GenericStyle):
-        name = 'VS_' + entity + "_" + vert
+        name = u"VS_{}_{}".format(entity, vert)
         dataname = entity
         units, unit_scale = Targets.get_unit(dataname)
-        title = dataname
+        title = Targets.TITLES.get(entity, entity)
         if units:
-            title += " ({})".format(units)
+            title += u" ({})".format(units)
         required_datafields = [
             (vert, entity),
             (vert, "ertel_potential_vorticity"), ]
@@ -272,6 +231,8 @@ def make_generic_class(entity, vert):
         fnord.styles = fnord.styles + [
             ("default", "fixed colour scale"),
             ("log", "fixed logarithmic colour scale")]
+    if entity == "ertel_potential_vorticity":
+        fnord.styles = [("ertel_potential_vorticity", "PV style")] + fnord.styles
 
     return fnord
 

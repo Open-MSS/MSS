@@ -1,0 +1,9 @@
+#
+# HTTP Authentication                               ###
+#
+#
+# Use the following code to create a new md5 digest of a password (e.g. in
+# ipython):
+#     import hashlib; hashlib.md5("my_new_password").hexdigest()
+allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
+                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]

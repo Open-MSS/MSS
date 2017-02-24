@@ -94,13 +94,11 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """Add ID number to the title of the corresponing view window.
         """
         QActiveViewsListWidgetItem.opened_views += 1
-        view_name = "(%i) %s" % (QActiveViewsListWidgetItem.opened_views,
-                                 view_window.name)
+        view_name = u"({:d}) {}".format(QActiveViewsListWidgetItem.opened_views, view_window.name)
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, type)
 
-        view_window.setWindowTitle("(%i) %s" %
-                                   (QActiveViewsListWidgetItem.opened_views,
-                                    view_window.windowTitle()))
+        view_window.setWindowTitle(u"({:d}) {}".format(
+            QActiveViewsListWidgetItem.opened_views, view_window.windowTitle()))
         view_window.setIdentifier(view_name)
         self.window = view_window
         self.parent = parent
@@ -112,8 +110,8 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """
         if self.parent is not None:
             self.parent.takeItem(self.parent.row(self))
-            if self.parent.parent is not None:
-                self.viewsChanged.emit()
+        if self.viewsChanged is not None:
+            self.viewsChanged.emit()
 
 
 #
@@ -173,7 +171,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         """
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
-        self.lblVersion.setText("Version: %s" % __version__)
+        self.lblVersion.setText(u"Version: {}".format(__version__))
 
 #
 # MAIN WINDOW
@@ -210,11 +208,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionTopView.triggered.connect(self.createNewView)
         self.actionSideView.triggered.connect(self.createNewView)
         self.actionTableView.triggered.connect(self.createNewView)
-        self.actionLoopView.triggered.connect(self.createNewView)
-        self.actionTimeSeriesViewTrajectories.triggered.connect(self.createNewView)
 
         # Tools menu.
         self.actionTrajectoryToolLagranto.triggered.connect(self.createNewTool)
+        self.actionTimeSeriesViewTrajectories.triggered.connect(self.createNewTool)
+        self.actionLoopView.triggered.connect(self.createNewTool)
 
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.showOnlineHelp)
@@ -244,7 +242,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except Exception, ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         import_plugins, type(ex), ex)))
                 continue
             try:
@@ -252,7 +250,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except AttributeError, ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         import_plugins, type(ex), ex)))
                 continue
 
@@ -264,7 +262,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except Exception, ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         import_plugins, type(ex), ex)))
                 continue
             try:
@@ -272,7 +270,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except Exception, ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error"),
-                    self.tr("ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
+                    self.tr(u"ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
                         export_plugins, type(ex), ex)))
                 continue
 
@@ -282,7 +280,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         full_name = "actionImportFlightTrack" + name.replace(" ", "")
 
         if hasattr(self, full_name):
-            raise ValueError("'{}' has already been set!".format(full_name))
+            raise ValueError(u"'{}' has already been set!".format(full_name))
 
         action = QtWidgets.QAction(self)
         action.setObjectName(_fromUtf8(full_name))
@@ -297,10 +295,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
-                except SyntaxError, e:
+                except (SyntaxError, IndexError), ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
-                        self.tr("ERROR: {}".format(e)))
+                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
                 else:
                     if not ft_name:
                         ft_name = filename
@@ -319,7 +317,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         full_name = "actionExportFlightTrack" + name.replace(" ", "")
 
         if hasattr(self, full_name):
-            raise ValueError("'{}' has already been set!".format(full_name))
+            raise ValueError(u"'{}' has already been set!".format(full_name))
 
         action = QtWidgets.QAction(self)
         action.setObjectName(_fromUtf8(full_name))
@@ -374,14 +372,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         elif self.sender() == self.actionTableView:
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
-        elif self.sender() == self.actionTimeSeriesViewTrajectories:
-            # Time series view.
-            view_window = timeseriesview.MSSTimeSeriesViewWindow()
-        elif self.sender() == self.actionLoopView:
-            # Loop view.
-            # ToDo check order
-            view_window = loopview.MSSLoopWindow(
-                config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -403,7 +393,15 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if self.sender() == self.actionTrajectoryToolLagranto:
             # Trajectory tool.
             tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews,
+                                                                      listtools=self.listTools,
                                                                       viewsChanged=self.viewsChanged)
+        elif self.sender() == self.actionTimeSeriesViewTrajectories:
+            # Time series view.
+            tool_window = timeseriesview.MSSTimeSeriesViewWindow()
+        elif self.sender() == self.actionLoopView:
+            # Loop view.
+            tool_window = loopview.MSSLoopWindow(
+                config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
 
         if tool_window is not None:
             # Make sure view window will be deleted after being closed, not
@@ -412,9 +410,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Open as a non-modal window.
             tool_window.show()
             # Add an entry referencing the new view to the list of views.
-            listitem = QActiveViewsListWidgetItem(tool_window, self.listTools)
-            if hasattr(tool_window, "moduleCloses"):
-                tool_window.moduleCloses.connect(listitem.view_destroyed)
+            listitem = QActiveViewsListWidgetItem(tool_window, self.listTools, self.viewsChanged)
+            tool_window.viewCloses.connect(listitem.view_destroyed)
+            self.viewsChanged.emit()
 
     def activateSubWindow(self, item):
         """When the user clicks on one of the open view or tool windows, this
@@ -458,7 +456,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         else:
             # Create a new flight track from the waypoints template.
             self.new_flight_track_counter += 1
-            waypoints_model = ft.WaypointsTableModel(name="new flight track (%i)" % self.new_flight_track_counter)
+            waypoints_model = ft.WaypointsTableModel(
+                name="new flight track ({:d})".format(self.new_flight_track_counter))
             # Make a copy of the template. Otherwise all new flight tracks would
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
@@ -500,7 +499,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.createNewFlightTrack(filename=filename, activate=True)
             else:
                 QtWidgets.QMessageBox.warning(self, "Open flight track",
-                                              "No supported file extension recognized!\n{:}".format(filename))
+                                              u"No supported file extension recognized!\n{:}".format(filename))
 
     def closeFlightTrack(self):
         """Slot to close the currently selected flight track. Flight tracks can
@@ -531,7 +530,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         filename = self.active_flight_track.getFilename()
         if filename and filename.endswith('.ftml'):
             sel = QtWidgets.QMessageBox.question(self, "Save flight track",
-                                                 "Saving flight track to {:s}. Continue?".format(filename),
+                                                 u"Saving flight track to '{:s}'. Continue?".format(filename),
                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if sel == QtWidgets.QMessageBox.Yes:
                 self.active_flight_track.saveToFTML(filename)
@@ -552,8 +551,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.active_flight_track.saveToFTML(filename)
             else:
                 QtWidgets.QMessageBox.warning(self, "Save flight track",
-                                              "File extension is not '.ftml'!\n{:}".format(filename),
-                                              QtWidgets.QMessageBox.Ok)
+                                              u"File extension is not '.ftml'!\n{:}".format(filename))
 
     def setFlightTrackActive(self):
         """Set the currently selected flight track to be the active one, i.e.
@@ -594,9 +592,25 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", help="show version", action="store_true", default=False
-                        )
+    parser.add_argument("--version", help="show version", action="store_true", default=False)
+    parser.add_argument("--debug", help="show debugging log messages", action="store_true", default=False)
     args = parser.parse_args()
+
+    # Log everything, and send it to stderr.
+    # See http://docs.python.org/library/logging.html for more information
+    # on the Python logging module.
+    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
+    logger = logging.getLogger()
+    # this is necessary as "someone" has already initialized logging, preventing basicConfig from doing stuff
+    for h in logger.handlers:
+        logger.removeHandler(h)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG,
+                            format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
+                            datefmt="%Y-%m-%d %H:%M:%S")
+    else:
+        logging.basicConfig(level=logging.INFO)
+
     if args.version:
         print "***********************************************************************"
         print "\n            Mission Support System (mss)\n"
@@ -604,6 +618,7 @@ def main():
         print "Documentation: http://mss.rtfd.io"
         print "Version:", __version__
         print "\nSystem is loading.."
+
     logging.info("Launching user interface...")
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = MSSMainWindow()
@@ -617,11 +632,4 @@ def main():
 #
 
 if __name__ == "__main__":
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
     main()

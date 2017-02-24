@@ -532,7 +532,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
             cdfVar[vName] = v
             cdfOrigin[vName] = (master, cdfm)
         if len(cdfVar) == 0:
-            raise IOError(u"master dataset {} does not have any variable".format(master))
+            raise IOError(u"master dataset '{}' does not have any variable".format(master))
 
         # Open each remaining file in read-only mode.
         # Make sure each file defines the same record variables as the master
@@ -544,16 +544,16 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                 # (..except those that shall not be tested..)
                 if dimName not in skipDimCheck:
                     if dimName not in masterDims:
-                        raise IOError("dimension {} not defined in master {}".format(dimName, master))
+                        raise IOError(u"dimension '{}' not defined in master '{}'".format(dimName, master))
                     if len(part.dimensions[dimName]) != len(cdfm.dimensions[dimName]) or \
                             (part.variables[dimName][:] != cdfm.variables[dimName][:]).any():
-                        raise IOError("dimension {} differs in master {} and "
-                                      "file {}".format(dimName, master, f))
+                        raise IOError(u"dimension '{}' differs in master '{}' and "
+                                      u"file '{}'".format(dimName, master, f))
 
             if requireDimNum:
                 if len(part.dimensions) != len(masterDims):
-                    raise IOError("number of dimensions not consistent in master "
-                                  "{} and {}".format(master, f))
+                    raise IOError(u"number of dimensions not consistent in master "
+                                  u"'{}' and '{}'".format(master, f))
 
             for vName, v in part.variables.items():
                 # Exclude dimension variables.
@@ -573,10 +573,10 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
         self._file_format = []
         for dset in self._cdf:
-            if dset.file_format == 'NETCDF4':
-                raise ValueError('MFNetCDF4 only works with NETCDF3_CLASSIC, '
-                                 'NETCDF3_64BIT and NETCDF4_CLASSIC '
-                                 'formatted files, not NETCDF4')
+            if dset.file_format == "NETCDF4":
+                raise ValueError("MFNetCDF4 only works with NETCDF3_CLASSIC, "
+                                 "NETCDF3_64BIT and NETCDF4_CLASSIC "
+                                 "formatted files, not NETCDF4")
             self._file_format.append(dset.file_format)
 
     def getOriginFile(self, varname):

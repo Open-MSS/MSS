@@ -880,6 +880,7 @@ class DataFiles(object):
     def __init__(self, data_dir=None, server_config_dir=None):
         self.data_dir = data_dir
         self.server_config_file = os.path.join(server_config_dir, "mss_wms_settings.py")
+        self.server_auth_config_file = os.path.join(server_config_dir, "mss_wms_auth.py")
         self.inidate = '20121017_12'
         self.levtype = 'type'
         self.range_data = RangeData().data
@@ -904,12 +905,38 @@ class DataFiles(object):
             os.makedirs(self.data_dir)
 
     def create_server_config(self, detailed_information=False):
+        simple_auth_config = '''
+#
+# HTTP Authentication                               ###
+#
+#
+# Use the following code to create a new md5 digest of a password (e.g. in
+# ipython):
+#     import hashlib; hashlib.md5("my_new_password").hexdigest()
+allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
+                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
+
+'''
         if detailed_information:
             simple_server_config = '''"""
 
 simple server config for demodata
 """
 import os
+import sys
+
+# Configuration of Python's code search path
+# If you already have set up the PYTHONPATH environment variable for the
+# stuff you see below, you don't need to do a1) and a2).
+
+# a1) Path of the directory where the mss code package is located.
+# sys.path.insert(0, '/home/mss/miniconda2/lib/python2.7/site-packages')
+
+# a2) Path of the directory where mss_wms_settings.py is located
+#MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
+#sys.path.insert(0, MSSCONFIGPATH)
+#os.chdir(MSSCONFIGPATH)
+
 import mslib.mswms.dataaccess
 from mslib.mswms import mpl_hsec_styles
 from mslib.mswms import mpl_vsec_styles
@@ -934,22 +961,13 @@ import mslib.mswms
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
 
-
+#
 # HTTP Authentication                               ###
 #
-
 # If you require basic HTTP authentication, set the following variable
 # to True. Add usernames in the list "allowed:users". Note that the
 # passwords are not specified in plain text but by their md5 digest.
 #enable_basic_http_authentication = False
-
-# Use the following code to create a new md5 digest of a password (e.g. in
-# ipython):
-#     import hashlib; hashlib.md5("my_new_password").hexdigest()
-#allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
-#                 ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
-
-
 
 
 # xml_template directory is a sub directory of mswms
@@ -1026,15 +1044,23 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
             print(u'''
 /!\ existing server config: "{}" for demodata not overwritten!
             '''.format(self.server_config_file))
+        if not os.path.exists(self.server_auth_config_file):
+            fid = open(self.server_auth_config_file, 'w')
+            fid.write(simple_auth_config)
+            fid.close()
+        else:
+            print(u'''
+/!\ existing server auth config: "{}" for demodata not overwritten!
+                '''.format(self.server_auth_config_file))
 
     def hybrid_data(self):
         self.levtype = 'ml'
         labels = ['U', 'V', 'W', 'CC', 'T', 'Q', 'P_derived']
         for label in labels:
             filename_out = os.path.join(self.data_dir,
-                                        "{}_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(self.inidate, label,
-                                                                                          self.levtype))
-            text = self.range_data["{}_{}".format(label, self.levtype)]
+                                        u"{}_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(
+                                            self.inidate, label, self.levtype))
+            text = self.range_data[u"{}_{}".format(label, self.levtype)]
             rangedata = StringIO(text)
             ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
             hybrid_default = np.linspace(20, 91, 72)

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib
 
 N_LEVELS = 16
 
@@ -62,9 +63,11 @@ class Targets(object):
         "eastward_wind": ("ms$^{-1}$", 1),
         "equivalent_latitude": ("degree N", 1),
         "ertel_potential_vorticity": ("PVU", 1),
+        "gravity_wave_temperature_perturbation": ("K", 1),
         "mean_age_of_air": ("month", 1),
         "northward_wind": ("ms$^{-1}$", 1),
-        "square_of_brunt_vaisala_frequency_in_air": ("s${^-2}$", 1),
+        "square_of_brunt_vaisala_frequency_in_air": ("s$^{-2}$", 1),
+        "tropopause_altitude": ("km", 1),
     }
 
     """The THRESHOLDS are used to determine a single colourmap suitable for all plotting purposes (that is vertical
@@ -122,6 +125,16 @@ class Targets(object):
             "fraction_above_24months_of_age_of_air_spectrum",
     ]:
         UNITS[standard_name] = ("%", 100)
+
+    TITLES = {
+        "ertel_potential_vorticity": "PV",
+        "square_of_brunt_vaisala_frequency_in_air": "N$^2$",
+        "gravity_wave_temperature_perturbation": "Gravity Wave Temperature Residual",
+        "tropopause_altitude": "Thermal Tropopause",
+    }
+    for standard_name in _TARGETS:
+        if standard_name.startswith("mole_fraction_of_") and standard_name.endswith("_in_air"):
+            TITLES[standard_name] = standard_name[17:-7]
 
     @staticmethod
     def get_targets():
@@ -219,3 +232,135 @@ def get_log_levels(cmin, cmax, levels=N_LEVELS):
         clev = np.asarray(list(clevlo) + list(clevhi))
 
     return clev
+
+
+def get_style_parameters(dataname, style, cmin, cmax, data):
+    if cmin is None or cmax is None:
+        cmin, cmax = data.min(), data.max()
+        if 0 < cmin < 0.05 * cmax:
+            cmin = 0.
+    cmap = matplotlib.pyplot.cm.rainbow
+
+    if style == "default":
+        clev = np.linspace(cmin, cmax, 16)
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style == "auto":
+        cmin = data.min()
+        cmax = data.max()
+        if cmin > 0 and cmin < 0.05 * cmax:
+            cmin = 0.
+        clev = np.linspace(cmin, cmax, 16)
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style == "log":
+        clev = get_log_levels(cmin, cmax, 16)
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style == "autolog":
+        cmin = data.min()
+        cmax = data.max()
+        clev = get_log_levels(cmin, cmax, 16)
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style == "nonlinear":
+        clev = Targets.get_thresholds(dataname)
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style.startswith("ertel_potential_vorticity"):
+        colors = [
+            (1.0, 0.55000000000000004, 1.0, 1.0),
+            (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
+            (0.64666666666666672, 0.25, 1.0, 1.0),
+            (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
+            (0.69999999999999996, 1.0, 1.0, 1.0),
+            (0.46666666666666667, 0.73333333333333339, 1.0, 1.0),
+            (0.23333333333333334, 0.46666666666666667, 1.0, 1.0),
+            (0.0, 0.20000000000000001, 1.0, 1.0),
+            (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
+            (0.43333333333333335, 0.90000000000000002, 0.43333333333333335, 1.0),
+            (0.21666666666666667, 0.80000000000000004, 0.21666666666666667, 1.0),
+            (0.0, 0.69999999999999996, 0.0, 1.0),
+            (1.0, 1.0, 0.0, 1.0),
+            (1.0, 0.375, 0.0, 1.0),
+            (0.90000000000000002, 0.0, 0.041666666666666664, 1.0),
+            (0.40000000000000002, 0.0, 0.25, 1.0)]
+        clev = list(np.arange(0, 4, 0.5)) + range(4, 8) + range(8, 18, 2)
+        if style[-2:] == "nh":
+            cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors, name="pv_map")
+            cmap.set_over((0.8, 0.8, 0.8, 1.0))
+        else:
+            cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors[::-1], name="pv_map")
+            cmap.set_under((0.8, 0.8, 0.8, 1.0))
+            clev = [-_x for _x in clev[::-1]]
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style.startswith("equivalent_latitude"):
+        colors = [
+            (1.0, 0.55000000000000004, 1.0, 1.0),
+            (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
+            (0.64666666666666672, 0.25, 1.0, 1.0),
+            (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
+            (0.69999999999999996, 1.0, 1.0, 1.0),
+            (0.46666666666666667, 0.73333333333333339, 1.0, 1.0),
+            (0.23333333333333334, 0.46666666666666667, 1.0, 1.0),
+            (0.0, 0.20000000000000001, 1.0, 1.0),
+            (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
+            (0.43333333333333335, 0.90000000000000002, 0.43333333333333335, 1.0),
+            (0.21666666666666667, 0.80000000000000004, 0.21666666666666667, 1.0),
+            (0.0, 0.69999999999999996, 0.0, 1.0),
+            (1.0, 1.0, 0.0, 1.0),
+            (1.0, 0.375, 0.0, 1.0),
+            (0.90000000000000002, 0.0, 0.041666666666666664, 1.0),
+            (0.40000000000000002, 0.0, 0.25, 1.0)]
+        clev = np.arange(5, 86, 5)
+        if style[-2:] == "nh":
+            cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors)
+        else:
+            cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors[::-1])
+            clev = [-_x for _x in clev[::-1]]
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style == "gravity_wave_temperature_perturbation":
+        cmap = matplotlib.pyplot.cm.Spectral_r
+        clev = [-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3]
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style == "square_of_brunt_vaisala_frequency_in_air":
+        cmap = matplotlib.pyplot.cm.colors.ListedColormap(
+            [(1.0, 0.55000000000000004, 1.0, 1.0),
+             (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
+             (0.64666666666666672, 0.25, 1.0, 1.0),
+             (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
+             (0.69999999999999996, 1.0, 1.0, 1.0),
+             (0.0, 0.20000000000000001, 1.0, 1.0),
+             (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
+             (0.0, 0.69999999999999996, 0.0, 1.0),
+             (1.0, 1.0, 0.0, 1.0),
+             (1.0, 0.73529411764705888, 0.0, 1.0),
+             (1.0, 0.46323529411764708, 0.0, 1.0),
+             (1.0, 0.21568627450980393, 0.0, 1.0),
+             (1.0, 0.034313725490196068, 0.0, 1.0),
+             (0.8294117647058824, 0.0, 0.071078431372549017, 1.0),
+             (0.61176470588235299, 0.0, 0.16176470588235295, 1.0),
+             (0.40000000000000002, 0.0, 0.25, 1.0),
+             ], name="n2_map")
+        cmap.set_over((0.8, 0.8, 0.8, 1.0))
+        clev = np.arange(0, 8.5 / 1e4, 0.5 / 1e4)
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style == "tropopause_altitude":
+        cmap = matplotlib.pyplot.cm.terrain
+        norm = None
+        clev = np.arange(5, 16.1, 0.25)
+    else:
+        raise RuntimeError(u"Illegal plotting style?! ({})".format(style))
+
+    return cmin, cmax, clev, cmap, norm
+
+
+def get_cbar_label_format(style, maxvalue):
+    format = "%.3g"
+    if style != "log":
+        if maxvalue >= 100. and maxvalue < 10000.:
+            format = "%4i"
+        if maxvalue >= 10. and maxvalue < 100.:
+            format = "%.1f"
+        if maxvalue >= 1. and maxvalue < 10.:
+            format = "%.2f"
+        if maxvalue >= .1 and maxvalue < 1.:
+            format = "%.3f"
+        if maxvalue >= .01 and maxvalue < 0.1:
+            format = "%.4f"
+    return format

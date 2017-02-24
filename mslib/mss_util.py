@@ -68,19 +68,19 @@ def config_loader(config_file=None, dataset=None, default=None):
         with open(os.path.join(config_file)) as source:
             data = json.load(source)
     except (AttributeError, IOError, TypeError), ex:
-        logging.error("MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
+        logging.error(u"MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
         if default is not None:
             return default
         raise IOError("MSS config File not found")
     except ValueError, ex:
-        error_message = "MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
+        error_message = u"MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
         raise FatalUserError(error_message)
     if dataset:
         try:
             return data[dataset]
         except KeyError:
-            logging.debug("Config File used: {:}".format(config_file))
-            logging.debug("Key not defined in config_file! {:}".format(dataset))
+            logging.debug(u"Config File used: '{:}'".format(config_file))
+            logging.debug(u"Key not defined in config_file! '{:}'".format(dataset))
             if default is not None:
                 return default
             raise KeyError("default value for key not set")

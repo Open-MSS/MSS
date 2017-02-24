@@ -116,8 +116,8 @@ class MSSPlotDriver(object):
         fc_step = fc_time - init_time
         fc_step = fc_step.days * 24 + fc_step.seconds / 3600
         self.fc_time = fc_time
-        logging.debug("\trequested initialisation time {}".format(init_time))
-        logging.debug("\trequested forecast valid time {} (step {} hrs)".format(fc_time, fc_step))
+        logging.debug(u"\trequested initialisation time {}".format(init_time))
+        logging.debug(u"\trequested forecast valid time {} (step {} hrs)".format(fc_time, fc_step))
 
         # Check if a dataset is open and if it contains the requested times.
         # (a dataset will only be open if the used layer has not changed,
@@ -125,9 +125,9 @@ class MSSPlotDriver(object):
         if self.dataset is not None:
             logging.debug("checking on open dataset.")
             if self.init_time == init_time:
-                logging.debug("\tinitialisation time ok ({}).".format(init_time))
+                logging.debug(u"\tinitialisation time ok ({}).".format(init_time))
                 if fc_time in self.times:
-                    logging.debug("\tforecast valid time contained ({}).".format(fc_time))
+                    logging.debug(u"\tforecast valid time contained ({}).".format(fc_time))
                     return
             logging.debug("need to re-open input files.")
             self.dataset.close()
@@ -149,10 +149,10 @@ class MSSPlotDriver(object):
             short_filename = os.path.basename(filename)
             if filename not in filenames:
                 filenames.append(filename)
-            logging.debug("\tvariable {} requires input file {}".format(var, short_filename))
+            logging.debug(u"\tvariable '{}' requires input file '{}'".format(var, short_filename))
             if short_filename not in available_files:
-                logging.error(u"ERROR: file {} does not exist".format(short_filename))
-                raise IOError(u"file {} does not exist".format(short_filename))
+                logging.error(u"ERROR: file '{}' does not exist".format(short_filename))
+                raise IOError(u"file '{}' does not exist".format(short_filename))
 
         if len(filenames) == 0:
             raise ValueError("no files found that correspond to the specified "
@@ -183,10 +183,10 @@ class MSSPlotDriver(object):
         try:
             lat_data, lon_data, lat_order = \
                 netCDF4tools.get_latlon_data(dataset)
-        except Exception as e:
-            logging.error("ERROR: {}".format(e))
+        except Exception as ex:
+            logging.error("ERROR: {} {}".format(type(ex), ex))
             dataset.close()
-            raise e
+            raise
 
         # Try to load vertical hybrid coordinate (model levels), isopressure
         # coordinate (pressure levels) or iso-potential-vorticity (pv levels).

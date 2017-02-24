@@ -1,6 +1,19 @@
 Changelog
 =========
 
+
+Version 1.3.2
+-------------
+
+Bug Fixes:
+ - Generic Maps for CLaMS employ incorrect styles, #138
+ - update of map on changes and style changes, #131
+ - Weight from aircraft limited to 99999, #128
+ - GUI load of different config.json fails, #127
+ - Delete Waypoint via Top/Sideview does not work, #124
+ - sideview axis too much details, #104
+
+
 Version 1.3.1
 -------------
 

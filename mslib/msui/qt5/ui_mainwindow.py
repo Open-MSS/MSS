@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -83,7 +83,7 @@ class Ui_MSSMainWindow(object):
         self.verticalLayout.addWidget(self.groupBox_2)
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 424, 26))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 424, 25))
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
@@ -144,11 +144,10 @@ class Ui_MSSMainWindow(object):
         self.menu_View.addAction(self.actionTopView)
         self.menu_View.addAction(self.actionSideView)
         self.menu_View.addAction(self.actionTableView)
-        self.menu_View.addSeparator()
-        self.menu_View.addAction(self.actionLoopView)
-        self.menu_View.addSeparator()
-        self.menu_View.addAction(self.actionTimeSeriesViewTrajectories)
         self.menu_Tools.addAction(self.actionTrajectoryToolLagranto)
+        self.menu_Tools.addAction(self.actionTimeSeriesViewTrajectories)
+        self.menu_Tools.addSeparator()
+        self.menu_Tools.addAction(self.actionLoopView)
         self.menu_Help.addAction(self.actionOnlineHelp)
         self.menu_Help.addAction(self.actionAboutMSUI)
         self.menubar.addAction(self.menu_File.menuAction())

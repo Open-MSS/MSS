@@ -7,12 +7,13 @@ AUTHORS:
 """
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
+import logging
+import pykml.parser
 
 # local application imports
+from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
-import pykml.parser
 
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
@@ -38,8 +39,12 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.btLoadFile.clicked.connect(self.load_file)
         self.pbSelectColour.clicked.connect(self.select_colour)
         self.cbOverlay.stateChanged.connect(self.update_settings)
+        self.dsbLineWidth.valueChanged.connect(self.update_settings)
+        self.cbManualStyle.stateChanged.connect(self.update_settings)
+
         self.cbOverlay.setChecked(True)
         self.cbOverlay.setEnabled(False)
+        self.cbManualStyle.setChecked(False)
 
     def get_color(self):
         button = self.pbSelectColour
@@ -52,7 +57,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if self.view is not None and self.cbOverlay.isChecked() and self.patch is not None:
             self.view.plotKML(self.patch)
-            self.patch.update(self.get_color())
+            self.patch.update(self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
         elif self.patch is not None:
             self.view.plotKML(None)
 
@@ -90,13 +95,14 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.patch = None
             self.cbOverlay.setEnabled(False)
         try:
-            with open(self.leFile.text()) as kmlf:
+            with open(unicode(self.leFile.text())) as kmlf:
                 self.kml = pykml.parser.parse(kmlf).getroot()
-                self.patch = KMLPatch(self.view.map, self.kml, self.get_color())
+                self.patch = KMLPatch(self.view.map, self.kml,
+                                      self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
             self.cbOverlay.setEnabled(True)
             if self.view is not None and self.cbOverlay.isChecked():
                 self.view.plotKML(self.patch)
-        except IOError, ex:
-            QtWidgets.QMessageBox.critical(self, self.tr("KML Overlay"),
-                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)),
-                                           QtWidgets.QMessageBox.Ok)
+        except (IOError, pykml.parser.etree.XMLSyntaxError), ex:
+            logging.error("KML Overlay - %s: %s", type(ex), ex)
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("KML Overlay"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))

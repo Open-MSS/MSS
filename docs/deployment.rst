@@ -59,6 +59,7 @@ Our examples are based on the following directories located in the home director
  .
  ├── config
  │   └── mss_wms_settings.py
+ |   └── mss_wms_auth.py
  ├── log
  │   └── mss_error.log
  ├── miniconda2
@@ -86,7 +87,8 @@ Create that mss user first.
 Configuration of apache mod_wsgi.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You have to add to mod_wsgi.conf::
+One posibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternativly you
+could add it also to mss_wms_settings.py.
 
   WSGIPythonPath /home/mss/config:/home/mss/miniconda2/lib/python2.7/site-packages
 
@@ -108,6 +110,8 @@ You can setup a vhost for this service.
  .. literalinclude:: samples/wsgi/wms.wsgi
 
 
+
+
 Configuration of wsgi auth
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -117,6 +121,10 @@ To restrict access to your data use this script.
 
 
  .. literalinclude:: samples/wsgi/auth.wsgi
+
+This needs also a configuration **/home/mss/config/mss_wms_auth.py** script.
+
+ .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
 
 
 Configuration of your site as vhost
@@ -158,8 +166,8 @@ For the standalone server *mswms* you need the path of your mss_wms_settings.py 
 
 .. _demodata:
 
-Demodata
-------------------
+demodata - simulated data
+==============================
 
 We provide demodata by executing the demodata programm. This creates in your home directory data files and also
 the needed server configuration file. The program creates 70MB of examples.
@@ -169,6 +177,7 @@ This script does not overwrite an existing mss_wms_settings.py
 
     mss
     ├── mss_wms_settings.py
+    ├── mss_wms_auth.py
     ├── testdata
     │   ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
     │   ├── 20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc
@@ -189,8 +198,12 @@ e.g.
 
     $ export PYTHONPATH=~/mss
 
- .. _detailed_mss_wms_settings:
 
-A more detailed server configuration for this demodata can be found at
+
+Detailed server configuration *mss_wms_settings.py* for this demodata
+
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
 
+For setting authentication see *mss_wms_auth.py*
+
+ .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample

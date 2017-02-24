@@ -10,7 +10,7 @@ server (simply execute this file with Python).
 import paste.httpserver
 import argparse
 import logging
-from wms import mss_wms_settings
+from wms import mss_wms_settings, mss_wms_auth
 
 
 def main():
@@ -51,13 +51,13 @@ def main():
         realm = 'Mission Support Web Map Service'
 
         def authfunc(environ, username, password):
-            for u, p in mss_wms_settings.allowed_users:
+            for u, p in mss_wms_auth.allowed_users:
                 if (u == username) and (p == hashlib.md5(password).hexdigest()):
                     return True
             return False
 
         application = AuthBasicHandler(application, realm, authfunc)
-    logging.info(u"Configuration File: {}".format(mss_wms_settings.__file__))
+    logging.info(u"Configuration File: '{}'".format(mss_wms_settings.__file__))
     paste.httpserver.serve(application, host=args.host, port=args.port, use_threadpool=args.use_threadpool)
 
 if __name__ == '__main__':
