@@ -894,8 +894,8 @@ class SatelliteOverpassPatch(object):
             # the plots look fine nevertheless.
             try:
                 element.remove()
-            except:
-                pass
+            except Exception, ex:
+                logging.error("Wildcard exception caught: %s %s", type(ex), ex)
 
 
 class KMLPatch(object):
@@ -993,7 +993,7 @@ class KMLPatch(object):
 
     def parse_styles(self, level):
         for style in getattr(level, "Style", []):
-            name = style.attrib.get("id", None)
+            name = style.attrib.get("id")
             if name is None:
                 continue
             self.styles[name] = {

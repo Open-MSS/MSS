@@ -200,18 +200,17 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
                                       password=self.password)
 
         # check for service exceptions, and return
-        if hasattr(u, "info"):
-            # NOTE: There is little bug in owslib.util.openURL -- if the file
-            # returned by the http server is an XML file, urlopen converts it
-            # into an "RereadableURL" object. WHile this enables the URL content
-            # to be scanned in urlopen as well as in a following method
-            # (urllib2.urlopen objects only allow the content to be read once),
-            # the "info" attribute is missing after the conversion..
-            if u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
-                se_xml = u.read()
-                se_tree = etree.fromstring(se_xml)
-                err_message = unicode(se_tree.find('ServiceException').text).strip()
-                raise mslib.owslib.wms.ServiceException(err_message, se_xml)
+        # NOTE: There is little bug in owslib.util.openURL -- if the file
+        # returned by the http server is an XML file, urlopen converts it
+        # into an "RereadableURL" object. WHile this enables the URL content
+        # to be scanned in urlopen as well as in a following method
+        # (urllib2.urlopen objects only allow the content to be read once),
+        # the "info" attribute is missing after the conversion..
+        if hasattr(u, "info") and u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
+            se_xml = u.read()
+            se_tree = etree.fromstring(se_xml)
+            err_message = unicode(se_tree.find('ServiceException').text).strip()
+            raise mslib.owslib.wms.ServiceException(err_message, se_xml)
         return u
 
 
@@ -676,7 +675,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     return True
         return False
 
-    def interpret_timestring(self, timestring, return_format=False):
+    @staticmethod
+    def interpret_timestring(timestring, return_format=False):
         """Tries to interpret a given time string.
 
         Returns a datetime objects if the method succeeds, otherwise None.
@@ -695,7 +695,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     return format
                 else:
                     return d
-            except:
+            except ValueError:
                 pass
         return None
 
@@ -955,7 +955,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.check_valid_time(save_valid_time)
         self.layerChangeInProgress = False
 
-    def secs_from_timestep(self, timestep_string):
+    @staticmethod
+    def secs_from_timestep(timestep_string):
         """Convert a string specifying a time step (e.g. 5 min, 3 hours) to
            seconds.
 
@@ -967,19 +968,18 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         try:
             minutes = int(timestep_string.split(" min")[0])
             return minutes * 60
-        except:
+        except ValueError:
             pass
         try:
             hours = int(timestep_string.split(" hour")[0])
             return hours * 3600
-        except:
+        except ValueError:
             pass
         try:
             days = int(timestep_string.split(" days")[0])
             return days * 86400
-        except:
-            raise ValueError(u"cannot convert {} to seconds: wrong format."
-                             .format(timestep_string))
+        except ValueError:
+            raise ValueError(u"cannot convert '{}' to seconds: wrong format.".format(timestep_string))
 
     def init_time_back_click(self):
         """Slot for the tbInitTime_back button.

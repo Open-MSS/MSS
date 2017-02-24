@@ -750,11 +750,11 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
 
         aboveThreshold = False
         timeWindows = []
-        for i in range(len(myData)):
-            if not aboveThreshold and myData[i] > threshold:
+        for i, data in enumerate(myData):
+            if not aboveThreshold and data > threshold:
                 aboveThreshold = True
                 windowStartTime = timeData[i]
-            elif aboveThreshold and myData[i] <= threshold:
+            elif aboveThreshold and data <= threshold:
                 aboveThreshold = False
                 timeWindows.append([windowStartTime, timeData[i]])
 
@@ -1128,17 +1128,15 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                               if isinstance(child, LagrantoMapItem)])
             #
             # Only flight tracks and trajectories can be queried and selected.
-            if isinstance(item, (FlightTrackItem, TrajectoryItem)):
-                # Check if the item matches the query.
-                if item.query(queryTranslation):
-                    #
-                    # The properties of the current item fulfil the query and
-                    # the item should be selected. Hence create an index.
-                    index = self.createIndex(item.row(), 0, item)
-                    #
-                    # QtGui.QItemSelectionRange.__init__ (self,
-                    #     QModelIndex index)
-                    itemSelectionRange = QtGui.QItemSelectionRange(index)
-                    itemSelection.append(itemSelectionRange)
+            # Check if the item matches the query.
+            if isinstance(item, (FlightTrackItem, TrajectoryItem)) and item.query(queryTranslation):
+                # The properties of the current item fulfil the query and
+                # the item should be selected. Hence create an index.
+                index = self.createIndex(item.row(), 0, item)
+                #
+                # QtGui.QItemSelectionRange.__init__ (self,
+                #     QModelIndex index)
+                itemSelectionRange = QtGui.QItemSelectionRange(index)
+                itemSelection.append(itemSelectionRange)
 
         return itemSelection

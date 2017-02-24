@@ -246,7 +246,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
     elif style == "auto":
         cmin = data.min()
         cmax = data.max()
-        if cmin > 0 and cmin < 0.05 * cmax:
+        if 0 < cmin < 0.05 * cmax:
             cmin = 0.
         clev = np.linspace(cmin, cmax, 16)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
@@ -351,14 +351,14 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
 def get_cbar_label_format(style, maxvalue):
     format = "%.3g"
     if style != "log":
-        if maxvalue >= 100. and maxvalue < 10000.:
+        if 100 <= maxvalue < 10000.:
             format = "%4i"
-        if maxvalue >= 10. and maxvalue < 100.:
+        elif 10 <= maxvalue < 100.:
             format = "%.1f"
-        if maxvalue >= 1. and maxvalue < 10.:
+        elif 1 <= maxvalue < 10.:
             format = "%.2f"
-        if maxvalue >= .1 and maxvalue < 1.:
+        elif 0.1 <= maxvalue < 1.:
             format = "%.3f"
-        if maxvalue >= .01 and maxvalue < 0.1:
+        elif 0.01 <= maxvalue < 0.1:
             format = "%.4f"
     return format
