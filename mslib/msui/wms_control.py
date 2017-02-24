@@ -660,7 +660,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             wmsbrws = wms_capabilities.WMSCapabilitiesBrowser(
                 parent=self,
                 url=self.wms.url,
-                capabilities_xml=self.wms.capabilities_document)
+                capabilities=self.wms)
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             wmsbrws.show()
 

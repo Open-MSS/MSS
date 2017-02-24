@@ -45,7 +45,7 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
     """Dialog presenting an XML document to the user.
     """
 
-    def __init__(self, parent=None, url=None, capabilities_xml=None):
+    def __init__(self, parent=None, url=None, capabilities=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
@@ -58,10 +58,42 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
             url = ""
         self.lblURL.setText(url)
 
-        if capabilities_xml is None:
-            capabilities_xml = ""
-        self.txtCapabilities.setPlainText(capabilities_xml)
+        self.capabilities = capabilities
 
+        self.update_text()
+        self.cbFullView.stateChanged.connect(self.update_text)
+
+    def update_text(self):
+        if self.cbFullView.isChecked():
+            self.txtCapabilities.setPlainText(self.capabilities.capabilities_document)
+        else:
+            text = ("<b>Title:</b> {title}<p>"
+                    "<b>Service type:</b> {type} {version}<br>"
+                    "<b>Abstract:</b><br>{abstract}<br>"
+                    "<b>Contact:</b><br>"
+                    "    {name}<br>"
+                    "    {organization}<br>"
+                    "    {email}<br>"
+                    "    {address}<br>"
+                    "    {postcode} {city}<br>\n"
+                    "<b>Keywords:</b> {keywords}<br>\n"
+                    "<b>Access constraints:</b> {accessconstraints}<br>\n"
+                    "<b>Fees:</b> {fees}").format(
+                url=self.capabilities.provider.url,
+                type=self.capabilities.identification.type,
+                version=self.capabilities.identification.version,
+                title=self.capabilities.identification.title,
+                abstract=self.capabilities.identification.abstract,
+                name=self.capabilities.provider.contact.name,
+                organization=self.capabilities.provider.contact.organization,
+                email=self.capabilities.provider.contact.email,
+                address=self.capabilities.provider.contact.address,
+                postcode=self.capabilities.provider.contact.postcode,
+                city=self.capabilities.provider.contact.city,
+                keywords=self.capabilities.identification.keywords,
+                accessconstraints=self.capabilities.identification.accessconstraints,
+                fees=self.capabilities.identification.fees)
+            self.txtCapabilities.setHtml(text)
 
 def _main():
     # Log everything, and send it to stderr.

@@ -250,6 +250,8 @@ class WMSServer(object):
                                service_contact_person=mss_wms_settings.__dict__.get("service_contact_person", ""),
                                service_contact_organisation=mss_wms_settings.__dict__.get(
                                    "service_contact_organisation", ""),
+                               service_contact_position=mss_wms_settings.__dict__.get("service_contact_position", ""),
+                               service_email=mss_wms_settings.__dict__.get("service_email", ""),
                                service_address_type=mss_wms_settings.__dict__.get("service_address_type", ""),
                                service_address=mss_wms_settings.__dict__.get("service_address", ""),
                                service_city=mss_wms_settings.__dict__.get("service_city", ""),
