@@ -269,7 +269,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         if proj_params is None:
             proj_params = get_projection_params(current_map["CRS"])
         if proj_params is None:
-            raise ValueError("unknown EPSG code: {:}".format(current_map["CRS"]))
+            raise ValueError(u"unknown EPSG code: {:}".format(current_map["CRS"]))
 
         # Create a keyword arguments dictionary for basemap that contains
         # the projection parameters.

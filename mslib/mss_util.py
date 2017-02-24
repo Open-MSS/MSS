@@ -79,8 +79,8 @@ def config_loader(config_file=None, dataset=None, default=None):
         try:
             return data[dataset]
         except KeyError:
-            logging.debug(u"Config File used: {:}".format(config_file))
-            logging.debug("Key not defined in config_file! {:}".format(dataset))
+            logging.debug(u"Config File used: '{:}'".format(config_file))
+            logging.debug(u"Key not defined in config_file! '{:}'".format(dataset))
             if default is not None:
                 return default
             raise KeyError("default value for key not set")

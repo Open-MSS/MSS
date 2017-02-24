@@ -229,7 +229,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
             if dataitem not in data.keys():
-                raise KeyError(u"required data field {} not found".format(dataitem))
+                raise KeyError(u"required data field '{}' not found".format(dataitem))
 
         # Copy parameters to properties.
         self.data = data

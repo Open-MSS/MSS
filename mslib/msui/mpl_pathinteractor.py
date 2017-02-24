@@ -623,7 +623,7 @@ class PathInteractor:
             wp = wps[row]
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
-                "Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
+                u"Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
                 .format(row, wp.lat, wp.lon, wp.flightlevel),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
@@ -839,8 +839,8 @@ class HPathInteractor(PathInteractor):
             x, y = event.xdata, event.ydata
             best_index = self.pathpatch.get_path() \
                 .index_of_closest_segment(x, y, eps=self.appropriateEpsilon())
-            logging.debug("TopView insert point: clicked at ({:f}, {:f}), "
-                          "best index: {:d}".format(x, y, best_index))
+            logging.debug(u"TopView insert point: clicked at ({:f}, {:f}), "
+                          u"best index: {:d}".format(x, y, best_index))
             self.pathpatch.get_path().insert_vertex(best_index, [x, y],
                                                     WaypointsPath.LINETO)
 
@@ -851,7 +851,7 @@ class HPathInteractor(PathInteractor):
             elif len(wpm.allWaypointData()) > 0 and best_index == 0:
                 flightlevel = wpm.waypointData(0).flightlevel
             else:
-                logging.error("Cannot copy flightlevel. best_index: {}, len: {}".format(
+                logging.error(u"Cannot copy flightlevel. best_index: {}, len: {}".format(
                               best_index, len(wpm.allWaypointData())))
                 flightlevel = 0
             new_wp = ft.Waypoint(round(lat, 2), round(lon, 2), flightlevel)

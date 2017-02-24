@@ -78,16 +78,16 @@ TABLE_FULL = [
     ("Lat\n(+-90)", lambda waypoint: waypoint.lat, True),
     ("Lon\n(+-180)", lambda waypoint: waypoint.lon, True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
-    ("Pressure\n(hPa)", lambda waypoint: "%.2f" % (waypoint.pressure / 100.), True),
-    ("Leg dist.\n(km [nm])", lambda waypoint: "%d [%d]" % (waypoint.distance_to_prev,
-                                                           waypoint.distance_to_prev / 1.852), False),
-    ("Cum. dist.\n(km [nm])", lambda waypoint: "%d [%d]" % (waypoint.distance_total,
-                                                            waypoint.distance_total / 1.852), False),
+    ("Pressure\n(hPa)", lambda waypoint: "{:.2f}".format(waypoint.pressure / 100.), True),
+    ("Leg dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
+        int(waypoint.distance_to_prev), int(waypoint.distance_to_prev / 1.852)), False),
+    ("Cum. dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
+        int(waypoint.distance_total), int(waypoint.distance_total / 1.852)), False),
     ("Leg time", lambda waypoint: seconds_to_string(waypoint.leg_time), False),
     ("Cum. time", lambda waypoint: seconds_to_string(waypoint.cum_time), False),
     ("Time (UTC)", lambda waypoint: waypoint.utc_time.strftime("%Y-%m-%d %H:%M:%S"), False),
-    ("Rem. fuel\n(lb)", lambda waypoint: ("%d" % waypoint.rem_fuel), False),
-    ("Aircraft\nweight (lb)", lambda waypoint: ("%d" % waypoint.weight), False),
+    ("Rem. fuel\n(lb)", lambda waypoint: ("{:d}".format(int(waypoint.rem_fuel))), False),
+    ("Aircraft\nweight (lb)", lambda waypoint: ("{:d}".format(int(waypoint.weight))), False),
     ("Comments                        ", lambda waypoint: waypoint.comments, True),
 ]
 
@@ -179,7 +179,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if filename.endswith(".ftml"):
                 self.loadFromFTML(filename)
             else:
-                logging.debug("No known file extension! {}".format(filename))
+                logging.debug(u"No known file extension! '{}'".format(filename))
 
         if waypoints:
             self.replaceWaypoints(waypoints)
@@ -187,12 +187,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
         """
-        logging.debug("loading settings from {}".format(self.settingsfile))
+        logging.debug(u"loading settings from '{}'".format(self.settingsfile))
         try:
             with open(self.settingsfile, "r") as fileobj:
                 settings = pickle.load(fileobj)
         except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
-            logging.warn("Problems reloading stored Performance settings ({}: {}). Switching to default".format(type(ex), ex))
+            logging.warn(u"Problems reloading stored Performance settings ({}: {}). Switching to default".format(type(ex), ex))
             self.performance_settings = DEFAULT_PERFORMANCE
         else:
             self.performance_settings = settings
@@ -203,12 +203,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        logging.debug("storing settings to {}".format(self.settingsfile))
+        logging.debug(u"storing settings to '{}'".format(self.settingsfile))
         try:
             with open(self.settingsfile, "w") as fileobj:
                 pickle.dump(self.performance_settings, fileobj)
         except (OSError, IOError), ex:
-            logging.warn("Problems storing Performance settings ({}: {}).".format(type(ex), ex))
+            logging.warn(u"Problems storing Performance settings ({}: {}).".format(type(ex), ex))
 
     def setName(self, name):
         self.name = name

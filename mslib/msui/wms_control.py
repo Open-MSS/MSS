@@ -184,7 +184,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
         base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
-        complete_url = "%s%s" % (base_url, data)
+        complete_url = u"{}{}".format(base_url, data)
         if return_only_url:
             return complete_url
         logging.debug("Retrieving: %s", complete_url)
@@ -576,10 +576,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     @QtCore.pyqtSlot(Exception)
     def displayException(self, ex):
-        logging.error("ERROR: %s", ex)
+        logging.error(u"ERROR: %s %s", type(ex), ex)
         QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                       self.tr("ERROR:\n{}\n{}".format(type(ex), ex)),
-                                       QtWidgets.QMessageBox.Ok)
+                                       self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
 
     @QtCore.pyqtSlot()
     def displayProgressDialog(self):
@@ -602,7 +601,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
         base_url = unicode(self.cbWMS_URL.currentText())
-        logging.debug("requesting capabilities from %s", base_url)
+        logging.debug(u"requesting capabilities from %s", base_url)
         wms = self.initialiseWMS(base_url)
         if wms is not None:
             # Parse layer tree of the wms object and discover usable layers.
@@ -612,8 +611,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 layer = stack.pop()
                 if len(layer.layers) == 0:
                     if self.crsAllowed(layer):
-                        # cb_string = "%s | %s" % (layer.name, layer.title)
-                        cb_string = "{} | {}".format(layer.title, layer.name)
+                        cb_string = u"{} | {}".format(layer.title, layer.name)
                         if cb_string not in filtered_layers:
                             filtered_layers.append(cb_string)
                 else:
@@ -732,7 +730,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         styles = layerobj.styles
         self.cbStyle.clear()
-        self.cbStyle.addItems(["{} | {}".format(s, styles[s]["title"])
+        self.cbStyle.addItems([u"{} | {}".format(s, styles[s]["title"])
                                for s in styles])
         abstract_text = layerobj.abstract if layerobj.abstract else ""
         abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
@@ -754,7 +752,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         while lobj is not None:
             if "elevation" in lobj.dimensions.keys() and "elevation" in lobj.extents.keys():
                 units = lobj.dimensions["elevation"]["units"]
-                elev_list = ["{} ({})".format(e.strip(), units) for e in
+                elev_list = [u"{} ({})".format(e.strip(), units) for e in
                              lobj.extents["elevation"]["values"]]
                 self.cbLevel.addItems(elev_list)
                 enable_elevation = True
@@ -891,8 +889,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                     interpretation_successful = False
 
                             if not interpretation_successful:
-                                logging.error("Can't understand time string {}."
-                                              " Please check the implementation.".format(time_item))
+                                logging.error(u"Can't understand time string {}."
+                                              u" Please check the implementation.".format(time_item))
 
             # No time extent tag was found: Set allowed_valid_times to None
             # (used by validTimeChanged()).
@@ -907,28 +905,26 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # parent.
             lobj = lobj.parent
 
-        logging.debug("determined init time format: {}".format(self.init_time_format))
+        logging.debug(u"determined init time format: {}".format(self.init_time_format))
         if enable_inittime and self.init_time_format is None:
             msg = "cannot determine init time format."
-            logging.warning("WARNING: {}".format(msg))
+            logging.warning(u"WARNING: {}".format(msg))
             if self.cbInitTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
                 QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                               self.tr("ERROR: {}".format(msg)),
-                                               QtWidgets.QMessageBox.Ok)
+                                               self.tr(u"ERROR: {}".format(msg)))
             self.init_time_format = ""
 
-        logging.debug("determined valid time format: {}".format(self.valid_time_format))
+        logging.debug(u"determined valid time format: {}".format(self.valid_time_format))
         if enable_validtime and self.valid_time_format is None:
             msg = "cannot determine valid time format."
-            logging.warning("WARNING: {}".format(msg))
+            logging.warning(u"WARNING: {}".format(msg))
             if self.cbValidTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
                 QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                               self.tr("ERROR: {}".format(msg)),
-                                               QtWidgets.QMessageBox.Ok)
+                                               self.tr(u"ERROR: {}".format(msg)))
             self.valid_time_format = ""
 
         self.enableLevelElements(enable_elevation)
@@ -1312,23 +1308,21 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if init_time is not None and init_time not in self.allowed_init_times:
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
                                            self.tr("ERROR: Invalid init time chosen\n"
-                                                   "(watch out for the strikethrough)!"),
-                                           QtWidgets.QMessageBox.Ok)
+                                                   "(watch out for the strikethrough)!"))
             return
 
         valid_time = self.getValidTime()
         if valid_time is not None and valid_time not in self.allowed_valid_times:
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
                                            self.tr("ERROR: Invalid valid time chosen!\n"
-                                                   "(watch out for the strikethrough)!"),
-                                           QtWidgets.QMessageBox.Ok)
+                                                   "(watch out for the strikethrough)!"))
             return
 
-        logging.debug("fetching layer {}; style {}, width {:d}, height {:d}".format(layer, style, width, height))
-        logging.debug("crs={}, path={}".format(crs, path_string))
-        logging.debug("init_time={}, valid_time={}".format(init_time, valid_time))
-        logging.debug("level={}".format(level))
-        logging.debug("transparent={}".format(transparent))
+        logging.debug(u"fetching layer {}; style {}, width {:d}, height {:d}".format(layer, style, width, height))
+        logging.debug(u"crs={}, path={}".format(crs, path_string))
+        logging.debug(u"init_time={}, valid_time={}".format(init_time, valid_time))
+        logging.debug(u"level={}".format(level))
+        logging.debug(u"transparent={}".format(transparent))
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1404,7 +1398,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     @QtCore.pyqtSlot(object, object, object, object, object, object, object)
     def continueRetrieveImage(self, img, legend_img, layer, style, init_time, valid_time, md5_filename):
-        logging.debug("{} {} {}".format(self.pdlg.wasCanceled(), self.expected_img != md5_filename, md5_filename))
+        logging.debug(u"{} {} {}".format(self.pdlg.wasCanceled(), self.expected_img != md5_filename, md5_filename))
         if self.pdlg.wasCanceled() or self.expected_img != md5_filename:
             return
         self.pdlg.close()
@@ -1445,7 +1439,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     try:
                         os.remove(os.path.join(self.wms_cache, f))
                     except Exception as ex:
-                        logging.error("ERROR: {}".format(ex))
+                        logging.error(u"ERROR: {} {}".format(type(ex), ex))
                 logging.debug("cache has been cleared.")
             else:
                 logging.debug("no cache exists that can be cleared.")
@@ -1532,7 +1526,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         # Get lat/lon coordinates of flight track and convert to string for URL.
         path_string = ""
         for waypoint in self.waypoints_model.allWaypointData():
-            path_string += "%.2f,%.2f," % (waypoint.lat, waypoint.lon)
+            path_string += "{:.2f},{:.2f},".format(waypoint.lat, waypoint.lon)
         path_string = path_string[:-1]
 
         # Determine the current size of the vertical section plot on the

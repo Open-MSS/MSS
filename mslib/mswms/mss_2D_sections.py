@@ -150,10 +150,10 @@ class Abstract2DSectionStyle(object):
                     self.driver.set_plot_parameters(self,
                                                     init_time=time,
                                                     valid_time=time)
-                except (IOError, ValueError) as e:
+                except (IOError, ValueError) as ex:
                     logging.debug(u"WARNING: unsuccessfully examined data for "
-                                  u"init time {}.. trying next time.".format(time))
-                    logging.debug(u"(Error message: {})".format(e))
+                                  u"init time '{}'.. trying next time.".format(time))
+                    logging.debug(u"(Error message: {} {})".format(type(ex), ex))
                 else:
                     successful = True
                     break
@@ -171,11 +171,11 @@ class Abstract2DSectionStyle(object):
                             self.driver.set_plot_parameters(self,
                                                             init_time=it,
                                                             valid_time=vt)
-                        except (IOError, ValueError) as e:
+                        except (IOError, ValueError) as ex:
                             logging.debug("WARNING: unsuccessfully examined data for "
                                           "init time {}, valid time {}.. trying next "
                                           "time.".format(it, vt))
-                            logging.debug(u"(Error message: {})".format(e))
+                            logging.debug(u"(Error message: {} {})".format(type(ex), ex))
                         else:
                             successful = True
                             break

@@ -205,12 +205,12 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
 
 def make_generic_class(entity, vert):
     class fnord(VS_GenericStyle):
-        name = 'VS_' + entity + "_" + vert
+        name = u"VS_{}_{}".format(entity, vert)
         dataname = entity
         units, unit_scale = Targets.get_unit(dataname)
         title = Targets.TITLES.get(entity, entity)
         if units:
-            title += " ({})".format(units)
+            title += u" ({})".format(units)
         required_datafields = [
             (vert, entity),
             (vert, "ertel_potential_vorticity"), ]
