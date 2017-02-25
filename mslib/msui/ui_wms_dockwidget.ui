@@ -182,6 +182,9 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="styleSheet">
+            <string notr="true">QComboBox QAbstractItemView { min-width: 600px; }</string>
+           </property>
            <property name="sizeAdjustPolicy">
             <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
            </property>
@@ -247,6 +250,9 @@
              <width>16777215</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QComboBox QAbstractItemView { min-width: 600px; }</string>
            </property>
            <property name="sizeAdjustPolicy">
             <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
@@ -765,12 +771,12 @@ p, li { white-space: pre-wrap; }
             <date>
              <year>2010</year>
              <month>1</month>
-             <day>21</day>
+             <day>20</day>
             </date>
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>11</hour>
+             <hour>10</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2000</year>
@@ -787,7 +793,7 @@ p, li { white-space: pre-wrap; }
            </property>
            <property name="minimumTime">
             <time>
-             <hour>11</hour>
+             <hour>10</hour>
              <minute>0</minute>
              <second>0</second>
             </time>

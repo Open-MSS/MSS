@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'msui/ui_wms_dockwidget.ui'
+# Form implementation generated from reading ui file 'ui_wms_dockwidget.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -89,6 +89,7 @@ class Ui_WMSDockWidget(object):
         self.cbLayer.setSizePolicy(sizePolicy)
         self.cbLayer.setMinimumSize(QtCore.QSize(200, 0))
         self.cbLayer.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.cbLayer.setStyleSheet("QComboBox QAbstractItemView { min-width: 600px; }")
         self.cbLayer.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContentsOnFirstShow)
         self.cbLayer.setMinimumContentsLength(0)
         self.cbLayer.setObjectName("cbLayer")
@@ -116,6 +117,7 @@ class Ui_WMSDockWidget(object):
         self.cbStyle.setSizePolicy(sizePolicy)
         self.cbStyle.setMinimumSize(QtCore.QSize(200, 0))
         self.cbStyle.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.cbStyle.setStyleSheet("QComboBox QAbstractItemView { min-width: 600px; }")
         self.cbStyle.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContentsOnFirstShow)
         self.cbStyle.setFrame(True)
         self.cbStyle.setObjectName("cbStyle")
@@ -298,10 +300,10 @@ class Ui_WMSDockWidget(object):
         self.dteValidTime = QtWidgets.QDateTimeEdit(WMSDockWidget)
         self.dteValidTime.setMinimumSize(QtCore.QSize(160, 0))
         self.dteValidTime.setMaximumSize(QtCore.QSize(160, 16777215))
-        self.dteValidTime.setDate(QtCore.QDate(2010, 1, 21))
-        self.dteValidTime.setMinimumDateTime(QtCore.QDateTime(QtCore.QDate(2000, 1, 1), QtCore.QTime(11, 0, 0)))
+        self.dteValidTime.setDate(QtCore.QDate(2010, 1, 20))
+        self.dteValidTime.setMinimumDateTime(QtCore.QDateTime(QtCore.QDate(2000, 1, 1), QtCore.QTime(10, 0, 0)))
         self.dteValidTime.setMinimumDate(QtCore.QDate(2000, 1, 1))
-        self.dteValidTime.setMinimumTime(QtCore.QTime(11, 0, 0))
+        self.dteValidTime.setMinimumTime(QtCore.QTime(10, 0, 0))
         self.dteValidTime.setCalendarPopup(False)
         self.dteValidTime.setTimeSpec(QtCore.Qt.UTC)
         self.dteValidTime.setObjectName("dteValidTime")
