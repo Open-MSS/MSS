@@ -69,10 +69,14 @@ class Ui_RemoteSensingDockWidget(object):
     def retranslateUi(self, RemoteSensingDockWidget):
         _translate = QtCore.QCoreApplication.translate
         RemoteSensingDockWidget.setWindowTitle(_translate("RemoteSensingDockWidget", "Remote Sensing"))
+        self.lbObsAngle.setToolTip(_translate("RemoteSensingDockWidget", "View direction of the remote sensing instrument.\n"
+"0 degree is towards flight direction."))
         self.lbObsAngle.setText(_translate("RemoteSensingDockWidget", "Viewing direction"))
+        self.cbDrawTangents.setToolTip(_translate("RemoteSensingDockWidget", "Tangent points in viewing direction at the specified altitude.\n"
+"Aircraft altitude is taken from the flight path."))
         self.cbDrawTangents.setText(_translate("RemoteSensingDockWidget", "draw tangent points"))
         self.btTangentsColour.setText(_translate("RemoteSensingDockWidget", "colour"))
         self.dsbTangentHeight.setSuffix(_translate("RemoteSensingDockWidget", " km"))
-        self.cbShowSolarAngle.setText(_translate("RemoteSensingDockWidget", "show solar angle (degree) (green if below horizon; otherwise\n"
-"reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180)"))
+        self.cbShowSolarAngle.setToolTip(_translate("RemoteSensingDockWidget", "dark green if below horizon; otherwise reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180"))
+        self.cbShowSolarAngle.setText(_translate("RemoteSensingDockWidget", "show solar angle (degree)"))
 

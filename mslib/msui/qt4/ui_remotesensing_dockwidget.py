@@ -82,10 +82,14 @@ class Ui_RemoteSensingDockWidget(object):
 
     def retranslateUi(self, RemoteSensingDockWidget):
         RemoteSensingDockWidget.setWindowTitle(_translate("RemoteSensingDockWidget", "Remote Sensing", None))
+        self.lbObsAngle.setToolTip(_translate("RemoteSensingDockWidget", "View direction of the remote sensing instrument.\n"
+"0 degree is towards flight direction.", None))
         self.lbObsAngle.setText(_translate("RemoteSensingDockWidget", "Viewing direction", None))
+        self.cbDrawTangents.setToolTip(_translate("RemoteSensingDockWidget", "Tangent points in viewing direction at the specified altitude.\n"
+"Aircraft altitude is taken from the flight path.", None))
         self.cbDrawTangents.setText(_translate("RemoteSensingDockWidget", "draw tangent points", None))
         self.btTangentsColour.setText(_translate("RemoteSensingDockWidget", "colour", None))
         self.dsbTangentHeight.setSuffix(_translate("RemoteSensingDockWidget", " km", None))
-        self.cbShowSolarAngle.setText(_translate("RemoteSensingDockWidget", "show solar angle (degree) (green if below horizon; otherwise\n"
-"reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180)", None))
+        self.cbShowSolarAngle.setToolTip(_translate("RemoteSensingDockWidget", "dark green if below horizon; otherwise reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180", None))
+        self.cbShowSolarAngle.setText(_translate("RemoteSensingDockWidget", "show solar angle (degree)", None))
 
