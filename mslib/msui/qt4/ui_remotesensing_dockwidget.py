@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'msui/ui_remotesensing_dockwidget.ui'
+# Form implementation generated from reading ui file 'ui_remotesensing_dockwidget.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -45,6 +45,8 @@ class Ui_RemoteSensingDockWidget(object):
         self.dsbObsAngle.setSingleStep(15.0)
         self.dsbObsAngle.setObjectName(_fromUtf8("dsbObsAngle"))
         self.horizontalLayout.addWidget(self.dsbObsAngle)
+        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout_5 = QtGui.QHBoxLayout()
         self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
@@ -58,15 +60,12 @@ class Ui_RemoteSensingDockWidget(object):
         self.btTangentsColour.setObjectName(_fromUtf8("btTangentsColour"))
         self.horizontalLayout_5.addWidget(self.btTangentsColour)
         self.dsbTangentHeight = QtGui.QDoubleSpinBox(RemoteSensingDockWidget)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dsbTangentHeight.sizePolicy().hasHeightForWidth())
-        self.dsbTangentHeight.setSizePolicy(sizePolicy)
         self.dsbTangentHeight.setMinimumSize(QtCore.QSize(0, 0))
         self.dsbTangentHeight.setPrefix(_fromUtf8(""))
         self.dsbTangentHeight.setObjectName(_fromUtf8("dsbTangentHeight"))
         self.horizontalLayout_5.addWidget(self.dsbTangentHeight)
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_6 = QtGui.QHBoxLayout()
         self.horizontalLayout_6.setObjectName(_fromUtf8("horizontalLayout_6"))
@@ -75,8 +74,8 @@ class Ui_RemoteSensingDockWidget(object):
         self.cbShowSolarAngle.setObjectName(_fromUtf8("cbShowSolarAngle"))
         self.horizontalLayout_6.addWidget(self.cbShowSolarAngle)
         self.verticalLayout.addLayout(self.horizontalLayout_6)
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem)
+        spacerItem2 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout.addItem(spacerItem2)
 
         self.retranslateUi(RemoteSensingDockWidget)
         QtCore.QMetaObject.connectSlotsByName(RemoteSensingDockWidget)
@@ -87,5 +86,6 @@ class Ui_RemoteSensingDockWidget(object):
         self.cbDrawTangents.setText(_translate("RemoteSensingDockWidget", "draw tangent points", None))
         self.btTangentsColour.setText(_translate("RemoteSensingDockWidget", "colour", None))
         self.dsbTangentHeight.setSuffix(_translate("RemoteSensingDockWidget", " km", None))
-        self.cbShowSolarAngle.setText(_translate("RemoteSensingDockWidget", "show solar angle", None))
+        self.cbShowSolarAngle.setText(_translate("RemoteSensingDockWidget", "show solar angle (degree) (green if below horizon; otherwise\n"
+"reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180)", None))
 
