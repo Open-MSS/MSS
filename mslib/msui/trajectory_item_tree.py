@@ -582,8 +582,8 @@ class LagrantoOutputItem(LagrantoMapItem):
                                                        self.loutput.meta)):
             trname = "{:04d} ".format(i)
             if "startcoordinates" in metadata.keys():
-                trname += unicode([u"{:.2f}".format(r) for r in
-                               metadata["startcoordinates"]]).replace('\'', '')
+                trname += unicode(
+                    [u"{:.2f}".format(r) for r in metadata["startcoordinates"]]).replace('\'', '')
             TrajectoryItem(trname, True, self, trajectory, metadata)
 
 
