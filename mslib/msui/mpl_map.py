@@ -455,8 +455,8 @@ class MapCanvas(basemap.Basemap):
                 # newer Matplotlib versions: this causes an exception when
                 # the user zooms/pans..
                 self.map_boundary.remove()
-            except Exception, ex:
-                logging.debug("wild exception caught - please make this more specific: %s", ex)
+            except NotImplementedError:
+                pass
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
