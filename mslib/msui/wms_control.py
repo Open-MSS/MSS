@@ -184,7 +184,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
         base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
-        complete_url = u"{}{}".format(base_url, data)
+        complete_url = u"{}?{}".format(base_url, data)
         if return_only_url:
             return complete_url
         logging.debug("Retrieving: %s", complete_url)
@@ -343,6 +343,7 @@ class WMSMapFetcher(QtCore.QObject):
             # This StringIO object can then be passed as a file substitute to
             # PIL.Image.open(). See
             #    http://www.pythonware.com/library/pil/handbook/image.htm
+            logging.debug("Retrieving legend from '%s'", urlstr)
             urlobject = urllib2.urlopen(urlstr)
             image_io = StringIO.StringIO(urlobject.read())
             legend_img_raw = PIL.Image.open(image_io)
