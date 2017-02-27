@@ -8,15 +8,13 @@ AUTHORS:
 
 # related third party imports
 import logging
-import os
-import pickle
 import pykml.parser
 
 # local application imports
 from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
-from mslib.msui import constants
+from mslib.mss_util import save_settings_pickle, load_settings_pickle
 
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
@@ -43,21 +41,16 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.cbOverlay.setEnabled(False)
         self.cbManualStyle.setChecked(False)
 
-        self.settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.kmloverlay_dockwidget.cfg")
-        try:
-            with open(self.settingsfile, "r") as fileobj:
-                settings = pickle.load(fileobj)
-        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
-            logging.warn("Problems reloading stored KMLDock settings (%s: %s). Switching to default",
-                         type(ex), ex)
-            settings = {}
+        self.settings_tag = "kmldock"
+        settings = load_settings_pickle(
+            self.settings_tag, {"filename": "", "linewidth": 1, "colour": (0, 0, 0, 1)})
 
-        self.leFile.setText(settings.get("filename", ""))
-        self.dsbLineWidth.setValue(settings.get("linewidth", 1))
+        self.leFile.setText(settings["filename"])
+        self.dsbLineWidth.setValue(settings["linewidth"])
 
         palette = QtGui.QPalette(self.pbSelectColour.palette())
         colour = QtGui.QColor()
-        colour.setRgbF(*settings.get("colour", (0, 0, 0, 1)))
+        colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
         self.pbSelectColour.setPalette(palette)
 
@@ -67,11 +60,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             "linewidth": self.dsbLineWidth.value(),
             "colour": self.get_color()
         }
-        try:
-            with open(self.settingsfile, "w") as fileobj:
-                pickle.dump(settings, fileobj)
-        except (OSError, IOError), ex:
-            logging.warn("Problems storing KMLDock settings (%s: %s).", type(ex), ex)
+        save_settings_pickle(self.settings_tag, settings)
 
     def get_color(self):
         button = self.pbSelectColour

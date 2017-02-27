@@ -27,6 +27,7 @@ AUTHORS:
 
 # standard library imports
 import os
+import pickle
 import logging
 import datetime
 from datetime import datetime as dt
@@ -100,6 +101,53 @@ def get_distance(coord0, coord1):
     """
     pr = pyproj.Geod(ellps='WGS84')
     return pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.
+
+
+def save_settings_pickle(tag, settings):
+    """
+    Saves a dictionary settings to disk.
+
+    :param tag: string specifying the settings
+    :param settings: dictionary of settings
+    :return: None
+    """
+    assert isinstance(tag, basestring)
+    assert isinstance(settings, dict)
+    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss." + tag + ".cfg")
+    logging.debug("storing settings for %s to %s", tag, settingsfile)
+    try:
+        with open(settingsfile, "w") as fileobj:
+            pickle.dump(settings, fileobj)
+    except (OSError, IOError), ex:
+        logging.warn("Problems storing %s settings (%s: %s).", tag, type(ex), ex)
+
+
+def load_settings_pickle(tag, default_settings=None):
+    """
+    Loads a dictionary of settings from disk. May supply a dictionary of default settings
+    to return in case the settings file is not present or damaged. The default_settings one will
+    be updated by the restored one so one may rely on all keys of the default_settings dictionary
+    being present in the returned dictionary.
+
+    :param tag: string specifying the settings
+    :param default_settings: dictionary of settings or None
+    :return: dictionary of settings
+    """
+    if default_settings is None:
+        default_settings = {}
+    assert isinstance(default_settings, dict)
+    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss." + tag + ".cfg")
+    logging.debug("loading settings for %s from %s", tag, settingsfile)
+    try:
+        with open(settingsfile, "r") as fileobj:
+            settings = pickle.load(fileobj)
+    except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
+        logging.warn("Problems reloading stored %s settings (%s: %s). Switching to default",
+                     tag, type(ex), ex)
+        settings = {}
+    if isinstance(settings, dict):
+        default_settings.update(settings)
+    return default_settings
 
 
 """

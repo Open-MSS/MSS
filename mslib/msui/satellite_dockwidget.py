@@ -30,7 +30,6 @@ AUTHORS:
 # standard library imports
 import logging
 import os
-import pickle
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
@@ -38,7 +37,7 @@ from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 # local application imports
 from mslib import mss_util
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
-from mslib.msui import constants
+from mslib.mss_util import save_settings_pickle, load_settings_pickle
 
 #
 # CLASS SatelliteControlWidgeT
@@ -59,15 +58,8 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         self.btLoadFile.clicked.connect(self.loadFile)
         self.cbSatelliteOverpasses.currentIndexChanged.connect(self.plotOverpassTrack)
 
-        self.settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.satellite_dockwidget.cfg")
-        try:
-            with open(self.settingsfile, "r") as fileobj:
-                settings = pickle.load(fileobj)
-        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
-            logging.warn("Problems reloading stored SatelliteDock settings (%s: %s). Switching to default",
-                         type(ex), ex)
-        else:
-            self.leFile.setText(settings.get("filename", ""))
+        self.settings_tag = "satellitedock"
+        load_settings_pickle(self.settings_tag, {"filename": ""})
 
     def selectFile(self):
         """Slot that opens a file dialog to choose a file with satellite
@@ -80,11 +72,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         if not filename:
             return
         self.leFile.setText(filename)
-        try:
-            with open(self.settingsfile, "w") as fileobj:
-                pickle.dump({"filename": filename}, fileobj)
-        except (OSError, IOError), ex:
-            logging.warn("Problems storing SatelliteWidget settings (%s: %s).", type(ex), ex)
+        save_settings_pickle(self.settings_tag, {"filename": filename})
 
     def loadFile(self):
         """Load the file specified in leFile and fill the combobox with the
