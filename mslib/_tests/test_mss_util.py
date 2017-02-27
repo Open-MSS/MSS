@@ -91,14 +91,6 @@ class TestAngles(object):
         assert mss_util.fix_angle(-180) == 180
         assert mss_util.fix_angle(-181) == 179
 
-    def test_compute_solar_angle(self):
-        azimuth_angle, zenith_angle = mss_util.compute_solar_angle(0, 7.56607, 50.355136)
-        assert int(azimuth_angle * 1000) == 13510
-        assert int(zenith_angle * 1000) == -62205
-        azimuth_angle, zenith_angle = mss_util.compute_solar_angle(12, 7.56607, 50.355136)
-        assert int(azimuth_angle * 1000) == 13607
-        assert int(zenith_angle * 1000) == -62197
-
     def test_rotate_point(self):
         assert mss_util.rotate_point([0, 0], 0) == (0.0, 0.0)
         assert mss_util.rotate_point([0, 0], 180) == (0.0, 0.0)
