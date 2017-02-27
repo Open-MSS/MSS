@@ -520,9 +520,11 @@ class GWFCDataAccess(NWPDataAccess):
     _data_organisation_table = {
         "gravity_wave_temperature_perturbation": {"ml": "ALTITUDE_LEVELS"},
         "air_pressure": {"ml": "ALTITUDE_LEVELS"},
+        "air_potential_temperature": {"ml": "ALTITUDE_LEVELS"},
         "brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
         "square_of_brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
         "tropopause_altitude": {"sfc": "SFC"},
+        "tropopause_air_pressure": {"sfc": "SFC"},
         "max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air": {"sfc": "SFC"},
         "mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air": {"sfc": "SFC"},
     }
