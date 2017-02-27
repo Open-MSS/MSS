@@ -184,7 +184,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
         base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
-        complete_url = u"{}{}".format(base_url, data)
+        complete_url = u"{}?{}".format(base_url, data)
         if return_only_url:
             return complete_url
         logging.debug("Retrieving: %s", complete_url)
@@ -265,6 +265,7 @@ class WMSMapFetcher(QtCore.QObject):
         self.wms_cache = wms_cache
         self.maps = []
         self.process.connect(self.process_map, QtCore.Qt.QueuedConnection)
+        self.long_request = False
 
     @QtCore.pyqtSlot(list)
     def fetch_maps(self, map_list):
@@ -285,6 +286,7 @@ class WMSMapFetcher(QtCore.QObject):
             return
         kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
         self.maps = self.maps[1:]
+        self.long_request = False
         try:
             map_img = self.fetch_map(kwargs, use_cache, md5_filename)
             legend_img = self.fetch_legend(use_cache=use_cache, **legend_kwargs)
@@ -311,6 +313,7 @@ class WMSMapFetcher(QtCore.QObject):
             logging.debug("MapPrefetcher - found image cache")
         else:
             self.started_request.emit()
+            self.long_request = True
             urlobject = self.wms.getmap(**kwargs)
             image_io = StringIO.StringIO(urlobject.read())
             img = PIL.Image.open(image_io)
@@ -334,10 +337,13 @@ class WMSMapFetcher(QtCore.QObject):
             legend_img = PIL.Image.open(md5_filename)
             logging.debug("MapPrefetcher - found legend cache")
         else:
-            self.started_request.emit()
+            if not self.long_request:
+                self.started_request.emit()
+                self.long_request = True
             # This StringIO object can then be passed as a file substitute to
             # PIL.Image.open(). See
             #    http://www.pythonware.com/library/pil/handbook/image.htm
+            logging.debug("Retrieving legend from '%s'", urlstr)
             urlobject = urllib2.urlopen(urlstr)
             image_io = StringIO.StringIO(urlobject.read())
             legend_img_raw = PIL.Image.open(image_io)
@@ -454,12 +460,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pbViewCapabilities.clicked.connect(self.viewCapabilities)
 
         self.cbLayer.currentIndexChanged.connect(self.layerChanged)
-
         self.cbStyle.currentIndexChanged.connect(self.styleChanged)
-
         self.cbLevel.currentIndexChanged.connect(self.levelChanged)
-        self.connect(self.cbLevel, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.levelChanged)
 
         # Connecting both activated() and currentIndexChanged() signals leads
         # to **TimeChanged() being called twice when the user selects a new
