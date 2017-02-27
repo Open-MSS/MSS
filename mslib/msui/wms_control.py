@@ -460,12 +460,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pbViewCapabilities.clicked.connect(self.viewCapabilities)
 
         self.cbLayer.currentIndexChanged.connect(self.layerChanged)
-
         self.cbStyle.currentIndexChanged.connect(self.styleChanged)
-
         self.cbLevel.currentIndexChanged.connect(self.levelChanged)
-        self.connect(self.cbLevel, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.levelChanged)
 
         # Connecting both activated() and currentIndexChanged() signals leads
         # to **TimeChanged() being called twice when the user selects a new
