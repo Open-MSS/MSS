@@ -381,7 +381,6 @@ class LagrantoOutputReader(object):
         return None
 
 
-
 #
 # Perform some tests if the module is called directly. Remember to adjust the
 # paths before executing this script.

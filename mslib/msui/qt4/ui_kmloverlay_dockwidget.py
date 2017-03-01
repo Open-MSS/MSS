@@ -73,11 +73,18 @@ class Ui_KMLOverlayDockWidget(object):
 
     def retranslateUi(self, KMLOverlayDockWidget):
         KMLOverlayDockWidget.setWindowTitle(_translate("KMLOverlayDockWidget", "KML Overlay", None))
+        self.cbOverlay.setToolTip(_translate("KMLOverlayDockWidget", "Hide/unhide loaded KML overlay.", None))
         self.cbOverlay.setText(_translate("KMLOverlayDockWidget", "KML Overlay", None))
+        self.btSelectFile.setToolTip(_translate("KMLOverlayDockWidget", "Specify KML file using a file dialog.", None))
         self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "...", None))
+        self.btLoadFile.setToolTip(_translate("KMLOverlayDockWidget", "Load specified KML file.", None))
         self.btLoadFile.setText(_translate("KMLOverlayDockWidget", "load", None))
+        self.cbManualStyle.setToolTip(_translate("KMLOverlayDockWidget", "Overwrite styles of KML document with colour/linewidth specified to the right.", None))
         self.cbManualStyle.setText(_translate("KMLOverlayDockWidget", "manual style", None))
+        self.pbSelectColour.setToolTip(_translate("KMLOverlayDockWidget", "Colour for KML overlay.", None))
         self.pbSelectColour.setText(_translate("KMLOverlayDockWidget", "Colour", None))
+        self.label_2.setToolTip(_translate("KMLOverlayDockWidget", "Line width for KML overlay.", None))
         self.label_2.setText(_translate("KMLOverlayDockWidget", "line width", None))
+        self.label.setToolTip(_translate("KMLOverlayDockWidget", "KML support is experimental. Please communicate important missing features to the MSS issue tracker!", None))
         self.label.setText(_translate("KMLOverlayDockWidget", "!Experimental Feature! Not all KML files and contained features will work.", None))
 

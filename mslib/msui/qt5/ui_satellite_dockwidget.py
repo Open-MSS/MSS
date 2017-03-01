@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_SatelliteDockWidget(object):
     def setupUi(self, SatelliteDockWidget):
         SatelliteDockWidget.setObjectName("SatelliteDockWidget")
-        SatelliteDockWidget.resize(649, 104)
+        SatelliteDockWidget.resize(649, 107)
         self.verticalLayout = QtWidgets.QVBoxLayout(SatelliteDockWidget)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
@@ -61,8 +61,11 @@ class Ui_SatelliteDockWidget(object):
         _translate = QtCore.QCoreApplication.translate
         SatelliteDockWidget.setWindowTitle(_translate("SatelliteDockWidget", "Satellite Tracks"))
         self.label_5.setText(_translate("SatelliteDockWidget", "File with predicted satellite track:"))
+        self.btSelectFile.setToolTip(_translate("SatelliteDockWidget", "Opens a file dialog for selecting a satellite overpass file."))
         self.btSelectFile.setText(_translate("SatelliteDockWidget", "..."))
+        self.btLoadFile.setToolTip(_translate("SatelliteDockWidget", "Load the specified file for visualisation."))
         self.btLoadFile.setText(_translate("SatelliteDockWidget", "load"))
         self.label_6.setText(_translate("SatelliteDockWidget", "Predicted satellite overpasses:"))
+        self.cbSatelliteOverpasses.setToolTip(_translate("SatelliteDockWidget", "Select/unselect a satellite overpass from all available overpasses."))
         self.label.setText(_translate("SatelliteDockWidget", "Use http://www-air.larc.nasa.gov/tools/predict.htm to generate prediction files."))
 

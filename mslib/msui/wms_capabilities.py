@@ -95,6 +95,7 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
                 fees=self.capabilities.identification.fees)
             self.txtCapabilities.setHtml(text)
 
+
 def _main():
     # Log everything, and send it to stderr.
     # See http://docs.python.org/library/logging.html for more information
