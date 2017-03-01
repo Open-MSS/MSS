@@ -61,18 +61,18 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
         if self.cbFullView.isChecked():
             self.txtCapabilities.setPlainText(self.capabilities.capabilities_document)
         else:
-            text = ("<b>Title:</b> {title}<p>"
-                    "<b>Service type:</b> {type} {version}<br>"
-                    "<b>Abstract:</b><br>{abstract}<br>"
-                    "<b>Contact:</b><br>"
-                    "    {name}<br>"
-                    "    {organization}<br>"
-                    "    {email}<br>"
-                    "    {address}<br>"
-                    "    {postcode} {city}<br>\n"
-                    "<b>Keywords:</b> {keywords}<br>\n"
-                    "<b>Access constraints:</b> {accessconstraints}<br>\n"
-                    "<b>Fees:</b> {fees}").format(
+            text = (u"<b>Title:</b> {title}<p>"
+                    u"<b>Service type:</b> {type} {version}<br>"
+                    u"<b>Abstract:</b><br>{abstract}<br>"
+                    u"<b>Contact:</b><br>"
+                    u"    {name}<br>"
+                    u"    {organization}<br>"
+                    u"    {email}<br>"
+                    u"    {address}<br>"
+                    u"    {postcode} {city}<br>\n"
+                    u"<b>Keywords:</b> {keywords}<br>\n"
+                    u"<b>Access constraints:</b> {accessconstraints}<br>\n"
+                    u"<b>Fees:</b> {fees}").format(
                 url=self.capabilities.provider.url,
                 type=self.capabilities.identification.type,
                 version=self.capabilities.identification.version,

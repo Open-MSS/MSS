@@ -277,6 +277,8 @@ class ServiceIdentification(object):
         fees = self._root.find('Fees')
         if fees is not None:
             self.fees = fees.text
+        else:
+            self.fees = None
              
 class ServiceProvider(object):
     ''' Implements IServiceProviderMetatdata '''
