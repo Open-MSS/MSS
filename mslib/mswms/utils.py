@@ -241,12 +241,19 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
     cmap = matplotlib.pyplot.cm.rainbow
     ticks = None
 
+    if any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)]):
+        cmin, cmax  = 0, 1
+
     if style == "default":
         clev = np.linspace(cmin, cmax, 16)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     elif style == "auto":
-        cmin = data.min()
-        cmax = data.max()
+        cmin_p = data.min()
+        cmax_p = data.max()
+        if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
+            cmin, cmax  = cmin_p, cmax_p
+        if cmin == cmax:
+            cmin, cmax = 0, 1
         if 0 < cmin < 0.05 * cmax:
             cmin = 0.
         clev = np.linspace(cmin, cmax, 16)
@@ -255,8 +262,12 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         clev = get_log_levels(cmin, cmax, 16)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     elif style == "autolog":
-        cmin = data.min()
-        cmax = data.max()
+        cmin_p = data.min()
+        cmax_p = data.max()
+        if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
+            cmin, cmax  = cmin_p, cmax_p
+        if cmin == cmax:
+            cmin, cmax = 0, 1
         clev = get_log_levels(cmin, cmax, 16)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     elif style == "nonlinear":
@@ -347,6 +358,9 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         clev = np.arange(5, 16.1, 0.25)
     else:
         raise RuntimeError(u"Illegal plotting style?! ({})".format(style))
+    if clev[0] == clev[-1]:
+        cmin, cmax = 0, 1
+        clev = np.linspace(0, 1, len(clev))
     return cmin, cmax, clev, cmap, norm, ticks
 
 
