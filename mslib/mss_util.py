@@ -113,7 +113,7 @@ def save_settings_pickle(tag, settings):
     """
     assert isinstance(tag, basestring)
     assert isinstance(settings, dict)
-    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss." + tag + ".cfg")
+    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.{}.cfg".format(tag))
     logging.debug("storing settings for %s to %s", tag, settingsfile)
     try:
         with open(settingsfile, "w") as fileobj:
@@ -136,7 +136,7 @@ def load_settings_pickle(tag, default_settings=None):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
-    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss." + tag + ".cfg")
+    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.{}.cfg".format(tag))
     logging.debug("loading settings for %s from %s", tag, settingsfile)
     try:
         with open(settingsfile, "r") as fileobj:
