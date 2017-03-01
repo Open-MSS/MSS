@@ -122,7 +122,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
             >>> out.close()
 
         """
-        base_url = self.getOperationByName('GetMap').methods[method]['url']
+        base_url = self.get_redirect_url(method)
         request = {'version': self.version, 'request': 'GetMap'}
 
         # check layers and styles
@@ -212,6 +212,9 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
             err_message = unicode(se_tree.find('ServiceException').text).strip()
             raise mslib.owslib.wms.ServiceException(err_message, se_xml)
         return u
+
+    def get_redirect_url(self, method="Get"):
+        return self.getOperationByName("GetMap").methods[method]["url"]
 
 
 #
@@ -487,7 +490,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbLevel_fwd.clicked.connect(self.level_fwd_click)
 
         self.btClearCache.clicked.connect(self.clearCache)
-
+        self.cbWMS_URL.editTextChanged.connect(self.disableGetMap)
         if view is not None and hasattr(view, "redrawn"):
             self.view.redrawn.connect(self.afterRedraw)
 
@@ -574,6 +577,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                           "no layers can be used in this view.")
             self.displayException(ex)
         return wms
+
+    def disableGetMap(self, text):
+        self.btGetMap.setEnabled(False)
+        self.pbViewCapabilities.setEnabled(False)
+        if self.wms is not None and self.wms.url == text:
+            self.btGetMap.setEnabled(True)
+            self.pbViewCapabilities.setEnabled(True)
 
     @QtCore.pyqtSlot(Exception)
     def displayException(self, ex):
@@ -1273,8 +1283,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         kwargs["return_only_url"] = True
         urlstr = self.wms.getmap(**kwargs)
         kwargs["return_only_url"] = False
-        if not urlstr.startswith(self.cbWMS_URL.currentText()):
-            raise RuntimeError("Url does not match, use get capabilities first.")
+        if not self.wms.url.startswith(self.cbWMS_URL.currentText()):
+            raise RuntimeError("WMS URL does not match, use get capabilities first.")
         return os.path.join(self.wms_cache, hashlib.md5(urlstr).hexdigest() + ".png")
 
     def retrieveImage(self, crs="EPSG:4326", bbox=None, path_string=None,
