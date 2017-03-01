@@ -173,8 +173,8 @@ class ECMWFDataAccess(NWPDataAccess):
 
     Constructor needs information on domain ID.
     """
-    _file_template = "$Y$m$d_$H_ecmwf_forecast.%s.%s.%03i.%s.nc"
-    _file_regexp = "(\d{8})_(\d{2})_ecmwf_forecast\.(.*)\.%s\.(\d{3}).*\.nc$"
+    _file_template = "$Y$m$d_$H_ecmwf_forecast.{gridtype}.{domain_id}.{fc_step:03d}.{vartype}.nc"
+    _file_regexp = "(?P<date>\d{8})_(?P<time>\d{2})_ecmwf_forecast\.(?P<vartype>.*)\.%s\.(?P<step>\d{3}).*\.nc$"
     _forecast_times = [36, 72, 144, 240]
     _data_organisation_table = {
         "low_cloud_area_fraction": {"sfc": "SFC"},
@@ -237,7 +237,7 @@ class ECMWFDataAccess(NWPDataAccess):
            the variable <variable> of the forecast specified by
            init_time and valid_time.
         """
-        variable_dict = self._data_organisation_table[variable]
+        variable_dict = self._data_organisation_table.get(variable, None)
 
         # Compute the time step in hours from the forecast valid time
         # and the initialisation time.
@@ -253,24 +253,26 @@ class ECMWFDataAccess(NWPDataAccess):
                 break
 
         # Substitute variable identifiers in the template filename.
-        if vartype not in variable_dict.keys():
+        if variable_dict is not None and vartype not in variable_dict.keys():
             raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
-        if type(variable_dict[vartype]) == str:
+        if variable_dict is None:
+            name = self._file_template.format(
+                gridtype=vartype, domain_id=self._domain_id,
+                fc_step=fc_step, vartype=vartype)
+        elif isinstance(variable_dict[vartype], basestring):
             # The string stored for the given variable type contains the
             # variable identifier in the filename.
-            name = self._file_template % (variable_dict[vartype],
-                                          self._domain_id,
-                                          fc_step,
-                                          vartype)
-        elif type(variable_dict[vartype]) == tuple:
+            name = self._file_template.format(
+                gridtype=variable_dict[vartype], domain_id=self._domain_id,
+                fc_step=fc_step, vartype=vartype)
+        elif isinstance(variable_dict[vartype], tuple):
             # The tuple stored for the given variable type contains the
             # variable identifier and an override level identifier.
-            name = self._file_template % (variable_dict[vartype][0],
-                                          self._domain_id,
-                                          fc_step,
-                                          variable_dict[vartype][1])
+            name = self._file_template.format(
+                gridtype=variable_dict[vartype][0], domain_id=self._domain_id,
+                fc_step=fc_step, vartype=variable_dict[vartype][1])
 
         # Substitute init time and time step interval identifiers.
         name = name.replace('$', '%')
@@ -297,10 +299,10 @@ class ECMWFDataAccess(NWPDataAccess):
                 # Extract information from the filename.
                 # date = int(m.group(1))
                 # time = int(m.group(2))
-                var = m.group(3)
-                step = int(m.group(4))
+                var = m.group("vartype")
+                step = int(m.group("step"))
                 # dtime = int(m.group(1)+m.group(2))
-                dtime = m.group(1) + m.group(2)
+                dtime = m.group("date") + m.group("time")
                 dtime = datetime.strptime(dtime, "%Y%m%d%H")
                 # print date, time, step, datetime, var
 
@@ -371,291 +373,36 @@ class ECMWFDataAccess(NWPDataAccess):
         return os.listdir(self._root_path)
 
 
-class CLAMSDataAccess(NWPDataAccess):
-    """Subclass to NWPDataAccess for accessing CLAMS data.
-
-    Constructor needs information on domain ID.
+class CLAMSDataAccess(ECMWFDataAccess):
+    """Subclass to ECMWFDataAccess for accessing CLAMS data.
     """
-    _file_template = "$Y$m$d_$H_clams_forecast.%s.%03i.%s.nc"
-    _file_regexp = "(\d{8})_(\d{2})_clams_forecast\.%s\.(\d{3})\.(.*)\.nc$"
+    _file_template = "$Y$m$d_$H_clams_forecast.{domain_id}.{fc_step:03d}.{vartype}.nc"
+    _file_regexp = "(?P<date>\d{8})_(?P<time>\d{2})_clams_forecast\.%s\.(?P<step>\d{3})\.(?P<vartype>.*)\.nc$"
     _forecast_times = [144]
+    _data_organisation_table = {}
+
     # Workaround for the numerical issue concering the lon dimension in
     # NetCDF files produced by netcdf-java 4.3..
     _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
 
-    def __init__(self, rootpath, domain_id):
-        NWPDataAccess.__init__(self, rootpath)
-        self._domain_id = domain_id
-        # Compile regular expression to match filenames.
-        self._filename_re = re.compile(self._file_regexp % domain_id)
 
-    def _determine_filename(self, variable, vartype, init_time, valid_time):
-        """Determines the name of the CLAMS data file the contains
-           the variable <variable> of the forecast specified by
-           init_time and valid_time.
-        """
-
-        # Compute the time step in hours from the forecast valid time
-        # and the initialisation time.
-        fc_step = valid_time - init_time
-        fc_step = fc_step.days * 24 + fc_step.seconds / 3600
-
-        # CLAMS forecasts are stored in a series of files containing
-        # different time steps. Determine into which time step interval
-        # the requested valid_time falls.
-        for t in self._forecast_times:
-            if t >= fc_step:
-                fc_step = t
-                break
-
-        name = self._file_template % (
-            self._domain_id,
-            fc_step,
-            vartype)
-
-        # Substitute init time and time step interval identifiers.
-        name = name.replace('$', '%')
-        name = datetime.strftime(init_time, name)
-        return name
-
-    def build_filetree(self):
-        """Build a tree structure with information on the available
-           forecast times and variables.
-
-        The first index of 'filetree' is the forecast date/time, the second the
-        timestep, the third the variable. The names of all available files are
-        parsed corresponding to the above specified regular expression and
-        inserted into the tree.
-        """
-        # Get a list of the available data files.
-        available_files = os.listdir(self._root_path)
-        # Build the tree structure.
-        filetree = {}
-        for filename in available_files:
-            m = self._filename_re.match(filename)
-            if m:
-                # Extract information from the filename.
-                step = int(m.group(3))
-                # dtime = int(m.group(1)+m.group(2))
-                dtime = m.group(1) + m.group(2)
-                dtime = datetime.strptime(dtime, "%Y%m%d%H")
-
-                # print date, time, step, datetime, var
-
-                # Insert the filename into the tree.
-                if dtime not in filetree.keys():
-                    filetree[dtime] = {}
-                if step not in filetree[dtime].keys():
-                    filetree[dtime][step] = {}
-                filetree[dtime][step][m.group(4)] = filename
-
-        return filetree
-
-    def get_init_times(self):
-        """Returns a list of available forecast init times (base times).
-        """
-        filetree = self.build_filetree()
-        init_times = filetree.keys()
-        init_times.sort()
-        return init_times
-
-    def get_valid_times(self, variable, vartype, init_time):
-        """Returns a list of available valid times for the specified
-           variable at the specified init time.
-        """
-        valid_times = []
-        for t in self._forecast_times:
-            # Open each forecast file belonging to this variable. To do this,
-            # query get_filename() with a time one hour less than the upper
-            # limits of the individual files.
-            delta = timedelta(seconds=3600 * (t - 1))
-            check_time = init_time + delta
-            filename = self.get_filename(variable, vartype,
-                                         init_time, check_time,
-                                         fullpath=True)
-            # print "checking file %s" % filename
-            if os.path.exists(filename):
-                # If the file exists, open the file and read the contained
-                # times. Add the list of times to valid_times.
-                # print "exists."
-                cached_valid_times = self.check_valid_cache(filename)
-                if cached_valid_times is not None:
-                    valid_times.extend(cached_valid_times)
-                else:
-                    dataset = netCDF4.Dataset(filename)
-                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                    times = netCDF4tools.num2date(timevar[:], timevar.units)
-                    valid_times.extend(times)
-                    dataset.close()
-                    self.save_valid_cache(filename, times)
-
-        return valid_times
-
-    def get_all_valid_times(self, variable, vartype):
-        """Similar to get_valid_times(), but returns the combined valid times
-           of all available init times.
-        """
-        valid_times = set()
-        filetree = self.build_filetree()
-        for init_time in filetree.keys():
-            vtimes = self.get_valid_times(variable, vartype, init_time)
-            valid_times.update(vtimes)
-        # valid_times.sort()
-        return list(valid_times)
-
-    def get_all_datafiles(self):
-        """Return a list of all available data files.
-        """
-        return os.listdir(self._root_path)
-
-
-class GWFCDataAccess(NWPDataAccess):
-    """Subclass to NWPDataAccess for accessing CLAMS data.
-
-    Constructor needs information on domain ID.
+class GWFCDataAccess(ECMWFDataAccess):
+    """Subclass to ECMWFDataAccess for accessing gravity wave forecast and related data.
     """
-    _file_template = "$Y$m$d_$H_gravity_wave_forecast.%s.%s.%03i.%s.nc"
-    _file_regexp = "(\d{8})_(\d{2})_gravity_wave_forecast\.(.*)\.%s\.(\d{3}).*\.nc$"
+    _file_template = "$Y$m$d_$H_gravity_wave_forecast.{gridtype}.{domain_id}.{fc_step:03d}.{vartype}.nc"
+    _file_regexp = "(?P<date>\d{8})_(?P<time>\d{2})_gravity_wave_forecast\.(?P<vartype>.*)\.%s\.(?P<step>\d{3}).*\.nc$"
     _forecast_times = range(0, 150, 6)
     _data_organisation_table = {
         "gravity_wave_temperature_perturbation": {"ml": "ALTITUDE_LEVELS"},
         "air_pressure": {"ml": "ALTITUDE_LEVELS"},
+        "air_potential_temperature": {"ml": "ALTITUDE_LEVELS"},
         "brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
         "square_of_brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
         "tropopause_altitude": {"sfc": "SFC"},
+        "tropopause_air_pressure": {"sfc": "SFC"},
         "max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air": {"sfc": "SFC"},
         "mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air": {"sfc": "SFC"},
     }
-
-    # Workaround for the numerical issue concering the lon dimension in
-    # NetCDF files produced by netcdf-java 4.3..
-    _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
-
-    def __init__(self, rootpath, domain_id):
-        NWPDataAccess.__init__(self, rootpath)
-        self._domain_id = domain_id
-        # Compile regular expression to match filenames.
-        self._filename_re = re.compile(self._file_regexp % domain_id)
-
-    def _determine_filename(self, variable, vartype, init_time, valid_time):
-        """Determines the name of the CLAMS data file the contains
-           the variable <variable> of the forecast specified by
-           init_time and valid_time.
-        """
-        variable_dict = self._data_organisation_table[variable]
-
-        # Compute the time step in hours from the forecast valid time
-        # and the initialisation time.
-        fc_step = valid_time - init_time
-        fc_step = fc_step.days * 24 + fc_step.seconds / 3600
-
-        # CLAMS forecasts are stored in a series of files containing
-        # different time steps. Determine into which time step interval
-        # the requested valid_time falls.
-        for t in self._forecast_times:
-            if t >= fc_step:
-                fc_step = t
-                break
-
-        # Substitute variable identifiers in the template filename.
-        if vartype not in variable_dict.keys():
-            raise ValueError(u"variable type {} not available for variable {}"
-                             .format(vartype, variable))
-
-        if type(variable_dict[vartype]) == str:
-            # The string stored for the given variable type contains the
-            # variable identifier in the filename.
-            name = self._file_template % (variable_dict[vartype],
-                                          self._domain_id,
-                                          fc_step,
-                                          vartype)  # vartype)
-        elif type(variable_dict[vartype]) == tuple:
-            # The tuple stored for the given variable type contains the
-            # variable identifier and an override level identifier.
-            name = self._file_template % (variable_dict[vartype][0],
-                                          self._domain_id,
-                                          fc_step,
-                                          variable_dict[vartype][1])
-
-        # Substitute init time and time step interval identifiers.
-        name = name.replace('$', '%')
-        name = datetime.strftime(init_time, name)
-        return name
-
-    def build_filetree(self):
-        """Build a tree structure with information on the available
-           forecast times and variables.
-
-        The first index of 'filetree' is the forecast date/time, the second the
-        timestep, the third the variable. The names of all available files are
-        parsed corresponding to the above specified regular expression and
-        inserted into the tree.
-        """
-        # Get a list of the available data files.
-        available_files = os.listdir(self._root_path)
-
-        # Build the tree structure.
-        filetree = {}
-        for filename in available_files:
-            m = self._filename_re.match(filename)
-            if m:
-                # Extract information from the filename.
-                var = m.group(3)
-                step = int(m.group(4))
-                dtime = m.group(1) + m.group(2)
-                dtime = datetime.strptime(dtime, "%Y%m%d%H")
-
-                # Insert the filename into the tree.
-                if dtime not in filetree.keys():
-                    filetree[dtime] = {}
-                if step not in filetree[dtime].keys():
-                    filetree[dtime][step] = {}
-                filetree[dtime][step][var] = filename
-
-        return filetree
-
-    def get_init_times(self):
-        """Returns a list of available forecast init times (base times).
-        """
-        filetree = self.build_filetree()
-        init_times = filetree.keys()
-        init_times.sort()
-        return init_times
-
-    def get_valid_times(self, variable, vartype, init_time):
-        """Returns a list of available valid times for the specified
-           variable at the specified init time.
-        """
-        valid_times = []
-        for t in self._forecast_times:
-            # Open each forecast file belonging to this variable. To do this,
-            # query get_filename() with a time one hour less than the upper
-            # limits of the individual files.
-            delta = timedelta(seconds=3600 * t)
-            check_time = init_time + delta
-            filename = self.get_filename(variable, vartype,
-                                         init_time, check_time,
-                                         fullpath=True)
-            if os.path.exists(filename):
-                valid_times.append(check_time)
-        return valid_times
-
-    def get_all_valid_times(self, variable, vartype):
-        """Similar to get_valid_times(), but returns the combined valid times
-           of all available init times.
-        """
-        valid_times = set()
-        filetree = self.build_filetree()
-        for init_time in filetree.keys():
-            vtimes = self.get_valid_times(variable, vartype, init_time)
-            valid_times.update(vtimes)
-        # valid_times.sort()
-        return list(valid_times)
-
-    def get_all_datafiles(self):
-        """Return a list of all available data files.
-        """
-        return os.listdir(self._root_path)
 
 
 class EMACDataAccess(NWPDataAccess):

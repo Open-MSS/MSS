@@ -541,7 +541,8 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         show_data = np.ma.masked_invalid(self.data[self.dataname]) * self.unit_scale
         # get cmin, cmax, cbar_log and cbar_format for level_key
         cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
-        cmin, cmax, clevs, cmap, norm = get_style_parameters(self.dataname, self.style, cmin, cmax, show_data)
+        cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
+            self.dataname, self.style, cmin, cmax, show_data)
 
         tc = bm.contourf(lonmesh, latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
 
@@ -567,25 +568,23 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
 
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
-                                     norm=norm, label=cbar_label, format=cbar_format)
+                                     norm=norm, label=cbar_label, format=cbar_format, ticks=ticks)
             cbar.set_ticklabels(clevs)
             cbar.set_ticks(clevs)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="3%", height="40%", loc=cbar_location)
-            self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format)
+            self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
 
             # adjust colorbar fontsize to figure height
             fontsize = self.fig.bbox.height * 0.024
             axins1.yaxis.set_ticks_position(tick_pos)
             for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
-                x.label2.set_path_effects([patheffects.withStroke(linewidth=3, foreground='w')])
+                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
                 x.label1.set_fontsize(fontsize)
-                x.label2.set_fontsize(fontsize)
 
 
-def make_generic_class(entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None):
+def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None):
     if add_data is None:
         add_data = [(vert, "ertel_potential_vorticity")]
     if add_contours is None:
@@ -603,6 +602,7 @@ def make_generic_class(entity, vert, add_data=None, add_contours=None, fix_style
         required_datafields = [(vert, entity)] + add_data
         contours = add_contours
 
+    fnord.__name__ = name
     fnord.styles = list(fnord.styles)
     if Targets.get_thresholds(entity) is not None:
         fnord.styles += [("nonlinear", "nonlinear colour scale")]
@@ -616,41 +616,46 @@ def make_generic_class(entity, vert, add_data=None, add_contours=None, fix_style
     if fix_styles is not None:
         fnord.styles = fix_styles
 
-    return fnord
+    globals()[name] = fnord
 
 
 for vert in ["pl", "ml", "tl"]:
     for ent in Targets.get_targets():
-        globals()["HS_GenericStyle_{}_{}".format(vert.upper(), ent)] = make_generic_class(ent, vert)
+        make_generic_class("HS_GenericStyle_{}_{}".format(vert.upper(), ent), ent, vert)
 
-    globals()["HS_GenericStyle_{}_{}".format(vert.upper(), "equivalent_latitude")] = make_generic_class(
+    make_generic_class(
+        "HS_GenericStyle_{}_{}".format(vert.upper(), "equivalent_latitude"),
         "equivalent_latitude", vert, [], [],
         fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
                     ("equivalent_latitude_sh", "southern hemisphere")])
-    globals()["HS_GenericStyle_{}_{}".format(vert.upper(), "ertel_potential_vorticity")] = make_generic_class(
+    make_generic_class(
+        "HS_GenericStyle_{}_{}".format(vert.upper(), "ertel_potential_vorticity"),
         "ertel_potential_vorticity", vert, [], [],
         fix_styles=[("ertel_potential_vorticity_nh", "northern hemisphere"),
                     ("ertel_potential_vorticity_sh", "southern hemisphere")])
-    globals()["HS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air")] = \
-        make_generic_class(
-            "square_of_brunt_vaisala_frequency_in_air", vert, [], [],
-            fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
-    globals()["HS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation")] = \
-        make_generic_class(
-            "gravity_wave_temperature_perturbation", vert,
-            [("sfc", "tropopause_altitude")],
-            [("tropopause_altitude", [8, 10, 12, 14, 16], "dimgrey", "dimgrey", "solid", 2, True)],
-            fix_styles=[("gravity_wave_temperature_perturbation", "")])
+    make_generic_class(
+        "HS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
+        "square_of_brunt_vaisala_frequency_in_air", vert, [], [],
+        fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
+    make_generic_class(
+        "HS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
+        "gravity_wave_temperature_perturbation", vert,
+        [("sfc", "tropopause_altitude")],
+        [("tropopause_altitude", [8, 10, 12, 14, 16], "dimgrey", "dimgrey", "solid", 2, True)],
+        fix_styles=[("gravity_wave_temperature_perturbation", "")])
 
-HS_GenericStyle_SFC_tropopause_altitude = make_generic_class(
+make_generic_class(
+    "HS_GenericStyle_SFC_tropopause_altitude",
     "tropopause_altitude", "sfc", [],
     [("tropopause_altitude", np.arange(5, 16.1, 0.500), "yellow", "red", "solid", 0.5, False)],
     fix_styles=[("tropopause_altitude", "tropopause_altitude")])
-HS_GenericStyle_SFC_max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air = make_generic_class(
+make_generic_class(
+    "HS_GenericStyle_SFC_max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air",
     "max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air", "sfc", [("sfc", "tropopause_altitude")],
     [("tropopause_altitude", np.arange(6, 16.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
     fix_styles = [("square_of_brunt_vaisala_frequency_in_air", "")])
-HS_GenericStyle_SFC_mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air = make_generic_class(
+make_generic_class(
+    "HS_GenericStyle_SFC_mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air",
     "mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air", "sfc", [("sfc", "tropopause_altitude")],
     [("tropopause_altitude", np.arange(6, 16.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
     fix_styles = [("square_of_brunt_vaisala_frequency_in_air", "")])
