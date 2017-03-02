@@ -80,13 +80,12 @@ class MSSViewWindow(QtWidgets.QMainWindow):
            the widget and return -1. Otherwise return <index-1>.
         """
         index -= 1
-        if index >= 0:
-            if self.docks[index] is not None:
-                # The widget has already been created, but is not visible at
-                # the moment.
-                self.docks[index].show()
-                self.docks[index].raise_()
-                index = -1
+        if index >= 0 and self.docks[index] is not None:
+            # The widget has already been created, but is not visible at
+            # the moment.
+            self.docks[index].show()
+            self.docks[index].raise_()
+            index = -1
         if hasattr(self, "cbTools"):
             self.cbTools.setCurrentIndex(0)
         return index

@@ -590,26 +590,47 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.exec_()
 
 
+def setup_logging(args):
+    logger = logging.getLogger()
+    # this is necessary as "someone" has already initialized logging, preventing basicConfig from doing stuff
+    for ch in logger.handlers:
+        logger.removeHandler(ch)
+
+    debug_formatter = logging.Formatter("%(asctime)s (%(module)s.%(funcName)s:%(lineno)s): %(message)s")
+    default_formatter = logging.Formatter("%(levelname)s: %(message)s")
+
+    # Console handler (suppress DEBUG by default)
+    ch = logging.StreamHandler()
+    if args.debug:
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(debug_formatter)
+    else:
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(default_formatter)
+    logger.addHandler(ch)
+
+    if not args.nolog:
+        # File handler (always on DEBUG level)
+        logfile = os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log")
+        if args.logfile is not None:
+            logfile = args.logfile
+        try:
+            fh = logging.FileHandler(logfile, "w")
+        except (OSError, IOError), ex:
+            logger.error("Could not open logfile '%s': %s %s", logfile, type(ex), ex)
+        else:
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(debug_formatter)
+            logger.addHandler(fh)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", help="show version", action="store_true", default=False)
-    parser.add_argument("--debug", help="show debugging log messages", action="store_true", default=False)
+    parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
+    parser.add_argument("--logfile", help="specify logfile location", action="store", default=None)
+    parser.add_argument("--nolog", help="do write debug log", action="store_true", default=False)
     args = parser.parse_args()
-
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logger = logging.getLogger()
-    # this is necessary as "someone" has already initialized logging, preventing basicConfig from doing stuff
-    for h in logger.handlers:
-        logger.removeHandler(h)
-    if args.debug:
-        logging.basicConfig(level=logging.DEBUG,
-                            format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                            datefmt="%Y-%m-%d %H:%M:%S")
-    else:
-        logging.basicConfig(level=logging.INFO)
 
     if args.version:
         print "***********************************************************************"
@@ -618,6 +639,8 @@ def main():
         print "Documentation: http://mss.rtfd.io"
         print "Version:", __version__
         print "\nSystem is loading.."
+
+    setup_logging(args)
 
     logging.info("Launching user interface...")
     application = QtWidgets.QApplication(sys.argv)

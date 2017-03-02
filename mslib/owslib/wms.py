@@ -324,7 +324,8 @@ class ContentMetadata:
         # (mss) Added "Abstract".
         for key in ('Name', 'Title', 'Abstract'):
             val = elem.find(key)
-            if val is not None:
+            # (mss) Added " and val.text is not None".
+            if val is not None and val.text is not None:
                 setattr(self, key.lower(), val.text.strip())
             else:
                 setattr(self, key.lower(), None)

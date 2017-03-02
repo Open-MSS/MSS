@@ -24,6 +24,10 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="lbObsAngle">
+       <property name="toolTip">
+        <string>View direction of the remote sensing instrument.
+0 degree is towards flight direction.</string>
+       </property>
        <property name="text">
         <string>Viewing direction</string>
        </property>
@@ -45,6 +49,19 @@
        </property>
       </widget>
      </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </item>
    <item>
@@ -56,6 +73,10 @@
          <width>145</width>
          <height>0</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Tangent points in viewing direction at the specified altitude.
+Aircraft altitude is taken from the flight path.</string>
        </property>
        <property name="text">
         <string>draw tangent points</string>
@@ -80,12 +101,6 @@
      </item>
      <item>
       <widget class="QDoubleSpinBox" name="dsbTangentHeight">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -100,6 +115,19 @@
        </property>
       </widget>
      </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </item>
    <item>
@@ -112,8 +140,11 @@
          <height>0</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>dark green if below horizon; otherwise reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180</string>
+       </property>
        <property name="text">
-        <string>show solar angle</string>
+        <string>show solar angle (degree)</string>
        </property>
       </widget>
      </item>

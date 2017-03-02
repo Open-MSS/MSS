@@ -57,6 +57,9 @@ class Ui_WMSCapabilitiesBrowser(object):
         self.verticalLayout.addWidget(self.txtCapabilities)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.cbFullView = QtGui.QCheckBox(WMSCapabilitiesBrowser)
+        self.cbFullView.setObjectName(_fromUtf8("cbFullView"))
+        self.horizontalLayout.addWidget(self.cbFullView)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.btClose = QtGui.QPushButton(WMSCapabilitiesBrowser)
@@ -72,5 +75,6 @@ class Ui_WMSCapabilitiesBrowser(object):
         WMSCapabilitiesBrowser.setWindowTitle(_translate("WMSCapabilitiesBrowser", "Browse WMS Capabilities - Mission Support System", None))
         self.label.setText(_translate("WMSCapabilitiesBrowser", "Capabilities document of:", None))
         self.lblURL.setText(_translate("WMSCapabilitiesBrowser", "<URL>", None))
+        self.cbFullView.setText(_translate("WMSCapabilitiesBrowser", "show full XML document", None))
         self.btClose.setText(_translate("WMSCapabilitiesBrowser", "close", None))
 

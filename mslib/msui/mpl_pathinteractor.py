@@ -183,7 +183,7 @@ class WaypointsPath(mpath.Path):
         wps = wps_model.allWaypointData()
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
-            for i in range(len(wps[1:])):
+            for i, _ in enumerate(wps[1:]):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
 
         self.codes, self.vertices = zip(*pathdata)
@@ -712,7 +712,7 @@ class VPathInteractor(PathInteractor):
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
             # to float().
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure / 100.)))
 
         self._ind = None
 
@@ -749,7 +749,7 @@ class VPathInteractor(PathInteractor):
         # profile needs to be redrawn (redraw_path()). If the horizontal
         # position of a waypoint has changed, the entire figure needs to be
         # redrawn, as this affects the x-position of all points.
-        if index1.column() == ft.FLIGHTLEVEL:
+        if index1.column() == ft.FLIGHTLEVEL or index1.column() == ft.PRESSURE:
             i = index1.row()
             pres = self.waypoints_model.waypointData(i).pressure
             # print "SideView: pressure of point %i has been changed to %f." % (i, pres)
@@ -834,7 +834,7 @@ class HPathInteractor(PathInteractor):
                 # removeRows() will trigger a signal that will redraw the path.
                 self.waypoints_model.removeRows(self._ind)
 
-        elif self.editmode == INSERT:
+        elif self.editmode == INSERT and event.inaxes is not None:
             # Get position for new vertex.
             x, y = event.xdata, event.ydata
             best_index = self.pathpatch.get_path() \

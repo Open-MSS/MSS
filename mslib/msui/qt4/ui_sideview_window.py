@@ -36,6 +36,7 @@ class Ui_SideViewWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.mpl.sizePolicy().hasHeightForWidth())
         self.mpl.setSizePolicy(sizePolicy)
+        self.mpl.setMinimumSize(QtCore.QSize(100, 100))
         self.mpl.setObjectName(_fromUtf8("mpl"))
         self.verticalLayout.addWidget(self.mpl)
         self.horizontalLayout = QtGui.QHBoxLayout()

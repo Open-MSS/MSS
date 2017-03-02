@@ -27,6 +27,7 @@ AUTHORS:
 
 # standard library imports
 import os
+import pickle
 import logging
 import datetime
 from datetime import datetime as dt
@@ -102,13 +103,58 @@ def get_distance(coord0, coord1):
     return pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.
 
 
+def save_settings_pickle(tag, settings):
+    """
+    Saves a dictionary settings to disk.
+
+    :param tag: string specifying the settings
+    :param settings: dictionary of settings
+    :return: None
+    """
+    assert isinstance(tag, basestring)
+    assert isinstance(settings, dict)
+    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.{}.cfg".format(tag))
+    logging.debug("storing settings for %s to %s", tag, settingsfile)
+    try:
+        with open(settingsfile, "w") as fileobj:
+            pickle.dump(settings, fileobj)
+    except (OSError, IOError), ex:
+        logging.warn("Problems storing %s settings (%s: %s).", tag, type(ex), ex)
+
+
+def load_settings_pickle(tag, default_settings=None):
+    """
+    Loads a dictionary of settings from disk. May supply a dictionary of default settings
+    to return in case the settings file is not present or damaged. The default_settings one will
+    be updated by the restored one so one may rely on all keys of the default_settings dictionary
+    being present in the returned dictionary.
+
+    :param tag: string specifying the settings
+    :param default_settings: dictionary of settings or None
+    :return: dictionary of settings
+    """
+    if default_settings is None:
+        default_settings = {}
+    assert isinstance(default_settings, dict)
+    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.{}.cfg".format(tag))
+    logging.debug("loading settings for %s from %s", tag, settingsfile)
+    try:
+        with open(settingsfile, "r") as fileobj:
+            settings = pickle.load(fileobj)
+    except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
+        logging.warn("Problems reloading stored %s settings (%s: %s). Switching to default",
+                     tag, type(ex), ex)
+        settings = {}
+    if isinstance(settings, dict):
+        default_settings.update(settings)
+    return default_settings
+
+
 """
 Tangent point / Hexagon / Solar Angle utilities
 """
 
 JSEC_START = datetime.datetime(2000, 1, 1)
-F = 1. / 298.257223563
-E2 = (2. - F) * F
 
 
 def datetime_to_jsec(dt):
@@ -145,101 +191,6 @@ def fix_angle(ang):
     return ang
 
 
-def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1, angle):
-    mlat = (lat0 + lat1) / 2.
-    lon0 *= np.cos(np.deg2rad(mlat))
-    lon1 *= np.cos(np.deg2rad(mlat))
-    dlon = lon1 - lon0
-    dlat = lat1 - lat0
-    obs_azi2 = fix_angle(angle + np.rad2deg(np.arctan2(dlon, dlat)))
-    return obs_azi2, -1
-
-
-def compute_solar_angle(jsec, lon, lat):
-    # The input to the Astronomer's almanach is the difference between
-    # the Julian date and JD 2451545.0 (noon, 1 January 2000)
-    time = jsec / (60. * 60. * 24.) - 0.5
-
-    # Mean longitude
-    mnlong = 280.460 + .9856474 * time
-    mnlong %= 360.
-    if mnlong < 0:
-        mnlong += 360
-        assert mnlong >= 0
-
-    # Mean anomaly
-    mnanom = 357.528 + .9856003 * time
-    mnanom = np.deg2rad(mnanom % 360.)
-    if mnanom < 0:
-        mnanom += 2 * np.pi
-        assert mnanom >= 0
-
-    # Ecliptic longitude and obliquity of ecliptic
-    eclong = mnlong + 1.915 * np.sin(mnanom) + 0.020 * np.sin(2 * mnanom)
-    eclong = np.deg2rad(eclong % 360.)
-    if (eclong < 0):
-        eclong += 2 * np.pi
-        assert (eclong >= 0)
-
-    oblqec = np.deg2rad(23.439 - 0.0000004 * time)
-
-    # Celestial coordinates
-    # Right ascension and declination
-    num = np.cos(oblqec) * np.sin(eclong)
-    den = np.cos(eclong)
-    ra = np.arctan(num / den)
-    if den < 0:
-        ra += np.pi
-    elif den >= 0 and num < 0:
-        ra += 2 * np.pi
-
-    dec = np.arcsin(np.sin(oblqec) * np.sin(eclong))
-    # Local coordinates
-    # Greenwich mean sidereal time
-    gmst = 6.697375 + .0657098242 * time + compute_hour_of_day(jsec)
-
-    gmst = gmst % 24.
-    if gmst < 0:
-        gmst += 24
-        assert gmst >= 0
-
-    # Local mean sidereal time
-    if lon < 0:
-        lon += 360
-        assert 0 <= lon <= 360
-
-    lmst = gmst + lon / 15.
-    lmst = np.deg2rad(15. * (lmst % 24.))
-
-    # Hour angle
-    ha = lmst - ra
-    if ha < -np.pi:
-        ha += 2 * np.pi
-
-    if ha > np.pi:
-        ha -= 2 * np.pi
-
-    assert -np.pi < ha < 2 * np.pi
-
-    # Latitude to radians
-    lat = np.deg2rad(lat)
-
-    # Azimuth and elevation
-    zenithAngle = np.arccos(np.sin(lat) * np.sin(dec) + np.cos(lat) * np.cos(dec) * np.cos(ha))
-    azimuthAngle = np.arccos((np.sin(lat) * np.cos(zenithAngle) - np.sin(dec)) /
-                             (np.cos(lat) * np.sin(zenithAngle)))
-
-    if ha > 0:
-        azimuthAngle += np.pi
-    else:
-        azimuthAngle = 3 * np.pi - azimuthAngle % (2 * np.pi)
-
-    if azimuthAngle > np.pi:
-        azimuthAngle -= 2 * np.pi
-
-    return np.rad2deg(azimuthAngle), 90 - np.rad2deg(zenithAngle)
-
-
 def rotate_point(point, angle, origin=(0, 0)):
     """Rotates a point. Angle is in degrees.
     Rotation is counter-clockwise"""
@@ -249,22 +200,6 @@ def rotate_point(point, angle, origin=(0, 0)):
                   (point[0] - origin[0]) * np.sin(angle) +
                   (point[1] - origin[1]) * np.cos(angle) + origin[1])
     return temp_point
-
-
-def create_hexagon(center_lat, center_lon, radius, angle=0.):
-    coords_0 = (radius, 0.)
-    CoordsCart_0 = [rotate_point(coords_0, angle=0. + angle),
-                    rotate_point(coords_0, angle=60. + angle),
-                    rotate_point(coords_0, angle=120. + angle),
-                    rotate_point(coords_0, angle=180. + angle),
-                    rotate_point(coords_0, angle=240. + angle),
-                    rotate_point(coords_0, angle=300. + angle),
-                    rotate_point(coords_0, angle=360. + angle)]
-    CoordsSphere_rot = [(center_lat + vec[0] / 110.,
-                         center_lon + vec[1] / (110. *
-                                                np.cos(np.deg2rad(vec[0] / 110. + center_lat))))
-                        for vec in CoordsCart_0]
-    return CoordsSphere_rot
 
 
 def convertHPAToKM(press):

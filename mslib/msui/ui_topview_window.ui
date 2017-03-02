@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>TopViewWindow</class>
- <widget class="QMainWindow" name="TopViewWindow" >
-  <property name="geometry" >
+ <widget class="QMainWindow" name="TopViewWindow">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,59 +10,65 @@
     <height>782</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Top View - Mission Support System</string>
   </property>
-  <widget class="QWidget" name="centralwidget" >
-   <layout class="QVBoxLayout" name="verticalLayout" >
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2" >
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="MplTopViewWidget" native="1" name="mpl" >
-        <property name="sizePolicy" >
-         <sizepolicy vsizetype="Expanding" hsizetype="Preferred" >
+       <widget class="MplTopViewWidget" name="mpl" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>100</height>
+         </size>
         </property>
        </widget>
       </item>
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout" >
+     <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="btMapRedraw" >
-        <property name="font" >
+       <widget class="QPushButton" name="btMapRedraw">
+        <property name="font">
          <font>
           <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
-        <property name="text" >
+        <property name="text">
          <string>&amp;REDRAW MAP</string>
         </property>
-        <property name="shortcut" >
+        <property name="shortcut">
          <string>R</string>
         </property>
-        <property name="flat" >
+        <property name="flat">
          <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btSettings" >
-        <property name="text" >
+       <widget class="QPushButton" name="btSettings">
+        <property name="text">
          <string>map appearance</string>
         </property>
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer_6" >
-        <property name="orientation" >
+       <spacer name="horizontalSpacer_6">
+        <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <property name="sizeHint" stdset="0" >
+        <property name="sizeHint" stdset="0">
          <size>
           <width>40</width>
           <height>20</height>
@@ -70,31 +77,31 @@
        </spacer>
       </item>
       <item>
-       <widget class="QComboBox" name="cbTools" >
-        <property name="sizePolicy" >
-         <sizepolicy vsizetype="Fixed" hsizetype="MinimumExpanding" >
+       <widget class="QComboBox" name="cbTools">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>(select to open tool)</string>
          </property>
         </item>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>WMS</string>
          </property>
         </item>
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer_3" >
-        <property name="orientation" >
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <property name="sizeHint" stdset="0" >
+        <property name="sizeHint" stdset="0">
          <size>
           <width>40</width>
           <height>20</height>
@@ -103,53 +110,53 @@
        </spacer>
       </item>
       <item>
-       <widget class="QComboBox" name="cbChangeMapSection" >
-        <property name="sizeAdjustPolicy" >
+       <widget class="QComboBox" name="cbChangeMapSection">
+        <property name="sizeAdjustPolicy">
          <enum>QComboBox::AdjustToContents</enum>
         </property>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>to reset map select a region</string>
          </property>
         </item>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>Spitsbergen, large</string>
          </property>
         </item>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>Spitsbergen, local</string>
          </property>
         </item>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>Europe (ste)</string>
          </property>
         </item>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>Germany (ste)</string>
          </property>
         </item>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>Europe (cyl)</string>
          </property>
         </item>
         <item>
-         <property name="text" >
+         <property name="text">
           <string>Germany (cyl)</string>
          </property>
         </item>
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer" >
-        <property name="orientation" >
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <property name="sizeHint" stdset="0" >
+        <property name="sizeHint" stdset="0">
          <size>
           <width>40</width>
           <height>20</height>
@@ -158,59 +165,59 @@
        </spacer>
       </item>
       <item>
-       <widget class="QLabel" name="label" >
-        <property name="text" >
+       <widget class="QLabel" name="label">
+        <property name="text">
          <string>waypoint edit mode:</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btMvWaypoint" >
-        <property name="text" >
+       <widget class="QToolButton" name="btMvWaypoint">
+        <property name="text">
          <string>&amp;Mv</string>
         </property>
-        <property name="shortcut" >
+        <property name="shortcut">
          <string>M</string>
         </property>
-        <property name="checkable" >
+        <property name="checkable">
          <bool>true</bool>
         </property>
-        <property name="checked" >
+        <property name="checked">
          <bool>true</bool>
         </property>
-        <property name="autoExclusive" >
+        <property name="autoExclusive">
          <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btInsWaypoint" >
-        <property name="text" >
+       <widget class="QToolButton" name="btInsWaypoint">
+        <property name="text">
          <string>&amp;Ins</string>
         </property>
-        <property name="shortcut" >
+        <property name="shortcut">
          <string>I</string>
         </property>
-        <property name="checkable" >
+        <property name="checkable">
          <bool>true</bool>
         </property>
-        <property name="autoExclusive" >
+        <property name="autoExclusive">
          <bool>true</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="btDelWaypoint" >
-        <property name="text" >
+       <widget class="QToolButton" name="btDelWaypoint">
+        <property name="text">
          <string>&amp;Del</string>
         </property>
-        <property name="shortcut" >
+        <property name="shortcut">
          <string>D</string>
         </property>
-        <property name="checkable" >
+        <property name="checkable">
          <bool>true</bool>
         </property>
-        <property name="autoExclusive" >
+        <property name="autoExclusive">
          <bool>true</bool>
         </property>
        </widget>
@@ -219,8 +226,8 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar" >
-   <property name="geometry" >
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>

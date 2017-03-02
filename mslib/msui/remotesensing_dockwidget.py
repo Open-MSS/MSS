@@ -13,14 +13,108 @@ AUTHORS:
 import numpy as np
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
-from mslib.mss_util import datetime_to_jsec, compute_solar_angle, \
-    compute_view_angles, get_distance, rotate_point
+from mslib.mss_util import datetime_to_jsec, get_distance, rotate_point, fix_angle, compute_hour_of_day
 from matplotlib.collections import LineCollection
 from matplotlib.colors import BoundaryNorm, ListedColormap
 import collections
 
 
-R = 6371.
+EARTH_RADIUS = 6371.
+
+
+def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1, angle):
+    mlat = (lat0 + lat1) / 2.
+    lon0 *= np.cos(np.deg2rad(mlat))
+    lon1 *= np.cos(np.deg2rad(mlat))
+    dlon = lon1 - lon0
+    dlat = lat1 - lat0
+    obs_azi2 = fix_angle(angle + np.rad2deg(np.arctan2(dlon, dlat)))
+    return obs_azi2, -1
+
+
+def compute_solar_angle(jsec, lon, lat):
+    # The input to the Astronomer's almanach is the difference between
+    # the Julian date and JD 2451545.0 (noon, 1 January 2000)
+    time = jsec / (60. * 60. * 24.) - 0.5
+
+    # Mean longitude
+    mnlong = 280.460 + .9856474 * time
+    mnlong %= 360.
+    if mnlong < 0:
+        mnlong += 360
+        assert mnlong >= 0
+
+    # Mean anomaly
+    mnanom = 357.528 + .9856003 * time
+    mnanom = np.deg2rad(mnanom % 360.)
+    if mnanom < 0:
+        mnanom += 2 * np.pi
+        assert mnanom >= 0
+
+    # Ecliptic longitude and obliquity of ecliptic
+    eclong = mnlong + 1.915 * np.sin(mnanom) + 0.020 * np.sin(2 * mnanom)
+    eclong = np.deg2rad(eclong % 360.)
+    if (eclong < 0):
+        eclong += 2 * np.pi
+        assert (eclong >= 0)
+
+    oblqec = np.deg2rad(23.439 - 0.0000004 * time)
+
+    # Celestial coordinates
+    # Right ascension and declination
+    num = np.cos(oblqec) * np.sin(eclong)
+    den = np.cos(eclong)
+    ra = np.arctan(num / den)
+    if den < 0:
+        ra += np.pi
+    elif den >= 0 and num < 0:
+        ra += 2 * np.pi
+
+    dec = np.arcsin(np.sin(oblqec) * np.sin(eclong))
+    # Local coordinates
+    # Greenwich mean sidereal time
+    gmst = 6.697375 + .0657098242 * time + compute_hour_of_day(jsec)
+
+    gmst = gmst % 24.
+    if gmst < 0:
+        gmst += 24
+        assert gmst >= 0
+
+    # Local mean sidereal time
+    if lon < 0:
+        lon += 360
+        assert 0 <= lon <= 360
+
+    lmst = gmst + lon / 15.
+    lmst = np.deg2rad(15. * (lmst % 24.))
+
+    # Hour angle
+    ha = lmst - ra
+    if ha < -np.pi:
+        ha += 2 * np.pi
+
+    if ha > np.pi:
+        ha -= 2 * np.pi
+
+    assert -np.pi < ha < 2 * np.pi
+
+    # Latitude to radians
+    lat = np.deg2rad(lat)
+
+    # Azimuth and elevation
+    zenithAngle = np.arccos(np.sin(lat) * np.sin(dec) + np.cos(lat) * np.cos(dec) * np.cos(ha))
+    azimuthAngle = np.arccos((np.sin(lat) * np.cos(zenithAngle) - np.sin(dec)) /
+                             (np.cos(lat) * np.sin(zenithAngle)))
+
+    if ha > 0:
+        azimuthAngle += np.pi
+    else:
+        azimuthAngle = 3 * np.pi - azimuthAngle % (2 * np.pi)
+
+    if azimuthAngle > np.pi:
+        azimuthAngle -= 2 * np.pi
+
+    return np.rad2deg(azimuthAngle), 90 - np.rad2deg(zenithAngle)
 
 
 class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidget):
@@ -117,8 +211,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             fine_lines[i][0], fine_lines[i][1], line_heights[i],
             cut_height=self.dsbTangentHeight.value()) for i in range(len(fine_lines))]
         for i, line in enumerate(tplines):
-            for j in range(len(line)):
-                line[j] = bmap(line[j][0], line[j][1])
+            for j, (lon, lat) in enumerate(line):
+                line[j] = bmap(lon, lat)
             tplines[i] = line
         return LineCollection(
             tplines,
@@ -222,10 +316,11 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         los.append(los[-1])
 
         if isinstance(flight_alt, (collections.Sequence, np.ndarray)):
-            dist = [np.sqrt(max((R + a) ** 2 - (R + cut_height) ** 2, 0)) / 110. for a in flight_alt[:-1]]
+            dist = [np.sqrt(max((EARTH_RADIUS + a) ** 2 - (EARTH_RADIUS + cut_height) ** 2, 0)) / 110.
+                    for a in flight_alt[:-1]]
             dist.append(dist[-1])
         else:
-            dist = np.sqrt((R + flight_alt) ** 2 - (R + cut_height) ** 2) / 110.
+            dist = np.sqrt((EARTH_RADIUS + flight_alt) ** 2 - (EARTH_RADIUS + cut_height) ** 2) / 110.
 
         tp_dir = (np.array(los).T * dist).T
 
@@ -235,7 +330,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
                (x0, y0) in tps]
         return tps
 
-    def calc_view_rating(self, obs_azi, obs_ele, sol_azi, sol_ele, height):
+    @staticmethod
+    def calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, height):
         """
         Calculates the angular distance between given directions under the
         condition that the sun is above the horizon.
@@ -249,7 +345,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         Returns: angular distance or 180 degrees if sun is below horizon
         """
-        thresh = -np.rad2deg(np.arccos(R / (height + R))) - 3
+        thresh = -np.rad2deg(np.arccos(EARTH_RADIUS / (height + EARTH_RADIUS))) - 3
 
         delta_azi = obs_azi - sol_azi
         delta_ele = obs_ele + sol_ele

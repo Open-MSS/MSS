@@ -464,11 +464,10 @@ def scale_variable(nc_var):
         data = nc_var.getValue()  # Scientific.IO.NetCDF version
     except:
         data = nc_var[:]  # netCDF4 version
-    if "_FillValue" in dir(nc_var):
-        if not (data - nc_var._FillValue).all():
-            raise ECMWFMissingValueError(u"NetCDF variable {} contains "
-                                         u"mssing values. Please implement a method using masked "
-                                         u"arrays for this kind of data.".format(nc_var.long_name))
+    if "_FillValue" in dir(nc_var) and not (data - nc_var._FillValue).all():
+        raise ECMWFMissingValueError(u"NetCDF variable '{}' contains "
+                                     u"mssing values. Please implement a method using masked "
+                                     u"arrays for this kind of data.".format(nc_var.long_name))
 
     # If the above tests succeeded, check if scale and offset attributes
     # are specified -- if not, return the data as-is as a numpy.ndarray

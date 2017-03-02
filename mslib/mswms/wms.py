@@ -192,9 +192,8 @@ class WMSServer(object):
         """Returns True if the given parameter is an XML that contains
            a service exception.
         """
-        if isinstance(var, (str, unicode)):
-            if var.find("<ServiceException") > 1:
-                return True
+        if isinstance(var, basestring) and var.find("<ServiceException") > 1:
+            return True
         return False
 
     def service_exception(self, code=None, text=""):
@@ -250,6 +249,8 @@ class WMSServer(object):
                                service_contact_person=mss_wms_settings.__dict__.get("service_contact_person", ""),
                                service_contact_organisation=mss_wms_settings.__dict__.get(
                                    "service_contact_organisation", ""),
+                               service_contact_position=mss_wms_settings.__dict__.get("service_contact_position", ""),
+                               service_email=mss_wms_settings.__dict__.get("service_email", ""),
                                service_address_type=mss_wms_settings.__dict__.get("service_address_type", ""),
                                service_address=mss_wms_settings.__dict__.get("service_address", ""),
                                service_city=mss_wms_settings.__dict__.get("service_city", ""),

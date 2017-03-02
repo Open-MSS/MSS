@@ -39,8 +39,6 @@ AUTHORS:
 # standard library imports
 import datetime
 import codecs
-import os
-import pickle
 import logging
 import xml.dom.minidom
 import string
@@ -51,8 +49,7 @@ from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
 # local application imports
 from mslib import mss_util
 from mslib import thermolib
-from mslib.mss_util import config_loader
-from mslib.msui import constants
+from mslib.mss_util import config_loader, save_settings_pickle, load_settings_pickle
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
@@ -171,7 +168,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.waypoints = []  # user-defined waypoints
 
         # self.aircraft.setErrorHandling("permissive")
-        self.settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.performance.cfg")
+        self.settings_tag = "performance"
         self.loadSettings()
 
         # If a filename is passed to the constructor, load data from this file.
@@ -187,15 +184,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
         """
-        logging.debug(u"loading settings from '{}'".format(self.settingsfile))
-        try:
-            with open(self.settingsfile, "r") as fileobj:
-                settings = pickle.load(fileobj)
-        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
-            logging.warn(u"Problems reloading stored Performance settings ({}: {}). Switching to default".format(type(ex), ex))
-            self.performance_settings = DEFAULT_PERFORMANCE
-        else:
-            self.performance_settings = settings
+        self.performance_settings = load_settings_pickle(self.settings_tag, DEFAULT_PERFORMANCE)
 
     def saveSettings(self):
         """Save the current settings (map appearance) to the file
@@ -203,12 +192,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        logging.debug(u"storing settings to '{}'".format(self.settingsfile))
-        try:
-            with open(self.settingsfile, "w") as fileobj:
-                pickle.dump(self.performance_settings, fileobj)
-        except (OSError, IOError), ex:
-            logging.warn(u"Problems storing Performance settings ({}: {}).".format(type(ex), ex))
+        save_settings_pickle(self.settings_tag, self.performance_settings)
 
     def setName(self, name):
         self.name = name
@@ -367,6 +351,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             elif column == PRESSURE:
                 try:
                     pressure = float(value) * 100  # convert hPa to Pa
+                    if pressure > 200000:
+                        raise ValueError
                     flightlevel = round(thermolib.pressure2flightlevel(pressure))
                     pressure = thermolib.flightlevel2pressure(flightlevel)
                 except ValueError:

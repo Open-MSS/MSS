@@ -284,10 +284,9 @@ class MSSPlotDriver(object):
         # (the required variables could have changed).
         if self.plot_object is not None:
             require_reload = require_reload or (self.plot_object != plot_object)
-        if require_reload:
-            if self.dataset:
-                self.dataset.close()
-                self.dataset = None
+        if require_reload and self.dataset is not None:
+            self.dataset.close()
+            self.dataset = None
 
         self.plot_object = plot_object
         self.figsize = figsize

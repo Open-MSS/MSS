@@ -22,6 +22,7 @@ class Ui_SideViewWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.mpl.sizePolicy().hasHeightForWidth())
         self.mpl.setSizePolicy(sizePolicy)
+        self.mpl.setMinimumSize(QtCore.QSize(100, 100))
         self.mpl.setObjectName("mpl")
         self.verticalLayout.addWidget(self.mpl)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -86,4 +87,5 @@ class Ui_SideViewWindow(object):
         self.btInsWaypoint.setShortcut(_translate("SideViewWindow", "I"))
         self.btDelWaypoint.setText(_translate("SideViewWindow", "Del"))
         self.btDelWaypoint.setShortcut(_translate("SideViewWindow", "D"))
+
 from mslib.msui.mpl_qtwidget import MplSideViewWidget

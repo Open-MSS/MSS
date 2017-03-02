@@ -604,6 +604,10 @@ class MplTopViewCanvas(MplCanvas):
         See MapCanvas.update_with_coordinate_change(). After the map redraw,
         coordinates of all objects overlain on the map have to be updated.
         """
+
+        # remove legend
+        self.drawLegend(None)
+
         # Show the progress dialog, since the retrieval can take a few seconds.
         self.pdlg.setValue(0)
         self.pdlg.show()
@@ -697,43 +701,39 @@ class MplTopViewCanvas(MplCanvas):
         """
         # If the method is called with a "None" image, the current legend
         # graphic should be removed (if one exists).
-        if img is None:
-            if self.legimg is not None:
-                self.legimg.remove()
-                self.legimg = None
-            return
+        if self.legimg is not None:
+            logging.debug("removing image %s", self.legimg)
+            self.legimg.remove()
+            self.legimg = None
 
-        # The size of the legend axes needs to be given in relative figure
-        # coordinates. To determine those from the legend graphics size in
-        # pixels, we need to determine the size of the currently displayed
-        # figure in pixels.
-        figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
-        ax_extent_x = img.size[0] / figsize_px[0]
-        ax_extent_y = img.size[1] / figsize_px[1]
+        if img is not None:
+            # The size of the legend axes needs to be given in relative figure
+            # coordinates. To determine those from the legend graphics size in
+            # pixels, we need to determine the size of the currently displayed
+            # figure in pixels.
+            figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
+            ax_extent_x = img.size[0] / figsize_px[0]
+            ax_extent_y = img.size[1] / figsize_px[1]
 
-        # If no legend axes have been created, do so now.
-        if self.legax is None:
-            # Add new axes to the plot.
-            ax_bbox = self.ax.get_position()
-            # Main axes instance of mplwidget has zorder 99.
-            self.legax = self.fig.add_axes([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y],
-                                           frameon=False,
-                                           xticks=[], yticks=[],
-                                           label="ax2", zorder=0)
-            self.legax.patch.set_facecolor("None")
+            # If no legend axes have been created, do so now.
+            if self.legax is None:
+                # Main axes instance of mplwidget has zorder 99.
+                self.legax = self.fig.add_axes([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y],
+                                               frameon=False,
+                                               xticks=[], yticks=[],
+                                               label="ax2", zorder=0)
+                self.legax.patch.set_facecolor("None")
 
-        # If axes exist, remove the current legend image and adjust their
-        # position.
-        else:
-            if self.legimg is not None:
-                self.legimg.remove()
-                self.legimg = None
-            self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
+            # If axes exist, adjust their position.
+            else:
+                self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
 
-        # Plot the new legimg in the legax axes.
-        self.legimg = self.legax.imshow(img, origin=PIL_image_origin, aspect="equal",
-                                        interpolation="nearest")
+            # Plot the new legimg in the legax axes.
+            self.legimg = self.legax.imshow(img, origin=PIL_image_origin, aspect="equal",
+                                            interpolation="nearest")
         self.draw()
+        # required so that it is actually drawn...
+        QtWidgets.QApplication.processEvents()
 
     def plotSatelliteOverpass(self, segment):
         """Plots a satellite track on top of the map.
@@ -941,8 +941,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             # below the items that are on the stack.
             item = stack.pop()
             if item.isVisible(self.identifier):
-                if isinstance(item, titree.FlightTrackItem) \
-                        or isinstance(item, titree.TrajectoryItem):
+                if isinstance(item, (titree.FlightTrackItem, titree.TrajectoryItem)):
                     itemsList.append(item)
                 else:
                     stack.extend(item.childItems)
@@ -959,8 +958,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             earliestStartTime = datetime(3000, 1, 1)
             self.subPlots = []
             for item in itemsList:
-                earliestStartTime = min(earliestStartTime,
-                                        item.getStartTime())
+                earliestStartTime = min(earliestStartTime, item.getStartTime())
                 for variable in item.childItems:
                     if variable.isVisible(self.identifier) and variable.getVariableName() not in self.subPlots:
                         self.subPlots.append(variable.getVariableName())
