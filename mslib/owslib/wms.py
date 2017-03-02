@@ -323,11 +323,12 @@ class ContentMetadata:
         # (mss) Added "Abstract".
         for key in ('Name', 'Title', 'Abstract'):
             val = elem.find(key)
+            # (mss) Added " and val.text is not None".
             if val is not None and val.text is not None:
                 setattr(self, key.lower(), val.text.strip())
             else:
                 setattr(self, key.lower(), None)
-            self.id = self.name  # conform to new interface
+            self.id=self.name #conform to new interface
         # bboxes
         b = elem.find('BoundingBox')
         self.boundingBox = None
