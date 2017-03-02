@@ -295,7 +295,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
-                except (SyntaxError, IndexError), ex:
+                except (SyntaxError, IndexError, OSError, IOError), ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(u"ERROR: {} {}".format(type(ex), ex)))
@@ -330,7 +330,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             filename = filename[0] if USE_PYQT5 else unicode(filename)
 
             if filename:
-                function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                try:
+                    function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                except (OSError, IOError), ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("file io plugin error"),
+                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
 
         setattr(self, full_name, types.MethodType(save_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))
