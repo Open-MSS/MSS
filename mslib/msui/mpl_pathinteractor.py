@@ -834,7 +834,7 @@ class HPathInteractor(PathInteractor):
                 # removeRows() will trigger a signal that will redraw the path.
                 self.waypoints_model.removeRows(self._ind)
 
-        elif self.editmode == INSERT:
+        elif self.editmode == INSERT and event.inaxes is not None:
             # Get position for new vertex.
             x, y = event.xdata, event.ydata
             best_index = self.pathpatch.get_path() \

@@ -415,19 +415,15 @@ class MapCanvas(basemap.Basemap):
 
         if self.kwargs["projection"] in ["cyl"]:
             # Latitudes in cylindrical projection need to be within -90..90.
-            if self.kwargs['urcrnrlat'] > 90:
-                self.kwargs['urcrnrlat'] = 90
-            if self.kwargs['llcrnrlat'] < -90:
-                self.kwargs['llcrnrlat'] = -90
-            # Longitudes in cylindrical projection need to be within -360..360.
-            if self.kwargs['llcrnrlon'] < -360 \
-                    or self.kwargs['urcrnrlon'] < -360:
-                self.kwargs['llcrnrlon'] += 360.
-                self.kwargs['urcrnrlon'] += 360.
-            if self.kwargs['llcrnrlon'] > 360 \
-                    or self.kwargs['urcrnrlon'] > 360:
-                self.kwargs['llcrnrlon'] -= 360.
-                self.kwargs['urcrnrlon'] -= 360.
+            self.kwargs['llcrnrlat'] = max(self.kwargs['llcrnrlat'], -90)
+            self.kwargs['urcrnrlat'] = max(self.kwargs['urcrnrlat'], -89)
+            self.kwargs['llcrnrlat'] = min(self.kwargs['llcrnrlat'], 89)
+            self.kwargs['urcrnrlat'] = min(self.kwargs['urcrnrlat'], 90)
+            # Longitudes in cylindrical projection need to be within -360..540.
+            self.kwargs["llcrnrlon"] = max(self.kwargs["llcrnrlon"], -360)
+            self.kwargs["urcrnrlon"] = max(self.kwargs["urcrnrlon"], -359)
+            self.kwargs["llcrnrlon"] = min(self.kwargs["llcrnrlon"], 539)
+            self.kwargs["urcrnrlon"] = min(self.kwargs["urcrnrlon"], 540)
 
         # Remove the current map artists.
         grat_vis = self.appearance["draw_graticule"]
