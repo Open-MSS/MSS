@@ -122,7 +122,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
             >>> out.close()
 
         """
-        base_url = self.getOperationByName('GetMap').methods[method]['url']
+        base_url = self.get_redirect_url(method)
         request = {'version': self.version, 'request': 'GetMap'}
 
         # check layers and styles
@@ -212,6 +212,9 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
             err_message = unicode(se_tree.find('ServiceException').text).strip()
             raise mslib.owslib.wms.ServiceException(err_message, se_xml)
         return u
+
+    def get_redirect_url(self, method="Get"):
+        return self.getOperationByName("GetMap").methods[method]["url"]
 
 
 #
@@ -387,6 +390,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Accomodates MSSWebMapService instances.
         self.wms = None
+        self.wms_service_cache = {}
 
         # Initial list of WMS servers.
         self.cbWMS_URL.clear()
@@ -409,7 +413,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Initialise GUI elements that control WMS parameters.
         self.cbLayer.clear()
+        self.cbLayer.setEnabled(False)
         self.cbStyle.clear()
+        self.cbStyle.setEnabled(False)
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
@@ -429,6 +435,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enableInitTimeElements(False)
         self.btGetMap.setEnabled(False)
         self.pbViewCapabilities.setEnabled(False)
+
         self.cbTransparent.setChecked(False)
 
         # Check for WMS image cache directory, create if neceassary.
@@ -487,13 +494,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbLevel_fwd.clicked.connect(self.level_fwd_click)
 
         self.btClearCache.clicked.connect(self.clearCache)
-
+        self.cbWMS_URL.editTextChanged.connect(self.wmsUrlChanged)
         if view is not None and hasattr(view, "redrawn"):
             self.view.redrawn.connect(self.afterRedraw)
 
         # Progress dialog to inform the user about image ongoing retrievals.
-        self.pdlg = QtWidgets.QProgressDialog("retrieving image...", "Cancel",
-                                              0, 10, self)
+        self.pdlg = QtWidgets.QProgressDialog(
+            "retrieving image...", "Cancel", 0, 10, parent=self.parent())
         self.pdlg.close()
 
         self.thread_prefetch = QtCore.QThread()  # no parent!
@@ -540,7 +547,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
         try:
-            _ = str(base_url)  # to Provoke early Unicode Error
+            _ = str(base_url)  # to provoke early Unicode Error
             while wms is None:
                 try:
                     wms = MSSWebMapService(base_url, version='1.1.1',
@@ -572,8 +579,33 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         except Exception as ex:
             logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
-            self.displayException(ex)
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("Web Map Service"),
+                self.tr(u"ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
         return wms
+
+    def wmsUrlChanged(self, text):
+        text = unicode(text)
+        wms = self.wms_service_cache.get(text)
+        if wms is not None and wms != self.wms:
+            self.activateWMS(wms)
+        elif self.wms is not None:
+            self.wms = None
+            self.cbLayer.clear()
+            self.cbLevel.clear()
+            self.cbStyle.clear()
+            self.cbInitTime.clear()
+            self.cbValidTime.clear()
+
+            self.cbLayer.setEnabled(False)
+            self.cbStyle.setEnabled(False)
+            self.enableLevelElements(False)
+            self.enableValidTimeElements(False)
+            self.enableInitTimeElements(False)
+            self.btGetMap.setEnabled(False)
+            self.pbViewCapabilities.setEnabled(False)
+            self.cbTransparent.setChecked(False)
+
 
     @QtCore.pyqtSlot(Exception)
     def displayException(self, ex):
@@ -593,11 +625,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """Query the WMS server in the URL combobox for its capabilities. Fill
            layer, style, etc. combo boxes.
         """
-        # Clear layer and style combo boxes. First disconnect the layerChanged
-        # slot to avoid calls to this function.
-        self.cbLayer.currentIndexChanged.disconnect(self.layerChanged)
-        self.cbLayer.clear()
-        self.cbStyle.clear()
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
@@ -605,42 +632,53 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug(u"requesting capabilities from %s", base_url)
         wms = self.initialiseWMS(base_url)
         if wms is not None:
-            # Parse layer tree of the wms object and discover usable layers.
-            stack = wms.contents.values()
-            filtered_layers = []
-            while len(stack) > 0:
-                layer = stack.pop()
-                if len(layer.layers) == 0:
-                    if self.crsAllowed(layer):
-                        cb_string = u"{} | {}".format(layer.title, layer.name)
-                        if cb_string not in filtered_layers:
-                            filtered_layers.append(cb_string)
-                else:
-                    stack.extend(layer.layers)
-            logging.debug("discovered %i layers that can be used in this view",
-                          len(filtered_layers))
-            filtered_layers.sort()
-            self.cbLayer.addItems(filtered_layers)
-            self.wms = wms
-            self.layerChanged(0)
-            self.btGetMap.setEnabled(True)
-            self.pbViewCapabilities.setEnabled(True)
+            self.activateWMS(wms)
+            self.wms_service_cache[wms.url] = wms
 
-            if self.prefetcher is not None:
-                self.prefetch.disconnect(self.prefetcher.fetch_maps)
-            if self.fetcher is not None:
-                self.fetch.disconnect(self.fetcher.fetch_maps)
+    def activateWMS(self, wms):
+        # Clear layer and style combo boxes. First disconnect the layerChanged
+        # slot to avoid calls to this function.
+        self.cbLayer.currentIndexChanged.disconnect(self.layerChanged)
+        self.cbLayer.clear()
+        self.cbStyle.clear()
 
-            self.prefetcher = WMSMapFetcher(self.wms, self.wms_cache)
-            self.prefetcher.moveToThread(self.thread_prefetch)
-            self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
+        # Parse layer tree of the wms object and discover usable layers.
+        stack = wms.contents.values()
+        filtered_layers = []
+        while len(stack) > 0:
+            layer = stack.pop()
+            if len(layer.layers) == 0:
+                if self.crsAllowed(layer):
+                    cb_string = u"{} | {}".format(layer.title, layer.name)
+                    if cb_string not in filtered_layers:
+                        filtered_layers.append(cb_string)
+            else:
+                stack.extend(layer.layers)
+        logging.debug("discovered %i layers that can be used in this view",
+                      len(filtered_layers))
+        filtered_layers.sort()
+        self.cbLayer.addItems(filtered_layers)
+        self.cbLayer.setEnabled(self.cbLayer.count() > 1)
+        self.wms = wms
+        self.layerChanged(0)
+        self.btGetMap.setEnabled(True)
+        self.pbViewCapabilities.setEnabled(True)
 
-            self.fetcher = WMSMapFetcher(self.wms, self.wms_cache)
-            self.fetcher.moveToThread(self.thread_fetch)
-            self.fetch.connect(self.fetcher.fetch_maps)  # implicitely uses a queued connection
-            self.fetcher.finished.connect(self.continueRetrieveImage)  # implicitely uses a queued connection
-            self.fetcher.exception.connect(self.displayException)  # implicitely uses a queued connection
-            self.fetcher.started_request.connect(self.displayProgressDialog)  # implicitely uses a queued connection
+        if self.prefetcher is not None:
+            self.prefetch.disconnect(self.prefetcher.fetch_maps)
+        if self.fetcher is not None:
+            self.fetch.disconnect(self.fetcher.fetch_maps)
+
+        self.prefetcher = WMSMapFetcher(self.wms, self.wms_cache)
+        self.prefetcher.moveToThread(self.thread_prefetch)
+        self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
+
+        self.fetcher = WMSMapFetcher(self.wms, self.wms_cache)
+        self.fetcher.moveToThread(self.thread_fetch)
+        self.fetch.connect(self.fetcher.fetch_maps)  # implicitely uses a queued connection
+        self.fetcher.finished.connect(self.continueRetrieveImage)  # implicitely uses a queued connection
+        self.fetcher.exception.connect(self.displayException)  # implicitely uses a queued connection
+        self.fetcher.started_request.connect(self.displayProgressDialog)  # implicitely uses a queued connection
 
         if self.cbInitTime.count() > 0:
             self.cbInitTime.setCurrentIndex(0)
@@ -734,6 +772,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.cbStyle.clear()
         self.cbStyle.addItems([u"{} | {}".format(s, styles[s]["title"])
                                for s in styles])
+        self.cbStyle.setEnabled(self.cbStyle.count() > 1)
+
         abstract_text = layerobj.abstract if layerobj.abstract else ""
         abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
         self.teLayerAbstract.setText(abstract_text)
@@ -1140,7 +1180,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            level control.
         """
         self.cbLevelOn.setChecked(enable)
-        self.cbLevel.setEnabled(enable)
+        self.cbLevel.setEnabled(enable and self.cbLevel.count() > 1)
         self.tbLevel_back.setEnabled(enable)
         self.tbLevel_fwd.setEnabled(enable)
 
@@ -1273,8 +1313,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         kwargs["return_only_url"] = True
         urlstr = self.wms.getmap(**kwargs)
         kwargs["return_only_url"] = False
-        if not urlstr.startswith(self.cbWMS_URL.currentText()):
-            raise RuntimeError("Url does not match, use get capabilities first.")
+        if not self.wms.url.startswith(self.cbWMS_URL.currentText()):
+            raise RuntimeError("WMS URL does not match, use get capabilities first.")
         return os.path.join(self.wms_cache, hashlib.md5(urlstr).hexdigest() + ".png")
 
     def retrieveImage(self, crs="EPSG:4326", bbox=None, path_string=None,
