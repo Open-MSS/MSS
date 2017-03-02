@@ -59,7 +59,8 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         self.cbSatelliteOverpasses.currentIndexChanged.connect(self.plotOverpassTrack)
 
         self.settings_tag = "satellitedock"
-        load_settings_pickle(self.settings_tag, {"filename": ""})
+        settings = load_settings_pickle(self.settings_tag, {"filename": ""})
+        self.leFile.setText(settings["filename"])
 
     def selectFile(self):
         """Slot that opens a file dialog to choose a file with satellite
