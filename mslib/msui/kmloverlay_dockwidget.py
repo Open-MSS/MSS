@@ -8,6 +8,7 @@ AUTHORS:
 
 # related third party imports
 import logging
+import os
 import pykml.parser
 
 # local application imports
@@ -93,7 +94,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
            overpass predictions.
         """
         filename = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open KML Polygonal File", "", "(*.kml)")
+            self, "Open KML Polygonal File", os.path.dirname(unicode(self.leFile.text())), "(*.kml)")
         filename = filename[0] if USE_PYQT5 else unicode(filename)
 
         if not filename:
