@@ -207,7 +207,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                                             labels=[0, 0, 0, 1],
                                             color='0.5', dashes=[5, 5])
 
-    def plot_hsection(self, data, lats, lons, bbox=[-180, -90, 180, 90],
+    def plot_hsection(self, data, lats, lons, bbox=(-180, -90, 180, 90),
                       level=None, figsize=(960, 640), epsg=None,
                       proj_params={"projection": "cyl"},
                       valid_time=None, init_time=None, style=None,
@@ -229,7 +229,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
             if dataitem not in data.keys():
-                raise KeyError(u"required data field {} not found".format(dataitem))
+                raise KeyError(u"required data field '{}' not found".format(dataitem))
 
         # Copy parameters to properties.
         self.data = data

@@ -18,6 +18,9 @@
     <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
       <widget class="QCheckBox" name="cbOverlay">
+       <property name="toolTip">
+        <string>Hide/unhide loaded KML overlay.</string>
+       </property>
        <property name="text">
         <string>KML Overlay</string>
        </property>
@@ -28,6 +31,9 @@
      </item>
      <item>
       <widget class="QToolButton" name="btSelectFile">
+       <property name="toolTip">
+        <string>Specify KML file using a file dialog.</string>
+       </property>
        <property name="text">
         <string>...</string>
        </property>
@@ -35,6 +41,9 @@
      </item>
      <item>
       <widget class="QToolButton" name="btLoadFile">
+       <property name="toolTip">
+        <string>Load specified KML file.</string>
+       </property>
        <property name="text">
         <string>load</string>
        </property>
@@ -45,9 +54,42 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_7">
      <item>
+      <widget class="QCheckBox" name="cbManualStyle">
+       <property name="toolTip">
+        <string>Overwrite styles of KML document with colour/linewidth specified to the right.</string>
+       </property>
+       <property name="text">
+        <string>manual style</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pbSelectColour">
+       <property name="toolTip">
+        <string>Colour for KML overlay.</string>
+       </property>
        <property name="text">
         <string>Colour</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="toolTip">
+        <string>Line width for KML overlay.</string>
+       </property>
+       <property name="text">
+        <string>line width</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="dsbLineWidth">
+       <property name="singleStep">
+        <double>0.500000000000000</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -68,6 +110,9 @@
    </item>
    <item>
     <widget class="QLabel" name="label">
+     <property name="toolTip">
+      <string>KML support is experimental. Please communicate important missing features to the MSS issue tracker!</string>
+     </property>
      <property name="text">
       <string>!Experimental Feature! Not all KML files and contained features will work.</string>
      </property>

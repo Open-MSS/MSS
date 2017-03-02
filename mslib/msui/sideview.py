@@ -33,9 +33,7 @@ AUTHORS:
 # standard library imports
 import functools
 import logging
-import os
-import pickle
-from mslib.mss_util import config_loader
+from mslib.mss_util import config_loader, save_settings_pickle, load_settings_pickle
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
@@ -48,7 +46,6 @@ from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import flighttrack as ft
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import wms_control as wms
-from mslib.msui import constants
 
 
 # Dock window indices.
@@ -92,7 +89,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.tableWidget.setRowCount(len(flightlevels))
         flightlevels.sort()
         for i, level in enumerate(flightlevels):
-            tableitem = QtWidgets.QTableWidgetItem("%3i" % level)
+            tableitem = QtWidgets.QTableWidgetItem(str(int(level)))
             self.tableWidget.setItem(i, 0, tableitem)
 
         self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
@@ -144,7 +141,9 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     def addItem(self):
         """Add a new item (i.e. flight level) to the table.
         """
-        self.tableWidget.insertRow(self.tableWidget.rowCount())
+        self.tableWidget.insertRow(0)
+        self.tableWidget.setItem(0, 0, QtWidgets.QTableWidgetItem("0"))
+        self.tableWidget.sortItems(0)
 
     def deleteSelected(self):
         """Remove the selected items (i.e. flight levels) from the table.
@@ -166,7 +165,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             flightlevel = 0
         if flightlevel > 999:
             flightlevel = 999
-        item.setText("%3i" % flightlevel)
+        item.setText(str(int(flightlevel)))
         self.tableWidget.sortItems(0)
 
     def getFlightLevels(self):
@@ -219,7 +218,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
 
         self.setFlightTrackModel(model)
 
-        self.settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.sideview.cfg")
+        self.settings_tag = "sideview"
         self.loadSettings()
 
         # Connect slots and signals.
@@ -288,24 +287,13 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         settings = self.getView().getSettings()
-        logging.debug("storing settings to %s", self.settingsfile)
-        try:
-            with open(self.settingsfile, "w") as fileobj:
-                pickle.dump(settings, fileobj)
-        except (OSError, IOError), ex:
-            logging.warn("Problems storing SideView settings (%s: %s).", type(ex), ex)
+        save_settings_pickle(self.settings_tag, settings)
 
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
         """
-        logging.debug("loading settings from %s", self.settingsfile)
-        try:
-            with open(self.settingsfile, "r") as fileobj:
-                settings = pickle.load(fileobj)
-        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
-            logging.warn("Problems reloading stored SideView settings (%s: %s). Switching to default", type(ex), ex)
-        else:
-            self.getView().setSettings(settings)
+        settings = load_settings_pickle(self.settings_tag)
+        self.getView().setSettings(settings)
 
 
 def _main():

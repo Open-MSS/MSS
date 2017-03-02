@@ -155,7 +155,7 @@ class LagrantoOutputReader(object):
         fname -- file name of the lsl-file, without path (i.e. only 'lsl_...').
         """
 
-        logging.debug(u"Parsing output file {}".format(fname))
+        logging.debug(u"Parsing output file '{}'".format(fname))
 
         #
         # Open the lsl text file and read its contents into the list 'lines',
@@ -167,14 +167,14 @@ class LagrantoOutputReader(object):
         # Open and read the metadata file, if existent.
         metafile = os.path.join(self.lagrantoOutputPath, fname) + '.meta.pyl'
         if os.path.exists(metafile):
-            logging.debug(u"Reading metadata file {}".format(os.path.basename(metafile)))
+            logging.debug(u"Reading metadata file '{}'".format(os.path.basename(metafile)))
             filehandler = open(metafile, 'r')
             startCoordinates = pickle.load(filehandler)
             startTime = pickle.load(filehandler)
             duration = pickle.load(filehandler)
             filehandler.close()
         else:
-            logging.debug(u"No metadata file {} found.".format(metafile))
+            logging.debug(u"No metadata file '{}' found.".format(metafile))
             startCoordinates = None
             startTime = None
             duration = None
@@ -305,8 +305,7 @@ class LagrantoOutputReader(object):
         #
         # Process the data section.
         for dataLine in lines[firstBlank + 3:secondBlank]:
-            for varName, strValue in zip(varNames[:len(varNames) - 1],
-                                         dataLine.split()):
+            for varName, strValue in zip(varNames[:-1], dataLine.split()):
                 self.stats[dataKey][varName].append(float(strValue))
 
         #
@@ -370,20 +369,16 @@ class LagrantoOutputReader(object):
         # return this value, otherwise try YYYYMMDD_hh.
         timeFormat = ["%Y%m%d_%H%M", "%Y%m%d_%H"]  # YYYYMMDD_hh[mm]
         timeFormatLen = [13, 11]
-        time = None
 
         for tf, tflen in zip(timeFormat, timeFormatLen):
-            try:
-                for i in range(len(name) - tflen):
-                    try:
-                        time = datetime.datetime.strptime(name[i:i + tflen], tf)
-                        break
-                    except:
-                        pass
-            except:
-                pass
-
-        return time
+            for i in range(len(name) - tflen):
+                try:
+                    time = datetime.datetime.strptime(name[i:i + tflen], tf)
+                except ValueError:
+                    pass
+                else:
+                    return time
+        return None
 
 
 #

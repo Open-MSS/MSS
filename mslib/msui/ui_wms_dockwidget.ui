@@ -79,6 +79,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="pbViewCapabilities">
+       <property name="toolTip">
+        <string>Show information on the selected WMS server.</string>
+       </property>
        <property name="text">
         <string>view</string>
        </property>
@@ -139,8 +142,14 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <property name="spacing">
+      <number>5</number>
+     </property>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>5</number>
+       </property>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
@@ -181,6 +190,9 @@
              <width>16777215</width>
              <height>16777215</height>
             </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QComboBox QAbstractItemView { min-width: 600px; }</string>
            </property>
            <property name="sizeAdjustPolicy">
             <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
@@ -248,6 +260,9 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="styleSheet">
+             <string notr="true">QComboBox QAbstractItemView { min-width: 600px; }</string>
+           </property>
            <property name="sizeAdjustPolicy">
             <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
            </property>
@@ -293,243 +308,9 @@ p, li { white-space: pre-wrap; }
       </widget>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QCheckBox" name="cbLevelOn">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>105</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>120</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="palette">
-            <palette>
-             <active>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>20</red>
-                 <green>19</green>
-                 <blue>18</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </active>
-             <inactive>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>20</red>
-                 <green>19</green>
-                 <blue>18</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </inactive>
-             <disabled>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </disabled>
-            </palette>
-           </property>
-           <property name="text">
-            <string>Level:</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="cbLevel">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>180</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>250</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Elevation values provided by the WMS server.</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="tbLevel_back">
-           <property name="text">
-            <string>&lt;</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="tbLevel_fwd">
-           <property name="text">
-            <string>&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="Line" name="line_5">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="cbTransparent">
-           <property name="text">
-            <string>transparent</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="Line" name="line_3">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Cache:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="cbCacheEnabled">
-           <property name="toolTip">
-            <string>Enable the image cache (retrieved images will be stored locally to speed up repeated retrievals).</string>
-           </property>
-           <property name="text">
-            <string>on</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-           <property name="tristate">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btClearCache">
-           <property name="toolTip">
-            <string>Clear all cache contents.</string>
-           </property>
-           <property name="text">
-            <string>clear</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="1" column="2">
         <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <widget class="QCheckBox" name="cbInitialisationOn">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>105</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>120</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="palette">
-            <palette>
-             <active>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>20</red>
-                 <green>19</green>
-                 <blue>18</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </active>
-             <inactive>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>20</red>
-                 <green>19</green>
-                 <blue>18</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </inactive>
-             <disabled>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </disabled>
-            </palette>
-           </property>
-           <property name="text">
-            <string>Initialisation:</string>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="QComboBox" name="cbInitTime">
            <property name="sizePolicy">
@@ -636,7 +417,7 @@ p, li { white-space: pre-wrap; }
            </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>10</width>
+             <width>5</width>
              <height>20</height>
             </size>
            </property>
@@ -644,67 +425,8 @@ p, li { white-space: pre-wrap; }
          </item>
         </layout>
        </item>
-       <item>
+       <item row="2" column="2">
         <layout class="QHBoxLayout" name="horizontalLayout_8">
-         <item>
-          <widget class="QCheckBox" name="cbValidOn">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>105</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>120</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="palette">
-            <palette>
-             <active>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>20</red>
-                 <green>19</green>
-                 <blue>18</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </active>
-             <inactive>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>20</red>
-                 <green>19</green>
-                 <blue>18</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </inactive>
-             <disabled>
-              <colorrole role="WindowText">
-               <brush brushstyle="SolidPattern">
-                <color alpha="255">
-                 <red>0</red>
-                 <green>0</green>
-                 <blue>0</blue>
-                </color>
-               </brush>
-              </colorrole>
-             </disabled>
-            </palette>
-           </property>
-           <property name="text">
-            <string>Valid:</string>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="QComboBox" name="cbValidTime">
            <property name="sizePolicy">
@@ -765,12 +487,12 @@ p, li { white-space: pre-wrap; }
             <date>
              <year>2010</year>
              <month>1</month>
-             <day>21</day>
+             <day>18</day>
             </date>
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>11</hour>
+             <hour>8</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2000</year>
@@ -787,7 +509,7 @@ p, li { white-space: pre-wrap; }
            </property>
            <property name="minimumTime">
             <time>
-             <hour>11</hour>
+             <hour>8</hour>
              <minute>0</minute>
              <second>0</second>
             </time>
@@ -827,13 +549,306 @@ p, li { white-space: pre-wrap; }
            </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>10</width>
+             <width>5</width>
              <height>20</height>
             </size>
            </property>
           </spacer>
          </item>
         </layout>
+       </item>
+       <item row="0" column="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QComboBox" name="cbLevel">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>180</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>250</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Elevation values provided by the WMS server.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbLevel_back">
+           <property name="text">
+            <string>&lt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="tbLevel_fwd">
+           <property name="text">
+            <string>&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>5</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="Line" name="line_5">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cbTransparent">
+           <property name="text">
+            <string>transparent</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Cache:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cbCacheEnabled">
+           <property name="toolTip">
+            <string>Enable the image cache (retrieved images will be stored locally to speed up repeated retrievals).</string>
+           </property>
+           <property name="text">
+            <string>on</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btClearCache">
+           <property name="toolTip">
+            <string>Clear all cache contents.</string>
+           </property>
+           <property name="text">
+            <string>clear</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="cbValidOn">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>120</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="palette">
+          <palette>
+           <active>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>20</red>
+               <green>19</green>
+               <blue>18</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </active>
+           <inactive>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>20</red>
+               <green>19</green>
+               <blue>18</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </inactive>
+           <disabled>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>0</red>
+               <green>0</green>
+               <blue>0</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </disabled>
+          </palette>
+         </property>
+         <property name="text">
+          <string>Valid:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="cbLevelOn">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>120</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="palette">
+          <palette>
+           <active>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>20</red>
+               <green>19</green>
+               <blue>18</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </active>
+           <inactive>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>20</red>
+               <green>19</green>
+               <blue>18</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </inactive>
+           <disabled>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>0</red>
+               <green>0</green>
+               <blue>0</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </disabled>
+          </palette>
+         </property>
+         <property name="text">
+          <string>Level:</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="cbInitialisationOn">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>120</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="palette">
+          <palette>
+           <active>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>20</red>
+               <green>19</green>
+               <blue>18</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </active>
+           <inactive>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>20</red>
+               <green>19</green>
+               <blue>18</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </inactive>
+           <disabled>
+            <colorrole role="WindowText">
+             <brush brushstyle="SolidPattern">
+              <color alpha="255">
+               <red>0</red>
+               <green>0</green>
+               <blue>0</blue>
+              </color>
+             </brush>
+            </colorrole>
+           </disabled>
+          </palette>
+         </property>
+         <property name="text">
+          <string>Initialisation:</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>

@@ -36,7 +36,7 @@ import os
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtCore, QtGui
+from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets
 import numpy
 
 try:
@@ -123,16 +123,15 @@ class AbstractLagrantoDataItem:
                     self.gxElements['general']['linestyle']) + '/' + str(
                         self.gxElements['general']['linewidth'])
             except Exception, ex:
-                logging.debug("caught a wildcard Exception: {}, {}".format(type(ex), ex))
+                logging.debug(u"caught a wildcard Exception: {}, {}".format(type(ex), ex))
                 return ''
         elif column == 3:
             # Item markers.
             s = ''
             try:
-                s += u'time({})'.format(self.gxElements['general'][
-                                            'timeMarkerInterval'].strftime('%H:%M'))
+                s += u'time({})'.format(self.gxElements['general']['timeMarkerInterval'].strftime('%H:%M'))
             except Exception, ex:
-                logging.debug("caught a wildcard Exception: {}, {}".format(type(ex), ex))
+                logging.debug(u"caught a wildcard Exception: {}, {}".format(type(ex), ex))
             return s
         else:
             return ''
@@ -244,10 +243,10 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         elif column == 4:
             # Start coordinates from first elements of lon/lat/p variables.
             try:
-                return '%.2f, %.2f, %.1f' % \
-                       (self.lonVariableChild.getVariableData()[0],
-                        self.latVariableChild.getVariableData()[0],
-                        self.pressureVariableChild.getVariableData()[0])
+                return "{:.2f}, {:.2f}, {:.1f}".format(
+                    self.lonVariableChild.getVariableData()[0],
+                    self.latVariableChild.getVariableData()[0],
+                    self.pressureVariableChild.getVariableData()[0])
             except:
                 return ''
         else:
@@ -431,7 +430,7 @@ class FlightTrackItem(LagrantoMapItem):
 
         if self.nafile is None:
             logging.error("could not read NASA Ames file")
-            return
+            raise RuntimeError("could not read NASA Ames file")
 
         #
         # Add all variable names contained in self.data as child nodes, so
@@ -445,8 +444,7 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().find(identifier) >= 0:
                     self.timeVariableChild = item
-                    logging.debug(u"identified time variable <{}>"
-                                  .format(item.getName()))
+                    logging.debug(u"identified time variable <{}>".format(item.getName()))
                     #
                     # The time variable has to be modified a bit: convert
                     # seconds to hours and change the name correspondingly.
@@ -463,8 +461,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.lonVariableChild = item
-                    logging.debug("identified longitude variable <{}> with "
-                                  "identifier <{}>".format(item.getName(), identifier))
+                    logging.debug(u"identified longitude variable <{}> with "
+                                  u"identifier <{}>".format(item.getName(), identifier))
                     break
             if self.lonVariableChild is not None:
                 break
@@ -474,8 +472,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.latVariableChild = item
-                    logging.debug("identified latitude variable <{}> with "
-                                  "identifier <{}>".format(item.getName(), identifier))
+                    logging.debug(u"identified latitude variable <{}> with "
+                                  u"identifier <{}>".format(item.getName(), identifier))
                     break
             if self.latVariableChild is not None:
                 break
@@ -485,8 +483,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.pressureVariableChild = item
-                    logging.debug("identified pressure variable <{}> with "
-                                  "identifier <{}>".format(item.getName(), identifier))
+                    logging.debug(u"identified pressure variable <{}> with "
+                                  u"identifier <{}>".format(item.getName(), identifier))
                     break
             if self.pressureVariableChild is not None:
                 break
@@ -499,8 +497,13 @@ class FlightTrackItem(LagrantoMapItem):
             return
         #
         # Open the NASA Ames file and read the data.
-        self.nafile = nappy.openNAFile(self.nasFileName)
-        self.nafile.readData()
+        try:
+            self.nafile = nappy.openNAFile(self.nasFileName)
+            self.nafile.readData()
+        except TypeError, ex:  # catch TypeError as nappy itself triggers Exception when raising
+            self.nafile = None
+            logging.error(u"%s %s", type(ex), ex)
+            return
         #
         # Convert variable array of nafile from 'list' to 'NumPy array' for
         # faster access (the array can be large!).
@@ -577,10 +580,10 @@ class LagrantoOutputItem(LagrantoMapItem):
         # LagrantoOutputReader.
         for i, (trajectory, metadata) in enumerate(zip(self.loutput.data,
                                                        self.loutput.meta)):
-            trname = '{:04d} '.format(i)
-            if 'startcoordinates' in metadata.keys():
-                trname += str([u'{:.2f}'.format(r) for r in
-                               metadata['startcoordinates']]).replace('\'', '')
+            trname = "{:04d} ".format(i)
+            if "startcoordinates" in metadata.keys():
+                trname += unicode(
+                    [u"{:.2f}".format(r) for r in metadata["startcoordinates"]]).replace('\'', '')
             TrajectoryItem(trname, True, self, trajectory, metadata)
 
 
@@ -650,24 +653,24 @@ class TrajectoryItem(LagrantoMapItem):
         if column < 5:
             return LagrantoMapItem.treeViewData(self, column)
         elif column == 5:
-            return '{} for {:f} hrs' \
-                .format(self.getStartTime().strftime('%Y-%m-%d %H:%M UTC'),
+            return "{} for {:f} hrs" \
+                .format(self.getStartTime().strftime("%Y-%m-%d %H:%M UTC"),
                         self.timeVariableChild.getVariableData()[-1])
         elif column == 6:
             s = ''
             for key, value in self.metadata.items():
-                if key not in ['starttime', 'file', 'starttime_filename',
-                               'startcoordinates', 'duration']:
-                    s += '{} = {}, '.format(key, str(value))
+                if key not in ["starttime", "file", "starttime_filename",
+                               "startcoordinates", "duration"]:
+                    s += u"{} = {}, ".format(key, str(value))
             return s
 
     def getStartTime(self):
         """Return the start time of the trajectory as a datetime object.
         """
         try:
-            return self.metadata['starttime']
+            return self.metadata["starttime"]
         except:
-            return self.metadata['starttime_filename']
+            return self.metadata["starttime_filename"]
 
     def getMetadata(self):
         """Return the metadata dictionary.
@@ -747,11 +750,11 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
 
         aboveThreshold = False
         timeWindows = []
-        for i in range(len(myData)):
-            if not aboveThreshold and myData[i] > threshold:
+        for i, data in enumerate(myData):
+            if not aboveThreshold and data > threshold:
                 aboveThreshold = True
                 windowStartTime = timeData[i]
-            elif aboveThreshold and myData[i] <= threshold:
+            elif aboveThreshold and data <= threshold:
                 aboveThreshold = False
                 timeWindows.append([windowStartTime, timeData[i]])
 
@@ -1125,17 +1128,15 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
                               if isinstance(child, LagrantoMapItem)])
             #
             # Only flight tracks and trajectories can be queried and selected.
-            if isinstance(item, (FlightTrackItem, TrajectoryItem)):
-                # Check if the item matches the query.
-                if item.query(queryTranslation):
-                    #
-                    # The properties of the current item fulfil the query and
-                    # the item should be selected. Hence create an index.
-                    index = self.createIndex(item.row(), 0, item)
-                    #
-                    # QtGui.QItemSelectionRange.__init__ (self,
-                    #     QModelIndex index)
-                    itemSelectionRange = QtGui.QItemSelectionRange(index)
-                    itemSelection.append(itemSelectionRange)
+            # Check if the item matches the query.
+            if isinstance(item, (FlightTrackItem, TrajectoryItem)) and item.query(queryTranslation):
+                # The properties of the current item fulfil the query and
+                # the item should be selected. Hence create an index.
+                index = self.createIndex(item.row(), 0, item)
+                #
+                # QtGui.QItemSelectionRange.__init__ (self,
+                #     QModelIndex index)
+                itemSelectionRange = QtGui.QItemSelectionRange(index)
+                itemSelection.append(itemSelectionRange)
 
         return itemSelection

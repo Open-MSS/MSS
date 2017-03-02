@@ -104,12 +104,12 @@ class MplCanvas(FigureCanvas):
         """
         self.default_filename = ""
         if title:
-            self.default_filename += "_{:>5}".format(title.split()[0])
+            self.default_filename += u"_{:>5}".format(title.split()[0])
         if isinstance(style, basestring) and style:
             title += u' ({})'.format(style)
         if isinstance(level, basestring):
             title += u' at {}'.format(level)
-            self.default_filename += "_{}".format(level.split()[0])
+            self.default_filename += u"_{}".format(level.split()[0])
         if isinstance(valid_time, datetime) and isinstance(init_time, datetime):
             time_step = valid_time - init_time
         else:
@@ -123,15 +123,12 @@ class MplCanvas(FigureCanvas):
         if valid_time:
             if init_time:
                 if time_step is not None:
-                    title += '\nValid: {} (step {:d} hrs from {})' \
-                        .format(valid_time,
-                                (time_step.days * 86400 + time_step.seconds) / 3600,
-                                init_time)
+                    title += u"\nValid: {} (step {:d} hrs from {})".format(
+                        valid_time, (time_step.days * 86400 + time_step.seconds) / 3600, init_time)
                 else:
-                    title += '\nValid: {} (initialisation: {})' \
-                        .format(valid_time, init_time)
+                    title += u"\nValid: {} (initialisation: {})".format(valid_time, init_time)
             else:
-                title += u'\nValid: {}'.format(valid_time)
+                title += u"\nValid: {}".format(valid_time)
 
         # Set title.
         self.ax.set_title(title, horizontalalignment='left', x=0)
@@ -308,7 +305,7 @@ class MplSideViewCanvas(MplCanvas):
                                     len_major_ticks + len(major_ticks2) - 1)
             major_ticks[len_major_ticks:] = major_ticks2[1:]
 
-        labels = ['%i' % (l / 100.) for l in major_ticks]
+        labels = ["{:d}".format(int(l / 100.)) for l in major_ticks]
 
         # .. the same for the minor ticks ..
         p_top_minor = max(label_distance, p_top)
@@ -358,10 +355,10 @@ class MplSideViewCanvas(MplCanvas):
         lat_inds = np.arange(len(lats))
         tick_index_step = len(lat_inds) / self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
-        self.ax.set_xticklabels(["%2.1f, %2.1f" % (d[0], d[1])
+        self.ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
                                  for d in zip(lats[::tick_index_step],
                                               lons[::tick_index_step])],
-                                rotation=25, fontsize=10, horizontalalignment='right')
+                                rotation=25, fontsize=10, horizontalalignment="right")
 
     def setVerticalExtent(self, pbot, ptop):
         """Set the vertical extent of the view to the specified pressure
@@ -479,12 +476,12 @@ class MplSideViewCanvas(MplCanvas):
         """
         logging.debug("plotting vertical section image..")
         ix, iy = img.size
-        logging.debug("  image size is {:d}{:d} px, format is {}".format(ix, iy, img.format))
+        logging.debug(u"  image size is {:d}{:d} px, format is {}".format(ix, iy, img.format))
         # Test if the image axes exist. If not, create them.
         if self.imgax is None:
             # Disable old white figure background so that the new underlying
             # axes become visible.
-            self.ax.patch.set_facecolor('None')
+            self.ax.patch.set_facecolor("None")
             # self.mpl.canvas.ax.patch.set_alpha(0.5)
 
             # Add new axes to the plot (imshow doesn't work with logarithmic axes).
@@ -492,7 +489,7 @@ class MplSideViewCanvas(MplCanvas):
             # Main axes instance of mplwidget has zorder 99.
             self.imgax = self.fig.add_axes(ax_bbox, frameon=True,
                                            xticks=[], yticks=[],
-                                           label='ax2', zorder=0)
+                                           label="ax2", zorder=0)
 
         # If an image is currently displayed, remove it from the plot.
         if self.image is not None:
@@ -502,7 +499,7 @@ class MplSideViewCanvas(MplCanvas):
         self.image = self.imgax.imshow(img, interpolation="nearest", aspect="auto",
                                        origin=PIL_image_origin)
         self.imgax.set_xlim(0, ix - 1)
-        if _matplotlib_version >= '1.2':
+        if _matplotlib_version >= "1.2":
             self.imgax.set_ylim(iy - 1, 0)
         else:
             self.imgax.set_ylim(0, iy - 1)
@@ -567,10 +564,10 @@ class MplTopViewCanvas(MplCanvas):
         """
         ax = self.ax
         self.map = mpl_map.MapCanvas(appearance=self.getMapAppearance(),
-                                     resolution='l', area_thresh=1000., ax=ax,
+                                     resolution="l", area_thresh=1000., ax=ax,
                                      **kwargs)
         ax.set_autoscale_on(False)
-        ax.set_title('Top view', horizontalalignment='left', x=0)
+        ax.set_title("Top view", horizontalalignment="left", x=0)
         self.draw()  # necessary?
 
         if model:
@@ -607,6 +604,10 @@ class MplTopViewCanvas(MplCanvas):
         See MapCanvas.update_with_coordinate_change(). After the map redraw,
         coordinates of all objects overlain on the map have to be updated.
         """
+
+        # remove legend
+        self.drawLegend(None)
+
         # Show the progress dialog, since the retrieval can take a few seconds.
         self.pdlg.setValue(0)
         self.pdlg.show()
@@ -700,43 +701,39 @@ class MplTopViewCanvas(MplCanvas):
         """
         # If the method is called with a "None" image, the current legend
         # graphic should be removed (if one exists).
-        if img is None:
-            if self.legimg is not None:
-                self.legimg.remove()
-                self.legimg = None
-            return
+        if self.legimg is not None:
+            logging.debug("removing image %s", self.legimg)
+            self.legimg.remove()
+            self.legimg = None
 
-        # The size of the legend axes needs to be given in relative figure
-        # coordinates. To determine those from the legend graphics size in
-        # pixels, we need to determine the size of the currently displayed
-        # figure in pixels.
-        figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
-        ax_extent_x = img.size[0] / figsize_px[0]
-        ax_extent_y = img.size[1] / figsize_px[1]
+        if img is not None:
+            # The size of the legend axes needs to be given in relative figure
+            # coordinates. To determine those from the legend graphics size in
+            # pixels, we need to determine the size of the currently displayed
+            # figure in pixels.
+            figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
+            ax_extent_x = img.size[0] / figsize_px[0]
+            ax_extent_y = img.size[1] / figsize_px[1]
 
-        # If no legend axes have been created, do so now.
-        if self.legax is None:
-            # Add new axes to the plot.
-            ax_bbox = self.ax.get_position()
-            # Main axes instance of mplwidget has zorder 99.
-            self.legax = self.fig.add_axes([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y],
-                                           frameon=False,
-                                           xticks=[], yticks=[],
-                                           label='ax2', zorder=0)
-            self.legax.patch.set_facecolor('None')
+            # If no legend axes have been created, do so now.
+            if self.legax is None:
+                # Main axes instance of mplwidget has zorder 99.
+                self.legax = self.fig.add_axes([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y],
+                                               frameon=False,
+                                               xticks=[], yticks=[],
+                                               label="ax2", zorder=0)
+                self.legax.patch.set_facecolor("None")
 
-        # If axes exist, remove the current legend image and adjust their
-        # position.
-        else:
-            if self.legimg is not None:
-                self.legimg.remove()
-                self.legimg = None
-            self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
+            # If axes exist, adjust their position.
+            else:
+                self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
 
-        # Plot the new legimg in the legax axes.
-        self.legimg = self.legax.imshow(img, origin=PIL_image_origin, aspect="equal",
-                                        interpolation="nearest")
+            # Plot the new legimg in the legax axes.
+            self.legimg = self.legax.imshow(img, origin=PIL_image_origin, aspect="equal",
+                                            interpolation="nearest")
         self.draw()
+        # required so that it is actually drawn...
+        QtWidgets.QApplication.processEvents()
 
     def plotSatelliteOverpass(self, segment):
         """Plots a satellite track on top of the map.
@@ -918,7 +915,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         if not self.traj_item_tree:
             return
 
-        logging.debug("updating trajectory items on view <%s>, mode %s",
+        logging.debug("updating trajectory items on view '%s', mode '%s'",
                       self.identifier, mode)
 
         # Determine which items have to be plotted (these are the items that
@@ -944,13 +941,12 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             # below the items that are on the stack.
             item = stack.pop()
             if item.isVisible(self.identifier):
-                if isinstance(item, titree.FlightTrackItem) \
-                        or isinstance(item, titree.TrajectoryItem):
+                if isinstance(item, (titree.FlightTrackItem, titree.TrajectoryItem)):
                     itemsList.append(item)
                 else:
                     stack.extend(item.childItems)
 
-        logging.debug("Plotting elements %s", [i.getName() for i in itemsList])
+        logging.debug("Plotting elements '%s'", [i.getName() for i in itemsList])
 
         if mode in ["REDRAW", "MARKER_CHANGE"]:
             # Clear the figure -- it needs to be completely redrawn.
@@ -962,8 +958,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
             earliestStartTime = datetime(3000, 1, 1)
             self.subPlots = []
             for item in itemsList:
-                earliestStartTime = min(earliestStartTime,
-                                        item.getStartTime())
+                earliestStartTime = min(earliestStartTime, item.getStartTime())
                 for variable in item.childItems:
                     if variable.isVisible(self.identifier) and variable.getVariableName() not in self.subPlots:
                         self.subPlots.append(variable.getVariableName())
@@ -971,7 +966,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         # Iterative list traversal no. 2: Draw / update plots.
         for item in itemsList:
 
-            logging.debug("plotting item {}".format(item.getName()))
+            logging.debug(u"plotting item {}".format(item.getName()))
             # The variables that have to be plotted are children of self.mapItem.
             # Plot all variables whose visible-flag is set to True.
             variablesToPlot = [variable for variable in item.childItems
@@ -983,8 +978,8 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                 # the new properties to all variables of trajectory 'item'.
                 for variable in variablesToPlot:
                     plt.setp(
-                        variable.getGxElementProperty("timeseries",
-                                                      "instance::%s" % self.identifier),
+                        variable.getGxElementProperty(
+                            "timeseries", u"instance::{}".format(self.identifier)),
                         visible=item.isVisible(self.identifier),
                         color=item.getGxElementProperty("general", "colour"),
                         linestyle=item.getGxElementProperty("general", "linestyle"),
@@ -1044,12 +1039,10 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # The topmost subplot gets the title (the name of self.mapItem).
                     if index == 0:
                         if len(itemsList) > 1:
-                            ax.set_title("Ensemble: {} to {}"
-                                         .format(itemsList[0].getName(),
-                                                 itemsList[-1].getName()))
+                            ax.set_title(u"Ensemble: {} to {}".format(
+                                itemsList[0].getName(), itemsList[-1].getName()))
                         else:
-                            ax.set_title("Single item: %s" %
-                                         itemsList[0].getName())
+                            ax.set_title(u"Single item: {}".format(itemsList[0].getName()))
 
                     #
                     # The bottommost subplot gets the x-label: The name of the time

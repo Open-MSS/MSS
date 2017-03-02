@@ -10,17 +10,33 @@ AUTHORS:
 * Stefan Ensmann
 
 """
+import numpy as np
 
 from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
-from mslib.mss_util import create_hexagon
-from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.mss_util import config_loader, rotate_point
 
 
 class HexagonException(Exception):
     pass
+
+
+def create_hexagon(center_lat, center_lon, radius, angle=0.):
+    coords_0 = (radius, 0.)
+    CoordsCart_0 = [rotate_point(coords_0, angle=0. + angle),
+                    rotate_point(coords_0, angle=60. + angle),
+                    rotate_point(coords_0, angle=120. + angle),
+                    rotate_point(coords_0, angle=180. + angle),
+                    rotate_point(coords_0, angle=240. + angle),
+                    rotate_point(coords_0, angle=300. + angle),
+                    rotate_point(coords_0, angle=360. + angle)]
+    CoordsSphere_rot = [(center_lat + vec[0] / 110.,
+                         center_lon + vec[1] / (110. *
+                                                np.cos(np.deg2rad(vec[0] / 110. + center_lat))))
+                        for vec in CoordsCart_0]
+    return CoordsSphere_rot
 
 
 class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):

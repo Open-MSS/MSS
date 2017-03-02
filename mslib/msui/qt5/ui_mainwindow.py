@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -83,7 +83,7 @@ class Ui_MSSMainWindow(object):
         self.verticalLayout.addWidget(self.groupBox_2)
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 424, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 424, 26))
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
@@ -166,9 +166,13 @@ class Ui_MSSMainWindow(object):
         self.label_3.setText(_translate("MSSMainWindow", "Active flight track:"))
         self.lblActiveFlightTrack.setText(_translate("MSSMainWindow", "(active flight track)"))
         self.label_2.setText(_translate("MSSMainWindow", "Open flight tracks:"))
+        self.listFlightTracks.setToolTip(_translate("MSSMainWindow", "List of open flight tracks.\n"
+"Double-click a flight track to rename it."))
         self.btSelectFlightTrack.setText(_translate("MSSMainWindow", "set selected flight track active"))
         self.groupBox.setTitle(_translate("MSSMainWindow", "Open Views:"))
+        self.listViews.setToolTip(_translate("MSSMainWindow", "Double-click a view to bring it to the front."))
         self.groupBox_2.setTitle(_translate("MSSMainWindow", "Open Tools:"))
+        self.listTools.setToolTip(_translate("MSSMainWindow", "Double-click a tool to bring it to the front."))
         self.menu_File.setTitle(_translate("MSSMainWindow", "&File"))
         self.menuImport_Flight_Track.setTitle(_translate("MSSMainWindow", "Import Flight Track"))
         self.menuExport_Active_Flight_Track.setTitle(_translate("MSSMainWindow", "Export Active Flight Track"))

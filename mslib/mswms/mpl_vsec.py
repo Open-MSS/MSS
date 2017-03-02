@@ -70,7 +70,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         return ["VERT:LOGP"]
 
     # TODO: the general setup should be a separate class as well
-    def _latlon_logp_setup(self, orography=105000., titlestring=""):
+    def _latlon_logp_setup(self, orography=105000., titlestring=u""):
         """General setup for lat/lon vs. log p vertical cross-sections.
         """
         ax = self.ax
@@ -114,7 +114,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                                     len_major_ticks + len(major_ticks2) - 1)
             major_ticks[len_major_ticks:] = major_ticks2[1:]
 
-        labels = ['{:.0f}'.format(l / 100.) for l in major_ticks]
+        labels = ["{:.0f}".format(l / 100.) for l in major_ticks]
 
         # .. the same for the minor ticks ..
         p_top_minor = max(label_distance, self.p_top)
@@ -144,26 +144,25 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Plot title (either in image axes or above).
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
-        titlestring += " [{:.0f}..{:.0f} hPa]".format(self.p_bot / 100, self.p_top / 100)
-        titlestring = "{0}{1}".format(titlestring, '\nValid: {} (step {:d} hrs from {})'
-                                      .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                                              time_step_hrs,
-                                              self.init_time.strftime('%a %Y-%m-%d %H:%M UTC')))
+        titlestring = u"{} [{:.0f}..{:.0f} hPa]\nValid: {} (step {:d} hrs from {})".format(
+            titlestring, self.p_bot / 100, self.p_top / 100,
+            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"),
+            time_step_hrs, self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
         if not self.noframe:
             ax.set_title(titlestring,
-                         horizontalalignment='left', x=0, fontsize=14)
-            ax.set_xlabel('Latitude, longitude (degrees)')
-            ax.set_ylabel('Pressure (hPa)')
+                         horizontalalignment="left", x=0, fontsize=14)
+            ax.set_xlabel("Latitude, longitude (degrees)")
+            ax.set_ylabel("Pressure (hPa)")
             if self.resolution != (-1, -1):
                 self.fig.text(0.99, 0.01, "model resolution {:.2f}x{:.2f} deg"
                               .format(self.resolution[0], self.resolution[1]),
-                              fontsize=10, horizontalalignment='right',
+                              fontsize=10, horizontalalignment="right",
                               transform=self.fig.transFigure)
         else:
             ax.text(0, self.p_top, titlestring,
-                    fontsize=10, verticalalignment='top',
-                    bbox=dict(facecolor='white', alpha=0.6))
+                    fontsize=10, verticalalignment="top",
+                    bbox=dict(facecolor="white", alpha=0.6))
 
     @abstractmethod
     def _plot_style(self):
@@ -182,7 +181,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
             if dataitem not in data.keys():
-                raise KeyError(u"required data field {} not found".format(dataitem))
+                raise KeyError(u"required data field '{}' not found".format(dataitem))
 
         # Copy parameters to properties.
         self.data = data

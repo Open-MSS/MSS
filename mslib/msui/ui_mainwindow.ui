@@ -73,6 +73,10 @@
        </item>
        <item>
         <widget class="QListWidget" name="listFlightTracks">
+         <property name="toolTip">
+          <string>List of open flight tracks.
+Double-click a flight track to rename it.</string>
+         </property>
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>
@@ -108,7 +112,11 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QListWidget" name="listViews"/>
+        <widget class="QListWidget" name="listViews">
+         <property name="toolTip">
+          <string>Double-click a view to bring it to the front.</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -126,7 +134,11 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
-        <widget class="QListWidget" name="listTools"/>
+        <widget class="QListWidget" name="listTools">
+         <property name="toolTip">
+          <string>Double-click a tool to bring it to the front.</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -139,7 +151,7 @@
      <x>0</x>
      <y>0</y>
      <width>424</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">

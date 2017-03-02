@@ -24,6 +24,7 @@ class Ui_TopViewWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.mpl.sizePolicy().hasHeightForWidth())
         self.mpl.setSizePolicy(sizePolicy)
+        self.mpl.setMinimumSize(QtCore.QSize(100, 100))
         self.mpl.setObjectName("mpl")
         self.horizontalLayout_2.addWidget(self.mpl)
         self.verticalLayout.addLayout(self.horizontalLayout_2)

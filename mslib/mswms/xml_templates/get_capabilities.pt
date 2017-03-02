@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE WMT_MS_Capabilities SYSTEM "http://www.digitalearth.gov/wmt/xml/capabilities_1_1_1.dtd">
+<!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
 <WMT_MS_Capabilities version="1.1.1" updateSequence="0">
     <Service>
         <Name>${ service_name }</Name>
@@ -11,6 +11,7 @@
                 <ContactPerson>${ service_contact_person }</ContactPerson>
                 <ContactOrganization>${ service_contact_organisation }</ContactOrganization>
             </ContactPersonPrimary>
+            <ContactPosition>${ service_contact_position }</ContactPosition>
             <ContactAddress>
                 <AddressType>${ service_address_type }</AddressType>
                 <Address>${ service_address }</Address>
@@ -19,6 +20,7 @@
                 <PostCode>${ service_post_code }</PostCode>
                 <Country>${ service_country }</Country>
             </ContactAddress>
+            <ContactElectronicMailAddress>${ service_email }</ContactElectronicMailAddress>
         </ContactInformation>
         <Fees>${ service_fees }</Fees>
         <AccessConstraints>${ service_access_constraints }</AccessConstraints>

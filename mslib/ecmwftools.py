@@ -299,7 +299,7 @@ def half_level_pressure(surface_pressure, num_levels=91):
           full_level_pressure_fast() on how to implement array support.
     """
     if num_levels not in [31, 62, 91, 137]:
-        raise ValueError("num_levels must be one of 31, 62, 91, 137, not {:d}".format(num_levels))
+        raise ValueError(u"num_levels must be one of 31, 62, 91, 137, not {:d}".format(num_levels))
     # NOTE that the ak/bk coefficients are defined for units [hPa], hence
     # the internal pressure units in this function are hPa.
     surface_pressure /= 100.
@@ -384,7 +384,7 @@ def full_level_pressure_fast(surface_pressure, levelaxis=-1, num_levels=91):
              levelaxis=1.
     """
     if num_levels not in [137, 91, 62, 31]:
-        raise ValueError("num_levels must be one of 31, 62, 91, 137, not {:d}".format(num_levels))
+        raise ValueError(u"num_levels must be one of 31, 62, 91, 137, not {:d}".format(num_levels))
 
     # Make sure that the input parameter 'surface pressure' is a NumPy array
     # and store its shape in order to restore it below.
@@ -464,16 +464,15 @@ def scale_variable(nc_var):
         data = nc_var.getValue()  # Scientific.IO.NetCDF version
     except:
         data = nc_var[:]  # netCDF4 version
-    if '_FillValue' in dir(nc_var):
-        if not (data - nc_var._FillValue).all():
-            raise ECMWFMissingValueError(u"NetCDF variable {} contains "
-                                         u"mssing values. Please implement a method using masked "
-                                         u"arrays for this kind of data.".format(nc_var.long_name))
+    if "_FillValue" in dir(nc_var) and not (data - nc_var._FillValue).all():
+        raise ECMWFMissingValueError(u"NetCDF variable '{}' contains "
+                                     u"mssing values. Please implement a method using masked "
+                                     u"arrays for this kind of data.".format(nc_var.long_name))
 
     # If the above tests succeeded, check if scale and offset attributes
     # are specified -- if not, return the data as-is as a numpy.ndarray
     # object, otherwise scale and offset the data.
-    if not ('add_offset' in dir(nc_var) and 'scale_factor' in dir(nc_var)):
+    if not ("add_offset" in dir(nc_var) and "scale_factor" in dir(nc_var)):
         return data
     else:
         return data * nc_var.scale_factor + nc_var.add_offset

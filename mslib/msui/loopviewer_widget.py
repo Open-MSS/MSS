@@ -348,13 +348,13 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
 
             pixmap_cache = []
 
-            filename = "{}_{}_{}".format(prod_abbrev, reg_abbrev, str(level))
-            url = "{0}_%03i.png".format(os.path.join(base_url, init_time_str, filename))
+            filename = u"{}_{}_{}".format(prod_abbrev, reg_abbrev, str(level))
+            url = u"{0}_%03i.png".format(os.path.join(base_url, init_time_str, filename))
 
             # LOOP over TIMESTEPS **********************************************
             for istep, step in enumerate(steps):
                 retrieve = url.format(step)
-                logging.debug("attempting to retrieve image file:\n >>> {}".format(retrieve))
+                logging.debug(u"attempting to retrieve image file: '{}'".format(retrieve))
                 try:
                     auth_required = True
                     while auth_required:
@@ -380,7 +380,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                                 # returned by the server and ask the user for username
                                 # and password.
                                 realm = ex.hdrs["WWW-Authenticate"].split('"')[1]
-                                logging.debug("'{}' asks for authentication.".format(realm))
+                                logging.debug(u"'{}' asks for authentication.".format(realm))
                                 dlg = MSS_WMS_AuthenticationDialog(parent=self)
                                 dlg.lblMessage.setText(realm)
                                 dlg.setModal(True)
@@ -391,7 +391,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                                     cancel = True
                                     break
                             else:
-                                raise ex
+                                raise
                     if not cancel:
                         # Read the image file from the URL into a string (urlobject.read())
                         # and wrap this string into a StringIO object that behaves like a file.
@@ -467,7 +467,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
             else:
                 self.synchronized = True
         colour = "black" if self.synchronized else "red"
-        self.lblInfo.setText("<font style='color: {};'><b>VT: {}, LVL: {}</b></font>"
+        self.lblInfo.setText(u"<font style='color: {};'><b>VT: {}, LVL: {}</b></font>"
                              .format(colour,
                                      self.valid_time.strftime("%Y-%m-%d %H:%M UTC"),
                                      self.levels[self.current_level]))

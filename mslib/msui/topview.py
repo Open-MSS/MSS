@@ -33,9 +33,7 @@ AUTHORS:
 # standard library imports
 import functools
 import logging
-import os
-import pickle
-from mslib.mss_util import config_loader, get_projection_params
+from mslib.mss_util import config_loader, get_projection_params, save_settings_pickle, load_settings_pickle
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtWidgets, QString
@@ -50,7 +48,6 @@ from mslib.msui import wms_control as wms
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
-from mslib.msui import constants
 
 # Dock window indices.
 WMS = 0
@@ -174,7 +171,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay]:
         self.docks = [None, None, None, None, None]
 
-        self.settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.topview.cfg")
+        self.settings_tag = "topview"
         self.loadSettings()
 
         # Initialise the GUI elements (map view, items of combo boxes etc.).
@@ -269,7 +266,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         if proj_params is None:
             proj_params = get_projection_params(current_map["CRS"])
         if proj_params is None:
-            raise ValueError("unknown EPSG code: {:}".format(current_map["CRS"]))
+            raise ValueError(u"unknown EPSG code: {:}".format(current_map["CRS"]))
 
         # Create a keyword arguments dictionary for basemap that contains
         # the projection parameters.
@@ -331,23 +328,12 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         settings = self.getView().getMapAppearance()
-        logging.debug("storing settings to %s", self.settingsfile)
-        try:
-            with open(self.settingsfile, "w") as fileobj:
-                pickle.dump(settings, fileobj)
-        except (OSError, IOError), ex:
-            logging.warn("Problems storing TopView settings (%s: %s).", type(ex), ex)
+        save_settings_pickle(self.settings_tag, settings)
 
     def loadSettings(self):
         """Load settings from the file self.settingsfile.
         """
-        settings = None
-        logging.debug("loading settings from %s", self.settingsfile)
-        try:
-            with open(self.settingsfile, "r") as fileobj:
-                settings = pickle.load(fileobj)
-        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
-            logging.warn("Problems reloading stored TopView settings (%s: %s). Switching to default", type(ex), ex)
+        settings = load_settings_pickle(self.settings_tag, {})
         self.getView().setMapAppearance(settings)
 
 

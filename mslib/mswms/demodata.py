@@ -1058,9 +1058,9 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
         labels = ['U', 'V', 'W', 'CC', 'T', 'Q', 'P_derived']
         for label in labels:
             filename_out = os.path.join(self.data_dir,
-                                        "{}_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(self.inidate, label,
-                                                                                          self.levtype))
-            text = self.range_data["{}_{}".format(label, self.levtype)]
+                                        u"{}_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(
+                                            self.inidate, label, self.levtype))
+            text = self.range_data[u"{}_{}".format(label, self.levtype)]
             rangedata = StringIO(text)
             ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
             hybrid_default = np.linspace(20, 91, 72)

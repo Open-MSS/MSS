@@ -103,18 +103,18 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
     # Get indexes of input temperatures above and below freezing, to select
     # the appropriate method for each temperature.
-    if force_phase == 'ice':
+    if force_phase == "ice":
         idx_ice = ()  # numpy.where(t is not None)
         idx_liq = None
-    elif force_phase == 'liquid':
+    elif force_phase == "liquid":
         idx_liq = ()  # numpy.where(t is not None)
         idx_ice = None
-    elif force_phase == 'None':
+    elif force_phase == "None":
         idx_ice = numpy.where(t <= 273.15)
         idx_liq = numpy.where(t > 273.15)
     else:
-        raise VapourPressureError("Cannot recognize the force_phase "
-                                  "keyword: {} (valid are ice, liquid, None)".format(force_phase))
+        raise VapourPressureError(u"Cannot recognize the force_phase "
+                                  u"keyword: '{}' (valid are ice, liquid, None)".format(force_phase))
 
     # Initialise output field.
     e_sat = numpy.zeros(numpy.shape(t))
@@ -293,8 +293,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                                        0.014025 * t[idx_liq])) / 100.
 
         else:
-            raise VapourPressureError("Unkown method for computing "
-                                      "the vapour pressure curve over liquid: {}".format(liquid))
+            raise VapourPressureError(u"Unkown method for computing "
+                                      u"the vapour pressure curve over liquid: {}".format(liquid))
 
     # =============================================================================
     #  Calculate saturation pressure over ice -------------------------------------
@@ -839,7 +839,7 @@ def dewpoint_approx(p, q, method='Bolton'):
     if method == 'Bolton':
         td = 243.5 / (17.67 / numpy.log(e_q / 100. / 6.112) - 1) + 273.15
     else:
-        raise ValueError("invalid dew point method <{}>".format(method))
+        raise ValueError(u"invalid dew point method '{}'".format(method))
 
     return td
 
@@ -1392,7 +1392,7 @@ def schmidt_appleman_tdiff_q_a_slow(p, t, q, liquid='HylandWexler', ice='GoffGra
 
     # Compute Schmidt-Applement threshold difference for each value.
     result = numpy.zeros(p_r.shape)
-    for i in range(len(p_r)):
+    for i, _ in enumerate(p_r):
         result[i] = schmidt_appleman_tdiff(p_r[i], t_r[i], rh01_r[i])
 
     # Return the result in the shape of the input arrays.

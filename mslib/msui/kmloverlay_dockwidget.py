@@ -7,12 +7,15 @@ AUTHORS:
 """
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
+import logging
+import os
+import pykml.parser
 
 # local application imports
+from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
-import pykml.parser
+from mslib.mss_util import save_settings_pickle, load_settings_pickle
 
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
@@ -27,19 +30,38 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.kml = None
         self.patch = None
 
-        palette = QtGui.QPalette(self.pbSelectColour.palette())
-        colour = QtGui.QColor()
-        colour.setRgbF(0, 0, 0, 1)
-        palette.setColor(QtGui.QPalette.Button, colour)
-        self.pbSelectColour.setPalette(palette)
-
-        # # Connect slots and signals.
+        # Connect slots and signals.
         self.btSelectFile.clicked.connect(self.select_file)
         self.btLoadFile.clicked.connect(self.load_file)
         self.pbSelectColour.clicked.connect(self.select_colour)
         self.cbOverlay.stateChanged.connect(self.update_settings)
+        self.dsbLineWidth.valueChanged.connect(self.update_settings)
+        self.cbManualStyle.stateChanged.connect(self.update_settings)
+
         self.cbOverlay.setChecked(True)
         self.cbOverlay.setEnabled(False)
+        self.cbManualStyle.setChecked(False)
+
+        self.settings_tag = "kmldock"
+        settings = load_settings_pickle(
+            self.settings_tag, {"filename": "", "linewidth": 1, "colour": (0, 0, 0, 1)})
+
+        self.leFile.setText(settings["filename"])
+        self.dsbLineWidth.setValue(settings["linewidth"])
+
+        palette = QtGui.QPalette(self.pbSelectColour.palette())
+        colour = QtGui.QColor()
+        colour.setRgbF(*settings["colour"])
+        palette.setColor(QtGui.QPalette.Button, colour)
+        self.pbSelectColour.setPalette(palette)
+
+    def __del__(self):
+        settings = {
+            "filename": unicode(self.leFile.text()),
+            "linewidth": self.dsbLineWidth.value(),
+            "colour": self.get_color()
+        }
+        save_settings_pickle(self.settings_tag, settings)
 
     def get_color(self):
         button = self.pbSelectColour
@@ -52,7 +74,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if self.view is not None and self.cbOverlay.isChecked() and self.patch is not None:
             self.view.plotKML(self.patch)
-            self.patch.update(self.get_color())
+            self.patch.update(self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
         elif self.patch is not None:
             self.view.plotKML(None)
 
@@ -72,7 +94,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
            overpass predictions.
         """
         filename = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open KML Polygonal File", "", "(*.kml)")
+            self, "Open KML Polygonal File", os.path.dirname(unicode(self.leFile.text())), "(*.kml)")
         filename = filename[0] if USE_PYQT5 else unicode(filename)
 
         if not filename:
@@ -90,13 +112,14 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.patch = None
             self.cbOverlay.setEnabled(False)
         try:
-            with open(self.leFile.text()) as kmlf:
+            with open(unicode(self.leFile.text())) as kmlf:
                 self.kml = pykml.parser.parse(kmlf).getroot()
-                self.patch = KMLPatch(self.view.map, self.kml, self.get_color())
+                self.patch = KMLPatch(self.view.map, self.kml,
+                                      self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
             self.cbOverlay.setEnabled(True)
             if self.view is not None and self.cbOverlay.isChecked():
                 self.view.plotKML(self.patch)
-        except IOError, ex:
-            QtWidgets.QMessageBox.critical(self, self.tr("KML Overlay"),
-                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)),
-                                           QtWidgets.QMessageBox.Ok)
+        except (IOError, pykml.parser.etree.XMLSyntaxError), ex:
+            logging.error("KML Overlay - %s: %s", type(ex), ex)
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("KML Overlay"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))

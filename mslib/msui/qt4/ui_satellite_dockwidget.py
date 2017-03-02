@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_SatelliteDockWidget(object):
     def setupUi(self, SatelliteDockWidget):
         SatelliteDockWidget.setObjectName(_fromUtf8("SatelliteDockWidget"))
-        SatelliteDockWidget.resize(649, 104)
+        SatelliteDockWidget.resize(649, 107)
         self.verticalLayout = QtGui.QVBoxLayout(SatelliteDockWidget)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.horizontalLayout_5 = QtGui.QHBoxLayout()
@@ -74,8 +74,11 @@ class Ui_SatelliteDockWidget(object):
     def retranslateUi(self, SatelliteDockWidget):
         SatelliteDockWidget.setWindowTitle(_translate("SatelliteDockWidget", "Satellite Tracks", None))
         self.label_5.setText(_translate("SatelliteDockWidget", "File with predicted satellite track:", None))
+        self.btSelectFile.setToolTip(_translate("SatelliteDockWidget", "Opens a file dialog for selecting a satellite overpass file.", None))
         self.btSelectFile.setText(_translate("SatelliteDockWidget", "...", None))
+        self.btLoadFile.setToolTip(_translate("SatelliteDockWidget", "Load the specified file for visualisation.", None))
         self.btLoadFile.setText(_translate("SatelliteDockWidget", "load", None))
         self.label_6.setText(_translate("SatelliteDockWidget", "Predicted satellite overpasses:", None))
+        self.cbSatelliteOverpasses.setToolTip(_translate("SatelliteDockWidget", "Select/unselect a satellite overpass from all available overpasses.", None))
         self.label.setText(_translate("SatelliteDockWidget", "Use http://www-air.larc.nasa.gov/tools/predict.htm to generate prediction files.", None))
 

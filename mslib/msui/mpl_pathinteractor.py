@@ -183,7 +183,7 @@ class WaypointsPath(mpath.Path):
         wps = wps_model.allWaypointData()
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
-            for i in range(len(wps[1:])):
+            for i, _ in enumerate(wps[1:]):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
 
         self.codes, self.vertices = zip(*pathdata)
@@ -575,7 +575,7 @@ class PathInteractor:
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
-                textlabel = "{:}".format(wpd[i].location)
+                textlabel = u"{:}".format(wpd[i].location)
             t = self.ax.text(x[i] + label_offset,
                              y[i] + label_offset,
                              textlabel,
@@ -623,7 +623,7 @@ class PathInteractor:
             wp = wps[row]
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
-                "Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
+                u"Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
                 .format(row, wp.lat, wp.lon, wp.flightlevel),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
@@ -712,7 +712,7 @@ class VPathInteractor(PathInteractor):
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
             # to float().
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure / 100.)))
 
         self._ind = None
 
@@ -749,7 +749,7 @@ class VPathInteractor(PathInteractor):
         # profile needs to be redrawn (redraw_path()). If the horizontal
         # position of a waypoint has changed, the entire figure needs to be
         # redrawn, as this affects the x-position of all points.
-        if index1.column() == ft.FLIGHTLEVEL:
+        if index1.column() == ft.FLIGHTLEVEL or index1.column() == ft.PRESSURE:
             i = index1.row()
             pres = self.waypoints_model.waypointData(i).pressure
             # print "SideView: pressure of point %i has been changed to %f." % (i, pres)
@@ -834,13 +834,13 @@ class HPathInteractor(PathInteractor):
                 # removeRows() will trigger a signal that will redraw the path.
                 self.waypoints_model.removeRows(self._ind)
 
-        elif self.editmode == INSERT:
+        elif self.editmode == INSERT and event.inaxes is not None:
             # Get position for new vertex.
             x, y = event.xdata, event.ydata
             best_index = self.pathpatch.get_path() \
                 .index_of_closest_segment(x, y, eps=self.appropriateEpsilon())
-            logging.debug("TopView insert point: clicked at ({:f}, {:f}), "
-                          "best index: {:d}".format(x, y, best_index))
+            logging.debug(u"TopView insert point: clicked at ({:f}, {:f}), "
+                          u"best index: {:d}".format(x, y, best_index))
             self.pathpatch.get_path().insert_vertex(best_index, [x, y],
                                                     WaypointsPath.LINETO)
 
@@ -851,7 +851,7 @@ class HPathInteractor(PathInteractor):
             elif len(wpm.allWaypointData()) > 0 and best_index == 0:
                 flightlevel = wpm.waypointData(0).flightlevel
             else:
-                logging.error("Cannot copy flightlevel. best_index: {}, len: {}".format(
+                logging.error(u"Cannot copy flightlevel. best_index: {}, len: {}".format(
                               best_index, len(wpm.allWaypointData())))
                 flightlevel = 0
             new_wp = ft.Waypoint(round(lat, 2), round(lon, 2), flightlevel)
@@ -975,7 +975,7 @@ class HPathInteractor(PathInteractor):
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
-                textlabel = "{:}".format(wpd[i].location)
+                textlabel = u"{:}".format(wpd[i].location)
             t = self.ax.text(x[i] + label_offset,
                              y[i] + label_offset,
                              textlabel,

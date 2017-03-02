@@ -230,7 +230,6 @@ def get_log_levels(cmin, cmax, levels=N_LEVELS):
         clevhi = np.exp(np.linspace(np.log(max(-cmin, cmax) * 0.001),
                                     np.log(cmax), max(2, 1 + int(levels * cmax / delta))))
         clev = np.asarray(list(clevlo) + list(clevhi))
-
     return clev
 
 
@@ -240,14 +239,22 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         if 0 < cmin < 0.05 * cmax:
             cmin = 0.
     cmap = matplotlib.pyplot.cm.rainbow
+    ticks = None
+
+    if any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)]):
+        cmin, cmax  = 0, 1
 
     if style == "default":
         clev = np.linspace(cmin, cmax, 16)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     elif style == "auto":
-        cmin = data.min()
-        cmax = data.max()
-        if cmin > 0 and cmin < 0.05 * cmax:
+        cmin_p = data.min()
+        cmax_p = data.max()
+        if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
+            cmin, cmax  = cmin_p, cmax_p
+        if cmin == cmax:
+            cmin, cmax = 0, 1
+        if 0 < cmin < 0.05 * cmax:
             cmin = 0.
         clev = np.linspace(cmin, cmax, 16)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
@@ -255,8 +262,12 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         clev = get_log_levels(cmin, cmax, 16)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     elif style == "autolog":
-        cmin = data.min()
-        cmax = data.max()
+        cmin_p = data.min()
+        cmax_p = data.max()
+        if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
+            cmin, cmax  = cmin_p, cmax_p
+        if cmin == cmax:
+            cmin, cmax = 0, 1
         clev = get_log_levels(cmin, cmax, 16)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     elif style == "nonlinear":
@@ -318,6 +329,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         cmap = matplotlib.pyplot.cm.Spectral_r
         clev = [-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3]
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+        ticks = -3, -2, -1, 1, 2, 3
     elif style == "square_of_brunt_vaisala_frequency_in_air":
         cmap = matplotlib.pyplot.cm.colors.ListedColormap(
             [(1.0, 0.55000000000000004, 1.0, 1.0),
@@ -345,22 +357,24 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         norm = None
         clev = np.arange(5, 16.1, 0.25)
     else:
-        raise RuntimeError("Illegal plotting style?! ({})".format(style))
-
-    return cmin, cmax, clev, cmap, norm
+        raise RuntimeError(u"Illegal plotting style?! ({})".format(style))
+    if clev[0] == clev[-1]:
+        cmin, cmax = 0, 1
+        clev = np.linspace(0, 1, len(clev))
+    return cmin, cmax, clev, cmap, norm, ticks
 
 
 def get_cbar_label_format(style, maxvalue):
     format = "%.3g"
     if style != "log":
-        if maxvalue >= 100. and maxvalue < 10000.:
+        if 100 <= maxvalue < 10000.:
             format = "%4i"
-        if maxvalue >= 10. and maxvalue < 100.:
+        elif 10 <= maxvalue < 100.:
             format = "%.1f"
-        if maxvalue >= 1. and maxvalue < 10.:
+        elif 1 <= maxvalue < 10.:
             format = "%.2f"
-        if maxvalue >= .1 and maxvalue < 1.:
+        elif 0.1 <= maxvalue < 1.:
             format = "%.3f"
-        if maxvalue >= .01 and maxvalue < 0.1:
+        elif 0.01 <= maxvalue < 0.1:
             format = "%.4f"
     return format

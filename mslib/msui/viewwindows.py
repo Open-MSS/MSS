@@ -61,7 +61,7 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         Qt receives a window close request for our application window.
         """
         ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                            self.tr("Do you want to close this {}?".format(self.name)),
+                                            self.tr(u"Do you want to close this {}?".format(self.name)),
                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                             QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
@@ -80,13 +80,12 @@ class MSSViewWindow(QtWidgets.QMainWindow):
            the widget and return -1. Otherwise return <index-1>.
         """
         index -= 1
-        if index >= 0:
-            if self.docks[index] is not None:
-                # The widget has already been created, but is not visible at
-                # the moment.
-                self.docks[index].show()
-                self.docks[index].raise_()
-                index = -1
+        if index >= 0 and self.docks[index] is not None:
+            # The widget has already been created, but is not visible at
+            # the moment.
+            self.docks[index].show()
+            self.docks[index].raise_()
+            index = -1
         if hasattr(self, "cbTools"):
             self.cbTools.setCurrentIndex(0)
         return index

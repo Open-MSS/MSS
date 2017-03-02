@@ -33,14 +33,12 @@ AUTHORS:
 import time
 from datetime import datetime, timedelta
 
-import Queue
 import StringIO
 import hashlib
 import logging
 import os
 import sys
 import re
-import threading
 import urllib
 import urllib2
 import xml.etree.ElementTree as etree
@@ -124,7 +122,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
             >>> out.close()
 
         """
-        base_url = self.getOperationByName('GetMap').methods[method]['url']
+        base_url = self.get_redirect_url(method)
         request = {'version': self.version, 'request': 'GetMap'}
 
         # check layers and styles
@@ -186,7 +184,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
         base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
-        complete_url = "%s%s" % (base_url, data)
+        complete_url = u"{}?{}".format(base_url, data)
         if return_only_url:
             return complete_url
         logging.debug("Retrieving: %s", complete_url)
@@ -202,19 +200,21 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
                                       password=self.password)
 
         # check for service exceptions, and return
-        if hasattr(u, "info"):
-            # NOTE: There is little bug in owslib.util.openURL -- if the file
-            # returned by the http server is an XML file, urlopen converts it
-            # into an "RereadableURL" object. WHile this enables the URL content
-            # to be scanned in urlopen as well as in a following method
-            # (urllib2.urlopen objects only allow the content to be read once),
-            # the "info" attribute is missing after the conversion..
-            if u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
-                se_xml = u.read()
-                se_tree = etree.fromstring(se_xml)
-                err_message = str(se_tree.find('ServiceException').text).strip()
-                raise mslib.owslib.wms.ServiceException(err_message, se_xml)
+        # NOTE: There is little bug in owslib.util.openURL -- if the file
+        # returned by the http server is an XML file, urlopen converts it
+        # into an "RereadableURL" object. WHile this enables the URL content
+        # to be scanned in urlopen as well as in a following method
+        # (urllib2.urlopen objects only allow the content to be read once),
+        # the "info" attribute is missing after the conversion..
+        if hasattr(u, "info") and u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
+            se_xml = u.read()
+            se_tree = etree.fromstring(se_xml)
+            err_message = unicode(se_tree.find('ServiceException').text).strip()
+            raise mslib.owslib.wms.ServiceException(err_message, se_xml)
         return u
+
+    def get_redirect_url(self, method="Get"):
+        return self.getOperationByName("GetMap").methods[method]["url"]
 
 
 #
@@ -245,7 +245,7 @@ class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
 #
 # CLASS WMSControlWidget
 #
-class MapPrefetcher(QtCore.QObject):
+class WMSMapFetcher(QtCore.QObject):
     """
     This class is supposed to run in a background thread to prefetch map images that may be used later on.
 
@@ -253,13 +253,22 @@ class MapPrefetcher(QtCore.QObject):
     in some way...
     """
 
+    # start fetching next URL in queue
     process = QtCore.pyqtSignal()
+    # present a final image including legend
+    finished = QtCore.pyqtSignal([object, object, object, object, object, object, object])
+    # triggered in case of caught exception
+    exception = QtCore.pyqtSignal([Exception])
+    # triggered in case of long lasting operation
+    started_request = QtCore.pyqtSignal()
 
     def __init__(self, wms, wms_cache, parent=None):
-        super(MapPrefetcher, self).__init__(parent)
+        super(WMSMapFetcher, self).__init__(parent)
         self.wms = wms
         self.wms_cache = wms_cache
+        self.maps = []
         self.process.connect(self.process_map, QtCore.Qt.QueuedConnection)
+        self.long_request = False
 
     @QtCore.pyqtSlot(list)
     def fetch_maps(self, map_list):
@@ -278,34 +287,77 @@ class MapPrefetcher(QtCore.QObject):
         """
         if len(self.maps) == 0:
             return
-        kwargs = self.maps[0]
+        kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
         self.maps = self.maps[1:]
-        if "queue" in kwargs:
-            del kwargs["queue"]
-        kwargs["return_only_url"] = True
-        urlstr = self.wms.getmap(**kwargs)
-        md5_filename = os.path.join(
-            unicode(self.wms_cache), hashlib.md5(urlstr).hexdigest() + ".png")
-        logging.info("MapPrefetcher %s %s.", kwargs["time"], kwargs["level"])
-        if os.path.exists(md5_filename):
-            logging.info("MapPrefetcher %s - file exists: %s.", self, md5_filename)
+        self.long_request = False
+        try:
+            map_img = self.fetch_map(kwargs, use_cache, md5_filename)
+            legend_img = self.fetch_legend(use_cache=use_cache, **legend_kwargs)
+        except Exception, ex:
+            logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
+            # emit finished so progress dialog will be closed
+            self.finished.emit(None, None, None, None, None, None, md5_filename)
+            self.exception.emit(ex)
         else:
-            kwargs["return_only_url"] = False
-            urlobject = self.wms.getmap(**kwargs)
-            imageIO = StringIO.StringIO(urlobject.read())
+            if len(self.maps) > 0:
+                self.process.emit()
+            self.finished.emit(
+                map_img, legend_img, kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"], kwargs["time"],
+                md5_filename)
 
-            img = PIL.Image.open(imageIO)
+    def fetch_map(self, kwargs, use_cache, md5_filename):
+        """
+        Retrieves a WMS map from a server or reads it from a cache if allowed
+        """
+        logging.debug("MapPrefetcher %s %s.", kwargs["time"], kwargs["level"])
+
+        if use_cache and os.path.exists(md5_filename):
+            img = PIL.Image.open(md5_filename)
+            logging.debug("MapPrefetcher - found image cache")
+        else:
+            self.started_request.emit()
+            self.long_request = True
+            urlobject = self.wms.getmap(**kwargs)
+            image_io = StringIO.StringIO(urlobject.read())
+            img = PIL.Image.open(image_io)
             # Check if the image is stored as indexed palette
             # with a transparent colour. Store correspondingly.
             if img.mode == "P" and "transparency" in img.info.keys():
                 img.save(md5_filename, transparency=img.info["transparency"])
             else:
                 img.save(md5_filename)
-            assert os.path.exists(md5_filename)
+            logging.debug("MapPrefetcher %s - saved filed: %s.", self, md5_filename)
+        return img
 
-            logging.info("MapPrefetcher %s - saved filed: %s.", self, md5_filename)
-        if len(self.maps) > 0:
-            self.process.emit()
+    def fetch_legend(self, urlstr=None, use_cache=True, md5_filename=None):
+        """
+        Retrieves a WMS legend from a server or reads it from a cache if allowed
+        """
+        if urlstr is None:
+            return None
+
+        if use_cache and os.path.exists(md5_filename):
+            legend_img = PIL.Image.open(md5_filename)
+            logging.debug("MapPrefetcher - found legend cache")
+        else:
+            if not self.long_request:
+                self.started_request.emit()
+                self.long_request = True
+            # This StringIO object can then be passed as a file substitute to
+            # PIL.Image.open(). See
+            #    http://www.pythonware.com/library/pil/handbook/image.htm
+            logging.debug("Retrieving legend from '%s'", urlstr)
+            urlobject = urllib2.urlopen(urlstr)
+            image_io = StringIO.StringIO(urlobject.read())
+            legend_img_raw = PIL.Image.open(image_io)
+            legend_img = legend_img_raw.crop(legend_img_raw.getbbox())
+            logging.debug("legend retrieved, legend graphic size is %i bytes.", image_io.len)
+            # Store the retrieved image in the cache, if enabled.
+            try:
+                legend_img.save(md5_filename, transparency=0)
+            except:
+                legend_img.save(md5_filename)
+        return legend_img
 
 
 class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
@@ -318,6 +370,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     """
 
     prefetch = QtCore.pyqtSignal([list], name="prefetch")
+    fetch = QtCore.pyqtSignal([list], name="fetch")
 
     def __init__(self, parent=None, crs_filter=".*",
                  default_WMS=None, wms_cache=None, view=None):
@@ -337,6 +390,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Accomodates MSSWebMapService instances.
         self.wms = None
+        self.wms_service_cache = {}
 
         # Initial list of WMS servers.
         self.cbWMS_URL.clear()
@@ -359,7 +413,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Initialise GUI elements that control WMS parameters.
         self.cbLayer.clear()
+        self.cbLayer.setEnabled(False)
         self.cbStyle.clear()
+        self.cbStyle.setEnabled(False)
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
@@ -379,6 +435,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enableInitTimeElements(False)
         self.btGetMap.setEnabled(False)
         self.pbViewCapabilities.setEnabled(False)
+
         self.cbTransparent.setChecked(False)
 
         # Check for WMS image cache directory, create if neceassary.
@@ -410,12 +467,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pbViewCapabilities.clicked.connect(self.viewCapabilities)
 
         self.cbLayer.currentIndexChanged.connect(self.layerChanged)
-
         self.cbStyle.currentIndexChanged.connect(self.styleChanged)
-
         self.cbLevel.currentIndexChanged.connect(self.levelChanged)
-        self.connect(self.cbLevel, QtCore.SIGNAL("currentIndexChanged(int)"),
-                     self.levelChanged)
 
         # Connecting both activated() and currentIndexChanged() signals leads
         # to **TimeChanged() being called twice when the user selects a new
@@ -441,19 +494,23 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbLevel_fwd.clicked.connect(self.level_fwd_click)
 
         self.btClearCache.clicked.connect(self.clearCache)
-
+        self.cbWMS_URL.editTextChanged.connect(self.wmsUrlChanged)
         if view is not None and hasattr(view, "redrawn"):
             self.view.redrawn.connect(self.afterRedraw)
 
         # Progress dialog to inform the user about image ongoing retrievals.
-        self.pdlg = QtWidgets.QProgressDialog("retrieving image...", "Cancel",
-                                              0, 10, self)
+        self.pdlg = QtWidgets.QProgressDialog(
+            "retrieving image...", "Cancel", 0, 10, parent=self.parent())
         self.pdlg.close()
 
-        self.thread = QtCore.QThread()  # no parent!
-        self.thread.start()
+        self.thread_prefetch = QtCore.QThread()  # no parent!
+        self.thread_prefetch.start()
+        self.thread_fetch = QtCore.QThread()  # no parent!
+        self.thread_fetch.start()
 
         self.prefetcher = None
+        self.fetcher = None
+        self.expected_img = None
 
     def __del__(self):
         """Destructor.
@@ -461,6 +518,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Service the WMS cache on application exit.
         if self.wms_cache is not None:
             self.serviceCache()
+        # properly terminate background threads. wait is necessary!
+        self.thread_prefetch.quit()
+        self.thread_prefetch.wait()
+        self.thread_fetch.quit()
+        self.thread_fetch.wait()
 
     def initialiseWMS(self, base_url):
         """Initialises a MSSWebMapService object with the specified base_url.
@@ -485,6 +547,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
         try:
+            _ = str(base_url)  # to provoke early Unicode Error
             while wms is None:
                 try:
                     wms = MSSWebMapService(base_url, version='1.1.1',
@@ -509,59 +572,113 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                             break
                     else:
                         raise
+        except UnicodeEncodeError:
+            logging.error(u"got a unicode url?!: '{}'".format(base_url))
+            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                           self.tr("ERROR: We cannot parse unicode URLs!"))
         except Exception as ex:
-            logging.error("ERROR: %s", ex)
             logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR:\n%s\n%s" % (type(ex), ex)),
-                                           QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("Web Map Service"),
+                self.tr(u"ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
         return wms
+
+    def wmsUrlChanged(self, text):
+        text = unicode(text)
+        wms = self.wms_service_cache.get(text)
+        if wms is not None and wms != self.wms:
+            self.activateWMS(wms)
+        elif self.wms is not None:
+            self.wms = None
+            self.cbLayer.clear()
+            self.cbLevel.clear()
+            self.cbStyle.clear()
+            self.cbInitTime.clear()
+            self.cbValidTime.clear()
+
+            self.cbLayer.setEnabled(False)
+            self.cbStyle.setEnabled(False)
+            self.enableLevelElements(False)
+            self.enableValidTimeElements(False)
+            self.enableInitTimeElements(False)
+            self.btGetMap.setEnabled(False)
+            self.pbViewCapabilities.setEnabled(False)
+            self.cbTransparent.setChecked(False)
+
+
+    @QtCore.pyqtSlot(Exception)
+    def displayException(self, ex):
+        logging.error(u"ERROR: %s %s", type(ex), ex)
+        QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+                                       self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
+
+    @QtCore.pyqtSlot()
+    def displayProgressDialog(self):
+        logging.debug("showing progress dialog")
+        self.pdlg.reset()
+        self.pdlg.setValue(5)
+        self.pdlg.setModal(True)
+        self.pdlg.show()
 
     def getCapabilities(self):
         """Query the WMS server in the URL combobox for its capabilities. Fill
            layer, style, etc. combo boxes.
         """
+
+        # Load new WMS. Only add those layers to the combobox that can provide
+        # the CRS that match the filter of this module.
+        base_url = unicode(self.cbWMS_URL.currentText())
+        logging.debug(u"requesting capabilities from %s", base_url)
+        wms = self.initialiseWMS(base_url)
+        if wms is not None:
+            self.activateWMS(wms)
+            self.wms_service_cache[wms.url] = wms
+
+    def activateWMS(self, wms):
         # Clear layer and style combo boxes. First disconnect the layerChanged
         # slot to avoid calls to this function.
         self.cbLayer.currentIndexChanged.disconnect(self.layerChanged)
         self.cbLayer.clear()
         self.cbStyle.clear()
 
-        # Load new WMS. Only add those layers to the combobox that can provide
-        # the CRS that match the filter of this module.
-        base_url = unicode(self.cbWMS_URL.currentText())
-        logging.debug("requesting capabilities from %s", base_url)
-        wms = self.initialiseWMS(base_url)
-        if wms is not None:
-            # Parse layer tree of the wms object and discover usable layers.
-            stack = wms.contents.values()
-            filtered_layers = []
-            while len(stack) > 0:
-                layer = stack.pop()
-                if len(layer.layers) == 0:
-                    if self.crsAllowed(layer):
-                        # cb_string = "%s | %s" % (layer.name, layer.title)
-                        cb_string = "%s | %s" % (layer.title, layer.name)
-                        if cb_string not in filtered_layers:
-                            filtered_layers.append(cb_string)
-                else:
-                    stack.extend(layer.layers)
-            logging.debug("discovered %i layers that can be used in this view",
-                          len(filtered_layers))
-            filtered_layers.sort()
-            self.cbLayer.addItems(filtered_layers)
-            self.wms = wms
-            self.layerChanged(0)
-            self.btGetMap.setEnabled(True)
-            self.pbViewCapabilities.setEnabled(True)
+        # Parse layer tree of the wms object and discover usable layers.
+        stack = wms.contents.values()
+        filtered_layers = []
+        while len(stack) > 0:
+            layer = stack.pop()
+            if len(layer.layers) == 0:
+                if self.crsAllowed(layer):
+                    cb_string = u"{} | {}".format(layer.title, layer.name)
+                    if cb_string not in filtered_layers:
+                        filtered_layers.append(cb_string)
+            else:
+                stack.extend(layer.layers)
+        logging.debug("discovered %i layers that can be used in this view",
+                      len(filtered_layers))
+        filtered_layers.sort()
+        self.cbLayer.addItems(filtered_layers)
+        self.cbLayer.setEnabled(self.cbLayer.count() > 1)
+        self.wms = wms
+        self.layerChanged(0)
+        self.btGetMap.setEnabled(True)
+        self.pbViewCapabilities.setEnabled(True)
 
-            if self.prefetcher is not None:
-                self.prefetch.disconnect(self.prefetcher.fetch_maps)
+        if self.prefetcher is not None:
+            self.prefetch.disconnect(self.prefetcher.fetch_maps)
+        if self.fetcher is not None:
+            self.fetch.disconnect(self.fetcher.fetch_maps)
 
-            self.prefetcher = MapPrefetcher(self.wms, self.wms_cache)
-            self.prefetcher.moveToThread(self.thread)
-            self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
+        self.prefetcher = WMSMapFetcher(self.wms, self.wms_cache)
+        self.prefetcher.moveToThread(self.thread_prefetch)
+        self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
+
+        self.fetcher = WMSMapFetcher(self.wms, self.wms_cache)
+        self.fetcher.moveToThread(self.thread_fetch)
+        self.fetch.connect(self.fetcher.fetch_maps)  # implicitely uses a queued connection
+        self.fetcher.finished.connect(self.continueRetrieveImage)  # implicitely uses a queued connection
+        self.fetcher.exception.connect(self.displayException)  # implicitely uses a queued connection
+        self.fetcher.started_request.connect(self.displayProgressDialog)  # implicitely uses a queued connection
 
         if self.cbInitTime.count() > 0:
             self.cbInitTime.setCurrentIndex(0)
@@ -582,7 +699,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             wmsbrws = wms_capabilities.WMSCapabilitiesBrowser(
                 parent=self,
                 url=self.wms.url,
-                capabilities_xml=self.wms.capabilities_document)
+                capabilities=self.wms)
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             wmsbrws.show()
 
@@ -598,7 +715,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     return True
         return False
 
-    def interpret_timestring(self, timestring, return_format=False):
+    @staticmethod
+    def interpret_timestring(timestring, return_format=False):
         """Tries to interpret a given time string.
 
         Returns a datetime objects if the method succeeds, otherwise None.
@@ -617,7 +735,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     return format
                 else:
                     return d
-            except:
+            except ValueError:
                 pass
         return None
 
@@ -652,8 +770,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         styles = layerobj.styles
         self.cbStyle.clear()
-        self.cbStyle.addItems(["{} | {}".format(s, styles[s]["title"])
+        self.cbStyle.addItems([u"{} | {}".format(s, styles[s]["title"])
                                for s in styles])
+        self.cbStyle.setEnabled(self.cbStyle.count() > 1)
+
         abstract_text = layerobj.abstract if layerobj.abstract else ""
         abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
         self.teLayerAbstract.setText(abstract_text)
@@ -674,7 +794,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         while lobj is not None:
             if "elevation" in lobj.dimensions.keys() and "elevation" in lobj.extents.keys():
                 units = lobj.dimensions["elevation"]["units"]
-                elev_list = ["{} ({})".format(e.strip(), units) for e in
+                elev_list = [u"{} ({})".format(e.strip(), units) for e in
                              lobj.extents["elevation"]["values"]]
                 self.cbLevel.addItems(elev_list)
                 enable_elevation = True
@@ -811,8 +931,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                     interpretation_successful = False
 
                             if not interpretation_successful:
-                                logging.error("Can't understand time string {}."
-                                              " Please check the implementation.".format(time_item))
+                                logging.error(u"Can't understand time string {}."
+                                              u" Please check the implementation.".format(time_item))
 
             # No time extent tag was found: Set allowed_valid_times to None
             # (used by validTimeChanged()).
@@ -827,28 +947,26 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # parent.
             lobj = lobj.parent
 
-        logging.debug("determined init time format: {}".format(self.init_time_format))
+        logging.debug(u"determined init time format: {}".format(self.init_time_format))
         if enable_inittime and self.init_time_format is None:
             msg = "cannot determine init time format."
-            logging.warning("WARNING: {}".format(msg))
+            logging.warning(u"WARNING: {}".format(msg))
             if self.cbInitTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
                 QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                               self.tr("ERROR: {}".format(msg)),
-                                               QtWidgets.QMessageBox.Ok)
+                                               self.tr(u"ERROR: {}".format(msg)))
             self.init_time_format = ""
 
-        logging.debug("determined valid time format: {}".format(self.valid_time_format))
+        logging.debug(u"determined valid time format: {}".format(self.valid_time_format))
         if enable_validtime and self.valid_time_format is None:
             msg = "cannot determine valid time format."
-            logging.warning("WARNING: {}".format(msg))
+            logging.warning(u"WARNING: {}".format(msg))
             if self.cbValidTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
                 QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                               self.tr("ERROR: {}".format(msg)),
-                                               QtWidgets.QMessageBox.Ok)
+                                               self.tr(u"ERROR: {}".format(msg)))
             self.valid_time_format = ""
 
         self.enableLevelElements(enable_elevation)
@@ -879,7 +997,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.check_valid_time(save_valid_time)
         self.layerChangeInProgress = False
 
-    def secs_from_timestep(self, timestep_string):
+    @staticmethod
+    def secs_from_timestep(timestep_string):
         """Convert a string specifying a time step (e.g. 5 min, 3 hours) to
            seconds.
 
@@ -891,19 +1010,18 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         try:
             minutes = int(timestep_string.split(" min")[0])
             return minutes * 60
-        except:
+        except ValueError:
             pass
         try:
             hours = int(timestep_string.split(" hour")[0])
             return hours * 3600
-        except:
+        except ValueError:
             pass
         try:
             days = int(timestep_string.split(" days")[0])
             return days * 86400
-        except:
-            raise ValueError(u"cannot convert {} to seconds: wrong format."
-                             .format(timestep_string))
+        except ValueError:
+            raise ValueError(u"cannot convert '{}' to seconds: wrong format.".format(timestep_string))
 
     def init_time_back_click(self):
         """Slot for the tbInitTime_back button.
@@ -1062,7 +1180,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            level control.
         """
         self.cbLevelOn.setChecked(enable)
-        self.cbLevel.setEnabled(enable)
+        self.cbLevel.setEnabled(enable and self.cbLevel.count() > 1)
         self.tbLevel_back.setEnabled(enable)
         self.tbLevel_fwd.setEnabled(enable)
 
@@ -1176,27 +1294,28 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         else:
             return None
 
-    def _queued_get_map(self, queue=None, **kwargs):
-        """Helper routine to call getmap() from a thread: The return value
-           is stored in the Queue.Queue() object that is passed to this routine,
-           to be able to retrieve it after the thread has finished its
-           execution.
-
-        See:
-          http://stackoverflow.com/questions/1886090/return-value-from-thread
-        """
-        try:
-            urlobject = self.wms.getmap(**kwargs)
-            if queue is not None:
-                queue.put(urlobject)
-        except Exception as ex:
-            if queue is not None:
-                queue.put(ex)
-
     def cachingEnabled(self):
         """Returns if the image cache is enabled.
         """
         return self.wms_cache is not None and self.cbCacheEnabled.isChecked()
+
+    def getLegendURL(self):
+        layer = self.getLayer()
+        style = self.getStyle()
+        layerobj = self.get_layer_object(layer)
+        urlstr = None
+        if style != "" and "legend" in layerobj.styles[style].keys():
+            urlstr = layerobj.styles[style]["legend"]
+
+        return urlstr
+
+    def getMD5Filename(self, kwargs):
+        kwargs["return_only_url"] = True
+        urlstr = self.wms.getmap(**kwargs)
+        kwargs["return_only_url"] = False
+        if not self.wms.url.startswith(self.cbWMS_URL.currentText()):
+            raise RuntimeError("WMS URL does not match, use get capabilities first.")
+        return os.path.join(self.wms_cache, hashlib.md5(urlstr).hexdigest() + ".png")
 
     def retrieveImage(self, crs="EPSG:4326", bbox=None, path_string=None,
                       width=800, height=400):
@@ -1216,24 +1335,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         bbox -- bounding box as list of four floats
         width, height -- width and height of requested image in pixels
 
-        Returns: a lot..
-        return img, legend_img, layer, style, init_time, valid_time, complete_level
-        with
-        img, legend_img -- PIL image objects
-        layer, style, complete_level -- string objects
-        init_time, valid_time -- datetime objects
         """
-
-        # Show the progress dialog, (a) since the retrieval can take a few
-        # seconds, and (b) to allow for cancellation of the request by the
-        # user.
-        self.pdlg.setValue(0)
-        self.pdlg.setModal(True)
-        self.pdlg.reset()
-
-        # Stores the image to be returned. If an error occurs, None will be
-        # returned.
-        img = None
 
         # Get layer and style names.
         layer = self.getLayer()
@@ -1248,23 +1350,21 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if init_time is not None and init_time not in self.allowed_init_times:
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
                                            self.tr("ERROR: Invalid init time chosen\n"
-                                                   "(watch out for the strikethrough)!"),
-                                           QtWidgets.QMessageBox.Ok)
-            raise RuntimeError("Invalid init time")
+                                                   "(watch out for the strikethrough)!"))
+            return
 
         valid_time = self.getValidTime()
         if valid_time is not None and valid_time not in self.allowed_valid_times:
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
                                            self.tr("ERROR: Invalid valid time chosen!\n"
-                                                   "(watch out for the strikethrough)!"),
-                                           QtWidgets.QMessageBox.Ok)
-            raise RuntimeError("Invalid valid time")
+                                                   "(watch out for the strikethrough)!"))
+            return
 
-        logging.debug("fetching layer {}; style {}, width {:d}, height {:d}".format(layer, style, width, height))
-        logging.debug("crs={}, path={}".format(crs, path_string))
-        logging.debug("init_time={}, valid_time={}".format(init_time, valid_time))
-        logging.debug("level={}".format(level))
-        logging.debug("transparent={}".format(transparent))
+        logging.debug(u"fetching layer {}; style {}, width {:d}, height {:d}".format(layer, style, width, height))
+        logging.debug(u"crs={}, path={}".format(crs, path_string))
+        logging.debug(u"init_time={}, valid_time={}".format(init_time, valid_time))
+        logging.debug(u"level={}".format(level))
+        logging.debug(u"transparent={}".format(transparent))
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1291,10 +1391,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "size": (width, height),
                       "format": 'image/png',
                       "transparent": transparent}
+            legend_kwargs = {"urlstr": self.getLegendURL(), "md5_filename": None}
+            if legend_kwargs["urlstr"] is not None:
+                legend_kwargs["md5_filename"] = os.path.join(
+                    self.wms_cache, hashlib.md5(legend_kwargs["urlstr"]).hexdigest() + ".png")
 
             # If caching is enabled, get the URL and check the image cache
             # directory for the suitable image file.
-            cache_hit = False
             if self.cachingEnabled():
                 prefetch_config = config_loader(dataset="wms_prefetch", default=mss_default.wms_prefetch)
                 prefetch_entries = ["validtime_fwd", "validtime_bck", "level_up", "level_down"]
@@ -1311,224 +1414,42 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 if fetch_nr > 0:
                     pre_tfwd, pre_tbck, pre_lfwd, pre_lbck = [prefetch_config[_x] for _x in prefetch_entries]
 
+                    ci_time, ci_level = self.cbValidTime.currentIndex(), self.cbLevel.currentIndex()
+                    prefetch_key_values = \
+                        [("time", unicode(self.cbValidTime.itemText(ci_p)))
+                         for ci_p in range(ci_time + 1, ci_time + 1 + pre_tfwd) + range(ci_time - pre_tbck, ci_time)
+                         if 0 <= ci_p < self.cbValidTime.count()] + \
+                        [("level", unicode(self.cbLevel.itemText(ci_p), errors="ignore").split(" (")[0])
+                         for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)
+                         if ci_p != ci_level and 0 <= ci_p < self.cbLevel.count()]
+
                     prefetch_maps = []
-                    ci = self.cbValidTime.currentIndex()
-                    times = [unicode(self.cbValidTime.itemText(ci_p))
-                             for ci_p in range(ci, ci + 1 + pre_tfwd) + range(ci - pre_tbck, ci)
-                             if 0 <= ci_p < self.cbValidTime.count()]
-                    for new_time in times:
-                        kwargs["time"] = new_time
-                        prefetch_maps.append(kwargs.copy())
-                    kwargs["time"] = valid_time
+                    for key, value in prefetch_key_values:
+                        kwargs_new = kwargs.copy()
+                        kwargs_new[key] = value
+                        prefetch_maps.append((kwargs_new, self.getMD5Filename(kwargs_new), True, {}))
+                    self.prefetch.emit(prefetch_maps)
 
-                    ci = self.cbLevel.currentIndex()
-                    levels = [unicode(self.cbLevel.itemText(ci_p), errors="ignore").split(" (")[0]
-                              for ci_p in range(ci - pre_lbck, ci + 1 + pre_lfwd)
-                              if ci_p != ci and 0 <= ci_p < self.cbLevel.count()]
-                    for new_level in levels:
-                        kwargs["level"] = new_level
-                        prefetch_maps.append(kwargs.copy())
-                    kwargs["level"] = level
-                    if len(prefetch_maps) > 0:
-                        self.prefetch.emit(prefetch_maps)
-
-                kwargs["return_only_url"] = True
-                urlstr = self.wms.getmap(**kwargs)
-                if urlstr.startswith(self.cbWMS_URL.currentText()):
-                    kwargs["return_only_url"] = False
-                    # Get an md5 digest of the URL string. The digest is used
-                    # as the filename.
-                    md5_filename = hashlib.md5(urlstr).hexdigest()
-                    md5_filename += ".png"
-                    logging.debug("checking cache for image file {} ...".format(md5_filename))
-                    md5_filename = os.path.join(self.wms_cache, md5_filename)
-                    if os.path.exists(md5_filename):
-                        logging.debug("  file exists, loading from cache.")
-                        cache_hit = True
-                    else:
-                        logging.debug("  file does not exist, retrieving from WMS server.")
-                else:
-                    logging.debug("  Url does not match, use get capabilities first.")
-                    raise RuntimeError("Url does not match, use get capabilities first.")
-
-            if not cache_hit:
-                self.pdlg.show()
-                QtWidgets.QApplication.processEvents()
-                self.pdlg.setValue(1)
-                QtWidgets.QApplication.processEvents()
-
-                queue = Queue.Queue()
-                kwargs["queue"] = queue
-                thread = threading.Thread(target=self._queued_get_map, kwargs=kwargs)
-                thread.start()
-
-                while thread.isAlive():
-                    # This loop keeps the GUI alive while the thread is executing,
-                    # and checks for a cancellation request by the user.
-                    QtWidgets.QApplication.processEvents()
-                    if self.pdlg.wasCanceled():
-                        logging.debug("map retrieval was canceled by the user.")
-                        raise UserWarning("map retrieval was canceled by the user.")
-                    # Wait for 10 ms if the thread is still running to prevent
-                    # the application from using 100% processor time.
-                    thread.join(0.01)
-
-                # Get the return value from getmap() from the queue. If everything
-                # went well, the return value is a urlobject instance, otherwise
-                # it is an Exception.
-                # NOTE: I can't figure out how to distinguish between the Exception
-                # types and the urlobject. "type(qreturn) is Exception" doesn't
-                # work, I'd have to list all possible exception types.
-                # "type(urlobject)" returns "instance", which doesn't help much
-                # either. Hence I merely test for a read() method.
-                if not queue.empty():
-                    qreturn = queue.get()
-                    if hasattr(qreturn, "read"):
-                        urlobject = qreturn
-                    else:
-                        raise qreturn
-
-                self.pdlg.setValue(8)
-                QtWidgets.QApplication.processEvents()
-                # Read the image file from the URL into a string (urlobject.read())
-                # and wrap this string into a StringIO object that behaves like a file.
-                imageIO = StringIO.StringIO(urlobject.read())
-                # This StringIO object can then be passed as a file substitute to
-                # PIL.Image.open(). See
-                #    http://www.pythonware.com/library/pil/handbook/image.htm
-                img = PIL.Image.open(imageIO)
-                logging.debug("layer retrieved, image size is {:d} bytes.".format(imageIO.len))
-                # Store the retrieved image in the cache, if enabled.
-                if self.cachingEnabled():
-                    logging.debug("storing retrieved image file in cache.")
-                    # Check if the image is stored as indexed palette
-                    # with a transparent colour. Store correspondingly.
-                    if img.mode == "P" and "transparency" in img.info.keys():
-                        logging.debug("image is index colour and transparent, "
-                                      "transparency index of image is %i.",
-                                      img.info["transparency"])
-                        img.save(md5_filename, transparency=img.info["transparency"])
-                    else:
-                        img.save(md5_filename)
-            else:
-                img = PIL.Image.open(md5_filename)
-                logging.debug("layer retrieved from cache.")
+            md5_filename = self.getMD5Filename(kwargs)
+            self.expected_img = md5_filename
+            self.pdlg.reset()
+            self.fetch.emit([(kwargs, md5_filename, self.cachingEnabled(), legend_kwargs)])
 
         except Exception as ex:
-            self.pdlg.close()
-            logging.error("ERROR: {}".format(ex))
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)),
-                                           QtWidgets.QMessageBox.Ok)
-            raise ex
+            self.displayException(ex)
 
-        legend_img = self.retrieveLegendGraphic()
-
-        # Close the progress dialog and return the image.
+    @QtCore.pyqtSlot(object, object, object, object, object, object, object)
+    def continueRetrieveImage(self, img, legend_img, layer, style, init_time, valid_time, md5_filename):
+        logging.debug(u"{} {} {}".format(self.pdlg.wasCanceled(), self.expected_img != md5_filename, md5_filename))
+        if self.pdlg.wasCanceled() or self.expected_img != md5_filename:
+            return
         self.pdlg.close()
+        if img is None:
+            return
 
-        complete_level = str(self.cbLevel.currentText())
+        complete_level = unicode(self.cbLevel.currentText())
         complete_level = complete_level if complete_level != "" else None
-        return img, legend_img, layer, style, init_time, valid_time, complete_level
-
-    def _queued_get_legend(self, queue=None, url=""):
-        """Helper routine to retrieve a legend graphic from a thread: The return value
-           is stored in the Queue.Queue() object that is passed to this routine,
-           to be able to retrieve it after the thread has finished its
-           execution.
-
-        See:
-          http://stackoverflow.com/questions/1886090/return-value-from-thread
-        """
-        try:
-            urlobject = urllib2.urlopen(url)
-            if queue is not None:
-                queue.put(urlobject)
-        except Exception as ex:
-            if queue is not None:
-                queue.put(ex)
-
-    def retrieveLegendGraphic(self):
-        """Retrieves the legend graphic of the currently selected layer and
-           style, if available.
-        """
-        # Stores the image to be returned. If no legend is available, None
-        # will be returned.
-        img = None
-
-        # Get layer and style names.
-        layer = self.getLayer()
-        style = self.getStyle()
-
-        # Check if a legend URL has been specified.
-        layerobj = self.get_layer_object(layer)
-        if style != "" and "legend" in layerobj.styles[style].keys():
-            urlstr = layerobj.styles[style]["legend"]
-            logging.debug("fetching legend graphic from {}".format(urlstr))
-
-            # If caching is enabled, check the image cache
-            # directory for the suitable image file.
-            cache_hit = False
-            if self.cachingEnabled():
-                # Get an md5 digest of the URL string. The digest is used
-                # as the filename.
-                md5_filename = hashlib.md5(urlstr).hexdigest()
-                md5_filename += ".png"
-                logging.debug("checking cache for image file {} ...".format(md5_filename))
-                md5_filename = os.path.join(self.wms_cache, md5_filename)
-                if os.path.exists(md5_filename):
-                    img = PIL.Image.open(md5_filename)
-                    logging.debug("  legend graphic retrieved from cache.")
-                    cache_hit = True
-                else:
-                    logging.debug("  file does not exist, retrieving from WMS server.")
-
-            # Legend graphic needs to be retrieved from server.
-            if not cache_hit:
-                queue = Queue.Queue()
-                kwargs = {"queue": queue, "url": urlstr}
-                thread = threading.Thread(target=self._queued_get_legend, kwargs=kwargs)
-                thread.start()
-
-                while thread.isAlive():
-                    # This loop keeps the GUI alive while the thread is executing,
-                    # and checks for a cancellation request by the user.
-                    QtWidgets.QApplication.processEvents()
-                    if self.pdlg.wasCanceled():
-                        logging.debug("legend retrieval was canceled by the user.")
-                        raise UserWarning("legend retrieval was canceled by the user.")
-                    # Wait for 10 ms if the thread is still running to prevent
-                    # the application from using 100% processor time.
-                    thread.join(0.01)
-
-                # See retrieveImage()..
-                if not queue.empty():
-                    qreturn = queue.get()
-                    if hasattr(qreturn, "read"):
-                        urlobject = qreturn
-                    else:
-                        raise qreturn
-
-                # Read the image file from the URL into a string (urlobject.read())
-                # and wrap this string into a StringIO object that behaves like a file.
-                imageIO = StringIO.StringIO(urlobject.read())
-                # This StringIO object can then be passed as a file substitute to
-                # PIL.Image.open(). See
-                #    http://www.pythonware.com/library/pil/handbook/image.htm
-                img_ = PIL.Image.open(imageIO)
-                img = img_.crop(img_.getbbox())
-                logging.debug("legend retrieved, legend graphic size is %i bytes.", imageIO.len)
-                # Store the retrieved image in the cache, if enabled.
-                if self.cachingEnabled():
-                    logging.debug("storing retrieved legend graphics file in cache.")
-                    try:
-                        img.save(md5_filename, transparency=0)
-                    except:
-                        img.save(md5_filename)
-        else:
-            logging.debug("no legend graphic available for this layer.")
-
-        return img
+        self.displayRetrievedImage(img, legend_img, layer, style, init_time, valid_time, complete_level)
 
     def getMap(self):
         """Prototypical stub for getMap() function. Needs to be reimplemented
@@ -1560,7 +1481,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     try:
                         os.remove(os.path.join(self.wms_cache, f))
                     except Exception as ex:
-                        logging.error("ERROR: {}".format(ex))
+                        logging.error(u"ERROR: {} {}".format(type(ex), ex))
                 logging.debug("cache has been cleared.")
             else:
                 logging.debug("no cache exists that can be cleared.")
@@ -1647,7 +1568,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         # Get lat/lon coordinates of flight track and convert to string for URL.
         path_string = ""
         for waypoint in self.waypoints_model.allWaypointData():
-            path_string += "%.2f,%.2f," % (waypoint.lat, waypoint.lon)
+            path_string += "{:.2f},{:.2f},".format(waypoint.lat, waypoint.lon)
         path_string = path_string[:-1]
 
         # Determine the current size of the vertical section plot on the
@@ -1655,23 +1576,19 @@ class VSecWMSControlWidget(WMSControlWidget):
         width, height = self.view.getPlotSizePx()
 
         # Retrieve the image.
-        try:
-            img, legend_img, layer, style, init_time, valid_time, level = \
-                self.retrieveImage(crs=crs, path_string=path_string, bbox=bbox,
-                                   width=width, height=height)
-        except Exception as ex:
-            logging.error("an error occurred. no image retrieved. ({})".format(ex))
+        self.retrieveImage(crs, bbox, path_string, width, height)
+
+    def displayRetrievedImage(self, img, legend_img, layer, style, init_time, valid_time, level):
+        # Plot the image on the view canvas.
+        self.view.drawImage(img)
+        if style != "":
+            style_title = self.get_layer_object(layer).styles[style]["title"]
         else:
-            # Plot the image on the view canvas.
-            self.view.drawImage(img)
-            if style != "":
-                style_title = self.get_layer_object(layer).styles[style]["title"]
-            else:
-                style_title = None
-            self.view.drawMetadata(title=self.get_layer_object(layer).title,
-                                   init_time=init_time,
-                                   valid_time=valid_time,
-                                   style=style_title)
+            style_title = None
+        self.view.drawMetadata(title=self.get_layer_object(layer).title,
+                               init_time=init_time,
+                               valid_time=valid_time,
+                               style=style_title)
 
 
 #
@@ -1721,25 +1638,22 @@ class HSecWMSControlWidget(WMSControlWidget):
         # screen in pixels. The image will be retrieved in this size.
         width, height = self.view.getPlotSizePx()
         # Retrieve the image.
-        try:
-            img, legend_img, layer, style, init_time, valid_time, level = \
-                self.retrieveImage(crs=crs, bbox=bbox, width=width, height=height)
-        except Exception as ex:
-            logging.error("an error occurred. no image retried. ({})".format(ex))
+        self.retrieveImage(crs, bbox, None, width, height)
+
+    def displayRetrievedImage(self, img, legend_img, layer, style, init_time, valid_time, level):
+        # Plot the image on the view canvas.
+        if style != "":
+            style_title = self.get_layer_object(layer).styles[style]["title"]
         else:
-            # Plot the image on the view canvas.
-            if style != "":
-                style_title = self.get_layer_object(layer).styles[style]["title"]
-            else:
-                style_title = None
-            self.view.drawMetadata(title=self.get_layer_object(layer).title,
-                                   init_time=init_time,
-                                   valid_time=valid_time,
-                                   level=level,
-                                   style=style_title)
-            self.view.drawImage(img)
-            self.view.drawLegend(legend_img)
-            self.view.waypoints_interactor.update()
+            style_title = None
+        self.view.drawMetadata(title=self.get_layer_object(layer).title,
+                               init_time=init_time,
+                               valid_time=valid_time,
+                               level=level,
+                               style=style_title)
+        self.view.drawImage(img)
+        self.view.drawLegend(legend_img)
+        self.view.waypoints_interactor.update()
 
 
 def _main():

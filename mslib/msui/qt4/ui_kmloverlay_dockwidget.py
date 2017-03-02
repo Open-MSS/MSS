@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'msui/ui_kmloverlay_dockwidget.ui'
+# Form implementation generated from reading ui file 'ui_kmloverlay_dockwidget.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -45,9 +45,20 @@ class Ui_KMLOverlayDockWidget(object):
         self.verticalLayout.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName(_fromUtf8("horizontalLayout_7"))
+        self.cbManualStyle = QtGui.QCheckBox(KMLOverlayDockWidget)
+        self.cbManualStyle.setObjectName(_fromUtf8("cbManualStyle"))
+        self.horizontalLayout_7.addWidget(self.cbManualStyle)
         self.pbSelectColour = QtGui.QPushButton(KMLOverlayDockWidget)
         self.pbSelectColour.setObjectName(_fromUtf8("pbSelectColour"))
         self.horizontalLayout_7.addWidget(self.pbSelectColour)
+        self.label_2 = QtGui.QLabel(KMLOverlayDockWidget)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.horizontalLayout_7.addWidget(self.label_2)
+        self.dsbLineWidth = QtGui.QDoubleSpinBox(KMLOverlayDockWidget)
+        self.dsbLineWidth.setSingleStep(0.5)
+        self.dsbLineWidth.setProperty("value", 1.0)
+        self.dsbLineWidth.setObjectName(_fromUtf8("dsbLineWidth"))
+        self.horizontalLayout_7.addWidget(self.dsbLineWidth)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout_7)
@@ -62,9 +73,18 @@ class Ui_KMLOverlayDockWidget(object):
 
     def retranslateUi(self, KMLOverlayDockWidget):
         KMLOverlayDockWidget.setWindowTitle(_translate("KMLOverlayDockWidget", "KML Overlay", None))
+        self.cbOverlay.setToolTip(_translate("KMLOverlayDockWidget", "Hide/unhide loaded KML overlay.", None))
         self.cbOverlay.setText(_translate("KMLOverlayDockWidget", "KML Overlay", None))
+        self.btSelectFile.setToolTip(_translate("KMLOverlayDockWidget", "Specify KML file using a file dialog.", None))
         self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "...", None))
+        self.btLoadFile.setToolTip(_translate("KMLOverlayDockWidget", "Load specified KML file.", None))
         self.btLoadFile.setText(_translate("KMLOverlayDockWidget", "load", None))
+        self.cbManualStyle.setToolTip(_translate("KMLOverlayDockWidget", "Overwrite styles of KML document with colour/linewidth specified to the right.", None))
+        self.cbManualStyle.setText(_translate("KMLOverlayDockWidget", "manual style", None))
+        self.pbSelectColour.setToolTip(_translate("KMLOverlayDockWidget", "Colour for KML overlay.", None))
         self.pbSelectColour.setText(_translate("KMLOverlayDockWidget", "Colour", None))
+        self.label_2.setToolTip(_translate("KMLOverlayDockWidget", "Line width for KML overlay.", None))
+        self.label_2.setText(_translate("KMLOverlayDockWidget", "line width", None))
+        self.label.setToolTip(_translate("KMLOverlayDockWidget", "KML support is experimental. Please communicate important missing features to the MSS issue tracker!", None))
         self.label.setText(_translate("KMLOverlayDockWidget", "!Experimental Feature! Not all KML files and contained features will work.", None))
 

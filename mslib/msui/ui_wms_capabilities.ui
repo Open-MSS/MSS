@@ -1,7 +1,8 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>WMSCapabilitiesBrowser</class>
- <widget class="QWidget" name="WMSCapabilitiesBrowser" >
-  <property name="geometry" >
+ <widget class="QWidget" name="WMSCapabilitiesBrowser">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
@@ -9,61 +10,68 @@
     <height>393</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Browse WMS Capabilities - Mission Support System</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" >
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2" >
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QLabel" name="label" >
-       <property name="sizePolicy" >
-        <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+      <widget class="QLabel" name="label">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="font" >
+       <property name="font">
         <font>
          <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
-       <property name="text" >
+       <property name="text">
         <string>Capabilities document of:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="lblURL" >
-       <property name="sizePolicy" >
-        <sizepolicy vsizetype="Preferred" hsizetype="MinimumExpanding" >
+      <widget class="QLabel" name="lblURL">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="text" >
-        <string>&lt;URL></string>
+       <property name="text">
+        <string>&lt;URL&gt;</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QTextBrowser" name="txtCapabilities" >
-     <property name="openExternalLinks" >
+    <widget class="QTextBrowser" name="txtCapabilities">
+     <property name="openExternalLinks">
       <bool>false</bool>
      </property>
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" >
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <spacer name="horizontalSpacer" >
-       <property name="orientation" >
+      <widget class="QCheckBox" name="cbFullView">
+       <property name="text">
+        <string>show full XML document</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <property name="sizeHint" stdset="0" >
+       <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
          <height>20</height>
@@ -72,8 +80,8 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="btClose" >
-       <property name="text" >
+      <widget class="QPushButton" name="btClose">
+       <property name="text">
         <string>close</string>
        </property>
       </widget>
@@ -90,11 +98,11 @@
    <receiver>WMSCapabilitiesBrowser</receiver>
    <slot>close()</slot>
    <hints>
-    <hint type="sourcelabel" >
+    <hint type="sourcelabel">
      <x>718</x>
      <y>374</y>
     </hint>
-    <hint type="destinationlabel" >
+    <hint type="destinationlabel">
      <x>376</x>
      <y>196</y>
     </hint>
