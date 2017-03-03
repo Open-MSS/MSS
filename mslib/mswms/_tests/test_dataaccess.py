@@ -31,7 +31,7 @@ import pytest
 from datetime import datetime
 from mslib.mswms import dataaccess
 from mslib.mswms.dataaccess import ECMWFDataAccess
-from conftest import BASE_DIR, DATA_DIR, VALID_TIME_CACHE
+from mslib._tests.utils import BASE_DIR, DATA_DIR, VALID_TIME_CACHE
 
 # ToDo improve
 dataaccess.valid_time_cache = VALID_TIME_CACHE

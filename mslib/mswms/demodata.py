@@ -1007,8 +1007,7 @@ nwpaccess = {
 
 epsg_to_mpl_basemap_table = {
     # EPSG:4326, the standard cylindrical lat/lon projection.
-    4326: {"projection": "cyl"},
-    77790000: {"projection": "stere", "lat_0": 90., "lon_0": 0.}
+    4326: {"projection": "cyl"}
 }
 #
 # Registration of horizontal layers.                     ###

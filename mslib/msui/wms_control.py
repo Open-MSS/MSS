@@ -41,7 +41,7 @@ import xml.etree.ElementTree as etree
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5, QMessageBox_critical_nonblock
 
 import mslib.owslib.wms
 import mslib.owslib.util
@@ -562,7 +562,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         except Exception as ex:
             logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
-            QtWidgets.QMessageBox.critical(
+            QMessageBox_critical_nonblock(
                 self, self.tr("Web Map Service"),
                 self.tr(u"ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
         return wms
@@ -589,12 +589,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.pbViewCapabilities.setEnabled(False)
             self.cbTransparent.setChecked(False)
 
-
     @QtCore.pyqtSlot(Exception)
     def displayException(self, ex):
         logging.error(u"ERROR: %s %s", type(ex), ex)
-        QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                       self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
+        QMessageBox_critical_nonblock(
+            self, self.tr("Web Map Service"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
 
     @QtCore.pyqtSlot()
     def displayProgressDialog(self):
@@ -1564,6 +1563,7 @@ class VSecWMSControlWidget(WMSControlWidget):
     def displayRetrievedImage(self, img, legend_img, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
         self.view.drawImage(img)
+        self.view.drawLegend(legend_img)
         if style != "":
             style_title = self.get_layer_object(layer).styles[style]["title"]
         else:

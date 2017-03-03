@@ -28,34 +28,21 @@
 
 import imp
 import os
-import tempfile
 
-try:
-    import git
-except ImportError:
-    git = None
 from mslib.mswms.demodata import DataFiles
+import mslib._tests.utils as utils
 
-SHA = ""
-if git is not None:
-    repo = git.Repo(search_parent_directories=True)
-    SHA = repo.head.object.hexsha
 
-BASE_DIR = os.path.join(tempfile.gettempdir(), u'mss{}'.format(SHA))
-DATA_DIR = os.path.join(BASE_DIR, 'testdata')
-SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
-VALID_TIME_CACHE = os.path.join(BASE_DIR, 'vt_cache')
-
-if not os.path.exists(DATA_DIR):
-    examples = DataFiles(data_dir=DATA_DIR,
-                         server_config_dir=BASE_DIR)
+if not os.path.exists(utils.DATA_DIR):
+    examples = DataFiles(data_dir=utils.DATA_DIR,
+                         server_config_dir=utils.BASE_DIR)
     examples.create_datadir()
-    examples.create_server_config()
+    examples.create_server_config(detailed_information=True)
     examples.hybrid_data()
     examples.pressure_data()
     examples.sfc_data()
 
 try:
-    imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
+    imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
 except IOError:
     pass
