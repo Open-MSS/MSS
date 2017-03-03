@@ -41,7 +41,7 @@ if git is not None:
     repo = git.Repo(search_parent_directories=True)
     SHA = repo.head.object.hexsha
 
-BASE_DIR = os.path.join(tempfile.tempdir, u'mss{}'.format(SHA))
+BASE_DIR = os.path.join(tempfile.gettempdir(), u'mss{}'.format(SHA))
 DATA_DIR = os.path.join(BASE_DIR, 'testdata')
 SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
 VALID_TIME_CACHE = os.path.join(BASE_DIR, 'vt_cache')
