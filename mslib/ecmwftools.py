@@ -1,37 +1,32 @@
-"""This module provides functions to process ECMWF forecast data.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.ecmwftools
+    ~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
+    This module provides functions to process ECMWF forecast data.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# related third party imports
 import numpy
-
-"""
-EXCEPTION CLASSES
-"""
 
 
 class ECMWFInvalidNetCDFVariableError(Exception):
@@ -273,8 +268,9 @@ ak_fulllevel_137, bk_fulllevel_137 = \
 
 
 def half_level_pressure(surface_pressure, num_levels=91):
-    """Compute the half-level pressure in [Pa] after equation (2.11) in the
-       IFS documentation << NOTE THE UNITS! [Pa, NOT hPa] >> :
+    """
+    Compute the half-level pressure in [Pa] after equation (2.11) in the
+    IFS documentation << NOTE THE UNITS! [Pa, NOT hPa] >> :
                   p_(k+1/2) = a_(k+1/2) + b_(k+1/2) * p_sfc
 
     This method is valid for the 91(137,62,31) level version of the ECMWF
@@ -317,8 +313,9 @@ def half_level_pressure(surface_pressure, num_levels=91):
 
 
 def full_level_pressure(surface_pressure, num_levels=91):
-    """Compute the full-level pressure (i.e. the pressure at the model
-       levels) in [Pa] from the half-level pressure via
+    """
+    Compute the full-level pressure (i.e. the pressure at the model
+    levels) in [Pa] from the half-level pressure via
                   p_k = 0.5 * (p_(k-1/2) + p_(k+1/2))
 
     See also half_level_pressure().
@@ -343,8 +340,9 @@ def full_level_pressure(surface_pressure, num_levels=91):
 
 
 def full_level_pressure_fast(surface_pressure, levelaxis=-1, num_levels=91):
-    """Compute the full-level pressure, i.e. the pressure at the model
-       levels, in [Pa]. << NOTE THE UNITS! [Pa, NOT hPa] >>
+    """
+    Compute the full-level pressure, i.e. the pressure at the model
+    levels, in [Pa]. << NOTE THE UNITS! [Pa, NOT hPa] >>
 
     Results are the same as from full_level_pressure(), but the pressure is
     computed with precomputed coefficients from compute_full_level_akbk(). Also,
@@ -427,14 +425,11 @@ def full_level_pressure_fast(surface_pressure, levelaxis=-1, num_levels=91):
     return data * 100.
 
 
-"""
-Mask and Scale Functions
-"""
-
-
 def scale_variable(nc_var):
-    """Scale the data of a packed NetCDF variable and return the result as
-       a NumPy array.
+    """
+    Mask and Scale Functions
+    Scale the data of a packed NetCDF variable and return the result as
+    a NumPy array.
 
     Arguments:
     nc_var -- Scientific.IO.NetCDF variable object
@@ -478,15 +473,12 @@ def scale_variable(nc_var):
         return data * nc_var.scale_factor + nc_var.add_offset
 
 
-"""
-Data processing
-"""
-
-
 def omega_to_w(data_omega, data_sfc_pressure, data_temperature, levelaxis=-1,
                return_rho_pressure=False):
-    """Convert pressure vertical velocity to geometric vertical velocity at
-       all model levels.
+    """
+    Data processing
+    Convert pressure vertical velocity to geometric vertical velocity at
+    all model levels.
 
     Arguments:
     data_omega -- 1D to 4D field of pressure vertical velocity [Pa/s]

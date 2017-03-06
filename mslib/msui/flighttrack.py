@@ -1,42 +1,40 @@
-"""Data model representing a flight track. The model is derived from
-QAbstractTableModel, so that it can directly be connected to any Qt view.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.msui.flighttrack
+    ~~~~~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
+    Data model representing a flight track. The model is derived from
+    QAbstractTableModel, so that it can directly be connected to any Qt view.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    For better understanding of the code, compare to the 'ships' example
+    from chapter 14/16 of 'Rapid GUI Programming with Python and Qt: The
+    Definitive Guide to PyQt Programming' (Mark Summerfield).
+
+    The model includes a method for computing the distance between waypoints
+    and for the entire flight track.
+
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the DLR/IPA Mission Support System User Interface (MSUI).
-
-For better understanding of the code, compare to the 'ships' example
-from chapter 14/16 of 'Rapid GUI Programming with Python and Qt: The
-Definitive Guide to PyQt Programming' (Mark Summerfield).
-
-The model includes a method for computing the distance between waypoints
-and for the entire flight track.
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
+
 import datetime
 import codecs
 import logging
@@ -54,8 +52,6 @@ from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
-# CONSTANTS (used in this module)
-#
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = range(5)
@@ -89,11 +85,6 @@ TABLE_FULL = [
 ]
 
 TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 6
-
-
-"""
-CLASS Waypoint
-"""
 
 
 class Waypoint(object):

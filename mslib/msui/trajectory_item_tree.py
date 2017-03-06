@@ -1,34 +1,32 @@
-"""Tree model for trajectory items loaded into the trajectory tool and drawn
-   on any views.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.msui.trajectory_item_tree
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    Tree model for trajectory items loaded into the trajectory tool and drawn
+    on any views.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the Mission Support System User Interface (MSUI).
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
 import datetime
 
 import logging
@@ -47,24 +45,13 @@ except:
     print "*** NAppy is not available. You will not be able to read NASA Ames files. ***"
     hasNAppy = False
 
-# local application imports
 from mslib.msui import lagranto_output_reader
-
-
-#
-# EXCEPTION CLASSES
-#
 
 
 class LagrantoTreeModelUnsupportedOperationError(Exception):
     """Exception class to handle wrong method arguments.
     """
     pass
-
-
-#
-# CLASS AbstractLagrantoDataItem
-#
 
 
 class AbstractLagrantoDataItem:
@@ -206,11 +193,6 @@ class AbstractLagrantoDataItem:
         classes.
         """
         raise NotImplementedError("Abstract AbstractLagrantoDataItem.getMetadataValue called.")
-
-
-#
-# CLASS LagrantoMapItem
-#
 
 
 class LagrantoMapItem(AbstractLagrantoDataItem):
@@ -401,11 +383,6 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         return eval(qstring)
 
 
-#
-# CLASS FlightTrackItem
-#
-
-
 class FlightTrackItem(LagrantoMapItem):
     """Holds flight track data stored in a NASA Ames file.
     """
@@ -544,11 +521,6 @@ class FlightTrackItem(LagrantoMapItem):
         return datetime.datetime(nas_date[0], nas_date[1], nas_date[2])
 
 
-#
-# CLASS LagrantoOutputItem
-#
-
-
 class LagrantoOutputItem(LagrantoMapItem):
     """Holds all data stored in a Lagranto output directory.
     """
@@ -585,11 +557,6 @@ class LagrantoOutputItem(LagrantoMapItem):
                 trname += unicode(
                     [u"{:.2f}".format(r) for r in metadata["startcoordinates"]]).replace('\'', '')
             TrajectoryItem(trname, True, self, trajectory, metadata)
-
-
-#
-# CLASS TrajectoryItem
-#
 
 
 class TrajectoryItem(LagrantoMapItem):
@@ -691,11 +658,6 @@ class TrajectoryItem(LagrantoMapItem):
             return None
 
 
-#
-# CLASS AbstractVariableItem
-#
-
-
 class AbstractVariableItem(AbstractLagrantoDataItem):
     """Tree node for variables contained in a flight track or trajectory file.
        Such variable can be visible on a time series plot, or they can be used
@@ -774,11 +736,6 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
                                                           eproperty, value)
 
 
-#
-# CLASS FlightTrackVariableItem
-#
-
-
 class FlightTrackVariableItem(AbstractVariableItem):
     """
     """
@@ -803,11 +760,6 @@ class FlightTrackVariableItem(AbstractVariableItem):
                                                              eproperty)
 
 
-#
-# CLASS TrajectoryVariableItem
-#
-
-
 class TrajectoryVariableItem(AbstractVariableItem):
     """
     """
@@ -818,11 +770,6 @@ class TrajectoryVariableItem(AbstractVariableItem):
         Implements AbstractVariableItem.getVariableData().
         """
         return self.parentItem.data[self.itemName]
-
-
-#
-# CLASS LagrantoMapItemsTreeModel
-#
 
 
 class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
