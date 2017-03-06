@@ -1,37 +1,35 @@
-"""Horizontal section style super classes for use with the
-   HorizontalSectionDriver class.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.mswms.mpl_hsec
+    ~~~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    Horizontal section style super classes for use with the
+    HorizontalSectionDriver class.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the DLR/IPA Mission Support System Web Map Service
-(MSS-WMS).
-
-*** style definitions should be put in mpl_hsec_styles.py ***
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
+
+# style definitions should be put in mpl_hsec_styles.py
+
 import StringIO
 import logging
 from abc import abstractmethod
@@ -49,11 +47,6 @@ from mslib.mswms import mss_2D_sections
 from mslib.mss_util import get_projection_params
 
 
-"""
-Horizontal Section Styles
-"""
-
-
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     """Abstract horizontal section super class. Use this class as a parent
        to classes implementing different plotting backends. For example,
@@ -66,11 +59,6 @@ class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """Re-implement this function to perform the actual plotting.
         """
         pass
-
-
-"""
-HSEC Matplotlib Super Class
-"""
 
 
 class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):

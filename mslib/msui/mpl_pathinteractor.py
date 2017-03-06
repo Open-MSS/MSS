@@ -1,50 +1,50 @@
-"""Interactive editing of Path objects on a Matplotlib canvas.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.msui.mpl_pathinteractor
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    Interactive editing of Path objects on a Matplotlib canvas.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This module provides the following classes:
+
+    a) WaypointsPath and subclasses PathV, PathH and PathH-GC:
+    Derivatives of matplotlib.Path, provide additional methods to
+    insert and delete vertices and to find best insertion points for new
+    vertices.
+
+    b) PathInteractor and subclasses VPathInteractor and HPathInteractor:
+    Classes that implement a path editor by binding matplotlib mouse events
+    to a WaypointsPath object. Support for moving, inserting and deleting vertices.
+
+    The code in this module is inspired by the matplotlib example 'path_editor.py'
+    (http://matplotlib.sourceforge.net/examples/event_handling/path_editor.html).
+
+    For more information on implementing animated graphics in matplotlib, see
+    http://www.scipy.org/Cookbook/Matplotlib/Animations.
+
+
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the Mission Support System User Interface (MSUI).
-
-This module provides the following classes:
-
-a) WaypointsPath and subclasses PathV, PathH and PathH-GC:
-Derivatives of matplotlib.Path, provide additional methods to
-insert and delete vertices and to find best insertion points for new
-vertices.
-
-b) PathInteractor and subclasses VPathInteractor and HPathInteractor:
-Classes that implement a path editor by binding matplotlib mouse events
-to a WaypointsPath object. Support for moving, inserting and deleting vertices.
-
-The code in this module is inspired by the matplotlib example 'path_editor.py'
-(http://matplotlib.sourceforge.net/examples/event_handling/path_editor.html).
-
-For more information on implementing animated graphics in matplotlib, see
-http://www.scipy.org/Cookbook/Matplotlib/Animations.
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
+
 import logging
 import numpy as np
 
@@ -56,16 +56,7 @@ from mslib.msui.mss_qt import QtCore, QtWidgets
 # local application imports
 from mslib.msui import flighttrack as ft
 
-#
-# CONSTANTS
-#
-
-# Constants to specify the current editing mode.
 MOVE, DELETE, INSERT = range(3)
-
-#
-# HELPER ROUTINES
-#
 
 
 def distance_point_linesegment(p, l1, l2):
@@ -96,11 +87,6 @@ def distance_point_linesegment(p, l1, l2):
     else:
         p_on_line = l1 + r * (l2 - l1)
         return np.linalg.norm(p - p_on_line)
-
-
-#
-# CLASS WaypointsPath
-#
 
 
 class WaypointsPath(mpath.Path):
