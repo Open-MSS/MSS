@@ -295,7 +295,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
-                except (SyntaxError, IndexError), ex:
+                except (SyntaxError, IndexError, OSError, IOError), ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(u"ERROR: {} {}".format(type(ex), ex)))
@@ -330,7 +330,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             filename = filename[0] if USE_PYQT5 else unicode(filename)
 
             if filename:
-                function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                try:
+                    function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                except (OSError, IOError), ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("file io plugin error"),
+                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
 
         setattr(self, full_name, types.MethodType(save_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))
@@ -602,15 +607,16 @@ def setup_logging(args):
     # Console handler (suppress DEBUG by default)
     ch = logging.StreamHandler()
     if args.debug:
+        logger.setLevel(logging.DEBUG)
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(debug_formatter)
     else:
+        logger.setLevel(logging.INFO)
         ch.setLevel(logging.INFO)
         ch.setFormatter(default_formatter)
     logger.addHandler(ch)
-
+    # File handler (always on DEBUG level)
     if not args.nolog:
-        # File handler (always on DEBUG level)
         logfile = os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log")
         if args.logfile is not None:
             logfile = args.logfile
@@ -619,6 +625,7 @@ def setup_logging(args):
         except (OSError, IOError), ex:
             logger.error("Could not open logfile '%s': %s %s", logfile, type(ex), ex)
         else:
+            logger.setLevel(logging.DEBUG)
             fh.setLevel(logging.DEBUG)
             fh.setFormatter(debug_formatter)
             logger.addHandler(fh)
