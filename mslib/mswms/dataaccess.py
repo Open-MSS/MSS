@@ -386,6 +386,19 @@ class CLAMSDataAccess(ECMWFDataAccess):
     _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
 
 
+class CLAMSICEDataAccess(ECMWFDataAccess):
+    """Subclass to ECMWFDataAccess for accessing CLAMS data.
+    """
+    _file_template = "$Y$m$d_$H_clamsice_forecast.{domain_id}.{fc_step:03d}.{vartype}.nc"
+    _file_regexp = "(?P<date>\d{8})_(?P<time>\d{2})_clamsice_forecast\.%s\.(?P<step>\d{3})\.(?P<vartype>.*)\.nc$"
+    _forecast_times = [144]
+    _data_organisation_table = {}
+
+    # Workaround for the numerical issue concering the lon dimension in
+    # NetCDF files produced by netcdf-java 4.3..
+    _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
+
+
 class GWFCDataAccess(ECMWFDataAccess):
     """Subclass to ECMWFDataAccess for accessing gravity wave forecast and related data.
     """
