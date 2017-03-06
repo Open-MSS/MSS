@@ -1,3 +1,29 @@
+# -*- coding: utf-8 -*-
+"""
+
+    mslib.mslib.utils
+    ~~~~~~~~~~~~~~~~~
+
+    This module provides functions for the wms server
+
+    This file is part of mss.
+
+    :copyright: Copyright 2016 Joern Ungermann
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
 import numpy as np
 import matplotlib
 
@@ -5,21 +31,21 @@ N_LEVELS = 16
 
 
 class Targets(object):
-    """This class defines the names, units, and ranges of supported generic physical
-       quantities for vertical and horizontal plots.
-
-       RANGES, UNITS, and THRESHOLDS can be overwritten from outside to determine ranges for plotting in settings.
     """
+    This class defines the names, units, and ranges of supported generic physical
+    quantities for vertical and horizontal plots.
 
-    """Dictionary containing valid value ranges for the different targes. The first level uses CF standard_name as key
-       to determine the target. The second level uses either the level type
-       ("pl", "ml", ...) as key or "total" for the level-overarching valid range. The level-type has a third level
-       using the level altitude as key. The leafs are made of 2-tuples indicating the lowest and the highest valid
-       value.
+    RANGES, UNITS, and THRESHOLDS can be overwritten from outside to determine ranges for plotting in settings.
+
+    Dictionary containing valid value ranges for the different targes. The first level uses CF standard_name as key
+    to determine the target. The second level uses either the level type
+    ("pl", "ml", ...) as key or "total" for the level-overarching valid range. The level-type has a third level
+    using the level altitude as key. The leafs are made of 2-tuples indicating the lowest and the highest valid
+    value.
     """
     RANGES = {}
 
-    """List of supported targets using the CF standard_name as unique identifier."""
+    # List of supported targets using the CF standard_name as unique identifier.
     _TARGETS = [
         "air_temperature",
         "eastward_wind",
@@ -79,9 +105,8 @@ class Targets(object):
         "maximum_relative_humidity_wrt_ice_on_backtrajectory": ("%", 1),
     }
 
-    """The THRESHOLDS are used to determine a single colourmap suitable for all plotting purposes (that is vertical
-       and horizontal on all levels. The given thresholds have been manually designed.
-    """
+    # The THRESHOLDS are used to determine a single colourmap suitable for all plotting purposes (that is vertical
+    # and horizontal on all levels. The given thresholds have been manually designed.
     THRESHOLDS = {
         "ertel_potential_vorticity":
             (-1, 0, 1, 2, 4, 6, 9, 12, 15, 25, 40),

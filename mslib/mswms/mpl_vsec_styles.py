@@ -1,41 +1,34 @@
-"""Matplotlib VERTICAL section styles.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.mswms.mpl_vsec_styles
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
+    Matplotlib VERTICAL section styles.
+    This file corresponds to mpl_hsec_styles.py, but for vertical section styles.
+    Please refer to the introductory docstring in mpl_hsec_styles.py for further
+    information.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the DLR/IPA Mission Support System Web Map Service
-(MSS-WMS).
-
-This file corresponds to mpl_hsec_styles.py, but for vertical section styles.
-Please refer to the introductory docstring in mpl_hsec_styles.py for further
-information.
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
-
-# related third party imports
 import matplotlib
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator
@@ -47,13 +40,12 @@ from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.utils import Targets, get_log_levels, get_style_parameters, get_cbar_label_format
 from mslib import thermolib
 
-"""
-TEMPERATURE
-"""
-
 
 class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
-    """Vertical section of temperature.
+    """
+    Temperature
+    Vertical section of temperature.
+
     """
 
     name = "VS_T01"
@@ -122,7 +114,8 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
 
 
 class VS_GenericStyle(AbstractVerticalSectionStyle):
-    """Vertical section of chemical species/other stuff
+    """
+    Vertical section of chemical species/other stuff
     """
     styles = [
         ("auto", "auto colour scale"),
@@ -315,13 +308,10 @@ make_generic_class(
     "maximum_pressure_on_backtrajectory"),
     "maximum_pressure_on_backtrajectory", vert, [], [])
 
-"""
-CLOUDS
-"""
-
-
 class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
-    """Vertical section of cloud cover.
+    """
+    Clouds
+    Vertical section of cloud cover.
     """
 
     name = "VS_CC01"
@@ -406,7 +396,8 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
 
 
 class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
-    """Vertical section of cloud cover and horizontal wind speed.
+    """
+    Vertical section of cloud cover and horizontal wind speed.
     """
 
     name = "VS_CW01"
@@ -487,13 +478,9 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-"""
-RELATIVE HUMIDITY
-"""
-
-
 class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
-    """Vertical sections of relative humidity.
+    """
+    Vertical sections of relative humidity.
     """
 
     name = "VS_RH01"
@@ -594,7 +581,8 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
 
 
 class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
-    """Vertical sections of specific humidity.
+    """
+    Vertical sections of specific humidity.
     """
 
     name = "VS_Q01"
@@ -706,13 +694,9 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-"""
-VERTICAL VELOCITY
-"""
-
-
 class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
-    """Vertical sections of vertical velocity.
+    """
+    Vertical sections of vertical velocity.
     """
 
     name = "VS_W01"
@@ -811,13 +795,9 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-"""
-HORIZONTAL VELOCITY
-"""
-
-
 class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
-    """Vertical sections of horizontal velocity.
+    """
+    Vertical sections of horizontal velocity.
     """
 
     name = "VS_HV01"
@@ -920,10 +900,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-"""
-POTENTIAL VORTICITY
-"""
-
+# POTENTIAL VORTICITY
 pv_cmap_data = [
     [0.0000, 0.6000, 1.0000],
     [0.0980, 0.6039, 1.0000],
@@ -1054,7 +1031,8 @@ pv_eth_cmap_1 = matplotlib.colors.LinearSegmentedColormap.from_list("pv_eth_cmap
 
 
 class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
-    """Vertical sections of potential vorticity.
+    """
+    Vertical sections of potential vorticity.
     """
 
     name = "VS_PV01"
@@ -1187,14 +1165,11 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-"""
-PROBABILITY OF WCB
-"""
-
-
 class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
-    """Vertical sections of probability of WCB trajectory occurence,
-       derived from Lagranto trajectories (TNF 2012 product).
+    """
+    Probability of WCB
+    Vertical sections of probability of WCB trajectory occurence,
+    derived from Lagranto trajectories (TNF 2012 product).
     """
 
     name = "VS_PWCB01"
@@ -1297,8 +1272,9 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
 
 
 class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
-    """Number of Lagranto trajectories per grid box for WCB, MIX, INSITU
-       trajectories (ML-Cirrus 2014 product).
+    """
+    Number of Lagranto trajectories per grid box for WCB, MIX, INSITU
+    trajectories (ML-Cirrus 2014 product).
     """
 
     name = "VS_LGTRAJ01"
@@ -1365,13 +1341,10 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
 
-"""
-EMAC Eyjafjallajokull
-"""
-
-
 class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
-    """EMAC Eyja tracer vertical cross sections.
+    """
+    EMAC Eyjafjallajokull
+    EMAC Eyja tracer vertical cross sections.
     """
 
     name = "VS_EMAC_Eyja_01"

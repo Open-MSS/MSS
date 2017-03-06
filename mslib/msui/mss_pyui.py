@@ -1,49 +1,34 @@
 #!/usr/bin/env python
-"""Mission Support System Python/Qt4 User Interface
-   ================================================
+# -*- coding: utf-8 -*-
+"""
+    mslib.msui.mss_pyui
+    ~~~~~~~~~~~~~~~~~~~
 
-********************************************************************************
+    Mission Support System Python/Qt4 User Interface
+    Main window of the user interface application. Manages view and tool windows
+    (the user can open multiple windows) and provides functionalty to open, save,
+    and switch between flight tracks.
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    This file is part of mss.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-   When using this software, please acknowledge its use by citing the
-   reference documentation in any publication, presentation, report,
-   etc. you create:
-
-   Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based tool
-   to plan atmospheric research flights, Geosci. Model Dev., 5, 55-71,
-   doi:10.5194/gmd-5-55-2012, 2012.
-
-********************************************************************************
-
-This file is part of the DLR/IPA Mission Support System User Interface (MSUI).
-
-Main window of the user interface application. Manages view and tool windows
-(the user can open multiple windows) and provides functionalty to open, save,
-and switch between flight tracks.
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
 import copy
 import importlib
 import logging
@@ -73,11 +58,6 @@ from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8, U
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
-
-
-#
-# QActiveViewsListWidgetItem
-#
 
 
 class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
@@ -112,11 +92,6 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
             self.parent.takeItem(self.parent.row(self))
         if self.viewsChanged is not None:
             self.viewsChanged.emit()
-
-
-#
-# QFlightTrackListWidgetItem
-#
 
 
 class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
@@ -154,11 +129,6 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
         item.flighttrack_model.setName(unicode(item.text()))
 
 
-#
-# About MSUI DIALOG
-#
-
-
 class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
        defined in the QtDesigner file.
@@ -172,10 +142,6 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText(u"Version: {}".format(__version__))
-
-#
-# MAIN WINDOW
-#
 
 
 class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
@@ -295,7 +261,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
-                except (SyntaxError, IndexError), ex:
+                except (SyntaxError, IndexError, OSError, IOError), ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(u"ERROR: {} {}".format(type(ex), ex)))
@@ -330,7 +296,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             filename = filename[0] if USE_PYQT5 else unicode(filename)
 
             if filename:
-                function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                try:
+                    function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                except (OSError, IOError), ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("file io plugin error"),
+                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
 
         setattr(self, full_name, types.MethodType(save_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))
@@ -602,15 +573,16 @@ def setup_logging(args):
     # Console handler (suppress DEBUG by default)
     ch = logging.StreamHandler()
     if args.debug:
+        logger.setLevel(logging.DEBUG)
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(debug_formatter)
     else:
+        logger.setLevel(logging.INFO)
         ch.setLevel(logging.INFO)
         ch.setFormatter(default_formatter)
     logger.addHandler(ch)
-
+    # File handler (always on DEBUG level)
     if not args.nolog:
-        # File handler (always on DEBUG level)
         logfile = os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log")
         if args.logfile is not None:
             logfile = args.logfile
@@ -619,6 +591,7 @@ def setup_logging(args):
         except (OSError, IOError), ex:
             logger.error("Could not open logfile '%s': %s %s", logfile, type(ex), ex)
         else:
+            logger.setLevel(logging.DEBUG)
             fh.setLevel(logging.DEBUG)
             fh.setFormatter(debug_formatter)
             logger.addHandler(fh)
@@ -649,10 +622,6 @@ def main():
     mainwindow.show()
     sys.exit(application.exec_())
 
-
-#
-# MAIN PROGRAM
-#
 
 if __name__ == "__main__":
     main()

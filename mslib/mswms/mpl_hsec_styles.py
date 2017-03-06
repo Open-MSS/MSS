@@ -1,73 +1,68 @@
-"""Matplotlib horizontal section styles.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.mswms.mpl_hsec_styles
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
-             2016-2017 see AUTHORS
+    Matplotlib horizontal section styles.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    In this module, the visualisation styles of the horizontal map products
+    that can be provided through the WMS are defined. The styles are classes
+    that are derived from MPLBasemapHorizontalSectionStyle (defined in
+    mpl_hsec.py). If you want to define a new product, copy an existing
+    implementation and modify it according to your needs.
+
+    A few notes:
+
+    1) The idea: Each product defines the data fields it requires as NetCDF-CF
+    compliant standard names in the variable 'required_datafields' (a list
+    of tuples (leveltype, variablename), where leveltype can be ml (model levels),
+    pl (pressure levels), or whatever you data source may provide. The data
+    driver invoked by the WSGI module is responsible for loading the data.
+    The superclass MPLBasemapHorizontalSectionStyle sets up the plot and
+    draws the map. What is left to do for the product class is to implement
+    specific post-processing actions on the data, and to do the visualisation
+    on the map.
+
+    2) If your product requires some sort of post-processing (e.g. the derivation
+    of potential temperature or any other parameter, place it in the
+    _prepare_datafields() method.
+
+    3) All visualisation commands go to the _plot_style() method. In this
+    method, you can assume that the data fields you have requested are available
+    as 2D arrays in the 'self.data' field.
+
+    4) All defined products MUST define a name (the WMS layer name) and a title.
+
+    5) If you want to provide different styles according to the WMS standard,
+    define the names of the styles in the 'styles' variable and check in
+    _plot_style() for the 'self.style' variable to know which style to deliver.
+
+    6) Your products should consider the 'self.noframe' variable to place a
+    legend and a title. If this variable is True (default WMS behaviour), plotting
+    anything outside the map axis will lead to erroneous plots. Look at the
+    provided styles to get a feeling of how title and legends can be best placed.
+
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the DLR/IPA Mission Support System Web Map Service
-(MSS-WMS).
-
-In this module, the visualisation styles of the horizontal map products
-that can be provided through the WMS are defined. The styles are classes
-that are derived from MPLBasemapHorizontalSectionStyle (defined in
-mpl_hsec.py). If you want to define a new product, copy an existing
-implementation and modify it according to your needs.
-
-A few notes:
-
-1) The idea: Each product defines the data fields it requires as NetCDF-CF
-compliant standard names in the variable 'required_datafields' (a list
-of tuples (leveltype, variablename), where leveltype can be ml (model levels),
-pl (pressure levels), or whatever you data source may provide. The data
-driver invoked by the WSGI module is responsible for loading the data.
-The superclass MPLBasemapHorizontalSectionStyle sets up the plot and
-draws the map. What is left to do for the product class is to implement
-specific post-processing actions on the data, and to do the visualisation
-on the map.
-
-2) If your product requires some sort of post-processing (e.g. the derivation
-of potential temperature or any other parameter, place it in the
-_prepare_datafields() method.
-
-3) All visualisation commands go to the _plot_style() method. In this
-method, you can assume that the data fields you have requested are available
-as 2D arrays in the 'self.data' field.
-
-4) All defined products MUST define a name (the WMS layer name) and a title.
-
-5) If you want to provide different styles according to the WMS standard,
-define the names of the styles in the 'styles' variable and check in
-_plot_style() for the 'self.style' variable to know which style to deliver.
-
-6) Your products should consider the 'self.noframe' variable to place a
-legend and a title. If this variable is True (default WMS behaviour), plotting
-anything outside the map axis will lead to erroneous plots. Look at the
-provided styles to get a feeling of how title and legends can be best placed.
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
 import logging
 
 # related third party imports
@@ -83,13 +78,10 @@ from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib import thermolib
 
-"""
-Surface Field: CLOUDS
-"""
-
 
 class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
     """
+    Surface Field: CLOUDS
     """
     name = "TCC"
     title = "Cloud Cover (0-1)"
@@ -192,12 +184,6 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             ax.text(bm.llcrnrx, bm.llcrnry, titlestring,
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
-
-"""
-Surface Field: Mean Sea Level Pressure
-"""
-
-
 # from scipy.ndimage import minimum_filter
 # def local_minima(fits, window=15):
 #     """Find the local minima within fits, and return them and their
@@ -223,6 +209,8 @@ Surface Field: Mean Sea Level Pressure
 
 class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
     """
+    Surface Field: Mean Sea Level Pressure
+
     """
     name = "MSLP"
     title = "Mean Sea Level Pressure (hPa)"
@@ -302,13 +290,9 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Surface Field: Solar Elevation Angle
-"""
-
-
 class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
     """
+    Surface Field: Solar Elevation Angle
     """
     name = "SEA"
     title = "Solar Elevation Angle (degrees)"
@@ -375,13 +359,9 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Surface Field: Sea Ice Cover
-"""
-
-
 class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
     """
+    Surface Field: Sea Ice Cover
     """
     name = "CI"
     title = "Sea Ice Cover Fraction (0-1)"
@@ -451,13 +431,9 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Upper Air Field: Temperature
-"""
-
-
 class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     """
+    Upper Air Field: Temperature
     """
     name = "MLTemp01"
     title = "Temperature (Model Level) (degC)"
@@ -701,7 +677,8 @@ make_generic_class(
 
 
 class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
-    """Pressure level version of the temperature style.
+    """
+    Pressure level version of the temperature style.
     """
     name = "PLTemp01"
     title = "Temperature (degC) and Geopotential Height (m)"
@@ -778,13 +755,10 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Upper Air Field: Geopotential and Wind
-"""
-
-
 class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
     """
+    Upper Air Field: Geopotential and Wind
+
     """
     name = "PLGeopWind"
     title = "Geopotential Height (m) and Horizontal Wind (m/s)"
@@ -884,13 +858,10 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Upper Air Field: Relative Humidity
-"""
-
-
 class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
-    """Relative humidity and geopotential on pressure levels.
+    """
+    Upper Air Field: Relative Humidity
+    Relative humidity and geopotential on pressure levels.
     """
     name = "PLRelHum01"
     title = "Relative Humditiy (%) and Geopotential Height (m)"
@@ -971,13 +942,10 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Upper Air Field: Equivalent Potential Temperature
-"""
-
-
 class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
-    """Equivalent potential temperature and geopotential on pressure levels.
+    """
+    Upper Air Field: Equivalent Potential Temperature
+    Equivalent potential temperature and geopotential on pressure levels.
     """
     name = "PLEQPT01"
     title = "Equivalent Potential Temperature (degC) and Geopotential Height (m)"
@@ -1058,13 +1026,10 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Upper Air Field: Vertical Velocity
-"""
-
-
 class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
-    """Vertical velocity and geopotential on pressure levels.
+    """
+    Upper Air Field: Vertical Velocity
+    Vertical velocity and geopotential on pressure levels.
     """
     name = "PLW01"
     title = "Vertical Velocity (cm/s) and Geopotential Height (m)"
@@ -1146,13 +1111,10 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Upper Air Field: Divergence
-"""
-
-
 class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
-    """Divergence and geopotential on pressure levels.
+    """
+    Upper Air Field: Divergence
+    Divergence and geopotential on pressure levels.
     """
     name = "PLDiv01"
     title = "Divergence and Geopotential Height (m)"
@@ -1211,13 +1173,9 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Upper Air Field: EMAC Tracer
-"""
-
-
 class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     """
+    Upper Air Field: EMAC Tracer
     """
     name = "EMAC_Eyja_Tracer"
     title = "EMAC Eyjafjallajokull Tracer (Model Level) (relative)"
@@ -1282,13 +1240,9 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-2D field: EMAC total column density
-"""
-
-
 class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
     """
+    2D field: EMAC total column density
     """
     name = "EMAC_Eyja_TotalColumn"
     title = "EMAC Eyjafjallajokull Tracer Total Column Density (kg/m^2)"
@@ -1362,14 +1316,11 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Dynamical (2PVU) Tropopause Fields
-"""
-
-
 class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
-    """Dynamical tropopause plots (2-PVU level). Three styles are available:
-       Pressure, potential temperature, and geopotential height.
+    """
+    Dynamical (2PVU) Tropopause Fields
+    Dynamical tropopause plots (2-PVU level). Three styles are available:
+    Pressure, potential temperature, and geopotential height.
     """
     name = "PVTropo01"
     title = "Dynamical Tropopause"
@@ -1470,14 +1421,11 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Surface Field: Probability of WCB
-"""
-
-
 class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
-    """Total column probability of WCB trajectory occurence, derived from
-       Lagranto trajectories (TNF 2012 product).
+    """
+    Surface Field: Probability of WCB
+    Total column probability of WCB trajectory occurence, derived from
+    Lagranto trajectories (TNF 2012 product).
     """
     name = ""
     title = "Total Column Probability of WCB (%)"
@@ -1542,14 +1490,11 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Upper level Field: Lagranto WCB/INSITU/MIX trajectories
-"""
-
-
 class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
-    """Number of Lagranto trajectories per grid box for WCB, MIX, INSITU
-       trajectories (ML-Cirrus 2014 product).
+    """
+    Upper level Field: Lagranto WCB/INSITU/MIX trajectories
+    Number of Lagranto trajectories per grid box for WCB, MIX, INSITU
+    trajectories (ML-Cirrus 2014 product).
     """
     name = ""
     title = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
@@ -1623,13 +1568,9 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Surface Field: Boundary Layer Height
-"""
-
-
 class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
     """
+    Surface Field: Boundary Layer Height
     """
     name = "BLH"
     title = "Boundary Layer Height (m)"
@@ -1699,13 +1640,9 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
 
-"""
-Meteosat brightness temperature
-"""
-
-
 class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
     """
+    Meteosat brightness temperature
     """
     name = "MSG_BT108"
     title = "Brightness Temperature 10.8um (K)"
