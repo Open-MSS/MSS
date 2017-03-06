@@ -1,31 +1,31 @@
-"""Collection of utility routines for the Mission Support System.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.mss_util
+    ~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    Collection of utility routines for the Mission Support System.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
 import os
 import pickle
 import logging
@@ -150,9 +150,8 @@ def load_settings_pickle(tag, default_settings=None):
     return default_settings
 
 
-"""
-Tangent point / Hexagon / Solar Angle utilities
-"""
+
+# Tangent point / Hexagon / Solar Angle utilities
 
 JSEC_START = datetime.datetime(2000, 1, 1)
 
@@ -222,11 +221,7 @@ def get_projection_params(epsg):
         proj_params = {"basemap": {"projection": "stere", "lat_0": -lat_0, "lon_0": lon_0}, "bbox": "latlon"}
     return proj_params
 
-
-"""
-Utility functions for interpolating vertical sections.
-"""
-
+# Utility functions for interpolating vertical sections.
 
 def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     """
@@ -327,7 +322,8 @@ def interpolate_vertsec3(data3D, data3D_lats, data3D_lons, lats, lons):
 
 
 def latlon_points(p1, p2, numpoints=100, connection='linear'):
-    """Compute intermediate points between two given points.
+    """
+    Compute intermediate points between two given points.
 
     Arguments:
     p1, p2 -- points given as lat/lon pairs, i.e. p1, p2 = [lat, lon]
@@ -364,7 +360,8 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
 
 
 def path_points(points, numpoints=100, connection='linear'):
-    """Compute intermediate points of a path given by a list of points.
+    """
+    Compute intermediate points of a path given by a list of points.
 
     Arguments:
     points -- list of lat/lon pairs, i.e. [[lat1,lon1], [lat2,lon2], ...]
@@ -434,11 +431,7 @@ def path_points(points, numpoints=100, connection='linear'):
     lats = np.array(lats)
     return lats, lons
 
-
-"""
-Satellite Track Predictions
-"""
-
+# Satellite Track Predictions
 
 def read_nasa_satellite_prediction(fname):
     """Read a text file as downloaded from the NASA satellite prediction tool.

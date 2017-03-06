@@ -1,32 +1,31 @@
-"""Some useful functions for handling NetCDF files with the netCDF4 library.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.netCDF4tools
+    ~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
+    Some useful functions for handling NetCDF files with the netCDF4 library.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
 import glob
 import re
 
@@ -35,20 +34,11 @@ import netCDF4
 import numpy as np
 
 
-"""
-EXCEPTION CLASSES
-"""
-
-
 class NetCDFVariableError(Exception):
     """Exception class to handle error concerning NetCDF variables.
     """
     pass
 
-
-"""
-CONSTANTS
-"""
 
 NO_FIELDS = 1
 
@@ -62,13 +52,11 @@ re_datetime = re.compile("(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})Z")
 # Expression used to identify the time variable by its units string.
 re_timeunits = re.compile("\w+ since \d{4}-\d{1,2}-\d{1,2}.\d{1,2}")
 
-"""
-NETCDF FILE TOOLS
-"""
-
+# NETCDF FILE TOOLS
 
 def identify_variable(ncfile, standard_name, check=False):
-    """Identify the variable in ncfile that is described by specified rules.
+    """
+    Identify the variable in ncfile that is described by specified rules.
 
     Arguments:
     ncfile -- Handle to open netCDF4.Dataset().
@@ -88,8 +76,9 @@ def identify_variable(ncfile, standard_name, check=False):
 
 
 def identify_CF_coordhybrid(ncfile, check=CHECK_NONE):
-    """Identify variables representing longitude, latitude, hybrid model levels
-       in ECMWF files.
+    """
+    Identify variables representing longitude, latitude, hybrid model levels
+    in ECMWF files.
 
 
     Returns:
@@ -112,8 +101,9 @@ def identify_CF_coordhybrid(ncfile, check=CHECK_NONE):
 
 
 def hybrid_orientation(hybrid_var):
-    """Returns -1 if orientation of hybrid_var is down (largest value first),
-       otherwise 1.
+    """
+    Returns -1 if orientation of hybrid_var is down (largest value first),
+    otherwise 1.
     """
     hybrid_levels = hybrid_var[:]
     if hybrid_levels[0] > hybrid_levels[-1]:
@@ -127,7 +117,8 @@ def hybrid_orientation(hybrid_var):
 
 
 def identify_CF_hybrid(ncfile):
-    """Identify the vertical variable from a CF-compliant NetCDF file.
+    """
+    Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: hybrid_name, hybrid_var, hybrid_orientation
     """
@@ -140,7 +131,8 @@ def identify_CF_hybrid(ncfile):
 
 
 def identify_CF_isopressure(ncfile):
-    """Identify the vertical variable from a CF-compliant NetCDF file.
+    """
+    Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: isopressure_name, isopressure_var, isopressure_orientation
     """
@@ -154,7 +146,8 @@ def identify_CF_isopressure(ncfile):
 
 
 def identify_CF_isopotvort(ncfile, isopotvortname_override=None):
-    """Identify the vertical variable from a CF-compliant NetCDF file.
+    """
+    Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: isopotvort_name, isopotvort_var, isopotvort_orientation
     """
@@ -167,7 +160,8 @@ def identify_CF_isopotvort(ncfile, isopotvortname_override=None):
 
 
 def identify_CF_isoaltitude(ncfile):
-    """Identify the vertical variable from a CF-compliant NetCDF file.
+    """
+    Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: isoaltitude_name, isoaltiude_var, isoalttiude_orientation
     """
@@ -179,7 +173,8 @@ def identify_CF_isoaltitude(ncfile):
 
 
 def identify_CF_isopottemp(ncfile):
-    """Identify the vertical variable from a CF-compliant NetCDF file.
+    """
+    Identify the vertical variable from a CF-compliant NetCDF file.
 
     Returns: isoaltitude_name, isoaltiude_var, isoalttiude_orientation
     """
@@ -192,7 +187,8 @@ def identify_CF_isopottemp(ncfile):
 
 
 def identify_CF_time(ncfile):
-    """Identify the time variable from a CF-compliant NetCDF file.
+    """
+    Identify the time variable from a CF-compliant NetCDF file.
 
     From the CF-conventions document: 'A time coordinate is identifiable
     from its units string alone'. This method tries to match identify the
@@ -207,7 +203,8 @@ def identify_CF_time(ncfile):
 
 
 def identify_CF_ensemble(ncfile, ensname_override=None):
-    """Identify the ensemble dimension from a CF-compliant NetCDF file.
+    """
+    Identify the ensemble dimension from a CF-compliant NetCDF file.
 
     Returns: ens_name, ens_var
     """
@@ -221,8 +218,9 @@ def identify_CF_ensemble(ncfile, ensname_override=None):
 
 
 def num2date(times, units, calendar='standard'):
-    """Extension to the netCDF4.num2date() function to correctly handle
-       time strings of format '2010-01-01T00:00:00Z', as used by netcdf-java.
+    """
+    Extension to the netCDF4.num2date() function to correctly handle
+    time strings of format '2010-01-01T00:00:00Z', as used by netcdf-java.
 
     Simply replaces an occurence of '2010-01-01T00:00:00Z' in units by
     '2010-01-01 00:00:00 0:00', which is the CF-compliant format.
@@ -236,7 +234,8 @@ def num2date(times, units, calendar='standard'):
 
 
 def get_latlon_data(ncfile, autoreverse=True):
-    """Get data arrays of latitude and longitude in a NetCDF file.
+    """
+    Get data arrays of latitude and longitude in a NetCDF file.
 
     ncfile needs to be an open netCDF4.Dataset.
 
@@ -305,7 +304,8 @@ def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
               complevel=6, shuffle=True, fletcher32=False, clobber=False,
               lsd_dict=None, nchunk=1000, quiet=False, classic=0,
               exclude_vars=[], exclude_dims=[]):
-    """convert a netcdf 3 file (filename3) to a netcdf 4 file
+    """
+    convert a netcdf 3 file (filename3) to a netcdf 4 file
 
     The default format is 'NETCDF4', but can be set
     to NETCDF4_CLASSIC if classic=1.
@@ -448,11 +448,6 @@ def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
     ncfile4.close()
 
 
-"""
-MFDataset_CommonDims
-"""
-
-
 class MFDatasetCommonDims(netCDF4.MFDataset):
     """MFDatasetCommonDims(self, files, exclude=[], requireDimNum=False)
 
@@ -468,7 +463,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
     def __init__(self, files, exclude=[], skipDimCheck=[],
                  requireDimNum=False):
-        """Open a Dataset spanning multiple files sharing common dimensions but
+        """
+        Open a Dataset spanning multiple files sharing common dimensions but
         containing different record variables, making it look as if it was a
         single file.
 

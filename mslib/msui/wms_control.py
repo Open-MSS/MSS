@@ -1,35 +1,31 @@
-"""Control widget to access Web Map Services.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.msui.wms_control
+    ~~~~~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
-             2016-2017 see AUTHORS
+    Control widget to access Web Map Services.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the Mission Support System User Interface (MSUI).
-
-AUTHORS:
-========
-
-* Marc Rautenhaus
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
 import time
 from datetime import datetime, timedelta
 
@@ -57,11 +53,6 @@ from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.mss_util import convertHPAToKM
-
-
-#
-# CLASS MSSWebMapService
-#
 
 
 class MSSWebMapService(mslib.owslib.wms.WebMapService):
@@ -217,11 +208,6 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         return self.getOperationByName("GetMap").methods[method]["url"]
 
 
-#
-# DIALOG for WMS Authentication
-#
-
-
 class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
     """Dialog to ask the user for username/password should this be
        required by a WMS server.
@@ -242,9 +228,6 @@ class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
                 unicode(self.lePassword.text()))
 
 
-#
-# CLASS WMSControlWidget
-#
 class WMSMapFetcher(QtCore.QObject):
     """
     This class is supposed to run in a background thread to prefetch map images that may be used later on.

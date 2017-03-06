@@ -1,36 +1,33 @@
-"""Top view implementation for the MSUI.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.msui.topview
+    ~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    Top view implementation for the msui.
+    See the reference documentation, Supplement, for details on the
+    implementation.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the Mission Support System User Interface (MSUI).
-
-See the reference documentation, Supplement, for details on the
-implementation.
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
 import functools
 import logging
 from mslib.mss_util import config_loader, get_projection_params, save_settings_pickle, load_settings_pickle
@@ -54,10 +51,6 @@ WMS = 0
 SATELLITE = 1
 REMOTESENSING = 2
 KMLOVERLAY = 3
-
-#
-# DIALOG for map appearance
-#
 
 
 class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -149,11 +142,6 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         if colour.isValid():
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
-
-
-#
-# CLASS FlightPlanTopView
-#
 
 
 class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):

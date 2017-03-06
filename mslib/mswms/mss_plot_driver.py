@@ -1,35 +1,31 @@
-"""Driver classes to create plots from ECMWF NetCDF data.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.mswms.mss_plot_driver
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-             2016-2017 see AUTHORS
+    Driver classes to create plots from ECMWF NetCDF data.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the DLR/IPA Mission Support System Web Map Service
-(MSS-WMS).
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
 from datetime import datetime
 
 import logging
@@ -43,14 +39,11 @@ import numpy as np
 from mslib import netCDF4tools
 from mslib import mss_util
 
-"""
-MSS Plot Driver
-"""
-
 
 class MSSPlotDriver(object):
-    """Abstract super class for implementing driver classes that provide
-       access to the MSS data server.
+    """
+    Abstract super class for implementing driver classes that provide
+    access to the MSS data server.
 
     The idea of a driver class is to encapsulate all methods related to
     loading data fields into memory. A driver can control objects from
@@ -361,11 +354,6 @@ class MSSPlotDriver(object):
         return self.data_access.get_valid_times(variable, vartype, init_time)
 
 
-"""
-Vertical Section Driver
-"""
-
-
 class VerticalSectionDriver(MSSPlotDriver):
     """The vertical section driver is responsible for loading the data that
        is to be plotted and for calling the plotting routines (that have
@@ -576,11 +564,6 @@ class VerticalSectionDriver(MSSPlotDriver):
         return image
 
 
-"""
-Horizontal Section Driver
-"""
-
-
 class HorizontalSectionDriver(MSSPlotDriver):
     """The horizontal section driver is responsible for loading the data that
        is to be plotted and for calling the plotting routines (that have
@@ -715,11 +698,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
         return image
 
 
-"""
-Module TESTING
-"""
-
-
+# ToDo move to _tests
 def test_vsec_clouds_path():
     """TEST: Create a vertical section of the CLOUDS style.
     """

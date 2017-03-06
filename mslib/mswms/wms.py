@@ -1,66 +1,46 @@
-"""WSGI module for MSS WMS server that provides access to ECMWF forecast data.
+# -*- coding: utf-8 -*-
+"""
 
-********************************************************************************
+    mslib.mswms.wms
+    ~~~~~~~~~~~~~~~
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-             2016-2017 see AUTHORS
+    WSGI module for MSS WMS server that provides access to ECMWF forecast data.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    The module implements a Web Map Service 1.1.1 interface to provide forecast data
+    from numerical weather predictions to the Mission Support User Interface.
+    Supported operations are GetCapabilities and GetMap for (WMS 1.1.1 compliant)
+    maps and (non-compliant) vertical sections.
+
+    1) Configure the WMS server by modifying the settings in mss_wms_settings.py
+    (address, products that shall be offered, ..).
+
+    2) If you want to define new visualisation styles, the files to put them
+    are mpl_hsec_styles.py and mpl_vsec_styles for maps and vertical sections,
+    respectively.
+
+    For more information on WMS, see http://www.opengeospatial.org/standards/wms
+
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Omar Qunsul (oq)
+    :copyright: Copyright 2016-2017 Reimar Bauer
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-   When using this software, please acknowledge its use by citing the
-   reference documentation in any publication, presentation, report,
-   etc. you create:
-
-   Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based tool
-   to plan atmospheric research flights, Geosci. Model Dev., 5, 55-71,
-   doi:10.5194/gmd-5-55-2012, 2012.
-
-********************************************************************************
-
-The module implements a Web Map Service 1.1.1 interface to provide forecast data
-from numerical weather predictions to the Mission Support User Interface.
-Supported operations are GetCapabilities and GetMap for (WMS 1.1.1 compliant)
-maps and (non-compliant) vertical sections.
-
-For more information on WMS, see
-       http://www.opengeospatial.org/standards/wms
-
-
-For an introduction on WSGI and Paste, see
-       http://pythonpaste.org/do-it-yourself-framework.html
-
-A good starting point to understand the program is to look at the main
-program at the end of the file.
-
-USAGE:
-======
-
-1) Configure the WMS server by modifying the settings in mss_wms_settings.py
-(address, products that shall be offered, ..).
-
-2) If you want to define new visualisation styles, the files to put them
-are mpl_hsec_styles.py and mpl_vsec_styles for maps and vertical sections,
-respectively.
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-* Omar Qunsul (oq)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
+
 import os
 import logging
 from datetime import datetime
@@ -264,8 +244,9 @@ class WMSServer(object):
         return return_data
 
     def produce_plot(self, environ, mode):
-        """Handler for a GetMap and GetVSec requests. Produces a plot with
-           the parameters specified in the URL.
+        """
+        Handler for a GetMap and GetVSec requests. Produces a plot with
+        the parameters specified in the URL.
 
         # TODO: Handle multiple layers. (mr, 2010-06-09)
         # TODO: Cache the produced images: Check whether an image with the given
