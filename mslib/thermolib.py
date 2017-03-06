@@ -1,43 +1,38 @@
-"""Collection of thermodynamic functions.
 
-********************************************************************************
+# -*- coding: utf-8 -*-
+"""
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-   Copyright 2011-2014 Marc Rautenhaus
+    mslib.thermolib
+    ~~~~~~~~~~~~~~~~
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Collection of thermodynamic functions.
+
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-The function sat_vapour_pressure() has been ported from the IDL function
-'VaporPressure' by Holger Voemel, available at
-              http://cires.colorado.edu/~voemel/vp.html.
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# related third party imports
+# The function sat_vapour_pressure() has been ported from the IDL function
+# 'VaporPressure' by Holger Voemel, available at http://cires.colorado.edu/~voemel/vp.html.
+
 import numpy
 import pylab
 import scipy.integrate
-
-"""
-EXCEPTION CLASSES
-"""
 
 
 class VapourPressureError(Exception):
@@ -47,15 +42,11 @@ class VapourPressureError(Exception):
     pass
 
 
-"""
-Vapour Pressure
-"""
-
-
 def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                         force_phase='None'):
-    """Compute the saturation vapour pressure over liquid water and over ice
-       with a variety of formulations.
+    """
+    Compute the saturation vapour pressure over liquid water and over ice
+    with a variety of formulations.
 
     This function is a direct port from the IDL function 'VaporPressure' by
     Holger Voemel, available at http://cires.colorado.edu/~voemel/vp.html.
@@ -397,7 +388,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
 
 def test_vapour_pressure():
-    """Make test plots of the saturation vapour pressure curves.
+    """
+    Make test plots of the saturation vapour pressure curves.
     """
 
     # Specify a temperature range in [K].
@@ -505,12 +497,6 @@ def test_vapour_pressure():
     pylab.xlabel("Temperature [K]")
     pylab.ylabel("Deviation from Goff Gratch [%]")
 
-
-"""
-Relative Humidity
-"""
-
-
 def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
             force_phase='None'):
     """Compute relative humidity in [%] from pressure, temperature, and
@@ -552,15 +538,10 @@ def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
     # Return the relative humidity, computed from w and w_sat.
     return 100. * w / w_sat
 
-
-"""
-Virtual Temperature
-"""
-
-
 def virt_temp(t, q, method='exact'):
-    """Compute virtual temperature in [K] from temperature and
-       specific humidity.
+    """
+    Compute virtual temperature in [K] from temperature and
+    specific humidity.
 
     Arguments:
     t -- temperature in [K]
@@ -596,11 +577,6 @@ def virt_temp(t, q, method='exact'):
         return t * (1. + 0.61 * w)
     else:
         raise TypeError('virtual temperature method not understood')
-
-
-"""
-Geopotential
-"""
 
 
 def geop_difference(p, t, method='trapz', axis=-1):
@@ -654,8 +630,9 @@ def geop_difference(p, t, method='trapz', axis=-1):
 
 
 def geop_thickness(p, t, q=None, cumulative=False, axis=-1):
-    """Compute the geopotential thickness in [m] between the pressure levels
-       given by the first and last element in p (= pressure).
+    """
+    Compute the geopotential thickness in [m] between the pressure levels
+    given by the first and last element in p (= pressure).
 
     Implements the hypsometric equation (1.18) from Holton, 3rd edition (or
     alternatively (3.24) in Wallace and Hobbs, 2nd ed.).
@@ -699,7 +676,7 @@ def geop_thickness(p, t, q=None, cumulative=False, axis=-1):
     # where Z denotes the geopotential height, Z = phi/g0.
     return -1. / 9.80665 * geop_difference(p, tv, method='cumtrapz' if cumulative else 'trapz', axis=axis)
 
-
+# ToDo move to _tests
 def test_geop_thickness():
     """Test geop_thickness() with some values from the 1976 US standard
        atmosphere.
@@ -760,15 +737,10 @@ def test_geop_thickness():
     geop = geop_thickness(p, t, cumulative=True)
     print geop
 
-
-"""
-Specific Humidity
-"""
-
-
 def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
-    """Computes specific humidity in [kg/kg] from pressure and dew point
-       temperature.
+    """
+    Computes specific humidity in [kg/kg] from pressure and dew point
+    temperature.
 
     Arguments:
     p -- pressure in [Pa]
@@ -797,14 +769,9 @@ def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
 
     return 0.622 * e_sat / (p + e_sat * (0.622 - 1.))
 
-
-"""
-Dew Point
-"""
-
-
 def dewpoint_approx(p, q, method='Bolton'):
-    """Computes dew point in [K] from pressure and specific humidity.
+    """
+    Computes dew point in [K] from pressure and specific humidity.
 
     Arguments:
     p -- pressure in [Pa]
@@ -844,13 +811,9 @@ def dewpoint_approx(p, q, method='Bolton'):
     return td
 
 
-"""
-Potential Temperature
-"""
-
-
 def pot_temp(p, t):
-    """Computes potential temperature in [K] from pressure and temperature.
+    """
+    Computes potential temperature in [K] from pressure and temperature.
 
     Arguments:
     p -- pressure in [Pa]
@@ -870,8 +833,9 @@ def pot_temp(p, t):
 
 def eqpt_approx(p, t, q, liquid='HylandWexler', ice='GoffGratch',
                 force_phase='None'):
-    """Computes equivalent potential temperature in [K] from pressure,
-       temperature and specific humidity.
+    """
+    Computes equivalent potential temperature in [K] from pressure,
+    temperature and specific humidity.
 
     Arguments:
     p -- pressure in [Pa]
@@ -910,7 +874,8 @@ def eqpt_approx(p, t, q, liquid='HylandWexler', ice='GoffGratch',
 
 
 def omega_to_w(omega, p, t):
-    """Convert pressure vertical velocity to geometric vertical velocity.
+    """
+    Convert pressure vertical velocity to geometric vertical velocity.
 
     Arguments:
     omega -- vertical velocity in pressure coordinates, in [Pa/s]
@@ -932,11 +897,6 @@ def omega_to_w(omega, p, t):
     """
     rho = p / (287.058 * t)
     return omega / (-9.80665 * rho)
-
-
-"""
-Flight Level / Pressure Conversion
-"""
 
 
 def flightlevel2pressure(flightlevel):
@@ -1061,9 +1021,10 @@ def pressure2flightlevel(p):
 
 
 def flightlevel2pressure_a(flightlevel):
-    """Conversion of flight level (given in hft) to pressure (Pa) with
-       hydrostatic equation, according to the profile of the ICAO
-       standard atmosphere.
+    """
+    Conversion of flight level (given in hft) to pressure (Pa) with
+    hydrostatic equation, according to the profile of the ICAO
+    standard atmosphere.
 
     Array version, the argument "p" must be a numpy array.
 
@@ -1133,9 +1094,10 @@ def flightlevel2pressure_a(flightlevel):
 
 
 def pressure2flightlevel_a(p, fake_above_32km=False):
-    """Conversion of pressure (Pa) to flight level (hft) with
-       hydrostatic equation, according to the profile of the ICAO
-       standard atmosphere.
+    """
+    Conversion of pressure (Pa) to flight level (hft) with
+    hydrostatic equation, according to the profile of the ICAO
+    standard atmosphere.
 
     Array version, the argument "p" must be a numpy array.
 
@@ -1206,7 +1168,8 @@ def pressure2flightlevel_a(p, fake_above_32km=False):
 
 
 def isa_temperature(flightlevel):
-    """International standard atmosphere temperature at the given flight level.
+    """
+    International standard atmosphere temperature at the given flight level.
 
     Reference:
         For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
@@ -1244,11 +1207,6 @@ def isa_temperature(flightlevel):
     else:
         raise ValueError("ISA temperature from flight level not "
                          "implemented for z > 32km")
-
-
-"""
-Schmidt/Appleman
-"""
 
 
 def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):

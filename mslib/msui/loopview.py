@@ -1,55 +1,49 @@
-"""Module to display batch-generated images.
+# -*- coding: utf-8 -*-
+"""
+    mslib.msui.loopview
+    ~~~~~~~~~~~~~~~~~~~
 
-********************************************************************************
+    Module to display batch-generated images.
 
-   Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    This module provides functionality to view batch generated images that are also
+    available from the Mission Support Website. The difference to the website is
+    that in this module the user can load up to four product categories and explore
+    the images time-synchronized. Also, all available vertical levels of the
+    products are loaded, so that the exploration of the vertical structure of the
+    atmosphere becomes easier.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+    Use the 'Layout' menu to select the number of displayed products. Depending on
+    the chosen layout, the window will be split into up to four areas (using the
+    QSplitter class), each containing an instance of the ImageLoopWidget class
+    contained in loopviewer_widget.py.
+
+    Use a double click on an ImageLoopWidget to load imagery into the widget. The
+    dialog that opens will offer the configuration defined in mss_settings.json.
+    Once the images have been loaded, use the mouse wheel on one of the images
+    to navigate forward and backward in time. Use the mouse wheel while the
+    <Shift> key is pressed to navigate up- and downward in vertical level.
+
+    This file is part of mss.
+
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
        http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-********************************************************************************
-
-This file is part of the Mission Support System User Interface (MSUI).
-
-DESCRIPTION:
-============
-
-This module provides functionality to view batch generated images that are also
-available from the Mission Support Website. The difference to the website is
-that in this module the user can load up to four product categories and explore
-the images time-synchronized. Also, all available vertical levels of the
-products are loaded, so that the exploration of the vertical structure of the
-atmosphere becomes easier.
-
-Use the 'Layout' menu to select the number of displayed products. Depending on
-the chosen layout, the window will be split into up to four areas (using the
-QSplitter class), each containing an instance of the ImageLoopWidget class
-contained in loopviewer_widget.py.
-
-Use a double click on an ImageLoopWidget to load imagery into the widget. The
-dialog that opens will offer the configuration defined in mss_settings.json.
-Once the images have been loaded, use the mouse wheel on one of the images
-to navigate forward and backward in time. Use the mouse wheel while the
-<Shift> key is pressed to navigate up- and downward in vertical level.
-
-
-AUTHORS:
-========
-
-* Marc Rautenhaus (mr)
-
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 
-# standard library imports
+
 import functools
 import logging
 import sys
@@ -64,10 +58,6 @@ from mslib.msui import loopviewer_widget as imw
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.mss_util import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-
-#
-# CLASS MSSLoopWindow
-#
 
 
 class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
@@ -238,10 +228,6 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
         # Notify the other widgets of the change.
         self.signalChangeValidTime.emit(forward, time)
 
-
-################################################################################
-################################################################################
-# Module test.
 
 if __name__ == "__main__":
     # Log everything, and send it to stderr.
