@@ -454,6 +454,11 @@ class MplSideViewCanvas(MplCanvas):
                 num_labels, axis[3] / 100)
         return bbox
 
+    def drawLegend(self, img):
+        if img is not None:
+            logging.error("Legends not supported in SideView mode!")
+            raise NotImplementedError
+
     def drawImage(self, img):
         """Draw the image img on the current plot.
 
