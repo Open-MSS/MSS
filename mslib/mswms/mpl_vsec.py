@@ -73,7 +73,6 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
         tick_index_step = max(1, len(self.lat_inds) / int(self.numlabels))
-        print self.lat_inds, self.numlabels
         ax.set_xticks(self.lat_inds[::tick_index_step])
         ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
                             for d in zip(self.lats[::tick_index_step],
@@ -100,7 +99,6 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # the distance is reduced to every 10hPa above 100hPa.
         label_distance = 10000
         label_bot = self.p_bot - (self.p_bot % label_distance)
-        print self.p_bot, self.p_top, label_bot, label_bot, self.p_top - 1, -label_distance
         major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
 
         # .. check step reduction to 10 hPa ..
