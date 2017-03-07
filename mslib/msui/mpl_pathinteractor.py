@@ -136,7 +136,6 @@ class WaypointsPath(mpath.Path):
             l1 = self.vertices[i]
             l2 = self.vertices[i + 1]
             distance = distance_point_linesegment(point, l1, l2)
-            # print i, l1, l2, distance
             if distance < eps and distance < min_distance:
                 min_index = i + 1
                 min_distance = distance
@@ -144,11 +143,9 @@ class WaypointsPath(mpath.Path):
         # Compute the distance between the given point and the end point of
         # the path. Is it smaller than the currently smallest distance?
         distance = np.linalg.norm(point - self.vertices[-1])
-        # print "last",distance
         if distance < min_distance:
             min_index = len(self.vertices)
 
-        # print "return", min_index, "\n"
         return min_index
 
     def transform_waypoint(self, wps_list, index):
@@ -693,7 +690,6 @@ class VPathInteractor(PathInteractor):
             # in the side view) to the data model.
             vertices = self.pathpatch.get_path().vertices
             pressure = vertices[self._ind][1]
-            # print "moved", self._ind, pressure
             # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
@@ -738,7 +734,6 @@ class VPathInteractor(PathInteractor):
         if index1.column() == ft.FLIGHTLEVEL or index1.column() == ft.PRESSURE:
             i = index1.row()
             pres = self.waypoints_model.waypointData(i).pressure
-            # print "SideView: pressure of point %i has been changed to %f." % (i, pres)
             vertices = self.pathpatch.get_path().vertices
             vertices[i] = vertices[i][0], pres
             self.redraw_path(vertices)
@@ -849,7 +844,6 @@ class HPathInteractor(PathInteractor):
             vertices = self.pathpatch.get_path().wp_vertices
             lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
                                 inverse=True)
-            # print "moved", self._ind, lon, lat
             # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
             # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
             #      twice?

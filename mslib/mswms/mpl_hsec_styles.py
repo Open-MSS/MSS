@@ -184,28 +184,6 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             ax.text(bm.llcrnrx, bm.llcrnry, titlestring,
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
 
-# from scipy.ndimage import minimum_filter
-# def local_minima(fits, window=15):
-#     """Find the local minima within fits, and return them and their
-#        indices.
-
-#     Returns a list of indices at which the minima were found, and a
-#     list of the minima, sorted in order of increasing minimum. The
-#     keyword argument window determines how close two local minima
-#     are allowed to be to one another.  If two local minima are found
-#     closer together than that, then the lowest of them is taken as
-#     the real minimum.  window=1 will return all local minima.
-
-#     Taken from
-#     http://mail.scipy.org/pipermail/scipy-user/2008-August/017886.html
-#     """
-#     fits = np.asarray(fits)
-#     minfits = minimum_filter(fits, size=window, mode="wrap")
-#     minima_mask = fits == minfits
-#     good_indices = np.arange(len(fits))[minima_mask]
-#     good_fits = fits[minima_mask]
-#     order = good_fits.argsort()
-#     return good_indices[order], good_fits[order]
 
 class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
     """
@@ -598,7 +576,6 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix
 for vert in ["pl", "ml", "tl"]:
     for ent in Targets.get_targets():
         make_generic_class("HS_GenericStyle_{}_{}".format(vert.upper(), ent), ent, vert)
-
     make_generic_class(
         "HS_GenericStyle_{}_{}".format(vert.upper(), "equivalent_latitude"),
         "equivalent_latitude", vert, [], [],
@@ -619,7 +596,6 @@ for vert in ["pl", "ml", "tl"]:
         [("sfc", "tropopause_altitude")],
         [("tropopause_altitude", [8, 10, 12, 14, 16], "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("gravity_wave_temperature_perturbation", "")])
-
     make_generic_class(
         "HS_GenericStyle_{}_{}".format(vert.upper(), "cloud_ice_mixing_ratio"),
         "cloud_ice_mixing_ratio", vert,
@@ -629,10 +605,8 @@ for vert in ["pl", "ml", "tl"]:
           ["dimgrey", "dimgrey", "#443322", "#045FB4"],
           ["dashed", "solid", "solid", "solid"], 2, True)],
         fix_styles=[("log_ice_cloud", "iwc")])
-
     make_generic_class(
-        "HS_GenericStyle_{}_{}".format(vert.upper(),
-        "number_concentration_of_ice_crystals_in_air"),
+        "HS_GenericStyle_{}_{}".format(vert.upper(), "number_concentration_of_ice_crystals_in_air"),
         "number_concentration_of_ice_crystals_in_air", vert,
         [("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
         [("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -640,10 +614,8 @@ for vert in ["pl", "ml", "tl"]:
           ["dimgrey", "dimgrey", "#443322", "#045FB4"],
           ["dashed", "solid", "solid", "solid"], 2, True)],
         fix_styles=[("log_ice_cloud", "nice")])
-
     make_generic_class(
-        "HS_GenericStyle_{}_{}".format(vert.upper(),
-        "mean_mass_radius_of_cloud_ice_crystals"),
+        "HS_GenericStyle_{}_{}".format(vert.upper(), "mean_mass_radius_of_cloud_ice_crystals"),
         "mean_mass_radius_of_cloud_ice_crystals", vert,
         [("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
         [("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -651,10 +623,8 @@ for vert in ["pl", "ml", "tl"]:
           ["dimgrey", "dimgrey", "#443322", "#045FB4"],
           ["dashed", "solid", "solid", "solid"], 2, True)],
         fix_styles=[("ice_cloud", "radius")])
-
     make_generic_class(
-        "HS_GenericStyle_{}_{}".format(vert.upper(),
-        "maximum_pressure_on_backtrajectory"),
+        "HS_GenericStyle_{}_{}".format(vert.upper(), "maximum_pressure_on_backtrajectory"),
         "maximum_pressure_on_backtrajectory", vert, [], [])
 
 make_generic_class(
@@ -666,12 +636,12 @@ make_generic_class(
     "HS_GenericStyle_SFC_max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air",
     "max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air", "sfc", [("sfc", "tropopause_altitude")],
     [("tropopause_altitude", np.arange(6, 16.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
-    fix_styles = [("square_of_brunt_vaisala_frequency_in_air", "")])
+    fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 make_generic_class(
     "HS_GenericStyle_SFC_mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air",
     "mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air", "sfc", [("sfc", "tropopause_altitude")],
     [("tropopause_altitude", np.arange(6, 16.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
-    fix_styles = [("square_of_brunt_vaisala_frequency_in_air", "")])
+    fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 
 
 class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):

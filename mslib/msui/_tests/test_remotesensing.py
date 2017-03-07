@@ -26,8 +26,6 @@
 """
 
 
-import pytest
-import datetime
 from mslib.msui.remotesensing_dockwidget import compute_solar_angle, compute_view_angles
 
 

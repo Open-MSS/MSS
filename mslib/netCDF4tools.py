@@ -31,7 +31,6 @@ import re
 
 # related third party imports
 import netCDF4
-import numpy as np
 
 
 class NetCDFVariableError(Exception):
@@ -52,7 +51,9 @@ re_datetime = re.compile("(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})Z")
 # Expression used to identify the time variable by its units string.
 re_timeunits = re.compile("\w+ since \d{4}-\d{1,2}-\d{1,2}.\d{1,2}")
 
+
 # NETCDF FILE TOOLS
+
 
 def identify_variable(ncfile, standard_name, check=False):
     """
@@ -271,181 +272,6 @@ def get_latlon_data(ncfile, autoreverse=True):
     lon_data = ((lon_var[:] + 180) % 360) - 180
 
     return lat_data, lon_data, lat_order
-
-
-"""
-COPY NETCDF FILES
-
-# THE FOLLOWING CODE INCLUDES SUBSTANTIAL PARTS TAKEN FROM THE NETCDF4-PYTHON
-# LIBRARY (<http://netcdf4-python.googlecode.com/>).
-#
-# NETCDF4-PYTHON COPYRIGHT INFORMATION:
-#
-# Contact:  Jeffrey Whitaker <jeffrey.s.whitaker@noaa.gov>
-# Copyright: 2008 by Jeffrey Whitaker.
-#
-# License: Permission to use, copy, modify, and distribute this software
-# and its documentation for any purpose and without fee is hereby granted,
-# provided that the above copyright notice appear in all copies and that
-# both the copyright notice and this permission notice appear in supporting
-# documentation. THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
-# SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
-# IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT OR
-# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
-# DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-# TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
-# OF THIS SOFTWARE.
-"""
-
-
-# The following method is taken from the "nc3tonc4" script from the
-# netcdf4-python package. Small adjustments have been made.
-def nc_to_nc4(filename3, filename4, unpackshort=True, zlib=True,
-              complevel=6, shuffle=True, fletcher32=False, clobber=False,
-              lsd_dict=None, nchunk=1000, quiet=False, classic=0,
-              exclude_vars=[], exclude_dims=[]):
-    """
-    convert a netcdf 3 file (filename3) to a netcdf 4 file
-
-    The default format is 'NETCDF4', but can be set
-    to NETCDF4_CLASSIC if classic=1.
-    If unpackshort=True, variables stored as short
-    integers with a scale and offset are unpacked to floats.
-    in the netcdf 4 file.  If the lsd_dict is not None, variable names
-    corresponding to the keys of the dict will be truncated to the decimal place
-    specified by the values of the dict.  This improves compression by
-    making it 'lossy'..
-    The zlib, complevel and shuffle keywords control
-    how the compression is done.
-
-    exclude_vars can be a list of variables that should NOT be copied.
-    """
-
-    ncfile3 = netCDF4.Dataset(filename3, 'r')
-    if classic:
-        ncfile4 = netCDF4.Dataset(filename4, 'w', clobber=clobber, format='NETCDF4_CLASSIC')
-    else:
-        ncfile4 = netCDF4.Dataset(filename4, 'w', clobber=clobber, format='NETCDF4')
-    mval = 1.e30  # missing value if unpackshort=True
-    # create dimensions. Check for unlimited dim.
-    unlimdimname = False
-    unlimdim = None
-    # create global attributes.
-    if not quiet:
-        print 'copying global attributes ..'
-    for attname in ncfile3.ncattrs():
-        if attname == 'file_format':
-            # Attribute 'file_format' fails as it is a reserved keyword.
-            # Workaround 2010/01/26 Marc Rautenhaus
-            setattr(ncfile4, 'orig_file_format', getattr(ncfile3, attname))
-        else:
-            setattr(ncfile4, attname, getattr(ncfile3, attname))
-    if not quiet:
-        print 'copying dimensions ..'
-    for dimname, dim in ncfile3.dimensions.iteritems():
-        if dimname in exclude_dims:
-            if not quiet:
-                print 'skipping dimension', dimname
-            continue
-        if dim.isunlimited():
-            unlimdimname = dimname
-            unlimdim = dim
-            ncfile4.createDimension(dimname, None)
-        else:
-            ncfile4.createDimension(dimname, len(dim))
-    # create variables.
-    for varname, ncvar in ncfile3.variables.iteritems():
-        # Check whether variable should be skipped. (mr, 2010/01/26)
-        if exclude_vars == NO_FIELDS:
-            # Skip all variables that have two or more dimensions.
-            if len(ncvar.dimensions) > 1:
-                if not quiet:
-                    print 'skipping variable', varname
-                continue
-        if (isinstance(exclude_vars, list) and varname in exclude_vars) \
-                or varname in exclude_dims:
-            if not quiet:
-                print 'skipping variable', varname
-            continue
-        if not quiet:
-            print 'copying variable', varname
-        # quantize data?
-        if lsd_dict is not None and varname in lsd_dict:
-            lsd = lsd_dict[varname]
-            if not quiet:
-                print 'truncating to least_significant_digit =', lsd
-        else:
-            lsd = None  # no quantization.
-        # unpack short integers to floats?
-        if unpackshort and hasattr(ncvar, 'scale_factor') and hasattr(ncvar, 'add_offset'):
-            dounpackshort = True
-            datatype = 'f4'
-        else:
-            dounpackshort = False
-            datatype = ncvar.dtype
-        # is there an unlimited dimension?
-        if unlimdimname and unlimdimname in ncvar.dimensions:
-            hasunlimdim = True
-        else:
-            hasunlimdim = False
-        if dounpackshort:
-            if not quiet:
-                print 'unpacking short integers to floats ...'
-        var = ncfile4.createVariable(varname, datatype, ncvar.dimensions,
-                                     least_significant_digit=lsd,
-                                     zlib=zlib, complevel=complevel,
-                                     shuffle=shuffle, fletcher32=fletcher32)
-        # fill variable attributes.
-        for attname in ncvar.ncattrs():
-            if dounpackshort and attname in ['add_offset', 'scale_factor']:
-                continue
-            if dounpackshort and attname == 'missing_value':
-                setattr(var, attname, mval)
-            else:
-                setattr(var, attname, getattr(ncvar, attname))
-        # fill variables with data.
-        if hasunlimdim:  # has an unlim dim, loop over unlim dim index.
-            # range to copy
-            if nchunk:
-                start = 0
-                stop = len(unlimdim)
-                step = nchunk
-                if step < 1:
-                    step = 1
-                for n in range(start, stop, step):
-                    nmax = n + nchunk
-                    if nmax > len(unlimdim):
-                        nmax = len(unlimdim)
-                    idata = ncvar[n:nmax]
-                    if dounpackshort:
-                        tmpdata = (ncvar.scale_factor * idata.astype('f') + ncvar.add_offset).astype('f')
-                        if hasattr(ncvar, 'missing_value'):
-                            tmpdata = np.where(idata == ncvar.missing_value, mval, tmpdata)
-                    else:
-                        tmpdata = idata
-                    var[n:nmax] = tmpdata
-            else:
-                idata = ncvar[:]
-                if dounpackshort:
-                    tmpdata = (ncvar.scale_factor * idata.astype('f') + ncvar.add_offset).astype('f')
-                    if hasattr(ncvar, 'missing_value'):
-                        tmpdata = np.where(idata == ncvar.missing_value, mval, tmpdata)
-                else:
-                    tmpdata = idata
-                var[0:len(unlimdim)] = tmpdata
-        else:  # no unlim dim or 1-d variable, just copy all data at once.
-            idata = ncvar[:]
-            if dounpackshort:
-                tmpdata = (ncvar.scale_factor * idata.astype('f') + ncvar.add_offset).astype('f')
-                if hasattr(ncvar, 'missing_value'):
-                    tmpdata = np.where(idata == ncvar.missing_value, mval, tmpdata)
-            else:
-                tmpdata = idata
-            var[:] = tmpdata
-        ncfile4.sync()  # flush data to disk
-    # close files.
-    ncfile3.close()
-    ncfile4.close()
 
 
 class MFDatasetCommonDims(netCDF4.MFDataset):

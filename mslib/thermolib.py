@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 
@@ -31,7 +30,6 @@
 # 'VaporPressure' by Holger Voemel, available at http://cires.colorado.edu/~voemel/vp.html.
 
 import numpy
-import pylab
 import scipy.integrate
 
 
@@ -294,7 +292,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
         if ice == 'WMO2000':
             ice = 'WMO_Goff'
 
-        elif ice == 'IAWPS':
+        if ice == 'IAWPS':
             raise VapourPressureError("IAPWS does not provide a vapour "
                                       "pressure formulation over ice")
 
@@ -387,116 +385,6 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
     return e_sat * 100. if not input_scalar else e_sat[0] * 100.
 
 
-def test_vapour_pressure():
-    """
-    Make test plots of the saturation vapour pressure curves.
-    """
-
-    # Specify a temperature range in [K].
-    t = numpy.arange(173, 313, 0.1)
-
-    # Compute saturation pressure over liquid water.
-    e_sat_liq_HylandWexler = sat_vapour_pressure(t, liquid='HylandWexler', force_phase='liquid')
-    e_sat_liq_GoffGratch = sat_vapour_pressure(t, liquid='GoffGratch', force_phase='liquid')
-    e_sat_liq_Wexler = sat_vapour_pressure(t, liquid='Wexler', force_phase='liquid')
-    e_sat_liq_MagnusTeten = sat_vapour_pressure(t, liquid='MagnusTeten', force_phase='liquid')
-    e_sat_liq_Buck_original = sat_vapour_pressure(t, liquid='Buck_original', force_phase='liquid')
-    e_sat_liq_Buck_manual = sat_vapour_pressure(t, liquid='Buck_manual', force_phase='liquid')
-    e_sat_liq_WMO_Goff = sat_vapour_pressure(t, liquid='WMO_Goff', force_phase='liquid')
-    e_sat_liq_WMO2000 = sat_vapour_pressure(t, liquid='WMO2000', force_phase='liquid')
-    e_sat_liq_Sonntag = sat_vapour_pressure(t, liquid='Sonntag', force_phase='liquid')
-    e_sat_liq_Bolton = sat_vapour_pressure(t, liquid='Bolton', force_phase='liquid')
-    # e_sat_liq_Fukuta = sat_vapour_pressure(t, liquid='Fukuta', force_phase='liquid')
-    e_sat_liq_IAPWS = sat_vapour_pressure(t, liquid='IAPWS', force_phase='liquid')
-    e_sat_liq_MurphyKoop = sat_vapour_pressure(t, liquid='MurphyKoop', force_phase='liquid')
-
-    # Compute saturation pressure over ice.
-    e_sat_ice_MartiMauersberger = sat_vapour_pressure(t, ice='MartiMauersberger', force_phase='ice')
-    e_sat_ice_HylandWexler = sat_vapour_pressure(t, ice='HylandWexler', force_phase='ice')
-    e_sat_ice_GoffGratch = sat_vapour_pressure(t, ice='GoffGratch', force_phase='ice')
-    e_sat_ice_MagnusTeten = sat_vapour_pressure(t, ice='MagnusTeten', force_phase='ice')
-    e_sat_ice_Buck_original = sat_vapour_pressure(t, ice='Buck_original', force_phase='ice')
-    e_sat_ice_Buck_manual = sat_vapour_pressure(t, ice='Buck_manual', force_phase='ice')
-    e_sat_ice_WMO_Goff = sat_vapour_pressure(t, ice='WMO_Goff', force_phase='ice')
-    e_sat_ice_Sonntag = sat_vapour_pressure(t, ice='Sonntag', force_phase='ice')
-    e_sat_ice_MurphyKoop = sat_vapour_pressure(t, ice='MurphyKoop', force_phase='ice')
-
-    # Plot saturation pressure curves over liquid water.
-    pylab.figure()
-    pylab.plot(t, e_sat_liq_HylandWexler, 'b-')
-    pylab.plot(t, e_sat_liq_GoffGratch, 'b--')
-    pylab.plot(t, e_sat_liq_Wexler, 'g-')
-    pylab.plot(t, e_sat_liq_MagnusTeten, 'g--')
-    pylab.plot(t, e_sat_liq_Buck_original, 'r-')
-    pylab.plot(t, e_sat_liq_Buck_manual, 'r-.')
-    pylab.plot(t, e_sat_liq_WMO_Goff, 'c-')
-    pylab.plot(t, e_sat_liq_WMO2000, 'c:')
-    pylab.plot(t, e_sat_liq_Sonntag, 'm-')
-    pylab.plot(t, e_sat_liq_Bolton, 'm:')
-    # pylab.plot(t, e_sat_liq_Fukuta, 'k-')
-    pylab.plot(t, e_sat_liq_IAPWS, 'k-.')
-    pylab.plot(t, e_sat_liq_MurphyKoop, 'k:')
-    pylab.title("Saturation vapour pressure curves over liquid water.")
-    pylab.xlabel("Temperature [K]")
-    pylab.ylabel("Pressure [Pa]")
-
-    # Plot saturation pressure curves over ice.
-    pylab.figure()
-    pylab.plot(t, e_sat_ice_MartiMauersberger, 'b-')
-    pylab.plot(t, e_sat_ice_HylandWexler, 'b--')
-    pylab.plot(t, e_sat_ice_GoffGratch, 'g-')
-    pylab.plot(t, e_sat_ice_MagnusTeten, 'g:')
-    pylab.plot(t, e_sat_ice_Buck_original, 'r-')
-    pylab.plot(t, e_sat_ice_Buck_manual, 'r-.')
-    pylab.plot(t, e_sat_ice_WMO_Goff, 'c-')
-    pylab.plot(t, e_sat_ice_Sonntag, 'm-')
-    pylab.plot(t, e_sat_ice_MurphyKoop, 'k-')
-    pylab.title("Saturation vapour pressure curves over ice.")
-    pylab.xlabel("Temperature [K]")
-    pylab.ylabel("Pressure [Pa]")
-
-    # Plot deviation in [%] of the liquid water saturation curves to the
-    # GoffGratch curve.
-    def deviation_from_GoffGratch_liquid(e_sat):
-        return 100. * (e_sat - e_sat_liq_GoffGratch) / e_sat_liq_GoffGratch
-
-    pylab.figure()
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_HylandWexler), 'b-')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_GoffGratch), 'b--')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Wexler), 'g-')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_MagnusTeten), 'g--')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Buck_original), 'r-')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Buck_manual), 'r-.')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_WMO_Goff), 'c-')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_WMO2000), 'c:')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Sonntag), 'm-')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Bolton), 'm:')
-    # pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_Fukuta), 'k-')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_IAPWS), 'k-.')
-    pylab.plot(t, deviation_from_GoffGratch_liquid(e_sat_liq_MurphyKoop), 'k:')
-    pylab.title("Saturation vapour pressure curves over liquid water.")
-    pylab.xlabel("Temperature [K]")
-    pylab.ylabel("Deviation from Goff Gratch [%]")
-
-    # Plot deviation in [%] of the ice water saturation curves to the
-    # GoffGratch curve.
-    def deviation_from_GoffGratch_ice(e_sat):
-        return 100. * (e_sat - e_sat_ice_GoffGratch) / e_sat_ice_GoffGratch
-
-    pylab.figure()
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_MartiMauersberger), 'b-')
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_HylandWexler), 'b--')
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_GoffGratch), 'g-')
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_MagnusTeten), 'g:')
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_Buck_original), 'r-')
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_Buck_manual), 'r-.')
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_WMO_Goff), 'c-')
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_Sonntag), 'm-')
-    pylab.plot(t, deviation_from_GoffGratch_ice(e_sat_ice_MurphyKoop), 'k-')
-    pylab.title("Saturation vapour pressure curves over ice.")
-    pylab.xlabel("Temperature [K]")
-    pylab.ylabel("Deviation from Goff Gratch [%]")
-
 def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
             force_phase='None'):
     """Compute relative humidity in [%] from pressure, temperature, and
@@ -537,6 +425,7 @@ def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
 
     # Return the relative humidity, computed from w and w_sat.
     return 100. * w / w_sat
+
 
 def virt_temp(t, q, method='exact'):
     """
@@ -676,6 +565,7 @@ def geop_thickness(p, t, q=None, cumulative=False, axis=-1):
     # where Z denotes the geopotential height, Z = phi/g0.
     return -1. / 9.80665 * geop_difference(p, tv, method='cumtrapz' if cumulative else 'trapz', axis=axis)
 
+
 # ToDo move to _tests
 def test_geop_thickness():
     """Test geop_thickness() with some values from the 1976 US standard
@@ -726,16 +616,13 @@ def test_geop_thickness():
 
     # Extract p and T arrays.
     p = std_atm_76[:, 2]
-    print p
     t = std_atm_76[:, 1]
-    print t
 
     # Compute geopotential difference and layer thickness. Layer thickness
     # should be similar to the actual altitude given above.
     geop = geop_difference(p, t, method='cumtrapz')
-    print geop
     geop = geop_thickness(p, t, cumulative=True)
-    print geop
+
 
 def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
     """
@@ -768,6 +655,7 @@ def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
     e_sat = sat_vapour_pressure(td, liquid=liquid)
 
     return 0.622 * e_sat / (p + e_sat * (0.622 - 1.))
+
 
 def dewpoint_approx(p, q, method='Bolton'):
     """
@@ -1058,7 +946,6 @@ def flightlevel2pressure_a(flightlevel):
     # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
     # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
     indices = numpy.where(z <= 11000.)
-    # print "0..11km", indices
     z0 = 0
     T0 = 288.15
     gamma = 6.5e-3
@@ -1070,7 +957,6 @@ def flightlevel2pressure_a(flightlevel):
     # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
     # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
     indices = numpy.where((z > 11000.) & (z <= 20000.))
-    # print "11..20km", indices
     z0 = 11000.
     p0 = 22632.
     T = 216.65
@@ -1081,7 +967,6 @@ def flightlevel2pressure_a(flightlevel):
     # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
     # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
     indices = numpy.where((z > 20000.) & (z <= 32000.))
-    # print "20..32km", indices
     z0 = 20000.
     T0 = 216.65
     gamma = -1.0e-3
@@ -1207,226 +1092,3 @@ def isa_temperature(flightlevel):
     else:
         raise ValueError("ISA temperature from flight level not "
                          "implemented for z > 32km")
-
-
-def schmidt_appleman_tdiff(p_Pa, T_K, rh_01):
-    """Schmidt/Appleman criterion folded by relative humidity of 80%.
-
-    Reference: U. Schumann, "On conditions for contrail formation from
-        aircraft exhausts", Met.Z. (1996) 4-23.
-
-    Arguments:
-    p_Pa  -- pressure in Pa
-    T_K   -- temperature in K
-    rh_01 -- relative humidity mapped to 0..1
-
-    Returns:
-    Temperature difference T_K - Schm./Appl.Threshold. Of interest are
-    return values below 0.
-
-    NOTE: The current implementation returns a value of 1. if relative
-    humidity is below 80% (as used, e.g. during CONCERT and ML-Cirrus).
-
-    NOTE: This function is a port of U. Schumann's FORTRAN77 function in
-    the old Metview3 scripts.
-
-    mr/18Mar2014
-    """
-
-    # Original comments from the FORTRAN program are in CAPITAL LETTERS:
-
-    # PROGRAMMED BY:
-    # ULRICH SCHUMANN; DLR, INSTITUT FUER PHYSIK DER ATMOSPHAERE
-    # OBERPFAFFENHOFEN, POSTFACH 1116, 82230 WESSLING, GERMANY
-    # REFERENCE: U.SCHUMANN,
-    #     ON CONDITIONS FOR CONTRAIL FORMATION FROM AIRCRAFT EXHAUSTS.
-    #     METEOROL. Z., 5 (1996) 4-23.
-    # VERSION OF FEBRUARY 7, 2000.
-
-    # G IN PA/K, SLOPE OF MIXING LINE,
-    #     G=EI*CP*R1*P/(Q*(1.-ETA)*R0)
-    # WITH  DATA R1/461.5/,R0/287.04/,CP/1004./
-    #     EI = EMISSION INDEX OF WATER VAPOR, E.G. 1.23 FOR KEROSENE
-    #     Q =  COMBUSTION HEAT, E.G. Q = 43.2E6 FOR KEROSENE
-    #     ETA= OVERALL EFFICIENCY, E.G. 0.3 FOR A SUBSONIC JET AIRCRAFT
-    #     P =  AMBIENT PRESSURE IN PA
-
-    EI = 1.23
-    CP = 1004.
-    R0 = 287.04
-    R1 = 461.5
-    Q = 43.2e6
-    ETA = 0.3
-
-    G = EI * CP * R1 * p_Pa / (Q * (1. - ETA) * R0)
-
-    # SATURATION PRESSURE FROM SONNTAG, TT IN K, PSAT IN PA
-    #    METEOROL. Z., 3 (1994) 51-66.
-    def PSAT(TT):
-        return 100. * numpy.exp(
-            -6096.9385 / TT + 16.635794 - 2.711193E-2 * TT + 1.673952E-5 * TT * TT + 2.433502 * numpy.log(TT))
-
-    def DPSAT(TT):
-        return (PSAT(TT + 1.) - PSAT(TT - 1.)) / 2.
-
-    def DDPSAT(TT):
-        return PSAT(TT + 1.) + PSAT(TT - 1.) - 2. * PSAT(TT)
-
-    if (rh_01 < 0.):
-        rh_01 = 0.
-
-    # TLM: THRESHOLD TEMPERATURE FOR U=1., IN K
-    # COMPUTATION OF TLM BY APPROXIMATION ACCORDING TO SCHUMANN (1996)
-    TLM = 273.15 - 46.46 + 9.43 * numpy.log(G - 0.053) + 0.720 * (numpy.log(G - 0.053)) ** 2
-
-    for ITER in range(1, 11):
-        F = DPSAT(TLM) - G
-        DF = DDPSAT(TLM)
-        DX = F / DF
-        TLM = TLM - DX
-        if (numpy.abs(DX) < 1.E-3):
-            break
-
-    # PRINT *,' ITER NOT LARGE ENOUGH FOR TLM, TLM,DX=',TLM,DX
-
-    # TLC: THRESHOLD TEMPERATURE FOR GIVEN U, IN K
-    # COMPUTATION OF TLC BY NEWTON ITERATION
-    if (rh_01 < 1.E-6):
-        TLC = TLM - PSAT(TLM) / G
-    else:
-        TLC = TLM
-        if (rh_01 < 0.99999):
-            EM = PSAT(TLM)
-            T0 = TLM - EM / G
-            E0 = PSAT(T0)
-            C = 1. - numpy.sqrt(1. + 4. * rh_01 * E0 / ((1. - rh_01) * EM))
-            TLC = TLM + (1. - rh_01) * (EM * (TLM - T0) / (2. * rh_01 * E0)) * C
-            for ITER in range(1, 11):
-                DELT = TLM - TLC
-                F = PSAT(TLM) - G * DELT - rh_01 * PSAT(TLC)
-                DF = G - rh_01 * DPSAT(TLC)
-                DX = F / DF
-                TLC = TLC - DX
-                if (numpy.abs(DX) < 1.E-3):
-                    break
-
-    # Filter values with rel.hum. < 80%.
-    TMKDIFF = 1.
-    if (rh_01 > 0.8):
-        TMKDIFF = T_K - TLC
-
-    return TMKDIFF
-
-
-def schmidt_appleman_tdiff_q(p, t, q, liquid='HylandWexler', ice='GoffGratch',
-                             force_phase='None'):
-    """Same as schmidt_appleman_tdiff(), but with specific humidity q
-    instead of relative humidity.
-
-    Arguments for q, liquid, ice, force_phase the same as for rel_hum().
-    """
-    rh01 = rel_hum(p, t, q, liquid=liquid, ice=ice, force_phase=force_phase)
-    rh01 /= 100.
-    return schmidt_appleman_tdiff(p, t, rh01)
-
-
-def schmidt_appleman_tdiff_q_a_slow(p, t, q, liquid='HylandWexler', ice='GoffGratch',
-                                    force_phase='None'):
-    """Same as schmidt_appleman_tdiff_q(), but takes arrays as arguments.
-
-    NOTE: This is the slow version, using Python loops to process the
-    array elements.  Use schmidt_appleman_tdiff_q_a() instead.
-    """
-    rh01 = rel_hum(p, t, q, liquid=liquid, ice=ice, force_phase=force_phase)
-    rh01 /= 100.
-
-    # Remember array shape.
-    shp = p.shape
-
-    # Transform arrays into 1D fields.
-    p_r = p.ravel()
-    t_r = t.ravel()
-    rh01_r = rh01.ravel()
-
-    # Compute Schmidt-Applement threshold difference for each value.
-    result = numpy.zeros(p_r.shape)
-    for i, _ in enumerate(p_r):
-        result[i] = schmidt_appleman_tdiff(p_r[i], t_r[i], rh01_r[i])
-
-    # Return the result in the shape of the input arrays.
-    result.reshape(shp)
-    return result
-
-
-def schmidt_appleman_tdiff_q_a(p_Pa, T_K, q, liquid='HylandWexler', ice='GoffGratch',
-                               force_phase='None'):
-    """Same as schmidt_appleman_tdiff_q(), but takes arrays as arguments.
-    """
-
-    # For comments see schmidt_appleman_tdiff().
-    # ==========================================
-
-    rh_01 = rel_hum(p_Pa, T_K, q, liquid=liquid, ice=ice, force_phase=force_phase)
-    rh_01 /= 100.
-
-    EI = 1.23
-    CP = 1004.
-    R0 = 287.04
-    R1 = 461.5
-    Q = 43.2e6
-    ETA = 0.3
-
-    G = EI * CP * R1 * p_Pa / (Q * (1. - ETA) * R0)
-
-    def PSAT(TT):
-        return 100. * numpy.exp(
-            -6096.9385 / TT + 16.635794 - 2.711193E-2 * TT + 1.673952E-5 * TT * TT + 2.433502 * numpy.log(TT))
-
-    def DPSAT(TT):
-        return (PSAT(TT + 1.) - PSAT(TT - 1.)) / 2.
-
-    def DDPSAT(TT):
-        return PSAT(TT + 1.) + PSAT(TT - 1.) - 2. * PSAT(TT)
-
-    rh_01[numpy.where(rh_01 < 0.)] = 0.
-
-    TLM = 273.15 - 46.46 + 9.43 * numpy.log(G - 0.053) + 0.720 * (numpy.log(G - 0.053)) ** 2
-
-    for ITER in range(1, 11):
-        F = DPSAT(TLM) - G
-        DF = DDPSAT(TLM)
-        DX = F / DF
-        TLM = TLM - DX
-        if (numpy.abs(DX) < 1.E-3).all():
-            break
-
-    TLC = numpy.zeros(TLM.shape)
-
-    i_rh_verysmall = numpy.where(rh_01 < 1.E-6)
-    TLC[i_rh_verysmall] = TLM[i_rh_verysmall] - PSAT(TLM[i_rh_verysmall]) / G[i_rh_verysmall]
-
-    i_rh = numpy.where(rh_01 >= 1.E-6)
-    TLC[i_rh] = TLM[i_rh]
-
-    i_rhLT1 = numpy.where(rh_01 < 0.99999)
-
-    EM = PSAT(TLM[i_rhLT1])
-    T0 = TLM[i_rhLT1] - EM / G[i_rhLT1]
-    E0 = PSAT(T0)
-    C = 1. - numpy.sqrt(1. + 4. * rh_01[i_rhLT1] * E0 / ((1. - rh_01[i_rhLT1]) * EM))
-    TLC[i_rhLT1] = TLM[i_rhLT1] + (1. - rh_01[i_rhLT1]) * (EM * (TLM[i_rhLT1] - T0) / (2. * rh_01[i_rhLT1] * E0)) * C
-    for ITER in range(1, 11):
-        DELT = TLM[i_rhLT1] - TLC[i_rhLT1]
-        F = PSAT(TLM[i_rhLT1]) - G[i_rhLT1] * DELT - rh_01[i_rhLT1] * PSAT(TLC[i_rhLT1])
-        DF = G[i_rhLT1] - rh_01[i_rhLT1] * DPSAT(TLC[i_rhLT1])
-        DX = F / DF
-        TLC[i_rhLT1] = TLC[i_rhLT1] - DX
-        if (numpy.abs(DX) < 1.E-3).all():
-            break
-
-    TMKDIFF = T_K - TLC
-
-    # Filter values with rel.hum. < 80%.
-    TMKDIFF[numpy.where(rh_01 < 0.8)] = 1.
-
-    return TMKDIFF

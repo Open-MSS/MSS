@@ -28,10 +28,7 @@
 
 import logging
 
-# related third party imports
-from mslib.msui.mss_qt import QtGui, QtWidgets  # Qt4 bindings
-
-# local application imports
+from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_wms_capabilities as ui
 
 

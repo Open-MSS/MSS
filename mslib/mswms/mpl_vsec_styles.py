@@ -37,7 +37,7 @@ import numpy as np
 
 # local application imports
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets, get_log_levels, get_style_parameters, get_cbar_label_format
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib import thermolib
 
 
@@ -280,8 +280,7 @@ make_generic_class(
     fix_styles=[("log_ice_cloud", "iwc")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(),
-    "number_concentration_of_ice_crystals_in_air"),
+    "VS_GenericStyle_{}_{}".format(vert.upper(), "number_concentration_of_ice_crystals_in_air"),
     "number_concentration_of_ice_crystals_in_air", vert,
     add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -292,8 +291,7 @@ make_generic_class(
     fix_styles=[("log_ice_cloud", "nice")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(),
-    "mean_mass_radius_of_cloud_ice_crystals"),
+    "VS_GenericStyle_{}_{}".format(vert.upper(), "mean_mass_radius_of_cloud_ice_crystals"),
     "mean_mass_radius_of_cloud_ice_crystals", vert,
     add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -304,9 +302,9 @@ make_generic_class(
     fix_styles=[("ice_cloud", "radius")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(),
-    "maximum_pressure_on_backtrajectory"),
+    "VS_GenericStyle_{}_{}".format(vert.upper(), "maximum_pressure_on_backtrajectory"),
     "maximum_pressure_on_backtrajectory", vert, [], [])
+
 
 class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
     """

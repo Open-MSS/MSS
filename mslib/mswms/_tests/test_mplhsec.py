@@ -28,9 +28,10 @@
 
 
 import os
+import pytest
 import importlib
-from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 
+from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib._tests.utils import BASE_DIR, SERVER_CONFIG_FILE
 
 

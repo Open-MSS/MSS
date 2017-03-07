@@ -26,7 +26,6 @@
     limitations under the License.
 """
 
-import logging
 import os
 from StringIO import StringIO
 
