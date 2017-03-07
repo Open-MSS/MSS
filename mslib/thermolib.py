@@ -616,16 +616,12 @@ def test_geop_thickness():
 
     # Extract p and T arrays.
     p = std_atm_76[:, 2]
-    print p
     t = std_atm_76[:, 1]
-    print t
 
     # Compute geopotential difference and layer thickness. Layer thickness
     # should be similar to the actual altitude given above.
     geop = geop_difference(p, t, method='cumtrapz')
-    print geop
     geop = geop_thickness(p, t, cumulative=True)
-    print geop
 
 
 def spec_hum_from_pTd(p, td, liquid='HylandWexler'):
@@ -950,7 +946,6 @@ def flightlevel2pressure_a(flightlevel):
     # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
     # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
     indices = numpy.where(z <= 11000.)
-    # print "0..11km", indices
     z0 = 0
     T0 = 288.15
     gamma = 6.5e-3
@@ -962,7 +957,6 @@ def flightlevel2pressure_a(flightlevel):
     # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
     # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
     indices = numpy.where((z > 11000.) & (z <= 20000.))
-    # print "11..20km", indices
     z0 = 11000.
     p0 = 22632.
     T = 216.65
@@ -973,7 +967,6 @@ def flightlevel2pressure_a(flightlevel):
     # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
     # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
     indices = numpy.where((z > 20000.) & (z <= 32000.))
-    # print "20..32km", indices
     z0 = 20000.
     T0 = 216.65
     gamma = -1.0e-3

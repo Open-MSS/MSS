@@ -39,10 +39,9 @@ import numpy
 
 try:
     import nappy
-
     hasNAppy = True
 except:
-    print "*** NAppy is not available. You will not be able to read NASA Ames files. ***"
+    logging.warn("*** NAppy is not available. You will not be able to read NASA Ames files. ***")
     hasNAppy = False
 
 from mslib.msui import lagranto_output_reader

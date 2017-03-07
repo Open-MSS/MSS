@@ -131,10 +131,6 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
            whenever an antry from the Layout menu has been selected. It shows/
            hides the ImageLoopWidgets.
         """
-        # print self.mainSplitter.width(), self.mainSplitter.height()
-        # for i in xrange(self.mainSplitter.count()):
-        #    print "main", i, self.mainSplitter.widget(i)
-
         # Hide everything.
         self.rightSplitter.hide()
         self.topSplitter.hide()

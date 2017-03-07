@@ -272,7 +272,6 @@ def interpolate_vertsec2(data3D, data3D_lats, data3D_lons, lats, lons):
     ind_lats = (lats - data3D_lats[0]) / dlat
     ind_lons = (lons - data3D_lons[0]) / dlon
     ind_coords = np.array([ind_lats, ind_lons])
-    # print data3D_lats, data3D_lons, lats, lons, ind_lats, ind_lons
 
     # One horizontal interpolation for each model level. The order
     # parameter controls the degree of the splines used, i.e. order=1
@@ -301,10 +300,8 @@ def interpolate_vertsec3(data3D, data3D_lats, data3D_lons, lats, lons):
     # scipy.ndimage.map_coordinates().
     interp_lat = interp1d(data3D_lats, np.arange(len(data3D_lats)), bounds_error=False)
     ind_lats = interp_lat(lats)
-    # print data3D_lats, lats, ind_lats
     interp_lon = interp1d(data3D_lons, np.arange(len(data3D_lons)), bounds_error=False)
     ind_lons = interp_lon(lons)
-    # print data3D_lons, lons, ind_lons
     ind_coords = np.array([ind_lats, ind_lons])
 
     # One horizontal interpolation for each model level. The order
