@@ -277,6 +277,10 @@ class ServiceIdentification(object):
         fees = self._root.find('Fees')
         if fees is not None:
             self.fees = fees.text
+        # (mss) Always set a default value similar to abstract.
+        else:
+            self.fees = None
+        # (mss)
              
 class ServiceProvider(object):
     ''' Implements IServiceProviderMetatdata '''
