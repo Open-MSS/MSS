@@ -276,7 +276,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
     ticks = None
 
     if any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)]):
-        cmin, cmax  = 0, 1
+        cmin, cmax = 0, 1
 
     if style == "default":
         clev = np.linspace(cmin, cmax, 16)
@@ -285,7 +285,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         cmin_p = data.min()
         cmax_p = data.max()
         if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
-            cmin, cmax  = cmin_p, cmax_p
+            cmin, cmax = cmin_p, cmax_p
         if cmin == cmax:
             cmin, cmax = 0, 1
         if 0 < cmin < 0.05 * cmax:
@@ -299,7 +299,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         cmin_p = data.min()
         cmax_p = data.max()
         if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
-            cmin, cmax  = cmin_p, cmax_p
+            cmin, cmax = cmin_p, cmax_p
         if cmin == cmax:
             cmin, cmax = 0, 1
         clev = get_log_levels(cmin, cmax, 16)
