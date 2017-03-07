@@ -29,7 +29,7 @@
 import pytest
 import os
 import imp
-from conftest import BASE_DIR, DATA_DIR, SERVER_CONFIG_FILE
+from mslib._tests.utils import BASE_DIR, DATA_DIR, SERVER_CONFIG_FILE
 
 
 class TestDemodate(object):

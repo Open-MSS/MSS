@@ -72,7 +72,6 @@ class MSSPlotDriver(object):
     def __del__(self):
         """Closes the open NetCDF dataset, if existing.
         """
-        logging.debug("closing plot driver")
         if self.dataset is not None:
             self.dataset.close()
 
