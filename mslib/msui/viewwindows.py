@@ -29,8 +29,7 @@
 
 from abc import abstractmethod
 
-# related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
+from mslib.msui.mss_qt import QtCore, QtWidgets
 
 
 class MSSViewWindow(QtWidgets.QMainWindow):

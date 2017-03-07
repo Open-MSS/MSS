@@ -50,7 +50,6 @@ import paste.request
 import paste.util.multidict
 import tempfile
 import urlparse
-from mslib.mss_util import get_projection_params
 from chameleon import PageTemplateLoader
 
 try:
