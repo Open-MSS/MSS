@@ -674,8 +674,6 @@ make_generic_class(
     fix_styles = [("square_of_brunt_vaisala_frequency_in_air", "")])
 
 
-
-
 class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     """
     Pressure level version of the temperature style.
