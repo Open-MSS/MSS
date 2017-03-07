@@ -45,6 +45,7 @@ test:
         - mslib
     commands:
         - mswms -h
+        - mss -h
 
 about:
     summary: A web service based tool to plan atmospheric research flights

@@ -599,7 +599,7 @@ def setup_logging(args):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", help="show version", action="store_true", default=False)
+    parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="specify logfile location", action="store", default=None)
     parser.add_argument("--nolog", help="do write debug log", action="store_true", default=False)
@@ -611,7 +611,7 @@ def main():
         print "***********************************************************************"
         print "Documentation: http://mss.rtfd.io"
         print "Version:", __version__
-        print "\nSystem is loading.."
+        sys.exit()
 
     setup_logging(args)
 
