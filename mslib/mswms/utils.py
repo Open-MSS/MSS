@@ -82,6 +82,10 @@ class Targets(object):
         "median_of_age_of_air_spectrum",
         "fraction_below_6months_of_age_of_air_spectrum",
         "fraction_above_24months_of_age_of_air_spectrum",
+        "cloud_ice_mixing_ratio",
+        "number_concentration_of_ice_crystals_in_air",
+        "mean_mass_radius_of_cloud_ice_crystals",
+        "maximum_pressure_on_backtrajectory",
     ]
 
     UNITS = {
@@ -94,6 +98,11 @@ class Targets(object):
         "northward_wind": ("ms$^{-1}$", 1),
         "square_of_brunt_vaisala_frequency_in_air": ("s$^{-2}$", 1),
         "tropopause_altitude": ("km", 1),
+        "cloud_ice_mixing_ratio": ("ppmv", 1),
+        "number_concentration_of_ice_crystals_in_air": ("cm$^{-3}$", 1),
+        "mean_mass_radius_of_cloud_ice_crystals": ("$\mu$m", 1),
+        "maximum_pressure_on_backtrajectory": ("hPa", 1),
+        "maximum_relative_humidity_wrt_ice_on_backtrajectory": ("%", 1),
     }
 
     # The THRESHOLDS are used to determine a single colourmap suitable for all plotting purposes (that is vertical
@@ -381,6 +390,39 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
         cmap = matplotlib.pyplot.cm.terrain
         norm = None
         clev = np.arange(5, 16.1, 0.25)
+    elif style == "log_ice_cloud":
+        cmap = matplotlib.pyplot.cm.colors.ListedColormap(
+            [(0.8, 0.8, 0.8, 1.0),
+             (1., 1., 1.0, 1.0),
+             (0., 0., 1.0, 1.0),
+             (0., 0.949, 0.988, 1.0),
+             (0., 1., 0., 1.0),
+             (1., 1.0, 0.0, 1.0),
+             (1.0, 0., 0.0, 1.0),
+             (0.212, 0.114, 0.075, 1.0),
+             ], name="ice_map_log")
+        if dataname == "number_concentration_of_ice_crystals_in_air":
+            clev = np.append(np.array([-1e31, -0.1]),
+                             get_log_levels(1e-4, 100., 7))
+            ticks = np.append(np.array([0.]), get_log_levels(1e-4, 100., 7))
+        if dataname == "cloud_ice_mixing_ratio":
+            clev = np.append(np.array([-1e31, -0.1]),
+                             get_log_levels(1e-3, 1e3, 7))
+            ticks = np.append(np.array([0.]), get_log_levels(1e-3, 1e3, 7))
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    elif style == "ice_cloud":
+        cmap = matplotlib.pyplot.cm.colors.ListedColormap(
+            [(1., 1., 1.0, 1.0),
+             (0., 0., 1.0, 1.0),
+             (0., 0.949, 0.988, 1.0),
+             (0., 1., 0., 1.0),
+             (1., 1.0, 0.0, 1.0),
+             (1.0, 0., 0.0, 1.0),
+             (0.212, 0.114, 0.075, 1.0),
+             ], name="ice_map")
+        if dataname == "mean_mass_radius_of_cloud_ice_crystals":
+            clev = np.array([0, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     else:
         raise RuntimeError(u"Illegal plotting style?! ({})".format(style))
     if clev[0] == clev[-1]:
@@ -402,4 +444,6 @@ def get_cbar_label_format(style, maxvalue):
             format = "%.3f"
         elif 0.01 <= maxvalue < 0.1:
             format = "%.4f"
+    if style == 'log_ice_cloud':
+        format = "%.0E"
     return format

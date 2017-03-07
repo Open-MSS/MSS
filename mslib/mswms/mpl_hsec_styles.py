@@ -620,6 +620,43 @@ for vert in ["pl", "ml", "tl"]:
         [("tropopause_altitude", [8, 10, 12, 14, 16], "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("gravity_wave_temperature_perturbation", "")])
 
+    make_generic_class(
+        "HS_GenericStyle_{}_{}".format(vert.upper(), "cloud_ice_mixing_ratio"),
+        "cloud_ice_mixing_ratio", vert,
+        [("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
+        [("maximum_relative_humidity_wrt_ice_on_backtrajectory",
+          [90, 100, 120, 160], ["dimgrey", "dimgrey", "#443322", "#045FB4"],
+          ["dimgrey", "dimgrey", "#443322", "#045FB4"],
+          ["dashed", "solid", "solid", "solid"], 2, True)],
+        fix_styles=[("log_ice_cloud", "iwc")])
+
+    make_generic_class(
+        "HS_GenericStyle_{}_{}".format(vert.upper(),
+        "number_concentration_of_ice_crystals_in_air"),
+        "number_concentration_of_ice_crystals_in_air", vert,
+        [("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
+        [("maximum_relative_humidity_wrt_ice_on_backtrajectory",
+          [90, 100, 120, 160], ["dimgrey", "dimgrey", "#443322", "#045FB4"],
+          ["dimgrey", "dimgrey", "#443322", "#045FB4"],
+          ["dashed", "solid", "solid", "solid"], 2, True)],
+        fix_styles=[("log_ice_cloud", "nice")])
+
+    make_generic_class(
+        "HS_GenericStyle_{}_{}".format(vert.upper(),
+        "mean_mass_radius_of_cloud_ice_crystals"),
+        "mean_mass_radius_of_cloud_ice_crystals", vert,
+        [("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
+        [("maximum_relative_humidity_wrt_ice_on_backtrajectory",
+          [90, 100, 120, 160], ["dimgrey", "dimgrey", "#443322", "#045FB4"],
+          ["dimgrey", "dimgrey", "#443322", "#045FB4"],
+          ["dashed", "solid", "solid", "solid"], 2, True)],
+        fix_styles=[("ice_cloud", "radius")])
+
+    make_generic_class(
+        "HS_GenericStyle_{}_{}".format(vert.upper(),
+        "maximum_pressure_on_backtrajectory"),
+        "maximum_pressure_on_backtrajectory", vert, [], [])
+
 make_generic_class(
     "HS_GenericStyle_SFC_tropopause_altitude",
     "tropopause_altitude", "sfc", [],
