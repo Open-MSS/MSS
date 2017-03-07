@@ -464,12 +464,9 @@ class VerticalSectionDriver(MSSPlotDriver):
         # NOTE: This does not overwrite self.lon_data (which is required
         # in its original form in case other data is loaded while this
         # file is open).
-        # print self.lon_data
         lon_data = ((self.lon_data - left_longitude) % 360) + left_longitude
-        # print lon_data
         lon_indices = lon_data.argsort()
         lon_data = lon_data[lon_indices]
-        # print lon_data
 
         for name, var in self.data_vars.items():
             if len(var.shape) == 4:
@@ -485,7 +482,6 @@ class VerticalSectionDriver(MSSPlotDriver):
             var_data = var_data[:, :, lon_indices]
             data[name] = mss_util.interpolate_vertsec3(var_data, self.lat_data, lon_data,
                                                        self.lats, self.lons)
-            # print data[name][:,30]
             # Free memory.
             del var_data
 
@@ -508,11 +504,9 @@ class VerticalSectionDriver(MSSPlotDriver):
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
-        # print self.lons
         self.lons = ((self.lons - left_longitude) % 360) + left_longitude
         lon_indices = self.lons.argsort()
         self.lons = self.lons[lon_indices]
-        # print self.lons
 
         # Shift data fields correspondingly.
         for key in self.data.keys():

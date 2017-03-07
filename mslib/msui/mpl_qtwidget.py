@@ -46,7 +46,7 @@ from mslib import thermolib
 
 
 # Python Qt4 bindings for GUI objects
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, FigureCanvas, NavigationToolbar
+from mslib.msui.mss_qt import QtCore, QtWidgets, FigureCanvas, NavigationToolbar
 
 # Matplotlib Figure object
 from matplotlib.figure import Figure

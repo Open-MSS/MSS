@@ -205,7 +205,6 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             logging.debug("creating figure..")
             dpi = 80
             figsize = figsize[0] / dpi, figsize[1] / dpi
-            # print figsize
             facecolor = "white"
             self.fig = mpl.figure.Figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
             logging.debug("\twith frame and legends" if not noframe else

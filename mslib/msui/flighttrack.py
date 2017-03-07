@@ -291,7 +291,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 value = value.toString()
             elif isinstance(value, QtCore.QVariant):
                 value = value.value()
-            # print "\n>> SetData()"
             waypoint = self.waypoints[index.row()]
             column = index.column()
             index2 = index  # in most cases only one field is being changed

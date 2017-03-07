@@ -332,7 +332,6 @@ class ECMWFDataAccess(NWPDataAccess):
                 # dtime = int(m.group(1)+m.group(2))
                 dtime = m.group("date") + m.group("time")
                 dtime = datetime.strptime(dtime, "%Y%m%d%H")
-                # print date, time, step, datetime, var
 
                 # Insert the filename into the tree.
                 if dtime not in filetree.keys():
@@ -365,11 +364,9 @@ class ECMWFDataAccess(NWPDataAccess):
             filename = self.get_filename(variable, vartype,
                                          init_time, check_time,
                                          fullpath=True)
-            # print "checking file %s" % filename
             if os.path.exists(filename):
                 # If the file exists, open the file and read the contained
                 # times. Add the list of times to valid_times.
-                # print "exists."
                 cached_valid_times = self.check_valid_cache(filename)
                 if cached_valid_times is not None:
                     valid_times.extend(cached_valid_times)
@@ -658,7 +655,6 @@ class MeteosatDataAccess(NWPDataAccess):
 
                 # If the file exists, open the file and read the contained
                 # times. Add the list of times to valid_times.
-                # print "exists."
                 cached_valid_times = self.check_valid_cache(filename)
                 if cached_valid_times is not None:
                     valid_times.extend(cached_valid_times)
