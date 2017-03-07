@@ -9,4 +9,5 @@ pytest-pep8
 sphinx
 sphinx_rtd_theme
 gitpython
-python-cov
+mock
+pytest-cov
