@@ -315,7 +315,111 @@ def interpolate_vertsec3(data3D, data3D_lats, data3D_lons, lats, lons):
     return np.ma.masked_invalid(curtain)
 
 
-# Satellite Track Predictions
+def latlon_points(p1, p2, numpoints=100, connection='linear'):
+    """
+    Compute intermediate points between two given points.
+
+    Arguments:
+    p1, p2 -- points given as lat/lon pairs, i.e. p1, p2 = [lat, lon]
+    numpoints -- number of intermediate points to be computed aloing the path
+    connection -- method to compute the intermediate points. Can be
+                  'linear' or 'greatcircle'
+
+    Returns two arrays lats, lons with intermediate latitude and longitudes.
+    """
+    LAT = 0
+    LON = 1
+    if connection == 'linear':
+        if p2[LAT] - p1[LAT] == 0:
+            lats = np.ones(numpoints) * p1[LAT]
+        else:
+            lat_step = float(p2[LAT] - p1[LAT]) / (numpoints - 1)
+            lats = np.arange(p1[LAT], p2[LAT] + lat_step / 2, lat_step)
+        if p2[LON] - p1[LON] == 0:
+            lons = np.ones(numpoints) * p1[LON]
+        else:
+            lon_step = float(p2[LON] - p1[LON]) / (numpoints - 1)
+            lons = np.arange(p1[LON], p2[LON] + lon_step / 2, lon_step)
+        return lats, lons
+    elif connection == 'greatcircle':
+        gc = pyproj.Geod(ellps="WGS84")
+        pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints)
+        return (np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]]),
+                np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]]))
+    else:
+        return None, None
+
+
+def path_points(points, numpoints=100, connection='linear'):
+    """
+    Compute intermediate points of a path given by a list of points.
+
+    Arguments:
+    points -- list of lat/lon pairs, i.e. [[lat1,lon1], [lat2,lon2], ...]
+    numpoints -- number of intermediate points to be computed along the path
+    connection -- method to compute the intermediate points. Can be
+                  'linear' or 'greatcircle'
+
+    Returns two arrays lats, lons with intermediate latitude and longitudes.
+    """
+    if connection not in ['linear', 'greatcircle']:
+        return None, None
+    LAT = 0
+    LON = 1
+
+    # First compute the lengths of the individual path segments, i.e.
+    # the distances between the points.
+    distances = []
+    for i in range(len(points) - 1):
+        if connection == 'linear':
+            # Use Euclidean distance in lat/lon space.
+            d = np.hypot(points[i][LAT] - points[i + 1][LAT],
+                         points[i][LON] - points[i + 1][LON])
+        elif connection == 'greatcircle':
+            # Use Vincenty distance provided by the geopy module.
+            d = get_distance(points[i], points[i + 1])
+        distances.append(d)
+    distances = np.asarray(distances)
+
+    # Compute the total length of the path and the length of the point
+    # segments to be computed.
+    total_length = distances.sum()
+    length_point_segment = total_length / (numpoints + len(points) - 2)
+
+    # If the total length of the path is zero, all given waypoints have the
+    # same coordinates. Return arrays with numpoints points all having these
+    # coordinate.
+    if total_length == 0.:
+        lons = np.ones(numpoints) * points[0][LON]
+        lats = np.ones(numpoints) * points[0][LAT]
+        return lats, lons
+
+    # For each segment, determine the number of points to be computed
+    # from the distance between the two bounding points and the
+    # length of the point segments. Then compute the intermediate
+    # points. Cut the first point from each segment other than the
+    # first segment to avoid double points.
+    lons = []
+    lats = []
+    for i in range(len(points) - 1):
+        segment_points = int(round(distances[i] / length_point_segment))
+        # Enforce that a segment consists of at least two points
+        # (otherwise latlon_points will throw an exception).
+        segment_points = max(segment_points, 2)
+        # print segment_points
+        lats_, lons_ = latlon_points(points[i], points[i + 1],
+                                     numpoints=segment_points,
+                                     connection=connection)
+        if i == 0:
+            lons.extend(lons_)
+            lats.extend(lats_)
+        else:
+            lons.extend(lons_[1:])
+            lats.extend(lats_[1:])
+    lons = np.asarray(lons)
+    lats = np.asarray(lats)
+    return lats, lons
+
 
 def read_nasa_satellite_prediction(fname):
     """Read a text file as downloaded from the NASA satellite prediction tool.
