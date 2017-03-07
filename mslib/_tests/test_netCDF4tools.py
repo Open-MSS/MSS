@@ -29,12 +29,13 @@ import os
 import pytest
 import datetime
 from netCDF4 import Dataset
-from conftest import DATA_DIR
 from mslib.netCDF4tools import (identify_variable, identify_CF_coordhybrid, identify_CF_hybrid, hybrid_orientation,
                                 identify_CF_isopressure, identify_CF_isopotvort, identify_CF_isoaltitude,
                                 identify_CF_isopottemp, identify_CF_time, identify_CF_ensemble, num2date,
                                 get_latlon_data
                                 )
+
+from mslib._tests.utils import DATA_DIR
 
 DATA_FILE_ML = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc")
 DATA_FILE_PL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc")

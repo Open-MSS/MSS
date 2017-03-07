@@ -40,7 +40,7 @@ try:
     # import the NavigationToolbar Qt4Agg widget
     from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 
-    from PyQt4 import QtGui, QtCore
+    from PyQt4 import QtGui, QtCore, QtTest
     QtWidgets = QtGui  # Follow the PyQt5 style and access objects from the modules of PyQt5
     from PyQt4.QtCore import QString  # import QString as this does not exist in PyQt5
 
@@ -55,7 +55,7 @@ except ImportError:
     # import the NavigationToolbar Qt5Agg widget
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
-    from PyQt5 import QtGui, QtCore, QtWidgets
+    from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
     QString = unicode  # QString is not exposed anymore but is used transparently by PyQt5
 
     _qt_ui_prefix = "mslib.msui.qt5."
@@ -110,6 +110,20 @@ else:
     except AttributeError:
         def _translate(context, text, disambig):
             return QtGui.QApplication.translate(context, text, disambig)
+
+
+def QMessageBox_nonblock(parent, icon, title, text):
+    box = QtWidgets.QMessageBox(icon, title, text, QtWidgets.QMessageBox.Ok, parent=parent)
+    box.show()
+    return box
+
+
+def QMessageBox_critical_nonblock(parent, title, text):
+    return QMessageBox_nonblock(parent, QtWidgets.QMessageBox.Critical, title, text)
+
+
+def QMessageBox_warn_nonblock(parent, title, text):
+    return QMessageBox_nonblock(QtWidgets.QMessageBox.Warning, title, text, parent)
 
 
 # PyQt5 silently aborts on a Python Exception and PyQt4 does not inform GUI users

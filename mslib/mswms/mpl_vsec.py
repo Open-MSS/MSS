@@ -72,7 +72,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax = self.ax
 
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
-        tick_index_step = len(self.lat_inds) / int(self.numlabels)
+        tick_index_step = max(1, len(self.lat_inds) / int(self.numlabels))
         ax.set_xticks(self.lat_inds[::tick_index_step])
         ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
                             for d in zip(self.lats[::tick_index_step],
