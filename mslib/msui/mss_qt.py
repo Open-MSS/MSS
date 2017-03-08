@@ -134,8 +134,8 @@ def excepthook(type_, value, traceback_):
     tb = "".join(traceback.format_exception(type_, value, traceback_))
     traceback.print_exception(type_, value, traceback_)
     logging.critical(u"Fatal error: %s", tb)
-    import mslib.mss_util
-    if type_ is mslib.mss_util.FatalUserError:
+    import mslib.utils
+    if type_ is mslib.utils.FatalUserError:
         QtWidgets.QMessageBox.critical(
             None, u"fatal error",
             u"Fatal error\n"

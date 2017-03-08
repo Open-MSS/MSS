@@ -28,7 +28,7 @@
 import numpy as np
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
-from mslib.mss_util import datetime_to_jsec, get_distance, rotate_point, fix_angle, compute_hour_of_day
+from mslib.utils import datetime_to_jsec, get_distance, rotate_point, fix_angle, compute_hour_of_day
 from matplotlib.collections import LineCollection
 from matplotlib.colors import BoundaryNorm, ListedColormap
 import collections

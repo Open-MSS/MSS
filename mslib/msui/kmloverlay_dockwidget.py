@@ -34,7 +34,7 @@ import pykml.parser
 from mslib.msui.mss_qt import QtGui, QtWidgets, QMessageBox_critical_nonblock, USE_PYQT5
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
-from mslib.mss_util import save_settings_pickle, load_settings_pickle
+from mslib.utils import save_settings_pickle, load_settings_pickle
 
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):

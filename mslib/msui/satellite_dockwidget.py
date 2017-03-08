@@ -25,17 +25,91 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import datetime
 import logging
 import os
 
 # related third party imports
+from datetime import datetime as dt
+
+import numpy as np
+
 from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 
 # local application imports
-from mslib import mss_util
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
-from mslib.mss_util import save_settings_pickle, load_settings_pickle
+from mslib.utils import save_settings_pickle, load_settings_pickle
+
+
+def read_nasa_satellite_prediction(fname):
+    """Read a text file as downloaded from the NASA satellite prediction tool.
+
+    This method reads satellite overpass predictions in ASCII format as
+    downloaded from http://www-air.larc.nasa.gov/tools/predict.htm.
+
+    Returns a list of dictionaries with keys
+      -- utc: Nx1 array with utc times as datetime objects
+      -- satpos: Nx2 array with lon/lat (x/y) of satellite positions
+      -- heading: Nx1 array with satellite headings in degrees
+      -- swath_left: Nx2 array with lon/lat of left swath boundary
+      -- swath_right: Nx2 array with lon/lat of right swath boundary
+    Each dictionary represents a separate overpass.
+
+    All arrays are masked arrays, note that missing values are common. Filter
+    out missing values with numpy.ma.compress_rows().
+
+    NOTE: ****** LON in the 'predict' files seems to be wrong --> needs to be
+                 multiplied by -1. ******
+    """
+    # Read the file into a list of strings.
+    satfile = open(fname, 'r')
+    satlines = satfile.readlines()
+    satfile.close()
+
+    # Determine the date from the first line.
+    date = dt.strptime(satlines[0].split()[0], "%Y/%m/%d")
+    basedate = dt.strptime("", "")
+
+    # "result" will store the individual overpass segments.
+    result = []
+    segment = {"utc": [], "satpos": [], "heading": [],
+               "swath_left": [], "swath_right": []}
+
+    # Define a time difference that specifies when to start a new segment.
+    # If the time between to subsequent points in the file is larger than
+    # this time, a new segment will be started.
+    seg_diff_time = datetime.timedelta(minutes=10)
+
+    # Loop over data lines. Either append point to current segment or start
+    # new segment. Before storing segments to the "result" list, convert
+    # to masked arrays.
+    for line in satlines[2:]:
+        values = line.split()
+        time = date + (dt.strptime(values[0], "%H:%M:%S") - basedate)
+
+        if len(segment["utc"]) == 0 or (time - segment["utc"][-1]) < seg_diff_time:
+            segment["utc"].append(time)
+            segment["satpos"].append([-1. * float(values[2]), float(values[1])])
+            segment["heading"].append(float(values[3]))
+            if len(values) == 8:
+                segment["swath_left"].append([-1. * float(values[5]), float(values[4])])
+                segment["swath_right"].append([-1. * float(values[7]), float(values[6])])
+            else:
+                # TODO 20100504: workaround for instruments without swath
+                segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
+                segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
+
+        else:
+            segment["utc"] = np.array(segment["utc"])
+            segment["satpos"] = np.ma.masked_equal(segment["satpos"], -999.)
+            segment["heading"] = np.ma.masked_equal(segment["heading"], -999.)
+            segment["swath_left"] = np.ma.masked_equal(segment["swath_left"], -999.)
+            segment["swath_right"] = np.ma.masked_equal(segment["swath_right"], -999.)
+            result.append(segment)
+            segment = {"utc": [], "satpos": [], "heading": [],
+                       "swath_left": [], "swath_right": []}
+
+    return result
 
 
 class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
@@ -77,7 +151,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         logging.debug("loading satellite overpasses in file '%s'", filename)
 
         try:
-            overpass_segments = mss_util.read_nasa_satellite_prediction(filename)
+            overpass_segments = read_nasa_satellite_prediction(filename)
         except (IOError, OSError, ValueError), ex:
             logging.error(u"Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),

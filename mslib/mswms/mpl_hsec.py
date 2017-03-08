@@ -44,7 +44,7 @@ import PIL.Image
 
 # local application imports
 from mslib.mswms import mss_2D_sections
-from mslib.mss_util import get_projection_params
+from mslib.utils import get_projection_params
 
 
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):

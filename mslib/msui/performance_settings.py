@@ -28,7 +28,7 @@
 
 from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
 
-from mslib.mss_util import config_loader, FatalUserError
+from mslib.utils import config_loader, FatalUserError
 from mslib.msui import aircrafts
 from mslib.msui import constants
 from mslib.msui.mss_qt import ui_performance_settings as ui_ps

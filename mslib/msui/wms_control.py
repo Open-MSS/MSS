@@ -38,7 +38,7 @@ import re
 import urllib
 import urllib2
 import xml.etree.ElementTree as etree
-from mslib.mss_util import config_loader
+from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5, QMessageBox_critical_nonblock
@@ -52,7 +52,7 @@ from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
-from mslib.mss_util import convertHPAToKM
+from mslib.utils import convertHPAToKM
 
 
 class MSSWebMapService(mslib.owslib.wms.WebMapService):

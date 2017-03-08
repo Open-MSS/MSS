@@ -93,7 +93,7 @@ except ImportError, ex:
 
 from mslib.mswms import mss_plot_driver
 
-from mslib.mswms.case_insensitive_multi_dict import CaseInsensitiveMultiDict
+from mslib.utils import CaseInsensitiveMultiDict
 
 # Logging the Standard Output, which will be added to the Apache Log Files
 logging.basicConfig(level=logging.DEBUG,
