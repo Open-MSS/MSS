@@ -27,12 +27,19 @@
 
 
 import sys
+import mock
+import os
+
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
-from mslib._tests.utils import close_modal_messagebox
+from mslib._tests.utils import close_modal_messagebox, BASE_DIR
 import mslib.msui.mss_pyui as mss_pyui
 
 
 class Test_MSSSideViewWindow(object):
+    sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
+    save_csv = os.path.join(BASE_DIR, "example.csv")
+    save_ftml = os.path.join(BASE_DIR, "example.ftml")
+
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
 
@@ -105,4 +112,48 @@ class Test_MSSSideViewWindow(object):
         self.window.actionAboutMSUI.trigger()
         QtWidgets.QApplication.processEvents()
         assert not close_modal_messagebox(self.window)
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+                return_value=os.path.join(sample_path, "example.ftml"))
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getSaveFileName",
+                return_value=save_ftml)
+    def test_load_flighttrack(self, mocksave, mockopen):
+        assert self.window.listFlightTracks.count() == 1
+        self.window.openFlightTrack()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1
+        assert mocksave.call_count == 0
+        assert not close_modal_messagebox(self.window)
+        self.window.saveFlightTrackAs()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1
+        assert mocksave.call_count == 1
+        assert not close_modal_messagebox(self.window)
+        assert os.path.exists(self.save_ftml)
+        # todo check for content of saved file
+        os.remove(self.save_ftml)
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+                return_value=os.path.join(sample_path, "example.csv"))
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getSaveFileName",
+                return_value=save_csv)
+    def test_import_csv(self, mocksave, mockopen):
+        assert self.window.listFlightTracks.count() == 1
+        self.window.actionImportFlightTrackCSV()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1
+        assert mocksave.call_count == 0
+        assert not close_modal_messagebox(self.window)
+        self.window.actionExportFlightTrackCSV()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1
+        assert mocksave.call_count == 1
+        assert not close_modal_messagebox(self.window)
+        assert os.path.exists(self.save_csv)
+        # todo check for content of saved file
+        os.remove(self.save_csv)
 

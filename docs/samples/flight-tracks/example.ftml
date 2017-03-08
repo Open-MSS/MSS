@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack>
+    <Name>new flight track (1)</Name>
+    <ListOfWaypoints>
+      <Waypoint flightlevel="0.0" lat="55.15" location="B" lon="-23.74">
+        <Comments>Takeoff</Comments>
+      </Waypoint>
+      <Waypoint flightlevel="350" lat="42.99" location="A" lon="-12.1">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="380.0" lat="52.785" location="Shannon" lon="-8.925">
+        <Comments>Dive</Comments>
+      </Waypoint>
+      <Waypoint flightlevel="400.0" lat="48.08" location="EDMO" lon="11.28">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="0.0" lat="63.74" location="C" lon="1.73">
+        <Comments>Landing</Comments>
+      </Waypoint>
+    </ListOfWaypoints>
+  </FlightTrack>
