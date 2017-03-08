@@ -26,14 +26,14 @@
     limitations under the License.
 """
 
+import datetime
+import json
+import logging
 import os
 import pickle
-import logging
-import datetime
-from datetime import datetime as dt
-import json
-# related third party imports
+
 import numpy as np
+import paste.util.multidict
 from scipy.interpolate import RectBivariateSpline, interp1d
 from scipy.ndimage import map_coordinates
 
@@ -63,7 +63,6 @@ def config_loader(config_file=None, dataset=None, default=None):
     """
     if config_file is None:
         config_file = constants.CACHED_CONFIG_FILE
-    data = {}
     try:
         with open(os.path.join(config_file)) as source:
             data = json.load(source)
@@ -217,8 +216,6 @@ def get_projection_params(epsg):
         proj_params = {"basemap": {"projection": "stere", "lat_0": -lat_0, "lon_0": lon_0}, "bbox": "latlon"}
     return proj_params
 
-# Utility functions for interpolating vertical sections.
-
 
 def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     """
@@ -315,74 +312,129 @@ def interpolate_vertsec3(data3D, data3D_lats, data3D_lons, lats, lons):
     return np.ma.masked_invalid(curtain)
 
 
-# Satellite Track Predictions
-
-def read_nasa_satellite_prediction(fname):
-    """Read a text file as downloaded from the NASA satellite prediction tool.
-
-    This method reads satellite overpass predictions in ASCII format as
-    downloaded from http://www-air.larc.nasa.gov/tools/predict.htm.
-
-    Returns a list of dictionaries with keys
-      -- utc: Nx1 array with utc times as datetime objects
-      -- satpos: Nx2 array with lon/lat (x/y) of satellite positions
-      -- heading: Nx1 array with satellite headings in degrees
-      -- swath_left: Nx2 array with lon/lat of left swath boundary
-      -- swath_right: Nx2 array with lon/lat of right swath boundary
-    Each dictionary represents a separate overpass.
-
-    All arrays are masked arrays, note that missing values are common. Filter
-    out missing values with numpy.ma.compress_rows().
-
-    NOTE: ****** LON in the 'predict' files seems to be wrong --> needs to be
-                 multiplied by -1. ******
+def latlon_points(p1, p2, numpoints=100, connection='linear'):
     """
-    # Read the file into a list of strings.
-    satfile = open(fname, 'r')
-    satlines = satfile.readlines()
-    satfile.close()
+    Compute intermediate points between two given points.
 
-    # Determine the date from the first line.
-    date = dt.strptime(satlines[0].split()[0], "%Y/%m/%d")
-    basedate = dt.strptime("", "")
+    Arguments:
+    p1, p2 -- points given as lat/lon pairs, i.e. p1, p2 = [lat, lon]
+    numpoints -- number of intermediate points to be computed aloing the path
+    connection -- method to compute the intermediate points. Can be
+                  'linear' or 'greatcircle'
 
-    # "result" will store the individual overpass segments.
-    result = []
-    segment = {"utc": [], "satpos": [], "heading": [],
-               "swath_left": [], "swath_right": []}
-
-    # Define a time difference that specifies when to start a new segment.
-    # If the time between to subsequent points in the file is larger than
-    # this time, a new segment will be started.
-    seg_diff_time = datetime.timedelta(minutes=10)
-
-    # Loop over data lines. Either append point to current segment or start
-    # new segment. Before storing segments to the "result" list, convert
-    # to masked arrays.
-    for line in satlines[2:]:
-        values = line.split()
-        time = date + (dt.strptime(values[0], "%H:%M:%S") - basedate)
-
-        if len(segment["utc"]) == 0 or (time - segment["utc"][-1]) < seg_diff_time:
-            segment["utc"].append(time)
-            segment["satpos"].append([-1. * float(values[2]), float(values[1])])
-            segment["heading"].append(float(values[3]))
-            if len(values) == 8:
-                segment["swath_left"].append([-1. * float(values[5]), float(values[4])])
-                segment["swath_right"].append([-1. * float(values[7]), float(values[6])])
-            else:
-                # TODO 20100504: workaround for instruments without swath
-                segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
-                segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
-
+    Returns two arrays lats, lons with intermediate latitude and longitudes.
+    """
+    LAT = 0
+    LON = 1
+    if connection == 'linear':
+        if p2[LAT] - p1[LAT] == 0:
+            lats = np.ones(numpoints) * p1[LAT]
         else:
-            segment["utc"] = np.array(segment["utc"])
-            segment["satpos"] = np.ma.masked_equal(segment["satpos"], -999.)
-            segment["heading"] = np.ma.masked_equal(segment["heading"], -999.)
-            segment["swath_left"] = np.ma.masked_equal(segment["swath_left"], -999.)
-            segment["swath_right"] = np.ma.masked_equal(segment["swath_right"], -999.)
-            result.append(segment)
-            segment = {"utc": [], "satpos": [], "heading": [],
-                       "swath_left": [], "swath_right": []}
+            lat_step = float(p2[LAT] - p1[LAT]) / (numpoints - 1)
+            lats = np.arange(p1[LAT], p2[LAT] + lat_step / 2, lat_step)
+        if p2[LON] - p1[LON] == 0:
+            lons = np.ones(numpoints) * p1[LON]
+        else:
+            lon_step = float(p2[LON] - p1[LON]) / (numpoints - 1)
+            lons = np.arange(p1[LON], p2[LON] + lon_step / 2, lon_step)
+        return lats, lons
+    elif connection == 'greatcircle':
+        gc = pyproj.Geod(ellps="WGS84")
+        pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints)
+        return (np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]]),
+                np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]]))
+    else:
+        return None, None
 
-    return result
+
+def path_points(points, numpoints=100, connection='linear'):
+    """
+    Compute intermediate points of a path given by a list of points.
+
+    Arguments:
+    points -- list of lat/lon pairs, i.e. [[lat1,lon1], [lat2,lon2], ...]
+    numpoints -- number of intermediate points to be computed along the path
+    connection -- method to compute the intermediate points. Can be
+                  'linear' or 'greatcircle'
+
+    Returns two arrays lats, lons with intermediate latitude and longitudes.
+    """
+    if connection not in ['linear', 'greatcircle']:
+        return None, None
+    LAT = 0
+    LON = 1
+
+    # First compute the lengths of the individual path segments, i.e.
+    # the distances between the points.
+    distances = []
+    for i in range(len(points) - 1):
+        if connection == 'linear':
+            # Use Euclidean distance in lat/lon space.
+            d = np.hypot(points[i][LAT] - points[i + 1][LAT],
+                         points[i][LON] - points[i + 1][LON])
+        elif connection == 'greatcircle':
+            # Use Vincenty distance provided by the geopy module.
+            d = get_distance(points[i], points[i + 1])
+        distances.append(d)
+    distances = np.asarray(distances)
+
+    # Compute the total length of the path and the length of the point
+    # segments to be computed.
+    total_length = distances.sum()
+    length_point_segment = total_length / (numpoints + len(points) - 2)
+
+    # If the total length of the path is zero, all given waypoints have the
+    # same coordinates. Return arrays with numpoints points all having these
+    # coordinate.
+    if total_length == 0.:
+        lons = np.ones(numpoints) * points[0][LON]
+        lats = np.ones(numpoints) * points[0][LAT]
+        return lats, lons
+
+    # For each segment, determine the number of points to be computed
+    # from the distance between the two bounding points and the
+    # length of the point segments. Then compute the intermediate
+    # points. Cut the first point from each segment other than the
+    # first segment to avoid double points.
+    lons = []
+    lats = []
+    for i in range(len(points) - 1):
+        segment_points = int(round(distances[i] / length_point_segment))
+        # Enforce that a segment consists of at least two points
+        # (otherwise latlon_points will throw an exception).
+        segment_points = max(segment_points, 2)
+        # print segment_points
+        lats_, lons_ = latlon_points(points[i], points[i + 1],
+                                     numpoints=segment_points,
+                                     connection=connection)
+        if i == 0:
+            lons.extend(lons_)
+            lats.extend(lats_)
+        else:
+            lons.extend(lons_[1:])
+            lats.extend(lats_[1:])
+    lons = np.asarray(lons)
+    lats = np.asarray(lats)
+    return lats, lons
+
+
+class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
+    """Extension to paste.util.multidict.MultiDict that makes the MultiDict
+       case-insensitive.
+
+    The only overridden method is __getitem__(), which converts string keys
+    to lower case before carrying out comparisons.
+
+    See ../paste/util/multidict.py as well as
+      http://stackoverflow.com/questions/2082152/case-insensitive-dictionary
+    """
+
+    def __getitem__(self, key):
+        if hasattr(key, 'lower'):
+            key = key.lower()
+        for k, v in self._items:
+            if hasattr(k, 'lower'):
+                k = k.lower()
+            if k == key:
+                return v
+        raise KeyError(repr(key))

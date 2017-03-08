@@ -56,7 +56,7 @@ from mslib.msui.mss_qt import QtGui, QtCore
 from mslib.msui.mss_qt import ui_loopwindow as ui
 from mslib.msui import loopviewer_widget as imw
 from mslib.msui.viewwindows import MSSViewWindow
-from mslib.mss_util import config_loader
+from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 

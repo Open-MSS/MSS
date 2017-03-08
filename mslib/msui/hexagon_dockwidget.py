@@ -32,7 +32,7 @@ from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.mss_util import config_loader, rotate_point
+from mslib.utils import config_loader, rotate_point
 
 
 class HexagonException(Exception):

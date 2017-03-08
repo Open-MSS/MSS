@@ -37,7 +37,7 @@ import numpy as np
 
 # local application imports
 from mslib import netCDF4tools
-from mslib import mss_util
+from mslib import utils
 
 
 class MSSPlotDriver(object):
@@ -425,9 +425,9 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         logging.debug("computing {:} interpolation points, connection: {}"
                       .format(vsec_numpoints, vsec_path_connection))
-        self.lats, self.lons = mss_util.path_points(vsec_path,
-                                                    numpoints=vsec_numpoints,
-                                                    connection=vsec_path_connection)
+        self.lats, self.lons = utils.path_points(vsec_path,
+                                                 numpoints=vsec_numpoints,
+                                                 connection=vsec_path_connection)
         self.vsec_path = vsec_path
         self.vsec_numpoints = vsec_numpoints
         self.vsec_path_connection = vsec_path_connection
@@ -480,8 +480,8 @@ class VerticalSectionDriver(MSSPlotDriver):
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
-            data[name] = mss_util.interpolate_vertsec3(var_data, self.lat_data, lon_data,
-                                                       self.lats, self.lons)
+            data[name] = utils.interpolate_vertsec3(var_data, self.lat_data, lon_data,
+                                                    self.lats, self.lons)
             # Free memory.
             del var_data
 
@@ -689,127 +689,6 @@ class HorizontalSectionDriver(MSSPlotDriver):
                       "time {}).\n".format(d3 - d2, d3 - d1))
 
         return image
-
-
-# ToDo move to _tests
-def test_vsec_clouds_path():
-    """TEST: Create a vertical section of the CLOUDS style.
-    """
-    # Define cross-section path (great circle interpolation between two points).
-    p1 = [45.00, 8.]
-    p2 = [50.00, 12.]
-    p3 = [51.00, 15.]
-    p4 = [48.00, 11.]
-
-    import mss_wms_settings
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
-
-    init_time = datetime(2010, 12, 14, 00)
-    valid_time = datetime(2010, 12, 14, 15)
-
-    import mpl_vsec_styles
-    # plot_object = mpl_vsec_styles.VSCloudsStyle01(p_top=20000.)
-    plot_object = mpl_vsec_styles.VSTemperatureStyle01(p_top=2000.)
-
-    vsec = VerticalSectionDriver(nwpaccess)
-    vsec.set_plot_parameters(plot_object=plot_object,
-                             vsec_path=[p1, p2, p3, p4],
-                             vsec_numpoints=101,
-                             vsec_path_connection='greatcircle',
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=False,
-                             show=True)
-    vsec.plot()
-
-
-def test_hsec_clouds_total():
-    """TEST: Create a horizontal section of the CLOUDS style.
-    """
-    # Define a bounding box for the map.
-    #    bbox = [0,30,30,60]
-    bbox = [-22.5, 27.5, 55, 62.5]
-
-    import mss_wms_settings
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
-
-    init_time = datetime(2010, 12, 14, 00)
-    valid_time = datetime(2010, 12, 14, 15)
-
-    import mpl_hsec_styles
-    plot_object = mpl_hsec_styles.HSCloudsStyle01()
-
-    hsec = HorizontalSectionDriver(nwpaccess)
-    hsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             # epsg=4326,
-                             epsg=77790010,
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=False,
-                             show=True)
-    hsec.plot()
-
-
-def test_hsec_temp():
-    """TEST: Create a horizontal section of the TEMPERATURE style.
-    """
-    # Define a bounding box for the map.
-    #    bbox = [0,30,30,60]
-    bbox = [-22.5, 27.5, 55, 62.5]
-
-    import mss_wms_settings
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
-
-    init_time = datetime(2010, 12, 16, 00)
-    valid_time = datetime(2010, 12, 16, 15)
-
-    import mpl_hsec_styles
-    #    plot_object = mpl_hsec_styles.HS_TemperatureStyle_ML_01()
-    #    level = 50
-    plot_object = mpl_hsec_styles.HS_TemperatureStyle_PL_01()
-    level = 925
-
-    hsec = HorizontalSectionDriver(nwpaccess)
-    hsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             level=level,
-                             # epsg=4326,
-                             epsg=77790010,
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=True,
-                             show=True)
-    hsec.plot()
-
-
-def test_hsec_geopwind():
-    """TEST: Create a horizontal section.
-    """
-    # Define a bounding box for the map.
-    bbox = [-22.5, 27.5, 55, 62.5]
-
-    import mss_wms_settings
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
-
-    init_time = datetime(2010, 12, 16, 00)
-    valid_time = datetime(2010, 12, 16, 15)
-
-    import mpl_hsec_styles
-    plot_object = mpl_hsec_styles.HS_GeopotentialWindStyle_PL()
-    level = 300
-
-    hsec = HorizontalSectionDriver(nwpaccess)
-    hsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             level=level,
-                             # epsg=4326,
-                             epsg=77790010,
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=True,
-                             show=True)
-    hsec.plot()
 
 
 if __name__ == "__main__":

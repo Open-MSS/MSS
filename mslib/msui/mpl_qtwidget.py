@@ -32,7 +32,7 @@
 from datetime import datetime
 
 import logging
-from mslib.mss_util import config_loader
+from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 import numpy as np
@@ -453,6 +453,11 @@ class MplSideViewCanvas(MplCanvas):
         bbox = (num_interpolation_points, axis[2] / 100,
                 num_labels, axis[3] / 100)
         return bbox
+
+    def drawLegend(self, img):
+        if img is not None:
+            logging.error("Legends not supported in SideView mode!")
+            raise NotImplementedError
 
     def drawImage(self, img):
         """Draw the image img on the current plot.
