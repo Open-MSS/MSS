@@ -75,7 +75,6 @@ def test_hsec_clouds_total():
     bbox = [-22.5, 27.5, 55, 62.5]
 
     nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
-    #20121017_12
     init_time = datetime(2012, 10, 17, 12)
     valid_time = datetime(2012, 10, 17, 12)
 
@@ -150,4 +149,3 @@ def test_hsec_geopwind():
                              show=True)
     img = hsec.plot()
     assert img is not None
-

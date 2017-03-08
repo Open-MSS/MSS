@@ -49,7 +49,7 @@ from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import loopview
 from mslib.msui import constants
-from mslib.mss_util import config_loader
+from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 

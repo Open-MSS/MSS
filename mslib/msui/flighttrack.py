@@ -45,9 +45,9 @@ import string
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
 
 # local application imports
-from mslib import mss_util
+from mslib import utils
 from mslib import thermolib
-from mslib.mss_util import config_loader, save_settings_pickle, load_settings_pickle
+from mslib.utils import config_loader, save_settings_pickle, load_settings_pickle
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
@@ -248,7 +248,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         Returns lats, lons.
         """
         path = [[wp.lat, wp.lon] for wp in self.waypoints]
-        lats, lons = mss_util.path_points(
+        lats, lons = utils.path_points(
             path, numpoints=numpoints, connection=connection)
         return lats, lons
 
@@ -467,8 +467,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp1.rem_fuel = self.performance_settings["fuel"]
             else:
                 wp0 = waypoints[pos - 1]
-                wp1.distance_to_prev = mss_util.get_distance((wp0.lat, wp0.lon),
-                                                             (wp1.lat, wp1.lon))
+                wp1.distance_to_prev = utils.get_distance((wp0.lat, wp0.lon),
+                                                          (wp1.lat, wp1.lon))
 
                 time, fuel = get_duration_fuel(wp0.flightlevel, wp1.flightlevel, wp1.distance_to_prev, wp0.weight)
                 wp1.leg_time = time
@@ -481,8 +481,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # Update the distance of the following waypoint as well.
         if pos < len(waypoints) - 1:
             wp2 = waypoints[pos + 1]
-            wp2.distance_to_prev = mss_util.get_distance((wp1.lat, wp1.lon),
-                                                         (wp2.lat, wp2.lon))
+            wp2.distance_to_prev = utils.get_distance((wp1.lat, wp1.lon),
+                                                      (wp2.lat, wp2.lon))
 
         # Update total distances of waypoint at index position and all
         # following waypoints.

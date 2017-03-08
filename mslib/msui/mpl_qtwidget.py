@@ -32,7 +32,7 @@
 from datetime import datetime
 
 import logging
-from mslib.mss_util import config_loader
+from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 import numpy as np

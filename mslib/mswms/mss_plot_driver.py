@@ -37,7 +37,7 @@ import numpy as np
 
 # local application imports
 from mslib import netCDF4tools
-from mslib import mss_util
+from mslib import utils
 
 
 class MSSPlotDriver(object):
@@ -425,9 +425,9 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         logging.debug("computing {:} interpolation points, connection: {}"
                       .format(vsec_numpoints, vsec_path_connection))
-        self.lats, self.lons = mss_util.path_points(vsec_path,
-                                                    numpoints=vsec_numpoints,
-                                                    connection=vsec_path_connection)
+        self.lats, self.lons = utils.path_points(vsec_path,
+                                                 numpoints=vsec_numpoints,
+                                                 connection=vsec_path_connection)
         self.vsec_path = vsec_path
         self.vsec_numpoints = vsec_numpoints
         self.vsec_path_connection = vsec_path_connection
@@ -480,8 +480,8 @@ class VerticalSectionDriver(MSSPlotDriver):
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
-            data[name] = mss_util.interpolate_vertsec3(var_data, self.lat_data, lon_data,
-                                                       self.lats, self.lons)
+            data[name] = utils.interpolate_vertsec3(var_data, self.lat_data, lon_data,
+                                                    self.lats, self.lons)
             # Free memory.
             del var_data
 

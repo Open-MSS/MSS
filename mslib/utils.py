@@ -26,14 +26,14 @@
     limitations under the License.
 """
 
+import datetime
+import json
+import logging
 import os
 import pickle
-import logging
-import datetime
-from datetime import datetime as dt
-import json
-# related third party imports
+
 import numpy as np
+import paste.util.multidict
 from scipy.interpolate import RectBivariateSpline, interp1d
 from scipy.ndimage import map_coordinates
 
@@ -63,7 +63,6 @@ def config_loader(config_file=None, dataset=None, default=None):
     """
     if config_file is None:
         config_file = constants.CACHED_CONFIG_FILE
-    data = {}
     try:
         with open(os.path.join(config_file)) as source:
             data = json.load(source)
@@ -216,8 +215,6 @@ def get_projection_params(epsg):
         lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
         proj_params = {"basemap": {"projection": "stere", "lat_0": -lat_0, "lon_0": lon_0}, "bbox": "latlon"}
     return proj_params
-
-# Utility functions for interpolating vertical sections.
 
 
 def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
@@ -421,72 +418,23 @@ def path_points(points, numpoints=100, connection='linear'):
     return lats, lons
 
 
-def read_nasa_satellite_prediction(fname):
-    """Read a text file as downloaded from the NASA satellite prediction tool.
+class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
+    """Extension to paste.util.multidict.MultiDict that makes the MultiDict
+       case-insensitive.
 
-    This method reads satellite overpass predictions in ASCII format as
-    downloaded from http://www-air.larc.nasa.gov/tools/predict.htm.
+    The only overridden method is __getitem__(), which converts string keys
+    to lower case before carrying out comparisons.
 
-    Returns a list of dictionaries with keys
-      -- utc: Nx1 array with utc times as datetime objects
-      -- satpos: Nx2 array with lon/lat (x/y) of satellite positions
-      -- heading: Nx1 array with satellite headings in degrees
-      -- swath_left: Nx2 array with lon/lat of left swath boundary
-      -- swath_right: Nx2 array with lon/lat of right swath boundary
-    Each dictionary represents a separate overpass.
-
-    All arrays are masked arrays, note that missing values are common. Filter
-    out missing values with numpy.ma.compress_rows().
-
-    NOTE: ****** LON in the 'predict' files seems to be wrong --> needs to be
-                 multiplied by -1. ******
+    See ../paste/util/multidict.py as well as
+      http://stackoverflow.com/questions/2082152/case-insensitive-dictionary
     """
-    # Read the file into a list of strings.
-    satfile = open(fname, 'r')
-    satlines = satfile.readlines()
-    satfile.close()
 
-    # Determine the date from the first line.
-    date = dt.strptime(satlines[0].split()[0], "%Y/%m/%d")
-    basedate = dt.strptime("", "")
-
-    # "result" will store the individual overpass segments.
-    result = []
-    segment = {"utc": [], "satpos": [], "heading": [],
-               "swath_left": [], "swath_right": []}
-
-    # Define a time difference that specifies when to start a new segment.
-    # If the time between to subsequent points in the file is larger than
-    # this time, a new segment will be started.
-    seg_diff_time = datetime.timedelta(minutes=10)
-
-    # Loop over data lines. Either append point to current segment or start
-    # new segment. Before storing segments to the "result" list, convert
-    # to masked arrays.
-    for line in satlines[2:]:
-        values = line.split()
-        time = date + (dt.strptime(values[0], "%H:%M:%S") - basedate)
-
-        if len(segment["utc"]) == 0 or (time - segment["utc"][-1]) < seg_diff_time:
-            segment["utc"].append(time)
-            segment["satpos"].append([-1. * float(values[2]), float(values[1])])
-            segment["heading"].append(float(values[3]))
-            if len(values) == 8:
-                segment["swath_left"].append([-1. * float(values[5]), float(values[4])])
-                segment["swath_right"].append([-1. * float(values[7]), float(values[6])])
-            else:
-                # TODO 20100504: workaround for instruments without swath
-                segment["swath_left"].append([-1. * float(values[2]), float(values[1])])
-                segment["swath_right"].append([-1. * float(values[2]), float(values[1])])
-
-        else:
-            segment["utc"] = np.array(segment["utc"])
-            segment["satpos"] = np.ma.masked_equal(segment["satpos"], -999.)
-            segment["heading"] = np.ma.masked_equal(segment["heading"], -999.)
-            segment["swath_left"] = np.ma.masked_equal(segment["swath_left"], -999.)
-            segment["swath_right"] = np.ma.masked_equal(segment["swath_right"], -999.)
-            result.append(segment)
-            segment = {"utc": [], "satpos": [], "heading": [],
-                       "swath_left": [], "swath_right": []}
-
-    return result
+    def __getitem__(self, key):
+        if hasattr(key, 'lower'):
+            key = key.lower()
+        for k, v in self._items:
+            if hasattr(k, 'lower'):
+                k = k.lower()
+            if k == key:
+                return v
+        raise KeyError(repr(key))

@@ -31,7 +31,7 @@ import datetime
 
 import logging
 import os
-from mslib.mss_util import config_loader
+from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from mslib.msui.mss_qt import QtCore, QtGui

@@ -27,7 +27,7 @@
 
 import pytest
 import datetime
-from mslib import mss_util
+from mslib import utils
 
 
 class TestConfigLoader(object):
@@ -37,7 +37,7 @@ class TestConfigLoader(object):
 
     def test_default_config(self):
         try:
-            data = mss_util.config_loader()
+            data = utils.config_loader()
         except IOError:
             pytest.skip("no config file found")
         assert isinstance(data, dict)
@@ -46,20 +46,20 @@ class TestConfigLoader(object):
 
     def test_default_config_dataset(self):
         try:
-            data = mss_util.config_loader(dataset="num_labels")
+            data = utils.config_loader(dataset="num_labels")
         except IOError:
             pytest.skip("no config file found")
         assert data == 10
         # defined value and not a default one
-        data = mss_util.config_loader(dataset="num_labels", default=5)
+        data = utils.config_loader(dataset="num_labels", default=5)
         assert data == 10
         # default for non existing entry
-        data = mss_util.config_loader(dataset="foobar", default=5)
+        data = utils.config_loader(dataset="foobar", default=5)
         assert data == 5
 
     def test_default_config_wrong_file(self):
         # return default if no access to config file given
-        data = mss_util.config_loader(config_file="foo.json", default={"foo": "123"})
+        data = utils.config_loader(config_file="foo.json", default={"foo": "123"})
         assert data == {"foo": "123"}
 
 
@@ -72,7 +72,7 @@ class TestGetDistance(object):
         coordinates_distance = [((50.355136, 7.566077), (50.353968, 4.577915), 212),
                                 ((-5.135943, -42.792442), (4.606085, 120.028077), 18130)]
         for coord1, coord2, distance in coordinates_distance:
-            assert int(mss_util.get_distance(coord1, coord2)) == distance
+            assert int(utils.get_distance(coord1, coord2)) == distance
 
 
 class TestTimes(object):
@@ -80,20 +80,20 @@ class TestTimes(object):
     tests about times
     """
     def test_datetime_to_jsec(self):
-        assert mss_util.datetime_to_jsec(datetime.datetime(2000, 2, 1, 0, 0, 0, 0)) == 2678400.0
-        assert mss_util.datetime_to_jsec(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)) == 0
-        assert mss_util.datetime_to_jsec(datetime.datetime(1995, 1, 1, 0, 0, 0, 0)) == -157766400.0
+        assert utils.datetime_to_jsec(datetime.datetime(2000, 2, 1, 0, 0, 0, 0)) == 2678400.0
+        assert utils.datetime_to_jsec(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)) == 0
+        assert utils.datetime_to_jsec(datetime.datetime(1995, 1, 1, 0, 0, 0, 0)) == -157766400.0
 
     def test_jsec_to_datetime(self):
-        assert mss_util.jsec_to_datetime(0) == datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
-        assert mss_util.jsec_to_datetime(3600) == datetime.datetime(2000, 1, 1, 1, 0, 0, 0)
-        assert mss_util.jsec_to_datetime(-157766400.0) == datetime.datetime(1995, 1, 1, 0, 0, 0, 0)
+        assert utils.jsec_to_datetime(0) == datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
+        assert utils.jsec_to_datetime(3600) == datetime.datetime(2000, 1, 1, 1, 0, 0, 0)
+        assert utils.jsec_to_datetime(-157766400.0) == datetime.datetime(1995, 1, 1, 0, 0, 0, 0)
 
     def test_compute_hour_of_day(self):
-        assert mss_util.compute_hour_of_day(0) == 0
-        assert mss_util.compute_hour_of_day(86400) == 0
-        assert mss_util.compute_hour_of_day(3600) == 1
-        assert mss_util.compute_hour_of_day(82800) == 23
+        assert utils.compute_hour_of_day(0) == 0
+        assert utils.compute_hour_of_day(86400) == 0
+        assert utils.compute_hour_of_day(3600) == 1
+        assert utils.compute_hour_of_day(82800) == 23
 
 
 class TestAngles(object):
@@ -101,21 +101,21 @@ class TestAngles(object):
     tests about angles
     """
     def test_normalize_angle(self):
-        assert mss_util.fix_angle(0) == 0
-        assert mss_util.fix_angle(180) == 180
-        assert mss_util.fix_angle(270) == 270
-        assert mss_util.fix_angle(-90) == 270
-        assert mss_util.fix_angle(-180) == 180
-        assert mss_util.fix_angle(-181) == 179
+        assert utils.fix_angle(0) == 0
+        assert utils.fix_angle(180) == 180
+        assert utils.fix_angle(270) == 270
+        assert utils.fix_angle(-90) == 270
+        assert utils.fix_angle(-180) == 180
+        assert utils.fix_angle(-181) == 179
 
     def test_rotate_point(self):
-        assert mss_util.rotate_point([0, 0], 0) == (0.0, 0.0)
-        assert mss_util.rotate_point([0, 0], 180) == (0.0, 0.0)
-        assert mss_util.rotate_point([1, 0], 0) == (1.0, 0.0)
-        assert mss_util.rotate_point([100, 90], 90) == (-90, 100)
+        assert utils.rotate_point([0, 0], 0) == (0.0, 0.0)
+        assert utils.rotate_point([0, 0], 180) == (0.0, 0.0)
+        assert utils.rotate_point([1, 0], 0) == (1.0, 0.0)
+        assert utils.rotate_point([100, 90], 90) == (-90, 100)
 
 
 class TestConverter(object):
     def test_convert_pressure_to_altitude(self):
-        assert mss_util.convertHPAToKM(1013.25) == 0
-        assert int(mss_util.convertHPAToKM(25) * 1000) == 22415
+        assert utils.convertHPAToKM(1013.25) == 0
+        assert int(utils.convertHPAToKM(25) * 1000) == 22415
