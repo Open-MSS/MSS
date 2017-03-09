@@ -79,15 +79,16 @@ class Test_HSecWMSControlWidget(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
         self.thread.terminate()
         # the next del statement should not be necessary, but the windows stay around without it.
-        # It sometimes also cause the QThread terminated early statement, wich should be prevented
+        # It sometimes also cause the QThread terminated early statement, which should be prevented
         # by the stuff in del __del__ function...
-        del self.window
+        # del self.window
         #  sys.exit(self.application.exec_())
 
     def query_server(self, url):

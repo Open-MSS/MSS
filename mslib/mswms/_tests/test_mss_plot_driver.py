@@ -8,6 +8,7 @@
 
     This file is part of mss.
 
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Reimar Bauer, Joern Ungermann
     :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
@@ -35,7 +36,8 @@ import mslib.mswms.mpl_hsec_styles as mpl_hsec_styles
 
 
 def test_vsec_clouds_path():
-    """TEST: Create a vertical section of the CLOUDS style.
+    """
+    TEST: Create a vertical section of the CLOUDS style.
     """
     # Define cross-section path (great circle interpolation between two points).
     p1 = [45.00, 8.]
@@ -67,11 +69,11 @@ def test_vsec_clouds_path():
 
 
 def test_hsec_clouds_total():
-    """TEST: Create a horizontal section of the CLOUDS style.
+    """
+    TEST: Create a horizontal section of the CLOUDS style.
     """
     pytest.skip("Test data not available")
     # Define a bounding box for the map.
-    #    bbox = [0,30,30,60]
     bbox = [-22.5, 27.5, 55, 62.5]
 
     nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
@@ -83,7 +85,6 @@ def test_hsec_clouds_total():
     hsec = HorizontalSectionDriver(nwpaccess)
     hsec.set_plot_parameters(plot_object=plot_object,
                              bbox=bbox,
-                             # epsg=4326,
                              epsg=77790010,
                              init_time=init_time,
                              valid_time=valid_time,
@@ -94,7 +95,8 @@ def test_hsec_clouds_total():
 
 
 def test_hsec_temp():
-    """TEST: Create a horizontal section of the TEMPERATURE style.
+    """
+    TEST: Create a horizontal section of the TEMPERATURE style.
     """
     # Define a bounding box for the map.
     #    bbox = [0,30,30,60]
@@ -112,7 +114,6 @@ def test_hsec_temp():
     hsec.set_plot_parameters(plot_object=plot_object,
                              bbox=bbox,
                              level=level,
-                             # epsg=4326,
                              epsg=77790010,
                              init_time=init_time,
                              valid_time=valid_time,
@@ -123,7 +124,8 @@ def test_hsec_temp():
 
 
 def test_hsec_geopwind():
-    """TEST: Create a horizontal section.
+    """
+    TEST: Create a horizontal section.
     """
     # Define a bounding box for the map.
     bbox = [-22.5, 27.5, 55, 62.5]
@@ -140,7 +142,6 @@ def test_hsec_geopwind():
     hsec.set_plot_parameters(plot_object=plot_object,
                              bbox=bbox,
                              level=level,
-                             # epsg=4326,
                              epsg=77790010,
                              style="default",
                              init_time=init_time,
