@@ -49,10 +49,10 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        del self.window
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)

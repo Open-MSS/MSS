@@ -25,11 +25,11 @@
     limitations under the License.
 """
 
+import mock
 import sys
 
+from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import flighttrack as ft
-#  from mslib._tests.utils import BASE_DIR, DATA_DIR, SERVER_CONFIG_FILE, close_modal_messagebox
-
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
 import mslib.msui.tableview as tv
 
@@ -57,16 +57,57 @@ class Test_TableView(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        del self.window
 
     def test_open_hex(self):
+        """
+        Tests opening the hexagon dock widget.
+        """
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
 
-    def test_insert_points(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
+                return_value=QtWidgets.QMessageBox.Yes)
+    def test_insertremove_hexagon(self, mockbox):
+        """
+        Test inserting and removing hexagons in TableView using the Hexagon dockwidget
+        """
+        self.window.cbTools.currentIndexChanged.emit(1)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 5
+        QtTest.QTest.mouseClick(self.window.docks[0].widget().pbAddHexagon, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 12
+        assert mockbox.call_count == 0
+        QtTest.QTest.mouseClick(self.window.docks[0].widget().pbRemoveHexagon, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockbox.call_count == 1
+        assert len(self.window.waypoints_model.waypoints) == 5
+
+    def test_performance(self):
+        """
+        Check effect of performance settings on TableView
+        """
+        self.window.waypoints_model.performance_settings = DEFAULT_PERFORMANCE
+        self.window.waypoints_model.update_distances(0)
+        self.window.waypoints_model.dataChanged.emit(
+            self.window.waypoints_model.index(0, 0), self.window.waypoints_model.index(0, 0))
+        self.window.resizeColumns()
+        assert self.window.waypoints_model.columnCount() == 13
+        visible = dict(DEFAULT_PERFORMANCE)
+        visible["visible"] = True
+        self.window.waypoints_model.performance_settings = visible
+        self.window.waypoints_model.update_distances(0)
+        self.window.waypoints_model.dataChanged.emit(
+            self.window.waypoints_model.index(0, 0), self.window.waypoints_model.index(0, 0))
+        self.window.resizeColumns()
+        assert self.window.waypoints_model.columnCount() == 13
+        # todo this does not check that actually something happens
+
+    def test_insert_point(self):
         """
         Check insertion of points
         """
@@ -79,6 +120,23 @@ class Test_TableView(object):
         assert len(self.window.waypoints_model.waypoints) == 6
         assert all([_x == _y for _x, _y in zip(wps[:2], wps2[:2])])
         assert all([_x == _y for _x, _y in zip(wps[2:], wps2[3:])])
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
+                return_value=QtWidgets.QMessageBox.Yes)
+    def test_remove_point(self, mockbox):
+        """
+        Check insertion of points
+        """
+        QtTest.QTest.keyClick(self.window.tableWayPoints, QtCore.Qt.Key_Down)
+        assert len(self.window.waypoints_model.waypoints) == 5
+        wps = list(self.window.waypoints_model.waypoints)
+        QtTest.QTest.mouseClick(self.window.btDeleteWayPoint, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        wps2 = self.window.waypoints_model.waypoints
+        assert mockbox.call_count == 1
+        assert len(self.window.waypoints_model.waypoints) == 4
+        assert all([_x == _y for _x, _y in zip(wps[:1], wps2[:1])])
+        assert all([_x == _y for _x, _y in zip(wps[2:], wps2[1:])])
 
     def test_reverse_points(self):
         """

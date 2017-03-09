@@ -250,7 +250,7 @@ class MSSPlotDriver(object):
         """
         self.data_vars = {}
         for df_type, df_name in self.plot_object.required_datafields:
-            varname, var = netCDF4tools.identify_variable(self.dataset, df_name)
+            varname, var = netCDF4tools.identify_variable(self.dataset, df_name, check=True)
             logging.debug("\tidentified variable <{}> for field <{}>".format(varname, df_name))
             self.data_vars[df_name] = var
 
