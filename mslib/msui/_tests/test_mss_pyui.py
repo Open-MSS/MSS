@@ -30,15 +30,18 @@ import sys
 import mock
 import os
 
+
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 from mslib._tests.utils import close_modal_messagebox, BASE_DIR
 import mslib.msui.mss_pyui as mss_pyui
+from mslib.plugins.io.text import load_from_txt, save_to_txt
 
 
 class Test_MSSSideViewWindow(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
     save_csv = os.path.join(BASE_DIR, "example.csv")
     save_ftml = os.path.join(BASE_DIR, "example.ftml")
+    save_txt = os.path.join(BASE_DIR, "example.txt")
 
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
@@ -51,10 +54,14 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        for i in range(self.window.listViews.count()):
+            self.window.listViews.item(i).window.hide()
+        for i in range(self.window.listTools.count()):
+            self.window.listTools.item(i).window.hide()
+        self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        del self.window
 
     def test_app_start(self):
         assert not close_modal_messagebox(self.window)
@@ -117,7 +124,7 @@ class Test_MSSSideViewWindow(object):
                 return_value=os.path.join(sample_path, "example.ftml"))
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=save_ftml)
-    def test_load_flighttrack(self, mocksave, mockopen):
+    def test_loadsaveas_flighttrack(self, mocksave, mockopen):
         assert self.window.listFlightTracks.count() == 1
         self.window.openFlightTrack()
         QtWidgets.QApplication.processEvents()
@@ -139,7 +146,7 @@ class Test_MSSSideViewWindow(object):
                 return_value=os.path.join(sample_path, "example.csv"))
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=save_csv)
-    def test_import_csv(self, mocksave, mockopen):
+    def test_plugin_csv(self, mocksave, mockopen):
         assert self.window.listFlightTracks.count() == 1
         self.window.actionImportFlightTrackCSV()
         QtWidgets.QApplication.processEvents()
@@ -157,3 +164,27 @@ class Test_MSSSideViewWindow(object):
         # todo check for content of saved file
         os.remove(self.save_csv)
 
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+                return_value=os.path.join(sample_path, "example.txt"))
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getSaveFileName",
+                return_value=save_txt)
+    def test_plugin_txt(self, mocksave, mockopen):
+        self.window.addImportFilter("TXT", "txt", load_from_txt)
+        self.window.addExportFilter("TXT", "txt", save_to_txt)
+
+        assert self.window.listFlightTracks.count() == 1
+        self.window.actionImportFlightTrackTXT()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1
+        assert mocksave.call_count == 0
+        assert not close_modal_messagebox(self.window)
+        self.window.actionExportFlightTrackTXT()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1
+        assert mocksave.call_count == 1
+        assert not close_modal_messagebox(self.window)
+        assert os.path.exists(self.save_txt)
+        # todo check for content of saved file
+        os.remove(self.save_txt)

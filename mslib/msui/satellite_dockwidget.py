@@ -25,18 +25,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import datetime
+
 import logging
 import os
-
-# related third party imports
-from datetime import datetime as dt
-
+from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 import numpy as np
 
 from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
-
-# local application imports
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
 from mslib.utils import save_settings_pickle, load_settings_pickle
 
@@ -67,8 +63,8 @@ def read_nasa_satellite_prediction(fname):
     satfile.close()
 
     # Determine the date from the first line.
-    date = dt.strptime(satlines[0].split()[0], "%Y/%m/%d")
-    basedate = dt.strptime("", "")
+    date = datetime.strptime(satlines[0].split()[0], "%Y/%m/%d")
+    basedate = datetime.strptime("", "")
 
     # "result" will store the individual overpass segments.
     result = []
@@ -78,14 +74,14 @@ def read_nasa_satellite_prediction(fname):
     # Define a time difference that specifies when to start a new segment.
     # If the time between to subsequent points in the file is larger than
     # this time, a new segment will be started.
-    seg_diff_time = datetime.timedelta(minutes=10)
+    seg_diff_time = timedelta(minutes=10)
 
     # Loop over data lines. Either append point to current segment or start
     # new segment. Before storing segments to the "result" list, convert
     # to masked arrays.
     for line in satlines[2:]:
         values = line.split()
-        time = date + (dt.strptime(values[0], "%H:%M:%S") - basedate)
+        time = date + (datetime.strptime(values[0], "%H:%M:%S") - basedate)
 
         if len(segment["utc"]) == 0 or (time - segment["utc"][-1]) < seg_diff_time:
             segment["utc"].append(time)
