@@ -173,15 +173,3 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
             segment = self.overpass_segments[index]
         if self.view is not None:
             self.view.plotSatelliteOverpass(segment)
-
-
-def _main():
-    import sys
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = SatelliteControlWidget()
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()

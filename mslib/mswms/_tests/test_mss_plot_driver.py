@@ -63,7 +63,7 @@ def test_vsec_clouds_path():
                              init_time=init_time,
                              valid_time=valid_time,
                              noframe=False,
-                             show=True)
+                             show=False)
     img = vsec.plot()
     assert img is not None
 
@@ -89,7 +89,7 @@ def test_hsec_clouds_total():
                              init_time=init_time,
                              valid_time=valid_time,
                              noframe=False,
-                             show=True)
+                             show=False)
     img = hsec.plot()
     assert img is not None
 
@@ -118,7 +118,7 @@ def test_hsec_temp():
                              init_time=init_time,
                              valid_time=valid_time,
                              noframe=True,
-                             show=True)
+                             show=False)
     img = hsec.plot()
     assert img is not None
 
@@ -147,6 +147,6 @@ def test_hsec_geopwind():
                              init_time=init_time,
                              valid_time=valid_time,
                              noframe=True,
-                             show=True)
+                             show=False)
     img = hsec.plot()
     assert img is not None

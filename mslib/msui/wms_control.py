@@ -1637,29 +1637,3 @@ class HSecWMSControlWidget(WMSControlWidget):
         self.view.drawImage(img)
         self.view.drawLegend(legend_img)
         self.view.waypoints_interactor.update()
-
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = WMSControlWidget(default_WMS=[])
-    window.btGetMap.clicked.connect(window.getMap)
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()
-
-# IPYTHON TEST LINES.
-
-# import wms_control
-# base_url = "http://localhost:8081/mss_wms"
-# wms = wms_control.MSSWebMapService(base_url, version='1.1.1')
-# l = wms.contents["PLGeopWind"]
