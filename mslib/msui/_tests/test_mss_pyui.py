@@ -30,11 +30,11 @@ import sys
 import mock
 import os
 
-
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 from mslib._tests.utils import close_modal_messagebox, BASE_DIR
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.plugins.io.text import load_from_txt, save_to_txt
+from mslib.plugins.io.flitestar import load_from_flitestar
 
 
 class Test_MSSSideViewWindow(object):
@@ -169,17 +169,17 @@ class Test_MSSSideViewWindow(object):
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=save_txt)
     def test_plugin_txt(self, mocksave, mockopen):
-        self.window.addImportFilter("TXT", "txt", load_from_txt)
-        self.window.addExportFilter("TXT", "txt", save_to_txt)
+        self.window.addImportFilter("_TXT", "txt", load_from_txt)
+        self.window.addExportFilter("_TXT", "txt", save_to_txt)
 
         assert self.window.listFlightTracks.count() == 1
-        self.window.actionImportFlightTrackTXT()
+        self.window.actionImportFlightTrack_TXT()
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
         assert mockopen.call_count == 1
         assert mocksave.call_count == 0
         assert not close_modal_messagebox(self.window)
-        self.window.actionExportFlightTrackTXT()
+        self.window.actionExportFlightTrack_TXT()
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
         assert mockopen.call_count == 1
@@ -188,3 +188,14 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_txt)
         # todo check for content of saved file
         os.remove(self.save_txt)
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+                return_value=os.path.join(sample_path, "flitestar.txt"))
+    def test_plugin_flitestar(self, mockopen):
+        self.window.addImportFilter("_FliteStar", "txt", load_from_flitestar)
+        assert self.window.listFlightTracks.count() == 1
+        self.window.actionImportFlightTrack_FliteStar()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1
+        assert not close_modal_messagebox(self.window)
