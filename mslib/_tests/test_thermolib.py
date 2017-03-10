@@ -43,12 +43,8 @@ def test_flightlevel2pressure():
 def test_pressure2flightlevel():
     assert (tl.pressure2flightlevel(50000) - 182.8913020578899) < 1e-6
     assert (tl.pressure2flightlevel(10000) - 530.83319183138485) < 1e-6
-    try:
+    with pytest.raises(ValueError):
         tl.pressure2flightlevel(10)
-    except ValueError:
-        pass
-    else:
-        assert False
     fls = np.arange(5000, 100000, 5000)
     assert np.allclose([tl.pressure2flightlevel(_x) for _x in fls],
                        tl.pressure2flightlevel_a(fls))
@@ -63,12 +59,8 @@ def test_isa_temperature():
     assert tl.isa_temperature(600) == 216.65
     assert (tl.isa_temperature(700) - 217.9860000000203) < 1e-6
     assert (tl.isa_temperature(800) - 221.0340000000232) < 1e-6
-    try:
+    with pytest.raises(ValueError):
         tl.isa_temperature(1200)
-    except ValueError:
-        pass
-    else:
-        assert False
 
 
 def test_geop_thickness():
