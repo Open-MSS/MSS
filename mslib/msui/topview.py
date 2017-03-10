@@ -323,39 +323,3 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         settings = load_settings_pickle(self.settings_tag, {})
         self.getView().setMapAppearance(settings)
-
-
-# Main program to test the window during development. The following code
-# will not be executed if the view is opened from the Mission Support
-# System user interface.
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    import sys
-
-    # Create an initital flight track.
-    initial_waypoints = [ft.Waypoint(48.10, 11.27, 0, comments="take off"),
-                         ft.Waypoint(52.32, 09.21, 200),
-                         ft.Waypoint(55.10, 11.27, 0, comments="landing")]
-    initial_waypoints = [ft.Waypoint(40., 25., 0),
-                         ft.Waypoint(60., -10., 0),
-                         ft.Waypoint(40., 10, 0)]
-
-    waypoints_model = ft.WaypointsTableModel(QString(""))
-    waypoints_model.insertRows(0, rows=len(initial_waypoints),
-                               waypoints=initial_waypoints)
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = MSSTopViewWindow(model=waypoints_model)
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()
