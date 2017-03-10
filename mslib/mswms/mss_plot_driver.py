@@ -689,16 +689,3 @@ class HorizontalSectionDriver(MSSPlotDriver):
                       "time {}).\n".format(d3 - d2, d3 - d1))
 
         return image
-
-
-if __name__ == "__main__":
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(levelname)s %(asctime)s %(funcName)s || %(message)s")
-
-    # test_vsec_clouds_path()
-    # test_hsec_clouds_total()
-    test_hsec_temp()
-    # test_hsec_geopwind()

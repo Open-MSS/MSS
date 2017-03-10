@@ -280,32 +280,3 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         settings = load_settings_pickle(self.settings_tag)
         self.getView().setSettings(settings)
-
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    import sys
-
-    # Create an initital flight track.
-    initial_waypoints = [ft.Waypoint(48.10, 11.27, 0, comments="take off"),
-                         ft.Waypoint(52.32, 09.21, 200),
-                         ft.Waypoint(48.10, 11.27, 0, comments="landing")]
-
-    waypoints_model = ft.WaypointsTableModel(QString(""))
-    waypoints_model.insertRows(0, rows=len(initial_waypoints),
-                               waypoints=initial_waypoints)
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = MSSSideViewWindow(model=waypoints_model)
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()

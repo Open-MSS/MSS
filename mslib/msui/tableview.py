@@ -194,35 +194,3 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.btAddWayPointToFlightTrack.setEnabled(True)
         self.btDeleteWayPoint.setEnabled(True)
         self.resizeColumns()
-
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    import sys
-
-    # Create an initital flight track.
-    initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),
-                         ft.Waypoint(48.10, 10.27, 200),
-                         ft.Waypoint(52.32, 09.21, 200),
-                         ft.Waypoint(52.55, 09.99, 200),
-                         ft.Waypoint(flightlevel=0, location="Hamburg", comments="landing HH")]
-
-    waypoints_model = ft.WaypointsTableModel(QString(""))
-    waypoints_model.insertRows(0, rows=len(initial_waypoints),
-                               waypoints=initial_waypoints)
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = MSSTableViewWindow(model=waypoints_model)
-    window.show()
-
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()
