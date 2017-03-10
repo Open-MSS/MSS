@@ -121,19 +121,20 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         ("auto", "auto colour scale"),
         ("autolog", "auto log colour scale"), ]
 
+    def _prepare_datafields(self):
+        if self.name[-2:] == "pl":
+            self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
+            self.data["air_pressure"] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis] * 100
+        elif self.name[-2:] == "tl":
+            curtain_p = self.data["air_pressure"] * 100
+            self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
+            self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+
     def _plot_style(self):
         ax = self.ax
         curtain_cc = self.data[self.dataname] * self.unit_scale
         curtain_cc = np.ma.masked_invalid(curtain_cc)
-        if self.name[-2:] == "pl":
-            curtain_p = np.empty_like(curtain_cc)
-            curtain_p[:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis] * 100
-        elif self.name[-2:] == "tl":
-            curtain_p = self.data["air_pressure"] * 100
-            self.data["air_potential_temperature"] = np.empty_like(curtain_cc)
-            self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
-        elif self.name[-2:] == "ml":
-            curtain_p = self.data["air_pressure"] * 100
+        curtain_p = self.data["air_pressure"] * 100
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -194,7 +195,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None):
+def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
     if add_data is None:
         add_data = [(vert, "ertel_potential_vorticity")]
     if add_contours is None:
@@ -225,8 +226,11 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix
         fnord.styles += add_styles
     if fix_styles is not None:
         fnord.styles = fix_styles
+    if add_prepare is not None:
+        fnord._prepare_datafields = add_prepare
 
     globals()[name] = fnord
+
 
 _ADD_DATA = {
     "pl": [("pl", "ertel_potential_vorticity"), ("pl", "air_potential_temperature")],

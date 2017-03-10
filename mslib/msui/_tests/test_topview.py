@@ -126,7 +126,6 @@ class Test_MSSTopViewWindow(object):
         assert not close_modal_messagebox(self.window)
 
     def test_move_point(self):
-        pytest.skip("not finished")
         QtTest.QTest.mouseClick(self.window.btInsWaypoint, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
@@ -138,13 +137,15 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mousePress(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        # QtTest.QTest.mouseMove(self.window.mpl.canvas, pos=QtCore.QPoint(100, 100))
-        # QtWidgets.QApplication.processEvents()
+        point = QtCore.QPoint(self.window.width() / 3, self.window.height() / 2)
+        QtTest.QTest.mouseMove(
+            self.window.mpl.canvas, pos=point)
+        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseRelease(
-            self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(100, 100))
-        self.application.exec_()
+            self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=point)
+        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
-        assert False
+        assert not close_modal_messagebox(self.window)
 
     def test_map_options(self):
         self.window.mpl.canvas.map.set_graticule_visible(True)
