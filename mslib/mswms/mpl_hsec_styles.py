@@ -538,7 +538,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None):
+def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
     if add_data is None:
         add_data = [(vert, "ertel_potential_vorticity")]
     if add_contours is None:
@@ -569,7 +569,8 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix
         fnord.styles += add_styles
     if fix_styles is not None:
         fnord.styles = fix_styles
-
+    if add_prepare is not None:
+        fnord._prepare_datafields = add_prepare
     globals()[name] = fnord
 
 
