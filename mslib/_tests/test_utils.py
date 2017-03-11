@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib._tests.test_mss_util
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib._tests.test_utils
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.mss_util
 
@@ -36,19 +36,13 @@ class TestConfigLoader(object):
     """
 
     def test_default_config(self):
-        try:
-            data = utils.config_loader()
-        except IOError:
-            pytest.skip("no config file found")
+        data = utils.config_loader()
         assert isinstance(data, dict)
         assert data["num_labels"] == 10
         assert data["num_interpolation_points"] == 201
 
     def test_default_config_dataset(self):
-        try:
-            data = utils.config_loader(dataset="num_labels")
-        except IOError:
-            pytest.skip("no config file found")
+        data = utils.config_loader(dataset="num_labels")
         assert data == 10
         # defined value and not a default one
         data = utils.config_loader(dataset="num_labels", default=5)

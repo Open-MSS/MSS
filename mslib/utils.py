@@ -36,6 +36,7 @@ import numpy as np
 import paste.util.multidict
 from scipy.interpolate import RectBivariateSpline, interp1d
 from scipy.ndimage import map_coordinates
+from mslib.msui import MissionSupportSystemDefaultConfig
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -65,7 +66,14 @@ def config_loader(config_file=None, dataset=None, default=None):
         config_file = constants.CACHED_CONFIG_FILE
     if config_file is None:
         logging.info('Default MSS config file missing.')
-        return default
+        default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
+        if dataset is None:
+            return default_config
+        else:
+            try:
+                return default_config[dataset]
+            except KeyError:
+                return default
     try:
         with open(os.path.join(config_file)) as source:
             data = json.load(source)
