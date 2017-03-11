@@ -63,6 +63,9 @@ def config_loader(config_file=None, dataset=None, default=None):
     """
     if config_file is None:
         config_file = constants.CACHED_CONFIG_FILE
+    if config_file is None:
+        logging.info('Default MSS config file missing.')
+        return default
     try:
         with open(os.path.join(config_file)) as source:
             data = json.load(source)
