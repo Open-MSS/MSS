@@ -154,7 +154,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def __init__(self, *args):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
-
+        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None
