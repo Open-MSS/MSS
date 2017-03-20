@@ -1,5 +1,12 @@
 Changelog
-================
+=========
+
+Version 1.3.3
+-------------
+
+Bug Fixes:
+ - Inserting Waypoint outside of map in TopView crashes MSS, #149
+ - Some of the additional tools don't close completly, #139
 
 
 Version 1.3.2
