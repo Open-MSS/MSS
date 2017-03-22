@@ -43,3 +43,20 @@ CACHED_CONFIG_FILE = None
 
 if os.path.exists(MSS_SETTINGS):
     CACHED_CONFIG_FILE = MSS_SETTINGS
+
+POSIX = {"application_destination": os.path.join(HOME, ".local/share/applications/mss{}.desktop"),
+         "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/mss-logo.png"),
+         "desktop": """[Desktop Entry]
+Name=mss {}
+Comment=mission support system
+Keywords=shell;prompt;command;commandline;cmd;
+Exec={}
+Icon={}
+Type=Application
+Categories=GNOME;QT;System;
+StartupNotify=true
+X-GNOME-SingleWindow=false
+OnlyShowIn=GNOME;Unity;
+Actions=New
+X-Ubuntu-Gettext-Domain=mss
+"""}
