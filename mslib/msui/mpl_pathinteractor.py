@@ -52,6 +52,8 @@ import numpy as np
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from mslib.msui.mss_qt import QtCore, QtWidgets
+from mslib.utils import config_loader, get_distance
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # local application imports
 from mslib.msui import flighttrack as ft
@@ -844,6 +846,11 @@ class HPathInteractor(PathInteractor):
             vertices = self.pathpatch.get_path().wp_vertices
             lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
                                 inverse=True)
+            locations = config_loader(dataset='locations', default=mss_default.locations)
+            distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc) for loc, (loc_lat, loc_lon) in locations.items()]
+            distances.sort()
+            if len(distances) > 0 and distances[0][0] < 100:
+                lat, lon = locations[distances[0][1]]
             # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
             # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
             #      twice?
