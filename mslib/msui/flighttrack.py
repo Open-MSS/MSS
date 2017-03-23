@@ -39,7 +39,6 @@ import datetime
 import codecs
 import logging
 import xml.dom.minidom
-import string
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
@@ -47,7 +46,7 @@ from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
 # local application imports
 from mslib import utils
 from mslib import thermolib
-from mslib.utils import config_loader, save_settings_pickle, load_settings_pickle
+from mslib.utils import config_loader, get_distance, save_settings_pickle, load_settings_pickle
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
@@ -85,6 +84,16 @@ TABLE_FULL = [
 ]
 
 TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 6
+
+
+def find_location(lat, lon):
+    locations = config_loader(dataset='locations', default=mss_default.locations)
+    distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc) for loc, (loc_lat, loc_lon) in locations.items()]
+    distances.sort()
+    if len(distances) > 0 and distances[0][0] < 5:
+        return locations[distances[0][1]], distances[0][1]
+    else:
+        return None
 
 
 class Waypoint(object):
@@ -303,6 +312,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pass
                 else:
                     waypoint.lat = value
+                    waypoint.location = ""
+                    loc = find_location(waypoint.lat, waypoint.lon)
+                    if loc is not None:
+                        waypoint.lat, waypoint.lon = loc[0]
+                        waypoint.location = loc[1]
                     # A change of position requires an update of the distances.
                     if update:
                         self.update_distances(index.row())
@@ -311,7 +325,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # changed.
                     # Delete the location name -- it won't be valid anymore
                     # after its coordinates have been changed.
-                    waypoint.location = ""
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == LON:
                 try:
@@ -320,9 +333,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pass
                 else:
                     waypoint.lon = value
+                    waypoint.location = ""
+                    loc = find_location(waypoint.lat, waypoint.lon)
+                    if loc is not None:
+                        waypoint.lat, waypoint.lon = loc[0]
+                        waypoint.location = loc[1]
                     if update:
                         self.update_distances(index.row())
-                    waypoint.location = ""
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == FLIGHTLEVEL:
                 try:
@@ -374,23 +391,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.beginInsertRows(QtCore.QModelIndex(), position,
                              position + rows - 1)
         for row, wp in enumerate(waypoints):
-            if wp.location == "":
-                locations = [unicode(_wp.location) for _wp in self.allWaypointData()]
-                locname = ""
-                for letter in string.ascii_uppercase:
-                    if letter not in locations:
-                        locname = letter
-                        break
-                if locname == "":
-                    for fletter in string.ascii_uppercase:
-                        for sletter in string.ascii_uppercase:
-                            if fletter + sletter not in locations:
-                                locname = fletter + sletter
-                                break
-                        if locname != "":
-                            break
-                wp.location = locname
-
             self.waypoints.insert(position + row, wp)
 
         self.update_distances(position, rows=rows)
