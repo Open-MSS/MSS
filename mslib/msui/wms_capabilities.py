@@ -85,27 +85,3 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
                 accessconstraints=self.capabilities.identification.accessconstraints,
                 fees=self.capabilities.identification.fees)
             self.txtCapabilities.setHtml(text)
-
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    import sys
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = WMSCapabilitiesBrowser(url="http://test.me",
-                                    capabilities_xml="""
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
-<WMT_MS_Capabilities version="1.1.1" updateSequence="1295028115677" xmlns:xlink="http://www.w3.org/1999/xlink">""")
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()

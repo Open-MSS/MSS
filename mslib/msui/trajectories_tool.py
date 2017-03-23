@@ -95,7 +95,8 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # View control.
         self.btPlotInView.clicked.connect(self.plotCurrentItemInView)
         self.btRemoveFromView.clicked.connect(self.removeCurrentItemFromView)
-        self.viewsChanged.connect(self.updateViews)
+        if self.viewsChanged is not None:
+            self.viewsChanged.connect(self.updateViews)
         self.updateViews()
 
     def closeEvent(self, event):
@@ -473,23 +474,3 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         return self.traj_item_tree
-
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    import sys
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = MSSTrajectoriesToolWindow()
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()

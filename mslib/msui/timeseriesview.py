@@ -55,27 +55,3 @@ class MSSTimeSeriesViewWindow(MSSMplViewWindow, ui.Ui_TimeSeriesViewWindow):
     def setIdentifier(self, identifier):
         super(MSSTimeSeriesViewWindow, self).setIdentifier(identifier)
         self.mpl.canvas.setIdentifier(identifier)
-
-
-# Main program to test the window during development. The following code
-# will not be executed if the view is opened from the Mission Support
-# System user interface.
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    import sys
-
-    application = QtGui.QApplication(sys.argv)
-    window = MSSTimeSeriesViewWindow()
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()
