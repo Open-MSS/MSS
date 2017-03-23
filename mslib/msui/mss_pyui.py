@@ -619,32 +619,27 @@ def main():
 
     if args.menue:
         if os.name == "posix":
+            icon_size = '48x48'
+            src_icon_path = icons(icon_size)
+            icon_destination = constants.POSIX["icon_destination"].format(icon_size)
+            shutil.copyfile(src_icon_path, icon_destination)
             try:
                 prefix = os.environ["CONDA_DEFAULT_ENV"]
             except KeyError:
                 prefix = ""
-            icon_size = '48x48'
-            src_icon_path = icons(icon_size)
-            desktop = constants.POSIX["desktop"]
             app_prefix = prefix
             if prefix:
                 app_prefix = "-{}".format(prefix)
+            desktop = constants.POSIX["desktop"]
             application_destination = constants.POSIX["application_destination"].format(app_prefix)
-            icon_destination = constants.POSIX["icon_destination"].format(icon_size)
-
-
             desktop = desktop.format(prefix,
-                         os.path.join(sys.prefix, "bin", "mss"),
-                         icon_destination)
-
-            shutil.copyfile(src_icon_path, icon_destination)
+                                     os.path.join(sys.prefix, "bin", "mss"),
+                                     icon_destination)
             with open(application_destination, 'w') as f:
                 f.write(desktop)
 
-            print "menue entry written"
+            print "menue entry created"
             sys.exit()
-
-
 
 
     setup_logging(args)

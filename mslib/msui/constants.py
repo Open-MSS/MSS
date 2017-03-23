@@ -48,15 +48,14 @@ POSIX = {"application_destination": os.path.join(HOME, ".local/share/application
          "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/mss-logo.png"),
          "desktop": """[Desktop Entry]
 Name=mss {}
-Comment=mission support system
-Keywords=shell;prompt;command;commandline;cmd;
+Comment=A web service based tool to plan atmospheric research flights (mission support system).
+Keywords=documentation;information;
 Exec={}
 Icon={}
 Type=Application
-Categories=GNOME;QT;System;
+Categories=GNOME;QT;Education;Science;Math
 StartupNotify=true
 X-GNOME-SingleWindow=false
-OnlyShowIn=GNOME;Unity;
 Actions=New
 X-Ubuntu-Gettext-Domain=mss
 """}
