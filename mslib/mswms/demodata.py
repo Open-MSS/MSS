@@ -167,6 +167,30 @@ time,isobaric,lat,lon
   2.81e+02   7.91e+00
   2.82e+02   7.97e+00
   2.84e+02   7.93e+00
+Potential_temperature_isobaric
+air_potential_temperature
+K
+4
+time,isobaric,lat,lon
+18
+  2.15e+02   3.79e+00
+  2.13e+02   2.07e+00
+  2.12e+02   3.10e+00
+  2.12e+02   4.82e+00
+  2.12e+02   6.31e+00
+  2.16e+02   5.91e+00
+  2.18e+02   5.03e+00
+  2.22e+02   3.86e+00
+  2.29e+02   5.00e+00
+  2.44e+02   6.20e+00
+  2.55e+02   6.33e+00
+  2.64e+02   6.30e+00
+  2.71e+02   6.62e+00
+  2.77e+02   7.36e+00
+  2.79e+02   7.67e+00
+  2.81e+02   7.91e+00
+  2.82e+02   7.97e+00
+  2.84e+02   7.93e+00
 U_velocity_isobaric
 eastward_wind
 m.s-1
@@ -312,6 +336,81 @@ time,isobaric,lat,lon
   6.12e-08   4.64e-09
   6.09e-08   4.65e-09
 """
+        self.forecast_theta_levels_pl = """\
+        Pressure
+        air_pressure
+        K.m2.kg-1.s-1
+        4
+        time,isentropic,lat,lon
+        18
+          20   5
+          30   5
+          50   5
+          70   5
+          100   10
+          150   10
+          200   10
+          250   10
+          300   10
+          400   10
+          500   10
+          600   10
+          700   10
+          800   10
+          900   10
+          925   10
+          950   10
+          1000  10
+        Potential_vorticity
+        ertel_potential_vorticity
+        K.m2.kg-1.s-1
+        4
+        time,isentropic,lat,lon
+        18
+          1.04e-04   2.25e-05
+          6.14e-05   1.03e-05
+          2.94e-05   4.86e-06
+          1.88e-05   3.51e-06
+          1.15e-05   3.26e-06
+          6.53e-06   2.85e-06
+          4.71e-06   3.21e-06
+          2.78e-06   3.09e-06
+          1.39e-06   2.23e-06
+          5.58e-07   7.26e-07
+          5.39e-07   4.40e-07
+          5.53e-07   3.95e-07
+          5.66e-07   9.73e-07
+          8.11e-07   3.37e-06
+          8.73e-07   3.62e-06
+          8.96e-07   3.81e-06
+          9.05e-07   3.94e-06
+          8.95e-07   4.09e-06
+        Ozone_mass_mixing_ratio
+        mass_fraction_of_ozone_in_air
+        kg.kg-1
+        4
+        time,isentropic,lat,lon
+        18
+          8.09e-06   1.21e-06
+          5.70e-06   5.69e-07
+          3.46e-06   4.69e-07
+          2.41e-06   5.23e-07
+          1.44e-06   4.97e-07
+          6.27e-07   3.28e-07
+          2.82e-07   2.03e-07
+          1.37e-07   1.08e-07
+          8.30e-08   4.80e-08
+          6.40e-08   1.39e-08
+          6.23e-08   8.08e-09
+          6.18e-08   6.28e-09
+          6.18e-08   5.47e-09
+          6.17e-08   4.73e-09
+          6.15e-08   4.57e-09
+          6.14e-08   4.60e-09
+          6.12e-08   4.64e-09
+          6.09e-08   4.65e-09
+        """
+
         self.forecast_p_derived_ml = """\
 Pressure
 air_pressure
@@ -875,6 +974,7 @@ time,hybrid,lat,lon
         self.data = {"CC_ml": self.forecast_cc_ml,
                      "P_derived_ml": self.forecast_p_derived_ml,
                      "PRESSURE_LEVELS_pl": self.forecast_pressure_levels_pl,
+                     "THETA_LEVELS_tl": self.forecast_theta_levels_pl,
                      "SFC_sfc": self.forecast_sfc,
                      "T_ml": self.forecast_t_ml,
                      "U_ml": self.forecast_u_ml,
@@ -1253,6 +1353,78 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 newvar.missing_value = float('nan')
         ecmwf.close()
 
+    def theta_data(self):
+        self.levtype = 'tl'
+        label = 'THETA_LEVELS'
+        filename_out = os.path.join(self.data_dir,
+                                    "{}_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(self.inidate, label,
+                                                                                      self.levtype))
+        text = self.range_data["{}_{}".format(label, self.levtype)]
+        rangedata = StringIO(text)
+        ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
+        theta_default = np.linspace(500, 300, 18)
+        self.nlevs = len(theta_default)
+        ecmwf.createDimension('lat', self.nlats)
+        newvar = ecmwf.createVariable('lat', 'f4', 'lat')
+        newvar[:] = self.lats
+        newvar.units = 'degrees_north'
+        newvar.standard_name = "latitude"
+        ecmwf.createDimension('lon', self.nlons)
+        newvar = ecmwf.createVariable('lon', 'f4', 'lon')
+        newvar[:] = self.lons
+        newvar.units = 'degrees_east'
+        newvar.standard_name = "longitude"
+        ecmwf.createDimension('isentropic', self.nlevs)
+        newvar = ecmwf.createVariable('isentropic', 'f4', 'isentropic')
+        newvar[:] = theta_default
+        newvar.units = 'K'
+        newvar.positive = 'down'
+        newvar.standard_name = "atmosphere_potential_temperature_coordinate"
+        ecmwf.createDimension('time', self.ntimes)
+        newvar = ecmwf.createVariable('time', 'i4', 'time')
+        newvar[:] = self.times
+        newvar.units = 'hours since 2012-10-17T12:00:00.000Z'
+        newvar.standard_name = 'time'
+        while True:
+            varname = rangedata.readline().strip()
+            if not varname:
+                break
+            standard_name = rangedata.readline().strip()
+            units = rangedata.readline().strip()
+            ndims = int(rangedata.readline().strip())
+            dims = rangedata.readline().strip().split(",")
+            rangedata.readline()
+            print "theta data: {}".format(varname)
+            newvar = ecmwf.createVariable(varname, 'f4', dims)
+            newvar.standard_name = standard_name
+            newvar.units = units
+            if ndims == 4:
+                test_data = np.ndarray(shape=(self.ntimes, self.nlevs, self.nlats, self.nlons), dtype=float, order='F')
+                for ilev in range(self.nlevs):
+                    # read range from file
+                    line = rangedata.readline().strip()
+                    tmean = float(line.split()[0])
+                    tstd = float(line.split()[1])
+                    # create test data arrays
+                    xarr = np.linspace(0., 10. + ilev / 3., self.nlons)
+                    yarr = np.linspace(0., 5. + ilev / 3., self.nlats)
+                    tarr = np.linspace(0, 2., self.ntimes)
+                    datax = xarr[np.newaxis, np.newaxis, :] + tarr[:, np.newaxis, np.newaxis]
+                    datay = yarr[np.newaxis, :, np.newaxis] - tarr[:, np.newaxis, np.newaxis]
+                    test_data[:, ilev, :, :] = tmean + tstd * (np.sin(datax) + np.cos(datay)) / 2
+                if varname == 'Land-sea_mask_surface':
+                    test_data = test_data.round()
+
+                if standard_name not in self.allow_negative:
+                    # let test_data values not be negative
+                    mask = np.where(test_data < 0.)
+                    test_data[mask] = 0.
+
+                newvar[:] = test_data
+                newvar.grid_mapping = 'LatLon_Projection'
+                newvar.missing_value = float('nan')
+        ecmwf.close()
+
     def sfc_data(self):
         self.levtype = 'sfc'
         label = 'SFC'
@@ -1388,6 +1560,7 @@ def main():
     examples.create_server_config(detailed_information=True)
     examples.hybrid_data()
     examples.pressure_data()
+    examples.theta_data()
     examples.sfc_data()
     print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
 

@@ -124,9 +124,8 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
     def _prepare_datafields(self):
         if self.name[-2:] == "pl":
             self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
-            self.data["air_pressure"] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis] * 100
+            self.data["air_pressure"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
         elif self.name[-2:] == "tl":
-            curtain_p = self.data["air_pressure"] * 100
             self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
             self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
 

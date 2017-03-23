@@ -46,12 +46,14 @@
 
 
 import logging
+import math
 import numpy as np
 
 # related third party imports
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from mslib.msui.mss_qt import QtCore, QtWidgets
+from mslib.utils import get_distance, find_location
 
 # local application imports
 from mslib.msui import flighttrack as ft
@@ -795,12 +797,26 @@ class HPathInteractor(PathInteractor):
         width = int(round(ax_bounds[2]))
         map_delta_x = abs(self.map.llcrnrx - self.map.urcrnrx)
         map_coords_per_px_x = map_delta_x / width
-        # X and Y are always approximately the same, hence it's enough to only
-        # consider X.
-        # height = int(round(ax_bounds[3]))
-        # map_delta_y = abs(self.map.llcrnry - self.map.urcrnry)
-        # map_coords_per_px_y = map_delta_y / height
+
         return map_coords_per_px_x * px
+
+    def appropriateEpsilon2(self, px=5):
+        """Determine an epsilon value appropriate for the current projection and
+           figure size.
+
+        The epsilon value gives the distance required in map projection
+        coordinates that corresponds to approximately px Pixels in screen
+        coordinates. The value can be used to find the line/point that is
+        closest to a click while discarding clicks that are too far away
+        from any geometry feature.
+        """
+        # (bounds = left, bottom, width, height)
+        ax_bounds = self.ax.bbox.bounds
+        diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
+        map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
+        km_per_px = map_delta / diagonal
+
+        return km_per_px * px
 
     def button_release_callback(self, event):
         """Called whenever a mouse button is released.
@@ -826,6 +842,12 @@ class HPathInteractor(PathInteractor):
                                                     WaypointsPath.LINETO)
 
             lon, lat = self.map(x, y, inverse=True)
+            loc = find_location(lat, lon, tolerance=self.appropriateEpsilon2(px=15))
+            if loc is not None:
+                (lat, lon), location = loc
+            else:
+                lat, lon = round(lat, 2), round(lon, 2)
+                location = u""
             wpm = self.waypoints_model
             if len(wpm.allWaypointData()) > 0 and 0 < best_index <= len(wpm.allWaypointData()):
                 flightlevel = wpm.waypointData(best_index - 1).flightlevel
@@ -835,7 +857,7 @@ class HPathInteractor(PathInteractor):
                 logging.error(u"Cannot copy flightlevel. best_index: {}, len: {}".format(
                               best_index, len(wpm.allWaypointData())))
                 flightlevel = 0
-            new_wp = ft.Waypoint(round(lat, 2), round(lon, 2), flightlevel)
+            new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
             wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
             self.redraw_path()
 
@@ -844,13 +866,18 @@ class HPathInteractor(PathInteractor):
             vertices = self.pathpatch.get_path().wp_vertices
             lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
                                 inverse=True)
+            loc = find_location(lat, lon, tolerance=self.appropriateEpsilon2(px=15))
+            if loc is not None:
+                lat, lon = loc[0]
+            else:
+                lat, lon = round(lat, 2), round(lon, 2)
             # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
             # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
             #      twice?
             qt_index = self.waypoints_model.createIndex(self._ind, ft.LAT)
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(round(float(lat), 2)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(lat))
             qt_index = self.waypoints_model.createIndex(self._ind, ft.LON)
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(round(float(lon), 2)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(lon))
 
         self._ind = None
 
