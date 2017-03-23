@@ -45,7 +45,7 @@ class Test_WMSCapabilities(object):
         self.capabilities.identification = mock.Mock()
 
         self.window = wc.WMSCapabilitiesBrowser(
-            url="http://test.me",
+            url="http://example.com",
             capabilities=self.capabilities)
         self.window.show()
         QtWidgets.QApplication.processEvents()
