@@ -101,6 +101,21 @@ def test_vsec_generic():
     img = vsec.plot()
     assert img is not None
 
+    plot_object = mpl_vsec_styles.VS_GenericStyle_TL_ertel_potential_vorticity(driver=vsec)
+
+    vsec.set_plot_parameters(plot_object=plot_object,
+                             bbox=bbox,
+                             vsec_path=[p1, p2, p3, p4],
+                             vsec_numpoints=101,
+                             vsec_path_connection='greatcircle',
+                             init_time=init_time,
+                             style="default",
+                             valid_time=valid_time,
+                             noframe=False,
+                             show=False)
+    img = vsec.plot()
+    assert img is not None
+
 
 def test_hsec_clouds_total():
     """
@@ -199,6 +214,21 @@ def test_hsec_generic():
 
     hsec = HorizontalSectionDriver(nwpaccess)
     plot_object = mpl_hsec_styles.HS_GenericStyle_PL_ertel_potential_vorticity(driver=hsec)
+    level = 300
+
+    hsec.set_plot_parameters(plot_object=plot_object,
+                             bbox=bbox,
+                             level=level,
+                             epsg=77790010,
+                             style="default",
+                             init_time=init_time,
+                             valid_time=valid_time,
+                             noframe=True,
+                             show=False)
+    img = hsec.plot()
+    assert img is not None
+
+    plot_object = mpl_hsec_styles.HS_GenericStyle_TL_ertel_potential_vorticity(driver=hsec)
     level = 300
 
     hsec.set_plot_parameters(plot_object=plot_object,
