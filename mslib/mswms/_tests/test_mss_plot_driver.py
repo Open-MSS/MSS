@@ -52,15 +52,64 @@ def test_vsec_clouds_path():
     valid_time = datetime(2012, 10, 17, 12)
 
     # plot_object = mpl_vsec_styles.VSCloudsStyle01(p_top=20000.)
-    plot_object = mpl_vsec_styles.VS_TemperatureStyle_01()
-
     vsec = VerticalSectionDriver(nwpaccess)
+    plot_object = mpl_vsec_styles.VS_TemperatureStyle_01(driver=vsec)
+
     vsec.set_plot_parameters(plot_object=plot_object,
                              bbox=bbox,
                              vsec_path=[p1, p2, p3, p4],
                              vsec_numpoints=101,
                              vsec_path_connection='greatcircle',
                              init_time=init_time,
+                             valid_time=valid_time,
+                             noframe=False,
+                             show=False)
+    img = vsec.plot()
+    assert img is not None
+
+
+def test_vsec_generic():
+    """
+    TEST: Create a vertical section of the CLOUDS style.
+    """
+    # Define cross-section path (great circle interpolation between two points).
+    p1 = [45.00, 8.]
+    p2 = [50.00, 12.]
+    p3 = [51.00, 15.]
+    p4 = [48.00, 11.]
+
+    bbox = [3, 500, 3, 10]
+    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+
+    init_time = datetime(2012, 10, 17, 12)
+    valid_time = datetime(2012, 10, 17, 12)
+
+    # plot_object = mpl_vsec_styles.VSCloudsStyle01(p_top=20000.)
+    vsec = VerticalSectionDriver(nwpaccess)
+    plot_object = mpl_vsec_styles.VS_GenericStyle_PL_ertel_potential_vorticity(driver=vsec)
+
+    vsec.set_plot_parameters(plot_object=plot_object,
+                             bbox=bbox,
+                             vsec_path=[p1, p2, p3, p4],
+                             vsec_numpoints=101,
+                             vsec_path_connection='greatcircle',
+                             init_time=init_time,
+                             style="default",
+                             valid_time=valid_time,
+                             noframe=False,
+                             show=False)
+    img = vsec.plot()
+    assert img is not None
+
+    plot_object = mpl_vsec_styles.VS_GenericStyle_TL_ertel_potential_vorticity(driver=vsec)
+
+    vsec.set_plot_parameters(plot_object=plot_object,
+                             bbox=bbox,
+                             vsec_path=[p1, p2, p3, p4],
+                             vsec_numpoints=101,
+                             vsec_path_connection='greatcircle',
+                             init_time=init_time,
+                             style="default",
                              valid_time=valid_time,
                              noframe=False,
                              show=False)
@@ -139,6 +188,49 @@ def test_hsec_geopwind():
     level = 300
 
     hsec = HorizontalSectionDriver(nwpaccess)
+    hsec.set_plot_parameters(plot_object=plot_object,
+                             bbox=bbox,
+                             level=level,
+                             epsg=77790010,
+                             style="default",
+                             init_time=init_time,
+                             valid_time=valid_time,
+                             noframe=True,
+                             show=False)
+    img = hsec.plot()
+    assert img is not None
+
+def test_hsec_generic():
+    """
+    TEST: Create a horizontal section.
+    """
+    # Define a bounding box for the map.
+    bbox = [-22.5, 27.5, 55, 62.5]
+
+    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+
+    init_time = datetime(2012, 10, 17, 12)
+    valid_time = datetime(2012, 10, 17, 12)
+
+    hsec = HorizontalSectionDriver(nwpaccess)
+    plot_object = mpl_hsec_styles.HS_GenericStyle_PL_ertel_potential_vorticity(driver=hsec)
+    level = 300
+
+    hsec.set_plot_parameters(plot_object=plot_object,
+                             bbox=bbox,
+                             level=level,
+                             epsg=77790010,
+                             style="default",
+                             init_time=init_time,
+                             valid_time=valid_time,
+                             noframe=True,
+                             show=False)
+    img = hsec.plot()
+    assert img is not None
+
+    plot_object = mpl_hsec_styles.HS_GenericStyle_TL_ertel_potential_vorticity(driver=hsec)
+    level = 300
+
     hsec.set_plot_parameters(plot_object=plot_object,
                              bbox=bbox,
                              level=level,
