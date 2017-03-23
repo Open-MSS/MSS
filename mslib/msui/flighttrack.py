@@ -46,7 +46,7 @@ from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
 # local application imports
 from mslib import utils
 from mslib import thermolib
-from mslib.utils import config_loader, get_distance, save_settings_pickle, load_settings_pickle
+from mslib.utils import config_loader, find_location, save_settings_pickle, load_settings_pickle
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
@@ -84,16 +84,6 @@ TABLE_FULL = [
 ]
 
 TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 6
-
-
-def find_location(lat, lon):
-    locations = config_loader(dataset='locations', default=mss_default.locations)
-    distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc) for loc, (loc_lat, loc_lon) in locations.items()]
-    distances.sort()
-    if len(distances) > 0 and distances[0][0] < 5:
-        return locations[distances[0][1]], distances[0][1]
-    else:
-        return None
 
 
 class Waypoint(object):
@@ -312,7 +302,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pass
                 else:
                     waypoint.lat = value
-                    waypoint.location = ""
+                    waypoint.location = u""
                     loc = find_location(waypoint.lat, waypoint.lon)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
@@ -333,7 +323,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pass
                 else:
                     waypoint.lon = value
-                    waypoint.location = ""
+                    waypoint.location = u""
                     loc = find_location(waypoint.lat, waypoint.lon)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]

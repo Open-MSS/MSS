@@ -112,6 +112,23 @@ def get_distance(coord0, coord1):
     return pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.
 
 
+def find_location(lat, lon, tolerance=5):
+    """
+    Checks if a location is present at given coordinates
+    :param lat: latitude
+    :param lon: longitude
+    :param tolerance: maximum distance between location and coordinates in km
+    :return: None or lat/lon, name
+    """
+    locations = config_loader(dataset='locations', default=MissionSupportSystemDefaultConfig.locations)
+    distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc) for loc, (loc_lat, loc_lon) in locations.items()]
+    distances.sort()
+    if len(distances) > 0 and distances[0][0] < tolerance:
+        return locations[distances[0][1]], distances[0][1]
+    else:
+        return None
+
+
 def save_settings_pickle(tag, settings):
     """
     Saves a dictionary settings to disk.
