@@ -167,6 +167,30 @@ time,isobaric,lat,lon
   2.81e+02   7.91e+00
   2.82e+02   7.97e+00
   2.84e+02   7.93e+00
+Potential_temperature_isobaric
+air_potential_temperature
+K
+4
+time,isobaric,lat,lon
+18
+  2.15e+02   3.79e+00
+  2.13e+02   2.07e+00
+  2.12e+02   3.10e+00
+  2.12e+02   4.82e+00
+  2.12e+02   6.31e+00
+  2.16e+02   5.91e+00
+  2.18e+02   5.03e+00
+  2.22e+02   3.86e+00
+  2.29e+02   5.00e+00
+  2.44e+02   6.20e+00
+  2.55e+02   6.33e+00
+  2.64e+02   6.30e+00
+  2.71e+02   6.62e+00
+  2.77e+02   7.36e+00
+  2.79e+02   7.67e+00
+  2.81e+02   7.91e+00
+  2.82e+02   7.97e+00
+  2.84e+02   7.93e+00
 U_velocity_isobaric
 eastward_wind
 m.s-1
