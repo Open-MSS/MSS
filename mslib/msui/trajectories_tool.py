@@ -30,7 +30,7 @@ import logging
 import os
 
 # related third party imports
-from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui, USE_PYQT5
 
 # local application imports
 from mslib.msui.mss_qt import ui_trajectories_window as ui
@@ -51,6 +51,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         super(MSSTrajectoriesToolWindow, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
 
         self.actionOpenFlightTrack.setEnabled(titree.hasNAppy)
         self.viewsChanged = viewsChanged
