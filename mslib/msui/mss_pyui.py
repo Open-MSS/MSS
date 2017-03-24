@@ -626,10 +626,14 @@ def main():
         sys.exit()
 
     if args.menue:
+        # Experimental feature to get mss into application menue
         if os.name == "posix":
             icon_size = '48x48'
             src_icon_path = icons(icon_size)
             icon_destination = constants.POSIX["icon_destination"].format(icon_size)
+            dirname = os.path.dirname(icon_destination)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
             shutil.copyfile(src_icon_path, icon_destination)
             try:
                 prefix = os.environ["CONDA_DEFAULT_ENV"]

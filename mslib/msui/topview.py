@@ -155,7 +155,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         super(MSSTopViewWindow, self).__init__(parent, model)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
 
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay]:
         self.docks = [None, None, None, None, None]

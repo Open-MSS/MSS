@@ -81,7 +81,7 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
     def __init__(self, config, parent=None, *args):
         super(MSSLoopWindow, self).__init__(parent, *args)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
 
         self.statusBar.addPermanentWidget(QtGui.QLabel(
             "Use wheel on image for time navigation, "
