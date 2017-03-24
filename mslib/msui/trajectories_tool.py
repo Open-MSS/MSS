@@ -51,7 +51,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         super(MSSTrajectoriesToolWindow, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
 
         self.actionOpenFlightTrack.setEnabled(titree.hasNAppy)
         self.viewsChanged = viewsChanged
