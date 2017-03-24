@@ -145,21 +145,6 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"),
             time_step_hrs, self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
-        if not self.noframe:
-            ax.set_title(titlestring,
-                         horizontalalignment="left", x=0, fontsize=14)
-            ax.set_xlabel("Latitude, longitude (degrees)")
-            ax.set_ylabel("Pressure (hPa)")
-            if self.resolution != (-1, -1):
-                self.fig.text(0.99, 0.01, "model resolution {:.2f}x{:.2f} deg"
-                              .format(self.resolution[0], self.resolution[1]),
-                              fontsize=10, horizontalalignment="right",
-                              transform=self.fig.transFigure)
-        else:
-            ax.text(0, self.p_top, titlestring,
-                    fontsize=10, verticalalignment="top",
-                    bbox=dict(facecolor="white", alpha=0.6))
-
     @abstractmethod
     def _plot_style(self):
         """Can call self._log_setup()
