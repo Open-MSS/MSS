@@ -156,7 +156,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def __init__(self, *args):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon(icons('64x64')))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
         # instead of the default Icon of python/pyhtonw
         try:

@@ -37,6 +37,7 @@ from mslib.msui.mss_qt import ui_trajectories_window as ui
 from mslib.msui import trajectory_item_tree as titree
 # import trajectory_ts
 from mslib.msui.viewwindows import MSSViewWindow
+from mslib.msui.icons import icons
 
 
 class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
@@ -51,7 +52,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         super(MSSTrajectoriesToolWindow, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
         self.actionOpenFlightTrack.setEnabled(titree.hasNAppy)
         self.viewsChanged = viewsChanged

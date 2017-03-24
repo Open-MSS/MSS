@@ -42,6 +42,7 @@ from mslib.msui.mss_qt import ui_tableview_window as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
+from mslib.msui.icons import icons
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -61,7 +62,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         super(MSSTableViewWindow, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))

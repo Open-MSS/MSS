@@ -45,6 +45,7 @@ from mslib.msui import wms_control as wms
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
+from mslib.msui.icons import icons
 
 # Dock window indices.
 WMS = 0
@@ -155,7 +156,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         super(MSSTopViewWindow, self).__init__(parent, model)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay]:
         self.docks = [None, None, None, None, None]

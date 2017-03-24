@@ -41,6 +41,7 @@ from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import flighttrack as ft
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import wms_control as wms
+from mslib.msui.icons import icons
 
 
 # Dock window indices.
@@ -196,7 +197,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         super(MSSSideViewWindow, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
         # Dock windows [WMS]:
         self.cbTools.clear()
