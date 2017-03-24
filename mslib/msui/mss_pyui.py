@@ -651,6 +651,7 @@ def main():
                 f.write(desktop)
 
             print "menue entry created"
+            #ToDo implement uninstall by desktop-file-edit --delete-original
             sys.exit()
 
 
