@@ -53,9 +53,8 @@ Keywords=documentation;information;
 Exec={}
 Icon={}
 Type=Application
-Categories=GNOME;QT;Education;Science;Math
+Categories=Science;
 StartupNotify=true
 X-GNOME-SingleWindow=false
-Actions=New
 X-Ubuntu-Gettext-Domain=mss
 """}
