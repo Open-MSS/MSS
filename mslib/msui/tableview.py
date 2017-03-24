@@ -35,7 +35,7 @@
 import logging
 from mslib.msui import hexagon_dockwidget as hex
 # related third party imports
-from mslib.msui.mss_qt import QtWidgets, QString
+from mslib.msui.mss_qt import QtWidgets, QtGui
 
 # local application imports
 from mslib.msui.mss_qt import ui_tableview_window as ui
@@ -61,6 +61,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         super(MSSTableViewWindow, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
 
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
