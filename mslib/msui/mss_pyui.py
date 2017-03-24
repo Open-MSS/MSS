@@ -33,6 +33,7 @@ import copy
 import importlib
 import logging
 import os
+import shutil
 import sys
 import types
 import functools
@@ -52,6 +53,7 @@ from mslib.msui import constants
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
+from mslib.msui.icons import icons
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8, USE_PYQT5
@@ -154,7 +156,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def __init__(self, *args):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
         # instead of the default Icon of python/pyhtonw
         try:
@@ -611,6 +613,8 @@ def main():
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="specify logfile location", action="store", default=None)
     parser.add_argument("--nolog", help="do write debug log", action="store_true", default=False)
+    parser.add_argument("-m", "--menue", help="adds mss to menue", action="store_true", default=False)
+
     args = parser.parse_args()
 
     if args.version:
@@ -620,6 +624,35 @@ def main():
         print "Documentation: http://mss.rtfd.io"
         print "Version:", __version__
         sys.exit()
+
+    if args.menue:
+        # Experimental feature to get mss into application menue
+        if os.name == "posix":
+            icon_size = '48x48'
+            src_icon_path = icons(icon_size)
+            icon_destination = constants.POSIX["icon_destination"].format(icon_size)
+            dirname = os.path.dirname(icon_destination)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
+            shutil.copyfile(src_icon_path, icon_destination)
+            try:
+                prefix = os.environ["CONDA_DEFAULT_ENV"]
+            except KeyError:
+                prefix = ""
+            app_prefix = prefix
+            if prefix:
+                app_prefix = "-{}".format(prefix)
+            desktop = constants.POSIX["desktop"]
+            application_destination = constants.POSIX["application_destination"].format(app_prefix)
+            desktop = desktop.format(prefix,
+                                     os.path.join(sys.prefix, "bin", "mss"),
+                                     icon_destination)
+            with open(application_destination, 'w') as f:
+                f.write(desktop)
+
+            print "menue entry created"
+            sys.exit()
+
 
     setup_logging(args)
 

@@ -51,7 +51,7 @@ class MSSTimeSeriesViewWindow(MSSMplViewWindow, ui.Ui_TimeSeriesViewWindow):
         """
         super(MSSTimeSeriesViewWindow, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
 
     def setIdentifier(self, identifier):
         super(MSSTimeSeriesViewWindow, self).setIdentifier(identifier)

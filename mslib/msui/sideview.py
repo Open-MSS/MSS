@@ -196,7 +196,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         super(MSSSideViewWindow, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
+        self.setWindowIcon(QtGui.QIcon('icons/64x64/mss-logo.png'))
 
         # Dock windows [WMS]:
         self.cbTools.clear()

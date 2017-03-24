@@ -43,3 +43,19 @@ CACHED_CONFIG_FILE = None
 
 if os.path.exists(MSS_SETTINGS):
     CACHED_CONFIG_FILE = MSS_SETTINGS
+
+POSIX = {"application_destination": os.path.join(HOME, ".local/share/applications/mss{}.desktop"),
+         "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/mss-logo.png"),
+         "desktop": """[Desktop Entry]
+Name=mss {}
+Comment=A web service based tool to plan atmospheric research flights (mission support system).
+Keywords=documentation;information;
+Exec={}
+Icon={}
+Type=Application
+Categories=GNOME;QT;Education;Science;Math
+StartupNotify=true
+X-GNOME-SingleWindow=false
+Actions=New
+X-Ubuntu-Gettext-Domain=mss
+"""}
