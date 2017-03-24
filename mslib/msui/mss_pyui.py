@@ -155,6 +155,14 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
+        # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
+        # instead of the default Icon of python/pyhtonw
+        try:
+            import ctypes
+            myappid = u"mss.mss_pyui.{}".format(__version__)  # arbitrary string
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except (ImportError, AttributeError):
+            pass
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None

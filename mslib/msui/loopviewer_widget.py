@@ -541,27 +541,3 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                                   self.products_dialog.region(),
                                   self.products_dialog.initTime())
         event.accept()
-
-
-################################################################################
-################################################################################
-# Module test.
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    import sys
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = ImageLoopWidget(config=None)
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()

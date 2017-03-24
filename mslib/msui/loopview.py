@@ -81,6 +81,8 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
     def __init__(self, config, parent=None, *args):
         super(MSSLoopWindow, self).__init__(parent, *args)
         self.setupUi(self)
+        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
+
         self.statusBar.addPermanentWidget(QtGui.QLabel(
             "Use wheel on image for time navigation, "
             "shift+wheel for level navigation."))
@@ -223,42 +225,3 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
 
         # Notify the other widgets of the change.
         self.signalChangeValidTime.emit(forward, time)
-
-
-if __name__ == "__main__":
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    app = QtGui.QApplication(sys.argv)
-    loop_configuration = {
-        "ECMWF forecasts": {
-            # URL to the Mission Support website at which the batch image
-            # products are located.
-            "url": "http://www.your-server.de/forecasts",
-            # Initialisation times every init_timestep hours.
-            "init_timestep": 12,
-            # Products available on the webpage. Add new products here!
-            # Each product listed here will be loaded as one group, so
-            # that the defined times can be navigated with <wheel> and
-            # the defined levels can be navigated with <shift+wheel>.
-            # Times not found in the listed range of forecast_steps
-            # are ignored, its hence save to define the entire forecast
-            # range with the smalled available time step.
-            "products": {
-                "Geopotential and Wind": {
-                    "abbrev": "geop",
-                    "regions": {"Europe": "eur", "Germany": "de"},
-                    "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": range(0, 240, 3)},
-            }
-        }
-    }
-    loop_configuration = config_loader(dataset="loop_configuration", default=mss_default.loop_configuration)
-    win = MSSLoopWindow(loop_configuration)
-    win.show()
-    sys.exit(app.exec_())

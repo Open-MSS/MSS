@@ -30,7 +30,7 @@ import sys
 import mock
 import os
 
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
+from mslib.msui.mss_qt import QtWidgets, QtTest
 from mslib._tests.utils import close_modal_messagebox, BASE_DIR
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.plugins.io.text import load_from_txt, save_to_txt

@@ -30,7 +30,7 @@ import logging
 import os
 
 # related third party imports
-from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui, USE_PYQT5
 
 # local application imports
 from mslib.msui.mss_qt import ui_trajectories_window as ui
@@ -51,6 +51,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         super(MSSTrajectoriesToolWindow, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon(QtGui.QIcon('mss-logo.png'))
 
         self.actionOpenFlightTrack.setEnabled(titree.hasNAppy)
         self.viewsChanged = viewsChanged
@@ -95,7 +96,8 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # View control.
         self.btPlotInView.clicked.connect(self.plotCurrentItemInView)
         self.btRemoveFromView.clicked.connect(self.removeCurrentItemFromView)
-        self.viewsChanged.connect(self.updateViews)
+        if self.viewsChanged is not None:
+            self.viewsChanged.connect(self.updateViews)
         self.updateViews()
 
     def closeEvent(self, event):
@@ -473,23 +475,3 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         return self.traj_item_tree
-
-
-def _main():
-    # Log everything, and send it to stderr.
-    # See http://docs.python.org/library/logging.html for more information
-    # on the Python logging module.
-    # NOTE: http://docs.python.org/library/logging.html#formatter-objects
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s (%(module)s.%(funcName)s): %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
-
-    import sys
-
-    application = QtWidgets.QApplication(sys.argv)
-    window = MSSTrajectoriesToolWindow()
-    window.show()
-    sys.exit(application.exec_())
-
-if __name__ == "__main__":
-    _main()

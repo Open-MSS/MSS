@@ -373,11 +373,3 @@ Example:
                 else:
                     return time
         return None
-
-
-#
-# Perform some tests if the module is called directly. Remember to adjust the
-# paths before executing this script.
-if __name__ == "__main__":
-    lout = LagrantoOutputReader(
-        '/path/to/lagranto/output/scf_ensemble_test_N01')
