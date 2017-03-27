@@ -617,16 +617,22 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             request = requests.get(base_url)
         except requests.exceptions.ConnectionError:
             request = None
+
         if request is not None and request.status_code == 200 and request.url != base_url:
-            all_urls = [self.cbWMS_URL.itemText(count) for count in range(self.cbWMS_URL.count())]
-            for count in range(len(all_urls)):
-                if all_urls[count] == base_url:
-                    del all_urls[count]
-                    all_urls.insert(0, request.url)
-                    base_url = request.url
+            found = False
+            for count in range(self.cbWMS_URL.count()):
+                if self.cbWMS_URL.itemText(count) == base_url:
+                    self.cbWMS_URL.setItemText(count, request.url)
+                    self.cbWMS_URL.setCurrentIndex(count)
+                    found = True
                     break
-            self.cbWMS_URL.clear()
-            self.cbWMS_URL.addItems(all_urls)
+                if self.cbWMS_URL.itemText(count) == request.url:
+                    self.cbWMS_URL.setCurrentIndex(count)
+                    found = True
+            if not found:
+                self.cbWMS_URL.insertItem(self.cbWMS_URL.count(), request.url)
+                self.cbWMS_URL.setCurrentIndex(self.cbWMS_URL.count() - 1)
+            base_url = request.url
         logging.debug(u"requesting capabilities from %s", base_url)
         wms = self.initialiseWMS(base_url)
         if wms is not None:
