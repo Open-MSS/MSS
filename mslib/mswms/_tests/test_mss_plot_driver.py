@@ -200,6 +200,7 @@ def test_hsec_geopwind():
     img = hsec.plot()
     assert img is not None
 
+
 def test_hsec_generic():
     """
     TEST: Create a horizontal section.
