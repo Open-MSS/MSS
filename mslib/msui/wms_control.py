@@ -34,6 +34,7 @@ import hashlib
 import logging
 import os
 import sys
+import requests
 import re
 import urllib
 import urllib2
@@ -610,7 +611,28 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
+
         base_url = unicode(self.cbWMS_URL.currentText())
+        try:
+            request = requests.get(base_url)
+        except requests.exceptions.ConnectionError:
+            request = None
+
+        if request is not None and request.status_code == 200 and request.url != base_url:
+            found = False
+            for count in range(self.cbWMS_URL.count()):
+                if self.cbWMS_URL.itemText(count) == base_url:
+                    self.cbWMS_URL.setItemText(count, request.url)
+                    self.cbWMS_URL.setCurrentIndex(count)
+                    found = True
+                    break
+                if self.cbWMS_URL.itemText(count) == request.url:
+                    self.cbWMS_URL.setCurrentIndex(count)
+                    found = True
+            if not found:
+                self.cbWMS_URL.insertItem(self.cbWMS_URL.count(), request.url)
+                self.cbWMS_URL.setCurrentIndex(self.cbWMS_URL.count() - 1)
+            base_url = request.url
         logging.debug(u"requesting capabilities from %s", base_url)
         wms = self.initialiseWMS(base_url)
         if wms is not None:

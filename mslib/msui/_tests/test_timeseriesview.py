@@ -54,4 +54,3 @@ class Test_MSSTimeSeriesViewWindow(object):
 
     def test_window_start(self):
         assert not close_modal_messagebox(self.window)
-
