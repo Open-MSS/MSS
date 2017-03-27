@@ -26,8 +26,16 @@
 """
 
 
+import mock
+import os
+import shutil
 import sys
-from mslib.msui.mss_qt import QtWidgets, QtTest
+import paste
+import paste.httpserver
+import multiprocessing
+import tempfile
+import mslib.mswms.wms
+from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 from mslib.msui import flighttrack as ft
 from mslib._tests.utils import close_modal_messagebox
 import mslib.msui.sideview as tv
@@ -56,5 +64,62 @@ class Test_MSSSideViewWindow(object):
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
+        QtWidgets.QApplication.processEvents()
+        assert not close_modal_messagebox(self.window)
+
+
+class Test_SideViewWMS(object):
+    def setup(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+
+        self.tempdir = tempfile.mkdtemp()
+        if not os.path.exists(self.tempdir):
+            os.mkdir(self.tempdir)
+        self.thread = multiprocessing.Process(
+            target=paste.httpserver.serve,
+            args=(mslib.mswms.wms.application,),
+            kwargs={"host": "127.0.0.1", "port": "8082", "use_threadpool": False})
+        self.thread.start()
+
+        initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
+        waypoints_model = ft.WaypointsTableModel("")
+        waypoints_model.insertRows(
+            0, rows=len(initial_waypoints), waypoints=initial_waypoints)
+        self.window = tv.MSSSideViewWindow(model=waypoints_model)
+        self.window.show()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtWidgets.QApplication.processEvents()
+        self.window.cbTools.currentIndexChanged.emit(1)
+        QtWidgets.QApplication.processEvents()
+        print self.window.docks
+        self.wms_control = self.window.docks[0].widget()
+        self.wms_control.cbWMS_URL.setEditText("")
+
+    def teardown(self):
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        shutil.rmtree(self.tempdir)
+        self.thread.terminate()
+
+    def query_server(self, url):
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.keyClicks(self.wms_control.cbWMS_URL, url)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseClick(self.wms_control.btGetCapabilities, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(2000)
+
+    def test_server_getmap(self):
+        """
+        assert that a getmap call to a WMS server displays an image
+        """
+        self.query_server("http://127.0.0.1:8082")
+        QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(2000)
         QtWidgets.QApplication.processEvents()
         assert not close_modal_messagebox(self.window)
