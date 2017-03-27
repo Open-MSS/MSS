@@ -48,7 +48,7 @@ test:
         - mswms -h
         - mss -h
 post:
-   - script: 'post-link.sh' [linux]
+   - script: 'mss -m' [linux]
 
 about:
     summary: A web service based tool to plan atmospheric research flights
