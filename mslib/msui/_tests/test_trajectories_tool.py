@@ -64,3 +64,11 @@ class Test_TrajectoriesTool(object):
         self.window.actionOpenTrajectories.trigger()
         assert mockopen.call_count == 1
         assert not close_modal_messagebox(self.window)
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+                return_value=os.path.join(sample_path, "nas", "sample.nas"))
+    def test_load_nas(self, mockopen):
+        self.window.actionOpenFlightTrack.trigger()
+        assert mockopen.call_count == 1
+        assert not close_modal_messagebox(self.window)
+        self.application.exec_()
