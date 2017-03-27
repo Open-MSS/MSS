@@ -612,10 +612,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
         base_url = unicode(self.cbWMS_URL.currentText())
-        r = requests.get(base_url)
-        # ToDo check status of request
-        if r.url != base_url:
-            base_url = r.url
+        try:
+            request = requests.get(base_url)
+        except requests.exceptions.ConnectionError:
+            request = None
+
+        if request is not None and request.status_code == 200 and request.url != base_url:
+            base_url = request.url
             self.cbWMS_URL.clear()
             self.cbWMS_URL.addItems([base_url])
         logging.debug(u"requesting capabilities from %s", base_url)
