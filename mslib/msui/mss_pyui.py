@@ -37,6 +37,7 @@ import shutil
 import sys
 import types
 import functools
+import platform
 import argparse
 
 from mslib import __version__
@@ -627,7 +628,7 @@ def main():
 
     if args.menue:
         # Experimental feature to get mss into application menue
-        if os.name == "posix":
+        if platform.system() == "Linux":
             icon_size = '48x48'
             src_icon_path = icons(icon_size)
             icon_destination = constants.POSIX["icon_destination"].format(icon_size)
