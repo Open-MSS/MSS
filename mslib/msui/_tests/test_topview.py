@@ -275,4 +275,3 @@ class Test_TopViewWMS(object):
         QtWidgets.QApplication.processEvents()
         self.window.mpl.canvas.redrawMap()
         assert mockbox.critical.call_count == 0
-

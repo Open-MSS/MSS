@@ -137,7 +137,6 @@ class Test_HSecWMSControlWidget(object):
         assert self.view.drawMetadata.call_count == 1
         self.view.reset_mock()
 
-
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_server_getmap_cached(self, mockbox):
         """
@@ -165,7 +164,6 @@ class Test_HSecWMSControlWidget(object):
         assert self.view.drawImage.call_count == 1
         assert self.view.drawLegend.call_count == 1
         assert self.view.drawMetadata.call_count == 1
-
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_server_service_cache(self, mockbox):
@@ -200,6 +198,7 @@ class Test_HSecWMSControlWidget(object):
         assert self.view.drawImage.call_count == 1
         assert self.view.drawLegend.call_count == 1
         assert self.view.drawMetadata.call_count == 1
+
 
 class Test_VSecWMSControlWidget(object):
     def setup(self):

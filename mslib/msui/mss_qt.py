@@ -111,6 +111,7 @@ else:
         def _translate(context, text, disambig):
             return QtGui.QApplication.translate(context, text, disambig)
 
+
 # PyQt5 silently aborts on a Python Exception and PyQt4 does not inform GUI users
 def excepthook(type_, value, traceback_):
     """
