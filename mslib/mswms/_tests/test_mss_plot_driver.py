@@ -35,211 +35,207 @@ import mslib.mswms.mpl_vsec_styles as mpl_vsec_styles
 import mslib.mswms.mpl_hsec_styles as mpl_hsec_styles
 
 
-def test_vsec_clouds_path():
-    """
-    TEST: Create a vertical section of the CLOUDS style.
-    """
-    # Define cross-section path (great circle interpolation between two points).
-    p1 = [45.00, 8.]
-    p2 = [50.00, 12.]
-    p3 = [51.00, 15.]
-    p4 = [48.00, 11.]
+class Test_VSec(object):
+    def setup(self):
+        p1 = [45.00, 8.]
+        p2 = [50.00, 12.]
+        p3 = [51.00, 15.]
+        p4 = [48.00, 11.]
+        nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
 
-    bbox = [3, 500, 3, 10]
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+        self.path = [p1, p2, p3, p4]
+        self.bbox = [3, 500, 3, 10]
+        self.init_time = datetime(2012, 10, 17, 12)
+        self.valid_time = datetime(2012, 10, 17, 12)
+        self.vsec = VerticalSectionDriver(nwpaccess)
 
-    init_time = datetime(2012, 10, 17, 12)
-    valid_time = datetime(2012, 10, 17, 12)
+    def plot(self, plot_object, style="default"):
+        self.vsec.set_plot_parameters(plot_object=plot_object,
+                                      bbox=self.bbox,
+                                      vsec_path=self.path,
+                                      vsec_numpoints=101,
+                                      vsec_path_connection='greatcircle',
+                                      init_time=self.init_time,
+                                      valid_time=self.valid_time,
+                                      style=style,
+                                      noframe=False,
+                                      show=False)
+        return self.vsec.plot()
 
-    # plot_object = mpl_vsec_styles.VSCloudsStyle01(p_top=20000.)
-    vsec = VerticalSectionDriver(nwpaccess)
-    plot_object = mpl_vsec_styles.VS_TemperatureStyle_01(driver=vsec)
+    def test_VS_TemperatureStyle_01(self):
+        img = self.plot(mpl_vsec_styles.VS_TemperatureStyle_01(driver=self.vsec))
+        assert img is not None
 
-    vsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             vsec_path=[p1, p2, p3, p4],
-                             vsec_numpoints=101,
-                             vsec_path_connection='greatcircle',
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=False,
-                             show=False)
-    img = vsec.plot()
-    assert img is not None
+    def test_VS_GenericStyle(self):
+        img = self.plot(mpl_vsec_styles.VS_GenericStyle_PL_mole_fraction_of_ozone_in_air(driver=self.vsec))
+        assert img is not None
 
+        img = self.plot(mpl_vsec_styles.VS_GenericStyle_TL_mole_fraction_of_ozone_in_air(driver=self.vsec))
+        assert img is not None
 
-def test_vsec_generic():
-    """
-    TEST: Create a vertical section of the CLOUDS style.
-    """
-    # Define cross-section path (great circle interpolation between two points).
-    p1 = [45.00, 8.]
-    p2 = [50.00, 12.]
-    p3 = [51.00, 15.]
-    p4 = [48.00, 11.]
+    def test_VS_CloudsStyle_01(self):
+        img = self.plot(mpl_vsec_styles.VS_CloudsStyle_01(driver=self.vsec))
+        assert img is not None
 
-    bbox = [3, 500, 3, 10]
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+    def test_VS_CloudsWindStyle_01(self):
+        img = self.plot(mpl_vsec_styles.VS_CloudsWindStyle_01(driver=self.vsec))
+        assert img is not None
 
-    init_time = datetime(2012, 10, 17, 12)
-    valid_time = datetime(2012, 10, 17, 12)
+    def test_VS_RelativeHumdityStyle_01(self):
+        img = self.plot(mpl_vsec_styles.VS_RelativeHumdityStyle_01(driver=self.vsec))
+        assert img is not None
 
-    # plot_object = mpl_vsec_styles.VSCloudsStyle01(p_top=20000.)
-    vsec = VerticalSectionDriver(nwpaccess)
-    plot_object = mpl_vsec_styles.VS_GenericStyle_PL_ertel_potential_vorticity(driver=vsec)
+    def test_VS_SpecificHumdityStyle_01(self):
+        img = self.plot(mpl_vsec_styles.VS_SpecificHumdityStyle_01(driver=self.vsec))
+        assert img is not None
 
-    vsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             vsec_path=[p1, p2, p3, p4],
-                             vsec_numpoints=101,
-                             vsec_path_connection='greatcircle',
-                             init_time=init_time,
-                             style="default",
-                             valid_time=valid_time,
-                             noframe=False,
-                             show=False)
-    img = vsec.plot()
-    assert img is not None
+    def test_VS_VerticalVelocityStyle_01(self):
+        img = self.plot(mpl_vsec_styles.VS_VerticalVelocityStyle_01(driver=self.vsec))
+        assert img is not None
 
-    plot_object = mpl_vsec_styles.VS_GenericStyle_TL_ertel_potential_vorticity(driver=vsec)
+    def test_VS_HorizontalVelocityStyle_01(self):
+        img = self.plot(mpl_vsec_styles.VS_HorizontalVelocityStyle_01(driver=self.vsec))
+        assert img is not None
 
-    vsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             vsec_path=[p1, p2, p3, p4],
-                             vsec_numpoints=101,
-                             vsec_path_connection='greatcircle',
-                             init_time=init_time,
-                             style="default",
-                             valid_time=valid_time,
-                             noframe=False,
-                             show=False)
-    img = vsec.plot()
-    assert img is not None
+    def test_VS_PotentialVorticityStyle_01(self):
+        pytest.skip("data not available")
+        img = self.plot(mpl_vsec_styles.VS_PotentialVorticityStyle_01(driver=self.vsec))
+        assert img is not None
 
+    def test_VS_ProbabilityOfWCBStyle_01(self):
+        pytest.skip("data not available")
+        img = self.plot(mpl_vsec_styles.VS_ProbabilityOfWCBStyle_01(driver=self.vsec))
+        assert img is not None
 
-def test_hsec_clouds_total():
-    """
-    TEST: Create a horizontal section of the CLOUDS style.
-    """
-    pytest.skip("Test data not available")
-    # Define a bounding box for the map.
-    bbox = [-22.5, 27.5, 55, 62.5]
+    def test_VS_LagrantoTrajStyle_PL_01(self):
+        pytest.skip("data not available")
+        img = self.plot(mpl_vsec_styles.VS_LagrantoTrajStyle_PL_01(driver=self.vsec))
+        assert img is not None
 
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
-    init_time = datetime(2012, 10, 17, 12)
-    valid_time = datetime(2012, 10, 17, 12)
-
-    plot_object = mpl_hsec_styles.HS_CloudsStyle_01()
-
-    hsec = HorizontalSectionDriver(nwpaccess)
-    hsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             epsg=77790010,
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=False,
-                             show=False)
-    img = hsec.plot()
-    assert img is not None
+    def test_VS_EMACEyja_Style_01(self):
+        pytest.skip("data not available")
+        img = self.plot(mpl_vsec_styles.VS_EMACEyja_Style_01(driver=self.vsec))
+        assert img is not None
 
 
-def test_hsec_temp():
-    """
-    TEST: Create a horizontal section of the TEMPERATURE style.
-    """
-    # Define a bounding box for the map.
-    #    bbox = [0,30,30,60]
-    bbox = [-22.5, 27.5, 55, 62.5]
+class Test_HSec(object):
+    def setup(self):
+        nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
 
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+        self.bbox = [-22.5, 27.5, 55, 62.5]
 
-    init_time = datetime(2012, 10, 17, 12)
-    valid_time = datetime(2012, 10, 17, 12)
+        self.init_time = datetime(2012, 10, 17, 12)
+        self.valid_time = datetime(2012, 10, 17, 12)
+        self.hsec = HorizontalSectionDriver(nwpaccess)
 
-    plot_object = mpl_hsec_styles.HS_TemperatureStyle_PL_01()
-    level = 925
+    def plot(self, plot_object, style="default", level=None):
+        self.hsec.set_plot_parameters(plot_object=plot_object,
+                                      bbox=self.bbox,
+                                      epsg=77790010,
+                                      init_time=self.init_time,
+                                      valid_time=self.valid_time,
+                                      level=level,
+                                      noframe=False,
+                                      style=style,
+                                      show=False)
+        return self.hsec.plot()
 
-    hsec = HorizontalSectionDriver(nwpaccess)
-    hsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             level=level,
-                             epsg=77790010,
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=True,
-                             show=False)
-    img = hsec.plot()
-    assert img is not None
+    def test_HS_CloudsStyle_01(self):
+        for style in ["TOT", "HIGH", "MED", "LOW"]:
+            img = self.plot(mpl_hsec_styles.HS_CloudsStyle_01(driver=self.hsec), style=style)
+        assert img is not None
 
+    def test_HS_MSLPStyle_01(self):
+        img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec))
+        assert img is not None
 
-def test_hsec_geopwind():
-    """
-    TEST: Create a horizontal section.
-    """
-    # Define a bounding box for the map.
-    bbox = [-22.5, 27.5, 55, 62.5]
+    def test_HS_SEAStyle_01(self):
+        pytest.skip("data not available")
+        img = self.plot(mpl_hsec_styles.HS_SEAStyle_01(driver=self.hsec))
+        assert img is not None
 
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+    def test_HS_SeaIceStyle_01(self):
+        for style in ["PCOL", "CONT"]:
+            img = self.plot(mpl_hsec_styles.HS_SeaIceStyle_01(driver=self.hsec), style=style)
+        assert img is not None
 
-    init_time = datetime(2012, 10, 17, 12)
-    valid_time = datetime(2012, 10, 17, 12)
+    def test_HS_TemperatureStyle_ML_01(self):
+        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_ML_01(driver=self.hsec), level=20)
+        assert img is not None
 
-    plot_object = mpl_hsec_styles.HS_GeopotentialWindStyle_PL()
-    level = 300
+    def test_HS_TemperatureStyle_PL_01(self):
+        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_PL_01(driver=self.hsec), level=925)
+        assert img is not None
 
-    hsec = HorizontalSectionDriver(nwpaccess)
-    hsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             level=level,
-                             epsg=77790010,
-                             style="default",
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=True,
-                             show=False)
-    img = hsec.plot()
-    assert img is not None
+    def test_HS_GeopotentialWindStyle_PL(self):
+        img = self.plot(mpl_hsec_styles.HS_GeopotentialWindStyle_PL(driver=self.hsec), level=300)
+        assert img is not None
 
+    def test_HS_GenericStyle(self):
+        for style in ["default", "nonlinear", "auto", "log", "autolog"]:
+            img = self.plot(
+                mpl_hsec_styles.HS_GenericStyle_PL_mole_fraction_of_ozone_in_air(driver=self.hsec),
+                level=300, style=style)
+            assert img is not None
 
-def test_hsec_generic():
-    """
-    TEST: Create a horizontal section.
-    """
-    # Define a bounding box for the map.
-    bbox = [-22.5, 27.5, 55, 62.5]
+        img = self.plot(mpl_hsec_styles.HS_GenericStyle_TL_mole_fraction_of_ozone_in_air(driver=self.hsec), level=300)
+        assert img is not None
 
-    nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+        img = self.plot(
+            mpl_hsec_styles.HS_GenericStyle_PL_ertel_potential_vorticity(driver=self.hsec),
+            style="ertel_potential_vorticity", level=300)
+        assert img is not None
 
-    init_time = datetime(2012, 10, 17, 12)
-    valid_time = datetime(2012, 10, 17, 12)
+        img = self.plot(
+            mpl_hsec_styles.HS_GenericStyle_PL_equivalent_latitude(driver=self.hsec),
+            style="equivalent_latitude", level=300)
+        assert img is not None
 
-    hsec = HorizontalSectionDriver(nwpaccess)
-    plot_object = mpl_hsec_styles.HS_GenericStyle_PL_ertel_potential_vorticity(driver=hsec)
-    level = 300
+    def test_HS_RelativeHumidityStyle_PL_01(self):
+        img = self.plot(mpl_hsec_styles.HS_RelativeHumidityStyle_PL_01(driver=self.hsec), level=300)
+        assert img is not None
 
-    hsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             level=level,
-                             epsg=77790010,
-                             style="default",
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=True,
-                             show=False)
-    img = hsec.plot()
-    assert img is not None
+    def test_HS_EQPTStyle_PL_01(self):
+        img = self.plot(mpl_hsec_styles.HS_EQPTStyle_PL_01(driver=self.hsec), level=300)
+        assert img is not None
 
-    plot_object = mpl_hsec_styles.HS_GenericStyle_TL_ertel_potential_vorticity(driver=hsec)
-    level = 300
+    def test_HS_WStyle_PL_01(self):
+        img = self.plot(mpl_hsec_styles.HS_WStyle_PL_01(driver=self.hsec), level=300)
+        assert img is not None
 
-    hsec.set_plot_parameters(plot_object=plot_object,
-                             bbox=bbox,
-                             level=level,
-                             epsg=77790010,
-                             style="default",
-                             init_time=init_time,
-                             valid_time=valid_time,
-                             noframe=True,
-                             show=False)
-    img = hsec.plot()
-    assert img is not None
+    def test_HS_DivStyle_PL_01(self):
+        img = self.plot(mpl_hsec_styles.HS_DivStyle_PL_01(driver=self.hsec), level=300)
+        assert img is not None
+
+    def test_HS_EMAC_TracerStyle_ML_01(self):
+        pytest.skip("data not present")
+        img = self.plot(mpl_hsec_styles.HS_EMAC_TracerStyle_ML_01(driver=self.hsec), level=300)
+        assert img is not None
+
+    def test_HS_EMAC_TracerStyle_SFC_01(self):
+        pytest.skip("data not present")
+        img = self.plot(mpl_hsec_styles.HS_EMAC_TracerStyle_SFC_01(driver=self.hsec), level=300)
+        assert img is not None
+
+    def test_HS_PVTropoStyle_PV_01(self):
+        pytest.skip("data not available")
+        img = self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=300)
+        assert img is not None
+
+    def test_HS_VIProbWCB_Style_01(self):
+        pytest.skip("data not present")
+        img = self.plot(mpl_hsec_styles.HS_VIProbWCB_Style_01(driver=self.hsec), level=300)
+        assert img is not None
+
+    def test_HS_LagrantoTrajStyle_PL_01(self):
+        pytest.skip("data not present")
+        img = self.plot(mpl_hsec_styles.HS_LagrantoTrajStyle_PL_01(driver=self.hsec), level=300)
+        assert img is not None
+
+    def test_HS_BLH_MSLP_Style_01(self):
+        img = self.plot(mpl_hsec_styles.HS_BLH_MSLP_Style_01(driver=self.hsec))
+        assert img is not None
+
+    def test_HS_Meteosat_BT108_01(self):
+        img = self.plot(mpl_hsec_styles.HS_Meteosat_BT108_01(driver=self.hsec))
+        assert img is not None
