@@ -1443,9 +1443,25 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "mass_fraction_of_nitrogen_dioxide_in_air")]
+    required_datafields = [("ml", "air_pressure")]
+
+    def _prepare_datafields(self):
+        """Computes potential temperature from pressure and temperature if
+        it has not been passed as a data field.
+        """
+        if self.name[-2:] == "pl":
+            self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
+            self.data["air_pressure"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+        elif self.name[-2:] == "tl":
+            self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
+            self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+        elif self.name[-2:] == "al":
+            # CAMS Regional Ensemble doesn't provide any pressure information, but we want to plot vertical sections
+            # anyways, so we do a poor-man's on-the-fly conversion here.
+            if 'air_pressure' not in self.data.keys():
+                self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
+                flightlevel = 3.28083989501 / 100. * self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+                self.data['air_pressure'][:] = thermolib.flightlevel2pressure_a(flightlevel)
 
     def _plot_style(self):
         ax = self.ax
@@ -1517,7 +1533,13 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
     # This is CTM output, so we cannot expect any additional meteorological
     # parameters except for air_pressure
     if add_data is None:
-        add_data = [(vert, "air_pressure")]
+        if vert == "al":
+            # "al" is altitude layer, i.e., for CTM output with no pressure information at all (e.g., CAMS reg. Ensemble)
+            # In those cases we derive air_pressure from the altitude alone, in the _prepare_datafields() method
+            add_data = []
+        else:
+            # all other layer types need to read air_pressure from the data
+            add_data = [(vert, "air_pressure")]
     if add_contours is None:
         add_contours = []
 
@@ -1553,7 +1575,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
     return fnord
 
 
-for vert in ["ml", "tl", "pl"]:
+for vert in ["ml", "tl", "pl", "al"]:
     for stdname, props in MSSChemTargets.items():
         name, qty, units, scale = props
         key = "VS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty

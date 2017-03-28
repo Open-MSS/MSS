@@ -116,10 +116,12 @@ nwpaccess = {
     #           folder for each init_time, which is called "%Y-%m-%d_%H"
     #        2. The string with which the filenames start
     #        3. The vertical layer type of the model; one of
-    #           - "al" (altitude level)
     #           - "pl" (pressure level)
     #           - "ml" (model level)
     #           - "tl" (potential temperature level)
+    #           - "al" (altitude level) -> CAUTION <- Only use if absolutely necessary, for models without any pressure
+    #             information.  For vertical sections, air_pressure will be determined on-the-fly, from the layer
+    #             altitude alone, which is not very accurate
     #    "CAMSglb": mslib.mswms.dataaccess.MSSChemDataAccess(datapath["camsglobal"], "cams-global", "ml"),
 }
 
