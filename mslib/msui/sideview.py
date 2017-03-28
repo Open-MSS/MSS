@@ -71,7 +71,8 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
                                  "colour_ft_vertices": (0, 0, 0, 0),
                                  "colour_ft_waypoints": (0, 0, 0, 0),
                                  "colour_ft_fill": (0, 0, 0, 0)}
-        default_settings_dict.update(settings_dict)
+        if settings_dict is not None:
+            default_settings_dict.update(settings_dict)
         settings_dict = default_settings_dict
 
         self.sbPbot.setValue(settings_dict["vertical_extent"][0])

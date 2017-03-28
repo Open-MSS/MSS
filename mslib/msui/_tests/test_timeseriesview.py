@@ -52,5 +52,6 @@ class Test_MSSTimeSeriesViewWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    def test_window_start(self):
-        assert not close_modal_messagebox(self.window)
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_window_start(self, mockbox):
+        assert mockbox.critical.call_count == 0

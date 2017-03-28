@@ -31,7 +31,7 @@ import os
 import pykml.parser
 
 # local application imports
-from mslib.msui.mss_qt import QtGui, QtWidgets, QMessageBox_critical_nonblock, USE_PYQT5
+from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
 from mslib.utils import save_settings_pickle, load_settings_pickle
@@ -140,5 +140,5 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.view.plotKML(self.patch)
         except (IOError, pykml.parser.etree.XMLSyntaxError), ex:
             logging.error("KML Overlay - %s: %s", type(ex), ex)
-            QMessageBox_critical_nonblock(
+            QtWidgets.QMessageBox.critical(
                 self, self.tr("KML Overlay"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))

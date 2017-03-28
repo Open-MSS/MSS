@@ -42,7 +42,7 @@ import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5, QMessageBox_critical_nonblock
+from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
 
 import mslib.owslib.wms
 import mslib.owslib.util
@@ -297,6 +297,7 @@ class WMSMapFetcher(QtCore.QObject):
 
         if use_cache and os.path.exists(md5_filename):
             img = PIL.Image.open(md5_filename)
+            img.load()
             logging.debug("MapPrefetcher - found image cache")
         else:
             self.started_request.emit()
@@ -322,6 +323,7 @@ class WMSMapFetcher(QtCore.QObject):
 
         if use_cache and os.path.exists(md5_filename):
             legend_img = PIL.Image.open(md5_filename)
+            legend_img.load()
             logging.debug("MapPrefetcher - found legend cache")
         else:
             if not self.long_request:
@@ -563,7 +565,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         except Exception as ex:
             logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
-            QMessageBox_critical_nonblock(
+            QtWidgets.QMessageBox.critical(
                 self, self.tr("Web Map Service"),
                 self.tr(u"ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
         return wms
@@ -593,7 +595,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     @QtCore.pyqtSlot(Exception)
     def displayException(self, ex):
         logging.error(u"ERROR: %s %s", type(ex), ex)
-        QMessageBox_critical_nonblock(
+        QtWidgets.QMessageBox.critical(
             self, self.tr("Web Map Service"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
 
     @QtCore.pyqtSlot()

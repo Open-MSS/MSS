@@ -37,7 +37,6 @@ import tempfile
 import mslib.mswms.wms
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
-from mslib._tests.utils import close_modal_messagebox
 import mslib.msui.topview as tv
 
 
@@ -86,15 +85,17 @@ class Test_MSSTopViewWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    def test_open_wms(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_open_wms(self, mockbox):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
-    def test_open_sat(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_open_sat(self, mockbox):
         self.window.cbTools.currentIndexChanged.emit(2)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_open_rs(self, mockcrit):
@@ -112,12 +113,14 @@ class Test_MSSTopViewWindow(object):
         rsdock.cbShowSolarAngle.setChecked(True)
         assert mockcrit.critical.call_count == 0
 
-    def test_open_kml(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_open_kml(self, mockbox):
         self.window.cbTools.currentIndexChanged.emit(4)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
-    def test_insert_point(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_insert_point(self, mockbox):
         """
         Test inserting a point inside and outside the canvas
         """
@@ -130,11 +133,12 @@ class Test_MSSTopViewWindow(object):
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(1, 1))
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
-    def test_remove_point_yes(self, mockbox):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.critical")
+    def test_remove_point_yes(self, mockcrit, mockbox):
         QtTest.QTest.mouseClick(self.window.btInsWaypoint, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
@@ -148,11 +152,12 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 3
-        assert not close_modal_messagebox(self.window)
+        assert mockcrit.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.No)
-    def test_remove_point_no(self, mockbox):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.critical")
+    def test_remove_point_no(self, mockcrit, mockbox):
         QtTest.QTest.mouseClick(self.window.btInsWaypoint, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
@@ -166,9 +171,10 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 4
-        assert not close_modal_messagebox(self.window)
+        assert mockcrit.call_count == 0
 
-    def test_move_point(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_move_point(self, mockbox):
         QtTest.QTest.mouseClick(self.window.btInsWaypoint, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
@@ -188,27 +194,28 @@ class Test_MSSTopViewWindow(object):
             self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
-    def test_map_options(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_map_options(self, mockbox):
         self.window.mpl.canvas.map.set_graticule_visible(True)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_graticule_visible(False)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_fillcontinents_visible(False)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_fillcontinents_visible(True)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_coastlines_visible(False)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_coastlines_visible(True)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
 
 class Test_TopViewWMS(object):
@@ -256,7 +263,8 @@ class Test_TopViewWMS(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
-    def test_server_getmap(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_server_getmap(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -266,6 +274,5 @@ class Test_TopViewWMS(object):
         QtTest.QTest.qWait(2000)
         QtWidgets.QApplication.processEvents()
         self.window.mpl.canvas.redrawMap()
-        assert not close_modal_messagebox(self.window)
-
+        assert mockbox.critical.call_count == 0
 

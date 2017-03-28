@@ -111,21 +111,6 @@ else:
         def _translate(context, text, disambig):
             return QtGui.QApplication.translate(context, text, disambig)
 
-
-def QMessageBox_nonblock(parent, icon, title, text):
-    box = QtWidgets.QMessageBox(icon, title, text, QtWidgets.QMessageBox.Ok, parent=parent)
-    box.show()
-    return box
-
-
-def QMessageBox_critical_nonblock(parent, title, text):
-    return QMessageBox_nonblock(parent, QtWidgets.QMessageBox.Critical, title, text)
-
-
-def QMessageBox_warn_nonblock(parent, title, text):
-    return QMessageBox_nonblock(QtWidgets.QMessageBox.Warning, title, text, parent)
-
-
 # PyQt5 silently aborts on a Python Exception and PyQt4 does not inform GUI users
 def excepthook(type_, value, traceback_):
     """
