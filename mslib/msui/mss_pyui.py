@@ -39,6 +39,7 @@ import types
 import functools
 import platform
 import argparse
+import hashlib
 
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
@@ -609,12 +610,22 @@ def setup_logging(args):
 
 
 def main():
+    try:
+        prefix = os.environ["CONDA_DEFAULT_ENV"]
+    except KeyError:
+        prefix = ""
+    app_prefix = prefix
+    if prefix:
+        app_prefix = "-{}".format(prefix)
+    icon_hash = hashlib.md5('.'.join([__version__, app_prefix])).hexdigest()
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="specify logfile location", action="store", default=None)
     parser.add_argument("--nolog", help="do write debug log", action="store_true", default=False)
-    parser.add_argument("-m", "--menue", help="adds mss to menue", action="store_true", default=False)
+    parser.add_argument("-m", "--menu", help="adds mss to menu", action="store_true", default=False)
+    parser.add_argument("-d", "--deinstall", help="removes mss from menu", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -626,23 +637,16 @@ def main():
         print "Version:", __version__
         sys.exit()
 
-    if args.menue:
+    if args.menu:
         # Experimental feature to get mss into application menue
         if platform.system() == "Linux":
             icon_size = '48x48'
             src_icon_path = icons(icon_size)
-            icon_destination = constants.POSIX["icon_destination"].format(icon_size)
+            icon_destination = constants.POSIX["icon_destination"].format(icon_size, icon_hash)
             dirname = os.path.dirname(icon_destination)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
             shutil.copyfile(src_icon_path, icon_destination)
-            try:
-                prefix = os.environ["CONDA_DEFAULT_ENV"]
-            except KeyError:
-                prefix = ""
-            app_prefix = prefix
-            if prefix:
-                app_prefix = "-{}".format(prefix)
             desktop = constants.POSIX["desktop"]
             application_destination = constants.POSIX["application_destination"].format(app_prefix)
             desktop = desktop.format(prefix,
@@ -650,10 +654,18 @@ def main():
                                      icon_destination)
             with open(application_destination, 'w') as f:
                 f.write(desktop)
-
-            print "menue entry created"
-            # ToDo implement uninstall by desktop-file-edit --delete-original
-            sys.exit()
+            logging.info("menu entry created")
+        sys.exit()
+    if args.deinstall:
+        application_destination = constants.POSIX["application_destination"].format(app_prefix)
+        if os.path.exists(application_destination):
+            os.remove(application_destination)
+        icon_size = '48x48'
+        icon_destination = constants.POSIX["icon_destination"].format(icon_size, icon_hash)
+        if os.path.exists(icon_destination):
+            os.remove(icon_destination)
+        logging.info("menu entry removed")
+        sys.exit()
 
     setup_logging(args)
 
