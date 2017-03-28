@@ -27,7 +27,6 @@
 
 import os
 import tempfile
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 
 try:
     import git
@@ -42,18 +41,3 @@ BASE_DIR = os.path.join(tempfile.gettempdir(), "mss{}".format(SHA))
 DATA_DIR = os.path.join(BASE_DIR, 'testdata')
 SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
 VALID_TIME_CACHE = os.path.join(BASE_DIR, 'vt_cache')
-
-
-def close_modal_messagebox(window):
-    """
-    This function closes a non-blocking modal message box typically used to indicate an error.
-    :param window: parent widget of the message box
-    :return: whether a window was closed
-    """
-    box = [_x for _x in window.children() if isinstance(_x, QtWidgets.QMessageBox)]
-    if len(box) == 1:
-        QtTest.QTest.keyClick(box[0], QtCore.Qt.Key_Enter)
-        QtTest.QTest.qWait(20)
-        QtWidgets.QApplication.processEvents()
-        return True
-    return False

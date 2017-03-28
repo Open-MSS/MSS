@@ -31,7 +31,6 @@ import sys
 import mock
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
 import mslib.msui.kmloverlay_dockwidget as kd
-from mslib._tests.utils import close_modal_messagebox
 
 
 class Test_KmlOverlayDockWidget(object):
@@ -53,7 +52,8 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         del self.window
 
-    def test_load(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_load(self, mockbox):
         """
         Test for flawless loading of parsing of KML files
         """
@@ -62,7 +62,7 @@ class Test_KmlOverlayDockWidget(object):
             self.window.leFile.setText(path)
             QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
             QtWidgets.QApplication.processEvents()
-            assert not close_modal_messagebox(self.window)
+            assert mockbox.critical.call_count == 0
 
     def test_styles(self):
         """
@@ -80,7 +80,8 @@ class Test_KmlOverlayDockWidget(object):
         QtTest.QTest.mouseClick(self.window.cbManualStyle, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    def test_load_error(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_load_error(self, mockbox):
         """
         Test that program mitigates loading a non-existing file
         """
@@ -89,4 +90,4 @@ class Test_KmlOverlayDockWidget(object):
         self.window.leFile.setText(path)
         QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 1

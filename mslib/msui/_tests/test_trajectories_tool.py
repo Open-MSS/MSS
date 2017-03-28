@@ -30,7 +30,6 @@ import os
 import sys
 import mock
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
-from mslib._tests.utils import close_modal_messagebox, BASE_DIR
 import mslib.msui.trajectories_tool as tt
 import mslib.msui.mss_pyui as mss_pyui
 
@@ -127,7 +126,6 @@ class Test_TrajectoryToolComples(object):
         assert mockcrit.critical.call_count == 0
         self.trajtool.cbPlotInView.setCurrentIndex(1)
         QtWidgets.QApplication.processEvents()
-        item = self.trajtool.traj_item_tree.getRootItem()
         root = self.trajtool.traj_item_tree.getRootItem()
         flighttrack = self.trajtool.tvVisibleElements.visualRect(
             self.trajtool.traj_item_tree.createIndex(0, 0, root.childItems[0].childItems[0]))
@@ -149,7 +147,6 @@ class Test_TrajectoryToolComples(object):
         assert mockcrit.critical.call_count == 0
         self.trajtool.cbPlotInView.setCurrentIndex(1)
         QtWidgets.QApplication.processEvents()
-        item = self.trajtool.traj_item_tree.getRootItem()
         root = self.trajtool.traj_item_tree.getRootItem()
         self.trajtool.tvVisibleElements.expandAll()
         flighttrack = self.trajtool.tvVisibleElements.visualRect(

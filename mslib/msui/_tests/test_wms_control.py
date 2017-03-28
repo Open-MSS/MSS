@@ -35,14 +35,14 @@ import shutil
 import tempfile
 import multiprocessing
 
-from mslib.msui import flighttrack as ft
-from mslib._tests.utils import BASE_DIR, close_modal_messagebox
+from mslib._tests.utils import BASE_DIR
 
 # important so wms finds the mss_wms_settings file in BASE_DIR
 sys.path.append(BASE_DIR)
 
 import mslib.mswms.wms
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
 
 
@@ -94,12 +94,13 @@ class Test_HSecWMSControlWidget(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
-    def test_no_server(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_no_server(self, mockbox):
         """
         assert that a message box informs about server troubles
         """
         self.query_server("http://127.0.0.1:8083")
-        assert close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 1
 
     def test_server_abort_getmap(self):
         """
@@ -119,7 +120,8 @@ class Test_HSecWMSControlWidget(object):
         assert self.view.drawMetadata.call_count == 0
         self.view.reset_mock()
 
-    def test_server_getmap(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_server_getmap(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -128,60 +130,74 @@ class Test_HSecWMSControlWidget(object):
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
         assert self.view.drawImage.call_count == 1
         assert self.view.drawLegend.call_count == 1
         assert self.view.drawMetadata.call_count == 1
         self.view.reset_mock()
 
-    def test_server_service_cache(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_server_getmap_cached(self, mockbox):
+        """
+        assert that a getmap call to a WMS server displays an image
+        """
+        self.query_server("http://127.0.0.1:8082")
+
+        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(2000)
+        assert mockbox.critical.call_count == 0
+
+        assert self.view.drawImage.call_count == 1
+        assert self.view.drawLegend.call_count == 1
+        assert self.view.drawMetadata.call_count == 1
+        self.view.reset_mock()
+
+        QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(1000)
+        assert mockbox.critical.call_count == 0
+
+        assert self.view.drawImage.call_count == 1
+        assert self.view.drawLegend.call_count == 1
+        assert self.view.drawMetadata.call_count == 1
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_server_service_cache(self, mockbox):
         """
         assert that changing between servers still allows image retrieval
         """
         self.query_server("http://127.0.0.1:8082")
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
+        QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Backspace)
         QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Backspace)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 1
         assert self.view.drawImage.call_count == 0
         assert self.view.drawLegend.call_count == 0
         assert self.view.drawMetadata.call_count == 0
+        mockbox.reset_mock()
 
         QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_2)
+        QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Slash)
+
         QtWidgets.QApplication.processEvents()
+        assert mockbox.critical.call_count == 0
+
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
+        assert mockbox.critical.call_count == 0
         assert self.view.drawImage.call_count == 1
         assert self.view.drawLegend.call_count == 1
         assert self.view.drawMetadata.call_count == 1
-        self.view.reset_mock()
-
-    # def test_get_all_maps(self):
-    #     self.query_server("http://127.0.0.1:8082")
-    #
-    #     for layer_idx in range(self.window.cbLayer.count()):
-    #         self.window.cbLayer.setCurrentIndex(layer_idx)
-    #         self.window.cb_init_time_back_click()
-    #         self.window.cb_valid_time_back_click()
-    #         for style_idx in range(self.window.cbStyle.count()):
-    #             self.window.cbStyle.setCurrentIndex(style_idx)
-    #             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-    #             QtWidgets.QApplication.processEvents()
-    #             QtTest.QTest.qWait(2000)
-    #             assert not close_modal_messagebox(self.window)
-    #
-    #             assert self.view.drawImage.call_count == 1
-    #             assert self.view.drawLegend.call_count == 1
-    #             assert self.view.drawMetadata.call_count == 1
-    #             self.view.reset_mock()
-    #             if layer_idx > 2:
-    #                 break
 
 
 class Test_VSecWMSControlWidget(object):
@@ -227,7 +243,8 @@ class Test_VSecWMSControlWidget(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
-    def test_server_getmap(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_server_getmap(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -236,7 +253,7 @@ class Test_VSecWMSControlWidget(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
         assert self.view.drawImage.call_count == 1
         assert self.view.drawLegend.call_count == 1
         assert self.view.drawMetadata.call_count == 1

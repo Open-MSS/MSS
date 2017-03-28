@@ -35,10 +35,60 @@ import paste.httpserver
 import multiprocessing
 import tempfile
 import mslib.mswms.wms
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
+from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
-from mslib._tests.utils import close_modal_messagebox
 import mslib.msui.sideview as tv
+
+
+class Test_MSS_SV_OptionsDialog(object):
+    def setup(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = tv.MSS_SV_OptionsDialog()
+        self.window.show()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtWidgets.QApplication.processEvents()
+
+    def teardown(self):
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_show(self, mockcrit):
+        assert mockcrit.critical.call_count == 0
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_get(self, mockcrit):
+        self.window.getSettings()
+        assert mockcrit.critical.call_count == 0
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_addLevel(self, mockcrit):
+        QtTest.QTest.mouseClick(self.window.btAdd, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockcrit.critical.call_count == 0
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_removeLevel(self, mockcrit):
+        QtTest.QTest.mouseClick(self.window.btDelete, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockcrit.critical.call_count == 0
+
+    def test_getFlightLevels(self):
+        levels = self.window.getFlightLevels()
+        assert all(x == y for x, y in zip(levels, [300, 320, 340]))
+        QtTest.QTest.mouseClick(self.window.btAdd, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        levels = self.window.getFlightLevels()
+        assert all(x == y for x, y in zip(levels, [0, 300, 320, 340]))
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
+    def test_setColour(self, mockdlg):
+        QtTest.QTest.mouseClick(self.window.btFillColour, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockdlg.call_count == 1
 
 
 class Test_MSSSideViewWindow(object):
@@ -62,10 +112,11 @@ class Test_MSSSideViewWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    def test_open_wms(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_open_wms(self, mockbox):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
 
 
 class Test_SideViewWMS(object):
@@ -93,7 +144,6 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
-        print self.window.docks
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.cbWMS_URL.setEditText("")
 
@@ -113,7 +163,8 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
-    def test_server_getmap(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_server_getmap(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -122,4 +173,15 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("mslib.msui.sideview.MSS_SV_OptionsDialog")
+    def test_options(self, mockdlg, mockbox):
+        QtTest.QTest.mouseClick(self.window.btOptions, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockbox.critical.call_count == 0
+        assert mockdlg.call_count == 1
+        assert mockdlg.return_value.setModal.call_count == 1
+        assert mockdlg.return_value.exec_.call_count == 1
+        assert mockdlg.return_value.destroy.call_count == 1

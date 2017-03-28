@@ -29,7 +29,6 @@
 import logging
 import os
 from datetime import datetime, timedelta
-from datetime import datetime, timedelta
 import numpy as np
 
 from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5

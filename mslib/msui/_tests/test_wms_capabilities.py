@@ -28,10 +28,8 @@
 
 import sys
 import mock
-import os
 
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
-from mslib._tests.utils import close_modal_messagebox
 import mslib.msui.wms_capabilities as wc
 
 
@@ -58,13 +56,15 @@ class Test_WMSCapabilities(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    def test_window_start(self):
-        assert not close_modal_messagebox(self.window)
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_window_start(self, mockbox):
+        assert mockbox.critical.call_count == 0
 
-    def test_switch_view(self):
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_switch_view(self, mockbox):
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert not close_modal_messagebox(self.window)
+        assert mockbox.critical.call_count == 0
