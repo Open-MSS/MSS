@@ -31,7 +31,6 @@ import sys
 import mock
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
 import mslib.msui.kmloverlay_dockwidget as kd
-from mslib._tests.utils import close_modal_messagebox
 
 
 class Test_KmlOverlayDockWidget(object):

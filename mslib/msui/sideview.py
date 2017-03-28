@@ -27,18 +27,16 @@
 """
 
 import functools
-import logging
 from mslib.utils import config_loader, save_settings_pickle, load_settings_pickle
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtWidgets, QString
+from mslib.msui.mss_qt import QtGui, QtWidgets
 
 # local application imports
 from mslib.msui.mss_qt import ui_sideview_window as ui
 from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
-from mslib.msui import flighttrack as ft
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons

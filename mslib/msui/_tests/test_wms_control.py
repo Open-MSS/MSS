@@ -35,7 +35,6 @@ import shutil
 import tempfile
 import multiprocessing
 
-from mslib.msui import flighttrack as ft
 from mslib._tests.utils import BASE_DIR
 
 # important so wms finds the mss_wms_settings file in BASE_DIR
@@ -43,6 +42,7 @@ sys.path.append(BASE_DIR)
 
 import mslib.mswms.wms
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
 
 

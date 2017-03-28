@@ -28,10 +28,8 @@
 
 import sys
 import mock
-import os
 
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
-from mslib._tests.utils import close_modal_messagebox, BASE_DIR
+from mslib.msui.mss_qt import QtWidgets, QtTest
 import mslib.msui.timeseriesview as tsv
 
 

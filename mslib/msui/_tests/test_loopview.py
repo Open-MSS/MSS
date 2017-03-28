@@ -28,9 +28,8 @@
 
 import sys
 import mock
-import os
 
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
+from mslib.msui.mss_qt import QtWidgets, QtTest
 import mslib.msui.loopview as lv
 
 

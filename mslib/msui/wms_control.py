@@ -33,7 +33,6 @@ import StringIO
 import hashlib
 import logging
 import os
-import sys
 import requests
 import re
 import urllib

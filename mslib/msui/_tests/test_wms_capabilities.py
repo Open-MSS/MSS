@@ -28,7 +28,6 @@
 
 import sys
 import mock
-import os
 
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
