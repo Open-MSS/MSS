@@ -58,7 +58,7 @@ m2.s-2
 time,lat,lon
   2.12e+03   4.74e+03
 Surface_pressure_surface
-surface_air_pressure
+air_pressure_at_sea_level
 Pa
 3
 time,lat,lon
@@ -76,23 +76,59 @@ land_binary_mask
 time,lat,lon
   4.20e-01   4.94e-01
 Low_cloud_cover_surface
-low_type_cloud_area_fraction
+low_cloud_area_fraction
 (0.-.1)
 3
 time,lat,lon
   3.67e-01   3.91e-01
 Medium_cloud_cover_surface
-medium_type_cloud_area_fraction
+medium_cloud_area_fraction
 (0.-.1)
 3
 time,lat,lon
   2.95e-01   3.77e-01
 High_cloud_cover_surface
-high_type_cloud_area_fraction
+high_cloud_area_fraction
 (0.-.1)
 3
 time,lat,lon
   4.07e-01   4.41e-01
+U
+surface_eastward_wind
+m.s-1
+3
+time,lat,lon
+  0 50
+V
+surface_northward_wind
+m.s-1
+3
+time,lat,lon
+  0 50
+SEA
+solar_elevation_angle
+degree
+3
+time,lat,lon
+  45 20
+SIAF
+sea_ice_area_fraction
+(0.-.1)
+3
+time,lat,lon
+  0.5 0.3
+brightness
+msg_brightness_temperature_108
+nW.cm.m-2.sr-1
+3
+time,lat,lon
+  100 20
+atmosphere_boundary_layer_thickness
+atmosphere_boundary_layer_thickness
+m
+3
+time,lat,lon
+  1000 400
 """
         self.forecast_pressure_levels_pl = """\
 Potential_vorticity_isobaric
@@ -312,7 +348,7 @@ time,isobaric,lat,lon
   4.93e-08   5.71e-05
   8.47e-08   5.94e-05
 Ozone_mass_mixing_ratio_isobaric
-mass_fraction_of_ozone_in_air
+mole_fraction_of_ozone_in_air
 kg.kg-1
 4
 time,isobaric,lat,lon
@@ -335,6 +371,30 @@ time,isobaric,lat,lon
   6.14e-08   4.60e-09
   6.12e-08   4.64e-09
   6.09e-08   4.65e-09
+EQLAT
+equivalent_latitude
+degree
+4
+time,isobaric,lat,lon
+18
+  80.09   1.21
+  50.70   5.69
+  30.46   4.69
+  20.41   5.23
+  10.44   4.97
+  60.27   3.28
+  20.82   2.03
+  10.37   1.08
+  80.30   4.80
+  60.40   1.39
+  60.23   8.08
+  60.18   6.28
+  60.18   5.47
+  60.17   4.73
+  60.15   4.57
+  60.14   4.60
+  60.12   4.64
+  60.09   4.65
 """
         self.forecast_theta_levels_pl = """\
         Pressure
@@ -386,7 +446,7 @@ time,isobaric,lat,lon
           9.05e-07   3.94e-06
           8.95e-07   4.09e-06
         Ozone_mass_mixing_ratio
-        mass_fraction_of_ozone_in_air
+        mole_fraction_of_ozone_in_air
         kg.kg-1
         4
         time,isentropic,lat,lon

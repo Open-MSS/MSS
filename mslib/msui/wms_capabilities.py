@@ -26,8 +26,6 @@
     limitations under the License.
 """
 
-import logging
-
 from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_wms_capabilities as ui
 

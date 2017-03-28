@@ -31,8 +31,6 @@
     limitations under the License.
 """
 
-import logging
-
 # related third party imports
 from mslib.msui.mss_qt import QtGui  # Qt4 bindings
 
