@@ -38,6 +38,7 @@ import numpy as np
 # local application imports
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
+from mslib.mswms.msschem import MSSChemTargets
 from mslib import thermolib
 
 
@@ -1431,3 +1432,151 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+
+
+class VS_MSSChemStyle(AbstractVerticalSectionStyle):
+    """ CTM tracer vertical tracer cross sections via MSS-Chem
+    """
+    styles = [
+        ("auto", "auto colour scale"),
+        ("autolog", "auto log colour scale"), ]
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [("ml", "air_pressure")]
+
+    def _prepare_datafields(self):
+        """Computes potential temperature from pressure and temperature if
+        it has not been passed as a data field.
+        """
+        if self.name[-2:] == "pl":
+            self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
+            self.data["air_pressure"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+        elif self.name[-2:] == "tl":
+            self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
+            self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+        elif self.name[-2:] == "al":
+            # CAMS Regional Ensemble doesn't provide any pressure information, but we want to plot vertical sections
+            # anyways, so we do a poor-man's on-the-fly conversion here.
+            if 'air_pressure' not in self.data.keys():
+                self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
+                flightlevel = 3.28083989501 / 100. * self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+                self.data['air_pressure'][:] = thermolib.flightlevel2pressure_a(flightlevel)
+
+    def _plot_style(self):
+        ax = self.ax
+        curtain_cc = self.data[self.dataname] * self.unit_scale
+        curtain_cc = np.ma.masked_invalid(curtain_cc)
+        curtain_p = self.data["air_pressure"] ### TODO* 100
+
+        numlevel = curtain_p.shape[0]
+        numpoints = len(self.lats)
+        curtain_lat = self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose()
+
+        # Filled contour plot of cloud cover.
+        # INFO on COLORMAPS:
+        #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
+        if self.p_bot > self.p_top:
+            visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
+        else:
+            visible = (curtain_p >= self.p_bot) & (curtain_p <= self.p_top)
+
+        if visible.sum() == 0:
+            visible = np.ones_like(curtain_cc, dtype=bool)
+
+        cmin, cmax = Targets.get_range(self.dataname)
+        cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
+            self.dataname, self.style, cmin, cmax, curtain_cc[visible])
+
+        cs = ax.contourf(curtain_lat, curtain_p, curtain_cc, clevs, cmap=cmap, extend="both", norm=norm)
+
+        # Contour lines
+        for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
+            if cont_levels is None:
+                pl_cont = ax.plot(self.lat_inds, self.data[cont_data].reshape(-1), "o", color="k", zorder=100)
+                plt.setp(pl_cont, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
+            else:
+                cs_pv = ax.contour(curtain_lat, curtain_p, self.data[cont_data], cont_levels,
+                                   colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
+                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                cs_pv_lab = ax.clabel(cs_pv, colours=cont_label_colour, fontsize=8, fmt='%i')
+                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
+
+        # Pressure decreases with index, i.e. orography is stored at the
+        # zero-p-index (data field is flipped in mss_plot_driver.py if
+        # pressure increases with index).
+        self._latlon_logp_setup(titlestring=self.title)
+
+        # Format for colorbar labels
+        cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
+        cbar_label = self.title
+
+        # Add colorbar.
+        if not self.noframe:
+            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
+            self.fig.colorbar(cs, fraction=0.05, pad=0.01, format=cbar_format, label=cbar_label, ticks=ticks)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="1%", height="40%", loc=1)
+            self.fig.colorbar(cs, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
+
+            # adjust colorbar fontsize to figure height
+            fontsize = self.fig.bbox.height * 0.024
+            axins1.yaxis.set_ticks_position("left")
+            for x in axins1.yaxis.majorTicks:
+                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
+                x.label1.set_fontsize(fontsize)
+
+
+def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
+
+    # This is CTM output, so we cannot expect any additional meteorological
+    # parameters except for air_pressure
+    if add_data is None:
+        if vert == "al":
+            # "al" is altitude layer, i.e., for CTM output with no pressure information at all (e.g., CAMS reg. Ensemble)
+            # In those cases we derive air_pressure from the altitude alone, in the _prepare_datafields() method
+            add_data = []
+        else:
+            # all other layer types need to read air_pressure from the data
+            add_data = [(vert, "air_pressure")]
+    if add_contours is None:
+        add_contours = []
+
+    class fnord(VS_MSSChemStyle):
+        name = entity + "_" + vert
+        dataname = entity
+        ###units, unit_scale = Targets.get_unit(dataname)
+        units = units
+        unit_scale = scale
+        title = nam + " (MSSChem, " + vert + ")"
+        long_name = entity
+        if units:
+            title += u" ({})".format(units)
+        required_datafields = [(vert, entity)] + add_data
+        contours = add_contours if add_contours else []
+
+    fnord.__name__ = name
+    fnord.styles = list(fnord.styles)
+    if Targets.get_thresholds(entity) is not None:
+        fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
+    if all(_x is not None for _x in Targets.get_range(entity)):
+        fnord.styles = fnord.styles + [
+            ("default", "fixed colour scale"),
+            ("log", "fixed logarithmic colour scale")]
+
+    if add_styles is not None:
+        fnord.styles += add_styles
+    if fix_styles is not None:
+        fnord.styles = fix_styles
+    if add_prepare is not None:
+        fnord._prepare_datafields = add_prepare
+
+    return fnord
+
+
+for vert in ["ml", "tl", "pl", "al"]:
+    for stdname, props in MSSChemTargets.items():
+        name, qty, units, scale = props
+        key = "VS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty
+        globals()[key] = make_msschem_class(stdname, name, vert, units, scale)

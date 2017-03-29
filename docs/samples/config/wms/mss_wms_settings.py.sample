@@ -92,6 +92,7 @@ datapath = {
     "ecmwf": "/path/to/data/mss/grid/ecmwf/netcdf",
     "emac": "/path/to/data/mss/grid/emac/netcdf",
     "meteosat": "/path/to/data/mss/grid/meteosat/netcdf",
+    "camsglobal": "/path/to/data/mss/grid/camsglobal/netcdf",
 }
 
 
@@ -103,6 +104,25 @@ nwpaccess = {
     #    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
     #    "meteosat_EUR_LL05": mslib.mswms.dataaccess.MeteosatDataAccess(datapath["meteosat"], "EUR_LL05"),
     #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccess.EMACDataAccess(datapath["emac"])
+
+    #        The MSS-Chem project provides an easy way to download and prepare
+    #        forecasts from a range of different CTMs.
+    #        The MSSChemDataAccess class is meant to provide access to
+    #        the chemistry forecasts prepared by MSS-Chem.  Therefore, it has
+    #        to be more general than the other DataAccess classes.
+    #        Its contstructor takes four arguments:
+    #
+    #        1. The path to the data files.  This directory has to contain one
+    #           folder for each init_time, which is called "%Y-%m-%d_%H"
+    #        2. The string with which the filenames start
+    #        3. The vertical layer type of the model; one of
+    #           - "pl" (pressure level)
+    #           - "ml" (model level)
+    #           - "tl" (potential temperature level)
+    #           - "al" (altitude level) -> CAUTION <- Only use if absolutely necessary, for models without any pressure
+    #             information.  For vertical sections, air_pressure will be determined on-the-fly, from the layer
+    #             altitude alone, which is not very accurate
+    #    "CAMSglb": mslib.mswms.dataaccess.MSSChemDataAccess(datapath["camsglobal"], "cams-global", "ml"),
 }
 
 nwpaccess[nwpaccess.keys()[0]].serviceCache()
@@ -152,10 +172,13 @@ register_horizontal_layers = [
 
     # EMAC layers.
     # (mpl_hsec_styles.HS_EMAC_TracerStyle_ML_01, ["emac_GLOBAL_LL1125"]),
-    # (mpl_hsec_styles.HS_EMAC_TracerStyle_SFC_01, ["emac_GLOBAL_LL1125"])
+    # (mpl_hsec_styles.HS_EMAC_TracerStyle_SFC_01, ["emac_GLOBAL_LL1125"]),
 
     # Meteosat products.
-    (mpl_hsec_styles.HS_Meteosat_BT108_01, ["meteosat_EUR_LL05"])
+    (mpl_hsec_styles.HS_Meteosat_BT108_01, ["meteosat_EUR_LL05"]),
+
+    # MSS-Chem chemistry forecasts
+    # (mpl_hsec_styles.HS_MSSChemStyle_ML_NO2_mfrac, ["CAMSglb"]),
 ]
 
 
@@ -174,10 +197,13 @@ register_vertical_layers = [
     (mpl_vsec_styles.VS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
     (mpl_vsec_styles.VS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
     (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
-    (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
+    (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"]),
 
     # EMAC layers.
-    # (mpl_vsec_styles.VS_EMACEyja_Style_01, ["emac_GLOBAL_LL1125"])
+    # (mpl_vsec_styles.VS_EMACEyja_Style_01, ["emac_GLOBAL_LL1125"]),
+
+    # MSS-Chem chemistry forecasts
+    # (mpl_vsec_styles.VS_MSSChemStyle_ML_NO2_mfrac, ["CAMSglb"]),
 ]
 
 
