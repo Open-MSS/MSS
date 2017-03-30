@@ -51,7 +51,7 @@ class Abstract2DSectionStyle(object):
     required_datafields = []
 
     def __init__(self, driver=None):
-        self.driver = driver
+        self.set_driver(driver)
 
     def required_datatypes(self):
         """Returns a list containing the datatypes required by the

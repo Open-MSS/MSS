@@ -1684,6 +1684,13 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
         ("auto", "auto colour scale"),
         ("autolog", "auto logcolour scale"), ]
 
+    # In order to use information from the DataAccess class to construct the titles, we override the set_driver to set
+    # self.title.  This cannot happen in __init__, as the WMSServer doesn't initialize the layers with the driver but
+    # rather sets the driver only after initialization.
+    def set_driver(self, driver):
+        super(HS_MSSChemStyle, self).set_driver(driver=driver)
+        self.title = self._title_tpl.format(modelname=self.driver.data_access._modelname)
+
     def _plot_style(self):
         bm = self.bm
         ax = self.bm.ax
@@ -1737,7 +1744,8 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
+def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_contours=None, fix_styles=None,
+                       add_styles=None, add_prepare=None):
     if add_data is None:
         add_data = []
     if add_contours is None:
@@ -1746,13 +1754,12 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
     class fnord(HS_MSSChemStyle):
         name = entity + "_" + vert
         dataname = entity
-        ###units, unit_scale = Targets.get_unit(entity)
         units = units
         unit_scale = scale
-        title = nam + " (MSSChem, " + vert + ")"
+        _title_tpl = nam + " ({modelname}, " + vert + ")"
         long_name = entity
         if units:
-            title += u" ({})".format(units)
+            _title_tpl += u" ({})".format(units)
 
         required_datafields = [(vert, entity)] + add_data
         contours = add_contours
