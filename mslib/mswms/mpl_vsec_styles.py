@@ -1445,6 +1445,17 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [("ml", "air_pressure")]
 
+    # In order to use information from the DataAccess class to construct the titles, we override the set_driver to set
+    # self.title.  This cannot happen in __init__, as the WMSServer doesn't initialize the layers with the driver but
+    # rather sets the driver only after initialization.
+    def set_driver(self, driver):
+        super(VS_MSSChemStyle, self).set_driver(driver=driver)
+        self.title = self._title_tpl.format(modelname=self.driver.data_access._modelname)
+        # for altitude level model data, when we don't have air_pressure information, we want to warn users that the
+        # vertical section is only an approximation
+        if (self.name[-2:] == "al") and ("p" not in self.driver.data_access.build_filetree().values()[0].values()[0].keys()):
+            self.title = self.title.replace(" al)", " al; WARNING: vert. distribution only approximate!)")
+
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
@@ -1549,10 +1560,10 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         ###units, unit_scale = Targets.get_unit(dataname)
         units = units
         unit_scale = scale
-        title = nam + " (MSSChem, " + vert + ")"
+        _title_tpl = nam + " ({modelname}, " + vert + ")"
         long_name = entity
         if units:
-            title += u" ({})".format(units)
+            _title_tpl += u" ({})".format(units)
         required_datafields = [(vert, entity)] + add_data
         contours = add_contours if add_contours else []
 

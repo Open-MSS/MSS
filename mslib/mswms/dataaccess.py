@@ -399,8 +399,7 @@ class ECMWFDataAccess(NWPDataAccess):
         for init_time in filetree.keys():
             vtimes = self.get_valid_times(variable, vartype, init_time)
             valid_times.update(vtimes)
-        # valid_times.sort()
-        return list(valid_times)
+        return sorted(list(valid_times))
 
     def get_all_datafiles(self):
         """Return a list of all available data files.
@@ -697,10 +696,11 @@ class MSSChemDataAccess(NWPDataAccess):
     _file_template = "%s_$Y-$m-$d_%s_%s_%s.nc"
     _file_regexp = "(?P<model>.*)_(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})_(?P<hour>\d{2})_(?P<vartype>.*)_(?P<variable>.*)\.nc$"
 
-    def __init__(self, rootpath, modelstr, vert):
+    def __init__(self, rootpath, modelname, modelstr, vert):
         NWPDataAccess.__init__(self, rootpath)
         # Compile regular expression to match filenames.
         self._filename_re = re.compile(self._file_regexp)
+        self._modelname = modelname
         self._modelstr = modelstr
         self._create_data_table(vert)
 
