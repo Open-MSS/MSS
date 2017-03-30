@@ -1744,7 +1744,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         add_contours = []
 
     class fnord(HS_MSSChemStyle):
-        name = entity + "_" + vert
+        name = "HS_" + entity + "_" + vert
         dataname = entity
         ###units, unit_scale = Targets.get_unit(entity)
         units = units
