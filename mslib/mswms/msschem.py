@@ -62,6 +62,7 @@ MSSChemQuantities = {
     'mfrac': ('mass_fraction', 'kg kg-1', 1),
     'mconc': ('mass_concentration', 'ug m-3', 1),
     'nfrac': ('mole_fraction', 'mol mol-1', 1),
+    'nconc': ('mole_concentration', 'mol m-3', 1),
 }
 
 
