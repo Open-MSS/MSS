@@ -1740,11 +1740,14 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
 def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
     if add_data is None:
         add_data = []
+    _contourname = ""
     if add_contours is None:
         add_contours = []
+    elif add_contours[0][0] == "air_pressure":
+        _contourname = "_pcontours"
 
     class fnord(HS_MSSChemStyle):
-        name = entity + "_" + vert
+        name = entity + "_" + vert + _contourname
         dataname = entity
         ###units, unit_scale = Targets.get_unit(entity)
         units = units
@@ -1768,3 +1771,14 @@ for vert in ["ml", "al", "pl"]:
         name, qty, units, scale = props
         key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty
         globals()[key] = make_msschem_class(stdname, name, vert, units, scale)
+
+_pressurelevels = np.linspace(5000, 95000, 19)
+_npressurelevels = len(_pressurelevels)
+for vert in ["ml"]:
+    for stdname, props in MSSChemTargets.items():
+        name, qty, units, scale = props
+        key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty + "_pcontours"
+        globals()[key] = make_msschem_class(stdname, name, vert, units, scale, add_data=[(vert, "air_pressure")],
+                                            add_contours=[
+                ("air_pressure", _pressurelevels, ["dimgrey"] * _npressurelevels, ["dimgrey"] * _npressurelevels,
+                 ["dotted"] * _npressurelevels, 1, True)],)
