@@ -45,7 +45,5 @@ if not os.path.exists(utils.DATA_DIR):
     examples.theta_data()
     if not os.path.exists(utils.VT_CACHE):
         os.makedirs(utils.VT_CACHE)
-try:
-    imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
-except IOError:
-    pass
+
+imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
