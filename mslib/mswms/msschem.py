@@ -26,7 +26,8 @@
     limitations under the License.
 """
 
-MSSChemSpecies = {
+MSSChemSpecies =\
+    {
         'AERMR01': 'fine_sea_salt_aerosol',
         'AERMR02': 'medium_sea_salt_aerosol',
         'AERMR03': 'coarse_sea_salt_aerosol',
@@ -55,18 +56,19 @@ MSSChemSpecies = {
         'PM2P5': 'pm2p5_ambient_aerosol',
         'PM10': 'pm10_ambient_aerosol',
         'SO2': 'sulfur_dioxide',
-        }
+    }
 
 
-MSSChemQuantities = {
-    'mfrac': ('mass_fraction', 'kg kg-1', 1),
-    'mconc': ('mass_concentration', 'ug m-3', 1),
-    'nfrac': ('mole_fraction', 'mol mol-1', 1),
-    'nconc': ('mole_concentration', 'mol m-3', 1),
-}
+MSSChemQuantities = \
+    {
+        'mfrac': ('mass_fraction', 'kg kg-1', 1),
+        'mconc': ('mass_concentration', 'ug m-3', 1),
+        'nfrac': ('mole_fraction', 'mol mol-1', 1),
+        'nconc': ('mole_concentration', 'mol m-3', 1),
+    }
 
 
 MSSChemTargets = {
-        qtylong + '_of_' + species + '_in_air': (key, qty, units, scale)
-        for key, species in MSSChemSpecies.items()
-        for qty, (qtylong, units, scale) in MSSChemQuantities.items()}
+    qtylong + '_of_' + species + '_in_air': (key, qty, units, scale)
+    for key, species in MSSChemSpecies.items()
+    for qty, (qtylong, units, scale) in MSSChemQuantities.items()}

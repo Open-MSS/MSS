@@ -165,7 +165,8 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
             else:
                 cs_pv = ax.contour(curtain_lat, curtain_p, self.data[cont_data], cont_levels,
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
-                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                plt.setp(cs_pv.collections,
+                         path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                 cs_pv_lab = ax.clabel(cs_pv, colours=cont_label_colour, fontsize=8, fmt='%i')
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
@@ -195,7 +196,8 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
+def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
+                       fix_styles=None, add_styles=None, add_prepare=None):
     if add_data is None:
         add_data = [(vert, "ertel_potential_vorticity")]
     if add_contours is None:
@@ -1453,7 +1455,8 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         self.title = self._title_tpl.format(modelname=self.driver.data_access._modelname)
         # for altitude level model data, when we don't have air_pressure information, we want to warn users that the
         # vertical section is only an approximation
-        if (self.name[-2:] == "al") and ("p" not in self.driver.data_access.build_filetree().values()[0].values()[0].keys()):
+        if (self.name[-2:] == "al") and\
+                ("p" not in self.driver.data_access.build_filetree().values()[0].values()[0].keys()):
             self.title = self.title.replace(" al)", " al; WARNING: vert. distribution only approximate!)")
 
     def _prepare_datafields(self):
@@ -1478,7 +1481,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         ax = self.ax
         curtain_cc = self.data[self.dataname] * self.unit_scale
         curtain_cc = np.ma.masked_invalid(curtain_cc)
-        curtain_p = self.data["air_pressure"] ### TODO* 100
+        curtain_p = self.data["air_pressure"]  # TODO* 100
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -1509,7 +1512,8 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
             else:
                 cs_pv = ax.contour(curtain_lat, curtain_p, self.data[cont_data], cont_levels,
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
-                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                plt.setp(cs_pv.collections,
+                         path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                 cs_pv_lab = ax.clabel(cs_pv, colours=cont_label_colour, fontsize=8, fmt='%i')
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
@@ -1539,13 +1543,15 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
+def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
+                       add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
 
     # This is CTM output, so we cannot expect any additional meteorological
     # parameters except for air_pressure
     if add_data is None:
         if vert == "al":
-            # "al" is altitude layer, i.e., for CTM output with no pressure information at all (e.g., CAMS reg. Ensemble)
+            # "al" is altitude layer, i.e., for CTM output with no pressure information
+            # at all (e.g., CAMS reg. Ensemble)
             # In those cases we derive air_pressure from the altitude alone, in the _prepare_datafields() method
             add_data = []
         else:
@@ -1557,7 +1563,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
     class fnord(VS_MSSChemStyle):
         name = "VS_" + entity + "_" + vert
         dataname = entity
-        ###units, unit_scale = Targets.get_unit(dataname)
+        # units, unit_scale = Targets.get_unit(dataname)
         units = units
         unit_scale = scale
         _title_tpl = nam + " ({modelname}, " + vert + ")"

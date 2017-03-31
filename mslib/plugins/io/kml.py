@@ -2,7 +2,7 @@
 """
 
     mslib.plugins.io.kml
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~
 
     plugin for KML format flight track export
 
@@ -26,6 +26,7 @@
 """
 
 import codecs
+
 
 def save_to_kml(filename, name, waypoints):
     if not filename:

@@ -143,7 +143,8 @@ class Test_NWPDataAccess(object):
     def test_get_all_valid_times(self):
         # Todo why not sorted
         all_valid_times = self.ECMWFDataAccess.get_all_valid_times("air_pressure", "ml")
-        assert all_valid_times == [datetime(2012, 10, 17, 15, 0),
+        assert all_valid_times == [datetime(2012, 10, 17, 12, 0),
+                                   datetime(2012, 10, 17, 15, 0),
                                    datetime(2012, 10, 17, 21, 0),
                                    datetime(2012, 10, 18, 21, 0),
                                    datetime(2012, 10, 18, 18, 0),
