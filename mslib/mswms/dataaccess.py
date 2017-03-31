@@ -27,6 +27,7 @@
 """
 
 from abc import ABCMeta, abstractmethod
+import glob
 import re
 import os
 import logging
@@ -37,6 +38,7 @@ import hashlib
 import pickle
 
 from mslib import netCDF4tools
+from mslib.mswms.msschem import MSSChemTargets
 
 valid_time_cache = None
 # Maximum size of the cache in bytes.
@@ -397,8 +399,7 @@ class ECMWFDataAccess(NWPDataAccess):
         for init_time in filetree.keys():
             vtimes = self.get_valid_times(variable, vartype, init_time)
             valid_times.update(vtimes)
-        # valid_times.sort()
-        return list(valid_times)
+        return sorted(list(valid_times))
 
     def get_all_datafiles(self):
         """Return a list of all available data files.
@@ -686,3 +687,158 @@ class MeteosatDataAccess(NWPDataAccess):
         """Return a list of all available data files.
         """
         return os.listdir(self._root_path)
+
+
+class MSSChemDataAccess(NWPDataAccess):
+    """Subclass to NWPDataAccess for accessing CTM data prepared by MSS-Chem
+
+    """
+    _file_template = "%s_$Y-$m-$d_%s_%s_%s.nc"
+    _file_regexp = "(?P<model>.*)_(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})_(?P<hour>\d{2})_(?P<vartype>.*)_(?P<variable>.*)\.nc$"
+
+    def __init__(self, rootpath, modelname, modelstr, vert):
+        NWPDataAccess.__init__(self, rootpath)
+        # Compile regular expression to match filenames.
+        self._filename_re = re.compile(self._file_regexp)
+        self._modelname = modelname
+        self._modelstr = modelstr
+        self._create_data_table(vert)
+
+    def _create_data_table(self, vert):
+        self._data_organisation_table = {
+                stdname: {vert: shortname.lower()}
+                for stdname, (shortname, _, _, _) in MSSChemTargets.items()}
+        self._data_organisation_table["air_pressure"] = {vert: "p"}
+
+    def _determine_filename(self, variable, vartype, init_time, valid_time):
+        """Determines the name of the CAMS global data file that contains
+           the variable <variable> of the forecast specified by
+           init_time and valid_time.
+
+        This can be simpler than usual, because MSS-Chem will prepare the data
+        such that there is exactly one file per variable, vartype, and
+        init_time, which contains all valid_times.
+
+        """
+        variable_dict = self._data_organisation_table[variable]
+
+        # Substitute variable identifiers in the template filename.
+        if vartype not in variable_dict.keys():
+            raise ValueError("variable type %s not available for variable %s"
+                             % (vartype, variable))
+
+        if type(variable_dict[vartype]) == str:
+            # The string stored for the given variable type contains the
+            # variable identifier in the filename.
+            name = self._file_template % (self._modelstr,
+                                          "{:%H}".format(init_time), vartype,
+                                          variable_dict[vartype])
+
+        # Substitute init time and time step interval identifiers.
+        name = name.replace('$', '%')
+        name = datetime.strftime(init_time, name)
+        return name
+
+    def build_filetree(self):
+        """Build a tree structure with information on the available
+           forecast times and variables.
+
+        The first index of 'filetree' is the forecast date/time, the second the
+        timestep, the third the variable. The names of all available files are
+        parsed corresponding to the above specified regular expression and
+        inserted into the tree.
+        """
+        # Get a list of the available data files.
+        available_files = self.get_all_datafiles()
+
+        # Build the tree structure.
+        filetree = {}
+        for filename in available_files:
+            m = self._filename_re.match(filename)
+            if m:
+                # Extract information from the filename.
+                var = m.group("variable")
+                step = 0
+                initime = datetime(int(m.group("year")), int(m.group("month")),
+                                   int(m.group("day")), int(m.group("hour")))
+
+                # Insert the filename into the tree.
+                if initime not in filetree.keys():
+                    filetree[initime] = {}
+                if step not in filetree[initime].keys():
+                    filetree[initime][step] = {}
+                filetree[initime][step][var] = filename
+
+        return filetree
+
+    def get_init_times(self):
+        """Returns a list of available forecast init times (base times).
+        """
+        filetree = self.build_filetree()
+        init_times = filetree.keys()
+        init_times.sort()
+        return init_times
+
+    def get_valid_times(self, variable, vartype, init_time):
+        """Returns a list of available valid times for the specified
+           variable at the specified init time.
+        """
+        valid_times = []
+        # Open the forecast file belonging to this variable.
+        filename = self.get_filename(variable, vartype, init_time, None,
+                                     fullpath=True)
+        if os.path.exists(filename):
+            # If the file exists, open the file and read the contained
+            # times. Add the list of times to valid_times.
+            cached_valid_times = self.check_valid_cache(filename)
+            if cached_valid_times is not None:
+                valid_times.extend(cached_valid_times)
+            else:
+                dataset = netCDF4.Dataset(filename)
+                timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                times = netCDF4tools.num2date(timevar[:], timevar.units)
+                valid_times.extend(times)
+                dataset.close()
+                self.save_valid_cache(filename, times)
+
+        return valid_times
+
+    def get_all_valid_times(self, variable, vartype):
+        """Similar to get_valid_times(), but returns the combined valid times
+           of all available init times.
+        """
+        valid_times = set()
+        filetree = self.build_filetree()
+        for init_time in filetree.keys():
+            vtimes = self.get_valid_times(variable, vartype, init_time)
+            valid_times.update(vtimes)
+        return sorted(list(valid_times))
+
+    def get_all_datafiles(self):
+        """Return a list of all available data files.
+        """
+        return [os.path.basename(fn) for fn
+                in glob.glob(os.path.join(self._root_path, "*", "*.nc"))]
+
+    def get_filename(self, variable, vartype, init_time, valid_time,
+                     fullpath=False):
+        """Get the filename of the file in which a given variable at
+           a given time can be found.
+
+        Arguments:
+        variable -- string with CF name of variable
+        vartype -- string specifying the type of the variable (model specific).
+                   For example, can be ml (model level), pl (pressure level),
+                   or sfc (surface) for ECMWF data.
+        init_time -- datetime object with initialisation time of forecast run
+        valid_time -- datetime object with valid time of forecast
+        fullpath -- if True, the complete path to the file will be returned.
+                    Default is False, only the filename will be returned.
+        """
+        filename = self._determine_filename(variable, vartype,
+                                            init_time, valid_time)
+        if fullpath:
+            return os.path.join(self._root_path,
+                                "{:%Y-%m-%d_%H}".format(init_time), filename)
+        else:
+            return filename

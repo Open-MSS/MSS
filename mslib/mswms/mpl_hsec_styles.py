@@ -76,6 +76,7 @@ from matplotlib import patheffects
 # local application imports
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
+from mslib.mswms.msschem import MSSChemTargets
 from mslib import thermolib
 
 
@@ -1673,3 +1674,118 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         else:
             ax.text(bm.llcrnrx, bm.llcrnry, titlestring,
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
+
+
+class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
+    """
+    Pressure level version for Chemical Mixing ratios.
+    """
+    styles = [
+        ("auto", "auto colour scale"),
+        ("autolog", "auto logcolour scale"), ]
+
+    # In order to use information from the DataAccess class to construct the titles, we override the set_driver to set
+    # self.title.  This cannot happen in __init__, as the WMSServer doesn't initialize the layers with the driver but
+    # rather sets the driver only after initialization.
+    def set_driver(self, driver):
+        super(HS_MSSChemStyle, self).set_driver(driver=driver)
+        self.title = self._title_tpl.format(modelname=self.driver.data_access._modelname)
+
+    def _plot_style(self):
+        bm = self.bm
+        ax = self.bm.ax
+
+        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
+        lonmesh, latmesh = bm(lonmesh_, latmesh_)
+
+        show_data = np.ma.masked_invalid(self.data[self.dataname]) * self.unit_scale
+        # get cmin, cmax, cbar_log and cbar_format for level_key
+        cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
+        cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
+            self.dataname, self.style, cmin, cmax, show_data)
+
+        tc = bm.contourf(lonmesh, latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
+
+        for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
+            cs_pv = ax.contour(lonmesh, latmesh, self.data[cont_data], cont_levels,
+                               colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
+            cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
+            if pe:
+                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
+
+        # define position of the colorbar and the orientation of the ticks
+        if self.epsg == 77774020:
+            cbar_location = 3
+            tick_pos = 'right'
+        else:
+            cbar_location = 4
+            tick_pos = 'left'
+
+        # Format for colorbar labels
+        cbar_label = self.title
+        cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
+
+        if not self.noframe:
+            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
+                                     norm=norm, label=cbar_label, format=cbar_format, ticks=ticks)
+            cbar.set_ticklabels(clevs)
+            cbar.set_ticks(clevs)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="40%", loc=cbar_location)
+            self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
+
+            # adjust colorbar fontsize to figure height
+            fontsize = self.fig.bbox.height * 0.024
+            axins1.yaxis.set_ticks_position(tick_pos)
+            for x in axins1.yaxis.majorTicks:
+                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
+                x.label1.set_fontsize(fontsize)
+
+
+def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_contours=None, fix_styles=None,
+                       add_styles=None, add_prepare=None):
+    if add_data is None:
+        add_data = []
+    _contourname = ""
+    if add_contours is None:
+        add_contours = []
+    elif add_contours[0][0] == "air_pressure":
+        _contourname = "_pcontours"
+
+    class fnord(HS_MSSChemStyle):
+        name = "HS_" + entity + "_" + vert + _contourname
+        dataname = entity
+        units = units
+        unit_scale = scale
+        _title_tpl = nam + " ({modelname}, " + vert + ")"
+        long_name = entity
+        if units:
+            _title_tpl += u" ({})".format(units)
+
+        required_datafields = [(vert, entity)] + add_data
+        contours = add_contours
+
+    fnord.__name__ = name
+    fnord.styles = list(fnord.styles)
+
+    return fnord
+
+
+for vert in ["ml", "al", "pl"]:
+    for stdname, props in MSSChemTargets.items():
+        name, qty, units, scale = props
+        key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty
+        globals()[key] = make_msschem_class(stdname, name, vert, units, scale)
+
+_pressurelevels = np.linspace(5000, 95000, 19)
+_npressurelevels = len(_pressurelevels)
+for vert in ["ml"]:
+    for stdname, props in MSSChemTargets.items():
+        name, qty, units, scale = props
+        key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty + "_pcontours"
+        globals()[key] = make_msschem_class(stdname, name, vert, units, scale, add_data=[(vert, "air_pressure")],
+                                            add_contours=[
+                ("air_pressure", _pressurelevels, ["dimgrey"] * _npressurelevels, ["dimgrey"] * _npressurelevels,
+                 ["dotted"] * _npressurelevels, 1, True)],)
