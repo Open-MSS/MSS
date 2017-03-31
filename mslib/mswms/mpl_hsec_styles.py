@@ -506,7 +506,8 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
-                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2,
+                                                                                 foreground="w")])
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
@@ -539,7 +540,8 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
                 x.label1.set_fontsize(fontsize)
 
 
-def make_generic_class(name, entity, vert, add_data=None, add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
+def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
+                       fix_styles=None, add_styles=None, add_prepare=None):
     if add_data is None:
         add_data = [(vert, "ertel_potential_vorticity")]
     if add_contours is None:
@@ -1711,7 +1713,8 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
-                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2,
+                                                                                 foreground="w")])
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
@@ -1784,8 +1787,10 @@ _npressurelevels = len(_pressurelevels)
 for vert in ["ml"]:
     for stdname, props in MSSChemTargets.items():
         name, qty, units, scale = props
+        # ToDo string substitution
         key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty + "_pcontours"
         globals()[key] = make_msschem_class(stdname, name, vert, units, scale, add_data=[(vert, "air_pressure")],
-                                            add_contours=[
-                ("air_pressure", _pressurelevels, ["dimgrey"] * _npressurelevels, ["dimgrey"] * _npressurelevels,
-                 ["dotted"] * _npressurelevels, 1, True)],)
+                                            add_contours=[("air_pressure", _pressurelevels,
+                                                           ["dimgrey"] * _npressurelevels,
+                                                           ["dimgrey"] * _npressurelevels,
+                                                           ["dotted"] * _npressurelevels, 1, True)],)
