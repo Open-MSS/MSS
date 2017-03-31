@@ -1211,7 +1211,7 @@ if mpl_vsec_styles is not None:
     ]
 '''
             simple_server_config = simple_server_config.format(vt_cache=self.vt_cache,
-                                                           data_dir=self.data_dir)
+                                                               data_dir=self.data_dir)
         else:
             simple_server_config = '''"""
 simple server config for demodata
