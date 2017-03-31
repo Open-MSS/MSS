@@ -706,8 +706,8 @@ class MSSChemDataAccess(NWPDataAccess):
 
     def _create_data_table(self, vert):
         self._data_organisation_table = {
-                stdname: {vert: shortname.lower()}
-                for stdname, (shortname, _, _, _) in MSSChemTargets.items()}
+            stdname: {vert: shortname.lower()}
+            for stdname, (shortname, _, _, _) in MSSChemTargets.items()}
         self._data_organisation_table["air_pressure"] = {vert: "p"}
 
     def _determine_filename(self, variable, vartype, init_time, valid_time):

@@ -29,9 +29,11 @@
 import os
 import sys
 import mock
+import pytest
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import mslib.msui.trajectories_tool as tt
 import mslib.msui.mss_pyui as mss_pyui
+from mslib.msui.trajectory_item_tree import HAVE_NAPPY
 
 
 class Test_TrajectoriesTool(object):
@@ -72,6 +74,8 @@ class Test_TrajectoriesTool(object):
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
                 return_value=os.path.join(sample_path, "nas", "sample.nas"))
     def test_load_nas(self, mockopen, mockcrit):
+        if not HAVE_NAPPY:
+            pytest.skip("nappy not available")
         self.window.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
@@ -120,6 +124,8 @@ class Test_TrajectoryToolComples(object):
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
                 return_value=os.path.join(sample_path, "nas", "sample.nas"))
     def test_show_nas(self, mockopen, mockcrit):
+        if not HAVE_NAPPY:
+            pytest.skip("nappy not available")
         self.trajtool.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1

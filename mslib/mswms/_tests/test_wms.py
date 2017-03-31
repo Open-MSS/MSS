@@ -115,4 +115,3 @@ class Test_WMS(object):
             assert isinstance(result[0], basestring)
             assert result[0].count("ServiceExceptionReport") > 0
             assert result[1] == "text/xml"
-

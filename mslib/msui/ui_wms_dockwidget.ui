@@ -191,8 +191,11 @@
              <height>16777215</height>
             </size>
            </property>
+           <property name="toolTip">
+            <string/>
+           </property>
            <property name="styleSheet">
-            <string notr="true">QComboBox QAbstractItemView { min-width: 600px; }</string>
+            <string notr="true">QComboBox QAbstractItemView { min-width: 800px; }</string>
            </property>
            <property name="sizeAdjustPolicy">
             <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
@@ -261,7 +264,7 @@
             </size>
            </property>
            <property name="styleSheet">
-             <string notr="true">QComboBox QAbstractItemView { min-width: 600px; }</string>
+            <string notr="true">QComboBox QAbstractItemView { min-width: 600px; }</string>
            </property>
            <property name="sizeAdjustPolicy">
             <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
@@ -343,15 +346,27 @@ p, li { white-space: pre-wrap; }
          </item>
          <item>
           <widget class="QToolButton" name="tbInitTime_cbback">
+           <property name="toolTip">
+            <string>Keyboard shortcut: alt-left</string>
+           </property>
            <property name="text">
             <string>&lt;</string>
+           </property>
+           <property name="shortcut">
+            <string>Alt+Left</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="tbInitTime_cbfwd">
+           <property name="toolTip">
+            <string>Keyboard shortcut: alt-right</string>
+           </property>
            <property name="text">
             <string>&gt;</string>
+           </property>
+           <property name="shortcut">
+            <string>Alt+Right</string>
            </property>
           </widget>
          </item>
@@ -454,15 +469,30 @@ p, li { white-space: pre-wrap; }
          </item>
          <item>
           <widget class="QToolButton" name="tbValidTime_cbback">
+           <property name="toolTip">
+            <string>Keyboard shortcut: left</string>
+           </property>
            <property name="text">
             <string>&lt;</string>
+           </property>
+           <property name="shortcut">
+            <string>Left</string>
+           </property>
+           <property name="arrowType">
+            <enum>Qt::NoArrow</enum>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="tbValidTime_cbfwd">
+           <property name="toolTip">
+            <string>Keyboard shortcut: right</string>
+           </property>
            <property name="text">
             <string>&gt;</string>
+           </property>
+           <property name="shortcut">
+            <string>Right</string>
            </property>
           </widget>
          </item>
@@ -487,12 +517,12 @@ p, li { white-space: pre-wrap; }
             <date>
              <year>2010</year>
              <month>1</month>
-             <day>18</day>
+             <day>17</day>
             </date>
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>8</hour>
+             <hour>7</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2000</year>
@@ -509,7 +539,7 @@ p, li { white-space: pre-wrap; }
            </property>
            <property name="minimumTime">
             <time>
-             <hour>8</hour>
+             <hour>7</hour>
              <minute>0</minute>
              <second>0</second>
             </time>
@@ -586,15 +616,27 @@ p, li { white-space: pre-wrap; }
          </item>
          <item>
           <widget class="QToolButton" name="tbLevel_back">
+           <property name="toolTip">
+            <string>Keyboard shortcut: down</string>
+           </property>
            <property name="text">
             <string>&lt;</string>
+           </property>
+           <property name="shortcut">
+            <string>Down</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="tbLevel_fwd">
+           <property name="toolTip">
+            <string>Keyboard shortcut: up</string>
+           </property>
            <property name="text">
             <string>&gt;</string>
+           </property>
+           <property name="shortcut">
+            <string>Up</string>
            </property>
           </widget>
          </item>

@@ -54,7 +54,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
-        self.actionOpenFlightTrack.setEnabled(titree.hasNAppy)
+        self.actionOpenFlightTrack.setEnabled(titree.HAVE_NAPPY)
         self.viewsChanged = viewsChanged
 
         # traj_item_tree stores all data corresponding to the map, i.e. flight

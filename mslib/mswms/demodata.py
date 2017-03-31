@@ -1057,8 +1057,9 @@ class DataFiles(object):
     Jens-Uwe Grooss, IEK-7, Forschungszentrum Juelich, Nov 2016
 
     """
-    def __init__(self, data_dir=None, server_config_dir=None):
+    def __init__(self, data_dir=None, vt_cache=None, server_config_dir=None):
         self.data_dir = data_dir
+        self.vt_cache = vt_cache
         self.server_config_file = os.path.join(server_config_dir, "mss_wms_settings.py")
         self.server_auth_config_file = os.path.join(server_config_dir, "mss_wms_auth.py")
         self.inidate = '20121017_12'
@@ -1156,18 +1157,19 @@ import mslib.mswms
 
 
 
-_vt_cache = os.path.join(os.path.expanduser("~"), "mss", "vt_cache")
+_vt_cache = "{vt_cache}"
 mslib.mswms.dataaccess.valid_time_cache = _vt_cache
 
-_datapath = os.path.join(os.path.expanduser("~"), "mss", "testdata")
-nwpaccess = {
-    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(_datapath, "EUR_LL015"),
-}
+_datapath = "{data_dir}"
 
-epsg_to_mpl_basemap_table = {
+nwpaccess = {{
+    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(_datapath, "EUR_LL015"),
+}}
+
+epsg_to_mpl_basemap_table = {{
     # EPSG:4326, the standard cylindrical lat/lon projection.
-    4326: {"projection": "cyl"}
-}
+    4326: {{"projection": "cyl"}}
+}}
 #
 # Registration of horizontal layers.                     ###
 #
@@ -1208,6 +1210,8 @@ if mpl_vsec_styles is not None:
         (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
+            simple_server_config = simple_server_config.format(vt_cache=self.vt_cache,
+                                                               data_dir=self.data_dir)
         else:
             simple_server_config = '''"""
 simple server config for demodata
@@ -1615,6 +1619,7 @@ def main():
     creates various test data files and also the server configuration
     """
     examples = DataFiles(data_dir=os.path.join(os.path.expanduser("~"), "mss", 'testdata'),
+                         vt_cache=os.path.join(os.path.expanduser("~"), "mss", "vt_cache"),
                          server_config_dir=os.path.join(os.path.expanduser("~"), "mss"))
     examples.create_datadir()
     examples.create_server_config(detailed_information=True)
