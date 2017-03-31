@@ -39,10 +39,10 @@ import numpy
 
 try:
     import nappy
-    hasNAppy = True
+    HAVE_NAPPY = True
 except:
     logging.warn("*** NAppy is not available. You will not be able to read NASA Ames files. ***")
-    hasNAppy = False
+    HAVE_NAPPY = False
 
 from mslib.msui import lagranto_output_reader
 
@@ -468,7 +468,7 @@ class FlightTrackItem(LagrantoMapItem):
     def __readNasaAmesFile(self):
         """Read the NASA Ames file 'self.nasFileName'.
         """
-        if not hasNAppy:
+        if not HAVE_NAPPY:
             self.nafile = None
             return
         #
@@ -493,11 +493,11 @@ class FlightTrackItem(LagrantoMapItem):
         for i in range(self.nafile.V.shape[0]):
             Vtemp.append(numpy.ma.masked_values(self.nafile.V[i],
                                                 self.nafile.VMISS[i]))
-            # Append independent variable to list of variables. Independent
-            # variables don't have a missing value, hence the dummy -9999.. here.
-            # TODO: This should be revised; the individual FlightTrackVariableItem shouldn't
-        #      access their parent's 'self.nafile.V' attribute to access the data;
-        #      instead they should own their own data array.
+        # Append independent variable to list of variables. Independent
+        # variables don't have a missing value, hence the dummy -9999.. here.
+        # TODO: This should be revised; the individual FlightTrackVariableItem shouldn't
+        #       access their parent's 'self.nafile.V' attribute to access the data;
+        #       instead they should own their own data array.
         Vtemp.append(numpy.ma.masked_values(self.nafile.X,
                                             -99999999))
         self.nafile.VNAME.append(self.nafile.XNAME[0])
