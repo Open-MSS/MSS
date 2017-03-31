@@ -163,9 +163,9 @@ class MSSPlotDriver(object):
         times = netCDF4tools.num2date(timevar[:], timevar.units)
         # removed after discussion, see
         # https://mss-devel.slack.com/archives/emerge/p1486658769000007
-        ##if init_time != netCDF4tools.num2date(0, timevar.units):
-        ##    dataset.close()
-        ##    raise ValueError("wrong initialisation time in input")
+        # if init_time != netCDF4tools.num2date(0, timevar.units):
+        #     dataset.close()
+        #     raise ValueError("wrong initialisation time in input")
 
         if fc_time not in times:
             msg = u"Forecast valid time {} is not available.".format(fc_time)
