@@ -28,11 +28,13 @@
 
 import imp
 import os
+import sys
 
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.utils as utils
 
 
+sys.path.insert(0, utils.BASE_DIR)
 if not os.path.exists(utils.DATA_DIR):
     examples = DataFiles(data_dir=utils.DATA_DIR,
                          vt_cache=utils.VT_CACHE,
