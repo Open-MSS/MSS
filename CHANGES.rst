@@ -1,6 +1,41 @@
 Changelog
 =========
 
+
+Version 1.4.0 (not released yet)
+--------------------------------
+
+New Features:
+ - Keyboard control for side/top views, #167
+ - Pressure contours to MSSChem hsects added, #164
+ - Export active flight track as .kml, #158
+ - Integration of CLaMS-Ice data products, #155
+ - mss gui got arguments on call, #153
+ - Support QT5, #114
+ - Enhanced KML support, #98
+ - Integration of CAMS regional AQ forecast,  #95
+ - Integrate prefetch functionality into msui client to speed up map loading, #2
+
+
+Bug Fixes:
+ - refactored wsgi auth handler, #141, #118
+ - WMS Url is updated to redirect Url, #135
+ - Better identification of configured layers without (valid) data, #101
+
+
+Other Changes:
+ - Our source now has a unified fileheader, #137
+ - Loop view  and Time Series moved into the Tools menue, #136
+ - MSS Icon missing from startmenu after conda install, #115  
+ - MSS Logo, #100
+ - We worked extensive on py.test test coverage also refactored all
+   exising tests, #21
+
+Hint:
+~~~~~~
+On linux and window installing of mss will create an icon in your Desktop start menue.
+
+
 Version 1.3.3
 -------------
 
