@@ -118,6 +118,7 @@ class Test_NWPDataAccess(object):
                  u'Q': u'20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc',
                  u'SFC': u'20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc',
                  u'T': u'20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc',
+                 u'THETA_LEVELS': '20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc',
                  u'U': u'20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc',
                  u'V': u'20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc',
                  u'W': u'20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc'
@@ -141,19 +142,18 @@ class Test_NWPDataAccess(object):
                                datetime(2012, 10, 19, 0, 0)]
 
     def test_get_all_valid_times(self):
-        # Todo why not sorted
         all_valid_times = self.ECMWFDataAccess.get_all_valid_times("air_pressure", "ml")
-        assert all_valid_times == [datetime(2012, 10, 17, 12, 0),
-                                   datetime(2012, 10, 17, 15, 0),
-                                   datetime(2012, 10, 17, 21, 0),
-                                   datetime(2012, 10, 18, 21, 0),
-                                   datetime(2012, 10, 18, 18, 0),
-                                   datetime(2012, 10, 18, 3, 0),
-                                   datetime(2012, 10, 18, 15, 0),
-                                   datetime(2012, 10, 18, 0, 0),
-                                   datetime(2012, 10, 17, 12, 0),
-                                   datetime(2012, 10, 18, 6, 0),
-                                   datetime(2012, 10, 17, 18, 0),
-                                   datetime(2012, 10, 18, 12, 0),
-                                   datetime(2012, 10, 18, 9, 0),
-                                   datetime(2012, 10, 19, 0, 0)]
+        assert sorted(all_valid_times) == \
+            sorted([datetime(2012, 10, 17, 15, 0),
+                    datetime(2012, 10, 17, 21, 0),
+                    datetime(2012, 10, 18, 21, 0),
+                    datetime(2012, 10, 18, 18, 0),
+                    datetime(2012, 10, 18, 3, 0),
+                    datetime(2012, 10, 18, 15, 0),
+                    datetime(2012, 10, 18, 0, 0),
+                    datetime(2012, 10, 17, 12, 0),
+                    datetime(2012, 10, 18, 6, 0),
+                    datetime(2012, 10, 17, 18, 0),
+                    datetime(2012, 10, 18, 12, 0),
+                    datetime(2012, 10, 18, 9, 0),
+                    datetime(2012, 10, 19, 0, 0)])

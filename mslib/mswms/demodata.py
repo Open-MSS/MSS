@@ -1157,10 +1157,10 @@ import mslib.mswms
 
 
 
-_vt_cache = "{vt_cache}"
+_vt_cache = r"{vt_cache}"
 mslib.mswms.dataaccess.valid_time_cache = _vt_cache
 
-_datapath = "{data_dir}"
+_datapath = r"{data_dir}"
 
 nwpaccess = {{
     "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(_datapath, "EUR_LL015"),

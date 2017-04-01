@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-import pytest
 import datetime
 from mslib import utils
 
