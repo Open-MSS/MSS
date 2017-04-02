@@ -1086,7 +1086,34 @@ class DataFiles(object):
             os.makedirs(self.data_dir)
 
     def create_server_config(self, detailed_information=False):
-        simple_auth_config = '''
+        simple_auth_config = '''# -*- coding: utf-8 -*-
+"""
+
+    mss_wms_settings
+    ~~~~~~~~~~~~~~~~
+
+    Configuration module for programs accessing data on the MSS server.
+
+    This file is part of mss.
+
+    :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: 2011-2014 Marc Rautenhaus
+    :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
+    :copyright: Copyright 2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
 #
 # HTTP Authentication                               ###
 #
@@ -1099,10 +1126,35 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 
 '''
         if detailed_information:
-            simple_server_config = '''"""
-
-simple server config for demodata
+            simple_server_config = '''# -*- coding: utf-8 -*-
 """
+
+    mss_wms_settings
+    ~~~~~~~~~~~~~~~~
+
+    Configuration module for programs accessing data on the MSS server.
+
+    This file is part of mss.
+
+    :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: 2011-2014 Marc Rautenhaus
+    :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
+    :copyright: Copyright 2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+
 import os
 import sys
 
@@ -1142,8 +1194,9 @@ import mslib.mswms
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
 
+
 #
-# HTTP Authentication                               ###
+# HTTP Authentication
 #
 # If you require basic HTTP authentication, set the following variable
 # to True. Add usernames in the list "allowed:users". Note that the
@@ -1151,10 +1204,9 @@ import mslib.mswms
 #enable_basic_http_authentication = False
 
 
-# xml_template directory is a sub directory of mswms
+#xml_template directory is a sub directory of mswms
 #base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 #xml_template_location = os.path.join(base_dir, "xml_templates")
-
 
 
 _vt_cache = r"{vt_cache}"
@@ -1170,8 +1222,9 @@ epsg_to_mpl_basemap_table = {{
     # EPSG:4326, the standard cylindrical lat/lon projection.
     4326: {{"projection": "cyl"}}
 }}
+
 #
-# Registration of horizontal layers.                     ###
+# Registration of horizontal layers.
 #
 
 # The following list contains tuples of the format (instance of
@@ -1180,7 +1233,7 @@ epsg_to_mpl_basemap_table = {{
 # visualisation products for which data files are available. The data
 # sets must be defined in mss_config.py. The WMS will only offer
 # products registered here.
-
+register_horizontal_layers = None
 if mpl_hsec_styles is not None:
     register_horizontal_layers = [
         # ECMWF standard pressure level products.
@@ -1194,9 +1247,8 @@ if mpl_hsec_styles is not None:
 
 
 #
-# Registration of vertical layers.                       ###
+# Registration of vertical layers.
 #
-
 # The same as above, but for vertical cross-sections.
 register_vertical_layers = None
 if mpl_vsec_styles is not None:

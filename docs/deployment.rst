@@ -96,7 +96,7 @@ could add it also to mss_wms_settings.py.
 By this setting you override the PYTHONPATH environment variable. So you have also to add
 the site-packes directory of your miniconda or anaconda installation besides the config file path.
 
-
+If your server hosts different instances by different users you want to setup this path in mss_wms_setting.py.
 
 
 Configuration of wsgi for wms
@@ -145,6 +145,16 @@ Configuration file of the wms server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configuration for the Mission Support System Web Map Service (wms).
+
+In this module the data organisation structure of the available forecast
+data is described. The class NWPDataAccess is subclassed for each data type
+in the system and provides methods to determine which file needs to be accessed for a given variable and time.
+The classes also provide methods to query the available initialisation times for a given variable,
+and the available valid times for a variable and a given initialisation time. As the latter methods need
+to open the NetCDF data files to determine the contained time values, a caching system is used to avoid
+re-opening already searched files.
+
+
 The configuration file have to become added to the /home/mss/config directory
 
 **/home/mss/config/mss_wms_settings.py**
@@ -153,6 +163,7 @@ The configuration file have to become added to the /home/mss/config directory
 
 
 You have to adopt this file to your data.
+
 
 .. _mswms-deployment:
 
@@ -185,6 +196,7 @@ This script does not overwrite an existing mss_wms_settings.py
     │   ├── 20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc
     │   ├── 20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc
     │   ├── 20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc
     │   ├── 20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc
     │   ├── 20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc
     │   └── 20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc

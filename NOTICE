@@ -1,16 +1,12 @@
 Mission Support System (MSS)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-Copyright 2011-2014 Marc Rautenhaus
-Copyright 2015-2017 see AUTHORS
 
-This product mainly includes software developed by the
+    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
 
-Institute of Atmospheric Physics
-Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-(German Aerospace Center)
-Oberpfaffenhofen, Germany
 
 ***************************************************************************
 
@@ -41,15 +37,6 @@ revision 1672, on 2010/08/11.
 
 NOTE: The file "wms.py" has been modified for the MSS. Changes are marked 
 with "(mss)".
-
-
-pyroms
------------
-
-mslib/greatcircle.py has been taken from the pyroms project:
-Python toolkit for the Regional Ocean Modeling System (ROMS)
-
-http://code.google.com/p/pyroms/
 
 
 NETCDF4-PYTHON
