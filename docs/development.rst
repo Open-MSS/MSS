@@ -55,7 +55,7 @@ To install some additional packages needed for running the tests, activate your 
 Running tests
 ~~~~~~~~~~~~~~~~~~~
 
-We have implemented demodata as data base for testing. On first call demodata becomes stored
+We have implemented demodata as data base for testing. On first call of py.test a set of demodata becomes stored
 in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
 
 ::
@@ -63,9 +63,11 @@ in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision
    $ python -m pytest
 
 
-Use the -v option to get a verbose result. By the -k option you could select one test to execute only or
---pep8 for PEP8 tests.
-Instead of using a run library module as a script by the -m option you may also use the py.test command.
+Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
+
+A pep8 only test is done by py.test --pep8 -m pep8
+
+Instead of running a ibrary module as a script by the -m option you may also use the py.test command.
 
 ::
 

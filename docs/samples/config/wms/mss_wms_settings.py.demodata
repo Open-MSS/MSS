@@ -1,6 +1,32 @@
+# -*- coding: utf-8 -*-
 """
-simple server config for demodata
+
+    mss_wms_settings
+    ~~~~~~~~~~~~~~~~
+
+    Configuration module for programs accessing data on the MSS server.
+    Simple server config for demodata.
+
+    This file is part of mss.
+
+    :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
+    :copyright: 2011-2014 Marc Rautenhaus
+    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
+
 import os
 import sys
 
@@ -12,24 +38,15 @@ import sys
 # sys.path.insert(0, '/home/mss/miniconda2/lib/python2.7/site-packages')
 
 # a2) Path of the directory where mss_wms_settings.py is located
-MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
-sys.path.insert(0, MSSCONFIGPATH)
-os.chdir(MSSCONFIGPATH)
+#MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
+#sys.path.insert(0, MSSCONFIGPATH)
+#os.chdir(MSSCONFIGPATH)
 
 import mslib.mswms.dataaccess
 from mslib.mswms import mpl_hsec_styles
 from mslib.mswms import mpl_vsec_styles
 import mslib.mswms
 
-
-#
-# HTTP Authentication                               ###
-#
-
-# If you require basic HTTP authentication, set the following variable
-# to True. Add usernames in the list "allowed:users". Note that the
-# passwords are not specified in plain text but by their md5 digest.
-#enable_basic_http_authentication = False
 
 # Configuration for mss_wms_settings accessing data on the MSS server.
 # This is the data organisation structure of demodata.
@@ -49,6 +66,15 @@ import mslib.mswms
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
 
+#
+# HTTP Authentication                               ###
+#
+# If you require basic HTTP authentication, set the following variable
+# to True. Add usernames in the list "allowed:users". Note that the
+# passwords are not specified in plain text but by their md5 digest.
+#enable_basic_http_authentication = False
+
+
 # xml_template directory is a sub directory of mswms
 #base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 #xml_template_location = os.path.join(base_dir, "xml_templates")
@@ -63,8 +89,7 @@ nwpaccess = {
 
 epsg_to_mpl_basemap_table = {
     # EPSG:4326, the standard cylindrical lat/lon projection.
-    4326: {"projection": "cyl"},
-    77790000: {"projection": "stere", "lat_0": 90., "lon_0": 0.}
+    4326: {"projection": "cyl"}
 }
 #
 # Registration of horizontal layers.                     ###
@@ -100,8 +125,6 @@ if mpl_vsec_styles is not None:
         # ECMWF standard vertical section styles.
         (mpl_vsec_styles.VS_CloudsStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_vsec_styles.VS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_vsec_styles.VS_ProbabilityOfWCBStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),

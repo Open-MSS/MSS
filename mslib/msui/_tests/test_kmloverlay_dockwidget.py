@@ -86,7 +86,8 @@ class Test_KmlOverlayDockWidget(object):
         Test that program mitigates loading a non-existing file
         """
         # load a non existing path
-        path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "satellite_predictor.txt")
+        path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
+                            "samples", "satellite_tracks", "satellite_predictor.txt")
         self.window.leFile.setText(path)
         QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()

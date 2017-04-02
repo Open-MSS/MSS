@@ -61,7 +61,7 @@ We suggest to create a mss user.
 * set execute bit on install script
 * execute script, enable environment in .bashrc
 * login again or export PATH="/home/mss/miniconda2/bin:$PATH"
-* python --version should tell Python 2.7.12
+* python --version should tell Python 2.7.X
 * conda install -c conda-forge mss
 
 For a simple test you could start the builtin standalone server by *mswms*.
