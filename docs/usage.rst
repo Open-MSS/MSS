@@ -124,7 +124,9 @@ Satellite Track Docking Widget
 The TopView has a docking widget allowing the visualisation of satellite tracks.
 A `web site <https://cloudsgate2.larc.nasa.gov/cgi-bin/predict/predict.cgi>`_ to generate the data for
 such tracks is operated by NASA. The data can be downloaded as ASCII file that can be open by the docking
-widget. An example file is located at **docs/samples/satellite_tracks/satellite_predictor.txt**
+widget. An example file is located at
+:download:`docs/samples/satellite_tracks/satellite_predictor.txt <samples/satellite_tracks/satellite_predictor.txt>`.
+
 
 
 KML Overlay Docking Widget
@@ -132,4 +134,5 @@ KML Overlay Docking Widget
 
 The TopView has a docking widget that allows the visualization of KML files on top of the map. This feature
 currently does not support all features of KML, for example, external resources such as images are not supported.
-Some example KML files are located at **docs/samples/kml/line.kml** and **docs/samples/kml/folder.kml**.
+Some example KML files are located at :download:`docs/samples/kml/line.kml <samples/kml/line.kml>` and
+:download:`docs/samples/kml/folder.kml <samples/kml/folder.kml>`.
