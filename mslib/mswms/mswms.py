@@ -30,11 +30,15 @@
 import paste.httpserver
 import argparse
 import logging
+import sys
+
+from mslib import __version__
 from wms import mss_wms_settings, mss_wms_auth
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--host", help="hostname",
                         default="127.0.0.1", dest="host")
     parser.add_argument("--port", help="port", dest="port", default="8081")
@@ -42,6 +46,14 @@ def main():
     parser.add_argument("--logfile", help="if set to a name log output goes to that file", dest="logfile",
                         default=None)
     args = parser.parse_args()
+
+    if args.version:
+        print "***********************************************************************"
+        print "\n            Mission Support System (mss)\n"
+        print "***********************************************************************"
+        print "Documentation: http://mss.rtfd.io"
+        print "Version:", __version__
+        sys.exit()
 
     if args.logfile is not None:
         # Log everything to "logfile".
