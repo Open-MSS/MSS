@@ -649,6 +649,9 @@ def main():
             shutil.copyfile(src_icon_path, icon_destination)
             desktop = constants.POSIX["desktop"]
             application_destination = constants.POSIX["application_destination"].format(app_prefix)
+            dirname = os.path.dirname(application_destination)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
             desktop = desktop.format(prefix,
                                      os.path.join(sys.prefix, "bin", "mss"),
                                      icon_destination)
