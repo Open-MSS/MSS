@@ -49,6 +49,9 @@ by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
 .. literalinclude:: samples/config/mss/mss_settings.json.sample
 
 
+Usage of mss
+~~~~~~~~~~~~
+
 Performance
 ...........
 
@@ -113,3 +116,20 @@ An exemplary test file format that can be ex- and imported may be activated by:
 The given plugins demonstrate, how additional plugins may be implemented. Please be advised that several
 attributes of the waypoints are automatically computed by MSS (for example all time and performance data)
 and will be overwritten after reading back the file.
+
+
+Satellite Track Docking Widget
+..............................
+
+The TopView has a docking widget allowing the visualisation of satellite tracks.
+A `web site <https://cloudsgate2.larc.nasa.gov/cgi-bin/predict/predict.cgi>`_ to generate the data for
+such tracks is operated by NASA. The data can be downloaded as ASCII file that can be open by the docking
+widget. An example file is located at **docs/samples/satellite_tracks/satellite_predictor.txt**
+
+
+KML Overlay Docking Widget
+..........................
+
+The TopView has a docking widget that allows the visualization of KML files on top of the map. This feature
+currently does not support all features of KML, for example, external resources such as images are not supported.
+Some example KML files are located at **docs/samples/kml/line.kml** and **docs/samples/kml/folder.kml**.
