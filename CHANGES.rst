@@ -2,8 +2,8 @@ Changelog
 =========
 
 
-Version 1.4.0 (not released yet)
---------------------------------
+Version 1.4.0
+-------------
 
 New Features:
  - Keyboard control for side/top views, #167
@@ -25,15 +25,19 @@ Bug Fixes:
 
 Other Changes:
  - Our source now has a unified fileheader, #137
- - Loop view  and Time Series moved into the Tools menue, #136
- - MSS Icon missing from startmenu after conda install, #115  
+ - Loop view  and Time Series moved into the Tools menu, #136
+ - MSS Icon missing from startmenu after conda install, #115
+ - Support of QT5, #114
  - MSS Logo, #100
  - We worked extensive on py.test test coverage also refactored all
-   exising tests, #21
+   existing inline code tests, #21
 
 Hint:
 ~~~~~~
-On linux and window installing of mss will create an icon in your Desktop start menue.
+On linux and window installing of mss will create an icon in your Desktop start menu.
+
+Because authentication can happen as different user than the one driving the mss server
+we have moved the password setup to mss_wms_auth.py
 
 
 Version 1.3.3
