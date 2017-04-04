@@ -81,7 +81,7 @@ Profiling can be done by e.g.::
 
 
 Building the docs with Sphinx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The documentation (in reStructuredText format, .rst) is in docs/.
 
@@ -95,7 +95,7 @@ Then point a web browser at docs/_build/html/index.html.
 
 
 Creating a new release
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 * make sure all issues for this milestone are closed or moved to the next milestone
 * update CHANGES.rst, based on git log
