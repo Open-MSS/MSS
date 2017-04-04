@@ -27,7 +27,6 @@ Other Changes:
  - Our source now has a unified fileheader, #137
  - Loop view  and Time Series moved into the Tools menu, #136
  - MSS Icon missing from startmenu after conda install, #115
- - Support of QT5, #114
  - MSS Logo, #100
  - We worked extensive on py.test test coverage also refactored all
    existing inline code tests, #21
