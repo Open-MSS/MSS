@@ -50,7 +50,8 @@ class Test_SatelliteDockWidget(object):
         QtWidgets.QApplication.processEvents()
 
     def test_load(self):
-        path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "satellite_predictor.txt")
+        path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
+                            "samples", "satellite_tracks", "satellite_predictor.txt")
         self.window.leFile.setText(path)
         assert self.window.cbSatelliteOverpasses.count() == 0
         QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)

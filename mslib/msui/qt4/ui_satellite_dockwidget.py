@@ -80,5 +80,5 @@ class Ui_SatelliteDockWidget(object):
         self.btLoadFile.setText(_translate("SatelliteDockWidget", "load", None))
         self.label_6.setText(_translate("SatelliteDockWidget", "Predicted satellite overpasses:", None))
         self.cbSatelliteOverpasses.setToolTip(_translate("SatelliteDockWidget", "Select/unselect a satellite overpass from all available overpasses.", None))
-        self.label.setText(_translate("SatelliteDockWidget", "Use http://www-air.larc.nasa.gov/tools/predict.htm to generate prediction files.", None))
+        self.label.setText(_translate("SatelliteDockWidget", "Use https://cloudsgate2.larc.nasa.gov/cgi-bin/predict/predict.cgi to generate prediction files.", None))
 

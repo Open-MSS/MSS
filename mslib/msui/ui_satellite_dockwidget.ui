@@ -81,7 +81,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Use http://www-air.larc.nasa.gov/tools/predict.htm to generate prediction files.</string>
+      <string>Use https://cloudsgate2.larc.nasa.gov/cgi-bin/predict/predict.cgi to generate prediction files.</string>
      </property>
     </widget>
    </item>

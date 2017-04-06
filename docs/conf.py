@@ -49,9 +49,11 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'MSS - Mission Support System'
-copyright = u'2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V., ' \
-            u'2011-2014 Marc Rautenhaus, ' \
-            u'2015-2016 see AUTHORS file'
+copyright = \
+    u'2016-2017 see AUTHORS file, ' \
+    u'2011-2014 Marc Rautenhaus, ' \
+    u'2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V., '
+
 author = 'see AUTHORS file'
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
