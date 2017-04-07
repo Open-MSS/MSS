@@ -40,7 +40,7 @@ class TestDemodate(object):
         assert os.path.exists(BASE_DIR)
         assert os.path.exists(DATA_DIR)
         assert os.path.exists(SERVER_CONFIG_FILE)
-        assert len(os.listdir(DATA_DIR)) == 10
+        assert len(os.listdir(DATA_DIR)) == 18
 
     def test_server_config_file(self):
         if not os.path.exists(BASE_DIR):
