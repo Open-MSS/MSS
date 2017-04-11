@@ -31,7 +31,7 @@ import netCDF4 as nc
 import numpy as np
 
 
-SURFACE = """\
+_SURFACE_TEXT = """\
 surface_geopotential
 m2.s-2
   2.12e+03   4.74e+03
@@ -78,7 +78,7 @@ vertically_integrated_probability_of_wcb_occurrence
 (0.-.1)
  0.25 0.2"""
 
-PROFILES =  """\
+_PROFILES_TEXT = """\
 air_pressure
 hPa
   20         2
@@ -341,23 +341,23 @@ degree
   60.09   4.65
 cloud_area_fraction_in_atmosphere_layer
 (0.-.1)
-  0.00e+00   0.00e+00	
-  0.00e+00   0.00e+00	
-  0.00e+00   0.00e+00	
-  0.00e+00   0.00e+00	
-  2.99e-06   4.96e-04	
-  1.89e-02   1.15e-01	
-  5.84e-02   1.99e-01	
-  1.60e-01   3.15e-01	
-  1.87e-01   3.34e-01	
-  1.34e-01   2.94e-01	
-  1.01e-01   2.57e-01	
-  9.27e-02   2.43e-01	
-  9.58e-02   2.38e-01	
-  1.29e-01   2.53e-01	
-  1.50e-01   2.72e-01	
-  1.58e-01   3.06e-01	
-  1.34e-01   3.03e-01	
+  0.00e+00   0.00e+00
+  0.00e+00   0.00e+00
+  0.00e+00   0.00e+00
+  0.00e+00   0.00e+00
+  2.99e-06   4.96e-04
+  1.89e-02   1.15e-01
+  5.84e-02   1.99e-01
+  1.60e-01   3.15e-01
+  1.87e-01   3.34e-01
+  1.34e-01   2.94e-01
+  1.01e-01   2.57e-01
+  9.27e-02   2.43e-01
+  9.58e-02   2.38e-01
+  1.29e-01   2.53e-01
+  1.50e-01   2.72e-01
+  1.58e-01   3.06e-01
+  1.34e-01   3.03e-01
   9.84e-02   2.69e-01
 atmosphere_hybrid_pressure_coordinate
 Pa
@@ -560,24 +560,21 @@ number_of_mix_trajectories
   7.50906889384e-06 3e-6
   5.77393276332e-06 3e-6"""
 
-DIMENSIONS = {
-    "latitude" : ("lat", "degrees_north", ""),
-    "longitude": ("lon", "degrees_north", ""),
-    "hybrid": ("hybrid", None, None),
-    "atmosphere_pressure_coordinate": ("isobaric", "hPa", "down"),
-    "atmosphere_potential_temperature_coordinate": ("isentropic", "K", "down"),
-    "atmosphere_ertel_potential_vorticity_coordinate": ("isopv", "PVU", "down"),
-    "time": ("time", "hours since 2012-10-17T12:00:00.000Z", "")
-}
+_ALLOW_NEGATIVE = ['surface_geopotential',
+                   'ertel_potential_vorticity',
+                   'eastward_wind',
+                   'northward_wind',
+                   'omega',
+                   'divergence_of_wind']
 
-ALLOW_NEGATIVE = ['surface_geopotential',
-                  'ertel_potential_vorticity',
-                  'eastward_wind',
-                  'northward_wind',
-                  'omega',
-                  'divergence_of_wind']
 
 def _parse_text(text, entry_length):
+    """
+    This function converts the textual description of profile/surface data to a dictionary.
+    :param text: String database
+    :param entry_length: number of lines per entity entry
+    :return: dictionary of information with one key per entity
+    """
     result = {}
     lines = text.split("\n")
     print len(lines)
@@ -589,24 +586,34 @@ def _parse_text(text, entry_length):
         result[name] = {"unit": unit, "data": data}
     return result
 
-PROFILES = _parse_text(PROFILES, 20)
-SURFACE = _parse_text(SURFACE, 3)
+_PROFILES = _parse_text(_PROFILES_TEXT, 20)
+_SURFACE = _parse_text(_SURFACE_TEXT, 3)
 
 
 def get_profile(coordinate, levels, standard_name):
-    assert coordinate in PROFILES, coordinate
-    assert standard_name in PROFILES, standard_name
+    """
+    Interpolates information of mean and variance in profile database according to the
+    specified coordinate and levels.
 
-    if PROFILES[coordinate]["data"][0, 0] < PROFILES[coordinate]["data"][1, 0]:
-        mean = np.interp(levels, PROFILES[coordinate]["data"][:, 0], PROFILES[standard_name]["data"][:, 0])
-        std = np.interp(levels, PROFILES[coordinate]["data"][:, 0], PROFILES[standard_name]["data"][:, 1])
+    :param coordinate: key specifying the coordinate entity. Must be monotonous.
+           (air_pressure, air_potential_temperature, geopotential_height, ertel_potential_vorticity are tested)
+    :param levels: Numerical values of coordinate variable to interpolate at
+    :param standard_name: CF standard name of entity to interpolate at specified points.
+    :return: two array, one for mean, ond for variance at specified levels.
+    """
+    assert coordinate in _PROFILES, coordinate
+    assert standard_name in _PROFILES, standard_name
+
+    if _PROFILES[coordinate]["data"][0, 0] < _PROFILES[coordinate]["data"][1, 0]:
+        mean = np.interp(levels, _PROFILES[coordinate]["data"][:, 0], _PROFILES[standard_name]["data"][:, 0])
+        std = np.interp(levels, _PROFILES[coordinate]["data"][:, 0], _PROFILES[standard_name]["data"][:, 1])
     else:
-        mean = np.interp(levels, PROFILES[coordinate]["data"][::-1, 0], PROFILES[standard_name]["data"][::-1, 0])
-        std = np.interp(levels, PROFILES[coordinate]["data"][::-1, 0], PROFILES[standard_name]["data"][::-1, 1])
+        mean = np.interp(levels, _PROFILES[coordinate]["data"][::-1, 0], _PROFILES[standard_name]["data"][::-1, 0])
+        std = np.interp(levels, _PROFILES[coordinate]["data"][::-1, 0], _PROFILES[standard_name]["data"][::-1, 1])
     return mean, std
 
 
-def generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=0):
+def _generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=0):
     xarr = np.linspace(0., 10. + ilev / 3., nlons)
     yarr = np.linspace(0., 5. + ilev / 3., nlats)
     tarr = np.linspace(0, 2., ntimes)
@@ -615,16 +622,16 @@ def generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=0):
     return mean + std * (np.sin(datax) + np.cos(datay)) / 2
 
 
-def generate_4d_data(ntimes, nlats, nlons, means, stds):
+def _generate_4d_data(ntimes, nlats, nlons, means, stds):
     assert len(means) == len(stds)
     data = np.empty((ntimes, len(means), nlats, nlons))
     for ilev, (mean, std) in enumerate(zip(means, stds)):
-        data[:, ilev, :, :] = generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=ilev)
+        data[:, ilev, :, :] = _generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=ilev)
     return data
 
 
-def correct_data(standard_name, unit, data):
-    if standard_name not in ALLOW_NEGATIVE:
+def _correct_data(standard_name, unit, data):
+    if standard_name not in _ALLOW_NEGATIVE:
         data[data < 0] = 0
     if standard_name == "land_binary_mask":
         data = data.round()
@@ -638,17 +645,37 @@ def correct_data(standard_name, unit, data):
 
 
 def generate_surface(standard_name, ntimes, nlats, nlons):
-    mean, std = SURFACE[standard_name]["data"][0]
-    data = generate_3d_data(ntimes, nlats, nlons, mean, std)
-    data = correct_data(standard_name, SURFACE[standard_name]["unit"], data)
-    return data, SURFACE[standard_name]["unit"]
+    """
+    Generates a random surface field for given entity of specified size.
+
+    :param standard_name: Entity to generate field for
+    :param ntimes: number of times
+    :param nlats: number of latitudes
+    :param nlons: number of longitudes
+    :return: tuple of 3-D array and unit of data
+    """
+    mean, std = _SURFACE[standard_name]["data"][0]
+    data = _generate_3d_data(ntimes, nlats, nlons, mean, std)
+    data = _correct_data(standard_name, _SURFACE[standard_name]["unit"], data)
+    return data, _SURFACE[standard_name]["unit"]
 
 
 def generate_field(coordinate, levels, standard_name, ntimes, nlats, nlons):
+    """
+    Generates a random 4-D field for given entity of specified size.
+
+    :param coordinate: standard_name of coordinate axis
+    :param levels: numerical values of coordinate axis to generate data on
+    :param standard_name: Entity to generate field for
+    :param ntimes: number of times
+    :param nlats: number of latitudes
+    :param nlons: number of longitudes
+    :return: tuple of 4-D array and unit of data
+    """
     means, stds = get_profile(coordinate, levels, standard_name)
-    data = generate_4d_data(ntimes, nlats, nlons, means, stds)
-    data = correct_data(standard_name, PROFILES[standard_name]["unit"], data)
-    return data, PROFILES[standard_name]["unit"]
+    data = _generate_4d_data(ntimes, nlats, nlons, means, stds)
+    data = _correct_data(standard_name, _PROFILES[standard_name]["unit"], data)
+    return data, _PROFILES[standard_name]["unit"]
 
 
 class DataFiles(object):
@@ -658,6 +685,18 @@ class DataFiles(object):
     Jens-Uwe Grooss, IEK-7, Forschungszentrum Juelich, Nov 2016
 
     """
+
+    dimensions = {
+        "latitude": ("lat", "degrees_north", ""),
+        "longitude": ("lon", "degrees_north", ""),
+        "hybrid": ("hybrid", None, None),
+        "atmosphere_pressure_coordinate": ("isobaric", "hPa", "down"),
+        "atmosphere_potential_temperature_coordinate": ("isentropic", "K", ""),
+        "atmosphere_altitude_coordinate": ("height", "m", ""),
+        "atmosphere_ertel_potential_vorticity_coordinate": ("isopv", "PVU", ""),
+        "time": ("time", "hours since 2012-10-17T12:00:00.000Z", "")
+    }
+
     def __init__(self, data_dir=None, vt_cache=None, server_config_dir=None):
         self.data_dir = data_dir
         self.vt_cache = vt_cache
@@ -873,13 +912,22 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 '''.format(self.server_auth_config_file))
 
     def generate_file(self, coordinate, label, leveltype, dimvals, variables):
+        """
+        Routine to generate a NetCDF file containing randomly generated model data
+
+        :param coordinate: standard_name of vertical axes
+        :param label: label for filename generation
+        :param leveltype: level type of file
+        :param dimvals: numerical values of vertical axis
+        :param variables: list of standard_names of variables to write into file
+        """
         filename_out = os.path.join(
             self.data_dir, u"20121017_12_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(label, leveltype))
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
 
         for dim, values in dimvals:
             if dim != "hybrid":
-                varname, unit, positive = DIMENSIONS[dim]
+                varname, unit, positive = self.dimensions[dim]
                 ecmwf.createDimension(varname, len(values))
                 newvar = ecmwf.createVariable(varname, 'f4', varname)
                 newvar[:] = values
@@ -907,11 +955,11 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
 
         if len(dimvals) == 4:
             ntimes, nlev, nlats, nlons = [len(dimvals[i][1]) for i in range(4)]
-            dims = [DIMENSIONS[dimvals[i][0]][0] for i in range(4)]
+            dims = [self.dimensions[dimvals[i][0]][0] for i in range(4)]
             levels = dimvals[1][1]
         elif len(dimvals) == 3:
             ntimes, nlats, nlons = [len(dimvals[i][1]) for i in range(3)]
-            dims = [DIMENSIONS[dimvals[i][0]][0] for i in range(3)]
+            dims = [self.dimensions[dimvals[i][0]][0] for i in range(3)]
         else:
             raise RuntimeError
 
@@ -930,11 +978,13 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
             newvar.grid_mapping = 'LatLon_Projection'
             newvar.missing_value = float('nan')
 
-
         ecmwf.close()
 
     def create_data(self):
-        times, lats, lons = np.arange(0, 39, 3), np.arange(30, 70), np.arange(-50, 50)
+        """
+        Method to generate all required model data for testing purposes.
+        """
+        times, lats, lons = np.arange(0, 39, 3), np.arange(70, 30, -1), np.arange(0, 50)
 
         for coordinate, label, levtype, coord_levels, variables in (
                 ("air_pressure", "PRESSURE_LEVELS", "pl",
@@ -950,10 +1000,13 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                  ("atmosphere_ertel_potential_vorticity_coordinate", [2, 3, 4]),
                  ["air_potential_temperature", "geopotential_height", "air_pressure"]),
 
-                ("geopotential_height", "THETA_LEVELS", "tl",
-                 ("atmosphere_potential_temperature_coordinate", np.linspace(460, 301, 20)),
+                ("geopotential_height", "ALTITUDE_LEVELS", "ml",
+                 ("atmosphere_altitude_coordinate", np.arange(5000, 15001, 500)),
                  ["air_pressure", "ertel_potential_vorticity", "mole_fraction_of_ozone_in_air"]),
-                ):
+
+                ("air_potential_temperature", "THETA_LEVELS", "tl",
+                 ("atmosphere_potential_temperature_coordinate", np.arange(300, 460, 20)),
+                 ["air_pressure", "ertel_potential_vorticity", "mole_fraction_of_ozone_in_air"])):
             self.generate_file(
                 coordinate, label, levtype,
                 (("time", times), coord_levels, ("latitude", lats), ("longitude", lons)), variables)
@@ -977,7 +1030,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 [standard_name])
 
         self.generate_file(
-            None, "SFC", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), SURFACE.keys())
+            None, "SFC", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), _SURFACE.keys())
         self.generate_file(
             None, "ProbWCB_LAGRANTO_derived", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)),
             ["vertically_integrated_probability_of_wcb_occurrence"])
@@ -997,14 +1050,5 @@ def main():
     examples.create_data()
     print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
 
-
 if __name__ == '__main__':
     main()
-
-# print get_profile("air_pressure", [10, 100, 500], "air_temperature")
-# print get_profile("air_pressure", [10, 100, 500], "geopotential_height")
-# print get_profile("air_potential_temperature", [300, 350, 380, 400, 450], "geopotential_height")
-# print get_profile("ertel_potential_vorticity", [2, 4, 6, 12], "geopotential_height")
-# print SURFACE
-# print generate_field("air_pressure", [10, 100, 500], "geopotential_height", 2, 3, 3)
-# print generate_surface("atmosphere_boundary_layer_thickness", 2, 3, 3)
