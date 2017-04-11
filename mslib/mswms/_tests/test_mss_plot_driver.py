@@ -226,7 +226,7 @@ class Test_HSec(object):
         assert img is not None
 
     def test_HS_VIProbWCB_Style_01(self):
-        img = self.plot(mpl_hsec_styles.HS_VIProbWCB_Style_01(driver=self.hsec) )
+        img = self.plot(mpl_hsec_styles.HS_VIProbWCB_Style_01(driver=self.hsec))
         assert img is not None
 
     def test_HS_LagrantoTrajStyle_PL_01(self):
