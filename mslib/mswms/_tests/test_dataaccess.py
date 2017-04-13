@@ -112,18 +112,23 @@ class Test_NWPDataAccess(object):
     def test_build_filetree(self):
         tree = self.ECMWFDataAccess.build_filetree()
         assert tree == {datetime(2012, 10, 17, 12, 0): {
-            36: {u'CC': u'20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc',
-                 u'PRESSURE_LEVELS': u'20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc',
-                 u'P_derived': u'20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc',
-                 u'Q': u'20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc',
-                 u'SFC': u'20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc',
-                 u'T': u'20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc',
-                 u'THETA_LEVELS': '20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc',
-                 u'U': u'20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc',
-                 u'V': u'20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc',
-                 u'W': u'20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc'
-                 }
-        }}
+            36: {'CIWC': '20121017_12_ecmwf_forecast.CIWC.EUR_LL015.036.ml.nc',
+                 'PVU': '20121017_12_ecmwf_forecast.PVU.EUR_LL015.036.pv.nc',
+                 'W': '20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc',
+                 'THETA_LEVELS': '20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc',
+                 'CC': '20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc',
+                 'PV_derived': '20121017_12_ecmwf_forecast.PV_derived.EUR_LL015.036.ml.nc',
+                 'CLWC': '20121017_12_ecmwf_forecast.CLWC.EUR_LL015.036.ml.nc',
+                 'Q': '20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc',
+                 'EMAC': '20121017_12_ecmwf_forecast.EMAC.EUR_LL015.036.ml.nc',
+                 'P_derived': '20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc',
+                 'U': '20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc',
+                 'T': '20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc',
+                 'SEA': '20121017_12_ecmwf_forecast.SEA.EUR_LL015.036.sfc.nc',
+                 'V': '20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc',
+                 'ProbWCB_LAGRANTO_derived': '20121017_12_ecmwf_forecast.ProbWCB_LAGRANTO_derived.EUR_LL015.036.sfc.nc',
+                 'SFC': '20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc',
+                 'PRESSURE_LEVELS': '20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc'}}}
 
     def test_get_valid_times(self):
         valid_times = self.ECMWFDataAccess.get_valid_times("air_pressure", "ml", datetime(2012, 10, 17, 12, 0))

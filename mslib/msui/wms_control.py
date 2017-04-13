@@ -56,6 +56,7 @@ from mslib.utils import convertHPAToKM
 
 WMS_SERVICE_CACHE = {}
 
+
 class MSSWebMapService(mslib.owslib.wms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
 

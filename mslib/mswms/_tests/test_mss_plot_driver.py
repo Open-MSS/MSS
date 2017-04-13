@@ -73,6 +73,11 @@ class Test_VSec(object):
         img = self.plot(mpl_vsec_styles.VS_GenericStyle_TL_mole_fraction_of_ozone_in_air(driver=self.vsec))
         assert img is not None
 
+    def test_VS_MSSChemStyle(self):
+        for style in mpl_vsec_styles.VS_MSSChemStyle_PL_O3_mfrac.styles:
+            img = self.plot(mpl_vsec_styles.VS_MSSChemStyle_PL_O3_mfrac(driver=self.vsec), style=style[0])
+        assert img is not None
+
     def test_VS_CloudsStyle_01(self):
         img = self.plot(mpl_vsec_styles.VS_CloudsStyle_01(driver=self.vsec))
         assert img is not None
@@ -98,12 +103,10 @@ class Test_VSec(object):
         assert img is not None
 
     def test_VS_PotentialVorticityStyle_01(self):
-        pytest.skip("data not available")
         img = self.plot(mpl_vsec_styles.VS_PotentialVorticityStyle_01(driver=self.vsec))
         assert img is not None
 
     def test_VS_ProbabilityOfWCBStyle_01(self):
-        pytest.skip("data not available")
         img = self.plot(mpl_vsec_styles.VS_ProbabilityOfWCBStyle_01(driver=self.vsec))
         assert img is not None
 
@@ -113,7 +116,6 @@ class Test_VSec(object):
         assert img is not None
 
     def test_VS_EMACEyja_Style_01(self):
-        pytest.skip("data not available")
         img = self.plot(mpl_vsec_styles.VS_EMACEyja_Style_01(driver=self.vsec))
         assert img is not None
 
@@ -150,7 +152,6 @@ class Test_HSec(object):
         assert img is not None
 
     def test_HS_SEAStyle_01(self):
-        pytest.skip("data not available")
         img = self.plot(mpl_hsec_styles.HS_SEAStyle_01(driver=self.hsec))
         assert img is not None
 
@@ -160,11 +161,11 @@ class Test_HSec(object):
         assert img is not None
 
     def test_HS_TemperatureStyle_ML_01(self):
-        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_ML_01(driver=self.hsec), level=20)
+        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_ML_01(driver=self.hsec), level=10)
         assert img is not None
 
     def test_HS_TemperatureStyle_PL_01(self):
-        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_PL_01(driver=self.hsec), level=925)
+        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_PL_01(driver=self.hsec), level=800)
         assert img is not None
 
     def test_HS_GeopotentialWindStyle_PL(self):
@@ -191,6 +192,11 @@ class Test_HSec(object):
             style="equivalent_latitude", level=300)
         assert img is not None
 
+    def test_HS_MSSChemStyle(self):
+        for style in mpl_hsec_styles.HS_MSSChemStyle_PL_O3_mfrac.styles:
+            img = self.plot(mpl_hsec_styles.HS_MSSChemStyle_PL_O3_mfrac(driver=self.hsec), level=300, style=style[0])
+        assert img is not None
+
     def test_HS_RelativeHumidityStyle_PL_01(self):
         img = self.plot(mpl_hsec_styles.HS_RelativeHumidityStyle_PL_01(driver=self.hsec), level=300)
         assert img is not None
@@ -208,27 +214,22 @@ class Test_HSec(object):
         assert img is not None
 
     def test_HS_EMAC_TracerStyle_ML_01(self):
-        pytest.skip("data not present")
-        img = self.plot(mpl_hsec_styles.HS_EMAC_TracerStyle_ML_01(driver=self.hsec), level=300)
+        img = self.plot(mpl_hsec_styles.HS_EMAC_TracerStyle_ML_01(driver=self.hsec), level=10)
         assert img is not None
 
     def test_HS_EMAC_TracerStyle_SFC_01(self):
-        pytest.skip("data not present")
-        img = self.plot(mpl_hsec_styles.HS_EMAC_TracerStyle_SFC_01(driver=self.hsec), level=300)
+        img = self.plot(mpl_hsec_styles.HS_EMAC_TracerStyle_SFC_01(driver=self.hsec))
         assert img is not None
 
     def test_HS_PVTropoStyle_PV_01(self):
-        pytest.skip("data not available")
-        img = self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=300)
+        img = self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=2)
         assert img is not None
 
     def test_HS_VIProbWCB_Style_01(self):
-        pytest.skip("data not present")
-        img = self.plot(mpl_hsec_styles.HS_VIProbWCB_Style_01(driver=self.hsec), level=300)
+        img = self.plot(mpl_hsec_styles.HS_VIProbWCB_Style_01(driver=self.hsec))
         assert img is not None
 
     def test_HS_LagrantoTrajStyle_PL_01(self):
-        pytest.skip("data not present")
         img = self.plot(mpl_hsec_styles.HS_LagrantoTrajStyle_PL_01(driver=self.hsec), level=300)
         assert img is not None
 
