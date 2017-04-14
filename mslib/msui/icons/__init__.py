@@ -39,3 +39,7 @@ ICONSIZE = [
 def icons(icon_size):
     if icon_size in ICONSIZE:
         return os.path.join(os.path.abspath(os.path.normpath(os.path.dirname(__file__))), icon_size, "mss-logo.png")
+
+
+def python_powered():
+    return os.path.join(os.path.abspath(os.path.normpath(os.path.dirname(__file__))), "python-powered-w-100x40.png")

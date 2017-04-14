@@ -39,16 +39,25 @@ from mslib._tests.utils import DATA_DIR
 
 DATA_FILE_ML = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc")
 DATA_FILE_PL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc")
+DATA_FILE_PV = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.PVU.EUR_LL015.036.pv.nc")
+DATA_FILE_TL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc")
+DATA_FILE_AL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc")
 
 
 class Test_netCDF4tools():
     def setup(self):
         self.ncfile_ml = Dataset(DATA_FILE_ML, 'r')
         self.ncfile_pl = Dataset(DATA_FILE_PL, 'r')
+        self.ncfile_pv = Dataset(DATA_FILE_PV, 'r')
+        self.ncfile_tl = Dataset(DATA_FILE_TL, 'r')
+        self.ncfile_al = Dataset(DATA_FILE_AL, 'r')
 
     def teardown(self):
         self.ncfile_ml.close()
         self.ncfile_pl.close()
+        self.ncfile_pv.close()
+        self.ncfile_tl.close()
+        self.ncfile_al.close()
 
     def test_identify_variable(self):
         checklist = [('time', u'time'),
@@ -56,7 +65,7 @@ class Test_netCDF4tools():
                      ('longitude', u'lon'),
                      ('atmosphere_pressure_coordinate', 'hyam'),
                      ('atmosphere_hybrid_height_coordinate', 'hybm'),
-                     ('cloud_area_fraction_in_atmosphere_layer', 'Fraction_of_cloud_cover_hybrid')]
+                     ('cloud_area_fraction_in_atmosphere_layer', 'cloud_area_fraction_in_atmosphere_layer')]
         for standard_name, short_name in checklist:
             variable = identify_variable(self.ncfile_ml, standard_name)
             assert variable[0] == short_name
@@ -64,8 +73,8 @@ class Test_netCDF4tools():
     def test_identify_CF_coordhybrid(self):
         lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var = identify_CF_coordhybrid(self.ncfile_ml)
         assert (lat_name, lon_name, hybrid_name) == (u'lat', u'lon', 'hybrid')
-        assert lat_var.size == 41
-        assert lon_var.size == 51
+        assert lat_var.size == 40
+        assert lon_var.size == 50
 
     def test_hybrid_orientation(self):
         lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var = identify_CF_coordhybrid(self.ncfile_ml)
@@ -74,23 +83,32 @@ class Test_netCDF4tools():
     def test_identify_CF_hybrid(self):
         hybrid_name, hybrid_var, orientation = identify_CF_hybrid(self.ncfile_ml)
         assert hybrid_name == "hybrid"
-        assert hybrid_var.size == 72
+        assert hybrid_var.size == 19
         assert orientation == 1
 
     def test_identify_CF_isopressure(self):
         hybrid_name, hybrid_var, orientation = identify_CF_isopressure(self.ncfile_ml)
         assert hybrid_name == "hyam"
-        assert hybrid_var.size == 72
+        assert hybrid_var.size == 19
         assert orientation == -1
 
     def test_identify_CF_isopotvort(self):
-        pytest.skip("no demodata available yet")
+        hybrid_name, hybrid_var, orientation = identify_CF_isopotvort(self.ncfile_pv)
+        assert hybrid_name == "isopv"
+        assert hybrid_var.size == 3
+        assert orientation == 1
 
     def test_identify_CF_isoaltitude(self):
-        pytest.skip("no demodata available yet")
+        hybrid_name, hybrid_var, orientation = identify_CF_isoaltitude(self.ncfile_al)
+        assert hybrid_name == "height"
+        assert hybrid_var.size == 21
+        assert orientation == 1
 
     def test_identify_CF_isopottemp(self):
-        pytest.skip("no demodata available yet")
+        hybrid_name, hybrid_var, orientation = identify_CF_isopottemp(self.ncfile_tl)
+        assert hybrid_name == "isentropic"
+        assert hybrid_var.size == 8
+        assert orientation == 1
 
     def test_identify_CF_time(self):
         time_name, time_var = identify_CF_time(self.ncfile_ml)
@@ -102,8 +120,8 @@ class Test_netCDF4tools():
 
     def test_get_latlon_data(self):
         lat_data, lon_data, lat_order = get_latlon_data(self.ncfile_pl)
-        assert lat_data.size == 41
-        assert lon_data.size == 51
+        assert lat_data.size == 40
+        assert lon_data.size == 50
         assert lat_order == -1
 
     def test_num2date(self):

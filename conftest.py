@@ -41,10 +41,7 @@ if not os.path.exists(utils.DATA_DIR):
                          server_config_dir=utils.BASE_DIR)
     examples.create_datadir()
     examples.create_server_config(detailed_information=True)
-    examples.hybrid_data()
-    examples.pressure_data()
-    examples.sfc_data()
-    examples.theta_data()
+    examples.create_data()
     if not os.path.exists(utils.VT_CACHE):
         os.makedirs(utils.VT_CACHE)
 

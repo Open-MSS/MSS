@@ -54,6 +54,8 @@ from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.utils import convertHPAToKM
 
+WMS_SERVICE_CACHE = {}
+
 
 class MSSWebMapService(mslib.owslib.wms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
@@ -375,7 +377,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Accomodates MSSWebMapService instances.
         self.wms = None
-        self.wms_service_cache = {}
 
         # Initial list of WMS servers.
         self.cbWMS_URL.clear()
@@ -571,7 +572,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def wmsUrlChanged(self, text):
         text = unicode(text)
-        wms = self.wms_service_cache.get(text)
+        wms = WMS_SERVICE_CACHE.get(text)
         if wms is not None and wms != self.wms:
             self.activateWMS(wms)
         elif self.wms is not None:
@@ -638,7 +639,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         wms = self.initialiseWMS(base_url)
         if wms is not None:
             self.activateWMS(wms)
-            self.wms_service_cache[wms.url] = wms
+            WMS_SERVICE_CACHE[wms.url] = wms
 
     def activateWMS(self, wms):
         # Clear layer and style combo boxes. First disconnect the layerChanged

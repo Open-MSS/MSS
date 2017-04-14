@@ -65,6 +65,7 @@ class NWPDataAccess(object):
         """Constructor takes the path of the data directory.
         """
         self._root_path = rootpath
+        self._modelname = ""
 
     def get_filename(self, variable, vartype, init_time, valid_time,
                      fullpath=False):
@@ -211,6 +212,7 @@ class ECMWFDataAccess(NWPDataAccess):
         "medium_cloud_area_fraction": {"sfc": "SFC"},
         "high_cloud_area_fraction": {"sfc": "SFC"},
         "air_pressure_at_sea_level": {"sfc": "SFC"},
+        "emac_column_density": {"sfc": "SFC"},
         "surface_eastward_wind": {"sfc": "SFC"},
         "surface_northward_wind": {"sfc": "SFC"},
         "surface_air_pressure": {"sfc": "SFC"},
@@ -222,6 +224,7 @@ class ECMWFDataAccess(NWPDataAccess):
         "solar_elevation_angle": {"sfc": "SEA"},
         "air_pressure": {"ml": "P_derived",
                          "tl": "THETA_LEVELS",
+                         "pl": "PRESSURE_LEVELS",
                          "pv": "PVU"},
         "geopotential_height": {"ml": "Z_derived",
                                 "pl": "PRESSURE_LEVELS",
@@ -235,6 +238,9 @@ class ECMWFDataAccess(NWPDataAccess):
                                       "pl": "PRESSURE_LEVELS",
                                       "tl": "THETA_LEVELS"},
         "equivalent_latitude": {"pl": "PRESSURE_LEVELS"},
+        "number_of_wcb_trajectories": {"pl": "PRESSURE_LEVELS"},
+        "number_of_insitu_trajectories": {"pl": "PRESSURE_LEVELS"},
+        "number_of_mix_trajectories": {"pl": "PRESSURE_LEVELS"},
         "specific_cloud_liquid_water_content": {"ml": "CLWC"},
         "specific_cloud_ice_water_content": {"ml": "CIWC"},
         "specific_humidity": {"ml": "Q",
@@ -255,7 +261,8 @@ class ECMWFDataAccess(NWPDataAccess):
         "divergence_of_wind": {"ml": "D",
                                "pl": "PRESSURE_LEVELS"},
         "vertically_integrated_probability_of_wcb_occurrence": {"sfc": "ProbWCB_LAGRANTO_derived"},
-        "probability_of_wcb_occurrence": {"ml": "ProbWCB_LAGRANTO_derived"}
+        "probability_of_wcb_occurrence": {"ml": "ProbWCB_LAGRANTO_derived"},
+        "emac_R12": {"ml": "EMAC"}
         # "vertically_integrated_probability_of_wcb_occurrence": {"sfc": ("ProbWCB_LAGRANTO_derived", "ml")}
         # "": {"": ""},
     }
