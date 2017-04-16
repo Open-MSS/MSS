@@ -36,11 +36,20 @@ from mslib.mswms.demodata import DataFiles
 import mslib._tests.utils as utils
 
 
+try:
+    # package currently on pypi only
+    from pyvirtualdisplay import Display
+except ImportError:
+    Display = None
+
 sys.path.insert(0, utils.BASE_DIR)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testdata(request):
+    if Display is not None:
+        # needs invisible xvfb installed, default backend for visible output is xephyr
+        Display(backend="xvfb", visible=0, size=(1680, 1050)).start()
     if not os.path.exists(utils.DATA_DIR):
         print('\n configure testdata')
         examples = DataFiles(data_dir=utils.DATA_DIR,
@@ -55,6 +64,8 @@ def configure_testdata(request):
 
     def unconfigure_testdata():
         print('\n unconfigure testdata')
+        if Display is not None:
+            Display.stop()
         if os.path.exists(utils.VT_CACHE):
             shutil.rmtree(utils.VT_CACHE)
         if os.path.exists(utils.BASE_DIR):
