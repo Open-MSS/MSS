@@ -42,6 +42,8 @@ try:
 except ImportError:
     Display = None
 
+
+VIRT_DISPLAY = None
 sys.path.insert(0, utils.BASE_DIR)
 
 
@@ -49,7 +51,9 @@ sys.path.insert(0, utils.BASE_DIR)
 def configure_testdata(request):
     if Display is not None:
         # needs invisible xvfb installed, default backend for visible output is xephyr
-        Display(backend="xvfb", visible=0, size=(1680, 1050)).start()
+        # by visible=1 you get xvfb
+        VIRT_DISPLAY = Display(visible=0, size=(1280, 1024))
+        VIRT_DISPLAY.start()
     if not os.path.exists(utils.DATA_DIR):
         print('\n configure testdata')
         examples = DataFiles(data_dir=utils.DATA_DIR,
@@ -64,12 +68,13 @@ def configure_testdata(request):
 
     def unconfigure_testdata():
         print('\n unconfigure testdata')
-        if Display is not None:
-            Display.stop()
         if os.path.exists(utils.VT_CACHE):
             shutil.rmtree(utils.VT_CACHE)
         if os.path.exists(utils.BASE_DIR):
             shutil.rmtree(utils.BASE_DIR)
+        # ToDo understand why tests end to early if following lines enabled
+        # if VIRT_DISPLAY is not None:
+        #    VIRT_DISPLAY.stop()
     request.addfinalizer(unconfigure_testdata)
 
 
