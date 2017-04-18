@@ -37,8 +37,7 @@ from mslib._tests.utils import BASE_DIR, SERVER_CONFIG_FILE
 
 class TestMPLBasemapHorizontalSectionStyle(object):
     def setup(self):
-        if not os.path.exists(BASE_DIR):
-            pytest.skip("Demo Data not existing")
+
         self.mss_wms_settings = importlib.import_module("mss_wms_settings", SERVER_CONFIG_FILE)
 
     def test_supported_epsg_codes(self):

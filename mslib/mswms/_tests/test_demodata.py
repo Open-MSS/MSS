@@ -36,16 +36,12 @@ import mslib.mswms.demodata as demodata
 
 class TestDemodate(object):
     def test_data_creation(self):
-        if not os.path.exists(BASE_DIR):
-            pytest.skip("Demo Data not existing")
         assert os.path.exists(BASE_DIR)
         assert os.path.exists(DATA_DIR)
         assert os.path.exists(SERVER_CONFIG_FILE)
         assert len(os.listdir(DATA_DIR)) == 18
 
     def test_server_config_file(self):
-        if not os.path.exists(BASE_DIR):
-            pytest.skip("Demo Data not existing")
         imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
 
     def test_get_profile(self):

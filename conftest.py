@@ -29,13 +29,25 @@
 import imp
 import os
 import sys
+import pytest
 
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.utils as utils
 
 
-sys.path.insert(0, utils.BASE_DIR)
+try:
+    # package currently on pypi only
+    # ToDo conda-forge package similiar to pykml
+    from pyvirtualdisplay import Display
+except ImportError:
+    Display = None
+
+
+VIRT_DISPLAY = None
+
 if not os.path.exists(utils.DATA_DIR):
+    print('\n configure testdata')
+    # ToDo check pytest tmpdir_factory
     examples = DataFiles(data_dir=utils.DATA_DIR,
                          vt_cache=utils.VT_CACHE,
                          server_config_dir=utils.BASE_DIR)
@@ -46,3 +58,27 @@ if not os.path.exists(utils.DATA_DIR):
         os.makedirs(utils.VT_CACHE)
 
 imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
+
+sys.path.insert(0, utils.BASE_DIR)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def configure_testsetup(request):
+    if Display is not None:
+        # needs for invisible window output xvfb installed,
+        # default backend for visible output is xephyr
+        # by visible=0 you get xvfb
+        VIRT_DISPLAY = Display(visible=0, size=(1280, 1024))
+        VIRT_DISPLAY.start()
+
+    def unconfigure_testsetup():
+        print('\n unconfigure testdata')
+        if VIRT_DISPLAY is not None:
+            VIRT_DISPLAY.stop()
+    request.addfinalizer(unconfigure_testsetup)
+
+
+@pytest.fixture(scope="class")
+def testdata_exists():
+    if not os.path.exists(BASE_DIR):
+        pytest.skip("testdata not existing")

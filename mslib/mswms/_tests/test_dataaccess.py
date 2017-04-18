@@ -37,10 +37,6 @@ from mslib._tests.utils import BASE_DIR, DATA_DIR, VALID_TIME_CACHE
 dataaccess.valid_time_cache = VALID_TIME_CACHE
 
 
-if not os.path.exists(BASE_DIR):
-    pytest.skip("Demo Data not existing")
-
-
 class Test_NWPDataAccess(object):
     def setup(self):
         self.ECMWFDataAccess = ECMWFDataAccess(DATA_DIR, "EUR_LL015")
