@@ -33,6 +33,7 @@ import copy
 import importlib
 import logging
 import os
+import re
 import shutil
 import sys
 import types
@@ -62,6 +63,10 @@ from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8, U
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
+
+
+def clean_string(string):
+    return re.sub('\W|^(?=\d)', '_', string)
 
 
 class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
@@ -212,9 +217,14 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.addImportFilter("CSV", "csv", load_from_csv)
         self.addExportFilter("CSV", "csv", save_to_csv)
 
-        import_plugins = config_loader(dataset="import_plugins", default={})
-        for name in import_plugins:
-            extension, module, function = import_plugins[name]
+        self._imported_plugins, self._exported_plugins = {}, {}
+        self.addPlugins()
+        # self.actionLoopView.setVisible(config_loader(dataset="enable_loopview", default=False))
+
+    def addPlugins(self):
+        self._imported_plugins = config_loader(dataset="import_plugins", default={})
+        for name in self._imported_plugins:
+            extension, module, function = self._imported_plugins[name]
             try:
                 imported_module = importlib.import_module(module)
             except Exception, ex:
@@ -232,9 +242,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                         import_plugins, type(ex), ex)))
                 continue
 
-        export_plugins = config_loader(dataset="export_plugins", default={})
-        for name in export_plugins:
-            extension, module, function = export_plugins[name]
+        self._exported_plugins = config_loader(dataset="export_plugins", default={})
+        for name in self._exported_plugins:
+            extension, module, function = self._exported_plugins[name]
             try:
                 imported_module = importlib.import_module(module)
             except Exception, ex:
@@ -252,11 +262,25 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                         export_plugins, type(ex), ex)))
                 continue
 
-        # self.actionLoopView.setVisible(config_loader(dataset="enable_loopview", default=False))
+    def removePlugins(self):
+        for name in self._imported_plugins:
+            full_name = "actionImportFlightTrack" + clean_string(name)
+            actions = [_x for _x in self.menuImport_Flight_Track.actions()
+                       if _x.objectName() == _fromUtf8(full_name)]
+            assert len(actions) == 1
+            self.menuImport_Flight_Track.removeAction(actions[0])
+            delattr(self, full_name)
+
+        for name in self._exported_plugins:
+            full_name = "actionExportFlightTrack" + clean_string(name)
+            actions = [_x for _x in self.menuExport_Active_Flight_Track.actions()
+                       if _x.objectName() == _fromUtf8(full_name)]
+            assert len(actions) == 1
+            self.menuExport_Active_Flight_Track.removeAction(actions[0])
+            delattr(self, full_name)
 
     def addImportFilter(self, name, extension, function):
-        full_name = "actionImportFlightTrack" + name.replace(" ", "")
-
+        full_name = "actionImportFlightTrack" + clean_string(name)
         if hasattr(self, full_name):
             raise ValueError(u"'{}' has already been set!".format(full_name))
 
@@ -292,8 +316,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         action.triggered.connect(getattr(self, full_name))
 
     def addExportFilter(self, name, extension, function):
-        full_name = "actionExportFlightTrack" + name.replace(" ", "")
-
+        full_name = "actionExportFlightTrack" + clean_string(name)
         if hasattr(self, full_name):
             raise ValueError(u"'{}' has already been set!".format(full_name))
 
@@ -462,11 +485,20 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         Returns:
 
         """
-        filename = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open Config file", "", "Supported files (*.json *.txt)")
-        filename = filename[0] if USE_PYQT5 else unicode(filename)
-        if filename:
-            constants.CACHED_CONFIG_FILE = filename
+        ret = QtWidgets.QMessageBox.warning(
+            self, self.tr("Mission Support System"),
+            self.tr("Opening a config file will reset application. Continue?"),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if ret == QtWidgets.QMessageBox.Yes:
+            filename = QtWidgets.QFileDialog.getOpenFileName(
+                self, "Open Config file", "", "Supported files (*.json *.txt)")
+            filename = filename[0] if USE_PYQT5 else unicode(filename)
+            if filename:
+                self.listViews.clear()
+                self.listTools.clear()
+                self.removePlugins()
+                constants.CACHED_CONFIG_FILE = filename
+                self.addPlugins()
 
     def openFlightTrack(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
