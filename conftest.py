@@ -44,6 +44,21 @@ except ImportError:
 
 
 VIRT_DISPLAY = None
+
+if not os.path.exists(utils.DATA_DIR):
+    print('\n configure testdata')
+    # ToDo check pytest tmpdir_factory
+    examples = DataFiles(data_dir=utils.DATA_DIR,
+                         vt_cache=utils.VT_CACHE,
+                         server_config_dir=utils.BASE_DIR)
+    examples.create_datadir()
+    examples.create_server_config(detailed_information=True)
+    examples.create_data()
+    if not os.path.exists(utils.VT_CACHE):
+        os.makedirs(utils.VT_CACHE)
+
+    imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
+
 sys.path.insert(0, utils.BASE_DIR)
 
 
@@ -54,17 +69,6 @@ def configure_testdata(request):
         # by visible=1 you get xvfb
         VIRT_DISPLAY = Display(visible=0, size=(1280, 1024))
         VIRT_DISPLAY.start()
-    if not os.path.exists(utils.DATA_DIR):
-        print('\n configure testdata')
-        examples = DataFiles(data_dir=utils.DATA_DIR,
-                             vt_cache=utils.VT_CACHE,
-                             server_config_dir=utils.BASE_DIR)
-        examples.create_datadir()
-        examples.create_server_config(detailed_information=True)
-        examples.create_data()
-        if not os.path.exists(utils.VT_CACHE):
-            os.makedirs(utils.VT_CACHE)
-    imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
 
     def unconfigure_testdata():
         print('\n unconfigure testdata')
@@ -72,19 +76,12 @@ def configure_testdata(request):
             shutil.rmtree(utils.VT_CACHE)
         if os.path.exists(utils.BASE_DIR):
             shutil.rmtree(utils.BASE_DIR)
-        # ToDo understand why tests end to early if following lines enabled
-        # if VIRT_DISPLAY is not None:
-        #    VIRT_DISPLAY.stop()
+        if VIRT_DISPLAY is not None:
+            VIRT_DISPLAY.stop()
     request.addfinalizer(unconfigure_testdata)
 
 
-@pytest.fixture(scope="function")
-def testdata_exists():
-    if not os.path.exists(BASE_DIR):
-        pytest.skip("testdata not existing")
-
-
 @pytest.fixture(scope="class")
-def testdata_exists():
+def testdata_exists_class():
     if not os.path.exists(BASE_DIR):
         pytest.skip("testdata not existing")
