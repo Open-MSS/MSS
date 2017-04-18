@@ -29,7 +29,6 @@
 import imp
 import os
 import sys
-import shutil
 import pytest
 
 from mslib.mswms.demodata import DataFiles
@@ -38,6 +37,7 @@ import mslib._tests.utils as utils
 
 try:
     # package currently on pypi only
+    # ToDo conda-forge package similiar to pykml
     from pyvirtualdisplay import Display
 except ImportError:
     Display = None
@@ -57,31 +57,28 @@ if not os.path.exists(utils.DATA_DIR):
     if not os.path.exists(utils.VT_CACHE):
         os.makedirs(utils.VT_CACHE)
 
-    imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
+imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
 
 sys.path.insert(0, utils.BASE_DIR)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def configure_testdata(request):
+def configure_testsetup(request):
     if Display is not None:
-        # needs invisible xvfb installed, default backend for visible output is xephyr
-        # by visible=1 you get xvfb
+        # needs for invisible window output xvfb installed,
+        # default backend for visible output is xephyr
+        # by visible=0 you get xvfb
         VIRT_DISPLAY = Display(visible=0, size=(1280, 1024))
         VIRT_DISPLAY.start()
 
-    def unconfigure_testdata():
+    def unconfigure_testsetup():
         print('\n unconfigure testdata')
-        if os.path.exists(utils.VT_CACHE):
-            shutil.rmtree(utils.VT_CACHE)
-        if os.path.exists(utils.BASE_DIR):
-            shutil.rmtree(utils.BASE_DIR)
         if VIRT_DISPLAY is not None:
             VIRT_DISPLAY.stop()
-    request.addfinalizer(unconfigure_testdata)
+    request.addfinalizer(unconfigure_testsetup)
 
 
 @pytest.fixture(scope="class")
-def testdata_exists_class():
+def testdata_exists():
     if not os.path.exists(BASE_DIR):
         pytest.skip("testdata not existing")
