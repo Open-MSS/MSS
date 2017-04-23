@@ -576,6 +576,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.activateWMS(wms)
         elif self.wms is not None:
             self.wms = None
+            self.btGetMap.setEnabled(False)
+
             self.cbLayer.clear()
             self.cbLevel.clear()
             self.cbStyle.clear()
@@ -587,7 +589,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.enableLevelElements(False)
             self.enableValidTimeElements(False)
             self.enableInitTimeElements(False)
-            self.btGetMap.setEnabled(False)
             self.pbViewCapabilities.setEnabled(False)
             self.cbTransparent.setChecked(False)
 
@@ -643,6 +644,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def activateWMS(self, wms):
         # Clear layer and style combo boxes. First disconnect the layerChanged
         # slot to avoid calls to this function.
+        self.btGetMap.setEnabled(False)
         self.cbLayer.currentIndexChanged.disconnect(self.layerChanged)
         self.cbLayer.clear()
         self.cbStyle.clear()
@@ -666,7 +668,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.cbLayer.setEnabled(self.cbLayer.count() > 1)
         self.wms = wms
         self.layerChanged(0)
-        self.btGetMap.setEnabled(True)
         self.pbViewCapabilities.setEnabled(True)
 
         if self.prefetcher is not None:
@@ -694,6 +695,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Reconnect layerChanged.
         self.cbLayer.currentIndexChanged.connect(self.layerChanged)
+        self.btGetMap.setEnabled(True)
 
     def viewCapabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities
@@ -1114,7 +1116,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         performed (lock mechanism to prevent erroneous requests during
         a layer change).
         """
-        if self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.btGetMap.click()
 
     def check_init_time(self, dt):
@@ -1627,7 +1629,7 @@ class HSecWMSControlWidget(WMSControlWidget):
             lvl = float(s.split(" (")[0])
             if s.endswith("(hPa)"):
                 lvl = convertHPAToKM(lvl)
-            if self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+            if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
                 self.btGetMap.click()
             else:
                 self.view.waypoints_interactor.update()
