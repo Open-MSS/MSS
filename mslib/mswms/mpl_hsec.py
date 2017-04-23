@@ -47,6 +47,13 @@ from mslib.mswms import mss_2D_sections
 from mslib.utils import get_projection_params
 
 
+BASEMAP_USE_CACHE = getattr(mss_wms_settings, "basemap_use_cache", False)
+BASEMAP_CACHE = {}
+BASEMAP_REQUESTS = []
+BASEMAP_REQUEST_SIZE = 200
+BASEMAP_CACHE_SIZE = 20
+
+
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     """Abstract horizontal section super class. Use this class as a parent
        to classes implementing different plotting backends. For example,
@@ -263,10 +270,38 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # stretch a map into an image area of a different aspect ratio."
         # NOTE: While the MSUI always requests image sizes that match the aspect
         # ratio, for instance the Metview 4 client does not (mr, 2011Dec16).
-        bm = basemap.Basemap(llcrnrlon=bbox[0], llcrnrlat=bbox[1],
-                             urcrnrlon=bbox[2], urcrnrlat=bbox[3],
-                             resolution='l', area_thresh=1000., ax=ax,
-                             fix_aspect=(not noframe), **proj_params)
+
+        # Some additional code to store the last 20 coastlines in memory for quicker
+        # access.
+        key = repr((proj_params, bbox))
+        BASEMAP_REQUESTS.append(key)
+        if BASEMAP_USE_CACHE and key in BASEMAP_CACHE:
+            bm = basemap.Basemap(llcrnrlon=bbox[0], llcrnrlat=bbox[1],
+                                 urcrnrlon=bbox[2], urcrnrlat=bbox[3],
+                                 resolution=None, area_thresh=1000., ax=ax,
+                                 fix_aspect=(not noframe), **proj_params)
+            (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,
+             bm.coastsegs, bm.landpolygons, bm.lakepolygons, bm.cntrysegs) = BASEMAP_CACHE[key]
+            logging.info("Loaded {} from basemap cache".format(key))
+        else:
+            bm = basemap.Basemap(llcrnrlon=bbox[0], llcrnrlat=bbox[1],
+                                 urcrnrlon=bbox[2], urcrnrlat=bbox[3],
+                                 resolution='l', area_thresh=1000., ax=ax,
+                                 fix_aspect=(not noframe), **proj_params)
+            # read in countries manually, as those are laoded only on demand
+            bm.cntrysegs, _ = bm._readboundarydata("countries")
+            BASEMAP_CACHE[key] = (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,
+                                  bm.coastsegs, bm.landpolygons, bm.lakepolygons, bm.cntrysegs)
+        BASEMAP_REQUESTS[:] = BASEMAP_REQUESTS[-BASEMAP_REQUEST_SIZE:]
+
+        if len(BASEMAP_CACHE) > BASEMAP_CACHE_SIZE:
+            useful = {}
+            for idx, key in enumerate(BASEMAP_REQUESTS):
+                useful[key] = useful.get(key, 0) + idx
+            least_useful = sorted([(value, key) for key, value in useful.items()])[:-BASEMAP_CACHE_SIZE]
+            for _, key in least_useful:
+                del BASEMAP_CACHE[key]
+                BASEMAP_REQUESTS[:] = [_x for _x in BASEMAP_REQUESTS if key != _x]
 
         # Set up the map appearance.
         bm.drawcoastlines(color='0.25')
