@@ -27,11 +27,10 @@
 """
 
 import os
-import pytest
 from datetime import datetime
 from mslib.mswms import dataaccess
 from mslib.mswms.dataaccess import ECMWFDataAccess
-from mslib._tests.utils import BASE_DIR, DATA_DIR, VALID_TIME_CACHE
+from mslib._tests.utils import DATA_DIR, VALID_TIME_CACHE
 
 # ToDo improve
 dataaccess.valid_time_cache = VALID_TIME_CACHE
@@ -108,7 +107,8 @@ class Test_NWPDataAccess(object):
     def test_build_filetree(self):
         tree = self.ECMWFDataAccess.build_filetree()
         assert tree == {datetime(2012, 10, 17, 12, 0): {
-            36: {'CIWC': '20121017_12_ecmwf_forecast.CIWC.EUR_LL015.036.ml.nc',
+            36: {'ALTITUDE_LEVELS': '20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc',
+                 'CIWC': '20121017_12_ecmwf_forecast.CIWC.EUR_LL015.036.ml.nc',
                  'PVU': '20121017_12_ecmwf_forecast.PVU.EUR_LL015.036.pv.nc',
                  'W': '20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc',
                  'THETA_LEVELS': '20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc',

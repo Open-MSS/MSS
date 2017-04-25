@@ -34,6 +34,7 @@ import sys
 
 from mslib import __version__
 from wms import mss_wms_settings, mss_wms_auth
+from mslib.utils import setup_logging
 
 
 def main():
@@ -43,7 +44,8 @@ def main():
                         default="127.0.0.1", dest="host")
     parser.add_argument("--port", help="port", dest="port", default="8081")
     parser.add_argument("--threadpool", help="threadpool", dest="use_threadpool", action="store_true", default=False)
-    parser.add_argument("--logfile", help="if set to a name log output goes to that file", dest="logfile",
+    parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
+    parser.add_argument("--logfile", help="If set to a name log output goes to that file", dest="logfile",
                         default=None)
     args = parser.parse_args()
 
@@ -55,22 +57,7 @@ def main():
         print "Version:", __version__
         sys.exit()
 
-    if args.logfile is not None:
-        # Log everything to "logfile".
-        # TODO: Change this to write to a rotating log handler (so that the file size
-        #  is kept constant). (mr, 2011-02-25)
-        logging.basicConfig(filename=args.logfile,
-                            level=logging.DEBUG,
-                            format="%(asctime)s %(funcName)19s || %(message)s",
-                            datefmt="%Y-%m-%d %H:%M:%S")
-    else:
-        # Log everything, and send it to stderr.
-        # See http://docs.python.org/library/logging.html for more information
-        # on the Python logging module.
-        logging.basicConfig(level=logging.DEBUG,
-                            # format="%(levelname)s %(asctime)s %(funcName)19s || %(message)s",
-                            format="%(asctime)s %(funcName)19s || %(message)s",
-                            datefmt="%Y-%m-%d %H:%M:%S")
+    setup_logging(args)
 
     from mslib.mswms.wms import application
     if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):

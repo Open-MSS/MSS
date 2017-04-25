@@ -115,6 +115,23 @@ nwpaccess[nwpaccess.keys()[0]].serviceCache()
 # passwords are not specified in plain text but by their md5 digest.
 enable_basic_http_authentication = False
 
+
+#
+# Basemap cache                                     ###
+#
+
+# Plotting coastlines on horizontal cross-sections requires usually the parsing
+# of the corresponding databases for each plot.
+# A simple caching feature allows to reuse this data from previous plots using
+# the same bounding box and projection parameters, dramatically speeding up
+# the plotting. 'basemap_cache_size' determines hows many sets of coastlines shall
+# be stored in memory and 'basemap_request_size' determines the length of history
+# used to determine, which data shall be purged first if the cache exceeds its
+# maximum size.
+basemap_use_cache = False
+basemap_request_size = 200
+basemap_cache_size = 20
+
 #
 # Registration of horizontal layers.                     ###
 #

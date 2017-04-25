@@ -26,7 +26,6 @@
     limitations under the License.
 """
 
-import pytest
 import os
 import imp
 import numpy as np
@@ -39,7 +38,7 @@ class TestDemodate(object):
         assert os.path.exists(BASE_DIR)
         assert os.path.exists(DATA_DIR)
         assert os.path.exists(SERVER_CONFIG_FILE)
-        assert len(os.listdir(DATA_DIR)) == 18
+        assert len(os.listdir(DATA_DIR)) == 19
 
     def test_server_config_file(self):
         imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
