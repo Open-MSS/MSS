@@ -28,9 +28,9 @@
 import mock
 import sys
 
-from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
-from mslib.msui import flighttrack as ft
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from mslib.msui import flighttrack as ft
+from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
 
 
@@ -111,15 +111,19 @@ class Test_TableView(object):
         """
         Check insertion of points
         """
-        QtTest.QTest.keyClick(self.window.tableWayPoints, QtCore.Qt.Key_Down)
+        item = self.window.tableWayPoints.visualRect(
+            self.window.waypoints_model.index(2, 0))
+        QtTest.QTest.mouseClick(
+            self.window.tableWayPoints.viewport(),
+            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item.center())
         assert len(self.window.waypoints_model.waypoints) == 5
         wps = list(self.window.waypoints_model.waypoints)
         QtTest.QTest.mouseClick(self.window.btAddWayPointToFlightTrack, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         wps2 = self.window.waypoints_model.waypoints
         assert len(self.window.waypoints_model.waypoints) == 6
-        assert all([_x == _y for _x, _y in zip(wps[:2], wps2[:2])])
-        assert all([_x == _y for _x, _y in zip(wps[2:], wps2[3:])])
+        assert all([_x == _y for _x, _y in zip(wps[:3], wps2[:3])]), (wps, wps2)
+        assert all([_x == _y for _x, _y in zip(wps[3:], wps2[4:])]), (wps, wps2)
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
@@ -127,7 +131,11 @@ class Test_TableView(object):
         """
         Check insertion of points
         """
-        QtTest.QTest.keyClick(self.window.tableWayPoints, QtCore.Qt.Key_Down)
+        item = self.window.tableWayPoints.visualRect(
+            self.window.waypoints_model.index(1, 0))
+        QtTest.QTest.mouseClick(
+            self.window.tableWayPoints.viewport(),
+            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item.center())
         assert len(self.window.waypoints_model.waypoints) == 5
         wps = list(self.window.waypoints_model.waypoints)
         QtTest.QTest.mouseClick(self.window.btDeleteWayPoint, QtCore.Qt.LeftButton)
