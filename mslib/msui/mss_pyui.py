@@ -53,7 +53,7 @@ from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import loopview
 from mslib.msui import constants
-from mslib.utils import config_loader
+from mslib.utils import config_loader, setup_logging
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
@@ -607,42 +607,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.exec_()
 
 
-def setup_logging(args):
-    logger = logging.getLogger()
-    # this is necessary as "someone" has already initialized logging, preventing basicConfig from doing stuff
-    for ch in logger.handlers:
-        logger.removeHandler(ch)
-
-    debug_formatter = logging.Formatter("%(asctime)s (%(module)s.%(funcName)s:%(lineno)s): %(message)s")
-    default_formatter = logging.Formatter("%(levelname)s: %(message)s")
-
-    # Console handler (suppress DEBUG by default)
-    ch = logging.StreamHandler()
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
-        ch.setLevel(logging.DEBUG)
-        ch.setFormatter(debug_formatter)
-    else:
-        logger.setLevel(logging.INFO)
-        ch.setLevel(logging.INFO)
-        ch.setFormatter(default_formatter)
-    logger.addHandler(ch)
-    # File handler (always on DEBUG level)
-    if not args.nolog:
-        logfile = os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log")
-        if args.logfile is not None:
-            logfile = args.logfile
-        try:
-            fh = logging.FileHandler(logfile, "w")
-        except (OSError, IOError), ex:
-            logger.error("Could not open logfile '%s': %s %s", logfile, type(ex), ex)
-        else:
-            logger.setLevel(logging.DEBUG)
-            fh.setLevel(logging.DEBUG)
-            fh.setFormatter(debug_formatter)
-            logger.addHandler(fh)
-
-
 def main():
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
@@ -656,8 +620,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
-    parser.add_argument("--logfile", help="specify logfile location", action="store", default=None)
-    parser.add_argument("--nolog", help="do write debug log", action="store_true", default=False)
+    parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
+                        default=os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log"))
     parser.add_argument("-m", "--menu", help="adds mss to menu", action="store_true", default=False)
     parser.add_argument("-d", "--deinstall", help="removes mss from menu", action="store_true", default=False)
 
