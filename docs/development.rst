@@ -94,6 +94,18 @@ To build the html version of it, you need to have sphinx installed::
 Then point a web browser at docs/_build/html/index.html.
 
 
+Merging stable into develop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Bug fixes we have done in stable we need to merge regulary into develop too:: 
+
+    git checkout stable
+    git pull
+    git checkout develop
+    git pull
+    git merge stable
+
+
 Creating a new release
 ~~~~~~~~~~~~~~~~~~~~~~
 
