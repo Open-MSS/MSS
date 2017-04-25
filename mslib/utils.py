@@ -466,3 +466,39 @@ class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
             if k == key:
                 return v
         raise KeyError(repr(key))
+
+
+def setup_logging(args):
+    logger = logging.getLogger()
+    # this is necessary as "someone" has already initialized logging, preventing basicConfig from doing stuff
+    for ch in logger.handlers:
+        logger.removeHandler(ch)
+
+    debug_formatter = logging.Formatter("%(asctime)s (%(module)s.%(funcName)s:%(lineno)s): %(message)s")
+    default_formatter = logging.Formatter("%(levelname)s: %(message)s")
+
+    # Console handler (suppress DEBUG by default)
+    ch = logging.StreamHandler()
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(debug_formatter)
+    else:
+        logger.setLevel(logging.INFO)
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(default_formatter)
+    logger.addHandler(ch)
+    # File handler (always on DEBUG level)
+    # TODO: Change this to write to a rotating log handler (so that the file size
+    # is kept constant). (mr, 2011-02-25)
+    if args.logfile:
+        logfile = args.logfile
+        try:
+            fh = logging.FileHandler(logfile, "w")
+        except (OSError, IOError), ex:
+            logger.error("Could not open logfile '%s': %s %s", logfile, type(ex), ex)
+        else:
+            logger.setLevel(logging.DEBUG)
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(debug_formatter)
+            logger.addHandler(fh)
