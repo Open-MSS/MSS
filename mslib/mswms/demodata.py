@@ -846,6 +846,8 @@ epsg_to_mpl_basemap_table = {{
     4326: {{"projection": "cyl"}}
 }}
 
+basemap_use_cache = True
+
 #
 # Registration of horizontal layers.
 #
