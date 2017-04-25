@@ -43,8 +43,6 @@ except ImportError:
     Display = None
 
 
-VIRT_DISPLAY = None
-
 if not os.path.exists(utils.DATA_DIR):
     print('\n configure testdata')
     # ToDo check pytest tmpdir_factory
@@ -70,12 +68,10 @@ def configure_testsetup(request):
         # by visible=0 you get xvfb
         VIRT_DISPLAY = Display(visible=0, size=(1280, 1024))
         VIRT_DISPLAY.start()
-
-    def unconfigure_testsetup():
-        print('\n unconfigure testdata')
-        if VIRT_DISPLAY is not None:
-            VIRT_DISPLAY.stop()
-    request.addfinalizer(unconfigure_testsetup)
+        yield
+        VIRT_DISPLAY.stop()
+    else:
+        yield
 
 
 @pytest.fixture(scope="class")
