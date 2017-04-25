@@ -26,18 +26,14 @@
     limitations under the License.
 """
 
-
-import os
-import pytest
 import importlib
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib._tests.utils import BASE_DIR, SERVER_CONFIG_FILE
+from mslib._tests.utils import SERVER_CONFIG_FILE
 
 
 class TestMPLBasemapHorizontalSectionStyle(object):
     def setup(self):
-
         self.mss_wms_settings = importlib.import_module("mss_wms_settings", SERVER_CONFIG_FILE)
 
     def test_supported_epsg_codes(self):
