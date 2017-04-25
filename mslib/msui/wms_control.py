@@ -621,26 +621,28 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         except requests.exceptions.ConnectionError:
             request = None
 
-        if request is not None and request.status_code == 200 and request.url != base_url:
-            found = False
-            for count in range(self.cbWMS_URL.count()):
-                if self.cbWMS_URL.itemText(count) == base_url:
-                    self.cbWMS_URL.setItemText(count, request.url)
-                    self.cbWMS_URL.setCurrentIndex(count)
-                    found = True
-                    break
-                if self.cbWMS_URL.itemText(count) == request.url:
-                    self.cbWMS_URL.setCurrentIndex(count)
-                    found = True
-            if not found:
-                self.cbWMS_URL.insertItem(self.cbWMS_URL.count(), request.url)
-                self.cbWMS_URL.setCurrentIndex(self.cbWMS_URL.count() - 1)
-            base_url = request.url
-        logging.debug(u"requesting capabilities from %s", base_url)
-        wms = self.initialiseWMS(base_url)
-        if wms is not None:
-            self.activateWMS(wms)
-            WMS_SERVICE_CACHE[wms.url] = wms
+        if request is not None:
+            logging.debug(u"requesting capabilities from %s", request.url)
+            wms = self.initialiseWMS(request.url)
+            if wms is not None:
+                self.activateWMS(wms)
+                WMS_SERVICE_CACHE[wms.url] = wms
+
+                # update the combo box, if entry requires change/insertion
+                found = False
+                for count in range(self.cbWMS_URL.count()):
+                    if self.cbWMS_URL.itemText(count) == base_url:
+                        self.cbWMS_URL.setItemText(count, request.url)
+                        self.cbWMS_URL.setCurrentIndex(count)
+                        found = True
+                        break
+                    if self.cbWMS_URL.itemText(count) == request.url:
+                        self.cbWMS_URL.setCurrentIndex(count)
+                        found = True
+                if not found:
+                    logging.debug("inserting URL: %s", request.url)
+                    self.cbWMS_URL.insertItem(self.cbWMS_URL.count(), request.url)
+                    self.cbWMS_URL.setCurrentIndex(self.cbWMS_URL.count() - 1)
 
     def activateWMS(self, wms):
         # Clear layer and style combo boxes. First disconnect the layerChanged
