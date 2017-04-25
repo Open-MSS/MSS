@@ -61,7 +61,7 @@ aircraft performance. Such a file may be loaded using the 'performance settings'
 in Table View. The aircraft performance is specified using tables given in the JSON format.
 A basic configuration looks like the following file:
 
-.. literalinclude:: samples/config/mss/performance_simple.json
+.. literalinclude:: samples/config/mss/performance_simple.json.sample
 
 This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
 2900 lbs/h irrespective of flight level changes. The aircraft weight and available fuel are
@@ -91,7 +91,7 @@ MSS currently offers several import/export filters in the mslib.plugins.io modul
 as an example for the definition of own plugins. The CSV plugin is enabled by default. Enabling the
 experimental FliteStar text import plugin would require those lines in the UI settings file:
 
-.. code-block:: json
+.. code:: json
 
     "import_plugins": {
         "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"]
@@ -104,7 +104,7 @@ path.
 
 An exemplary test file format that can be ex- and imported may be activated by:
 
-.. code-block:: json
+.. code:: json
 
     "import_plugins": {
         "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"]
