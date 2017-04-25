@@ -233,7 +233,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
-                        import_plugins, type(ex), ex)))
+                        self._imported_plugins, type(ex), ex)))
                 continue
             try:
                 self.addImportFilter(name, extension, getattr(imported_module, function))
@@ -241,7 +241,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
-                        import_plugins, type(ex), ex)))
+                        self._imported_plugins, type(ex), ex)))
                 continue
 
         self._exported_plugins = config_loader(dataset="export_plugins", default={})
@@ -253,7 +253,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
-                        import_plugins, type(ex), ex)))
+                        self._exported_plugins, type(ex), ex)))
                 continue
             try:
                     self.addExportFilter(name, extension, getattr(imported_module, function))
@@ -261,7 +261,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error"),
                     self.tr(u"ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
-                        export_plugins, type(ex), ex)))
+                        self._exported_plugins, type(ex), ex)))
                 continue
 
     def removePlugins(self):

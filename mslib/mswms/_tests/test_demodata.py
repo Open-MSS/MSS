@@ -26,7 +26,6 @@
     limitations under the License.
 """
 
-import pytest
 import os
 import imp
 import numpy as np
