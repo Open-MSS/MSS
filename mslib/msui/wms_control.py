@@ -41,7 +41,7 @@ import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
-from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, USE_PYQT5
 
 import mslib.owslib.wms
 import mslib.owslib.util
@@ -55,6 +55,13 @@ from mslib.msui import constants
 from mslib.utils import convertHPAToKM
 
 WMS_SERVICE_CACHE = {}
+WMS_URL_LIST = QtGui.QStandardItemModel()
+
+
+def add_wms_urls(combo_box, url_list):
+    combo_box_urls = [unicode(combo_box.itemText(_i)) for _i in range(combo_box.count())]
+    for url in (_url for _url in url_list if _url not in combo_box_urls):
+        combo_box.addItem(url)
 
 
 class MSSWebMapService(mslib.owslib.wms.WebMapService):
@@ -379,9 +386,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.wms = None
 
         # Initial list of WMS servers.
-        self.cbWMS_URL.clear()
+        self.cbWMS_URL.setModel(WMS_URL_LIST)
+
         if default_WMS is not None:
-            self.cbWMS_URL.addItems(default_WMS)
+            add_wms_urls(self.cbWMS_URL, default_WMS)
+        if self.cbWMS_URL.count() > 0:
+            self.cbWMS_URL.setCurrentIndex(0)
 
         # Compile regular expression used in crsAllowed() to filter
         # layers accordings to their CRS.
@@ -621,26 +631,29 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         except requests.exceptions.ConnectionError:
             request = None
 
-        if request is not None and request.status_code == 200 and request.url != base_url:
-            found = False
-            for count in range(self.cbWMS_URL.count()):
-                if self.cbWMS_URL.itemText(count) == base_url:
-                    self.cbWMS_URL.setItemText(count, request.url)
-                    self.cbWMS_URL.setCurrentIndex(count)
-                    found = True
-                    break
-                if self.cbWMS_URL.itemText(count) == request.url:
-                    self.cbWMS_URL.setCurrentIndex(count)
-                    found = True
-            if not found:
-                self.cbWMS_URL.insertItem(self.cbWMS_URL.count(), request.url)
-                self.cbWMS_URL.setCurrentIndex(self.cbWMS_URL.count() - 1)
-            base_url = request.url
-        logging.debug(u"requesting capabilities from %s", base_url)
-        wms = self.initialiseWMS(base_url)
-        if wms is not None:
-            self.activateWMS(wms)
-            WMS_SERVICE_CACHE[wms.url] = wms
+        if request is not None:
+            logging.debug(u"requesting capabilities from %s", request.url)
+            wms = self.initialiseWMS(request.url)
+            if wms is not None:
+
+                # update the combo box, if entry requires change/insertion
+                found = False
+                for count in range(self.cbWMS_URL.count()):
+                    if self.cbWMS_URL.itemText(count) == base_url:
+                        self.cbWMS_URL.setItemText(count, request.url)
+                        self.cbWMS_URL.setCurrentIndex(count)
+                        found = True
+                        break
+                    if self.cbWMS_URL.itemText(count) == request.url:
+                        self.cbWMS_URL.setCurrentIndex(count)
+                        found = True
+                if not found:
+                    logging.debug("inserting URL: %s", request.url)
+                    add_wms_urls(self.cbWMS_URL, [request.url])
+                    self.cbWMS_URL.setEditText(request.url)
+
+                self.activateWMS(wms)
+                WMS_SERVICE_CACHE[wms.url] = wms
 
     def activateWMS(self, wms):
         # Clear layer and style combo boxes. First disconnect the layerChanged
