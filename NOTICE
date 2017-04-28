@@ -38,6 +38,9 @@ revision 1672, on 2010/08/11.
 NOTE: The file "wms.py" has been modified for the MSS. Changes are marked 
 with "(mss)".
 
+We also did a PEP8 review and adopted it to the recent 0.14 version
+https://pypi.python.org/pypi/OWSLib/0.14.0 
+
 
 NETCDF4-PYTHON
 --------------------
