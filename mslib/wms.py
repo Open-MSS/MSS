@@ -44,7 +44,7 @@ class WebMapService(object):
         if name in self.__getattribute__('contents').keys():
             return self.__getattribute__('contents')[name]
         else:
-            raise KeyError, "No content named %s" % name
+            raise KeyError("No content named %s" % name)
 
     def __init__(self, url, version='1.1.1', xml=None, username=None, password=None):
         """Initialize."""
@@ -115,6 +115,7 @@ class WebMapService(object):
             items.append((item, self.contents[item]))
         return items
 
+    @property
     def getcapabilities(self):
         """ Request and return capabilities document from the WMS as a
             file-like object.
@@ -227,7 +228,7 @@ class WebMapService(object):
         for item in self.operations:
             if item.name == name:
                 return item
-        raise KeyError, "No operation named %s" % name
+        raise KeyError("No operation named %s" % name)
 
 
 class ServiceIdentification(object):
