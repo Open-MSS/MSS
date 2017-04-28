@@ -25,30 +25,13 @@ Currently supports only version 1.1.1 of the WMS protocol.
 """
 
 import cgi
+import xml.etree.ElementTree as etree
+
 from urllib import urlencode
-from etree import etree
-from .util import openURL
+from owslib.util import openURL
 from collections import OrderedDict
+from owslib.map import wms111
 
-
-class ServiceException(Exception):
-    """WMS ServiceException
-
-    Attributes:
-        message -- short error message
-        xml  -- full xml error message from server
-    """
-
-    def __init__(self, message, xml):
-        self.message = message
-        self.xml = xml
-        
-    def __str__(self):
-        return repr(self.message)
-
-
-class CapabilitiesError(Exception):
-    pass
 
 
 class WebMapService(object):
@@ -98,7 +81,7 @@ class WebMapService(object):
             reader = WMSCapabilitiesReader(
                 self.version, url=self.url, un=self.username, pw=self.password
                 )
-            self._capabilities = ServiceMetadata(reader.read(self.url))
+            self._capabilities = wms111.ServiceMetadata(reader.read(self.url))
             # (mss) Store capabilities document.
             self.capabilities_document = reader.capabilities_document
             # (mss)
@@ -112,12 +95,12 @@ class WebMapService(object):
         self.identification=ServiceIdentification(serviceelem, self.version)   
         
         #serviceProvider metadata
-        self.provider=ServiceProvider(serviceelem)   
+        self.provider=wms111.ServiceProvider(serviceelem)
             
         #serviceOperations metadata 
         self.operations=[]
         for elem in self._capabilities.find('Capability/Request')[:]:
-            self.operations.append(OperationMetadata(elem))
+            self.operations.append(wms111.OperationMetadata(elem))
           
         #serviceContents metadata: our assumption is that services use a top-level 
         #layer as a metadata organizer, nothing more.
@@ -282,40 +265,8 @@ class ServiceIdentification(object):
             self.fees = None
         # (mss)
              
-class ServiceProvider(object):
-    ''' Implements IServiceProviderMetatdata '''
-    def __init__(self, infoset):
-        self._root=infoset
-        name=self._root.find('ContactInformation/ContactPersonPrimary/ContactOrganization')
-        if name is not None:
-            self.name=name.text
-        else:
-            self.name=None
-        self.url=self._root.find('OnlineResource').attrib.get('{http://www.w3.org/1999/xlink}href', '')
-        #contact metadata
-        contact = self._root.find('ContactInformation')
-        ## sometimes there is a contact block that is empty, so make
-        ## sure there are children to parse
-        if contact is not None and contact[:] != []:
-            self.contact = ContactMetadata(contact)
-        else:
-            self.contact = None
-            
-    def getContentByName(self, name):
-        """Return a named content item."""
-        for item in self.contents:
-            if item.name == name:
-                return item
-        raise KeyError, "No content named %s" % name
 
-    def getOperationByName(self, name):
-        """Return a named content item."""
-        for item in self.operations:
-            if item.name == name:
-                return item
-        raise KeyError, "No operation named %s" % name
-
-class ContentMetadata:
+class ContentMetadata(object):
     """
     Abstraction for WMS layer metadata.
 
@@ -469,73 +420,15 @@ class ContentMetadata:
         #(mss)
                 
         self.layers = []
+        # ToDo XXX child is a list
         for child in elem.findall('Layer'):
             self.layers.append(ContentMetadata(child, self))
 
     def __str__(self):
         return 'Layer Name: %s Title: %s' % (self.name, self.title)
 
-
-class OperationMetadata:
-    """Abstraction for WMS OperationMetadata.
-    
-    Implements IOperationMetadata.
-    """
-    def __init__(self, elem):
-        """."""
-        self.name = elem.tag
-        # formatOptions
-        self.formatOptions = [f.text for f in elem.findall('Format')]
-        methods = []
-        for verb in elem.findall('DCPType/HTTP/*'):
-            url = verb.find('OnlineResource').attrib['{http://www.w3.org/1999/xlink}href']
-            methods.append((verb.tag, {'url': url}))
-        self.methods = dict(methods)
-
-class ContactMetadata:
-    """Abstraction for contact details advertised in GetCapabilities.
-    """
-    def __init__(self, elem):
-        name = elem.find('ContactPersonPrimary/ContactPerson')
-        if name is not None:
-            self.name=name.text
-        else:
-            self.name=None
-        email = elem.find('ContactElectronicMailAddress')
-        if email is not None:
-            self.email=email.text
-        else:
-            self.email=None
-        self.address = self.city = self.region = None
-        self.postcode = self.country = None
-
-        address = elem.find('ContactAddress')
-        if address is not None:
-            street = address.find('Address')
-            if street is not None: self.address = street.text
-
-            city = address.find('City')
-            if city is not None: self.city = city.text
-
-            region = address.find('StateOrProvince')
-            if region is not None: self.region = region.text
-
-            postcode = address.find('PostCode')
-            if postcode is not None: self.postcode = postcode.text
-
-            country = address.find('Country')
-            if country is not None: self.country = country.text
-
-        organization = elem.find('ContactPersonPrimary/ContactOrganization')
-        if organization is not None: self.organization = organization.text
-        else:self.organization = None
-
-        position = elem.find('ContactPosition')
-        if position is not None: self.position = position.text
-        else: self.position = None
-
       
-class WMSCapabilitiesReader:
+class WMSCapabilitiesReader(object):
     """Read and parse capabilities document into a lxml.etree infoset
     """
 
@@ -590,7 +483,7 @@ class WMSCapabilitiesReader:
 
         #now split it up again to use the generic openURL function...
         spliturl=getcaprequest.split('?')
-        u = openURL(spliturl[0], spliturl[1], method='Get', username = self.username, password = self.password)
+        u = wms111.openURL(spliturl[0], spliturl[1], method='Get', username = self.username, password = self.password)
         # (mss) Store capabilities document.
         self.capabilities_document = u.read()
         return etree.fromstring(self.capabilities_document)
