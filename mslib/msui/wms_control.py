@@ -43,7 +43,7 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, USE_PYQT5
 
-import mslib.wms
+import mslib.ogcwms
 import owslib.util
 import PIL.Image
 
@@ -64,7 +64,7 @@ def add_wms_urls(combo_box, url_list):
         combo_box.addItem(url)
 
 
-class MSSWebMapService(mslib.wms.WebMapService):
+class MSSWebMapService(mslib.ogcwms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
 
         added parameters are
