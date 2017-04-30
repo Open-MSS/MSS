@@ -36,9 +36,9 @@ Obtained from SVN (http://svn.gispython.org/svn/gispy/OWSLib/trunk),
 revision 1672, on 2010/08/11.
 
 NOTE: The file "wms.py" has been modified for the MSS. Changes are marked 
-with "(mss)".
+with "(mss)". We renamed it to "ogcwms.py" (2017-04-28)
 
-We also did a PEP8 review and adopted it to the recent 0.14 version
+We also did a PEP8 review of the ogcwms.py and adopted it to the recent 0.14 version
 https://pypi.python.org/pypi/OWSLib/0.14.0 
 
 

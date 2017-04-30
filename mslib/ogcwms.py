@@ -44,6 +44,7 @@
 #   -- bugfix: copy parent SRS only if it has been defined (2010-09-22)
 #   -- added dimensions and extents parsing (2011-01-13)
 #   -- added storage of capabilities document (2011-01-17)
+#   -- renamed to ogcwms (2017-04-28)
 #   -- PEP8 review
 #   -- adopted it to the recent 0.14 version https://pypi.python.org/pypi/OWSLib/0.14.0
 # ******************************************************************************
