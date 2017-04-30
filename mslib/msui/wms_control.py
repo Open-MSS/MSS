@@ -43,8 +43,8 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, USE_PYQT5
 
-import mslib.owslib.wms
-import mslib.owslib.util
+import mslib.ogcwms
+import owslib.util
 import PIL.Image
 
 # local application imports
@@ -64,7 +64,7 @@ def add_wms_urls(combo_box, url_list):
         combo_box.addItem(url)
 
 
-class MSSWebMapService(mslib.owslib.wms.WebMapService):
+class MSSWebMapService(mslib.ogcwms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
 
         added parameters are
@@ -195,7 +195,7 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
 
-        u = mslib.owslib.util.openURL(base_url, data, method,
+        u = owslib.util.openURL(base_url, data, method,
                                       username=self.username,
                                       password=self.password)
 
@@ -210,11 +210,13 @@ class MSSWebMapService(mslib.owslib.wms.WebMapService):
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
             err_message = unicode(se_tree.find('ServiceException').text).strip()
-            raise mslib.owslib.wms.ServiceException(err_message, se_xml)
+            raise owslib.wms.ServiceException(err_message, se_xml)
         return u
 
     def get_redirect_url(self, method="Get"):
-        return self.getOperationByName("GetMap").methods[method]["url"]
+        #return self.getOperationByName("GetMap").methods[method]["url"]
+        # ToDo redirect broken
+        return self.getOperationByName("GetMap").methods[0]["url"]
 
 
 class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
@@ -548,7 +550,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 try:
                     wms = MSSWebMapService(base_url, version='1.1.1',
                                            username=username, password=password)
-                except mslib.owslib.util.ServiceException as ex:
+                except owslib.util.ServiceException as ex:
                     if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
                             "401 Unauthorized") >= 0:
                         # Catch the "401 Unauthorized" error if one has been
