@@ -335,8 +335,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # calling methods of the CDFMF subclass when querying the master file.
         cdfm = netCDF4.Dataset(master)
         # copy attributes from master.
-        for name, value in cdfm.__dict__.items():
-            self.__dict__[name] = value
+        self.__dict__.update(cdfm.__dict__)
+
 
         # Get names of master dimensions.
         masterDims = cdfm.dimensions.keys()
