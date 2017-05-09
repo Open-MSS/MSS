@@ -337,7 +337,6 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # copy attributes from master.
         self.__dict__.update(cdfm.__dict__)
 
-
         # Get names of master dimensions.
         masterDims = cdfm.dimensions.keys()
 

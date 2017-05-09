@@ -194,10 +194,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
-
         u = owslib.util.openURL(base_url, data, method,
-                                      username=self.username,
-                                      password=self.password)
+                                username=self.username, password=self.password)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -214,7 +212,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         return u
 
     def get_redirect_url(self, method="Get"):
-        #return self.getOperationByName("GetMap").methods[method]["url"]
+        # return self.getOperationByName("GetMap").methods[method]["url"]
         # ToDo redirect broken
         return self.getOperationByName("GetMap").methods[0]["url"]
 

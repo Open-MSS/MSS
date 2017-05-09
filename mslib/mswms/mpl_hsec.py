@@ -50,6 +50,7 @@ from mslib.utils import get_projection_params
 BASEMAP_CACHE = {}
 BASEMAP_REQUESTS = []
 
+
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     """Abstract horizontal section super class. Use this class as a parent
        to classes implementing different plotting backends. For example,

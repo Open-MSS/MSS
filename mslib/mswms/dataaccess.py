@@ -674,7 +674,7 @@ class MeteosatDataAccess(NWPDataAccess):
                 if cached_valid_times is not None:
                     valid_times.extend(cached_valid_times)
                 else:
-                    with netCDF4.Dataset(filename) as dataset :
+                    with netCDF4.Dataset(filename) as dataset:
                         timename, timevar = netCDF4tools.identify_CF_time(dataset)
                         times = netCDF4tools.num2date(timevar[:], timevar.units)
                         valid_times.extend(times)
