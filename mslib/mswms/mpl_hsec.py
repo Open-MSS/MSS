@@ -71,7 +71,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
     name = "BASEMAP"
     title = "Matplotlib basemap"
 
-    def _plot_style(self, style=None):
+    def _plot_style(self):
         """Overwrite this method to plot style-specific data on the map.
         """
         pass
