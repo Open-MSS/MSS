@@ -390,6 +390,8 @@ class ECMWFDataAccess(NWPDataAccess):
                 else:
                     dataset = netCDF4.Dataset(filename)
                     timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                    if len(timevar) < 2:
+                        raise RuntimeError("This doesn't work here?!")
                     times = netCDF4tools.num2date(timevar[:], timevar.units)
                     valid_times.extend(times)
                     dataset.close()

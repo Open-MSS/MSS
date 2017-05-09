@@ -81,7 +81,9 @@ class Test_HSecWMSControlWidget(object):
         self.thread.terminate()
 
     def query_server(self, url):
-        QtWidgets.QApplication.processEvents()
+        while len(self.window.cbWMS_URL.currentText()) > 0:
+            QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Backspace)
+            QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClicks(self.window.cbWMS_URL, url)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
@@ -104,7 +106,7 @@ class Test_HSecWMSControlWidget(object):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(20)
+        QtTest.QTest.qWait(10)
         QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
@@ -123,7 +125,7 @@ class Test_HSecWMSControlWidget(object):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWait(3000)
         assert mockbox.critical.call_count == 0
 
         assert self.view.drawImage.call_count == 1
