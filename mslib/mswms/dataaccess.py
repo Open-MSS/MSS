@@ -388,13 +388,12 @@ class ECMWFDataAccess(NWPDataAccess):
                 if cached_valid_times is not None:
                     valid_times.extend(cached_valid_times)
                 else:
-                    dataset = netCDF4.Dataset(filename)
-                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                    if len(timevar) < 2:
-                        raise RuntimeError("This doesn't work here?!")
-                    times = netCDF4tools.num2date(timevar[:], timevar.units)
-                    valid_times.extend(times)
-                    dataset.close()
+                    with netCDF4.Dataset(filename) as dataset:
+                        timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                        if len(timevar) < 2:
+                            raise RuntimeError("This doesn't work here?!")
+                        times = netCDF4tools.num2date(timevar[:], timevar.units)
+                        valid_times.extend(times)
                     self.save_valid_cache(filename, times)
 
         return valid_times
@@ -574,11 +573,10 @@ class EMACDataAccess(NWPDataAccess):
                     if cached_valid_times is not None:
                         valid_times.extend(cached_valid_times)
                     else:
-                        dataset = netCDF4.Dataset(os.path.join(data_dir, filename))
-                        timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                        times = netCDF4tools.num2date(timevar[:], timevar.units)
-                        valid_times.extend(times)
-                        dataset.close()
+                        with netCDF4.Dataset(os.path.join(data_dir, filename)) as dataset:
+                            timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                            times = netCDF4tools.num2date(timevar[:], timevar.units)
+                            valid_times.extend(times)
                         self.save_valid_cache(filename, times)
 
         valid_times.sort()
@@ -646,10 +644,9 @@ class MeteosatDataAccess(NWPDataAccess):
 
             if match:
                 filename = os.path.join(self._root_path, f)
-                dataset = netCDF4.Dataset(filename)
-                timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                init_time = netCDF4tools.num2date(0, timevar.units)
-                dataset.close()
+                with netCDF4.Dataset(filename) as dataset:
+                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                    init_time = netCDF4tools.num2date(0, timevar.units)
 
                 init_times.append(init_time)
 
@@ -677,11 +674,10 @@ class MeteosatDataAccess(NWPDataAccess):
                 if cached_valid_times is not None:
                     valid_times.extend(cached_valid_times)
                 else:
-                    dataset = netCDF4.Dataset(filename)
-                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                    times = netCDF4tools.num2date(timevar[:], timevar.units)
-                    valid_times.extend(times)
-                    dataset.close()
+                    with netCDF4.Dataset(filename) as dataset :
+                        timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                        times = netCDF4tools.num2date(timevar[:], timevar.units)
+                        valid_times.extend(times)
                     self.save_valid_cache(filename, times)
 
         return valid_times
@@ -803,11 +799,10 @@ class MSSChemDataAccess(NWPDataAccess):
             if cached_valid_times is not None:
                 valid_times.extend(cached_valid_times)
             else:
-                dataset = netCDF4.Dataset(filename)
-                timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                times = netCDF4tools.num2date(timevar[:], timevar.units)
-                valid_times.extend(times)
-                dataset.close()
+                with netCDF4.Dataset(filename) as dataset:
+                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                    times = netCDF4tools.num2date(timevar[:], timevar.units)
+                    valid_times.extend(times)
                 self.save_valid_cache(filename, times)
 
         return valid_times
