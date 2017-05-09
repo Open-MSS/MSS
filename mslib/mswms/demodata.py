@@ -577,11 +577,9 @@ def _parse_text(text, entry_length):
     """
     result = {}
     lines = text.split("\n")
-    print len(lines)
     for i in range(0, len(lines), entry_length):
         name = lines[i]
         unit = lines[i + 1]
-        print i, name, unit
         data = np.asarray([list(map(float, line.split())) for line in lines[i + 2:i + entry_length]])
         result[name] = {"unit": unit, "data": data}
     return result
