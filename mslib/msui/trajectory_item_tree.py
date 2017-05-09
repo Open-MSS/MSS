@@ -552,7 +552,7 @@ class LagrantoOutputItem(LagrantoMapItem):
         for i, (trajectory, metadata) in enumerate(zip(self.loutput.data,
                                                        self.loutput.meta)):
             trname = "{:04d} ".format(i)
-            if "startcoordinates" in metadata.keys():
+            if "startcoordinates" in metadata:
                 trname += unicode(
                     [u"{:.2f}".format(r) for r in metadata["startcoordinates"]]).replace('\'', '')
             TrajectoryItem(trname, True, self, trajectory, metadata)
@@ -589,7 +589,7 @@ class TrajectoryItem(LagrantoMapItem):
         #
         # Add all variable names contained in self.data as child nodes, so
         # that they are added to the tree view.
-        for variable in self.data.keys():
+        for variable in self.data:
             #
             # Per default, plot only variables listed here in a new time
             # series window.

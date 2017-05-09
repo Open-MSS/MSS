@@ -52,7 +52,7 @@ class NWPDataAccess(object):
        in which data file a given variable at a given time can be found.
 
     The class provides the method get_filename(). It derives filenames from
-    CF variable names, initialisation and valid times.
+    CF variable names, initialisation and valid times.q
     The method get_datapath() provides the root path where the data
     can be found.
 
@@ -298,7 +298,7 @@ class ECMWFDataAccess(NWPDataAccess):
                 break
 
         # Substitute variable identifiers in the template filename.
-        if variable_dict is not None and vartype not in variable_dict.keys():
+        if variable_dict is not None and vartype not in variable_dict:
             raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
@@ -351,9 +351,9 @@ class ECMWFDataAccess(NWPDataAccess):
                 dtime = datetime.strptime(dtime, "%Y%m%d%H")
 
                 # Insert the filename into the tree.
-                if dtime not in filetree.keys():
+                if dtime not in filetree:
                     filetree[dtime] = {}
-                if step not in filetree[dtime].keys():
+                if step not in filetree[dtime]:
                     filetree[dtime][step] = {}
                 filetree[dtime][step][var] = filename
 
@@ -363,7 +363,7 @@ class ECMWFDataAccess(NWPDataAccess):
         """Returns a list of available forecast init times (base times).
         """
         filetree = self.build_filetree()
-        init_times = filetree.keys()
+        init_times = list(filetree.keys())
         init_times.sort()
         return init_times
 
@@ -404,7 +404,7 @@ class ECMWFDataAccess(NWPDataAccess):
         """
         valid_times = set()
         filetree = self.build_filetree()
-        for init_time in filetree.keys():
+        for init_time in filetree:
             vtimes = self.get_valid_times(variable, vartype, init_time)
             valid_times.update(vtimes)
         return sorted(list(valid_times))
@@ -521,12 +521,12 @@ class EMACDataAccess(NWPDataAccess):
         variable_dict = self._data_organisation_table[variable]
 
         # Substitute variable identifiers in the template filename.
-        if vartype not in variable_dict.keys():
+        if vartype not in variable_dict:
             raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
         name = self._file_template % variable_dict[vartype]
-        if "replace" in variable_dict.keys():
+        if "replace" in variable_dict:
             pattern = variable_dict["replace"]
             name = name.replace(pattern[0], pattern[1])
         name = name.replace('$', '%')
@@ -728,7 +728,7 @@ class MSSChemDataAccess(NWPDataAccess):
         variable_dict = self._data_organisation_table[variable]
 
         # Substitute variable identifiers in the template filename.
-        if vartype not in variable_dict.keys():
+        if vartype not in variable_dict:
             raise ValueError("variable type %s not available for variable %s"
                              % (vartype, variable))
 
@@ -768,9 +768,9 @@ class MSSChemDataAccess(NWPDataAccess):
                                    int(m.group("day")), int(m.group("hour")))
 
                 # Insert the filename into the tree.
-                if initime not in filetree.keys():
+                if initime not in filetree:
                     filetree[initime] = {}
-                if step not in filetree[initime].keys():
+                if step not in filetree[initime]:
                     filetree[initime][step] = {}
                 filetree[initime][step][var] = filename
 
@@ -780,7 +780,7 @@ class MSSChemDataAccess(NWPDataAccess):
         """Returns a list of available forecast init times (base times).
         """
         filetree = self.build_filetree()
-        init_times = filetree.keys()
+        init_times = list(filetree.keys())
         init_times.sort()
         return init_times
 
@@ -813,7 +813,7 @@ class MSSChemDataAccess(NWPDataAccess):
         """
         valid_times = set()
         filetree = self.build_filetree()
-        for init_time in filetree.keys():
+        for init_time in filetree:
             vtimes = self.get_valid_times(variable, vartype, init_time)
             valid_times.update(vtimes)
         return sorted(list(valid_times))

@@ -362,7 +362,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         for f in files[1:]:
             part = netCDF4.Dataset(f)
             # Make sure dimension of new dataset are contained in the master.
-            for dimName in part.dimensions.keys():
+            for dimName in part.dimensions:
                 # (..except those that shall not be tested..)
                 if dimName not in skipDimCheck:
                     if dimName not in masterDims:

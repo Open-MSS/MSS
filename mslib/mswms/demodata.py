@@ -582,7 +582,7 @@ def _parse_text(text, entry_length):
         name = lines[i]
         unit = lines[i + 1]
         print i, name, unit
-        data = np.asarray([map(float, line.split()) for line in lines[i + 2:i + entry_length]])
+        data = np.asarray([list(map(float, line.split())) for line in lines[i + 2:i + entry_length]])
         result[name] = {"unit": unit, "data": data}
     return result
 
