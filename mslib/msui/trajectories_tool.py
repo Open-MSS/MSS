@@ -298,7 +298,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         try:
             self.traj_item_tree.changeItemGxProperty_list(indices, 'general',
                                                           'colour', colour)
-        except Exception, ex:
+        except Exception as ex:
             QtWidgets.QMessageBox.warning(self, self.tr('item colour'), self.tr(str(ex)))
 
     def setCurrentItemLineStyle(self):
@@ -317,7 +317,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         try:
             self.traj_item_tree.changeItemGxProperty_list(indices, "general",
                                                           "linestyle", lineStyle)
-        except Exception, ex:
+        except Exception as ex:
             QtWidgets.QMessageBox.warning(self, self.tr('item line style'), self.tr(u"{} {}".format(type(ex), ex)))
 
     def setCurrentItemLineWidth(self):
@@ -334,7 +334,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         try:
             self.traj_item_tree.changeItemGxProperty_list(indices, "general",
                                                           "linewidth", lineWidth)
-        except Exception, ex:
+        except Exception as ex:
             QtWidgets.QMessageBox.warning(self, self.tr('item line width'), self.tr(u"{} {}".format(type(ex), ex)))
 
     def setCurrentItemTimeMarker(self):
@@ -392,7 +392,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
                 if not first_index:
                     first_index = index
                 last_index = index
-            except Exception, ex:
+            except Exception as ex:
                 QtWidgets.QMessageBox.warning(self, self.tr("Time marker"), self.tr(u"{} {}".format(type(ex), ex)))
 
         self.traj_item_tree.emitChange(first_index, last_index, mode="MARKER_CHANGE")

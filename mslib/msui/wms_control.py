@@ -287,7 +287,7 @@ class WMSMapFetcher(QtCore.QObject):
         try:
             map_img = self.fetch_map(kwargs, use_cache, md5_filename)
             legend_img = self.fetch_legend(use_cache=use_cache, **legend_kwargs)
-        except Exception, ex:
+        except Exception as ex:
             logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
             # emit finished so progress dialog will be closed
             self.finished.emit(None, None, None, None, None, None, md5_filename)
@@ -630,7 +630,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         base_url = unicode(self.cbWMS_URL.currentText())
         try:
             request = requests.get(base_url)
-        except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL), ex:
+        except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as ex:
             logging.error("cannot load capabilities document.\n"
                           "no layers can be used in this view.")
             QtWidgets.QMessageBox.critical(

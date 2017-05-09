@@ -130,7 +130,7 @@ class NWPDataAccess(object):
             try:
                 with open(filename, "r") as fileobj:
                     valid_times = pickle.load(fileobj)
-            except (pickle.UnpicklingError, OSError, IOError), ex:
+            except (pickle.UnpicklingError, OSError, IOError) as ex:
                 logging.error(u"Error reading cache file '{}': {} - {}".format(filename, type(ex), ex))
                 logging.error(u"os.stat: {}".format(os.stat(filename)))
 
@@ -146,7 +146,7 @@ class NWPDataAccess(object):
             try:
                 with open(filename, "w") as fileobj:
                     pickle.dump(valid_times, fileobj)
-            except (pickle.PicklingError, OSError, IOError), ex:
+            except (pickle.PicklingError, OSError, IOError) as ex:
                 logging.error(u"Error writing cache file '{}': {} - {}".format(filename, type(ex), ex))
 
     def serviceCache(self):
@@ -179,7 +179,7 @@ class NWPDataAccess(object):
             if (cum_size_bytes > valid_time_cache_max_size_bytes) or fileage > valid_time_cache_max_age_seconds:
                 try:
                     os.remove(filename)
-                except (OSError, IOError), ex:
+                except (OSError, IOError) as ex:
                     logging.error(u"Could not remove {:}: {:} - {:}".format(filename, type(ex), ex))
                     logging.error(u"os.stat: {}".format(os.stat(filename)))
                 else:

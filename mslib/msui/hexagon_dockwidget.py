@@ -150,5 +150,5 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
             else:
                 raise HexagonException("Cannot remove hexagon, please select a hexagon "
                                        "waypoint ('Hexagon x' in comments field)")
-        except HexagonException, ex:
+        except HexagonException as ex:
             QtWidgets.QMessageBox.warning(self, "Remove hexagon", str(ex))

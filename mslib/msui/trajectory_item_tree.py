@@ -108,7 +108,7 @@ class AbstractLagrantoDataItem:
                 return str(self.gxElements['general']['colour']) + '/' + str(
                     self.gxElements['general']['linestyle']) + '/' + str(
                         self.gxElements['general']['linewidth'])
-            except Exception, ex:
+            except Exception as ex:
                 logging.debug(u"caught a wildcard Exception: {}, {}".format(type(ex), ex))
                 return ''
         elif column == 3:
@@ -116,7 +116,7 @@ class AbstractLagrantoDataItem:
             s = ''
             try:
                 s += u'time({})'.format(self.gxElements['general']['timeMarkerInterval'].strftime('%H:%M'))
-            except Exception, ex:
+            except Exception as ex:
                 logging.debug(u"caught a wildcard Exception: {}, {}".format(type(ex), ex))
             return s
         else:
@@ -476,7 +476,7 @@ class FlightTrackItem(LagrantoMapItem):
         try:
             self.nafile = nappy.openNAFile(self.nasFileName)
             self.nafile.readData()
-        except TypeError, ex:  # catch TypeError as nappy itself triggers Exception when raising
+        except TypeError as ex:  # catch TypeError as nappy itself triggers Exception when raising
             self.nafile = None
             logging.error(u"%s %s", type(ex), ex)
             return

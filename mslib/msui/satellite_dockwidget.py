@@ -147,7 +147,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
 
         try:
             overpass_segments = read_nasa_satellite_prediction(filename)
-        except (IOError, OSError, ValueError), ex:
+        except (IOError, OSError, ValueError) as ex:
             logging.error(u"Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
                                            self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))

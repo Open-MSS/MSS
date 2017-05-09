@@ -54,7 +54,7 @@ from chameleon import PageTemplateLoader
 
 try:
     import mss_wms_settings
-except ImportError, ex:
+except ImportError as ex:
     logging.warning(u"Couldn't import mss_wms_settings (ImportError:'{}'), creating dummy config.".format(ex))
 
     class mss_wms_settings(object):
@@ -83,7 +83,7 @@ except ImportError, ex:
 
 try:
     import mss_wms_auth
-except ImportError, ex:
+except ImportError as ex:
     logging.warning(u"Couldn't import mss_wms_auth (ImportError:'{}'), creating dummy config.".format(ex))
 
     class mss_wms_auth(object):
