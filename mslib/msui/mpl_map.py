@@ -135,7 +135,7 @@ class MapCanvas(basemap.Basemap):
         if self.appearance["draw_graticule"]:
             try:
                 self._draw_auto_graticule()
-            except Exception, ex:
+            except Exception as ex:
                 logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
         else:
             self.map_parallels = None
@@ -878,7 +878,7 @@ class SatelliteOverpassPatch(object):
             # the plots look fine nevertheless.
             try:
                 element.remove()
-            except Exception, ex:
+            except Exception as ex:
                 logging.error("Wildcard exception caught: %s %s", type(ex), ex)
 
 

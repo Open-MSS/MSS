@@ -50,6 +50,7 @@ from mslib.utils import get_projection_params
 BASEMAP_CACHE = {}
 BASEMAP_REQUESTS = []
 
+
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     """Abstract horizontal section super class. Use this class as a parent
        to classes implementing different plotting backends. For example,
@@ -71,18 +72,18 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
     name = "BASEMAP"
     title = "Matplotlib basemap"
 
-    def _plot_style(self, style=None):
+    def _plot_style(self):
         """Overwrite this method to plot style-specific data on the map.
         """
         pass
 
     def supported_epsg_codes(self):
-        return mss_wms_settings.epsg_to_mpl_basemap_table.keys()
+        return list(mss_wms_settings.epsg_to_mpl_basemap_table.keys())
 
     def support_epsg_code(self, epsg):
         """Returns a list of supported EPSG codes.
         """
-        return (epsg in mss_wms_settings.epsg_to_mpl_basemap_table.keys() or
+        return (epsg in mss_wms_settings.epsg_to_mpl_basemap_table or
                 get_projection_params(str(epsg)) is not None)
 
     def supported_crs(self):
@@ -219,7 +220,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
-            if dataitem not in data.keys():
+            if dataitem not in data:
                 raise KeyError(u"required data field '{}' not found".format(dataitem))
 
         # Copy parameters to properties.
@@ -404,7 +405,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.lons = self.lons[lon_indices]
 
         # Shift data fields correspondingly.
-        for key in self.data.keys():
+        for key in self.data:
             self.data[key] = self.data[key][:, lon_indices]
 
     def mask_data(self):
@@ -431,6 +432,6 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         mask4 = y < self.bm.ymin - add_y
         mask = mask1 + mask2 + mask3 + mask4
         # mask data arrays.
-        for key in self.data.keys():
+        for key in self.data:
             self.data[key] = np.ma.masked_array(self.data[key],
                                                 mask=mask, keep_mask=False)

@@ -194,10 +194,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
-
         u = owslib.util.openURL(base_url, data, method,
-                                      username=self.username,
-                                      password=self.password)
+                                username=self.username, password=self.password)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -214,7 +212,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         return u
 
     def get_redirect_url(self, method="Get"):
-        #return self.getOperationByName("GetMap").methods[method]["url"]
+        # return self.getOperationByName("GetMap").methods[method]["url"]
         # ToDo redirect broken
         return self.getOperationByName("GetMap").methods[0]["url"]
 
@@ -287,7 +285,7 @@ class WMSMapFetcher(QtCore.QObject):
         try:
             map_img = self.fetch_map(kwargs, use_cache, md5_filename)
             legend_img = self.fetch_legend(use_cache=use_cache, **legend_kwargs)
-        except Exception, ex:
+        except Exception as ex:
             logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
             # emit finished so progress dialog will be closed
             self.finished.emit(None, None, None, None, None, None, md5_filename)
@@ -317,7 +315,7 @@ class WMSMapFetcher(QtCore.QObject):
             img = PIL.Image.open(image_io)
             # Check if the image is stored as indexed palette
             # with a transparent colour. Store correspondingly.
-            if img.mode == "P" and "transparency" in img.info.keys():
+            if img.mode == "P" and "transparency" in img.info:
                 img.save(md5_filename, transparency=img.info["transparency"])
             else:
                 img.save(md5_filename)
@@ -630,10 +628,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         base_url = unicode(self.cbWMS_URL.currentText())
         try:
             request = requests.get(base_url)
-        except requests.exceptions.ConnectionError:
-            request = None
-
-        if request is not None:
+        except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as ex:
+            logging.error("cannot load capabilities document.\n"
+                          "no layers can be used in this view.")
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("Web Map Service"),
+                self.tr(u"ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
+        else:
             logging.debug(u"requesting capabilities from %s", request.url)
             wms = self.initialiseWMS(request.url)
             if wms is not None:
@@ -768,7 +769,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         if self.wms is None:
             return None
-        if layername in self.wms.contents.keys():
+        if layername in self.wms.contents:
             return self.wms.contents[layername]
         else:
             stack = self.wms.contents.values()
@@ -815,7 +816,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # ~~~~ A) Elevation. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         lobj = layerobj
         while lobj is not None:
-            if "elevation" in lobj.dimensions.keys() and "elevation" in lobj.extents.keys():
+            if "elevation" in lobj.dimensions and "elevation" in lobj.extents:
                 units = lobj.dimensions["elevation"]["units"]
                 elev_list = [u"{} ({})".format(e.strip(), units) for e in
                              lobj.extents["elevation"]["values"]]
@@ -834,11 +835,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         lobj = layerobj
         while lobj is not None:
-            if "init_time" in lobj.dimensions.keys() and "init_time" in lobj.extents.keys():
+            if "init_time" in lobj.dimensions and "init_time" in lobj.extents:
                 # MSS web map service.
                 self.init_time_name = "init_time"
                 enable_inittime = True
-            elif "run" in lobj.dimensions.keys() and "run" in lobj.extents.keys():
+            elif "run" in lobj.dimensions and "run" in lobj.extents:
                 # IBL web map service.
                 self.init_time_name = "run"
                 enable_inittime = True
@@ -874,14 +875,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         lobj = layerobj
         while lobj is not None:
 
-            if "time" in lobj.dimensions.keys() and "time" in lobj.extents.keys():
+            if "time" in lobj.dimensions and "time" in lobj.extents:
                 self.valid_time_name = "time"
                 enable_validtime = True
-            elif "time" in lobj.dimensions.keys():
+            elif "time" in lobj.dimensions:
                 enable_validtime = True
                 self.valid_time_name = "time"
                 vtime_no_extent = True
-            elif "forecast" in lobj.dimensions.keys() and "forecast" in lobj.extents.keys():
+            elif "forecast" in lobj.dimensions and "forecast" in lobj.extents:
                 # IBL web map service.
                 self.valid_time_name = "forecast"
                 enable_validtime = True
@@ -1327,7 +1328,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         style = self.getStyle()
         layerobj = self.get_layer_object(layer)
         urlstr = None
-        if style != "" and "legend" in layerobj.styles[style].keys():
+        if style != "" and "legend" in layerobj.styles[style]:
             urlstr = layerobj.styles[style]["legend"]
 
         return urlstr

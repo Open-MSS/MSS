@@ -94,7 +94,7 @@ class Waypoint(object):
     def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
         self.location = location
         locations = config_loader(dataset='locations', default=mss_default.locations)
-        if location in locations.keys():
+        if location in locations:
             self.lat, self.lon = locations[location]
         else:
             self.lat = lat
@@ -625,8 +625,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                             wp.location != ""]:
                     if loc not in adds:
                         adds.append(loc)
-                adds = sorted(adds)
-            combobox.addItems(adds)
+            combobox.addItems(sorted(adds))
 
             combobox.setEditable(True)
             return combobox
@@ -654,7 +653,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         if index.column() == LOCATION:
             loc = unicode(editor.currentText())
             locations = config_loader(dataset='locations', default=mss_default.locations)
-            if loc in locations.keys():
+            if loc in locations:
                 lat, lon = locations[loc]
                 # Don't update distances and flight performance twice, hence
                 # set update=False for LAT.

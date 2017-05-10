@@ -161,7 +161,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         # Check if required data is available.
         for datatype, dataitem in self.required_datafields:
-            if dataitem not in data.keys():
+            if dataitem not in data:
                 raise KeyError(u"required data field '{}' not found".format(dataitem))
 
         # Copy parameters to properties.
@@ -305,7 +305,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # Variable data.
             data_node = xmldoc.createElement("Data")
 
-            for var in self.data.keys():
+            for var in self.data:
                 node = xmldoc.createElement(var)
                 data_shape = self.data[var].shape
                 node.setAttribute("num_levels", u"{}".format(data_shape[0]))

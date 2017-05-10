@@ -99,9 +99,9 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
             self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
             self.dsbFuel.setValue(self.aircraft.fuel)
 
-        except KeyError, ex:
+        except KeyError as ex:
             QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
                                            self.tr(u"JSON File missing '{}' entry".format(ex)))
-        except (FatalUserError, ValueError), ex:
+        except (FatalUserError, ValueError) as ex:
             QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
                                            self.tr(u"JSON File has Syntax Problems:\n{}".format(ex)))

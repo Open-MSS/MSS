@@ -82,7 +82,8 @@ class Test_NWPDataAccess(object):
         else:
             if valid_cache is not None:
                 # follow up test can remove a cache file
-                assert datetime(2012, 10, 17, 12, 0) in valid_cache
+                assert datetime(2012, 10, 17, 12, 0) in valid_cache, \
+                    (type(valid_cache), valid_cache)
 
     def test_save_valid_cache(self):
         filename = self.ECMWFDataAccess.get_filename("air_pressure", "ml",

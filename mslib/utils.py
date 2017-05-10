@@ -77,12 +77,12 @@ def config_loader(config_file=None, dataset=None, default=None):
     try:
         with open(os.path.join(config_file)) as source:
             data = json.load(source)
-    except (AttributeError, IOError, TypeError), ex:
+    except (AttributeError, IOError, TypeError) as ex:
         logging.error(u"MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
         if default is not None:
             return default
         raise IOError("MSS config File not found")
-    except ValueError, ex:
+    except ValueError as ex:
         error_message = u"MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
         raise FatalUserError(error_message)
     if dataset:
@@ -144,7 +144,7 @@ def save_settings_pickle(tag, settings):
     try:
         with open(settingsfile, "w") as fileobj:
             pickle.dump(settings, fileobj)
-    except (OSError, IOError), ex:
+    except (OSError, IOError) as ex:
         logging.warn("Problems storing %s settings (%s: %s).", tag, type(ex), ex)
 
 
@@ -167,7 +167,7 @@ def load_settings_pickle(tag, default_settings=None):
     try:
         with open(settingsfile, "r") as fileobj:
             settings = pickle.load(fileobj)
-    except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError), ex:
+    except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError) as ex:
         logging.warn("Problems reloading stored %s settings (%s: %s). Switching to default",
                      tag, type(ex), ex)
         settings = {}
@@ -495,7 +495,7 @@ def setup_logging(args):
         logfile = args.logfile
         try:
             fh = logging.FileHandler(logfile, "w")
-        except (OSError, IOError), ex:
+        except (OSError, IOError) as ex:
             logger.error("Could not open logfile '%s': %s %s", logfile, type(ex), ex)
         else:
             logger.setLevel(logging.DEBUG)

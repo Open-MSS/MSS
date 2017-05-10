@@ -511,7 +511,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         self.lons = self.lons[lon_indices]
 
         # Shift data fields correspondingly.
-        for key in self.data.keys():
+        for key in self.data:
             self.data[key] = self.data[key][:, lon_indices]
 
     def plot(self):

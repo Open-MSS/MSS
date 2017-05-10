@@ -61,7 +61,7 @@ import cgi
 import xml.etree.ElementTree as etree
 
 from urllib import urlencode
-from owslib.util import openURL
+from owslib.util import openURL, ServiceException
 from collections import OrderedDict
 from owslib.map import wms111
 
