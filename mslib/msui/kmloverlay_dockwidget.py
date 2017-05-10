@@ -138,7 +138,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.cbOverlay.setEnabled(True)
             if self.view is not None and self.cbOverlay.isChecked():
                 self.view.plotKML(self.patch)
-        except (IOError, pykml.parser.etree.XMLSyntaxError), ex:
+        except (IOError, pykml.parser.etree.XMLSyntaxError) as ex:
             logging.error("KML Overlay - %s: %s", type(ex), ex)
             QtWidgets.QMessageBox.critical(
                 self, self.tr("KML Overlay"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))

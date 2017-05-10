@@ -243,7 +243,6 @@ class Test_TopViewWMS(object):
         QtWidgets.QApplication.processEvents()
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
-        print self.window.docks
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.cbWMS_URL.setEditText("")
 

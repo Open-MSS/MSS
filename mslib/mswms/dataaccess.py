@@ -52,7 +52,7 @@ class NWPDataAccess(object):
        in which data file a given variable at a given time can be found.
 
     The class provides the method get_filename(). It derives filenames from
-    CF variable names, initialisation and valid times.
+    CF variable names, initialisation and valid times.q
     The method get_datapath() provides the root path where the data
     can be found.
 
@@ -130,7 +130,7 @@ class NWPDataAccess(object):
             try:
                 with open(filename, "r") as fileobj:
                     valid_times = pickle.load(fileobj)
-            except (pickle.UnpicklingError, OSError, IOError), ex:
+            except (pickle.UnpicklingError, OSError, IOError) as ex:
                 logging.error(u"Error reading cache file '{}': {} - {}".format(filename, type(ex), ex))
                 logging.error(u"os.stat: {}".format(os.stat(filename)))
 
@@ -146,7 +146,7 @@ class NWPDataAccess(object):
             try:
                 with open(filename, "w") as fileobj:
                     pickle.dump(valid_times, fileobj)
-            except (pickle.PicklingError, OSError, IOError), ex:
+            except (pickle.PicklingError, OSError, IOError) as ex:
                 logging.error(u"Error writing cache file '{}': {} - {}".format(filename, type(ex), ex))
 
     def serviceCache(self):
@@ -179,7 +179,7 @@ class NWPDataAccess(object):
             if (cum_size_bytes > valid_time_cache_max_size_bytes) or fileage > valid_time_cache_max_age_seconds:
                 try:
                     os.remove(filename)
-                except (OSError, IOError), ex:
+                except (OSError, IOError) as ex:
                     logging.error(u"Could not remove {:}: {:} - {:}".format(filename, type(ex), ex))
                     logging.error(u"os.stat: {}".format(os.stat(filename)))
                 else:
@@ -298,7 +298,7 @@ class ECMWFDataAccess(NWPDataAccess):
                 break
 
         # Substitute variable identifiers in the template filename.
-        if variable_dict is not None and vartype not in variable_dict.keys():
+        if variable_dict is not None and vartype not in variable_dict:
             raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
@@ -351,9 +351,9 @@ class ECMWFDataAccess(NWPDataAccess):
                 dtime = datetime.strptime(dtime, "%Y%m%d%H")
 
                 # Insert the filename into the tree.
-                if dtime not in filetree.keys():
+                if dtime not in filetree:
                     filetree[dtime] = {}
-                if step not in filetree[dtime].keys():
+                if step not in filetree[dtime]:
                     filetree[dtime][step] = {}
                 filetree[dtime][step][var] = filename
 
@@ -363,7 +363,7 @@ class ECMWFDataAccess(NWPDataAccess):
         """Returns a list of available forecast init times (base times).
         """
         filetree = self.build_filetree()
-        init_times = filetree.keys()
+        init_times = list(filetree.keys())
         init_times.sort()
         return init_times
 
@@ -388,11 +388,12 @@ class ECMWFDataAccess(NWPDataAccess):
                 if cached_valid_times is not None:
                     valid_times.extend(cached_valid_times)
                 else:
-                    dataset = netCDF4.Dataset(filename)
-                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                    times = netCDF4tools.num2date(timevar[:], timevar.units)
-                    valid_times.extend(times)
-                    dataset.close()
+                    with netCDF4.Dataset(filename) as dataset:
+                        timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                        if len(timevar) < 2:
+                            raise RuntimeError("This doesn't work here?!")
+                        times = netCDF4tools.num2date(timevar[:], timevar.units)
+                        valid_times.extend(times)
                     self.save_valid_cache(filename, times)
 
         return valid_times
@@ -403,7 +404,7 @@ class ECMWFDataAccess(NWPDataAccess):
         """
         valid_times = set()
         filetree = self.build_filetree()
-        for init_time in filetree.keys():
+        for init_time in filetree:
             vtimes = self.get_valid_times(variable, vartype, init_time)
             valid_times.update(vtimes)
         return sorted(list(valid_times))
@@ -520,12 +521,12 @@ class EMACDataAccess(NWPDataAccess):
         variable_dict = self._data_organisation_table[variable]
 
         # Substitute variable identifiers in the template filename.
-        if vartype not in variable_dict.keys():
+        if vartype not in variable_dict:
             raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
         name = self._file_template % variable_dict[vartype]
-        if "replace" in variable_dict.keys():
+        if "replace" in variable_dict:
             pattern = variable_dict["replace"]
             name = name.replace(pattern[0], pattern[1])
         name = name.replace('$', '%')
@@ -572,11 +573,10 @@ class EMACDataAccess(NWPDataAccess):
                     if cached_valid_times is not None:
                         valid_times.extend(cached_valid_times)
                     else:
-                        dataset = netCDF4.Dataset(os.path.join(data_dir, filename))
-                        timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                        times = netCDF4tools.num2date(timevar[:], timevar.units)
-                        valid_times.extend(times)
-                        dataset.close()
+                        with netCDF4.Dataset(os.path.join(data_dir, filename)) as dataset:
+                            timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                            times = netCDF4tools.num2date(timevar[:], timevar.units)
+                            valid_times.extend(times)
                         self.save_valid_cache(filename, times)
 
         valid_times.sort()
@@ -644,10 +644,9 @@ class MeteosatDataAccess(NWPDataAccess):
 
             if match:
                 filename = os.path.join(self._root_path, f)
-                dataset = netCDF4.Dataset(filename)
-                timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                init_time = netCDF4tools.num2date(0, timevar.units)
-                dataset.close()
+                with netCDF4.Dataset(filename) as dataset:
+                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                    init_time = netCDF4tools.num2date(0, timevar.units)
 
                 init_times.append(init_time)
 
@@ -675,11 +674,10 @@ class MeteosatDataAccess(NWPDataAccess):
                 if cached_valid_times is not None:
                     valid_times.extend(cached_valid_times)
                 else:
-                    dataset = netCDF4.Dataset(filename)
-                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                    times = netCDF4tools.num2date(timevar[:], timevar.units)
-                    valid_times.extend(times)
-                    dataset.close()
+                    with netCDF4.Dataset(filename) as dataset:
+                        timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                        times = netCDF4tools.num2date(timevar[:], timevar.units)
+                        valid_times.extend(times)
                     self.save_valid_cache(filename, times)
 
         return valid_times
@@ -730,7 +728,7 @@ class MSSChemDataAccess(NWPDataAccess):
         variable_dict = self._data_organisation_table[variable]
 
         # Substitute variable identifiers in the template filename.
-        if vartype not in variable_dict.keys():
+        if vartype not in variable_dict:
             raise ValueError("variable type %s not available for variable %s"
                              % (vartype, variable))
 
@@ -770,9 +768,9 @@ class MSSChemDataAccess(NWPDataAccess):
                                    int(m.group("day")), int(m.group("hour")))
 
                 # Insert the filename into the tree.
-                if initime not in filetree.keys():
+                if initime not in filetree:
                     filetree[initime] = {}
-                if step not in filetree[initime].keys():
+                if step not in filetree[initime]:
                     filetree[initime][step] = {}
                 filetree[initime][step][var] = filename
 
@@ -782,7 +780,7 @@ class MSSChemDataAccess(NWPDataAccess):
         """Returns a list of available forecast init times (base times).
         """
         filetree = self.build_filetree()
-        init_times = filetree.keys()
+        init_times = list(filetree.keys())
         init_times.sort()
         return init_times
 
@@ -801,11 +799,10 @@ class MSSChemDataAccess(NWPDataAccess):
             if cached_valid_times is not None:
                 valid_times.extend(cached_valid_times)
             else:
-                dataset = netCDF4.Dataset(filename)
-                timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                times = netCDF4tools.num2date(timevar[:], timevar.units)
-                valid_times.extend(times)
-                dataset.close()
+                with netCDF4.Dataset(filename) as dataset:
+                    timename, timevar = netCDF4tools.identify_CF_time(dataset)
+                    times = netCDF4tools.num2date(timevar[:], timevar.units)
+                    valid_times.extend(times)
                 self.save_valid_cache(filename, times)
 
         return valid_times
@@ -816,7 +813,7 @@ class MSSChemDataAccess(NWPDataAccess):
         """
         valid_times = set()
         filetree = self.build_filetree()
-        for init_time in filetree.keys():
+        for init_time in filetree:
             vtimes = self.get_valid_times(variable, vartype, init_time)
             valid_times.update(vtimes)
         return sorted(list(valid_times))

@@ -229,7 +229,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             extension, module, function = self._imported_plugins[name]
             try:
                 imported_module = importlib.import_module(module)
-            except Exception, ex:
+            except Exception as ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
@@ -237,7 +237,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 continue
             try:
                 self.addImportFilter(name, extension, getattr(imported_module, function))
-            except AttributeError, ex:
+            except AttributeError as ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
@@ -249,7 +249,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             extension, module, function = self._exported_plugins[name]
             try:
                 imported_module = importlib.import_module(module)
-            except Exception, ex:
+            except Exception as ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
@@ -257,7 +257,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 continue
             try:
                     self.addExportFilter(name, extension, getattr(imported_module, function))
-            except Exception, ex:
+            except Exception as ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error"),
                     self.tr(u"ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
@@ -299,7 +299,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
-                except (SyntaxError, IndexError, OSError, IOError), ex:
+                except (SyntaxError, IndexError, OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(u"ERROR: {} {}".format(type(ex), ex)))
@@ -335,7 +335,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
-                except (OSError, IOError), ex:
+                except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(u"ERROR: {} {}".format(type(ex), ex)))

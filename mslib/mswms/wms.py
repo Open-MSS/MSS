@@ -54,7 +54,7 @@ from chameleon import PageTemplateLoader
 
 try:
     import mss_wms_settings
-except ImportError, ex:
+except ImportError as ex:
     logging.warning(u"Couldn't import mss_wms_settings (ImportError:'{}'), creating dummy config.".format(ex))
 
     class mss_wms_settings(object):
@@ -83,7 +83,7 @@ except ImportError, ex:
 
 try:
     import mss_wms_auth
-except ImportError, ex:
+except ImportError as ex:
     logging.warning(u"Couldn't import mss_wms_auth (ImportError:'{}'), creating dummy config.".format(ex))
 
     class mss_wms_auth(object):
@@ -111,13 +111,13 @@ class WMSServer(object):
     def __init__(self, data_access_dict):
         self.hsec_layer_registry = {}
         self.hsec_drivers = {}
-        for key in data_access_dict.keys():
+        for key in data_access_dict:
             self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
                 data_access_dict[key])
 
         self.vsec_layer_registry = {}
         self.vsec_drivers = {}
-        for key in data_access_dict.keys():
+        for key in data_access_dict:
             self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
                 data_access_dict[key])
 
@@ -138,8 +138,8 @@ class WMSServer(object):
                           "dataset '{}'".format(layer.name, dataset))
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
-            if dataset not in self.hsec_layer_registry.keys():
-                if dataset in self.hsec_drivers.keys():
+            if dataset not in self.hsec_layer_registry:
+                if dataset in self.hsec_drivers:
                     self.hsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError(u"dataset '{}' not available".format(dataset))
@@ -159,8 +159,8 @@ class WMSServer(object):
             logging.debug(u"registering vertical section layer '{}' with dataset '{}'".format(layer.name, dataset))
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
-            if dataset not in self.vsec_layer_registry.keys():
-                if dataset in self.vsec_drivers.keys():
+            if dataset not in self.vsec_layer_registry:
+                if dataset in self.vsec_drivers:
                     self.vsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError(u"dataset '{}' not available".format(dataset))
@@ -196,7 +196,7 @@ class WMSServer(object):
 
         # Horizontal Layers
         hsec_layers = []
-        for dataset in self.hsec_layer_registry.keys():
+        for dataset in self.hsec_layer_registry:
             for layer in self.hsec_layer_registry[dataset].values():
                 if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
                     logging.error("layer %s/%s has no init times!", layer, dataset)
@@ -208,7 +208,7 @@ class WMSServer(object):
 
         # Vertical Layers
         vsec_layers = []
-        for dataset in self.vsec_layer_registry.keys():
+        for dataset in self.vsec_layer_registry:
             for layer in self.vsec_layer_registry[dataset].values():
                 if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
                     logging.error("layer %s/%s has no init times!", layer, dataset)
@@ -345,8 +345,8 @@ class WMSServer(object):
         if mode == "GetMap":
 
             # Check requested layer.
-            if (dataset not in self.hsec_layer_registry.keys()) or \
-               (layer not in self.hsec_layer_registry[dataset].keys()):
+            if (dataset not in self.hsec_layer_registry) or \
+               (layer not in self.hsec_layer_registry[dataset]):
                 msg = u"Invalid LAYER '{}.{}' requested".format(dataset, layer)
                 logging.error(msg)
                 return self.service_exception(code="LayerNotDefined", text=msg)
@@ -430,8 +430,8 @@ class WMSServer(object):
             logging.debug(u"VSEC PATH: {}".format(path))
 
             # Check requested layers.
-            if (dataset not in self.vsec_layer_registry.keys()) or \
-                    (layer not in self.vsec_layer_registry[dataset].keys()):
+            if (dataset not in self.vsec_layer_registry) or \
+                    (layer not in self.vsec_layer_registry[dataset]):
                 msg = u"Invalid LAYER '{}.{}' requested".format(dataset, layer)
                 return self.service_exception(code="LayerNotDefined", text=msg)
 
@@ -513,7 +513,7 @@ def application(environ, start_response):
         url = paste.request.construct_url(environ)
         server_url = urlparse.urljoin(url, urlparse.urlparse(url).path)
 
-        if url in cache.keys():
+        if url in cache:
             return_format, return_data = cache[url]
         else:
             if request.lower() == 'getcapabilities':
