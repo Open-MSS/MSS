@@ -770,6 +770,25 @@ class MapCanvas(basemap.Basemap):
             # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
             # of pyproj?? (mr, 16Oct2012)
             lonlats = gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
+            # The cylindrical projection of matplotlib is not periodic, that means that
+            # -170 longitude and 190 longitude are not identical. The gc projection however
+            # assumes identity and maps all longitudes to -180 to 180. This is no issue for
+            # most other projections.
+            # The clean solution would be to have a periodic display, where the locations
+            # and path are plotted periodically every 360 degree. As long as this is not
+            # supported by matplotlib.basemap, we "hack" this to map the path to the
+            # longitude range defined by the locations. This breaks potentially down in case
+            # that the locations are too far apart (>180 degree), but this is not the typical
+            # use case and will thus hopefully not pose a problem.
+            if self.projection == "cyl":
+                lonlats = np.asarray(lonlats)
+                milon = min(lons[i], lons[i + 1])
+                malon = max(lons[i], lons[i + 1])
+                sel = lonlats[:, 0] < milon
+                lonlats[sel, 0] += 360
+                sel = lonlats[:, 0] > malon
+                lonlats[sel, 0] -= 360
+
             for lon, lat in lonlats:
                 gclons.append(lon)
                 gclats.append(lat)
