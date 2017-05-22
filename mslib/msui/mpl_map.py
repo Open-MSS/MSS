@@ -180,18 +180,14 @@ class MapCanvas(basemap.Basemap):
         # Compute some map coordinates that are required below for the automatic
         # determination of which meridians and parallels to draw.
         axis = self.ax.axis()
-        upperLeftCornerLon, upperLeftCornerLat = self.__call__(axis[0],
-                                                               axis[3],
-                                                               inverse=True)
-        lowerRightCornerLon, lowerRightCornerLat = self.__call__(axis[1],
-                                                                 axis[2],
-                                                                 inverse=True)
-        middleUpperBoundaryLon, middleUpperBoundaryLat = \
-            self.__call__(np.mean([axis[0], axis[1]]),
-                          axis[3], inverse=True)
-        middleLowerBoundaryLon, middleLowerBoundaryLat = \
-            self.__call__(np.mean([axis[0], axis[1]]),
-                          axis[2], inverse=True)
+        upperLeftCornerLon, upperLeftCornerLat = self.__call__(
+            axis[0], axis[3], inverse=True)
+        lowerRightCornerLon, lowerRightCornerLat = self.__call__(
+            axis[1], axis[2], inverse=True)
+        middleUpperBoundaryLon, middleUpperBoundaryLat = self.__call__(
+            np.mean([axis[0], axis[1]]), axis[3], inverse=True)
+        middleLowerBoundaryLon, middleLowerBoundaryLat = self.__call__(
+            np.mean([axis[0], axis[1]]), axis[2], inverse=True)
 
         # Determine which parallels and meridians should be drawn.
         #   a) determine which are the minimum and maximum visible
@@ -201,9 +197,8 @@ class MapCanvas(basemap.Basemap):
             # For stereographic projections: Draw meridians from the minimum
             # longitude contained in the map at one of the four corners to the
             # maximum longitude at one of these corner points. If
-            # the map centre is contained in the map, draw all meridians
-            # around the globe.
-            # FIXME? This is only correct for polar stereographic projections.
+            # the southern or norther pole  is contained in the map, draw all
+            # meridians around the globe.
             # Draw parallels from the min latitude contained in the map at
             # one of the four corners OR the middle top or bottom to the
             # maximum latitude at one of these six points.
@@ -215,9 +210,23 @@ class MapCanvas(basemap.Basemap):
             # use projection coordinates for this test
             centre_x = self.projparams["x_0"]
             centre_y = self.projparams["y_0"]
-            contains_centre = (centre_x < self.urcrnrx)and (centre_y < self.urcrnry)
+            centre_lon, centre_lat = self.__call__(centre_x, centre_y, inverse=True)
+            if centre_lat > 0:
+                pole_lon, pole_lat = 0, 90
+            else:
+                pole_lon, pole_lat = 0, -90
+            pole_x, pole_y = self.__call__(pole_lon, pole_lat)
+            if self.urcrnrx > self.llcrnrx:
+                contains_pole = (self.llcrnrx <= pole_x <= self.urcrnrx)
+            else:
+                contains_pole = (self.llcrnrx >= pole_x >= self.urcrnrx)
+            if self.urcrnry > self.llcrnry:
+                contains_pole = contains_pole and (self.llcrnry <= pole_y <= self.urcrnry)
+            else:
+                contains_pole = contains_pole and (self.llcrnry >= pole_y >= self.urcrnry)
+
             # merdidians
-            if contains_centre:
+            if contains_pole:
                 mapLonStart = -180.
                 mapLonStop = 180.
             else:
@@ -234,7 +243,7 @@ class MapCanvas(basemap.Basemap):
                              self.llcrnrlat,
                              middleUpperBoundaryLat, upperLeftCornerLat,
                              self.urcrnrlat)
-            if contains_centre:
+            if contains_pole:
                 centre_lat = self.projparams["lat_0"]
                 mapLatStart = min(mapLatStart, centre_lat)
                 mapLatStop = max(mapLatStop, centre_lat)
