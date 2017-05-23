@@ -6,7 +6,7 @@ Version 1.4.1
 -------------
 
 Bug Fixes:
- - changing WMS Url needs to reset some options, #17ß
+ - changing WMS Url needs to reset some options, #170
  - plugins, e.g. kml plugin can not be loaded via configuration (.json) file on any platform, #171
  - Changing map appearance deletes WMS image title, #174
 
