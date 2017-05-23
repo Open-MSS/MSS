@@ -61,7 +61,7 @@ aircraft performance. Such a file may be loaded using the 'performance settings'
 in Table View. The aircraft performance is specified using tables given in the JSON format.
 A basic configuration looks like the following file:
 
-.. literalinclude:: samples/config/mss/performance_simple.json
+.. literalinclude:: samples/config/mss/performance_simple.json.sample
 
 This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
 2900 lbs/h irrespective of flight level changes. The aircraft weight and available fuel are
