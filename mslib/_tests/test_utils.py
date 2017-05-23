@@ -25,6 +25,7 @@
     limitations under the License.
 """
 
+from builtins import object
 import datetime
 from mslib import utils
 

@@ -26,6 +26,8 @@
 """
 
 
+from builtins import range
+from builtins import object
 import sys
 import mock
 
@@ -52,7 +54,7 @@ loop_configuration = {
                 "abbrev": "geop",
                 "regions": {"Europe": "eur", "Germany": "de"},
                 "levels": [200, 250, 300, 500, 700, 850, 925],
-                "forecast_steps": range(0, 240, 3)},
+                "forecast_steps": list(range(0, 240, 3))},
         }
     }
 }

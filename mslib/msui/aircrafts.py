@@ -24,8 +24,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
 
+from builtins import object
+from past.utils import old_div
 import bisect
 import numpy as np
 
@@ -85,7 +88,7 @@ class SimpleAircraft(object):
             weight0, weight1 = 1, 0
         else:
             index0 = index1 - 1
-            weight0 = (x - xs[index1]) / (xs[index0] - xs[index1])
+            weight0 = old_div((x - xs[index1]), (xs[index0] - xs[index1]))
             weight1 = 1. - weight0
         assert 0 <= weight0 <= 1, (xs, x, weight0)
         assert 0 <= weight1 <= 1, (xs, x, weight1)

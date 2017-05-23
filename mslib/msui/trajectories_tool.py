@@ -26,6 +26,8 @@
     limitations under the License.
 """
 
+from builtins import str
+from builtins import range
 import logging
 import os
 
@@ -118,7 +120,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # QString to str.
         nas_file = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open NASA Ames File", "", "NASA Ames files (*.nas)")
-        nas_file = nas_file[0] if USE_PYQT5 else unicode(nas_file)
+        nas_file = nas_file[0] if USE_PYQT5 else str(nas_file)
         if nas_file:
             logging.debug(u"Loading flight track data from '%s'", nas_file)
 
@@ -141,7 +143,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Ask for a directory to open.
         traj_dir = QtWidgets.QFileDialog.getExistingDirectory(
             self, "Open Lagranto Output Directory", "")
-        traj_dir = traj_dir[0] if USE_PYQT5 else unicode(traj_dir)
+        traj_dir = traj_dir[0] if USE_PYQT5 else str(traj_dir)
         if traj_dir:
             logging.debug(u"Loading trajectory data from '%s'", traj_dir)
 
@@ -260,7 +262,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Generally, an instance of this class will contain a list of
         # non-overlapping selection ranges.
         itemSelection = self.traj_item_tree.selectionFromQuery(
-            unicode(self.leSelectionQuery.text()),
+            str(self.leSelectionQuery.text()),
             index=rootIndex)
 
         # Items can be selected in the tree view by using the select()
@@ -402,7 +404,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         view_name = self.cbPlotInView.currentText()
         selection = self.selectedMapElements()
-        if unicode(view_name) != "None" and len(selection) > 0:
+        if str(view_name) != "None" and len(selection) > 0:
             view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
                          self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
             logging.debug(u"Plotting selected elements in view <%s>", view_name)
@@ -421,7 +423,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         view_name = self.cbRemoveFromView.currentText()
-        if unicode(view_name) != "None":
+        if str(view_name) != "None":
             view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
                          self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
             logging.debug(u"Removing selected elements from view <%s>", view_name)
@@ -460,7 +462,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         self.cbRemoveFromView.setCurrentIndex(index if index >= 0 else 0)
 
         new_views = [self.cbPlotInView.itemText(i) for i in range(self.cbPlotInView.count())]
-        missing_views = [unicode(_x) for _x in old_views if _x not in new_views]
+        missing_views = [str(_x) for _x in old_views if _x not in new_views]
         stack = [_x for _x in self.traj_item_tree.getRootItem().childItems]
         while len(stack) > 0:
             # Downwards traversal of the tree to determine all visible items

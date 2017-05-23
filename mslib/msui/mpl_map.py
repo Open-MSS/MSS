@@ -31,8 +31,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
 
+from builtins import str
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import logging
 
 # related third party imports
@@ -81,8 +87,8 @@ class MapCanvas(basemap.Basemap):
                               "draw_coastlines": True,
                               "fill_waterbodies": True,
                               "fill_continents": True,
-                              "colour_water": (153 / 255., 255 / 255., 255 / 255., 255 / 255.),
-                              "colour_land": (204 / 255., 153 / 255., 102 / 255., 255 / 255.)}
+                              "colour_water": (old_div(153, 255.), old_div(255, 255.), old_div(255, 255.), old_div(255, 255.)),
+                              "colour_land": (old_div(204, 255.), old_div(153, 255.), old_div(102, 255.), old_div(255, 255.))}
         default_appearance.update(param_appearance)
         self.appearance = default_appearance
 
@@ -256,17 +262,17 @@ class MapCanvas(basemap.Basemap):
         spacingValues = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 40]
         deltaLon = mapLonStop - mapLonStart
         deltaLat = mapLatStop - mapLatStart
-        spacingLon = [i for i in spacingValues if i > deltaLon / 11.][0]
-        spacingLat = [i for i in spacingValues if i > deltaLat / 11.][0]
+        spacingLon = [i for i in spacingValues if i > old_div(deltaLon, 11.)][0]
+        spacingLat = [i for i in spacingValues if i > old_div(deltaLat, 11.)][0]
 
         #   c) parallels and meridians start at the first value in the
         #      spacingLon/Lat grid that's smaller than the lon/lat of the
         #      lower left corner; they stop at the first values in the
         #      grid that's larger than the lon/lat of the upper right corner.
-        lonStart = np.floor(mapLonStart / spacingLon) * spacingLon
-        lonStop = np.ceil(mapLonStop / spacingLon) * spacingLon
-        latStart = np.floor(mapLatStart / spacingLat) * spacingLat
-        latStop = np.ceil(mapLatStop / spacingLat) * spacingLat
+        lonStart = np.floor(old_div(mapLonStart, spacingLon)) * spacingLon
+        lonStop = np.ceil(old_div(mapLonStop, spacingLon)) * spacingLon
+        latStart = np.floor(old_div(mapLatStart, spacingLat)) * spacingLat
+        latStop = np.ceil(old_div(mapLatStop, spacingLat)) * spacingLat
 
         #   d) call the basemap methods to draw the lines in the determined
         #      range.
@@ -297,12 +303,12 @@ class MapCanvas(basemap.Basemap):
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            for item in self.map_parallels.values():
+            for item in list(self.map_parallels.values()):
                 for line in item[0]:
                     line.remove()
                 for text in item[1]:
                     text.remove()
-            for item in self.map_meridians.values():
+            for item in list(self.map_meridians.values()):
                 for line in item[0]:
                     line.remove()
                 for text in item[1]:
@@ -732,7 +738,7 @@ class MapCanvas(basemap.Basemap):
         # use great circle formula for a perfect sphere.
         gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
         az12, az21, dist = gc.inv(lon1, lat1, lon2, lat2)
-        npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
+        npoints = int(old_div((dist + 0.5 * 1000. * del_s), (1000. * del_s)))
         lonlats = gc.npts(lon1, lat1, lon2, lat2, npoints)
         lons = [lon1]
         lats = [lat1]
@@ -759,7 +765,7 @@ class MapCanvas(basemap.Basemap):
         gclats = [lats[0]]
         for i in range(len(lons) - 1):
             az12, az21, dist = gc.inv(lons[i], lats[i], lons[i + 1], lats[i + 1])
-            npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
+            npoints = int(old_div((dist + 0.5 * 1000. * del_s), (1000. * del_s)))
             # BUG -- weird path in cyl projection on waypoint move
             # On some system configurations, the path is wrongly plotted when one
             # of the waypoints is moved by the user and the current projection is cylindric.
@@ -834,7 +840,7 @@ class SatelliteOverpassPatch(object):
             pathdata.append((Path.LINETO, self.map(point[0], point[1])))
         for point in sw_r[::-1]:
             pathdata.append((Path.LINETO, self.map(point[0], point[1])))
-        codes, verts = zip(*pathdata)
+        codes, verts = list(zip(*pathdata))
         path = mpl_pi.PathH(verts, codes, map=self.map)
         patch = mpatches.PathPatch(path, facecolor='yellow',
                                    edgecolor='yellow', alpha=0.4)
@@ -956,7 +962,7 @@ class KMLPatch(object):
     def parse_placemarks(self, level):
         for placemark in getattr(level, "Placemark", []):
             name = getattr(placemark, "name", None)
-            style = unicode(getattr(placemark, "styleUrl", ""))
+            style = str(getattr(placemark, "styleUrl", ""))
             logging.debug("Placemark: %s %s", style, name)
             self.parse_geometries(placemark, style, name)
         for folder in getattr(level, "Folder", []):
@@ -966,13 +972,13 @@ class KMLPatch(object):
 
     def get_style_params(self, style):
         result = {
-            "color": unicode(getattr(style, "color", "")),
+            "color": str(getattr(style, "color", "")),
             "linewidth": float(getattr(style, "width", self.linewidth))
         }
         if not result["color"] or len(result["color"]) != 8:
             result["color"] = self.color
         else:
-            result["color"] = [int(result["color"][i:i + 2], 16) / 255. for i in range(0, 8, 2)]
+            result["color"] = [old_div(int(result["color"][i:i + 2], 16), 255.) for i in range(0, 8, 2)]
         return result
 
     def parse_styles(self, level):

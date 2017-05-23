@@ -25,7 +25,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
+from builtins import range
+from past.builtins import basestring
+from past.utils import old_div
+from builtins import object
 from abc import ABCMeta, abstractmethod
 import glob
 import re
@@ -39,6 +44,7 @@ import pickle
 
 from mslib import netCDF4tools
 from mslib.mswms.msschem import MSSChemTargets
+from future.utils import with_metaclass
 
 valid_time_cache = None
 # Maximum size of the cache in bytes.
@@ -47,7 +53,7 @@ valid_time_cache_max_size_bytes = 10 * 1024 * 1024
 valid_time_cache_max_age_seconds = 10 * 86400
 
 
-class NWPDataAccess(object):
+class NWPDataAccess(with_metaclass(ABCMeta, object)):
     """Abstract superclass providing a framework to let the user query
        in which data file a given variable at a given time can be found.
 
@@ -59,7 +65,6 @@ class NWPDataAccess(object):
     In subclasses, the protected method _determine_filename() must be
     implemented.
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, rootpath):
         """Constructor takes the path of the data directory.
@@ -117,7 +122,7 @@ class NWPDataAccess(object):
     def md5_filename(self, filename):
         """
         """
-        md5_filename = hashlib.md5(filename + repr(os.path.getmtime(filename))).hexdigest()
+        md5_filename = hashlib.md5((filename + repr(os.path.getmtime(filename))).encode('utf-8')).hexdigest()
         md5_filename += ".vt_cache_pickle"
         return md5_filename
 
@@ -128,7 +133,8 @@ class NWPDataAccess(object):
         filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if os.path.exists(filename):
             try:
-                with open(filename, "r") as fileobj:
+                # ToDo check Python2
+                with open(filename, "rb") as fileobj:
                     valid_times = pickle.load(fileobj)
             except (pickle.UnpicklingError, OSError, IOError) as ex:
                 logging.error(u"Error reading cache file '{}': {} - {}".format(filename, type(ex), ex))
@@ -144,7 +150,7 @@ class NWPDataAccess(object):
         filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if not os.path.exists(filename):
             try:
-                with open(filename, "w") as fileobj:
+                with open(filename, "wb") as fileobj:
                     pickle.dump(valid_times, fileobj)
             except (pickle.PicklingError, OSError, IOError) as ex:
                 logging.error(u"Error writing cache file '{}': {} - {}".format(filename, type(ex), ex))
@@ -287,7 +293,7 @@ class ECMWFDataAccess(NWPDataAccess):
         # Compute the time step in hours from the forecast valid time
         # and the initialisation time.
         fc_step = valid_time - init_time
-        fc_step = fc_step.days * 24 + fc_step.seconds / 3600
+        fc_step = fc_step.days * 24 + old_div(fc_step.seconds, 3600)
 
         # ECMWF forecasts are stored in a series of files containing
         # different time steps. Determine into which time step interval
@@ -384,6 +390,7 @@ class ECMWFDataAccess(NWPDataAccess):
             if os.path.exists(filename):
                 # If the file exists, open the file and read the contained
                 # times. Add the list of times to valid_times.
+                # ToDo remove caches
                 cached_valid_times = self.check_valid_cache(filename)
                 if cached_valid_times is not None:
                     valid_times.extend(cached_valid_times)
@@ -446,7 +453,7 @@ class GWFCDataAccess(ECMWFDataAccess):
     """
     _file_template = "$Y$m$d_$H_gravity_wave_forecast.{gridtype}.{domain_id}.{fc_step:03d}.{vartype}.nc"
     _file_regexp = "(?P<date>\d{8})_(?P<time>\d{2})_gravity_wave_forecast\.(?P<vartype>.*)\.%s\.(?P<step>\d{3}).*\.nc$"
-    _forecast_times = range(0, 150, 6)
+    _forecast_times = list(range(0, 150, 6))
     _data_organisation_table = {
         "gravity_wave_temperature_perturbation": {"ml": "ALTITUDE_LEVELS"},
         "air_pressure": {"ml": "ALTITUDE_LEVELS"},
@@ -712,7 +719,7 @@ class MSSChemDataAccess(NWPDataAccess):
     def _create_data_table(self, vert):
         self._data_organisation_table = {
             stdname: {vert: shortname.lower()}
-            for stdname, (shortname, _, _, _) in MSSChemTargets.items()}
+            for stdname, (shortname, _, _, _) in list(MSSChemTargets.items())}
         self._data_organisation_table["air_pressure"] = {vert: "p"}
 
     def _determine_filename(self, variable, vartype, init_time, valid_time):

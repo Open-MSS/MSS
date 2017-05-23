@@ -26,7 +26,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import datetime
 
 import logging
@@ -53,7 +59,7 @@ class LagrantoTreeModelUnsupportedOperationError(Exception):
     pass
 
 
-class AbstractLagrantoDataItem:
+class AbstractLagrantoDataItem(object):
     """Base class for all trajectory instances that are loaded into a
        trajectory tool.
 
@@ -425,7 +431,7 @@ class FlightTrackItem(LagrantoMapItem):
                     # The time variable has to be modified a bit: convert
                     # seconds to hours and change the name correspondingly.
                     index = self.nafile.VNAME.index(item.getName())
-                    self.nafile.V[index, :] = self.nafile.V[index, :] / 3600.
+                    self.nafile.V[index, :] = old_div(self.nafile.V[index, :], 3600.)
                     self.nafile.VNAME[index] = "(1/3600) * " + self.nafile.VNAME[index]
                     item.itemName = self.nafile.VNAME[index]
                     break
@@ -553,7 +559,7 @@ class LagrantoOutputItem(LagrantoMapItem):
                                                        self.loutput.meta)):
             trname = "{:04d} ".format(i)
             if "startcoordinates" in metadata:
-                trname += unicode(
+                trname += str(
                     [u"{:.2f}".format(r) for r in metadata["startcoordinates"]]).replace('\'', '')
             TrajectoryItem(trname, True, self, trajectory, metadata)
 
@@ -624,7 +630,7 @@ class TrajectoryItem(LagrantoMapItem):
                         self.timeVariableChild.getVariableData()[-1])
         elif column == 6:
             s = ''
-            for key, value in self.metadata.items():
+            for key, value in list(self.metadata.items()):
                 if key not in ["starttime", "file", "starttime_filename",
                                "startcoordinates", "duration"]:
                     s += u"{} = {}, ".format(key, str(value))

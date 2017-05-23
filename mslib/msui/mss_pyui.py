@@ -28,7 +28,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import print_function
 
+from builtins import str
+from builtins import range
 import copy
 import importlib
 import logging
@@ -135,7 +138,7 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
     def nameChanged(self, item):
         """Slot to change the name of a flight track.
         """
-        item.flighttrack_model.setName(unicode(item.text()))
+        item.flighttrack_model.setName(str(item.text()))
 
 
 class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
@@ -294,7 +297,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         def load_function_wrapper(self):
             filename = QtWidgets.QFileDialog.getOpenFileName(
                 self, "Import Flight Track", "", name + " (*." + extension + ")")
-            filename = filename[0] if USE_PYQT5 else unicode(filename)
+            filename = filename[0] if USE_PYQT5 else str(filename)
 
             if filename:
                 try:
@@ -330,7 +333,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         def save_function_wrapper(self):
             filename = QtWidgets.QFileDialog.getSaveFileName(
                 self, "Export Flight Track", "", name + " (*." + extension + ")")
-            filename = filename[0] if USE_PYQT5 else unicode(filename)
+            filename = filename[0] if USE_PYQT5 else str(filename)
 
             if filename:
                 try:
@@ -494,7 +497,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             filename = QtWidgets.QFileDialog.getOpenFileName(
                 self, "Open Config file", "", "Supported files (*.json *.txt)")
-            filename = filename[0] if USE_PYQT5 else unicode(filename)
+            filename = filename[0] if USE_PYQT5 else str(filename)
             if filename:
                 self.listViews.clear()
                 self.listTools.clear()
@@ -509,7 +512,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         filename = QtWidgets.QFileDialog.getOpenFileName(self,
                                                          "Open Flight Track", "",
                                                          "Flight track XML (*.ftml)")
-        filename = filename[0] if USE_PYQT5 else unicode(filename)
+        filename = filename[0] if USE_PYQT5 else str(filename)
 
         if filename:
             if filename.endswith('.ftml'):
@@ -560,7 +563,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         default_filename = os.path.join(self.lastSaveDir, self.active_flight_track.name + ".ftml")
         filename = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save Flight Track", default_filename, "Flight track XML (*.ftml)")
-        filename = filename[0] if USE_PYQT5 else unicode(filename)
+        filename = filename[0] if USE_PYQT5 else str(filename)
 
         if filename:
             self.lastSaveDir = os.path.dirname(filename)
@@ -615,7 +618,7 @@ def main():
     app_prefix = prefix
     if prefix:
         app_prefix = "-{}".format(prefix)
-    icon_hash = hashlib.md5('.'.join([__version__, app_prefix])).hexdigest()
+    icon_hash = hashlib.md5('.'.join([__version__, app_prefix]).encode('utf-8')).hexdigest()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
@@ -628,11 +631,11 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        print "***********************************************************************"
-        print "\n            Mission Support System (mss)\n"
-        print "***********************************************************************"
-        print "Documentation: http://mss.rtfd.io"
-        print "Version:", __version__
+        print("***********************************************************************")
+        print("\n            Mission Support System (mss)\n")
+        print("***********************************************************************")
+        print("Documentation: http://mss.rtfd.io")
+        print("Version:", __version__)
         sys.exit()
 
     if args.menu:

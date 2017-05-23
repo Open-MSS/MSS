@@ -25,7 +25,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
+from __future__ import print_function
 
+from builtins import zip
+from builtins import map
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import os
 import netCDF4 as nc
 import numpy as np
@@ -612,8 +619,8 @@ def get_profile(coordinate, levels, standard_name):
 
 
 def _generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=0):
-    xarr = np.linspace(0., 10. + ilev / 3., nlons)
-    yarr = np.linspace(0., 5. + ilev / 3., nlats)
+    xarr = np.linspace(0., 10. + old_div(ilev, 3.), nlons)
+    yarr = np.linspace(0., 5. + old_div(ilev, 3.), nlats)
     tarr = np.linspace(0, 2., ntimes)
     datax = xarr[np.newaxis, np.newaxis, :] + tarr[:, np.newaxis, np.newaxis]
     datay = yarr[np.newaxis, :, np.newaxis] - tarr[:, np.newaxis, np.newaxis]
@@ -1030,7 +1037,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 [standard_name])
 
         self.generate_file(
-            None, "SFC", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), _SURFACE.keys())
+            None, "SFC", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), list(_SURFACE.keys()))
         self.generate_file(
             None, "ProbWCB_LAGRANTO_derived", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)),
             ["vertically_integrated_probability_of_wcb_occurrence"])

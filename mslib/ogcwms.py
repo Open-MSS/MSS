@@ -57,10 +57,14 @@ API for Web Map Service (WMS) methods and metadata.
 Currently supports only version 1.1.1 of the WMS protocol.
 """
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import cgi
 import xml.etree.ElementTree as etree
 
-from urllib import urlencode
+from urllib.parse import urlencode
 from owslib.util import openURL, ServiceException
 from collections import OrderedDict
 from owslib.map import wms111
@@ -74,7 +78,7 @@ class WebMapService(object):
 
     def __getitem__(self, name):
         ''' check contents dictionary to allow dict like access to service layers'''
-        if name in self.__getattribute__('contents').keys():
+        if name in list(self.__getattribute__('contents').keys()):
             return self.__getattribute__('contents')[name]
         else:
             raise KeyError("No content named %s" % name)
@@ -369,7 +373,7 @@ class ContentMetadata(object):
             # some servers found in the wild use a single SRS
             # tag containing a whitespace separated list of SRIDs
             # instead of several SRS tags. hence the inner loop
-            for srslist in map(lambda x: x.text, elem.findall('SRS')):
+            for srslist in [x.text for x in elem.findall('SRS')]:
                 if srslist:
                     for srs in srslist.split():
                         self.crsOptions.append(srs)

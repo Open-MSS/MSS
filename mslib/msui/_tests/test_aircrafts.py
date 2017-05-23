@@ -26,6 +26,7 @@
 """
 
 
+from builtins import object
 from mslib.msui.aircrafts import SimpleAircraft, AIRCRAFT_DUMMY
 
 

@@ -24,6 +24,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import numpy as np
 import matplotlib
 
@@ -325,7 +329,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
             (1.0, 0.375, 0.0, 1.0),
             (0.90000000000000002, 0.0, 0.041666666666666664, 1.0),
             (0.40000000000000002, 0.0, 0.25, 1.0)]
-        clev = list(np.arange(0, 4, 0.5)) + range(4, 8) + range(8, 18, 2)
+        clev = list(np.arange(0, 4, 0.5)) + list(range(4, 8)) + list(range(8, 18, 2))
         if style[-2:] == "nh":
             cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors, name="pv_map")
             cmap.set_over((0.8, 0.8, 0.8, 1.0))
@@ -384,7 +388,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
              (0.40000000000000002, 0.0, 0.25, 1.0),
              ], name="n2_map")
         cmap.set_over((0.8, 0.8, 0.8, 1.0))
-        clev = np.arange(0, 8.5 / 1e4, 0.5 / 1e4)
+        clev = np.arange(0, old_div(8.5, 1e4), old_div(0.5, 1e4))
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     elif style == "tropopause_altitude":
         cmap = matplotlib.pyplot.cm.terrain

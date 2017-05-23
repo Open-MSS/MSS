@@ -27,6 +27,8 @@
 """
 
 
+from builtins import range
+from builtins import object
 import os
 import tempfile
 
@@ -178,27 +180,27 @@ class MissionSupportSystemDefaultConfig(object):
                     "abbrev": "geop",
                     "regions": {"Europe": "eur", "Germany": "de"},
                     "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": range(0, 240, 3)},
+                    "forecast_steps": list(range(0, 240, 3))},
                 "Temperature": {
                     "abbrev": "temp",
                     "regions": {"Europe": "eur", "Germany": "de"},
                     "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": range(0, 240, 3)},
+                    "forecast_steps": list(range(0, 240, 3))},
                 "Equivalent Potential Temperature": {
                     "abbrev": "eqpt",
                     "regions": {"Europe": "eur", "Germany": "de"},
                     "levels": [500, 700, 850, 925],
-                    "forecast_steps": range(0, 240, 3)},
+                    "forecast_steps": list(range(0, 240, 3))},
                 "Relative Humidity": {
                     "abbrev": "rhu",
                     "regions": {"Europe": "eur", "Germany": "de"},
                     "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": range(0, 243, 3)},
+                    "forecast_steps": list(range(0, 243, 3))},
                 "Vertical Velocity": {
                     "abbrev": "vert",
                     "regions": {"Europe": "eur", "Germany": "de"},
                     "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": range(0, 243, 3)}
+                    "forecast_steps": list(range(0, 243, 3))}
             }
         }
     }

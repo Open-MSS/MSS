@@ -25,7 +25,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
+from builtins import object
+from past.utils import old_div
 from datetime import datetime
 
 import logging
@@ -38,9 +41,10 @@ import numpy as np
 # local application imports
 from mslib import netCDF4tools
 from mslib import utils
+from future.utils import with_metaclass
 
 
-class MSSPlotDriver(object):
+class MSSPlotDriver(with_metaclass(ABCMeta, object)):
     """
     Abstract super class for implementing driver classes that provide
     access to the MSS data server.
@@ -59,7 +63,6 @@ class MSSPlotDriver(object):
     Classes that derive from this class need to implement the two methods
     set_plot_parameters() and plot().
     """
-    __metaclass__ = ABCMeta
 
     def __init__(self, data_access_object):
         """Requires an instance of a data access object from the MSS
@@ -106,7 +109,7 @@ class MSSPlotDriver(object):
             logging.error(msg)
             raise ValueError(msg)
         fc_step = fc_time - init_time
-        fc_step = fc_step.days * 24 + fc_step.seconds / 3600
+        fc_step = fc_step.days * 24 + old_div(fc_step.seconds, 3600)
         self.fc_time = fc_time
         logging.debug(u"\trequested initialisation time {}".format(init_time))
         logging.debug(u"\trequested forecast valid time {} (step {} hrs)".format(fc_time, fc_step))
@@ -470,13 +473,13 @@ class VerticalSectionDriver(MSSPlotDriver):
         lon_indices = lon_data.argsort()
         lon_data = lon_data[lon_indices]
 
-        for name, var in self.data_vars.items():
+        for name, var in list(self.data_vars.items()):
             if len(var.shape) == 4:
                 var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
             else:
                 var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
             logging.debug("\tLoaded {:.2f} Mbytes from data field <{:}> at timestep {:}.".format(
-                          var_data.nbytes / 1048576., name, timestep))
+                          old_div(var_data.nbytes, 1048576.), name, timestep))
             logging.debug("\tVertical dimension direction is {}.".format(
                           "up" if self.vert_order == 1 else "down"))
             logging.debug("\tInterpolating to cross-section path.")
@@ -633,7 +636,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
             self.actual_level = self.vert_data[level]
         logging.debug("loading data for time step {} ({}), level index {} (level {})".format(
                       timestep, self.fc_time, level, self.level))
-        for name, var in self.data_vars.items():
+        for name, var in list(self.data_vars.items()):
             if level is None or len(var.shape) == 3:
                 # 2D fields: time, lat, lon.
                 var_data = var[timestep, ::self.lat_order, :]
@@ -641,7 +644,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
                 # 3D fields: time, level, lat, lon.
                 var_data = var[timestep, level, ::self.lat_order, :]
             logging.debug("\tLoaded {:.2f} Mbytes from data field <{}>."
-                          .format(var_data.nbytes / 1048576., name))
+                          .format(old_div(var_data.nbytes, 1048576.), name))
             data[name] = var_data
             # Free memory.
             del var_data

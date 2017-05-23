@@ -43,8 +43,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
 
+from builtins import str
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import logging
 import math
 import numpy as np
@@ -58,7 +64,7 @@ from mslib.utils import get_distance, find_location
 # local application imports
 from mslib.msui import flighttrack as ft
 
-MOVE, DELETE, INSERT = range(3)
+MOVE, DELETE, INSERT = list(range(3))
 
 
 def distance_point_linesegment(p, l1, l2):
@@ -78,7 +84,7 @@ def distance_point_linesegment(p, l1, l2):
     # Compute the parameter r in the line formulation p* = l1 + r*(l2-l1).
     # p* is the point on the line at which (p-p*) and (l1-l2) form a right
     # angle.
-    r = np.dot(p - l1, l2 - l1) / np.linalg.norm(l2 - l1) ** 2
+    r = old_div(np.dot(p - l1, l2 - l1), np.linalg.norm(l2 - l1) ** 2)
     # If 0 < r < 1, we return the distance p-p*. If r > 1, p* is on the
     # forward extension of l1-l2, hence return the distance between
     # p and l2. If r < 0, return the distance p-l1.
@@ -171,7 +177,7 @@ class WaypointsPath(mpath.Path):
             for i, _ in enumerate(wps[1:]):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
 
-        self.codes, self.vertices = zip(*pathdata)
+        self.codes, self.vertices = list(zip(*pathdata))
         self.codes = np.array(self.codes, dtype=np.uint8)
         self.vertices = np.array(self.vertices)
 
@@ -290,19 +296,19 @@ class PathH_GC(PathH):
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
-        self.wp_codes, self.wp_vertices = zip(*pathdata)
+        self.wp_codes, self.wp_vertices = list(zip(*pathdata))
         self.wp_codes = np.array(self.wp_codes, dtype=np.uint8)
         self.wp_vertices = np.array(self.wp_vertices)
 
         # Coordinates of intermediate great circle points.
-        lons, lats = zip(*[(wp.lon, wp.lat) for wp in wps])
+        lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
         x, y = self.map.gcpoints_path(lons, lats)
 
         if len(x) > 0:
             pathdata = [(Path.MOVETO, (x[0], y[0]))]
             for i in range(len(x[1:])):
                 pathdata.append((Path.LINETO, (x[i + 1], y[i + 1])))
-        self.codes, self.vertices = zip(*pathdata)
+        self.codes, self.vertices = list(zip(*pathdata))
         self.codes = np.array(self.codes, dtype=np.uint8)
         self.vertices = np.array(self.vertices)
 
@@ -341,7 +347,7 @@ class PathH_GC(PathH):
 #
 
 
-class PathInteractor:
+class PathInteractor(object):
     """An interactive matplotlib path editor. Allows vertices of a path patch
        to be interactively picked and moved around.
 
@@ -392,7 +398,7 @@ class PathInteractor:
 
         # Draw the line representing flight track or profile (correct
         # vertices handling for the line needs to be ensured in subclasses).
-        x, y = zip(*self.pathpatch.get_path().vertices)
+        x, y = list(zip(*self.pathpatch.get_path().vertices))
         self.line, = self.ax.plot(x, y, color=linecolor,
                                   marker=marker, linewidth=2,
                                   markerfacecolor=markerfacecolor,
@@ -548,14 +554,14 @@ class PathInteractor:
         """
         if vertices is None:
             vertices = self.pathpatch.get_path().vertices
-        self.line.set_data(zip(*vertices))
+        self.line.set_data(list(zip(*vertices)))
 
         # Draw waypoint labels.
         label_offset = 0
         for wp in self.wp_labels:
             wp.remove()
         self.wp_labels = []  # remove doesn't seem to be necessary
-        x, y = zip(*vertices)
+        x, y = list(zip(*vertices))
         wpd = self.waypoints_model.allWaypointData()
         for i in range(len(wpd)):
             textlabel = str(i)
@@ -696,7 +702,7 @@ class VPathInteractor(PathInteractor):
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
             # to float().
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure / 100.)))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(old_div(pressure, 100.))))
 
         self._ind = None
 
@@ -796,7 +802,7 @@ class HPathInteractor(PathInteractor):
         ax_bounds = self.ax.bbox.bounds
         width = int(round(ax_bounds[2]))
         map_delta_x = abs(self.map.llcrnrx - self.map.urcrnrx)
-        map_coords_per_px_x = map_delta_x / width
+        map_coords_per_px_x = old_div(map_delta_x, width)
 
         return map_coords_per_px_x * px
 
@@ -814,7 +820,7 @@ class HPathInteractor(PathInteractor):
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
         map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
-        km_per_px = map_delta / diagonal
+        km_per_px = old_div(map_delta, diagonal)
 
         return km_per_px * px
 
@@ -932,15 +938,15 @@ class HPathInteractor(PathInteractor):
         else:
             # If waypoints have been provided, compute the intermediate
             # great circle points for the line instance.
-            x, y = zip(*wp_vertices)
+            x, y = list(zip(*wp_vertices))
             lons, lats = self.map(x, y, inverse=True)
             x, y = self.map.gcpoints_path(lons, lats)
-            vertices = zip(x, y)
+            vertices = list(zip(x, y))
 
         # Set the line to disply great circle points, remove existing
         # waypoints scatter instance and draw a new one. This is
         # necessary as scatter() does not provide a set_data method.
-        self.line.set_data(zip(*vertices))
+        self.line.set_data(list(zip(*vertices)))
 
         wp_heights = [(wp.flightlevel * 0.03048) for wp in self.waypoints_model.allWaypointData()]
         wp_times = [wp.utc_time for wp in self.waypoints_model.allWaypointData()]
@@ -967,7 +973,7 @@ class HPathInteractor(PathInteractor):
 
         if self.wp_scatter is not None:
             self.wp_scatter.remove()
-        x, y = zip(*wp_vertices)
+        x, y = list(zip(*wp_vertices))
         # (animated is important to remove the old scatter points from the map)
         self.wp_scatter = self.ax.scatter(x, y, color=self.markerfacecolor,
                                           s=20, zorder=3, animated=True,

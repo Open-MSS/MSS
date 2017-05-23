@@ -26,6 +26,7 @@
     limitations under the License.
 """
 
+from builtins import str
 import logging
 import os
 from datetime import datetime, timedelta
@@ -131,8 +132,8 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """
         filename = QtGui.QFileDialog.getOpenFileName(
             self, "Open NASA satellite overpass prediction",
-            os.path.dirname(unicode(self.leFile.text())), "(*.*)")
-        filename = filename[0] if USE_PYQT5 else unicode(filename)
+            os.path.dirname(str(self.leFile.text())), "(*.*)")
+        filename = filename[0] if USE_PYQT5 else str(filename)
         if not filename:
             return
         self.leFile.setText(filename)
@@ -142,7 +143,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """Load the file specified in leFile and fill the combobox with the
            available track segments.
         """
-        filename = unicode(self.leFile.text())
+        filename = str(self.leFile.text())
         logging.debug("loading satellite overpasses in file '%s'", filename)
 
         try:

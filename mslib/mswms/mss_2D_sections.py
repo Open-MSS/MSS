@@ -27,17 +27,18 @@
     limitations under the License.
 """
 
+from builtins import object
 import logging
 from abc import ABCMeta, abstractmethod
+from future.utils import with_metaclass
 
 
-class Abstract2DSectionStyle(object):
+class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
     """
     Horizontal Section Styles
     Abstract 2D section super class. Use this class as a parent
     for classes implementing horizontal and vertical cross sections.
     """
-    __metaclass__ = ABCMeta
 
     # Name and title of each derived style have to be defined if the style
     # should be used with the WMS WSGI module.

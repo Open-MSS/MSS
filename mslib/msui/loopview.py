@@ -42,8 +42,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
 
+from builtins import range
+from past.utils import old_div
 import functools
 
 # related third party imports
@@ -90,7 +93,7 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
         # changeValidTime() method of this class, which displays
         # the globally synchronized time.
         self.imageWidgets = []
-        for i in xrange(self.max_views):
+        for i in range(self.max_views):
             widget = imw.ImageLoopWidget(config, self)
             self.imageWidgets.append(widget)
             widget.signalChangeValidTime.connect(self.changeValidTime)
@@ -168,7 +171,7 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
             self.mainSplitter.insertWidget(0, self.imageWidgets[0])
             show_widgets = [0, 1, 2]
             self.rightSplitter.setSizes(np.ones(self.rightSplitter.count()))
-            self.mainSplitter.setSizes([2 * w / 3, w / 3])
+            self.mainSplitter.setSizes([2 * w / 3, old_div(w, 3)])
 
         elif index == 3:
             # One large and three small views.
@@ -180,7 +183,7 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
             self.mainSplitter.insertWidget(0, self.imageWidgets[0])
             show_widgets = [0, 1, 2, 3]
             self.rightSplitter.setSizes(np.ones(self.rightSplitter.count()))
-            self.mainSplitter.setSizes([2 * w / 3, w / 3])
+            self.mainSplitter.setSizes([2 * w / 3, old_div(w, 3)])
 
         elif index == 4:
             # Four equally sized views.

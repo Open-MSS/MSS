@@ -33,8 +33,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
 
+from builtins import str
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
 import datetime
 import codecs
 import logging
@@ -53,7 +59,7 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
-LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = range(5)
+LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
 
 
 def seconds_to_string(seconds):
@@ -70,11 +76,11 @@ TABLE_FULL = [
     ("Lat\n(+-90)", lambda waypoint: waypoint.lat, True),
     ("Lon\n(+-180)", lambda waypoint: waypoint.lon, True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
-    ("Pressure\n(hPa)", lambda waypoint: "{:.2f}".format(waypoint.pressure / 100.), True),
+    ("Pressure\n(hPa)", lambda waypoint: "{:.2f}".format(old_div(waypoint.pressure, 100.)), True),
     ("Leg dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
-        int(waypoint.distance_to_prev), int(waypoint.distance_to_prev / 1.852)), False),
+        int(waypoint.distance_to_prev), int(old_div(waypoint.distance_to_prev, 1.852))), False),
     ("Cum. dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
-        int(waypoint.distance_total), int(waypoint.distance_total / 1.852)), False),
+        int(waypoint.distance_total), int(old_div(waypoint.distance_total, 1.852))), False),
     ("Leg time", lambda waypoint: seconds_to_string(waypoint.leg_time), False),
     ("Cum. time", lambda waypoint: seconds_to_string(waypoint.cum_time), False),
     ("Time (UTC)", lambda waypoint: waypoint.utc_time.strftime("%Y-%m-%d %H:%M:%S"), False),
@@ -496,7 +502,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             self.waypoints[0].distance_to_prev = 0
             self.waypoints[0].distance_total = 0
         for i in range(1, len(self.waypoints)):
-            wp_comm = unicode(self.waypoints[i].comments)
+            wp_comm = str(self.waypoints[i].comments)
             if len(wp_comm) == 9 and wp_comm.startswith("Hexagon "):
                 wp_comm = "Hexagon {:d}".format(8 - int(wp_comm[-1]))
                 self.waypoints[i].comments = QString(wp_comm)
@@ -540,12 +546,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         for wp in self.waypoints:
             element = doc.createElement("Waypoint")
             wp_el.appendChild(element)
-            element.setAttribute("location", unicode(wp.location))
+            element.setAttribute("location", str(wp.location))
             element.setAttribute("lat", str(wp.lat))
             element.setAttribute("lon", str(wp.lon))
             element.setAttribute("flightlevel", str(wp.flightlevel))
             comments = doc.createElement("Comments")
-            comments.appendChild(doc.createTextNode(unicode(wp.comments)))
+            comments.appendChild(doc.createTextNode(str(wp.comments)))
             element.appendChild(comments)
 
         with codecs.open(self.filename, 'w', encoding="utf-8") as file_object:
@@ -573,7 +579,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if len(comments.childNodes):
                 comments = comments.childNodes[0].data.strip()
             else:
-                comments = unicode('')
+                comments = str('')
 
             waypoints_list.append(Waypoint(lat, lon, flightlevel,
                                            location=location,
@@ -619,7 +625,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         if index.column() == LOCATION:
             combobox = QtWidgets.QComboBox(parent)
             locations = config_loader(dataset='locations', default=mss_default.locations)
-            adds = locations.keys()
+            adds = list(locations.keys())
             if self.parent() is not None:
                 for loc in [wp.location for wp in self.parent().waypoints_model.allWaypointData() if
                             wp.location != ""]:
@@ -651,7 +657,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
            combobox, get the corresponding coordinates.
         """
         if index.column() == LOCATION:
-            loc = unicode(editor.currentText())
+            loc = str(editor.currentText())
             locations = config_loader(dataset='locations', default=mss_default.locations)
             if loc in locations:
                 lat, lon = locations[loc]

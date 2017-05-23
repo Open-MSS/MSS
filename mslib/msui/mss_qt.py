@@ -56,7 +56,7 @@ except ImportError:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
     from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
-    QString = unicode  # QString is not exposed anymore but is used transparently by PyQt5
+    QString = str  # QString is not exposed anymore but is used transparently by PyQt5
 
     _qt_ui_prefix = "mslib.msui.qt5."
 

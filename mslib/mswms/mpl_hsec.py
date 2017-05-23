@@ -26,11 +26,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
 
 # style definitions should be put in mpl_hsec_styles.py
 
-import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from past.utils import old_div
+import io
 import logging
 from abc import abstractmethod
 import mss_wms_settings
@@ -176,17 +182,17 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         spacingValues = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 40]
         deltaLon = mapLonStop - mapLonStart
         deltaLat = mapLatStop - mapLatStart
-        spacingLon = [i for i in spacingValues if i > deltaLon / 10.][0]
-        spacingLat = [i for i in spacingValues if i > deltaLat / 10.][0]
+        spacingLon = [i for i in spacingValues if i > old_div(deltaLon, 10.)][0]
+        spacingLat = [i for i in spacingValues if i > old_div(deltaLat, 10.)][0]
 
         #   c) parallels and meridians start at the first value in the
         #      spacingLon/Lat grid that's smaller than the lon/lat of the
         #      lower left corner; they stop at the first values in the
         #      grid that's larger than the lon/lat of the upper right corner.
-        lonStart = np.floor(mapLonStart / spacingLon) * spacingLon
-        lonStop = np.ceil(mapLonStop / spacingLon) * spacingLon
-        latStart = np.floor(mapLatStart / spacingLat) * spacingLat
-        latStop = np.ceil(mapLatStop / spacingLat) * spacingLat
+        lonStart = np.floor(old_div(mapLonStart, spacingLon)) * spacingLon
+        lonStop = np.ceil(old_div(mapLonStop, spacingLon)) * spacingLon
+        latStart = np.floor(old_div(mapLatStart, spacingLat)) * spacingLat
+        latStop = np.ceil(old_div(mapLatStop, spacingLat)) * spacingLat
 
         #   d) call the basemap methods to draw the lines in the determined
         #      range.
@@ -241,7 +247,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         logging.debug("creating figure..")
         dpi = 80
-        figsize = figsize[0] / dpi, figsize[1] / dpi
+        figsize = old_div(figsize[0], dpi), old_div(figsize[1], dpi)
         facecolor = "white"
         fig = mpl.figure.Figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
         logging.debug("\twith frame and legends" if not noframe else
@@ -300,7 +306,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                 useful = {}
                 for idx, key in enumerate(BASEMAP_REQUESTS):
                     useful[key] = useful.get(key, 0) + idx
-                least_useful = sorted([(value, key) for key, value in useful.items()])[:-basemap_cache_size]
+                least_useful = sorted([(value, key) for key, value in list(useful.items())])[:-basemap_cache_size]
                 for _, key in least_useful:
                     del BASEMAP_CACHE[key]
                     BASEMAP_REQUESTS[:] = [_x for _x in BASEMAP_REQUESTS if key != _x]
@@ -332,7 +338,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         # Return the image as png embedded in a StringIO stream.
         canvas = FigureCanvas(fig)
-        output = StringIO.StringIO()
+        output = io.BytesIO()
         canvas.print_png(output, bbox_inches='tight')
 
         if show:
@@ -353,7 +359,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         output.seek(0)  # necessary for PIL.Image.open()
         palette_img = PIL.Image.open(output).convert(mode="RGB"
                                                      ).convert("P", palette=PIL.Image.ADAPTIVE)
-        output = StringIO.StringIO()
+        output = io.BytesIO()
         if not transparent:
             logging.debug("saving figure as non-transparent PNG.")
             palette_img.save(output, format="PNG")  # using optimize=True doesn't change much
@@ -368,7 +374,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             # palette. (Why doesn't PIL provide a method to directly access the
             # colours in a palette??)
             lut = palette_img.resize((256, 1))
-            lut.putdata(range(256))
+            lut.putdata(list(range(256)))
             lut = [c[1] for c in lut.convert("RGB").getcolors()]
             facecolor_rgb = list(mpl.colors.hex2color(mpl.colors.cnames[facecolor]))
             for i in [0, 1, 2]:
@@ -423,8 +429,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         x, y = self.bm(lonmesh_, latmesh_)
         # test which coordinates are outside the map domain.
 
-        add_x = (self.bm.xmax - self.bm.xmin) / 10.
-        add_y = (self.bm.ymax - self.bm.ymin) / 10.
+        add_x = old_div((self.bm.xmax - self.bm.xmin), 10.)
+        add_y = old_div((self.bm.ymax - self.bm.ymin), 10.)
 
         mask1 = x < self.bm.xmin - add_x
         mask2 = x > self.bm.xmax + add_x
