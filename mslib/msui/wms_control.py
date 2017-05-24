@@ -316,7 +316,7 @@ class WMSMapFetcher(QtCore.QObject):
             self.started_request.emit()
             self.long_request = True
             urlobject = self.wms.getmap(**kwargs)
-            image_io = io.StringIO(urlobject.read())
+            image_io = io.BytesIO(urlobject.read())
             img = PIL.Image.open(image_io)
             # Check if the image is stored as indexed palette
             # with a transparent colour. Store correspondingly.
@@ -347,7 +347,7 @@ class WMSMapFetcher(QtCore.QObject):
             #    http://www.pythonware.com/library/pil/handbook/image.htm
             logging.debug("Retrieving legend from '%s'", urlstr)
             urlobject = urllib.request.urlopen(urlstr)
-            image_io = io.StringIO(urlobject.read())
+            image_io = io.BytesIO(urlobject.read())
             legend_img_raw = PIL.Image.open(image_io)
             legend_img = legend_img_raw.crop(legend_img_raw.getbbox())
             logging.debug("legend retrieved, legend graphic size is %i bytes.", image_io.len)

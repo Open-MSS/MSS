@@ -381,7 +381,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                     if not cancel:
                         # Read the image file from the URL into a string (urlobject.read())
                         # and wrap this string into a StringIO object that behaves like a file.
-                        imageIO = io.StringIO(urlobject.read())
+                        imageIO = io.BytesIO(urlobject.read())
                         qp = QtGui.QPixmap()
                         qp.loadFromData(imageIO.getvalue())
 
