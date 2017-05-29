@@ -165,11 +165,13 @@ Example:
         metafile = os.path.join(self.lagrantoOutputPath, fname) + '.meta.pyl'
         if os.path.exists(metafile):
             logging.debug(u"Reading metadata file '{}'".format(os.path.basename(metafile)))
-            filehandler = open(metafile, 'r')
-            startCoordinates = pickle.load(filehandler)
-            startTime = pickle.load(filehandler)
-            duration = pickle.load(filehandler)
-            filehandler.close()
+            # ToDo example file without UnicodeDecodeError: 'ascii' codec can't decode byte 0xfa in
+            # position 1: ordinal not in range(128)
+            with open(metafile, "rb") as fileobj:
+                startCoordinates = pickle.load(fileobj)
+                startTime = pickle.load(fileobj)
+                duration = pickle.load(fileobj)
+
         else:
             logging.debug(u"No metadata file '{}' found.".format(metafile))
             startCoordinates = None

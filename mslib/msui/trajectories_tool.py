@@ -143,7 +143,6 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Ask for a directory to open.
         traj_dir = QtWidgets.QFileDialog.getExistingDirectory(
             self, "Open Lagranto Output Directory", "")
-        traj_dir = traj_dir[0] if USE_PYQT5 else str(traj_dir)
         if traj_dir:
             logging.debug(u"Loading trajectory data from '%s'", traj_dir)
 
