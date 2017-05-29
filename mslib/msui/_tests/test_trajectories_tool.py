@@ -50,7 +50,7 @@ class Test_TrajectoriesTool(object):
         self.window = tt.MSSTrajectoriesToolWindow(listviews=self.listViews, listtools=self.listTools)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
@@ -103,7 +103,7 @@ class Test_TrajectoryToolComples(object):
         self.window.createNewFlightTrack(activate=True)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
         self.window.actionTopView.trigger()
         QtWidgets.QApplication.processEvents()

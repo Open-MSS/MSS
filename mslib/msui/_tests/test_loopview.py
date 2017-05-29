@@ -68,7 +68,7 @@ class Test_MSSLoopViewWindow(object):
         self.window = lv.MSSLoopWindow(loop_configuration)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

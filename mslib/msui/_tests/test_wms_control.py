@@ -69,7 +69,7 @@ class Test_HSecWMSControlWidget(object):
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
@@ -220,7 +220,7 @@ class Test_VSecWMSControlWidget(object):
 
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
