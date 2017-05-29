@@ -53,7 +53,7 @@ import functools
 import numpy as np
 
 # local application imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
 from mslib.msui.mss_qt import ui_loopwindow as ui
 from mslib.msui import loopviewer_widget as imw
 from mslib.msui.viewwindows import MSSViewWindow
@@ -83,9 +83,14 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
-        self.statusBar.addPermanentWidget(QtGui.QLabel(
-            "Use wheel on image for time navigation, "
-            "shift+wheel for level navigation."))
+        try:
+            self.statusBar.addPermanentWidget(QtGui.QLabel(
+                "Use wheel on image for time navigation, "
+                "shift+wheel for level navigation."))
+        except AttributeError:
+            self.statusBar.addPermanentWidget(QtWidgets.QLabel(
+                "Use wheel on image for time navigation, "
+                "shift+wheel for level navigation."))
 
         # Create max_views image labels. The labels will exist
         # in memory, but they won't always be visible to the user.
@@ -100,16 +105,25 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
 
         # Create the splitter objects that are necessary to implement
         # the layouts.
-        self.mainSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        self.rightSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.topSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        self.bottomSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        try:
+            self.mainSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+            self.rightSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+            self.topSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+            self.bottomSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        except AttributeError:
+            self.mainSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+            self.rightSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+            self.topSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+            self.bottomSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.mainSplitter.addWidget(self.rightSplitter)
         self.mainSplitter.addWidget(self.topSplitter)
         self.mainSplitter.addWidget(self.bottomSplitter)
 
         # Set the initial layout (only one widget visible).
-        layout = QtGui.QHBoxLayout()
+        try:
+            layout = QtGui.QHBoxLayout()
+        except AttributeError:
+            layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.mainSplitter)
         self.centralFrame.setLayout(layout)
         self.setLayout(0)
