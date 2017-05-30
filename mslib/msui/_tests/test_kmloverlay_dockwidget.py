@@ -43,7 +43,10 @@ class Test_KmlOverlayDockWidget(object):
         self.window = kd.KMLOverlayControlWidget(view=self.view)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowExposed(self.window)
+        try:
+            QtTest.QTest.qWaitForWindowExposed(self.window)
+        except AttributeError:
+            QtTest.QTest.qWaitForWindowShown(self.window)
         # start load test
         QtWidgets.QApplication.processEvents()
 

@@ -48,7 +48,10 @@ class Test_WMSCapabilities(object):
             capabilities=self.capabilities)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowExposed(self.window)
+        try:
+            QtTest.QTest.qWaitForWindowExposed(self.window)
+        except AttributeError:
+            QtTest.QTest.qWaitForWindowShown(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

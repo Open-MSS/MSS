@@ -68,7 +68,10 @@ class Test_MSSLoopViewWindow(object):
         self.window = lv.MSSLoopWindow(loop_configuration)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowExposed(self.window)
+        try:
+            QtTest.QTest.qWaitForWindowExposed(self.window)
+        except AttributeError:
+            QtTest.QTest.qWaitForWindowShown(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
