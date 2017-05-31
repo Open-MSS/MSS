@@ -55,10 +55,7 @@ class Test_TableView(object):
         self.window.show()
 
         QtWidgets.QApplication.processEvents()
-        try:
-            QtTest.QTest.qWaitForWindowExposed(self.window)
-        except AttributeError:
-            QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

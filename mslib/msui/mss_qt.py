@@ -44,6 +44,7 @@ try:
     QtWidgets = QtGui  # Follow the PyQt5 style and access objects from the modules of PyQt5
     from PyQt4.QtCore import QString  # import QString as this does not exist in PyQt5
 
+    QtTest.QTest.qWaitForWindowExposed = QtTest.QTest.qWaitForWindowShown
     _qt_ui_prefix = "mslib.msui.qt4."
 
 except ImportError:

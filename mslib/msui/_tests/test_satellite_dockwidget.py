@@ -41,10 +41,7 @@ class Test_SatelliteDockWidget(object):
         self.window = sd.SatelliteControlWidget(view=self.view)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        try:
-            QtTest.QTest.qWaitForWindowExposed(self.window)
-        except AttributeError:
-            QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

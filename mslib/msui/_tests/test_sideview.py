@@ -48,10 +48,7 @@ class Test_MSS_SV_OptionsDialog(object):
         self.window = tv.MSS_SV_OptionsDialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        try:
-            QtTest.QTest.qWaitForWindowExposed(self.window)
-        except AttributeError:
-            QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
@@ -108,10 +105,7 @@ class Test_MSSSideViewWindow(object):
         self.window = tv.MSSSideViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        try:
-            QtTest.QTest.qWaitForWindowExposed(self.window)
-        except AttributeError:
-            QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
@@ -148,10 +142,7 @@ class Test_SideViewWMS(object):
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
-        try:
-            QtTest.QTest.qWaitForWindowExposed(self.window)
-        except AttributeError:
-            QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
