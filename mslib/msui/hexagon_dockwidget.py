@@ -27,8 +27,8 @@
 from __future__ import division
 
 
-from builtins import str
-from builtins import range
+
+
 from past.utils import old_div
 import numpy as np
 

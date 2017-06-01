@@ -30,8 +30,8 @@
 """
 from __future__ import print_function
 
-from builtins import str
-from builtins import range
+
+
 import copy
 import importlib
 import logging

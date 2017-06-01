@@ -32,7 +32,7 @@
     limitations under the License.
 """
 
-from builtins import range
+
 from mslib.msui import hexagon_dockwidget as hex
 # related third party imports
 from mslib.msui.mss_qt import QtWidgets, QtGui

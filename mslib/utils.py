@@ -27,7 +27,7 @@
 """
 from __future__ import division
 
-from builtins import range
+
 from past.builtins import basestring
 from past.utils import old_div
 import datetime

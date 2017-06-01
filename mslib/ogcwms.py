@@ -59,8 +59,8 @@ Currently supports only version 1.1.1 of the WMS protocol.
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
-from builtins import object
+
+
 import cgi
 import xml.etree.ElementTree as etree
 

@@ -28,10 +28,6 @@
 from __future__ import division
 from __future__ import print_function
 
-from builtins import zip
-from builtins import map
-from builtins import range
-from builtins import object
 from past.utils import old_div
 import os
 import netCDF4 as nc

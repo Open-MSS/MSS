@@ -30,7 +30,7 @@ from __future__ import division
 # Parts of the code have been adapted from Chapter 6 of Sandro Tosi,
 # 'Matplotlib for Python Developers'.
 
-from builtins import zip
+
 from past.builtins import basestring
 from past.utils import old_div
 from datetime import datetime

@@ -25,7 +25,7 @@
     limitations under the License.
 """
 
-from builtins import object
+
 import os
 import pytest
 import datetime

@@ -28,8 +28,8 @@
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
-from builtins import range
+
+
 from past.builtins import basestring
 import time
 from datetime import datetime, timedelta
@@ -41,7 +41,6 @@ import os
 import requests
 import re
 import urllib.request, urllib.parse, urllib.error
-import urllib.request, urllib.error, urllib.parse
 import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default

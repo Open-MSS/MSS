@@ -26,8 +26,8 @@
 """
 
 
-from builtins import zip
-from builtins import object
+
+
 import mock
 import os
 import shutil

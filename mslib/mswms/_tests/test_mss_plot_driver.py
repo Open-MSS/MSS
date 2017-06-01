@@ -27,7 +27,7 @@
     limitations under the License.
 """
 
-from builtins import object
+
 from datetime import datetime
 import pytest
 from mslib.mswms.mss_plot_driver import VerticalSectionDriver, HorizontalSectionDriver

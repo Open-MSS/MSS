@@ -27,7 +27,7 @@
 """
 
 from past.builtins import basestring
-from builtins import object
+
 import mslib.mswms.wms as wms
 
 

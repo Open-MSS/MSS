@@ -25,9 +25,9 @@
     limitations under the License.
 """
 from __future__ import division
-from builtins import range
+
 from past.utils import old_div
-from builtins import object
+
 import numpy as np
 import matplotlib
 

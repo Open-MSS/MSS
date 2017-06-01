@@ -26,7 +26,7 @@
     limitations under the License.
 """
 
-from builtins import object
+
 import os
 from datetime import datetime
 from mslib.mswms import dataaccess

@@ -26,9 +26,9 @@
     limitations under the License.
 """
 
-from builtins import zip
+
 from past.builtins import basestring
-from builtins import object
+
 import os
 import imp
 import numpy as np
