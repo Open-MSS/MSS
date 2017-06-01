@@ -62,7 +62,7 @@ def load_from_csv(filename):
         raise SyntaxError("CSV file requires at least 4 lines!")
     dialect = csv.Sniffer().sniff(lines[-1])
     csv_reader = csv.reader(lines, dialect=dialect)
-    name = csv_reader.next()[0]
+    name = next(csv_reader)[0]
     next(csv_reader)  # header
     for row in csv_reader:
         wp = ft.Waypoint()

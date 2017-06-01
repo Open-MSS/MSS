@@ -53,14 +53,15 @@ def save_to_txt(filename, name, waypoints):
                                                                      max_com_len)
         out_file.write(header)
         for i, wp in enumerate(waypoints):
-            loc = str(wp.location).encode("ascii", "replace")
+            # ToDo check str(str( .. ) and may be use csv write
+            loc = str(str(wp.location).encode("ascii", "replace"))
             lat = wp.lat
             lon = wp.lon
             lvl = wp.flightlevel
             pre = old_div(wp.pressure, 100.)
             leg = wp.distance_to_prev
             cum = wp.distance_total
-            com = str(wp.comments).encode("ascii", "replace")
+            com = str(str(wp.comments).encode("ascii", "replace"))
             out_file.write(line.format(i, loc, max_loc_len, lat, lon, lvl, pre, leg, cum, com, max_com_len))
 
 
