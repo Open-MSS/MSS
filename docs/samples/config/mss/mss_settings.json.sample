@@ -24,9 +24,15 @@
         "03 Global (cyl)": {"CRS": "EPSG:4326",
                             "map": {"llcrnrlon": -180.0, "llcrnrlat": -90.0,
                                     "urcrnrlon": 180.0, "urcrnrlat": 90.0}},
-        "04 Northern Hemisphere (stereo)": {"CRS": "EPSG:77790000",
+        "04 Shannon (stereo)": {"CRS": "EPSG:77752350",
+                                "map": {"llcrnrlon": -45.0, "llcrnrlat": 22.0,
+                                        "urcrnrlon": 45.0, "urcrnrlat": 63.0}},
+        "05 Northern Hemisphere (stereo)": {"CRS": "EPSG:77790000",
                                             "map": {"llcrnrlon": -45.0, "llcrnrlat": 0.0,
-                                                    "urcrnrlon": 135.0, "urcrnrlat": 0.0}}
+                                                    "urcrnrlon": 135.0, "urcrnrlat": 0.0}},
+        "06 Southern Hemisphere (stereo)": {"CRS": "EPSG:77890000",
+                                            "map": {"llcrnrlon": 45.0, "llcrnrlat": 0.0,
+                                                    "urcrnrlon": -135.0, "urcrnrlat": 0.0}}
     },
 
     "crs_to_mpl_basemap_table" : {
