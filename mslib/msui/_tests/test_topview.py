@@ -25,6 +25,10 @@
     limitations under the License.
 """
 
+from __future__ import division
+
+
+from past.utils import old_div
 
 import mock
 import os
@@ -46,7 +50,7 @@ class Test_MSS_TV_MapAppearanceDialog(object):
         self.window = tv.MSS_TV_MapAppearanceDialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
@@ -76,7 +80,7 @@ class Test_MSSTopViewWindow(object):
         self.window = tv.MSSTopViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
@@ -186,7 +190,7 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mousePress(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        point = QtCore.QPoint(self.window.width() / 3, self.window.height() / 2)
+        point = QtCore.QPoint(old_div(self.window.width(), 3), old_div(self.window.height(), 2))
         QtTest.QTest.mouseMove(
             self.window.mpl.canvas, pos=point)
         QtWidgets.QApplication.processEvents()
@@ -239,7 +243,7 @@ class Test_TopViewWMS(object):
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()

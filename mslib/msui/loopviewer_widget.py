@@ -35,14 +35,20 @@
     limitations under the License.
 """
 
+from __future__ import division
 
+
+from future import standard_library
+standard_library.install_aliases()
+
+from past.utils import old_div
 from datetime import datetime, timedelta
 
-import StringIO
+import io
 import functools
 import logging
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
@@ -98,7 +104,7 @@ class ProductChooserDialog(QtWidgets.QDialog, uipc.Ui_ProductChooserDialog):
         self.cbType.clear()
         self.cbProduct.clear()
         self.cbRegion.clear()
-        keys = self.config.keys()
+        keys = list(self.config.keys())
         keys.sort()
         self.cbType.addItems(keys)
         self.loadProducts(self.cbType.currentText())
@@ -108,7 +114,7 @@ class ProductChooserDialog(QtWidgets.QDialog, uipc.Ui_ProductChooserDialog):
         """
         self.cbProduct.clear()
         _type = str(_type)
-        keys = self.config[_type]["products"].keys()
+        keys = list(self.config[_type]["products"].keys())
         keys.sort()
         self.cbProduct.addItems(keys)
         self.loadRegions(self.cbProduct.currentText())
@@ -122,7 +128,7 @@ class ProductChooserDialog(QtWidgets.QDialog, uipc.Ui_ProductChooserDialog):
             return
         _type = str(self.cbType.currentText())
         self.cbRegion.clear()
-        keys = self.config[_type]["products"][product]["regions"].keys()
+        keys = list(self.config[_type]["products"][product]["regions"].keys())
         keys.sort()
         self.cbRegion.addItems(keys)
 
@@ -343,19 +349,19 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                             logging.debug("setting HTTP authentication..")
                             # (see http://docs.python.org/library/urllib2.html#examples).
                             # Create an OpenerDirector with support for Basic HTTP Authentication...
-                            auth_handler = urllib2.HTTPBasicAuthHandler()
+                            auth_handler = urllib.request.HTTPBasicAuthHandler()
                             auth_handler.add_password(realm=realm,
                                                       uri=base_url,
                                                       user=username,
                                                       passwd=password)
-                            opener = urllib2.build_opener(auth_handler)
+                            opener = urllib.request.build_opener(auth_handler)
                             # ...and install it globally so it can be used with urlopen.
-                            urllib2.install_opener(opener)
+                            urllib.request.install_opener(opener)
                             auth_installed = True
                         try:
-                            urlobject = urllib2.urlopen(retrieve)
+                            urlobject = urllib.request.urlopen(retrieve)
                             auth_required = False
-                        except urllib2.HTTPError as ex:
+                        except urllib.error.HTTPError as ex:
                             if ex.code == 401:
                                 # Catch the "401 Unauthorized" error if one has been
                                 # returned by the server and ask the user for username
@@ -376,17 +382,17 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                     if not cancel:
                         # Read the image file from the URL into a string (urlobject.read())
                         # and wrap this string into a StringIO object that behaves like a file.
-                        imageIO = StringIO.StringIO(urlobject.read())
+                        imageIO = io.BytesIO(urlobject.read())
                         qp = QtGui.QPixmap()
                         qp.loadFromData(imageIO.getvalue())
 
                         valid_time = init_time + timedelta(seconds=3600 * step)
                         pixmap_cache.append((qp, valid_time))
-                except urllib2.HTTPError as ex:
+                except urllib.error.HTTPError as ex:
                     logging.debug("timestep {:03d} not available (HTTP error {d})".format(step, ex.code))
 
                 # Update progress dialog.
-                self.pdlg.setValue((float(ilevel) + float(istep) / num_steps) / num_levels * 100.)
+                self.pdlg.setValue((float(ilevel) + old_div(float(istep), num_steps)) / num_levels * 100.)
                 self.pdlg.repaint()
                 QtWidgets.QApplication.processEvents()
                 if self.pdlg.wasCanceled() or cancel:

@@ -27,6 +27,7 @@
 
 # The README.txt file should be written in reST so that PyPI can use
 # it to generate your project's PyPI page.
+from past.builtins import execfile
 from setuptools import setup, find_packages
 long_description = open('README').read()
 execfile('mslib/version.py')

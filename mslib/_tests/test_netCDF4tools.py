@@ -44,7 +44,7 @@ DATA_FILE_TL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.THETA_LEVELS.E
 DATA_FILE_AL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc")
 
 
-class Test_netCDF4tools():
+class Test_netCDF4tools(object):
     def setup(self):
         self.ncfile_ml = Dataset(DATA_FILE_ML, 'r')
         self.ncfile_pl = Dataset(DATA_FILE_PL, 'r')

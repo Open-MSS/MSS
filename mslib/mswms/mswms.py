@@ -27,6 +27,9 @@
     limitations under the License.
 """
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import paste.httpserver
 import argparse
 import logging
@@ -50,11 +53,11 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        print "***********************************************************************"
-        print "\n            Mission Support System (mss)\n"
-        print "***********************************************************************"
-        print "Documentation: http://mss.rtfd.io"
-        print "Version:", __version__
+        print("***********************************************************************")
+        print("\n            Mission Support System (mss)\n")
+        print("***********************************************************************")
+        print("Documentation: http://mss.rtfd.io")
+        print("Version:", __version__)
         sys.exit()
 
     setup_logging(args)

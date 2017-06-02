@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-# related third party imports
 import logging
 import os
 import pykml.parser
@@ -76,7 +75,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
     def __del__(self):
         settings = {
-            "filename": unicode(self.leFile.text()),
+            "filename": str(self.leFile.text()),
             "linewidth": self.dsbLineWidth.value(),
             "colour": self.get_color()
         }
@@ -113,8 +112,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
            overpass predictions.
         """
         filename = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open KML Polygonal File", os.path.dirname(unicode(self.leFile.text())), "(*.kml)")
-        filename = filename[0] if USE_PYQT5 else unicode(filename)
+            self, "Open KML Polygonal File", os.path.dirname(str(self.leFile.text())), "(*.kml)")
+        filename = filename[0] if isinstance(filename, list) and USE_PYQT5 else str(filename)
 
         if not filename:
             return
@@ -131,7 +130,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.patch = None
             self.cbOverlay.setEnabled(False)
         try:
-            with open(unicode(self.leFile.text())) as kmlf:
+            with open(str(self.leFile.text())) as kmlf:
                 self.kml = pykml.parser.parse(kmlf).getroot()
                 self.patch = KMLPatch(self.view.map, self.kml,
                                       self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())

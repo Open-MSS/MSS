@@ -41,6 +41,7 @@ requirements:
         - tk 8.5.*
         - pykml
         - owslib
+        - future  # [py2k}
 
 test:
     imports:

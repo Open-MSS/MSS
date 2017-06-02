@@ -70,5 +70,5 @@ MSSChemQuantities = \
 
 MSSChemTargets = {
     qtylong + '_of_' + species + '_in_air': (key, qty, units, scale)
-    for key, species in MSSChemSpecies.items()
-    for qty, (qtylong, units, scale) in MSSChemQuantities.items()}
+    for key, species in list(MSSChemSpecies.items())
+    for qty, (qtylong, units, scale) in list(MSSChemQuantities.items())}

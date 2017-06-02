@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-
 import sys
 import mock
 
@@ -41,7 +40,7 @@ class Test_MSSTimeSeriesViewWindow(object):
         self.window = tsv.MSSTimeSeriesViewWindow()
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

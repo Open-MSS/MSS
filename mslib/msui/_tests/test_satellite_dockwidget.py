@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-
 import os
 import sys
 import mock
@@ -40,7 +39,7 @@ class Test_SatelliteDockWidget(object):
         self.window = sd.SatelliteControlWidget(view=self.view)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

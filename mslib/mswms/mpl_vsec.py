@@ -26,12 +26,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-
 # style definitions should be put in mpl_vsec_styles.py
 
+from __future__ import division
+
+
+from future import standard_library
+standard_library.install_aliases()
+
+
+from past.utils import old_div
 import PIL.Image
-import StringIO
+import io
 import logging
 import numpy as np
 from abc import abstractmethod
@@ -72,7 +78,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax = self.ax
 
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
-        tick_index_step = max(1, len(self.lat_inds) / int(self.numlabels))
+        tick_index_step = max(1, old_div(len(self.lat_inds), int(self.numlabels)))
         ax.set_xticks(self.lat_inds[::tick_index_step])
         ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
                             for d in zip(self.lats[::tick_index_step],
@@ -104,13 +110,13 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # .. check step reduction to 10 hPa ..
         if self.p_top < 10000:
             major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1,
-                                     -label_distance / 10)
+                                     old_div(-label_distance, 10))
             len_major_ticks = len(major_ticks)
             major_ticks = np.resize(major_ticks,
                                     len_major_ticks + len(major_ticks2) - 1)
             major_ticks[len_major_ticks:] = major_ticks2[1:]
 
-        labels = ["{:.0f}".format(l / 100.) for l in major_ticks]
+        labels = ["{:.0f}".format(old_div(l, 100.)) for l in major_ticks]
 
         # .. the same for the minor ticks ..
         p_top_minor = max(label_distance, self.p_top)
@@ -121,7 +127,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         if self.p_top < 10000:
             minor_ticks2 = np.arange(minor_ticks[-1], self.p_top - 1,
-                                     -label_distance_minor / 10)
+                                     old_div(-label_distance_minor, 10))
             len_minor_ticks = len(minor_ticks)
             minor_ticks = np.resize(minor_ticks,
                                     len_minor_ticks + len(minor_ticks2) - 1)
@@ -139,9 +145,9 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         # Plot title (either in image axes or above).
         time_step = self.valid_time - self.init_time
-        time_step_hrs = (time_step.days * 86400 + time_step.seconds) / 3600
+        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
         titlestring = u"{} [{:.0f}..{:.0f} hPa]\nValid: {} (step {:d} hrs from {})".format(
-            titlestring, self.p_bot / 100, self.p_top / 100,
+            titlestring, old_div(self.p_bot, 100), old_div(self.p_top, 100),
             self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"),
             time_step_hrs, self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
@@ -189,7 +195,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             logging.debug("creating figure..")
             dpi = 80
-            figsize = figsize[0] / dpi, figsize[1] / dpi
+            figsize = old_div(figsize[0], dpi), old_div(figsize[1], dpi)
             facecolor = "white"
             self.fig = mpl.figure.Figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
             logging.debug("\twith frame and legends" if not noframe else
@@ -207,7 +213,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             # Return the image as png embedded in a StringIO stream.
             canvas = FigureCanvas(self.fig)
-            output = StringIO.StringIO()
+            output = io.BytesIO()
             canvas.print_png(output, bbox_inches='tight')
 
             if show:
@@ -228,7 +234,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             output.seek(0)  # necessary for PIL.Image.open()
             palette_img = PIL.Image.open(output).convert(mode="RGB"
                                                          ).convert("P", palette=PIL.Image.ADAPTIVE)
-            output = StringIO.StringIO()
+            output = io.BytesIO()
             if not transparent:
                 logging.debug("saving figure as non-transparent PNG.")
                 palette_img.save(output, format="PNG")  # using optimize=True doesn't change much
@@ -243,7 +249,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                 # palette. (Why doesn't PIL provide a method to directly access the
                 # colours in a palette??)
                 lut = palette_img.resize((256, 1))
-                lut.putdata(range(256))
+                lut.putdata(list(range(256)))
                 lut = [c[1] for c in lut.convert("RGB").getcolors()]
                 facecolor_rgb = list(mpl.colors.hex2color(mpl.colors.cnames[facecolor]))
                 for i in [0, 1, 2]:

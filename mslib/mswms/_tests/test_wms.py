@@ -26,6 +26,8 @@
     limitations under the License.
 """
 
+from past.builtins import basestring
+
 import mslib.mswms.wms as wms
 
 

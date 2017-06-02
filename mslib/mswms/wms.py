@@ -41,6 +41,12 @@
     limitations under the License.
 """
 
+from future import standard_library
+standard_library.install_aliases()
+
+
+from past.builtins import basestring
+
 import os
 import logging
 from datetime import datetime
@@ -49,7 +55,7 @@ import paste
 import paste.request
 import paste.util.multidict
 import tempfile
-import urlparse
+import urllib.parse
 from chameleon import PageTemplateLoader
 
 try:
@@ -171,7 +177,7 @@ class WMSServer(object):
         """Returns True if the given parameter is an XML that contains
            a service exception.
         """
-        if isinstance(var, basestring) and var.find("<ServiceException") > 1:
+        if isinstance(var, basestring) and var.find(b"<ServiceException") > 1:
             return True
         return False
 
@@ -197,7 +203,7 @@ class WMSServer(object):
         # Horizontal Layers
         hsec_layers = []
         for dataset in self.hsec_layer_registry:
-            for layer in self.hsec_layer_registry[dataset].values():
+            for layer in list(self.hsec_layer_registry[dataset].values()):
                 if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
                     logging.error("layer %s/%s has no init times!", layer, dataset)
                     continue
@@ -209,7 +215,7 @@ class WMSServer(object):
         # Vertical Layers
         vsec_layers = []
         for dataset in self.vsec_layer_registry:
-            for layer in self.vsec_layer_registry[dataset].values():
+            for layer in list(self.vsec_layer_registry[dataset].values()):
                 if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
                     logging.error("layer %s/%s has no init times!", layer, dataset)
                     continue
@@ -507,11 +513,11 @@ def application(environ, start_response):
 
         # Processing
         request = str(query.get('request'))
-        return_data = ""
+        output = ""
         return_format = 'text/plain'
 
         url = paste.request.construct_url(environ)
-        server_url = urlparse.urljoin(url, urlparse.urlparse(url).path)
+        server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
         if url in cache:
             return_format, return_data = cache[url]
@@ -519,19 +525,22 @@ def application(environ, start_response):
             if request.lower() == 'getcapabilities':
                 return_format = 'text/xml'
                 return_data = app.get_capabilities(server_url)
+                output = str(return_data).encode('utf-8')
             elif request.lower() in ['getmap', 'getvsec']:
                 return_data, return_format = app.produce_plot(environ, request)
+                # ToDo refactor
                 if not app.is_service_exception(return_data):
                     return_format = return_format.lower()  # MAYBE TO BE DELETED
+                    output = return_data
                 else:
                     return_format = "text/xml"
+                    output = str(return_data).encode('utf-8')
 
                 # Saving the result in a cache
                 cache[url] = (return_format, return_data)
 
         # Preparing the Response
         status = '200 OK'
-        output = str(return_data)
         response_headers = [('Content-type', return_format), ('Content-Length', str(len(output)))]
         start_response(status, response_headers)
 
