@@ -25,8 +25,6 @@
     limitations under the License.
 """
 
-
-
 import mock
 import sys
 

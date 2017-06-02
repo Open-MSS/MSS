@@ -29,7 +29,6 @@
 import glob
 import re
 
-# related third party imports
 import netCDF4
 
 

@@ -25,8 +25,6 @@
     limitations under the License.
 """
 
-# related third party imports
-
 import logging
 import os
 import pykml.parser

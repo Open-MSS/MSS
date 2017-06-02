@@ -25,8 +25,6 @@
     limitations under the License.
 """
 
-
-
 from mslib.msui.aircrafts import SimpleAircraft, AIRCRAFT_DUMMY
 
 

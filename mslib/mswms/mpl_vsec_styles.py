@@ -28,6 +28,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+
 from __future__ import division
 
 from past.utils import old_div
@@ -37,7 +38,6 @@ import mpl_toolkits.axes_grid1.inset_locator
 from matplotlib import patheffects
 import numpy as np
 
-# local application imports
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib.mswms.msschem import MSSChemTargets

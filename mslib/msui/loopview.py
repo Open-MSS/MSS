@@ -45,7 +45,6 @@
 from __future__ import division
 
 
-
 from past.utils import old_div
 import functools
 

@@ -25,6 +25,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+
 from __future__ import division
 
 
@@ -35,10 +36,8 @@ import logging
 import os
 from abc import ABCMeta, abstractmethod
 
-# related third party imports
 import numpy as np
 
-# local application imports
 from mslib import netCDF4tools
 from mslib import utils
 from future.utils import with_metaclass

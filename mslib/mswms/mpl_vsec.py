@@ -26,14 +26,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+# style definitions should be put in mpl_vsec_styles.py
+
 from __future__ import division
 
 
-# style definitions should be put in mpl_vsec_styles.py
-
 from future import standard_library
 standard_library.install_aliases()
-
 
 
 from past.utils import old_div

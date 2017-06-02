@@ -25,8 +25,6 @@
     limitations under the License.
 """
 
-
-
 from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
 
 from mslib.utils import config_loader, FatalUserError

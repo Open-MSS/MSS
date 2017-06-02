@@ -26,7 +26,6 @@
     limitations under the License.
 """
 
-
 from past.builtins import basestring
 
 import os

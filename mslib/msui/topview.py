@@ -28,15 +28,11 @@
     limitations under the License.
 """
 
-
 import functools
 import logging
 from mslib.utils import config_loader, get_projection_params, save_settings_pickle, load_settings_pickle
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-# related third party imports
 from mslib.msui.mss_qt import QtGui, QtWidgets
-
-# local application imports
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow

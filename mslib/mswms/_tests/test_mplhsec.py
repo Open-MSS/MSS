@@ -26,7 +26,6 @@
     limitations under the License.
 """
 
-
 import importlib
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle

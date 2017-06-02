@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-
 import datetime
 from mslib import utils
 

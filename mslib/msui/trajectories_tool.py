@@ -26,18 +26,13 @@
     limitations under the License.
 """
 
-
-
 import logging
 import os
 
-# related third party imports
 from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui, USE_PYQT5
-
-# local application imports
 from mslib.msui.mss_qt import ui_trajectories_window as ui
 from mslib.msui import trajectory_item_tree as titree
-# import trajectory_ts
+
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.icons import icons
 

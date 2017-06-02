@@ -62,12 +62,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+
 from __future__ import division
 
 from past.utils import old_div
 import logging
 
-# related third party imports
 import numpy as np
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator
@@ -75,7 +75,6 @@ import matplotlib.colors
 import mpl_toolkits.basemap
 from matplotlib import patheffects
 
-# local application imports
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib.mswms.msschem import MSSChemTargets
