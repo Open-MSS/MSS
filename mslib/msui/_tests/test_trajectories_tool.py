@@ -64,7 +64,8 @@ class Test_TrajectoriesTool(object):
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getExistingDirectory",
                 return_value=os.path.join(sample_path, "trajectories"))
     def test_load_trajectories(self, mockopen, mockcrit):
-        pytest.skip("can't load example file")
+        if sys.version_info.major > 2:
+            pytest.skip("can't load example pickle file")
         self.window.actionOpenTrajectories.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
@@ -147,7 +148,8 @@ class Test_TrajectoryToolComples(object):
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getExistingDirectory",
                 return_value=os.path.join(sample_path, "trajectories"))
     def test_show_trajectories(self, mockopen, mockcrit):
-        pytest.skip("can't load example file")
+        if sys.version_info.major > 2:
+            pytest.skip("can't load example pickle file")
         self.trajtool.actionOpenTrajectories.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
