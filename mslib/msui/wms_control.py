@@ -1276,20 +1276,20 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if USE_PYQT5:
             return self.cbLayer.currentText().split(" | ")[-1]
         else:
-            return str(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
+            return unicode(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
 
     def getStyle(self):
         if USE_PYQT5:
             return self.cbStyle.currentText().split(" |")[0]
         else:
-            return str(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
+            return unicode(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
 
     def getLevel(self):
         if self.cbLevelOn.isChecked():
             if USE_PYQT5:
                 return self.cbLevel.currentText().split(" (")[0]
             else:
-                return str(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
+                return unicode(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
         else:
             return None
 
@@ -1447,7 +1447,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         [("time", str(self.cbValidTime.itemText(ci_p)))
                          for ci_p in list(range(ci_time + 1, ci_time + 1 + pre_tfwd)) + list(range(ci_time - pre_tbck, ci_time))
                          if 0 <= ci_p < self.cbValidTime.count()] + \
-                        [("level", str(self.cbLevel.itemText(ci_p), errors="ignore").split(" (")[0])
+                        [("level", str(self.cbLevel.itemText(ci_p)).split(" (")[0])
                          for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)
                          if ci_p != ci_level and 0 <= ci_p < self.cbLevel.count()]
 
@@ -1644,7 +1644,7 @@ class HSecWMSControlWidget(WMSControlWidget):
             if USE_PYQT5:
                 s = self.cbLevel.currentText()
             else:
-                s = str(self.cbLevel.currentText(), errors="ignore")
+                s = unicode(self.cbLevel.currentText(), errors="ignore")
             if s == "":
                 return
             lvl = float(s.split(" (")[0])

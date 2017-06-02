@@ -145,6 +145,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # the case with ensemble runs). If yes,
             # load all those subdirectories. Otherwise load the selected
             # directory.
+            # ToDo we have to solve this differently, it is not a good idea to have such a traversal
             traj_dir_items = os.listdir(traj_dir)
             subdirs = [sdir for sdir in traj_dir_items
                        if os.path.isdir(os.path.join(traj_dir, sdir))]
