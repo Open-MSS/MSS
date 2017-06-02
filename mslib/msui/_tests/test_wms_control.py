@@ -58,6 +58,8 @@ class Test_HSecWMSControlWidget(object):
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
+        paste.httpserver.ServerExit()
+        QtTest.QTest.qWait(3000)
         self.thread = multiprocessing.Process(
             target=paste.httpserver.serve,
             args=(mslib.mswms.wms.application,),
@@ -202,6 +204,8 @@ class Test_VSecWMSControlWidget(object):
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
+        paste.httpserver.ServerExit()
+        QtTest.QTest.qWait(2000)
         self.thread = multiprocessing.Process(
             target=paste.httpserver.serve,
             args=(mslib.mswms.wms.application,),
