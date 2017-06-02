@@ -26,6 +26,7 @@
 """
 
 
+
 import sys
 import mock
 import os
@@ -50,7 +51,7 @@ class Test_MSSSideViewWindow(object):
         self.window.createNewFlightTrack(activate=True)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

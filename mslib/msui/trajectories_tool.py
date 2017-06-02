@@ -29,13 +29,10 @@
 import logging
 import os
 
-# related third party imports
 from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui, USE_PYQT5
-
-# local application imports
 from mslib.msui.mss_qt import ui_trajectories_window as ui
 from mslib.msui import trajectory_item_tree as titree
-# import trajectory_ts
+
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.icons import icons
 
@@ -118,7 +115,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # QString to str.
         nas_file = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open NASA Ames File", "", "NASA Ames files (*.nas)")
-        nas_file = nas_file[0] if USE_PYQT5 else unicode(nas_file)
+        nas_file = nas_file[0] if USE_PYQT5 else str(nas_file)
         if nas_file:
             logging.debug(u"Loading flight track data from '%s'", nas_file)
 
@@ -141,7 +138,6 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Ask for a directory to open.
         traj_dir = QtWidgets.QFileDialog.getExistingDirectory(
             self, "Open Lagranto Output Directory", "")
-        traj_dir = traj_dir[0] if USE_PYQT5 else unicode(traj_dir)
         if traj_dir:
             logging.debug(u"Loading trajectory data from '%s'", traj_dir)
 
@@ -149,6 +145,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # the case with ensemble runs). If yes,
             # load all those subdirectories. Otherwise load the selected
             # directory.
+            # ToDo we have to solve this differently, it is not a good idea to have such a traversal
             traj_dir_items = os.listdir(traj_dir)
             subdirs = [sdir for sdir in traj_dir_items
                        if os.path.isdir(os.path.join(traj_dir, sdir))]
@@ -260,7 +257,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Generally, an instance of this class will contain a list of
         # non-overlapping selection ranges.
         itemSelection = self.traj_item_tree.selectionFromQuery(
-            unicode(self.leSelectionQuery.text()),
+            str(self.leSelectionQuery.text()),
             index=rootIndex)
 
         # Items can be selected in the tree view by using the select()
@@ -402,7 +399,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         view_name = self.cbPlotInView.currentText()
         selection = self.selectedMapElements()
-        if unicode(view_name) != "None" and len(selection) > 0:
+        if str(view_name) != "None" and len(selection) > 0:
             view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
                          self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
             logging.debug(u"Plotting selected elements in view <%s>", view_name)
@@ -421,7 +418,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         view_name = self.cbRemoveFromView.currentText()
-        if unicode(view_name) != "None":
+        if str(view_name) != "None":
             view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
                          self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
             logging.debug(u"Removing selected elements from view <%s>", view_name)
@@ -460,7 +457,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         self.cbRemoveFromView.setCurrentIndex(index if index >= 0 else 0)
 
         new_views = [self.cbPlotInView.itemText(i) for i in range(self.cbPlotInView.count())]
-        missing_views = [unicode(_x) for _x in old_views if _x not in new_views]
+        missing_views = [str(_x) for _x in old_views if _x not in new_views]
         stack = [_x for _x in self.traj_item_tree.getRootItem().childItems]
         while len(stack) > 0:
             # Downwards traversal of the tree to determine all visible items

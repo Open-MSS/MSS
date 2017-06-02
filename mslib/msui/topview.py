@@ -32,10 +32,7 @@ import functools
 import logging
 from mslib.utils import config_loader, get_projection_params, save_settings_pickle, load_settings_pickle
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-# related third party imports
 from mslib.msui.mss_qt import QtGui, QtWidgets
-
-# local application imports
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow
@@ -203,7 +200,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.cbChangeMapSection.clear()
         predefined_map_sections = config_loader(dataset="predefined_map_sections",
                                                 default=mss_default.predefined_map_sections)
-        items = predefined_map_sections.keys()
+        items = list(predefined_map_sections.keys())
         items.sort()
         self.cbChangeMapSection.addItems(items)
 
@@ -245,7 +242,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """Change the current map section to one of the predefined regions.
         """
         # Get the initial projection parameters from the tables in mss_settings.
-        current_map_key = unicode(self.cbChangeMapSection.currentText())
+        current_map_key = str(self.cbChangeMapSection.currentText())
         predefined_map_sections = config_loader(dataset="predefined_map_sections",
                                                 default=mss_default.predefined_map_sections)
         current_map = predefined_map_sections[current_map_key]

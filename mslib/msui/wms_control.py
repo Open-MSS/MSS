@@ -26,17 +26,21 @@
     limitations under the License.
 """
 
+from future import standard_library
+standard_library.install_aliases()
+
+
+from past.builtins import basestring
 import time
 from datetime import datetime, timedelta
 
-import StringIO
+import io
 import hashlib
 import logging
 import os
 import requests
 import re
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -59,7 +63,7 @@ WMS_URL_LIST = QtGui.QStandardItemModel()
 
 
 def add_wms_urls(combo_box, url_list):
-    combo_box_urls = [unicode(combo_box.itemText(_i)) for _i in range(combo_box.count())]
+    combo_box_urls = [str(combo_box.itemText(_i)) for _i in range(combo_box.count())]
     for url in (_url for _url in url_list if _url not in combo_box_urls):
         combo_box.addItem(url)
 
@@ -178,7 +182,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
             request['elevation'] = str(level)
         # --(mss)
 
-        data = urllib.urlencode(request)
+        data = urllib.parse.urlencode(request)
 
         # ++(mss)
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
@@ -207,7 +211,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         if hasattr(u, "info") and u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
-            err_message = unicode(se_tree.find('ServiceException').text).strip()
+            err_message = str(se_tree.find('ServiceException').text).strip()
             raise owslib.wms.ServiceException(err_message, se_xml)
         return u
 
@@ -233,8 +237,8 @@ class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
     def getAuthInfo(self):
         """Return the entered username and password.
         """
-        return (unicode(self.leUsername.text()),
-                unicode(self.lePassword.text()))
+        return (str(self.leUsername.text()),
+                str(self.lePassword.text()))
 
 
 class WMSMapFetcher(QtCore.QObject):
@@ -311,7 +315,7 @@ class WMSMapFetcher(QtCore.QObject):
             self.started_request.emit()
             self.long_request = True
             urlobject = self.wms.getmap(**kwargs)
-            image_io = StringIO.StringIO(urlobject.read())
+            image_io = io.BytesIO(urlobject.read())
             img = PIL.Image.open(image_io)
             # Check if the image is stored as indexed palette
             # with a transparent colour. Store correspondingly.
@@ -341,8 +345,8 @@ class WMSMapFetcher(QtCore.QObject):
             # PIL.Image.open(). See
             #    http://www.pythonware.com/library/pil/handbook/image.htm
             logging.debug("Retrieving legend from '%s'", urlstr)
-            urlobject = urllib2.urlopen(urlstr)
-            image_io = StringIO.StringIO(urlobject.read())
+            urlobject = urllib.request.urlopen(urlstr)
+            image_io = io.BytesIO(urlobject.read())
             legend_img_raw = PIL.Image.open(image_io)
             legend_img = legend_img_raw.crop(legend_img_raw.getbbox())
             logging.debug("legend retrieved, legend graphic size is %i bytes.", image_io.len)
@@ -537,7 +541,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         wms = None
         # initialize login cache fomr config file, but do not overwrite existing keys
-        for key, value in config_loader(dataset="WMS_login", default={}).items():
+        for key, value in list(config_loader(dataset="WMS_login", default={}).items()):
             if key not in constants.WMS_LOGIN_CACHE:
                 constants.WMS_LOGIN_CACHE[key] = value
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
@@ -581,7 +585,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return wms
 
     def wmsUrlChanged(self, text):
-        text = unicode(text)
+        text = str(text)
         wms = WMS_SERVICE_CACHE.get(text)
         if wms is not None and wms != self.wms:
             self.activateWMS(wms)
@@ -625,7 +629,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
 
-        base_url = unicode(self.cbWMS_URL.currentText())
+        base_url = str(self.cbWMS_URL.currentText())
         try:
             request = requests.get(base_url)
         except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as ex:
@@ -667,7 +671,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.cbStyle.clear()
 
         # Parse layer tree of the wms object and discover usable layers.
-        stack = wms.contents.values()
+        stack = list(wms.contents.values())
         filtered_layers = []
         while len(stack) > 0:
             layer = stack.pop()
@@ -772,7 +776,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if layername in self.wms.contents:
             return self.wms.contents[layername]
         else:
-            stack = self.wms.contents.values()
+            stack = list(self.wms.contents.values())
             while len(stack) > 0:
                 layer = stack.pop()
                 if layer.name == layername:
@@ -1339,7 +1343,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         kwargs["return_only_url"] = False
         if not self.wms.url.startswith(self.cbWMS_URL.currentText()):
             raise RuntimeError("WMS URL does not match, use get capabilities first.")
-        return os.path.join(self.wms_cache, hashlib.md5(urlstr).hexdigest() + ".png")
+        return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
 
     def retrieveImage(self, crs="EPSG:4326", bbox=None, path_string=None,
                       width=800, height=400):
@@ -1418,7 +1422,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             legend_kwargs = {"urlstr": self.getLegendURL(), "md5_filename": None}
             if legend_kwargs["urlstr"] is not None:
                 legend_kwargs["md5_filename"] = os.path.join(
-                    self.wms_cache, hashlib.md5(legend_kwargs["urlstr"]).hexdigest() + ".png")
+                    self.wms_cache, hashlib.md5(legend_kwargs["urlstr"].encode('utf-8')).hexdigest() + ".png")
 
             # If caching is enabled, get the URL and check the image cache
             # directory for the suitable image file.
@@ -1440,10 +1444,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
                     ci_time, ci_level = self.cbValidTime.currentIndex(), self.cbLevel.currentIndex()
                     prefetch_key_values = \
-                        [("time", unicode(self.cbValidTime.itemText(ci_p)))
-                         for ci_p in range(ci_time + 1, ci_time + 1 + pre_tfwd) + range(ci_time - pre_tbck, ci_time)
+                        [("time", str(self.cbValidTime.itemText(ci_p)))
+                         for ci_p in list(range(ci_time + 1, ci_time + 1 + pre_tfwd)) + list(range(ci_time - pre_tbck, ci_time))
                          if 0 <= ci_p < self.cbValidTime.count()] + \
-                        [("level", unicode(self.cbLevel.itemText(ci_p), errors="ignore").split(" (")[0])
+                        [("level", str(self.cbLevel.itemText(ci_p)).split(" (")[0])
                          for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)
                          if ci_p != ci_level and 0 <= ci_p < self.cbLevel.count()]
 
@@ -1471,7 +1475,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if img is None:
             return
 
-        complete_level = unicode(self.cbLevel.currentText())
+        complete_level = str(self.cbLevel.currentText())
         complete_level = complete_level if complete_level != "" else None
         self.displayRetrievedImage(img, legend_img, layer, style, init_time, valid_time, complete_level)
 

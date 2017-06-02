@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-
 import sys
 import mock
 
@@ -52,7 +51,7 @@ loop_configuration = {
                 "abbrev": "geop",
                 "regions": {"Europe": "eur", "Germany": "de"},
                 "levels": [200, 250, 300, 500, 700, 850, 925],
-                "forecast_steps": range(0, 240, 3)},
+                "forecast_steps": list(range(0, 240, 3))},
         }
     }
 }
@@ -66,7 +65,7 @@ class Test_MSSLoopViewWindow(object):
         self.window = lv.MSSLoopWindow(loop_configuration)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

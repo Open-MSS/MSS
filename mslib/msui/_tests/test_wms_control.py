@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-
 import os
 import sys
 import mock
@@ -68,7 +67,7 @@ class Test_HSecWMSControlWidget(object):
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
@@ -106,7 +105,7 @@ class Test_HSecWMSControlWidget(object):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(10)
+        QtTest.QTest.qWait(20)
         QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
@@ -219,7 +218,7 @@ class Test_VSecWMSControlWidget(object):
 
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 

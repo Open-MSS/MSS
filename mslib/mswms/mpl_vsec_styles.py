@@ -29,13 +29,15 @@
     limitations under the License.
 """
 
+from __future__ import division
+
+from past.utils import old_div
 import matplotlib
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator
 from matplotlib import patheffects
 import numpy as np
 
-# local application imports
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib.mswms.msschem import MSSChemTargets
@@ -991,44 +993,44 @@ pv_eth_cmap_0 = matplotlib.colors.ListedColormap(pv_cmap_data)
 #           (/170, 255,  60/) )/255
 
 def scale_pvu_to_01(pvu):
-    return (pvu + 2.) / 10.
+    return old_div((pvu + 2.), 10.)
 
 
 S = 0.0000000001
 
 _pv_eth_data = (
-    (scale_pvu_to_01(-2.), (142. / 255., 178. / 255., 255. / 255.)),
-    (scale_pvu_to_01(0. - S), (142. / 255., 178. / 255., 255. / 255.)),
+    (scale_pvu_to_01(-2.), (old_div(142., 255.), old_div(178., 255.), old_div(255., 255.))),
+    (scale_pvu_to_01(0. - S), (old_div(142., 255.), old_div(178., 255.), old_div(255., 255.))),
 
-    (scale_pvu_to_01(0.), (181. / 255., 201. / 255., 255. / 255.)),
-    (scale_pvu_to_01(0.2 - S), (181. / 255., 201. / 255., 255. / 255.)),
+    (scale_pvu_to_01(0.), (old_div(181., 255.), old_div(201., 255.), old_div(255., 255.))),
+    (scale_pvu_to_01(0.2 - S), (old_div(181., 255.), old_div(201., 255.), old_div(255., 255.))),
 
-    (scale_pvu_to_01(0.2), (214. / 255., 226. / 255., 237. / 255.)),
-    (scale_pvu_to_01(0.5 - S), (214. / 255., 226. / 255., 237. / 255.)),
+    (scale_pvu_to_01(0.2), (old_div(214., 255.), old_div(226., 255.), old_div(237., 255.))),
+    (scale_pvu_to_01(0.5 - S), (old_div(214., 255.), old_div(226., 255.), old_div(237., 255.))),
 
-    (scale_pvu_to_01(0.5), (242. / 255., 221. / 255., 160. / 255.)),
-    (scale_pvu_to_01(0.8 - S), (242. / 255., 221. / 255., 160. / 255.)),
+    (scale_pvu_to_01(0.5), (old_div(242., 255.), old_div(221., 255.), old_div(160., 255.))),
+    (scale_pvu_to_01(0.8 - S), (old_div(242., 255.), old_div(221., 255.), old_div(160., 255.))),
 
-    (scale_pvu_to_01(0.8), (239. / 255., 193. / 255., 130. / 255.)),
-    (scale_pvu_to_01(1.0 - S), (239. / 255., 193. / 255., 130. / 255.)),
+    (scale_pvu_to_01(0.8), (old_div(239., 255.), old_div(193., 255.), old_div(130., 255.))),
+    (scale_pvu_to_01(1.0 - S), (old_div(239., 255.), old_div(193., 255.), old_div(130., 255.))),
 
-    (scale_pvu_to_01(1.0), (242. / 255., 132. / 255., 68. / 255.)),
-    (scale_pvu_to_01(1.5 - S), (242. / 255., 132. / 255., 68. / 255.)),
+    (scale_pvu_to_01(1.0), (old_div(242., 255.), old_div(132., 255.), old_div(68., 255.))),
+    (scale_pvu_to_01(1.5 - S), (old_div(242., 255.), old_div(132., 255.), old_div(68., 255.))),
 
-    (scale_pvu_to_01(1.5), (220. / 255., 60. / 255., 30. / 255.)),
-    (scale_pvu_to_01(2.0 - S), (220. / 255., 60. / 255., 30. / 255.)),
+    (scale_pvu_to_01(1.5), (old_div(220., 255.), old_div(60., 255.), old_div(30., 255.))),
+    (scale_pvu_to_01(2.0 - S), (old_div(220., 255.), old_div(60., 255.), old_div(30., 255.))),
 
-    (scale_pvu_to_01(2.0), (255. / 255., 120. / 255., 20. / 255.)),
-    (scale_pvu_to_01(3.0 - S), (255. / 255., 120. / 255., 20. / 255.)),
+    (scale_pvu_to_01(2.0), (old_div(255., 255.), old_div(120., 255.), old_div(20., 255.))),
+    (scale_pvu_to_01(3.0 - S), (old_div(255., 255.), old_div(120., 255.), old_div(20., 255.))),
 
-    (scale_pvu_to_01(3.0), (255. / 255., 190. / 255., 20. / 255.)),
-    (scale_pvu_to_01(4.0 - S), (255. / 255., 190. / 255., 20. / 255.)),
+    (scale_pvu_to_01(3.0), (old_div(255., 255.), old_div(190., 255.), old_div(20., 255.))),
+    (scale_pvu_to_01(4.0 - S), (old_div(255., 255.), old_div(190., 255.), old_div(20., 255.))),
 
-    (scale_pvu_to_01(4.0), (255. / 255., 249. / 255., 20. / 255.)),
-    (scale_pvu_to_01(6.0 - S), (255. / 255., 249. / 255., 20. / 255.)),
+    (scale_pvu_to_01(4.0), (old_div(255., 255.), old_div(249., 255.), old_div(20., 255.))),
+    (scale_pvu_to_01(6.0 - S), (old_div(255., 255.), old_div(249., 255.), old_div(20., 255.))),
 
-    (scale_pvu_to_01(6.0), (170. / 255., 255. / 255., 60. / 255.)),
-    (scale_pvu_to_01(8.0), (170. / 255., 255. / 255., 60. / 255.))
+    (scale_pvu_to_01(6.0), (old_div(170., 255.), old_div(255., 255.), old_div(60., 255.))),
+    (scale_pvu_to_01(8.0), (old_div(170., 255.), old_div(255., 255.), old_div(60., 255.)))
 )
 
 pv_eth_cmap_1 = matplotlib.colors.LinearSegmentedColormap.from_list("pv_eth_cmap_1", _pv_eth_data)
@@ -1456,7 +1458,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         # for altitude level model data, when we don't have air_pressure information, we want to warn users that the
         # vertical section is only an approximation
         if (self.name[-2:] == "al") and\
-                ("p" not in self.driver.data_access.build_filetree().values()[0].values()[0]):
+                ("p" not in list(self.driver.data_access.build_filetree().values())[0].values()[0]):
             self.title = self.title.replace(" al)", " al; WARNING: vert. distribution only approximate!)")
 
     def _prepare_datafields(self):
@@ -1593,7 +1595,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
 
 
 for vert in ["ml", "tl", "pl", "al"]:
-    for stdname, props in MSSChemTargets.items():
+    for stdname, props in list(MSSChemTargets.items()):
         name, qty, units, scale = props
         key = "VS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty
         globals()[key] = make_msschem_class(stdname, name, vert, units, scale)

@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-
 import sys
 import mock
 
@@ -47,7 +46,7 @@ class Test_WMSCapabilities(object):
             capabilities=self.capabilities)
         self.window.show()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowShown(self.window)
+        QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

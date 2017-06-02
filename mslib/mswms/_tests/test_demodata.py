@@ -26,6 +26,8 @@
     limitations under the License.
 """
 
+from past.builtins import basestring
+
 import os
 import imp
 import numpy as np
@@ -72,7 +74,7 @@ class TestDemodate(object):
 
     def test_SURFACE(self):
         assert isinstance(demodata._SURFACE, dict)
-        for key, entry in demodata._SURFACE.items():
+        for key, entry in list(demodata._SURFACE.items()):
             assert "data" in entry
             assert "unit" in entry
             assert isinstance(entry["unit"], basestring)
@@ -80,7 +82,7 @@ class TestDemodate(object):
 
     def test_PROFILES(self):
         assert isinstance(demodata._PROFILES, dict)
-        for key, entry in demodata._PROFILES.items():
+        for key, entry in list(demodata._PROFILES.items()):
             assert "data" in entry
             assert "unit" in entry
             assert isinstance(entry["unit"], basestring)

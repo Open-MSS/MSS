@@ -29,7 +29,6 @@
 import glob
 import re
 
-# related third party imports
 import netCDF4
 
 
@@ -67,7 +66,7 @@ def identify_variable(ncfile, standard_name, check=False):
 
     """
 
-    for var_name, variable in ncfile.variables.items():
+    for var_name, variable in list(ncfile.variables.items()):
         if "standard_name" in variable.ncattrs() and variable.standard_name == standard_name:
             return var_name, variable
     if check:
@@ -338,7 +337,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         self.__dict__.update(cdfm.__dict__)
 
         # Get names of master dimensions.
-        masterDims = cdfm.dimensions.keys()
+        masterDims = list(cdfm.dimensions.keys())
 
         # Create the following:
         #   cdf       list of Dataset instances
@@ -347,7 +346,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         self._cdf = cdf  # Store this now, because dim() method needs it
         cdfVar = {}
         cdfOrigin = {}
-        for vName, v in cdfm.variables.items():
+        for vName, v in list(cdfm.variables.items()):
             if vName in exclude:
                 continue
             cdfVar[vName] = v
@@ -376,7 +375,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                     raise IOError(u"number of dimensions not consistent in master "
                                   u"'{}' and '{}'".format(master, f))
 
-            for vName, v in part.variables.items():
+            for vName, v in list(part.variables.items()):
                 # Exclude dimension variables.
                 if (vName in exclude) or (vName in masterDims):
                     continue

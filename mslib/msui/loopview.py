@@ -42,15 +42,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from __future__ import division
 
 
+from past.utils import old_div
 import functools
 
 # related third party imports
 import numpy as np
 
 # local application imports
-from mslib.msui.mss_qt import QtGui, QtCore
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
 from mslib.msui.mss_qt import ui_loopwindow as ui
 from mslib.msui import loopviewer_widget as imw
 from mslib.msui.viewwindows import MSSViewWindow
@@ -79,8 +81,7 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
         super(MSSLoopWindow, self).__init__(parent, *args)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
-
-        self.statusBar.addPermanentWidget(QtGui.QLabel(
+        self.statusBar.addPermanentWidget(QtWidgets.QLabel(
             "Use wheel on image for time navigation, "
             "shift+wheel for level navigation."))
 
@@ -90,23 +91,32 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
         # changeValidTime() method of this class, which displays
         # the globally synchronized time.
         self.imageWidgets = []
-        for i in xrange(self.max_views):
+        for i in range(self.max_views):
             widget = imw.ImageLoopWidget(config, self)
             self.imageWidgets.append(widget)
             widget.signalChangeValidTime.connect(self.changeValidTime)
 
         # Create the splitter objects that are necessary to implement
         # the layouts.
-        self.mainSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        self.rightSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.topSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        self.bottomSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        try:
+            self.mainSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+            self.rightSplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+            self.topSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+            self.bottomSplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        except AttributeError:
+            self.mainSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+            self.rightSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+            self.topSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+            self.bottomSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.mainSplitter.addWidget(self.rightSplitter)
         self.mainSplitter.addWidget(self.topSplitter)
         self.mainSplitter.addWidget(self.bottomSplitter)
 
         # Set the initial layout (only one widget visible).
-        layout = QtGui.QHBoxLayout()
+        try:
+            layout = QtGui.QHBoxLayout()
+        except AttributeError:
+            layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.mainSplitter)
         self.centralFrame.setLayout(layout)
         self.setLayout(0)
@@ -168,7 +178,7 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
             self.mainSplitter.insertWidget(0, self.imageWidgets[0])
             show_widgets = [0, 1, 2]
             self.rightSplitter.setSizes(np.ones(self.rightSplitter.count()))
-            self.mainSplitter.setSizes([2 * w / 3, w / 3])
+            self.mainSplitter.setSizes([2 * w / 3, old_div(w, 3)])
 
         elif index == 3:
             # One large and three small views.
@@ -180,7 +190,7 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
             self.mainSplitter.insertWidget(0, self.imageWidgets[0])
             show_widgets = [0, 1, 2, 3]
             self.rightSplitter.setSizes(np.ones(self.rightSplitter.count()))
-            self.mainSplitter.setSizes([2 * w / 3, w / 3])
+            self.mainSplitter.setSizes([2 * w / 3, old_div(w, 3)])
 
         elif index == 4:
             # Four equally sized views.

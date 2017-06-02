@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-
 import importlib
 import logging
 import traceback
@@ -44,6 +43,7 @@ try:
     QtWidgets = QtGui  # Follow the PyQt5 style and access objects from the modules of PyQt5
     from PyQt4.QtCore import QString  # import QString as this does not exist in PyQt5
 
+    QtTest.QTest.qWaitForWindowExposed = QtTest.QTest.qWaitForWindowShown
     _qt_ui_prefix = "mslib.msui.qt4."
 
 except ImportError:
@@ -56,7 +56,7 @@ except ImportError:
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
     from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
-    QString = unicode  # QString is not exposed anymore but is used transparently by PyQt5
+    QString = str  # QString is not exposed anymore but is used transparently by PyQt5
 
     _qt_ui_prefix = "mslib.msui.qt5."
 
