@@ -82,15 +82,9 @@ class MSSLoopWindow(MSSViewWindow, ui.Ui_ImageLoopWindow):
         super(MSSLoopWindow, self).__init__(parent, *args)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
-
-        try:
-            self.statusBar.addPermanentWidget(QtGui.QLabel(
-                "Use wheel on image for time navigation, "
-                "shift+wheel for level navigation."))
-        except AttributeError:
-            self.statusBar.addPermanentWidget(QtWidgets.QLabel(
-                "Use wheel on image for time navigation, "
-                "shift+wheel for level navigation."))
+        self.statusBar.addPermanentWidget(QtWidgets.QLabel(
+            "Use wheel on image for time navigation, "
+            "shift+wheel for level navigation."))
 
         # Create max_views image labels. The labels will exist
         # in memory, but they won't always be visible to the user.
