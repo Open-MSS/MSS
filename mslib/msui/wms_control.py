@@ -57,6 +57,8 @@ from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.utils import convertHPAToKM
+from mslib.ogcwms import openURL
+
 
 WMS_SERVICE_CACHE = {}
 WMS_URL_LIST = QtGui.QStandardItemModel()
@@ -198,8 +200,10 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
-        u = owslib.util.openURL(base_url, data, method,
-                                username=self.username, password=self.password)
+        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+
+        u = openURL(base_url, data, method,
+                    username=self.username, password=self.password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -345,7 +349,8 @@ class WMSMapFetcher(QtCore.QObject):
             # PIL.Image.open(). See
             #    http://www.pythonware.com/library/pil/handbook/image.htm
             logging.debug("Retrieving legend from '%s'", urlstr)
-            urlobject = urllib.request.urlopen(urlstr)
+            urlobject = requests.get(urlstr)
+            # urlobject = urllib.request.urlopen(urlstr)
             image_io = io.BytesIO(urlobject.read())
             legend_img_raw = PIL.Image.open(image_io)
             legend_img = legend_img_raw.crop(legend_img_raw.getbbox())

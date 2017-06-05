@@ -62,11 +62,92 @@ standard_library.install_aliases()
 
 import cgi
 import xml.etree.ElementTree as etree
+import requests
 
 from urllib.parse import urlencode
-from owslib.util import openURL, ServiceException
+from owslib.util import ServiceException
 from collections import OrderedDict
 from owslib.map import wms111
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+
+def openURL(url_base, data=None, method='Get', cookies=None,
+            username=None, password=None, timeout=30, headers=None, proxies=None):
+    # (mss) added proxies
+    """
+    Function to open URLs.
+
+    Uses requests library but with additional checks for OGC service exceptions and url formatting.
+    Also handles cookies and simple user password authentication.
+    """
+    headers = headers if headers is not None else {}
+    rkwargs = {}
+
+    rkwargs['timeout'] = timeout
+
+    auth = None
+    if username and password:
+        auth = (username, password)
+
+    rkwargs['auth'] = auth
+
+    # FIXUP for WFS in particular, remove xml style namespace
+    # @TODO does this belong here?
+    method = method.split("}")[-1]
+
+    if method.lower() == 'post':
+        try:
+            xml = etree.fromstring(data)
+            headers['Content-Type'] = 'text/xml'
+        except (ParseError, UnicodeEncodeError):
+            pass
+
+        rkwargs['data'] = data
+
+    elif method.lower() == 'get':
+        rkwargs['params'] = data
+
+    else:
+        raise ValueError("Unknown method ('%s'), expected 'get' or 'post'" % method)
+
+    if cookies is not None:
+        rkwargs['cookies'] = cookies
+
+    req = requests.request(method.upper(),
+                           url_base,
+                           headers=headers,
+                           # MSS
+                           proxies=proxies,
+                           **rkwargs)
+
+    if req.status_code in [400, 401]:
+        raise ServiceException(req.text)
+
+    if req.status_code in [404, 500, 502, 503, 504]:  # add more if needed
+        req.raise_for_status()
+
+    # check for service exceptions without the http header set
+    if 'Content-Type' in req.headers and req.headers['Content-Type'] in ['text/xml', 'application/xml',
+                                                                         'application/vnd.ogc.se_xml']:
+        # just in case 400 headers were not set, going to have to read the xml to see if it's an exception report.
+        se_tree = etree.fromstring(req.content)
+
+        # to handle the variety of namespaces and terms across services
+        # and versions, especially for "legacy" responses like WMS 1.3.0
+        possible_errors = [
+            '{http://www.opengis.net/ows}Exception',
+            '{http://www.opengis.net/ows/1.1}Exception',
+            '{http://www.opengis.net/ogc}ServiceException',
+            'ServiceException'
+        ]
+
+        for possible_error in possible_errors:
+            serviceException = se_tree.find(possible_error)
+            if serviceException is not None:
+                # and we need to deal with some message nesting
+                raise ServiceException(
+                    '\n'.join([str(t).strip() for t in serviceException.itertext() if str(t).strip()]))
+
+    return ResponseWrapper(req)
 
 
 class WebMapService(object):
@@ -239,8 +320,8 @@ class WebMapService(object):
             request['time'] = str(time)
 
         data = urlencode(request)
-
-        u = openURL(base_url, data, method, username=self.username, password=self.password)
+        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+        u = openURL(base_url, data, method, username=self.username, password=self.password, proxies=proxies)
 
         # check for service exceptions, and return
         if u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
@@ -508,9 +589,12 @@ class WMSCapabilitiesReader(object):
         """
         getcaprequest = self.capabilities_url(service_url)
 
+        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+
         # now split it up again to use the generic openURL function...
         spliturl = getcaprequest.split('?')
-        u = wms111.openURL(spliturl[0], spliturl[1], method='Get', username=self.username, password=self.password)
+        u = openURL(spliturl[0], spliturl[1], method='Get',
+                    username=self.username, password=self.password, proxies=proxies)
         # (mss) Store capabilities document.
         self.capabilities_document = u.read()
         return etree.fromstring(self.capabilities_document)
