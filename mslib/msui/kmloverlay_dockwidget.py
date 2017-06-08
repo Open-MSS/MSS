@@ -113,7 +113,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         filename = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open KML Polygonal File", os.path.dirname(str(self.leFile.text())), "(*.kml)")
-        filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
+        filename = filename[0] if isinstance(filename, list) and USE_PYQT5 else str(filename)
 
         if not filename:
             return
