@@ -3,6 +3,8 @@ Installation
 
 Current Releases of mss are based on *python 2*.
 
+.. image:: https://anaconda.org/conda-forge/mss/badges/installer/conda.svg
+
 We are yet *not ready* for python 3.
 
 Install distributed version by conda
