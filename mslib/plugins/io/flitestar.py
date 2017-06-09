@@ -27,7 +27,6 @@
 """
 from __future__ import division
 
-from past.utils import old_div
 import numpy as np
 import os
 
@@ -48,21 +47,21 @@ def load_from_flitestar(filename):
                 line = line.split()
                 if len(line) < 10:
                     raise SyntaxError("Line {} has less than 9 fields.".format(line))
-                alt = round(old_div(float(line[-1]), 100.), 2)
+                alt = round(float(line[-1]) / 100., 2)
                 if line[4] == 'N':
                     NS = 1.
                 elif line[4] == 'S':
                     NS = -1.
                 else:
                     NS = np.nan
-                lat = round((float(line[5]) + old_div(float(line[6]), 60.)) * NS, 2)
+                lat = round((float(line[5]) + (float(line[6]) / 60.)) * NS, 2)
                 if line[7] == 'E':
                     EW = 1.
                 elif line[7] == 'W':
                     EW = -1.
                 else:
                     EW = np.nan
-                lon = round((float(line[8]) + old_div(float(line[9]), 60.)) * EW, 2)
+                lon = round((float(line[8]) + (float(line[9]) / 60.)) * EW, 2)
 
                 wp = ft.Waypoint()
                 wp.location = line[3]

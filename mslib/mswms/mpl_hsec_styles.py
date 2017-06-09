@@ -65,7 +65,6 @@
 
 from __future__ import division
 
-from past.utils import old_div
 import logging
 
 import numpy as np
@@ -173,7 +172,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
         elif self.style == "HIGH":
             titlestring = "High cloud cover (0-1)"
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -256,7 +255,7 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Mean sea level pressure (hPa) and surface wind"
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -366,8 +365,8 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
         if self.style == "PCOL":
             # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
-            lonmesh_ = lonmesh_ - old_div((self.lons[1] - self.lons[0]), 2.)
-            latmesh_ = latmesh_ - old_div((self.lats[1] - self.lats[0]), 2.)
+            lonmesh_ = lonmesh_ - ((self.lons[1] - self.lons[0]) / 2.)
+            latmesh_ = latmesh_ - ((self.lats[1] - self.lats[0]) / 2.)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         ice = data['sea_ice_area_fraction']
@@ -398,7 +397,7 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         # Plot title.
         titlestring = "Sea Ice Cover"
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -465,7 +464,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Temperature (degC) at model level %i" % self.level
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -705,7 +704,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         linewidths=1, linestyles="solid")
 
         # Plot geopotential height contours.
-        gpm = old_div(self.data["geopotential_height"], 9.81)
+        gpm = (self.data["geopotential_height"] / 9.81)
         geop_contours = np.arange(400, 28000, 40)
         cs = bm.contour(lonmesh, latmesh, gpm,
                         geop_contours, colors="black", linewidths=1)
@@ -714,7 +713,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Temperature (degC) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -806,7 +805,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
                  linewidths=0.5, length=6)
 
         # Plot geopotential height contours.
-        gpm = old_div(self.data["geopotential_height"], 9.81)
+        gpm = (self.data["geopotential_height"] / 9.81)
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -817,7 +816,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         titlestring = "Geopotential Height (m) and Horizontal Wind (m/s) " \
                       "at %i hPa" % self.level
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -891,7 +890,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
-        gpm = old_div(self.data["geopotential_height"], 9.81)
+        gpm = self.data["geopotential_height"] / 9.81
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -901,7 +900,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Relative Humditiy (%%) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -975,7 +974,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
-        gpm = old_div(self.data["geopotential_height"], 9.81)
+        gpm = (self.data["geopotential_height"] / 9.81)
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -985,7 +984,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Equivalent Potential Temperature (degC) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -1060,7 +1059,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
-        gpm = old_div(self.data["geopotential_height"], 9.81)
+        gpm = (self.data["geopotential_height"] / 9.81)
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -1070,7 +1069,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Vertical Velocity (cm/s) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -1122,7 +1121,7 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         linewidths=2, linestyles="solid")
 
         # Plot geopotential height contours.
-        gpm = old_div(self.data["geopotential_height"], 9.81)
+        gpm = (self.data["geopotential_height"] / 9.81)
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -1132,7 +1131,7 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         titlestring = "Divergence (positive: red, negative: blue) and Geopotential Height (m) at " \
                       "%i hPa" % self.level
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -1169,8 +1168,8 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh_ = lonmesh_ - old_div((self.lons[1] - self.lons[0]), 2.)
-        latmesh_ = latmesh_ - old_div((self.lats[1] - self.lats[0]), 2.)
+        lonmesh_ = lonmesh_ - ((self.lons[1] - self.lons[0]) / 2.)
+        latmesh_ = latmesh_ - ((self.lats[1] - self.lats[0]) / 2.)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         tc = bm.pcolor(lonmesh, latmesh, tracer,
@@ -1199,7 +1198,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "EMAC Eyjafjallajokull Tracer (relative) at model level %i" % self.level
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -1244,8 +1243,8 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         # EMAC's latitudes. The error, however, is small, thus we neglect it
         # here.
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh_ -= old_div((self.lons[1] - self.lons[0]), 2.)
-        latmesh_ -= old_div((self.lats[1] - self.lats[0]), 2.)
+        lonmesh_ -= ((self.lons[1] - self.lons[0]) / 2.)
+        latmesh_ -= ((self.lats[1] - self.lats[0]) / 2.)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         tc = bm.pcolor(lonmesh, latmesh, tracer,
@@ -1275,7 +1274,7 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "EMAC Eyjafjallajokull Tracer Total Column Density (kg/m^2)"
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -1333,7 +1332,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         if self.style == "PRES":
             filled_contours = np.arange(120, 551, 10)
             thin_contours = np.arange(100, 601, 40)
-            vardata = old_div(data["air_pressure"], 100.)
+            vardata = (data["air_pressure"] / 100.)
             label = "Pressure (hPa)"
             fcmap = plt.cm.terrain_r
         elif self.style == "PT":
@@ -1345,7 +1344,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         elif self.style == "GEOP":
             filled_contours = np.arange(5000, 15000, 250)
             thin_contours = np.arange(5000, 15000, 500)
-            vardata = old_div(data["geopotential_height"], 9.81)
+            vardata = (data["geopotential_height"] / 9.81)
             label = "Geopotential Height (m)"
             fcmap = plt.cm.terrain
 
@@ -1372,15 +1371,15 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
 
         if self.style == "PRES":
             titlestring = "Dynamical Tropopause Pressure (hPa) at " \
-                          "%i PVU" % (old_div(int(self.level), 1000))
+                          "%i PVU" % (int(self.level) // 1000)
         elif self.style == "PT":
             titlestring = "Dynamical Tropopause Potential Temperature (K) at " \
-                          "%i PVU" % (old_div(int(self.level), 1000))
+                          "%i PVU" % (int(self.level) // 1000)
         elif self.style == "GEOP":
             titlestring = "Dynamical Tropopause Geopotential Height (m) at " \
-                          "%i PVU" % (old_div(int(self.level), 1000))
+                          "%i PVU" % (int(self.level) // 1000)
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -1449,7 +1448,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Mean sea level pressure (hPa) and total column probability of WCB (0-1)"
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -1527,7 +1526,7 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,
@@ -1599,7 +1598,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         # Title
         titlestring = "Boundary layer height (m) and mean sea level pressure (hPa)"
         time_step = self.valid_time - self.init_time
-        time_step_hrs = old_div((time_step.days * 86400 + time_step.seconds), 3600)
+        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
             .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
                     time_step_hrs,

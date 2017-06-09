@@ -33,7 +33,6 @@ from __future__ import division
 
 
 from past.builtins import basestring
-from past.utils import old_div
 from datetime import datetime
 
 import logging
@@ -126,7 +125,7 @@ class MplCanvas(FigureCanvas):
             if init_time:
                 if time_step is not None:
                     title += u"\nValid: {} (step {:d} hrs from {})".format(
-                        valid_time, old_div((time_step.days * 86400 + time_step.seconds), 3600), init_time)
+                        valid_time, (time_step.days * 86400 + time_step.seconds) // 3600, init_time)
                 else:
                     title += u"\nValid: {} (initialisation: {})".format(valid_time, init_time)
             else:
@@ -290,14 +289,13 @@ class MplSideViewCanvas(MplCanvas):
 
         # .. check step reduction to 10 hPa ..
         if p_top < 10000:
-            major_ticks2 = np.arange(major_ticks[-1], p_top - 1,
-                                     old_div(-label_distance, 10))
+            major_ticks2 = np.arange(major_ticks[-1], p_top - 1, -label_distance // 10)
             len_major_ticks = len(major_ticks)
             major_ticks = np.resize(major_ticks,
                                     len_major_ticks + len(major_ticks2) - 1)
             major_ticks[len_major_ticks:] = major_ticks2[1:]
 
-        labels = ["{:d}".format(int(old_div(l, 100.))) for l in major_ticks]
+        labels = ["{:d}".format(int(l / 100.)) for l in major_ticks]
 
         # .. the same for the minor ticks ..
         p_top_minor = max(label_distance, p_top)
@@ -307,8 +305,7 @@ class MplSideViewCanvas(MplCanvas):
                                 -label_distance_minor)
 
         if p_top < 10000:
-            minor_ticks2 = np.arange(minor_ticks[-1], p_top - 1,
-                                     old_div(-label_distance_minor, 10))
+            minor_ticks2 = np.arange(minor_ticks[-1], p_top - 1, -label_distance_minor // 10)
             len_minor_ticks = len(minor_ticks)
             minor_ticks = np.resize(minor_ticks,
                                     len_minor_ticks + len(minor_ticks2) - 1)
@@ -345,7 +342,7 @@ class MplSideViewCanvas(MplCanvas):
         self.ax.set_xlim(0, len(lats) - 1)
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
         lat_inds = np.arange(len(lats))
-        tick_index_step = old_div(len(lat_inds), self.numlabels)
+        tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
         self.ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
                                  for d in zip(lats[::tick_index_step],
@@ -373,7 +370,7 @@ class MplSideViewCanvas(MplCanvas):
     def getVerticalExtent(self):
         """Returns the bottom and top pressure (hPa) of the plot.
         """
-        return old_div(self.p_bot, 100), old_div(self.p_top, 100)
+        return (self.p_bot // 100), (self.p_top // 100)
 
     def drawFlightLevels(self):
         """Draw horizontal lines indicating the altitude of the flight levels.
@@ -455,8 +452,8 @@ class MplSideViewCanvas(MplCanvas):
 
         # Return a tuple (num_interpolation_points, p_bot[hPa],
         #                 num_labels, p_top[hPa]) as BBOX.
-        bbox = (num_interpolation_points, old_div(axis[2], 100),
-                num_labels, old_div(axis[3], 100))
+        bbox = (num_interpolation_points, (axis[2] // 100),
+                num_labels, (axis[3] // 100))
         return bbox
 
     def drawLegend(self, img):
@@ -704,8 +701,8 @@ class MplTopViewCanvas(MplCanvas):
             # pixels, we need to determine the size of the currently displayed
             # figure in pixels.
             figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
-            ax_extent_x = old_div(img.size[0], figsize_px[0])
-            ax_extent_y = old_div(img.size[1], figsize_px[1])
+            ax_extent_x = img.size[0] // figsize_px[0]
+            ax_extent_y = img.size[1] // figsize_px[1]
 
             # If no legend axes have been created, do so now.
             if self.legax is None:
@@ -765,8 +762,8 @@ class MplTopViewCanvas(MplCanvas):
                     "fill_continents": True,
                     "draw_flighttrack": True,
                     "label_flighttrack": True,
-                    "colour_water": (old_div(153, 255.), old_div(255, 255.), old_div(255, 255.), old_div(255, 255.)),
-                    "colour_land": (old_div(204, 255.), old_div(153, 255.), old_div(102, 255.), old_div(255, 255.)),
+                    "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
+                    "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
                     "colour_ft_vertices": (0, 0, 1, 1),
                     "colour_ft_waypoints": (1, 0, 0, 1)}
         if settings_dict is not None:
@@ -987,7 +984,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # so that the common time axis starts with the earliest
                     # start time determined above.
                     x = item.getTimeVariable().getVariableData() + \
-                        old_div((item.getStartTime() - earliestStartTime).seconds, 3600.)
+                        ((item.getStartTime() - earliestStartTime).seconds / 3600.)
                     y = variable.getVariableData()
                     #
                     # Plot the variable data with the colour determines above, store
