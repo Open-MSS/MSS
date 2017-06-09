@@ -397,8 +397,6 @@ class ECMWFDataAccess(NWPDataAccess):
                 else:
                     with netCDF4.Dataset(filename) as dataset:
                         timename, timevar = netCDF4tools.identify_CF_time(dataset)
-                        if len(timevar) < 2:
-                            raise RuntimeError("This doesn't work here?!")
                         times = netCDF4tools.num2date(timevar[:], timevar.units)
                         valid_times.extend(times)
                     self.save_valid_cache(filename, times)
