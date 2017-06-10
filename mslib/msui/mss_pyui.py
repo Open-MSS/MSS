@@ -369,13 +369,23 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
         """
+        geometry = config_loader(dataset="geometry",
+                                 default=mss_default.geometry)
         view_window = None
         if self.sender() == self.actionTopView:
             # Top view.
             view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
+            # ToDo only for the drawing window
+            view_window.resize(geometry['topview'][0], geometry['topview'][1])
+            if geometry["immutable"]:
+                view_window.setFixedSize(geometry['topview'][0], geometry['topview'][1])
         elif self.sender() == self.actionSideView:
             # Side view.
             view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
+            # ToDo only for the drawing window
+            view_window.resize(geometry['sideview'][0], geometry['sideview'][1])
+            if geometry["immutable"]:
+                view_window.setFixedSize(geometry['sideview'][0], geometry['sideview'][1])
         elif self.sender() == self.actionTableView:
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
