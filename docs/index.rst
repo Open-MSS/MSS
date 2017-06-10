@@ -4,6 +4,8 @@
 Mission Support System's Documentation
 ========================================================
 
+.. image:: https://anaconda.org/conda-forge/mss/badges/version.svg
+
 .. include:: ../README
 
 
