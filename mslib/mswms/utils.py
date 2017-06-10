@@ -27,8 +27,6 @@
 
 from __future__ import division
 
-from past.utils import old_div
-
 import numpy as np
 import matplotlib
 
@@ -389,7 +387,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
              (0.40000000000000002, 0.0, 0.25, 1.0),
              ], name="n2_map")
         cmap.set_over((0.8, 0.8, 0.8, 1.0))
-        clev = np.arange(0, old_div(8.5, 1e4), old_div(0.5, 1e4))
+        clev = np.arange(0., 8.5 / 1e4, 0.5 / 1e4)
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     elif style == "tropopause_altitude":
         cmap = matplotlib.pyplot.cm.terrain

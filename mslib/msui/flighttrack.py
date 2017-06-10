@@ -39,7 +39,6 @@ from __future__ import division
 
 from past.builtins import basestring
 
-from past.utils import old_div
 import datetime
 import codecs
 import logging
@@ -75,11 +74,11 @@ TABLE_FULL = [
     ("Lat\n(+-90)", lambda waypoint: waypoint.lat, True),
     ("Lon\n(+-180)", lambda waypoint: waypoint.lon, True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
-    ("Pressure\n(hPa)", lambda waypoint: "{:.2f}".format(old_div(waypoint.pressure, 100.)), True),
+    ("Pressure\n(hPa)", lambda waypoint: "{:.2f}".format((waypoint.pressure / 100.)), True),
     ("Leg dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
-        int(waypoint.distance_to_prev), int(old_div(waypoint.distance_to_prev, 1.852))), False),
+        int(waypoint.distance_to_prev), int(waypoint.distance_to_prev / 1.852)), False),
     ("Cum. dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
-        int(waypoint.distance_total), int(old_div(waypoint.distance_total, 1.852))), False),
+        int(waypoint.distance_total), int(waypoint.distance_total / 1.852)), False),
     ("Leg time", lambda waypoint: seconds_to_string(waypoint.leg_time), False),
     ("Cum. time", lambda waypoint: seconds_to_string(waypoint.cum_time), False),
     ("Time (UTC)", lambda waypoint: waypoint.utc_time.strftime("%Y-%m-%d %H:%M:%S"), False),

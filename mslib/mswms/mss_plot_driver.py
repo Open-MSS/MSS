@@ -29,7 +29,6 @@
 from __future__ import division
 
 
-from past.utils import old_div
 from datetime import datetime
 
 import logging
@@ -108,7 +107,7 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
             logging.error(msg)
             raise ValueError(msg)
         fc_step = fc_time - init_time
-        fc_step = fc_step.days * 24 + old_div(fc_step.seconds, 3600)
+        fc_step = fc_step.days * 24 + (fc_step.seconds // 3600)
         self.fc_time = fc_time
         logging.debug(u"\trequested initialisation time {}".format(init_time))
         logging.debug(u"\trequested forecast valid time {} (step {} hrs)".format(fc_time, fc_step))
@@ -478,14 +477,14 @@ class VerticalSectionDriver(MSSPlotDriver):
             else:
                 var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
             logging.debug("\tLoaded {:.2f} Mbytes from data field <{:}> at timestep {:}.".format(
-                          old_div(var_data.nbytes, 1048576.), name, timestep))
+                          (var_data.nbytes / 1048576.), name, timestep))
             logging.debug("\tVertical dimension direction is {}.".format(
                           "up" if self.vert_order == 1 else "down"))
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
-            data[name] = utils.interpolate_vertsec3(var_data, self.lat_data, lon_data,
-                                                    self.lats, self.lons)
+            data[name] = utils.interpolate_vertsec(var_data, self.lat_data, lon_data,
+                                                   self.lats, self.lons)
             # Free memory.
             del var_data
 
@@ -643,7 +642,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
                 # 3D fields: time, level, lat, lon.
                 var_data = var[timestep, level, ::self.lat_order, :]
             logging.debug("\tLoaded {:.2f} Mbytes from data field <{}>."
-                          .format(old_div(var_data.nbytes, 1048576.), name))
+                          .format(var_data.nbytes / 1048576., name))
             data[name] = var_data
             # Free memory.
             del var_data

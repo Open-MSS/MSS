@@ -87,6 +87,7 @@ except ImportError as ex:
         enable_basic_http_authentication = False
         __file__ = None
 
+print(mss_wms_settings.__file__)
 try:
     import mss_wms_auth
 except ImportError as ex:

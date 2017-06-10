@@ -28,9 +28,8 @@
 
 from __future__ import division
 
-
 from past.builtins import basestring
-from past.utils import old_div
+
 import datetime
 import json
 import logging
@@ -114,7 +113,7 @@ def get_distance(coord0, coord1):
         length of distance in km
     """
     pr = pyproj.Geod(ellps='WGS84')
-    return old_div(pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1], 1000.)
+    return (pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.)
 
 
 def find_location(lat, lon, tolerance=5):
@@ -126,7 +125,8 @@ def find_location(lat, lon, tolerance=5):
     :return: None or lat/lon, name
     """
     locations = config_loader(dataset='locations', default=MissionSupportSystemDefaultConfig.locations)
-    distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc) for loc, (loc_lat, loc_lon) in list(locations.items())]
+    distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
+                 for loc, (loc_lat, loc_lon) in list(locations.items())]
     distances.sort()
     if len(distances) > 0 and distances[0][0] < tolerance:
         return locations[distances[0][1]], distances[0][1]
@@ -204,7 +204,7 @@ def jsec_to_datetime(jsecs):
 
 def compute_hour_of_day(jsecs):
     date = JSEC_START + datetime.timedelta(seconds=jsecs)
-    return date.hour + old_div(date.minute, 60.) + old_div(date.second, 3600.)
+    return date.hour + (date.minute / 60.) + (date.second / 3600.)
 
 
 def fix_angle(ang):
@@ -230,7 +230,7 @@ def rotate_point(point, angle, origin=(0, 0)):
 
 
 def convertHPAToKM(press):
-    return (old_div(288.15, 0.0065)) * (1. - (old_div(press, 1013.25)) ** (old_div(1., 5.255))) / 1000.
+    return ((288.15 / 0.0065)) * (1. - ((press / 1013.25)) ** ((1. / 5.255))) / 1000.
 
 
 def get_projection_params(epsg):
@@ -251,69 +251,6 @@ def get_projection_params(epsg):
 
 
 def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
-    """
-    Interpolate curtain[z,pos] (curtain[level,pos]) from data3D[z,y,x]
-    (data3D[level,lat,lon]).
-
-    This method is based on scipy.interpolate.RectBivariateSpline().
-
-    data3D has to be on a regular lat/lon grid, coordinates given by lats, lons.
-    lats, lons have to be strictly INCREASING, they do not have to be uniform,
-    though.
-    """
-    # Create an empty field to accomodate the curtain.
-    curtain = np.zeros([data3D.shape[0], len(lats)])
-
-    # One horizontal interpolation for each model level.
-    for ml in range(data3D.shape[0]):
-        data = data3D[ml, :, :]
-        # Initialise a SciPy interpolation object. RectBivariateSpline is the
-        # only class that can handle 2D input fields.
-        interpolator = RectBivariateSpline(data3D_lats,
-                                           data3D_lons,
-                                           data, kx=1, ky=1)
-        # RectBivariateSpline returns a full mesh of lat/lon interpolated
-        # values.. use diagonal to only get the values at lat/lon pairs.
-        curtain[ml, :] = interpolator(lats, lons).diagonal()
-
-    return curtain
-
-
-def interpolate_vertsec2(data3D, data3D_lats, data3D_lons, lats, lons):
-    """
-    Interpolate curtain[z,pos] (curtain[level,pos]) from data3D[z,y,x]
-    (data3D[level,lat,lon]).
-
-    This method is based on scipy.ndimage.map_coordinates().
-
-    data3D has to be on a regular lat/lon grid, coordinates given by lats, lons.
-    The lats, lons arrays can have arbitrary order, they do not have to be uniform.
-    """
-    # Create an empty field to accomodate the curtain.
-    curtain = np.zeros([data3D.shape[0], len(lats)])
-
-    # Transform lat/lon values to array index space. This is necessary to use
-    # scipy.ndimage.map_coordinates(). See the comments on
-    #      http://old.nabble.com/2D-Interpolation-td18161034.html
-    # (2D Interpolation; Ryan May Jun 27, 2008) and the examples on
-    #      http://www.scipy.org/Cookbook/Interpolation
-    dlat = data3D_lats[1] - data3D_lats[0]
-    dlon = data3D_lons[1] - data3D_lons[0]
-    ind_lats = old_div((lats - data3D_lats[0]), dlat)
-    ind_lons = old_div((lons - data3D_lons[0]), dlon)
-    ind_coords = np.array([ind_lats, ind_lons])
-
-    # One horizontal interpolation for each model level. The order
-    # parameter controls the degree of the splines used, i.e. order=1
-    # stands for linear interpolation.
-    for ml in range(data3D.shape[0]):
-        data = data3D[ml, :, :]
-        curtain[ml, :] = map_coordinates(data, ind_coords, order=1)
-
-    return curtain
-
-
-def interpolate_vertsec3(data3D, data3D_lats, data3D_lons, lats, lons):
     """
     Interpolate curtain[z,pos] (curtain[level,pos]) from data3D[z,y,x]
     (data3D[level,lat,lon]).
@@ -363,13 +300,13 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
         if p2[LAT] - p1[LAT] == 0:
             lats = np.ones(numpoints) * p1[LAT]
         else:
-            lat_step = old_div(float(p2[LAT] - p1[LAT]), (numpoints - 1))
-            lats = np.arange(p1[LAT], p2[LAT] + old_div(lat_step, 2), lat_step)
+            lat_step = float(p2[LAT] - p1[LAT]) / (numpoints - 1)
+            lats = np.arange(p1[LAT], p2[LAT] + (lat_step / 2), lat_step)
         if p2[LON] - p1[LON] == 0:
             lons = np.ones(numpoints) * p1[LON]
         else:
-            lon_step = old_div(float(p2[LON] - p1[LON]), (numpoints - 1))
-            lons = np.arange(p1[LON], p2[LON] + old_div(lon_step, 2), lon_step)
+            lon_step = float(p2[LON] - p1[LON]) / (numpoints - 1)
+            lons = np.arange(p1[LON], p2[LON] + (lon_step / 2), lon_step)
         return lats, lons
     elif connection == 'greatcircle':
         gc = pyproj.Geod(ellps="WGS84")
@@ -414,7 +351,7 @@ def path_points(points, numpoints=100, connection='linear'):
     # Compute the total length of the path and the length of the point
     # segments to be computed.
     total_length = distances.sum()
-    length_point_segment = old_div(total_length, (numpoints + len(points) - 2))
+    length_point_segment = total_length / (numpoints + len(points) - 2)
 
     # If the total length of the path is zero, all given waypoints have the
     # same coordinates. Return arrays with numpoints points all having these
@@ -432,7 +369,7 @@ def path_points(points, numpoints=100, connection='linear'):
     lons = []
     lats = []
     for i in range(len(points) - 1):
-        segment_points = int(round(old_div(distances[i], length_point_segment)))
+        segment_points = int(round(distances[i] / length_point_segment))
         # Enforce that a segment consists of at least two points
         # (otherwise latlon_points will throw an exception).
         segment_points = max(segment_points, 2)

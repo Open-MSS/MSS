@@ -27,7 +27,6 @@
 from __future__ import division
 
 
-from past.utils import old_div
 import numpy as np
 
 from mslib.msui.mss_qt import QtWidgets
@@ -50,10 +49,10 @@ def create_hexagon(center_lat, center_lon, radius, angle=0.):
                     rotate_point(coords_0, angle=240. + angle),
                     rotate_point(coords_0, angle=300. + angle),
                     rotate_point(coords_0, angle=360. + angle)]
-    CoordsSphere_rot = [(center_lat + old_div(vec[0], 110.),
-                         center_lon + old_div(vec[1], (110. *
-                                                np.cos(np.deg2rad(old_div(vec[0], 110.) + center_lat)))))
-                        for vec in CoordsCart_0]
+    CoordsSphere_rot = [
+        (center_lat + (vec[0] / 110.),
+         center_lon + (vec[1] / (110. * np.cos(np.deg2rad((vec[0] / 110.) + center_lat)))))
+        for vec in CoordsCart_0]
     return CoordsSphere_rot
 
 

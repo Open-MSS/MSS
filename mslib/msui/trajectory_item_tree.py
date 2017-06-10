@@ -29,8 +29,6 @@
 from __future__ import division
 
 
-from past.utils import old_div
-
 import datetime
 
 import logging
@@ -429,7 +427,7 @@ class FlightTrackItem(LagrantoMapItem):
                     # The time variable has to be modified a bit: convert
                     # seconds to hours and change the name correspondingly.
                     index = self.nafile.VNAME.index(item.getName())
-                    self.nafile.V[index, :] = old_div(self.nafile.V[index, :], 3600.)
+                    self.nafile.V[index, :] = (self.nafile.V[index, :] / 3600.)
                     self.nafile.VNAME[index] = "(1/3600) * " + self.nafile.VNAME[index]
                     item.itemName = self.nafile.VNAME[index]
                     break

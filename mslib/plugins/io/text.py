@@ -29,7 +29,6 @@
 from __future__ import division
 
 
-from past.utils import old_div
 import logging
 
 import mslib.msui.flighttrack as ft
@@ -59,7 +58,7 @@ def save_to_txt(filename, name, waypoints):
             lat = wp.lat
             lon = wp.lon
             lvl = wp.flightlevel
-            pre = old_div(wp.pressure, 100.)
+            pre = wp.pressure / 100.
             leg = wp.distance_to_prev
             cum = wp.distance_total
             com = str(str(wp.comments).encode("ascii", "replace"))

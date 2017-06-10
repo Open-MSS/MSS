@@ -29,7 +29,6 @@
 from __future__ import division
 from __future__ import print_function
 
-from past.utils import old_div
 import os
 import netCDF4 as nc
 import numpy as np
@@ -616,8 +615,8 @@ def get_profile(coordinate, levels, standard_name):
 
 
 def _generate_3d_data(ntimes, nlats, nlons, mean, std, ilev=0):
-    xarr = np.linspace(0., 10. + old_div(ilev, 3.), nlons)
-    yarr = np.linspace(0., 5. + old_div(ilev, 3.), nlats)
+    xarr = np.linspace(0., 10. + (ilev / 3.), nlons)
+    yarr = np.linspace(0., 5. + (ilev / 3.), nlats)
     tarr = np.linspace(0, 2., ntimes)
     datax = xarr[np.newaxis, np.newaxis, :] + tarr[:, np.newaxis, np.newaxis]
     datay = yarr[np.newaxis, :, np.newaxis] - tarr[:, np.newaxis, np.newaxis]

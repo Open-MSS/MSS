@@ -35,7 +35,6 @@
 from __future__ import division
 
 
-from past.utils import old_div
 import logging
 
 # related third party imports
@@ -84,8 +83,8 @@ class MapCanvas(basemap.Basemap):
                               "draw_coastlines": True,
                               "fill_waterbodies": True,
                               "fill_continents": True,
-                              "colour_water": (old_div(153, 255.), old_div(255, 255.), old_div(255, 255.), old_div(255, 255.)),
-                              "colour_land": (old_div(204, 255.), old_div(153, 255.), old_div(102, 255.), old_div(255, 255.))}
+                              "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
+                              "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.))}
         default_appearance.update(param_appearance)
         self.appearance = default_appearance
 
@@ -268,17 +267,17 @@ class MapCanvas(basemap.Basemap):
         spacingValues = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 40]
         deltaLon = mapLonStop - mapLonStart
         deltaLat = mapLatStop - mapLatStart
-        spacingLon = [i for i in spacingValues if i > old_div(deltaLon, 11.)][0]
-        spacingLat = [i for i in spacingValues if i > old_div(deltaLat, 11.)][0]
+        spacingLon = [i for i in spacingValues if i > (deltaLon / 11.)][0]
+        spacingLat = [i for i in spacingValues if i > (deltaLat / 11.)][0]
 
         #   c) parallels and meridians start at the first value in the
         #      spacingLon/Lat grid that's smaller than the lon/lat of the
         #      lower left corner; they stop at the first values in the
         #      grid that's larger than the lon/lat of the upper right corner.
-        lonStart = np.floor(old_div(mapLonStart, spacingLon)) * spacingLon
-        lonStop = np.ceil(old_div(mapLonStop, spacingLon)) * spacingLon
-        latStart = np.floor(old_div(mapLatStart, spacingLat)) * spacingLat
-        latStop = np.ceil(old_div(mapLatStop, spacingLat)) * spacingLat
+        lonStart = np.floor((mapLonStart / spacingLon)) * spacingLon
+        lonStop = np.ceil((mapLonStop / spacingLon)) * spacingLon
+        latStart = np.floor((mapLatStart / spacingLat)) * spacingLat
+        latStop = np.ceil((mapLatStop / spacingLat)) * spacingLat
 
         #   d) call the basemap methods to draw the lines in the determined
         #      range.
@@ -744,7 +743,7 @@ class MapCanvas(basemap.Basemap):
         # use great circle formula for a perfect sphere.
         gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
         az12, az21, dist = gc.inv(lon1, lat1, lon2, lat2)
-        npoints = int(old_div((dist + 0.5 * 1000. * del_s), (1000. * del_s)))
+        npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
         lonlats = gc.npts(lon1, lat1, lon2, lat2, npoints)
         lons = [lon1]
         lats = [lat1]
@@ -771,7 +770,7 @@ class MapCanvas(basemap.Basemap):
         gclats = [lats[0]]
         for i in range(len(lons) - 1):
             az12, az21, dist = gc.inv(lons[i], lats[i], lons[i + 1], lats[i + 1])
-            npoints = int(old_div((dist + 0.5 * 1000. * del_s), (1000. * del_s)))
+            npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
             # BUG -- weird path in cyl projection on waypoint move
             # On some system configurations, the path is wrongly plotted when one
             # of the waypoints is moved by the user and the current projection is cylindric.
@@ -1003,7 +1002,7 @@ class KMLPatch(object):
         if not result["color"] or len(result["color"]) != 8:
             result["color"] = self.color
         else:
-            result["color"] = [old_div(int(result["color"][i:i + 2], 16), 255.) for i in range(0, 8, 2)]
+            result["color"] = [(int(result["color"][i:i + 2], 16) / 255.) for i in range(0, 8, 2)]
         return result
 
     def parse_styles(self, level):

@@ -27,9 +27,6 @@
 
 from __future__ import division
 
-
-from past.utils import old_div
-
 import mock
 import os
 import shutil
@@ -190,7 +187,7 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mousePress(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        point = QtCore.QPoint(old_div(self.window.width(), 3), old_div(self.window.height(), 2))
+        point = QtCore.QPoint((self.window.width() // 3), self.window.height() // 2)
         QtTest.QTest.mouseMove(
             self.window.mpl.canvas, pos=point)
         QtWidgets.QApplication.processEvents()

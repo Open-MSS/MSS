@@ -35,7 +35,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 
-from past.utils import old_div
 import io
 import logging
 from abc import abstractmethod
@@ -182,17 +181,17 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         spacingValues = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 40]
         deltaLon = mapLonStop - mapLonStart
         deltaLat = mapLatStop - mapLatStart
-        spacingLon = [i for i in spacingValues if i > old_div(deltaLon, 10.)][0]
-        spacingLat = [i for i in spacingValues if i > old_div(deltaLat, 10.)][0]
+        spacingLon = [i for i in spacingValues if i > (deltaLon / 10.)][0]
+        spacingLat = [i for i in spacingValues if i > (deltaLat / 10.)][0]
 
         #   c) parallels and meridians start at the first value in the
         #      spacingLon/Lat grid that's smaller than the lon/lat of the
         #      lower left corner; they stop at the first values in the
         #      grid that's larger than the lon/lat of the upper right corner.
-        lonStart = np.floor(old_div(mapLonStart, spacingLon)) * spacingLon
-        lonStop = np.ceil(old_div(mapLonStop, spacingLon)) * spacingLon
-        latStart = np.floor(old_div(mapLatStart, spacingLat)) * spacingLat
-        latStop = np.ceil(old_div(mapLatStop, spacingLat)) * spacingLat
+        lonStart = np.floor((mapLonStart / spacingLon)) * spacingLon
+        lonStop = np.ceil((mapLonStop / spacingLon)) * spacingLon
+        latStart = np.floor((mapLatStart / spacingLat)) * spacingLat
+        latStop = np.ceil((mapLatStop / spacingLat)) * spacingLat
 
         #   d) call the basemap methods to draw the lines in the determined
         #      range.
@@ -247,7 +246,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         logging.debug("creating figure..")
         dpi = 80
-        figsize = old_div(figsize[0], dpi), old_div(figsize[1], dpi)
+        figsize = (figsize[0] / dpi), (figsize[1] / dpi)
         facecolor = "white"
         fig = mpl.figure.Figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
         logging.debug("\twith frame and legends" if not noframe else
@@ -429,8 +428,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         x, y = self.bm(lonmesh_, latmesh_)
         # test which coordinates are outside the map domain.
 
-        add_x = old_div((self.bm.xmax - self.bm.xmin), 10.)
-        add_y = old_div((self.bm.ymax - self.bm.ymin), 10.)
+        add_x = ((self.bm.xmax - self.bm.xmin) / 10.)
+        add_y = ((self.bm.ymax - self.bm.ymin) / 10.)
 
         mask1 = x < self.bm.xmin - add_x
         mask2 = x > self.bm.xmax + add_x

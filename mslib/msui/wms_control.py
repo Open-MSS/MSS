@@ -40,7 +40,9 @@ import logging
 import os
 import requests
 import re
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -1447,7 +1449,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     ci_time, ci_level = self.cbValidTime.currentIndex(), self.cbLevel.currentIndex()
                     prefetch_key_values = \
                         [("time", str(self.cbValidTime.itemText(ci_p)))
-                         for ci_p in list(range(ci_time + 1, ci_time + 1 + pre_tfwd)) + list(range(ci_time - pre_tbck, ci_time))
+                         for ci_p in list(range(ci_time + 1, ci_time + 1 + pre_tfwd)) +
+                            list(range(ci_time - pre_tbck, ci_time))
                          if 0 <= ci_p < self.cbValidTime.count()] + \
                         [("level", str(self.cbLevel.itemText(ci_p)).split(" (")[0])
                          for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)
