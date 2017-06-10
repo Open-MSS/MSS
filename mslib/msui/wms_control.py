@@ -40,23 +40,25 @@ import logging
 import os
 import requests
 import re
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-# related third party imports
 from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, USE_PYQT5
 
 import mslib.ogcwms
 import owslib.util
 import PIL.Image
 
-# local application imports
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.utils import convertHPAToKM
+from mslib.ogcwms import openURL
+
 
 WMS_SERVICE_CACHE = {}
 WMS_URL_LIST = QtGui.QStandardItemModel()
@@ -198,8 +200,10 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
-        u = owslib.util.openURL(base_url, data, method,
-                                username=self.username, password=self.password)
+        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+
+        u = openURL(base_url, data, method,
+                    username=self.username, password=self.password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -345,7 +349,7 @@ class WMSMapFetcher(QtCore.QObject):
             # PIL.Image.open(). See
             #    http://www.pythonware.com/library/pil/handbook/image.htm
             logging.debug("Retrieving legend from '%s'", urlstr)
-            urlobject = urllib.request.urlopen(urlstr)
+            urlobject = requests.get(urlstr)
             image_io = io.BytesIO(urlobject.read())
             legend_img_raw = PIL.Image.open(image_io)
             legend_img = legend_img_raw.crop(legend_img_raw.getbbox())
@@ -1445,7 +1449,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     ci_time, ci_level = self.cbValidTime.currentIndex(), self.cbLevel.currentIndex()
                     prefetch_key_values = \
                         [("time", str(self.cbValidTime.itemText(ci_p)))
-                         for ci_p in list(range(ci_time + 1, ci_time + 1 + pre_tfwd)) + list(range(ci_time - pre_tbck, ci_time))
+                         for ci_p in list(range(ci_time + 1, ci_time + 1 + pre_tfwd)) +
+                            list(range(ci_time - pre_tbck, ci_time))
                          if 0 <= ci_p < self.cbValidTime.count()] + \
                         [("level", str(self.cbLevel.itemText(ci_p)).split(" (")[0])
                          for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)

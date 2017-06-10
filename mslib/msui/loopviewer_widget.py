@@ -41,14 +41,15 @@ from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
 
-from past.utils import old_div
 from datetime import datetime, timedelta
 
 import io
 import functools
 import logging
 import os
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets
@@ -392,7 +393,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                     logging.debug("timestep {:03d} not available (HTTP error {d})".format(step, ex.code))
 
                 # Update progress dialog.
-                self.pdlg.setValue((float(ilevel) + old_div(float(istep), num_steps)) / num_levels * 100.)
+                self.pdlg.setValue((float(ilevel) + (float(istep) / num_steps)) / num_levels * 100.)
                 self.pdlg.repaint()
                 QtWidgets.QApplication.processEvents()
                 if self.pdlg.wasCanceled() or cancel:

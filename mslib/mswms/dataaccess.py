@@ -29,7 +29,6 @@
 from __future__ import division
 
 from past.builtins import basestring
-from past.utils import old_div
 
 from abc import ABCMeta, abstractmethod
 import glob
@@ -293,7 +292,7 @@ class ECMWFDataAccess(NWPDataAccess):
         # Compute the time step in hours from the forecast valid time
         # and the initialisation time.
         fc_step = valid_time - init_time
-        fc_step = fc_step.days * 24 + old_div(fc_step.seconds, 3600)
+        fc_step = fc_step.days * 24 + fc_step.seconds // 3600
 
         # ECMWF forecasts are stored in a series of files containing
         # different time steps. Determine into which time step interval

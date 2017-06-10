@@ -29,7 +29,6 @@
 from __future__ import absolute_import
 from __future__ import division
 
-from past.utils import old_div
 import csv
 import mslib.msui.flighttrack as ft
 
@@ -47,7 +46,7 @@ def save_to_csv(filename, name, waypoints):
             lat = "{:.3f}".format(wp.lat)
             lon = "{:.3f}".format(wp.lon)
             lvl = "{:.3f}".format(wp.flightlevel)
-            pre = "{:.3f}".format(old_div(wp.pressure, 100.))
+            pre = "{:.3f}".format(wp.pressure / 100.)
             leg = "{:.3f}".format(wp.distance_to_prev)
             cum = "{:.3f}".format(wp.distance_total)
             com = str(wp.comments).encode("ascii", "replace")

@@ -48,6 +48,11 @@ by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
 
 .. literalinclude:: samples/config/mss/mss_settings.json.sample
 
+If you are in an area with a very low bandwith you may consider to use a squid web proxy
+and add those lines in your mss_settings pointing to the proxy server.
+
+.. literalinclude:: samples/config/mss/proxies.sample
+
 
 Usage of mss
 ~~~~~~~~~~~~

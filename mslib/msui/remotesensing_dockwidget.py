@@ -28,7 +28,6 @@
 from __future__ import division
 
 
-from past.utils import old_div
 import numpy as np
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
@@ -42,7 +41,7 @@ EARTH_RADIUS = 6371.
 
 
 def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1, angle):
-    mlat = old_div((lat0 + lat1), 2.)
+    mlat = ((lat0 + lat1) / 2.)
     lon0 *= np.cos(np.deg2rad(mlat))
     lon1 *= np.cos(np.deg2rad(mlat))
     dlon = lon1 - lon0
@@ -54,7 +53,7 @@ def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1, angle):
 def compute_solar_angle(jsec, lon, lat):
     # The input to the Astronomer's almanach is the difference between
     # the Julian date and JD 2451545.0 (noon, 1 January 2000)
-    time = old_div(jsec, (60. * 60. * 24.)) - 0.5
+    time = (jsec / (60. * 60. * 24.)) - 0.5
 
     # Mean longitude
     mnlong = 280.460 + .9856474 * time
@@ -83,7 +82,7 @@ def compute_solar_angle(jsec, lon, lat):
     # Right ascension and declination
     num = np.cos(oblqec) * np.sin(eclong)
     den = np.cos(eclong)
-    ra = np.arctan(old_div(num, den))
+    ra = np.arctan(num / den)
     if den < 0:
         ra += np.pi
     elif den >= 0 and num < 0:
@@ -104,7 +103,7 @@ def compute_solar_angle(jsec, lon, lat):
         lon += 360
         assert 0 <= lon <= 360
 
-    lmst = gmst + old_div(lon, 15.)
+    lmst = gmst + (lon / 15.)
     lmst = np.deg2rad(15. * (lmst % 24.))
 
     # Hour angle
@@ -122,7 +121,7 @@ def compute_solar_angle(jsec, lon, lat):
 
     # Azimuth and elevation
     zenithAngle = np.arccos(np.sin(lat) * np.sin(dec) + np.cos(lat) * np.cos(dec) * np.cos(ha))
-    azimuthAngle = np.arccos(old_div((np.sin(lat) * np.cos(zenithAngle) - np.sin(dec)),
+    azimuthAngle = np.arccos(((np.sin(lat) * np.cos(zenithAngle) - np.sin(dec)) /
                              (np.cos(lat) * np.sin(zenithAngle))))
 
     if ha > 0:
@@ -329,24 +328,23 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         lon_lin2 = np.array(lon_lin) * np.cos(np.deg2rad(np.array(lat_lin)))
         lins = list(zip(lon_lin2[0:-1], lon_lin2[1:], lat_lin[0:-1], lat_lin[1:]))
         direction = [(x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
-        direction = [(old_div(_x, np.hypot(_x, _y)), old_div(_y, np.hypot(_x, _y)))
+        direction = [(_x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
                      for _x, _y in direction]
         los = [rotate_point(point, -self.dsbObsAngle.value()) for point in direction]
         los.append(los[-1])
 
         if isinstance(flight_alt, (collections.Sequence, np.ndarray)):
-            dist = [old_div(np.sqrt(max((EARTH_RADIUS + a) ** 2 - (EARTH_RADIUS + cut_height) ** 2, 0)), 110.)
+            dist = [(np.sqrt(max((EARTH_RADIUS + a) ** 2 - (EARTH_RADIUS + cut_height) ** 2, 0)) / 110.)
                     for a in flight_alt[:-1]]
             dist.append(dist[-1])
         else:
-            dist = old_div(np.sqrt((EARTH_RADIUS + flight_alt) ** 2 - (EARTH_RADIUS + cut_height) ** 2), 110.)
+            dist = (np.sqrt((EARTH_RADIUS + flight_alt) ** 2 - (EARTH_RADIUS + cut_height) ** 2) / 110.)
 
         tp_dir = (np.array(los).T * dist).T
 
         tps = [(x0 + tp_x, y0 + tp_y) for
                ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lins, tp_dir)]
-        tps = [(old_div(x0, np.cos(np.deg2rad(y0))), y0) for
-               (x0, y0) in tps]
+        tps = [(x0 / np.cos(np.deg2rad(y0)), y0) for (x0, y0) in tps]
         return tps
 
     @staticmethod
@@ -364,7 +362,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         Returns: angular distance or 180 degrees if sun is below horizon
         """
-        thresh = -np.rad2deg(np.arccos(old_div(EARTH_RADIUS, (height + EARTH_RADIUS)))) - 3
+        thresh = -np.rad2deg(np.arccos(EARTH_RADIUS / (height + EARTH_RADIUS))) - 3
 
         delta_azi = obs_azi - sol_azi
         delta_ele = obs_ele + sol_ele

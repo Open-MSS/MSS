@@ -46,8 +46,6 @@
 
 from __future__ import division
 
-
-from past.utils import old_div
 import logging
 import math
 import numpy as np
@@ -81,7 +79,7 @@ def distance_point_linesegment(p, l1, l2):
     # Compute the parameter r in the line formulation p* = l1 + r*(l2-l1).
     # p* is the point on the line at which (p-p*) and (l1-l2) form a right
     # angle.
-    r = old_div(np.dot(p - l1, l2 - l1), np.linalg.norm(l2 - l1) ** 2)
+    r = (np.dot(p - l1, l2 - l1) / np.linalg.norm(l2 - l1) ** 2)
     # If 0 < r < 1, we return the distance p-p*. If r > 1, p* is on the
     # forward extension of l1-l2, hence return the distance between
     # p and l2. If r < 0, return the distance p-l1.
@@ -699,7 +697,7 @@ class VPathInteractor(PathInteractor):
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
             # to float().
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(old_div(pressure, 100.))))
+            self.waypoints_model.setData(qt_index, QtCore.QVariant(float(pressure / 100.)))
 
         self._ind = None
 
@@ -799,7 +797,7 @@ class HPathInteractor(PathInteractor):
         ax_bounds = self.ax.bbox.bounds
         width = int(round(ax_bounds[2]))
         map_delta_x = abs(self.map.llcrnrx - self.map.urcrnrx)
-        map_coords_per_px_x = old_div(map_delta_x, width)
+        map_coords_per_px_x = map_delta_x / width
 
         return map_coords_per_px_x * px
 
@@ -817,7 +815,7 @@ class HPathInteractor(PathInteractor):
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
         map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
-        km_per_px = old_div(map_delta, diagonal)
+        km_per_px = map_delta / diagonal
 
         return km_per_px * px
 
