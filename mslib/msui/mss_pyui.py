@@ -42,6 +42,7 @@ import functools
 import platform
 import argparse
 import hashlib
+import requests
 
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
@@ -612,6 +613,25 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
+    def configureMenu(self):
+        """
+        disables menu entries which won't work, because libraries missing or not configured
+        """
+        # loopview
+        try:
+            loop_configuration = config_loader(dataset="loop_configuration", default=mss_default.loop_configuration)
+            url = loop_configuration["ECMWF forecasts"]["url"]
+            request = requests.head(url)
+        except (KeyError, requests.exceptions.ConnectionError):
+            self.actionLoopView.setEnabled(False)
+
+        # trajectory analyses
+        try:
+            import nappy
+        except ImportError:
+            self.actionTrajectoryToolLagranto.setEnabled(False)
+            self.actionTimeSeriesViewTrajectories.setEnabled(False)
+
 
 def main():
     try:
@@ -679,6 +699,7 @@ def main():
     logging.info("Launching user interface...")
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = MSSMainWindow()
+    mainwindow.configureMenu()
     mainwindow.createNewFlightTrack(activate=True)
     mainwindow.show()
     sys.exit(application.exec_())
