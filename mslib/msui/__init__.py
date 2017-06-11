@@ -52,6 +52,12 @@ class MissionSupportSystemDefaultConfig(object):
     Your values can be set in your personal mss_settings.json file
     """
 
+    # layout of different views, with immutable they can't resized
+    layout = {"topview": (963, 702),
+              "sideview": (913, 557),
+              "tableview": (1236,424),
+              "immutable": False}
+
     # Matplotlib Basemap Projection Parameters
     # The following parameters configure the map projections available in
     # the top view. Define EPSG codes you require in terms of Matplotlib
@@ -202,9 +208,6 @@ class MissionSupportSystemDefaultConfig(object):
         }
     }
     proxies = None
-    geometry = {"topview": (963, 702),
-                "sideview": (913, 557),
-                "immutable": False}
 
     # Trajectory tool: When NASA Ames files are opened, the following
     # variables will be used for lon/lat/pressure:
