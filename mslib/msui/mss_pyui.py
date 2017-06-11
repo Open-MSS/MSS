@@ -388,8 +388,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
-            if layout["immutable"]:
-                view_window.centralwidget.setFixedSize(layout['tableview'][0], layout['tableview'][1])
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
