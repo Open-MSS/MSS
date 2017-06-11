@@ -369,16 +369,25 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
         """
+        layout = config_loader(dataset="layout",
+                                 default=mss_default.layout)
         view_window = None
         if self.sender() == self.actionTopView:
             # Top view.
             view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
+            view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif self.sender() == self.actionSideView:
             # Side view.
             view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
+            view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
         elif self.sender() == self.actionTableView:
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
+            view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
