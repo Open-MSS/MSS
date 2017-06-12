@@ -207,7 +207,8 @@ class MissionSupportSystemDefaultConfig(object):
             }
         }
     }
-    proxies = None
+    # None is not wanted here
+    proxies = {}
 
     # Trajectory tool: When NASA Ames files are opened, the following
     # variables will be used for lon/lat/pressure:
