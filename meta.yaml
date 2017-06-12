@@ -54,6 +54,20 @@ about:
     home: https://bitbucket.org/wxmetvis/mss
     license: Apache 2.0
     license_file: LICENSE
+    description: >
+  MSS - Mission Support System
+
+  http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
+
+  Software for planning research Aircraft Missions.
+  For discussion of the possibilites of the research flights,
+  the Mission Support System (MSS) was developed.
+  This software helps to review a big amount of metereological and
+  model data by viewing the forecasted parameters of interest along possible regions
+  of a proposed flight path. Data and possible flight paths can
+  be displayed on a hoizontal view (map projection) or on a vertical
+  view (along the proposed flight path). Flight paths can be constructed
+  and modified on these views. Exchange through a waypoint table is also possible.
 
 extra:
     recipe-maintainers:
