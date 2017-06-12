@@ -182,6 +182,12 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
 
         if level is not None:
             request['elevation'] = str(level)
+
+        # normalise base_url so it contains no request and no parameters
+        parsed_url = urllib.parse.urlparse(base_url)
+
+        base_url = urllib.parse.urlunparse([x if i != 4 else "" for i, x in enumerate(parsed_url)])
+        request.update(dict(urllib.parse.parse_qsl(parsed_url[4])))
         # --(mss)
 
         data = urllib.parse.urlencode(request)
@@ -350,10 +356,9 @@ class WMSMapFetcher(QtCore.QObject):
             #    http://www.pythonware.com/library/pil/handbook/image.htm
             logging.debug("Retrieving legend from '%s'", urlstr)
             urlobject = requests.get(urlstr)
-            image_io = io.BytesIO(urlobject.read())
+            image_io = io.BytesIO(urlobject.content)
             legend_img_raw = PIL.Image.open(image_io)
             legend_img = legend_img_raw.crop(legend_img_raw.getbbox())
-            logging.debug("legend retrieved, legend graphic size is %i bytes.", image_io.len)
             # Store the retrieved image in the cache, if enabled.
             try:
                 legend_img.save(md5_filename, transparency=0)
