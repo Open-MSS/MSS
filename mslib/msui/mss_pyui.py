@@ -63,6 +63,12 @@ from mslib.msui.icons import icons, python_powered
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8, USE_PYQT5
 
+try:
+    import nappy
+    HAVE_NAPPY = True
+except:
+    HAVE_NAPPY = False
+
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
 
@@ -626,9 +632,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.actionLoopView.setEnabled(False)
 
         # trajectory analyses
-        try:
-            import nappy
-        except ImportError:
+        if not HAVE_NAPPY:
             self.actionTrajectoryToolLagranto.setEnabled(False)
             self.actionTimeSeriesViewTrajectories.setEnabled(False)
 
