@@ -42,3 +42,4 @@ VT_CACHE = os.path.join(BASE_DIR, 'vt_cache')
 DATA_DIR = os.path.join(BASE_DIR, 'testdata')
 SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
 VALID_TIME_CACHE = os.path.join(BASE_DIR, 'vt_cache')
+os.environ["MSS_CONFIG_PATH"] = BASE_DIR

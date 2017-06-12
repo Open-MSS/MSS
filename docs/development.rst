@@ -80,6 +80,14 @@ Profiling can be done by e.g.::
    $ python -m cProfile  -s time ./demodata.py > profile.txt
 
 
+Setup mss_settings.json
+----------------------------
+
+On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
+If you want to overwrite this setup and try out a special configuration add an mss_settings.json
+file to the testings base dir in your tmp directory.
+
+
 Building the docs with Sphinx
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
