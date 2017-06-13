@@ -37,7 +37,7 @@ from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import mpl_pathinteractor as mpl_pi
-from mslib.msui import wms_control as wms
+from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
@@ -218,7 +218,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             if index == WMS:
                 # Create a new WMSDockWidget.
                 title = "Web Map Service (Top View)"
-                widget = wms.HSecWMSControlWidget(
+                widget = wc.HSecWMSControlWidget(
                     default_WMS=config_loader(dataset="default_WMS", default=mss_default.default_WMS),
                     view=self.mpl.canvas,
                     parent=self,
