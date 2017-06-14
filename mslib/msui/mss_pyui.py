@@ -30,6 +30,8 @@
 """
 from __future__ import print_function
 
+from builtins import str
+
 import copy
 import importlib
 import logging
