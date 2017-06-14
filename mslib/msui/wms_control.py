@@ -40,9 +40,7 @@ import logging
 import os
 import requests
 import re
-import urllib.request
 import urllib.parse
-import urllib.error
 import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -184,10 +182,9 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
             request['elevation'] = str(level)
 
         # normalise base_url so it contains no request and no parameters
-        parsed_url = urllib.parse.urlparse(base_url)
-
-        base_url = urllib.parse.urlunparse([x if i != 4 else "" for i, x in enumerate(parsed_url)])
-        request.update(dict(urllib.parse.parse_qsl(parsed_url[4])))
+        (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(base_url)
+        base_url = urllib.parse.urlunparse((scheme, netloc, path, params, "", fragment))
+        request.update(dict(urllib.parse.parse_qsl(query)))
         # --(mss)
 
         data = urllib.parse.urlencode(request)
@@ -196,7 +193,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
         base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
-        complete_url = u"{}?{}".format(base_url, data)
+
+        complete_url = urllib.parse.urlunparse((str(""), str(""), str(base_url), str(""), data, str("")))
         if return_only_url:
             return complete_url
         logging.debug("Retrieving: %s", complete_url)
