@@ -55,7 +55,7 @@ class MissionSupportSystemDefaultConfig(object):
     # layout of different views, with immutable they can't resized
     layout = {"topview": (963, 702),
               "sideview": (913, 557),
-              "tableview": (1236,424),
+              "tableview": (1236, 424),
               "immutable": False}
 
     # Matplotlib Basemap Projection Parameters

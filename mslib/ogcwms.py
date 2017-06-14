@@ -67,6 +67,7 @@ import requests
 from urllib.parse import urlencode
 from owslib.util import ServiceException
 from collections import OrderedDict
+from owslib.etree import ParseError
 from owslib.map import wms111
 from owslib.util import ResponseWrapper
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default

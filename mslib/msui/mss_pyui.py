@@ -376,8 +376,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
         """
-        layout = config_loader(dataset="layout",
-                                 default=mss_default.layout)
+        layout = config_loader(dataset="layout", default=mss_default.layout)
         view_window = None
         if self.sender() == self.actionTopView:
             # Top view.
@@ -627,7 +626,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         try:
             loop_configuration = config_loader(dataset="loop_configuration", default=mss_default.loop_configuration)
             url = loop_configuration["ECMWF forecasts"]["url"]
-            request = requests.head(url)
+            requests.head(url)
         except (KeyError, requests.exceptions.ConnectionError):
             self.actionLoopView.setEnabled(False)
 
