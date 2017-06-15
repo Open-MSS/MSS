@@ -99,6 +99,38 @@ class Test_HSecWMSControlWidget(object):
         self.query_server("http://127.0.0.1:8083")
         assert mockbox.critical.call_count == 1
 
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_no_schema(self, mockbox):
+        """
+        assert that a message box informs about server troubles
+        """
+        self.query_server("127.0.0.1:8082")
+        assert mockbox.critical.call_count == 1
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_invalid_schema(self, mockbox):
+        """
+        assert that a message box informs about server troubles
+        """
+        self.query_server("hppd://127.0.0.1:8082")
+        assert mockbox.critical.call_count == 1
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_invalid_url(self, mockbox):
+        """
+        assert that a message box informs about server troubles
+        """
+        self.query_server("http://???127.0.0.1:8082")
+        assert mockbox.critical.call_count == 1
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_connection_error(self, mockbox):
+        """
+        assert that a message box informs about server troubles
+        """
+        self.query_server("http://.....127.0.0.1:8082")
+        assert mockbox.critical.call_count == 1
+
     def test_server_abort_getmap(self):
         """
         assert that an aborted getmap call does not change the displayed image

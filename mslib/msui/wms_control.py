@@ -641,9 +641,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         base_url = str(self.cbWMS_URL.currentText())
         try:
             request = requests.get(base_url)
-        except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as ex:
-            logging.error("cannot load capabilities document.\n"
-                          "no layers can be used in this view.")
+        except (requests.exceptions.TooManyRedirects,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.InvalidURL,
+                requests.exceptions.InvalidSchema,
+                requests.exceptions.MissingSchema) as ex:
+            logging.error("Cannot load capabilities document.\n"
+                          "No layers can be used in this view.")
             QtWidgets.QMessageBox.critical(
                 self, self.tr("Web Map Service"),
                 self.tr(u"ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
