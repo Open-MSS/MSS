@@ -459,6 +459,7 @@ class PathInteractor(object):
         """
         self.background = self.canvas.copy_from_bbox(self.ax.bbox)
         try:
+            # TODO review
             self.ax.draw_artist(self.pathpatch)
         except ValueError:
             # When using Matplotlib 1.2, "ValueError: Invalid codes array."
@@ -580,7 +581,8 @@ class PathInteractor(object):
             self.canvas.restore_region(self.background)
         try:
             self.ax.draw_artist(self.pathpatch)
-        except ValueError:
+        except ValueError, error:
+            logging.error("ValueError Exception %s", error)
             pass  # silently ignore "ValueError: Invalid codes array."
         self.ax.draw_artist(self.line)
         for t in self.wp_labels:
@@ -1003,7 +1005,8 @@ class HPathInteractor(PathInteractor):
             self.canvas.restore_region(self.background)
         try:
             self.ax.draw_artist(self.pathpatch)
-        except ValueError:
+        except ValueError, error:
+            logging.error("ValueError Exception %s", error)
             pass  # silently ignore "ValueError: Invalid codes array."
         self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)

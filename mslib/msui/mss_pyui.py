@@ -68,7 +68,7 @@ from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8, U
 try:
     import nappy
     HAVE_NAPPY = True
-except:
+except ImportError:
     HAVE_NAPPY = False
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -182,7 +182,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             import ctypes
             myappid = u"mss.mss_pyui.{}".format(__version__)  # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-        except (ImportError, AttributeError):
+        except (ImportError, AttributeError), error:
+            logging.error("AttributeError, ImportError Exception %s", error)
             pass
         # Reference to the flight track that is currently displayed in the
         # views.

@@ -43,7 +43,7 @@ import numpy
 try:
     import nappy
     HAVE_NAPPY = True
-except:
+except ImportError:
     logging.warn("*** NAppy is not available. You will not be able to read NASA Ames files. ***")
     HAVE_NAPPY = False
 
@@ -231,7 +231,8 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
                     self.lonVariableChild.getVariableData()[0],
                     self.latVariableChild.getVariableData()[0],
                     self.pressureVariableChild.getVariableData()[0])
-            except:
+            except Exception as ex:
+                logging.error("Wildecard Exception %s - %s.", type(ex), ex)
                 return ''
         else:
             return ''
@@ -273,7 +274,8 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
             self.__computeTimeMarkerIndexes(value)
             try:
                 self.timeSeriesPlotter.update()
-            except:
+            except Exception as ex:
+                logging.error("Wildecard Exception %s - %s.", type(ex), ex)
                 pass
 
     def __computeTimeMarkerIndexes(self, requestedInterval):
@@ -297,7 +299,8 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         # value representing seconds.
         try:
             requestedInterval = requestedInterval.hour * 3600 + requestedInterval.minute * 60
-        except:
+        except Exception as ex:
+            logging.error("Wildecard Exception %s - %s.", type(ex), ex)
             pass
 
         #
@@ -638,7 +641,7 @@ class TrajectoryItem(LagrantoMapItem):
         """
         try:
             return self.metadata["starttime"]
-        except:
+        except KeyError:
             return self.metadata["starttime_filename"]
 
     def getMetadata(self):
@@ -656,7 +659,7 @@ class TrajectoryItem(LagrantoMapItem):
         """
         try:
             return self.metadata[key]
-        except:
+        except KeyError:
             return None
 
 

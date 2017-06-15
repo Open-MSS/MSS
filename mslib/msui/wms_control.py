@@ -361,7 +361,8 @@ class WMSMapFetcher(QtCore.QObject):
             # Store the retrieved image in the cache, if enabled.
             try:
                 legend_img.save(md5_filename, transparency=0)
-            except:
+            except Exception as ex:
+                logging.error("Wildecard Exception %s - %s.", type(ex), ex)
                 legend_img.save(md5_filename)
         return legend_img
 
@@ -771,7 +772,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     return format
                 else:
                     return d
-            except ValueError:
+            except ValueError, error:
+                logging.error("ValueError Exception %s", error)
                 pass
         return None
 
@@ -952,8 +954,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                         self.cbValidTime.addItem(
                                             time_val.strftime(self.valid_time_format))
                                         time_val += timedelta(hours=time_interval_hours)
-
-                                except:
+                                except Exception as ex:
+                                    logging.error("Wildecard Exception %s - %s.", type(ex), ex)
                                     interpretation_successful = False
 
                             else:
@@ -963,7 +965,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                         datetime.strptime(time_item,
                                                           self.valid_time_format))
                                     self.cbValidTime.addItem(time_item)
-                                except:
+                                except Exception as ex:
+                                    logging.error("Wildecard Exception %s - %s.", type(ex), ex)
                                     interpretation_successful = False
 
                             if not interpretation_successful:
@@ -1046,17 +1049,20 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         try:
             minutes = int(timestep_string.split(" min")[0])
             return minutes * 60
-        except ValueError:
+        except ValueError, error:
+            logging.error("ValueError Exception %s", error)
             pass
         try:
             hours = int(timestep_string.split(" hour")[0])
             return hours * 3600
-        except ValueError:
+        except ValueError, error:
+            logging.error("ValueError Exception %s", error)
             pass
         try:
             days = int(timestep_string.split(" days")[0])
             return days * 86400
-        except ValueError:
+        except ValueError, error:
+            logging.error("ValueError Exception %s", error)
             raise ValueError(u"cannot convert '{}' to seconds: wrong format.".format(timestep_string))
 
     def init_time_back_click(self):

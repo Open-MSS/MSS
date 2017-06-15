@@ -301,6 +301,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 waypoint.location = value
             elif column == LAT:
                 try:
+                    # TODO: review
                     value = float(value)
                 except ValueError:
                     pass
@@ -322,6 +323,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == LON:
                 try:
+                    # TODO: review
                     value = float(value)
                 except ValueError:
                     pass
@@ -337,6 +339,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == FLIGHTLEVEL:
                 try:
+                    # TODO: review
                     flightlevel = float(value)
                     pressure = thermolib.flightlevel2pressure(flightlevel)
                 except ValueError:
@@ -351,6 +354,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), PRESSURE)
             elif column == PRESSURE:
                 try:
+                    # TODO: review
                     pressure = float(value) * 100  # convert hPa to Pa
                     if pressure > 200000:
                         raise ValueError
