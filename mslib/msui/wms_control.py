@@ -362,7 +362,7 @@ class WMSMapFetcher(QtCore.QObject):
             try:
                 legend_img.save(md5_filename, transparency=0)
             except Exception as ex:
-                logging.error("Wildecard Exception %s - %s.", type(ex), ex)
+                logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
                 legend_img.save(md5_filename)
         return legend_img
 
@@ -955,7 +955,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                             time_val.strftime(self.valid_time_format))
                                         time_val += timedelta(hours=time_interval_hours)
                                 except Exception as ex:
-                                    logging.error("Wildecard Exception %s - %s.", type(ex), ex)
+                                    logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
                                     interpretation_successful = False
 
                             else:
@@ -966,7 +966,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                                           self.valid_time_format))
                                     self.cbValidTime.addItem(time_item)
                                 except Exception as ex:
-                                    logging.error("Wildecard Exception %s - %s.", type(ex), ex)
+                                    logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
                                     interpretation_successful = False
 
                             if not interpretation_successful:

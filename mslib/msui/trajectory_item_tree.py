@@ -232,7 +232,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
                     self.latVariableChild.getVariableData()[0],
                     self.pressureVariableChild.getVariableData()[0])
             except Exception as ex:
-                logging.error("Wildecard Exception %s - %s.", type(ex), ex)
+                logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
                 return ''
         else:
             return ''
@@ -275,7 +275,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
             try:
                 self.timeSeriesPlotter.update()
             except Exception as ex:
-                logging.error("Wildecard Exception %s - %s.", type(ex), ex)
+                logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
                 pass
 
     def __computeTimeMarkerIndexes(self, requestedInterval):
@@ -300,7 +300,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         try:
             requestedInterval = requestedInterval.hour * 3600 + requestedInterval.minute * 60
         except Exception as ex:
-            logging.error("Wildecard Exception %s - %s.", type(ex), ex)
+            logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
             pass
 
         #

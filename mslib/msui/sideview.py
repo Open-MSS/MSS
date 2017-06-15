@@ -153,7 +153,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         try:
             flightlevel = int(float(str(item.text())))
         except Exception as ex:
-            logging.error("Wildecard Exception %s - %s.", type(ex), ex)
+            logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
             flightlevel = 0
         if flightlevel < 0:
             flightlevel = 0
