@@ -161,3 +161,13 @@ The TopView has a docking widget that allows the visualization of KML files on t
 currently does not support all features of KML, for example, external resources such as images are not supported.
 Some example KML files are located at :download:`docs/samples/kml/line.kml <samples/kml/line.kml>` and
 :download:`docs/samples/kml/folder.kml <samples/kml/folder.kml>`.
+
+
+Example WMS Server
+~~~~~~~~~~~~~~~~~~
+
+Some public accessible WMS Servers
+
+ * http://osmwms.itc-halle.de/maps/osmfree
+ * http://ows.terrestris.de/osm/service
+ * https://firms.modaps.eosdis.nasa.gov/wms
