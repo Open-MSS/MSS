@@ -29,8 +29,9 @@
 from future import standard_library
 standard_library.install_aliases()
 
-
 from past.builtins import basestring
+from builtins import str
+
 import time
 from datetime import datetime, timedelta
 
@@ -40,9 +41,7 @@ import logging
 import os
 import requests
 import re
-import urllib.request
 import urllib.parse
-import urllib.error
 import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -184,10 +183,9 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
             request['elevation'] = str(level)
 
         # normalise base_url so it contains no request and no parameters
-        parsed_url = urllib.parse.urlparse(base_url)
-
-        base_url = urllib.parse.urlunparse([x if i != 4 else "" for i, x in enumerate(parsed_url)])
-        request.update(dict(urllib.parse.parse_qsl(parsed_url[4])))
+        (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(base_url)
+        base_url = urllib.parse.urlunparse((scheme, netloc, path, params, "", fragment))
+        request.update(dict(urllib.parse.parse_qsl(query)))
         # --(mss)
 
         data = urllib.parse.urlencode(request)
@@ -196,10 +194,11 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
         base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
-        complete_url = u"{}?{}".format(base_url, data)
+
+        complete_url = urllib.parse.urlunparse((str(""), str(""), str(base_url), str(""), data, str("")))
         if return_only_url:
             return complete_url
-        logging.debug("Retrieving: %s", complete_url)
+        logging.debug("Retrieving image from '%s'", complete_url)
         # --(mss)
 
         # (mss) owslib.util.openURL checks for ServiceExceptions and raises a
@@ -556,7 +555,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
         try:
-            _ = str(base_url)  # to provoke early Unicode Error
+            str(base_url)  # to provoke early Unicode Error
             while wms is None:
                 try:
                     wms = MSSWebMapService(base_url, version='1.1.1',
@@ -1347,9 +1346,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return urlstr
 
     def getMD5Filename(self, kwargs):
-        kwargs["return_only_url"] = True
-        urlstr = self.wms.getmap(**kwargs)
-        kwargs["return_only_url"] = False
+        urlstr = self.wms.getmap(return_only_url=True, **kwargs)
         if not self.wms.url.startswith(self.cbWMS_URL.currentText()):
             raise RuntimeError("WMS URL does not match, use get capabilities first.")
         return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")

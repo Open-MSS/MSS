@@ -26,6 +26,8 @@
     limitations under the License.
 """
 
+from builtins import str
+
 import logging
 import os
 from datetime import datetime, timedelta
