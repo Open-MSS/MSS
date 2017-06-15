@@ -48,10 +48,30 @@ by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
 
 .. literalinclude:: samples/config/mss/mss_settings.json.sample
 
+
+Web Proxy
+~~~~~~~~~
+
 If you are in an area with a very low bandwith you may consider to use a squid web proxy
 and add those lines in your mss_settings pointing to the proxy server.
 
-.. literalinclude:: samples/config/mss/proxies.sample
+.. literalinclude:: samples/config/mss/snippets/proxies.sample
+
+Loop View
+~~~~~~~~~
+
+If you have an image server you can configure the loop view by
+
+.. literalinclude:: samples/config/mss/snippets/loopview.sample
+
+Trajectory Tool
+~~~~~~~~~~~~~~~
+
+For accessing trajectory data based on NASA AMES format you need the nappy python module installed and
+can configure this view by
+
+.. literalinclude:: samples/config/mss/snippets/trajectorytool.sample
+
 
 
 Usage of mss
