@@ -36,8 +36,8 @@
 
 from __future__ import division
 
-
 from past.builtins import basestring
+from builtins import str
 
 import datetime
 import codecs

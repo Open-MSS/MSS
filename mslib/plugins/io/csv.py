@@ -29,6 +29,8 @@
 from __future__ import absolute_import
 from __future__ import division
 
+from builtins import str
+
 import csv
 import mslib.msui.flighttrack as ft
 
