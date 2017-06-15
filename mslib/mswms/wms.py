@@ -521,7 +521,7 @@ def application(environ, start_response):
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
         if url in cache:
-            return_format, return_data = cache[url]
+            return_format, output = cache[url]
         else:
             if request.lower() == 'getcapabilities':
                 return_format = 'text/xml'
@@ -538,7 +538,7 @@ def application(environ, start_response):
                     output = str(return_data).encode('utf-8')
 
                 # Saving the result in a cache
-                cache[url] = (return_format, return_data)
+                cache[url] = (return_format, output)
 
         # Preparing the Response
         status = '200 OK'
