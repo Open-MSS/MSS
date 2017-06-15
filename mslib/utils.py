@@ -38,7 +38,7 @@ import pickle
 
 import numpy as np
 import paste.util.multidict
-from scipy.interpolate import RectBivariateSpline, interp1d
+from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 from mslib.msui import MissionSupportSystemDefaultConfig
 

@@ -200,7 +200,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         complete_url = u"{}?{}".format(base_url, data)
         if return_only_url:
             return complete_url
-        logging.debug("Retrieving: %s", complete_url)
+        logging.debug("Retrieving image from '%s'", complete_url)
         # --(mss)
 
         # (mss) owslib.util.openURL checks for ServiceExceptions and raises a
@@ -557,7 +557,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
         try:
-            _ = str(base_url)  # to provoke early Unicode Error
+            str(base_url)  # to provoke early Unicode Error
             while wms is None:
                 try:
                     wms = MSSWebMapService(base_url, version='1.1.1',
@@ -1348,9 +1348,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return urlstr
 
     def getMD5Filename(self, kwargs):
-        kwargs["return_only_url"] = True
-        urlstr = self.wms.getmap(**kwargs)
-        kwargs["return_only_url"] = False
+        urlstr = self.wms.getmap(return_only_url=True, **kwargs)
         if not self.wms.url.startswith(self.cbWMS_URL.currentText()):
             raise RuntimeError("WMS URL does not match, use get capabilities first.")
         return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
