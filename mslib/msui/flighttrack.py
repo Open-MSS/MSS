@@ -250,10 +250,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         Returns lats, lons.
         """
-        path = [[wp.lat, wp.lon] for wp in self.waypoints]
-        lats, lons = utils.path_points(
+        path = [[wp.lat, wp.lon, wp.utc_time] for wp in self.waypoints]
+        return utils.path_points(
             path, numpoints=numpoints, connection=connection)
-        return lats, lons
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
         """Return data describing the table header; overrides the
