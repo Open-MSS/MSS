@@ -102,7 +102,9 @@ def openURL(url_base, data=None, method='Get', cookies=None,
         try:
             xml = etree.fromstring(data)
             headers['Content-Type'] = 'text/xml'
-        except (ParseError, UnicodeEncodeError):
+        except (ParseError, UnicodeEncodeError) as error:
+            # (mss)
+            logging.debug("ParseError, UnicodeEncodeError %s", error)
             pass
 
         rkwargs['data'] = data

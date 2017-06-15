@@ -1,4 +1,5 @@
-
-"proxies": {"http": "http://yoursquidproxy:3128",
-            "https": "http://yoursquidproxy:3128"}
+  "proxies": {
+    "http": "http://yoursquidproxy:3128",
+    "https": "http://yoursquidproxy:3128"
+  }
 
