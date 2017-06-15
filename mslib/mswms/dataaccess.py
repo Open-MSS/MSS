@@ -550,7 +550,8 @@ class EMACDataAccess(NWPDataAccess):
             try:
                 dt = datetime.strptime(d, "%Y%m%d_%H")
                 init_times.append(dt)
-            except:
+            except Exception as ex:
+                logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
                 pass
 
         init_times.sort()
