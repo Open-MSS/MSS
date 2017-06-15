@@ -701,8 +701,8 @@ class MplTopViewCanvas(MplCanvas):
             # pixels, we need to determine the size of the currently displayed
             # figure in pixels.
             figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
-            ax_extent_x = img.size[0] // figsize_px[0]
-            ax_extent_y = img.size[1] // figsize_px[1]
+            ax_extent_x = float(img.size[0]) / figsize_px[0]
+            ax_extent_y = float(img.size[1]) / figsize_px[1]
 
             # If no legend axes have been created, do so now.
             if self.legax is None:
