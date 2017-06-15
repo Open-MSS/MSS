@@ -702,8 +702,8 @@ class MapCanvas(basemap.Basemap):
                                                               u"instance::{}".format(self.identifier))
                         for instance in instances:
                             instance.remove()
-                    except (KeyError, ValueError), error:
-                        logging.error("KeyError, ValueError Exception %s", error)
+                    except (KeyError, ValueError) as error:
+                        logging.debug("KeyError, ValueError Exception %s", error)
                         pass
                     # Plot new instances.
                     plot_instance = self.plot(x, y,
@@ -724,8 +724,8 @@ class MapCanvas(basemap.Basemap):
                                                                      u"instance::{}".format(self.identifier))
                     plt.setp(old_scatter_instance, visible=False)
                     old_scatter_instance.remove()
-                except (KeyError, ValueError), error:
-                    logging.error("KeyError, ValueError Exception %s", error)
+                except (KeyError, ValueError) as error:
+                    logging.debug("KeyError, ValueError Exception %s", error)
                     pass
                 imarker = item.getTimeMarkerIndexes()
                 if imarker is not None:

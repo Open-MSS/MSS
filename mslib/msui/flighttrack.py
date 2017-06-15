@@ -301,7 +301,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 waypoint.location = value
             elif column == LAT:
                 try:
-                    # TODO: review
+                    # The table fields accept basically any input.
+                    # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     value = float(value)
                 except ValueError:
                     pass
@@ -323,7 +324,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == LON:
                 try:
-                    # TODO: review
+                    # The table fields accept basically any input.
+                    # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     value = float(value)
                 except ValueError:
                     pass
@@ -339,7 +341,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == FLIGHTLEVEL:
                 try:
-                    # TODO: review
+                    # The table fields accept basically any input.
+                    # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     flightlevel = float(value)
                     pressure = thermolib.flightlevel2pressure(flightlevel)
                 except ValueError:
@@ -354,7 +357,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     index2 = self.createIndex(index.row(), PRESSURE)
             elif column == PRESSURE:
                 try:
-                    # TODO: review
+                    # The table fields accept basically any input.
+                    # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     pressure = float(value) * 100  # convert hPa to Pa
                     if pressure > 200000:
                         raise ValueError

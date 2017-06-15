@@ -772,8 +772,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     return format
                 else:
                     return d
-            except ValueError, error:
-                logging.error("ValueError Exception %s", error)
+            except ValueError as error:
+                logging.debug("ValueError Exception %s", error)
                 pass
         return None
 
@@ -1049,20 +1049,20 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         try:
             minutes = int(timestep_string.split(" min")[0])
             return minutes * 60
-        except ValueError, error:
-            logging.error("ValueError Exception %s", error)
+        except ValueError as error:
+            logging.debug("ValueError Exception %s", error)
             pass
         try:
             hours = int(timestep_string.split(" hour")[0])
             return hours * 3600
-        except ValueError, error:
-            logging.error("ValueError Exception %s", error)
+        except ValueError as error:
+            logging.debug("ValueError Exception %s", error)
             pass
         try:
             days = int(timestep_string.split(" days")[0])
             return days * 86400
-        except ValueError, error:
-            logging.error("ValueError Exception %s", error)
+        except ValueError as error:
+            logging.debug("ValueError Exception %s", error)
             raise ValueError(u"cannot convert '{}' to seconds: wrong format.".format(timestep_string))
 
     def init_time_back_click(self):
