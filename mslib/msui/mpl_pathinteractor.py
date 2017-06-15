@@ -213,8 +213,8 @@ class PathV(WaypointsPath):
         waypoints makes no sense).
         """
         # Compute intermediate points.
-        lats, lons = wps_model.intermediatePoints(numpoints=self.numintpoints,
-                                                  connection="greatcircle")
+        lats, lons, times = wps_model.intermediatePoints(
+            numpoints=self.numintpoints, connection="greatcircle")
 
         # Determine indices of waypoints in list of intermediate points.
         # Store these indices.
@@ -231,6 +231,7 @@ class PathV(WaypointsPath):
         self.intermediate_indexes = intermediate_indexes
         self.ilats = lats
         self.ilons = lons
+        self.itimes = times
 
         # Call super method.
         WaypointsPath.update_from_WaypointsTableModel(self, wps_model)
@@ -668,7 +669,7 @@ class VPathInteractor(PathInteractor):
         """
         self.redraw_path()
         if self.redrawXAxis is not None:
-            self.redrawXAxis(self.path.ilats, self.path.ilons)
+            self.redrawXAxis(self.path.ilats, self.path.ilons, self.path.itimes)
         self.ax.figure.canvas.draw()
 
     def button_release_callback(self, event):

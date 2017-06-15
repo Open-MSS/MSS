@@ -35,6 +35,7 @@ import json
 import logging
 import os
 import pickle
+import netCDF4 as nc
 
 import numpy as np
 import paste.util.multidict
@@ -296,6 +297,9 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
     """
     LAT = 0
     LON = 1
+    TIME = 2
+    lats, lons, times = None, None, None
+
     if connection == 'linear':
         if p2[LAT] - p1[LAT] == 0:
             lats = np.ones(numpoints) * p1[LAT]
@@ -307,14 +311,20 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
         else:
             lon_step = float(p2[LON] - p1[LON]) / (numpoints - 1)
             lons = np.arange(p1[LON], p2[LON] + (lon_step / 2), lon_step)
-        return lats, lons
     elif connection == 'greatcircle':
         gc = pyproj.Geod(ellps="WGS84")
         pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints)
-        return (np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]]),
-                np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]]))
+        lats = np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]])
+        lons = np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]])
+
+    p1_time, p2_time = nc.date2num([p1[TIME], p2[TIME]], "seconds since 2000-01-01")
+    if p2_time - p1_time == 0:
+        times = np.ones(numpoints) * p1_time
     else:
-        return None, None
+        time_step = float(p2_time - p1_time) / (numpoints - 1)
+        times = np.arange(p1_time, p2_time + (time_step / 2), time_step)
+
+    return lats, lons, nc.num2date(times, "seconds since 2000-01-01")
 
 
 def path_points(points, numpoints=100, connection='linear'):
@@ -333,6 +343,7 @@ def path_points(points, numpoints=100, connection='linear'):
         return None, None
     LAT = 0
     LON = 1
+    TIME = 2
 
     # First compute the lengths of the individual path segments, i.e.
     # the distances between the points.
@@ -359,7 +370,8 @@ def path_points(points, numpoints=100, connection='linear'):
     if total_length == 0.:
         lons = np.ones(numpoints) * points[0][LON]
         lats = np.ones(numpoints) * points[0][LAT]
-        return lats, lons
+        times = np.ones(numpoints) * points[0][TIME]
+        return lats, lons, times
 
     # For each segment, determine the number of points to be computed
     # from the distance between the two bounding points and the
@@ -368,24 +380,21 @@ def path_points(points, numpoints=100, connection='linear'):
     # first segment to avoid double points.
     lons = []
     lats = []
+    times = []
     for i in range(len(points) - 1):
         segment_points = int(round(distances[i] / length_point_segment))
         # Enforce that a segment consists of at least two points
         # (otherwise latlon_points will throw an exception).
         segment_points = max(segment_points, 2)
         # print segment_points
-        lats_, lons_ = latlon_points(points[i], points[i + 1],
-                                     numpoints=segment_points,
-                                     connection=connection)
-        if i == 0:
-            lons.extend(lons_)
-            lats.extend(lats_)
-        else:
-            lons.extend(lons_[1:])
-            lats.extend(lats_[1:])
-    lons = np.asarray(lons)
-    lats = np.asarray(lats)
-    return lats, lons
+        lats_, lons_, times_ = latlon_points(
+            points[i], points[i + 1],
+            numpoints=segment_points, connection=connection)
+        startidx = 0 if i == 0 else 1
+        lons.extend(lons_[startidx:])
+        lats.extend(lats_[startidx:])
+        times.extend(times_[startidx:])
+    return [np.asarray(_x) for _x in lats, lons, times]
 
 
 class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
