@@ -402,8 +402,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         vsec_path = vsec_path if vsec_path is not None else self.vsec_path
         vsec_numpoints = vsec_numpoints if vsec_numpoints is not None else self.vsec_numpoints
         vsec_numlabels = vsec_numlabels if vsec_numlabels is not None else self.vsec_numlabels
-        vsec_path_connection = vsec_path_connection if vsec_path_connection is not None \
-            else self.vsec_path_connection
+        if vsec_path_connection is None:
+            vsec_path_connection = self.vsec_path_connection
         show = show if show else self.show
         transparent = transparent if transparent is not None else self.transparent
         return_format = return_format if return_format is not None else self.return_format
@@ -428,9 +428,10 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         logging.debug("computing {:} interpolation points, connection: {}"
                       .format(vsec_numpoints, vsec_path_connection))
-        self.lats, self.lons = utils.path_points(vsec_path,
-                                                 numpoints=vsec_numpoints,
-                                                 connection=vsec_path_connection)
+        now = datetime.now()
+        self.lats, self.lons, _ = utils.path_points(
+            [(_x, _y, now) for _x, _y in vsec_path],
+            numpoints=vsec_numpoints, connection=vsec_path_connection)
         self.vsec_path = vsec_path
         self.vsec_numpoints = vsec_numpoints
         self.vsec_path_connection = vsec_path_connection

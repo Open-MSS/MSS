@@ -201,8 +201,7 @@ class MplSideViewCanvas(MplCanvas):
        flight track / list of waypoints.
     """
 
-    def __init__(self, model=None, settings=None,
-                 numlabels=None):
+    def __init__(self, model=None, settings=None, numlabels=None):
 
         """
         Arguments:
@@ -324,7 +323,7 @@ class MplSideViewCanvas(MplCanvas):
         ax.set_xlabel("lat/lon")
         ax.set_ylabel("pressure (hPa)")
 
-    def redrawXAxis(self, lats, lons):
+    def redrawXAxis(self, lats, lons, times):
         """Redraw the x-axis of the side view on path changes. Also remove
            a vertical section image if one exists, as it is invalid after
            a path change.
@@ -344,10 +343,18 @@ class MplSideViewCanvas(MplCanvas):
         lat_inds = np.arange(len(lats))
         tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
-        self.ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
-                                 for d in zip(lats[::tick_index_step],
-                                              lons[::tick_index_step])],
-                                rotation=25, fontsize=10, horizontalalignment="right")
+        if self.waypoints_model is not None and self.waypoints_model.performance_settings["visible"]:
+            self.ax.set_xticklabels(["{:2.1f}, {:2.1f}\n{}Z".format(d[0], d[1], d[2].strftime("%H:%M"))
+                                     for d in zip(lats[::tick_index_step],
+                                                  lons[::tick_index_step],
+                                                  times[::tick_index_step])],
+                                    rotation=25, fontsize=10, horizontalalignment="right")
+        else:
+            self.ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
+                                     for d in zip(lats[::tick_index_step],
+                                                  lons[::tick_index_step],
+                                                  times[::tick_index_step])],
+                                    rotation=25, fontsize=10, horizontalalignment="right")
 
     def setVerticalExtent(self, pbot, ptop):
         """Set the vertical extent of the view to the specified pressure
