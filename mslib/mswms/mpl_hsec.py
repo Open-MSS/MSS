@@ -206,13 +206,14 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
     def plot_hsection(self, data, lats, lons, bbox=(-180, -90, 180, 90),
                       level=None, figsize=(960, 640), epsg=None,
-                      proj_params={"projection": "cyl"},
+                      proj_params=None,
                       valid_time=None, init_time=None, style=None,
                       resolution=-1, noframe=False, show=False,
                       transparent=False):
         """
         EPSG overrides proj_params!
         """
+        proj_params = proj_params or {"projection": "cyl"}
         # Projection parameters from EPSG code.
         if epsg is not None:
             proj_params = mss_wms_settings.epsg_to_mpl_basemap_table.get(epsg)

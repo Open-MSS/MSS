@@ -21,7 +21,7 @@ interface (top view and side view).
 .. _mss-configuration:
 
 Configuration of mss
-~~~~~~~~~~~~~~~~~~~~
+++++++++++++++++++++
 
 
 Settings file
@@ -48,64 +48,8 @@ by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
 
 .. literalinclude:: samples/config/mss/mss_settings.json.sample
 
-
-Web Proxy
-~~~~~~~~~
-
-If you are in an area with a very low bandwith you may consider to use a squid web proxy
-and add those lines in your mss_settings pointing to the proxy server.
-
-.. literalinclude:: samples/config/mss/snippets/proxies.sample
-
-Loop View
-~~~~~~~~~
-
-If you have an image server you can configure the loop view by
-
-.. literalinclude:: samples/config/mss/snippets/loopview.sample
-
-Trajectory Tool
-~~~~~~~~~~~~~~~
-
-For accessing trajectory data based on NASA AMES format you need the nappy python module installed and
-can configure this view by
-
-.. literalinclude:: samples/config/mss/snippets/trajectorytool.sample
-
-
-
-Usage of mss
-~~~~~~~~~~~~
-
-Performance
-...........
-
-MSS may also roughly estimate the fuel consumption and thus range of the aircraft
-neglecting weather conditions given a proper configuration file specifying the
-aircraft performance. Such a file may be loaded using the 'performance settings' button
-in Table View. The aircraft performance is specified using tables given in the JSON format.
-A basic configuration looks like the following file:
-
-.. literalinclude:: samples/config/mss/performance_simple.json.sample
-
-This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
-2900 lbs/h irrespective of flight level changes. The aircraft weight and available fuel are
-also given, but these may also be adjusted in the GUI after loading.
-
-The columns of the cruise table are aircraft weight (lbs), aircraft altitude (feet),
-speed (nm/h), and fuel consumption (lbs/h). MSS bilinearily interpolates in aircraft
-weight and altitude and extrapolates assuming a constant behaviour outside the given data.
-The climb table specifies the aircraft performance when climbing up from 0 feet altitude,
-while the descent table specifies the behaviour when descending down to 0 feet altitude.
-The column headers are aircraft weight (lbs), aircraft altitude (feet), time spent (minutes),
-distance required (nm), and fuel consumed (lbs). To compute the required data for a flight
-level change, a bilinear interpolation in the table for current aircraft weight and the
-two involved altitudes is performed and the difference of the resulting value is used in
-the calculation.
-
-
 Flight track import/export
-..........................
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As the planned flight track has to be quickly communicated to different parties having different
 desired file formats, MSS supports a simple plugin system for exporting planned flights and
@@ -142,9 +86,63 @@ The given plugins demonstrate, how additional plugins may be implemented. Please
 attributes of the waypoints are automatically computed by MSS (for example all time and performance data)
 and will be overwritten after reading back the file.
 
+Web Proxy
+~~~~~~~~~
+
+If you are in an area with a very low bandwith you may consider to use a squid web proxy
+and add those lines in your mss_settings pointing to the proxy server.
+
+.. literalinclude:: samples/config/mss/snippets/proxies.sample
+
+Loop View
+~~~~~~~~~
+
+If you have an image server you can configure the loop view by
+
+.. literalinclude:: samples/config/mss/snippets/loopview.sample
+
+Trajectory Tool
+~~~~~~~~~~~~~~~
+
+For accessing trajectory data based on NASA AMES format you need the nappy python module installed and
+can configure this view by
+
+.. literalinclude:: samples/config/mss/snippets/trajectorytool.sample
+
+
+Docking Widgets Configurations
+..............................
+
+
+Performance
+~~~~~~~~~~~
+
+MSS may also roughly estimate the fuel consumption and thus range of the aircraft
+neglecting weather conditions given a proper configuration file specifying the
+aircraft performance. Such a file may be loaded using the 'performance settings' button
+in Table View. The aircraft performance is specified using tables given in the JSON format.
+A basic configuration looks like the following file:
+
+.. literalinclude:: samples/config/mss/performance_simple.json.sample
+
+This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
+2900 lbs/h irrespective of flight level changes. The aircraft weight and available fuel are
+also given, but these may also be adjusted in the GUI after loading.
+
+The columns of the cruise table are aircraft weight (lbs), aircraft altitude (feet),
+speed (nm/h), and fuel consumption (lbs/h). MSS bilinearily interpolates in aircraft
+weight and altitude and extrapolates assuming a constant behaviour outside the given data.
+The climb table specifies the aircraft performance when climbing up from 0 feet altitude,
+while the descent table specifies the behaviour when descending down to 0 feet altitude.
+The column headers are aircraft weight (lbs), aircraft altitude (feet), time spent (minutes),
+distance required (nm), and fuel consumed (lbs). To compute the required data for a flight
+level change, a bilinear interpolation in the table for current aircraft weight and the
+two involved altitudes is performed and the difference of the resulting value is used in
+the calculation.
+
 
 Satellite Track Docking Widget
-..............................
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The TopView has a docking widget allowing the visualisation of satellite tracks.
 A `web site <https://cloudsgate2.larc.nasa.gov/cgi-bin/predict/predict.cgi>`_ to generate the data for
@@ -155,9 +153,19 @@ widget. An example file is located at
 
 
 KML Overlay Docking Widget
-..........................
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The TopView has a docking widget that allows the visualization of KML files on top of the map. This feature
 currently does not support all features of KML, for example, external resources such as images are not supported.
 Some example KML files are located at :download:`docs/samples/kml/line.kml <samples/kml/line.kml>` and
 :download:`docs/samples/kml/folder.kml <samples/kml/folder.kml>`.
+
+
+Example WMS Server
+..................
+
+Some public accessible WMS Servers
+
+ * http://osmwms.itc-halle.de/maps/osmfree
+ * http://ows.terrestris.de/osm/service
+ * https://firms.modaps.eosdis.nasa.gov/wms

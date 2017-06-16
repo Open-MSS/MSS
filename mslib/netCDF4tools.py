@@ -286,7 +286,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
     <http://netcdf4-python.googlecode.com/>} library by Jeffrey Whitaker.
     """
 
-    def __init__(self, files, exclude=[], skipDimCheck=[],
+    def __init__(self, files, exclude=None, skipDimCheck=None,
                  requireDimNum=False):
         """
         Open a Dataset spanning multiple files sharing common dimensions but
@@ -325,6 +325,9 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         """
         # Open the master file in the base class, so that the CDFMF instance
         # can be used like a CDF instance.
+
+        exclude = exclude or []
+        skipDimCheck = skipDimCheck or []
         if isinstance(files, str):
             files = sorted(glob.glob(files))
 
