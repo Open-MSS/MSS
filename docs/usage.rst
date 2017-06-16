@@ -21,7 +21,7 @@ interface (top view and side view).
 .. _mss-configuration:
 
 Configuration of mss
-~~~~~~~~~~~~~~~~~~~~
+++++++++++++++++++++
 
 
 Settings file
@@ -110,12 +110,12 @@ can configure this view by
 .. literalinclude:: samples/config/mss/snippets/trajectorytool.sample
 
 
+Docking Widgets Configurations
+..............................
 
-Usage of mss
-~~~~~~~~~~~~
 
 Performance
-...........
+~~~~~~~~~~~
 
 MSS may also roughly estimate the fuel consumption and thus range of the aircraft
 neglecting weather conditions given a proper configuration file specifying the
@@ -141,11 +141,8 @@ two involved altitudes is performed and the difference of the resulting value is
 the calculation.
 
 
-
-
-
 Satellite Track Docking Widget
-..............................
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The TopView has a docking widget allowing the visualisation of satellite tracks.
 A `web site <https://cloudsgate2.larc.nasa.gov/cgi-bin/predict/predict.cgi>`_ to generate the data for
@@ -156,7 +153,7 @@ widget. An example file is located at
 
 
 KML Overlay Docking Widget
-..........................
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The TopView has a docking widget that allows the visualization of KML files on top of the map. This feature
 currently does not support all features of KML, for example, external resources such as images are not supported.
@@ -165,7 +162,7 @@ Some example KML files are located at :download:`docs/samples/kml/line.kml <samp
 
 
 Example WMS Server
-~~~~~~~~~~~~~~~~~~
+..................
 
 Some public accessible WMS Servers
 
