@@ -2,6 +2,48 @@ Changelog
 =========
 
 
+Version 1.5.0
+~~~~~~~~~~~~~
+
+New Features:
+ - old OWSlib removed from repository and replaced by conda-forge package, #1
+ - the get capabilities button becomes enabled if the WMS Url changes, #106
+ - About of the mss ui got a link to the documentation, #110
+ - About shows that we are a python powered project, #111
+ - by configuration, sizes of topview, sideview, tableview,
+   could be predefined and for topview and sideview set to immutable., #123
+ - refactored strings to unicode, #126
+ - refactored url strings, #150
+ - performance data used for time information on vertical plots, #151
+ - use a singleton for WMS capability storage, #168
+ - ui files, _test folders excluded from conda build, #169
+ - implemented virtualdisplay for linux, #172
+ - cache for basemap coastline and country shape data added, #173
+ - consistant naming of "as" imports, #175
+ - loopview enable/disabled, based on given URL, #183
+ - configurable external proxy to cache on low bandwidth transfered images, #188
+
+
+Bug Fixes:
+ - Graticule strange/broken for southern polar stereographic projection, #178
+ - Flighpath / Location positioning problematic when crossing 180 degree E/W in cylindrical projection, #179
+ - tests independent from local mss_settings.json, #191
+ - catch invalid WMS Urls, #195
+
+
+Other Changes:
+ - line seperator of source files unified to LF, #92
+ - refactored whole codebase for compatibility with python3, #176
+ - version number of recent conda package added to documentation, #185
+ - split mss_settings.json.sample into snippet parts, and further documentation #194
+
+Hint:
+~~~~~
+At all this version has a lot of refactoring work.
+We are now compatible with python3.
+Some features were implemented to speed up server and client proccesses.
+
+
 Version 1.4.1
 -------------
 
@@ -41,7 +83,7 @@ Other Changes:
    existing inline code tests, #21
 
 Hint:
-~~~~~~
+~~~~~
 On linux and window installing of mss will create an icon in your Desktop start menu.
 
 Because authentication can happen as different user than the one driving the mss server
