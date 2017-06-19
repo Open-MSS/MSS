@@ -19,10 +19,11 @@ requirements:
     build:
         - python
         - setuptools
-        - menuinst [win]
+        - future
+        - menuinst  # [win]
     run:
         - python
-        - menuinst [win]
+        - menuinst  # [win]
         - basemap 1.0.7
         - chameleon
         - execnet
@@ -41,7 +42,7 @@ requirements:
         - tk 8.5.*
         - pykml
         - owslib
-        - future  # [py2k}
+        - future  # [py2k]
 
 test:
     imports:

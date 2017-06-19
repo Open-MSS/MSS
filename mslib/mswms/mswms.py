@@ -36,7 +36,7 @@ import logging
 import sys
 
 from mslib import __version__
-from wms import mss_wms_settings, mss_wms_auth
+from mslib.mswms.wms import mss_wms_settings, mss_wms_auth
 from mslib.utils import setup_logging
 
 
