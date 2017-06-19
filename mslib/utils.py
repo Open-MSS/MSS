@@ -394,7 +394,7 @@ def path_points(points, numpoints=100, connection='linear'):
         lons.extend(lons_[startidx:])
         lats.extend(lats_[startidx:])
         times.extend(times_[startidx:])
-    return [np.asarray(_x) for _x in lats, lons, times]
+    return [np.asarray(_x) for _x in (lats, lons, times)]
 
 
 class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
