@@ -16,7 +16,7 @@ New Features:
  - refactored url strings, #150
  - performance data used for time information on vertical plots, #151
  - use a singleton for WMS capability storage, #168
- - ui files, _test folders excluded from conda build, #169
+ - ui files, _test folders excluded from conda build pacakages, #169
  - implemented virtualdisplay for linux, #172
  - cache for basemap coastline and country shape data added, #173
  - consistant naming of "as" imports, #175
@@ -26,7 +26,7 @@ New Features:
 
 Bug Fixes:
  - Graticule strange/broken for southern polar stereographic projection, #178
- - Flighpath / Location positioning problematic when crossing 180 degree E/W in cylindrical projection, #179
+ - Flightpath / Location positioning problematic when crossing 180 degree E/W in cylindrical projection, #179
  - tests independent from local mss_settings.json, #191
  - catch invalid WMS Urls, #195
 
@@ -39,9 +39,10 @@ Other Changes:
 
 Hint:
 ~~~~~
-At all this version has a lot of refactoring work.
-We are now compatible with python3.
-Some features were implemented to speed up server and client proccesses.
+This version has a lot of refactoring work.
+We are now compatible with Python 3. We have not all dependent libraries verified
+to behave similar as for Python 2. After done this we will build also a Python 3 package.
+
 
 
 Version 1.4.1
