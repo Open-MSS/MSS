@@ -48,6 +48,89 @@ A few notes:
   network. Hence, when possible, try to make sure the WMS runs on the
   same computer on which the input data files are hosted.
 
+
+
+Configuration file of the wms server
+------------------------------------
+
+Configuration for the Mission Support System Web Map Service (wms).
+
+In this module the data organisation structure of the available forecast
+data is described. The class NWPDataAccess is subclassed for each data type
+in the system and provides methods to determine which file needs to be accessed for a given variable and time.
+The classes also provide methods to query the available initialisation times for a given variable,
+and the available valid times for a variable and a given initialisation time. As the latter methods need
+to open the NetCDF data files to determine the contained time values, a caching system is used to avoid
+re-opening already searched files.
+
+
+The configuration file have to become added to the /home/mss/config directory
+
+**/home/mss/config/mss_wms_settings.py**
+
+ .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
+
+
+You have to adopt this file to your data.
+
+
+.. _mswms-deployment:
+
+Standalone server setup
+------------------------------
+
+For the standalone server *mswms* you need the path of your mss_wms_settings.py added to the PYTHONPATH. E.g.::
+
+ export PYTHONPATH=/home/mss/config
+
+
+.. _demodata:
+
+demodata - simulated data
+--------------------------
+
+We provide demodata by executing the demodata programm. This creates in your home directory data files and also
+the needed server configuration file. The program creates 70MB of examples.
+This script does not overwrite an existing mss_wms_settings.py
+
+::
+
+    mss
+    ├── mss_wms_settings.py
+    ├── mss_wms_auth.py
+    ├── testdata
+    │   ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc
+    │   ├── 20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc
+    │   ├── 20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc
+    │   ├── 20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc
+    │   ├── 20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc
+    │   └── 20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc
+    └── vt_cache
+
+
+Before starting the standalone server you should add the path where the server config is to your python search path.
+e.g.
+
+::
+
+    $ export PYTHONPATH=~/mss
+
+
+
+Detailed server configuration *mss_wms_settings.py* for this demodata
+
+ .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
+
+For setting authentication see *mss_wms_auth.py*
+
+ .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
+
+
+
 .. _apache-deployment:
 
 Apache server setup
@@ -140,82 +223,3 @@ You have to setup a webserver server site configuration file
 
 Enable it with a2ensite mss.yourserver.de.conf
 
-
-Configuration file of the wms server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Configuration for the Mission Support System Web Map Service (wms).
-
-In this module the data organisation structure of the available forecast
-data is described. The class NWPDataAccess is subclassed for each data type
-in the system and provides methods to determine which file needs to be accessed for a given variable and time.
-The classes also provide methods to query the available initialisation times for a given variable,
-and the available valid times for a variable and a given initialisation time. As the latter methods need
-to open the NetCDF data files to determine the contained time values, a caching system is used to avoid
-re-opening already searched files.
-
-
-The configuration file have to become added to the /home/mss/config directory
-
-**/home/mss/config/mss_wms_settings.py**
-
- .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
-
-
-You have to adopt this file to your data.
-
-
-.. _mswms-deployment:
-
-Standalone server setup
-------------------------------
-
-For the standalone server *mswms* you need the path of your mss_wms_settings.py added to the PYTHONPATH. E.g.::
-
- export PYTHONPATH=/home/mss/config
-
-
-.. _demodata:
-
-demodata - simulated data
-==============================
-
-We provide demodata by executing the demodata programm. This creates in your home directory data files and also
-the needed server configuration file. The program creates 70MB of examples.
-This script does not overwrite an existing mss_wms_settings.py
-
-::
-
-    mss
-    ├── mss_wms_settings.py
-    ├── mss_wms_auth.py
-    ├── testdata
-    │   ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
-    │   ├── 20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc
-    │   ├── 20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc
-    │   ├── 20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc
-    │   ├── 20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc
-    │   ├── 20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc
-    │   ├── 20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc
-    │   ├── 20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc
-    │   ├── 20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc
-    │   └── 20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc
-    └── vt_cache
-
-
-Before starting the standalone server you should add the path where the server config is to your python search path.
-e.g. 
-
-::
-
-    $ export PYTHONPATH=~/mss
-
-
-
-Detailed server configuration *mss_wms_settings.py* for this demodata
-
- .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
-
-For setting authentication see *mss_wms_auth.py*
-
- .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
