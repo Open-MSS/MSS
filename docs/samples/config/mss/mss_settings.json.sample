@@ -2,10 +2,10 @@
 {
 
     "layout": {
-       "topview": (963, 702),
-       "sideview": (913, 557),
-       "tableview": (1236,424),
-       "immutable": False
+       "topview": [963, 702],
+       "sideview": [913, 557],
+       "tableview": [1236, 424],
+       "immutable": false
      },
 
     "locations": {
