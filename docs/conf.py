@@ -12,7 +12,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 import os
-from mslib.version import __version__
+
+# until readthedocs has a newer python version we have to hardcode the string here
+__version__ = "1.5.0"
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
