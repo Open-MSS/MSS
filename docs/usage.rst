@@ -162,7 +162,7 @@ Some example KML files are located at :download:`docs/samples/kml/line.kml <samp
 
 
 Example WMS Server
-..................
+++++++++++++++++++
 
 Some public accessible WMS Servers
 
