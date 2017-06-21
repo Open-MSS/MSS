@@ -11,11 +11,8 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-
-from past.builtins import execfile
-import sys
 import os
-execfile('../mslib/version.py')
+from mslib.version import __version__
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
