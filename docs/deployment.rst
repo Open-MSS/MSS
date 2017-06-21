@@ -142,9 +142,12 @@ For setting authentication see *mss_wms_auth.py*
 
 .. _apache-deployment:
 
-Apache server setup
---------------------------------
 
+Apache server setup
+-------------------
+
+One Instance
+............
 
 Our examples are based on the following directories located in the home directory of the mss user::
 
@@ -207,6 +210,8 @@ You can setup a vhost for this service.
 Configuration of wsgi auth
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+As long as you have only one instance of the server running you can use this method to restrict access.
+
 To restrict access to your data use this script.
 
 **/home/mss/wsgi/auth.wsgi**
@@ -217,6 +222,11 @@ To restrict access to your data use this script.
 This needs also a configuration **/home/mss/config/mss_wms_auth.py** script.
 
  .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
+
+
+At the moment you have many different instances with different users or different versions of mss you have to use
+basic auth of your webserver configuration.
+
 
 
 Configuration of your site as vhost
@@ -232,3 +242,18 @@ You have to setup a webserver server site configuration file
 
 Enable it with a2ensite mss.yourserver.de.conf
 
+
+Many Instances
+..............
+
+If you want to setup many instances we suggest to use a similiar proxy based configuration
+
+ .. literalinclude:: samples/sites-available/mss_proxy.conf
+
+and if you need authentication then use a Location based AuthType Basic
+
+ .. literalinclude:: samples/sites-available/proxy_demo.yourserver.de.conf
+
+
+
+For further informations on apache2 server setup read `<https://httpd.apache.org/docs/2.4/howto/>`_
