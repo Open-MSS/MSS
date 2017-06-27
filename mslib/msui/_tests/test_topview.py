@@ -134,6 +134,10 @@ class Test_MSSTopViewWindow(object):
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(1, 1))
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
+        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
+        # click again on same position
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 5
         assert mockbox.critical.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
