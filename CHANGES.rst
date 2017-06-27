@@ -2,8 +2,16 @@ Changelog
 =========
 
 
+Version 1.5.1
+-------------
+
+Bug Fixes:
+ - clicks on same position crashs waypoint insert for cyl projection, #197
+ - existing picklefiles of py2 crash on py3 version (vice versa), #198
+
+
 Version 1.5.0
-~~~~~~~~~~~~~
+-------------
 
 New Features:
  - old OWSlib removed from repository and replaced by conda-forge package, #1
