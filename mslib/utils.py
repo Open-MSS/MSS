@@ -169,14 +169,17 @@ def load_settings_pickle(tag, default_settings=None):
         default_settings = {}
     assert isinstance(default_settings, dict)
     settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.{}.cfg".format(tag))
-    logging.debug("loading settings for %s from %s", tag, settingsfile)
-    try:
-        with open(settingsfile, "rb") as fileobj:
-            settings = pickle.load(fileobj)
-    except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError) as ex:
-        logging.warn("Problems reloading stored %s settings (%s: %s). Switching to default",
-                     tag, type(ex), ex)
-        settings = {}
+    settings = {}
+    if not os.path.exists(settingsfile):
+        logging.debug("settings file '%s' for %s not available", settingsfile, tag)
+    else:
+        logging.debug("loading settings file '%s' for %s", settingsfile, tag)
+        try:
+            with open(settingsfile, "rb") as fileobj:
+                settings = pickle.load(fileobj)
+        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError) as ex:
+            logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
+                          tag, type(ex), ex)
     if isinstance(settings, dict):
         default_settings.update(settings)
     return default_settings
