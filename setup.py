@@ -50,6 +50,7 @@ setup(
     namespace_packages=[],
     include_package_data=True,
     zip_safe=False,
+    setup_requires=["pytest-runner"],
     install_requires=[],  # we use conda build recipe
     entry_points=dict(
         console_scripts=['mss = mslib.msui.mss_pyui:main'],
