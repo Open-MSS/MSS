@@ -121,7 +121,7 @@ Creating a new release
 * update CHANGES.rst, based on git log
 * check version number of upcoming release in CHANGES.rst
 * verify that version.py, meta.yaml, MANIFEST.in and setup.py are complete
-* merge from develop to stable
+* for a new stable release merge from develop to stable
 * tag the release::
 
    git tag -s -m "tagged/signed release X.Y.Z" X.Y.Z
