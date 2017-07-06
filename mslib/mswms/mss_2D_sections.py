@@ -183,7 +183,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
 
             # Get a list of the available levels.
             if self.driver.vert_data is not None:
-                return [u"{:d}".format(lvl) for lvl in sorted({int(_x) for _x in self.driver.vert_data})]
+                return [u"{:}".format(lvl) for lvl in sorted({float(_x) for _x in self.driver.vert_data})]
             else:
                 return []
         else:

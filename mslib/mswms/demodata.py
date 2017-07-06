@@ -1000,7 +1000,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                   "number_of_wcb_trajectories", "number_of_insitu_trajectories", "number_of_mix_trajectories"]),
 
                 ("ertel_potential_vorticity", "PVU", "pv",
-                 ("atmosphere_ertel_potential_vorticity_coordinate", [2, 3, 4]),
+                 ("atmosphere_ertel_potential_vorticity_coordinate", [2, 2.5, 3, 3.5, 4]),
                  ["air_potential_temperature", "geopotential_height", "air_pressure"]),
 
                 ("geopotential_height", "ALTITUDE_LEVELS", "ml",
