@@ -63,6 +63,7 @@ standard_library.install_aliases()
 import cgi
 import xml.etree.ElementTree as etree
 import requests
+import logging
 
 from urllib.parse import urlencode
 from owslib.util import ServiceException

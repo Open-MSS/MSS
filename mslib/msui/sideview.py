@@ -28,6 +28,7 @@
 
 from builtins import str
 
+import logging
 import functools
 from mslib.utils import config_loader, save_settings_pickle, load_settings_pickle
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
