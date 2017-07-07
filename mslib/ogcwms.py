@@ -101,7 +101,7 @@ def openURL(url_base, data=None, method='Get', cookies=None,
 
     if method.lower() == 'post':
         try:
-            xml = etree.fromstring(data)
+            etree.fromstring(data)
             headers['Content-Type'] = 'text/xml'
         except (ParseError, UnicodeEncodeError) as error:
             # (mss)
