@@ -139,4 +139,5 @@ def excepthook(type_, value, traceback_):
             u"{}".format(tb))
     QtCore.qFatal('')
 
+
 sys.excepthook = excepthook

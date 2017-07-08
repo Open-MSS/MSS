@@ -629,12 +629,13 @@ class HorizontalSectionDriver(MSSPlotDriver):
         timestep = self.times.searchsorted(self.fc_time)
         level = None
         if self.level is not None:
-            level = self.vert_data[::self.vert_order].searchsorted(self.level)
-            if self.vert_order == -1:
-                level = len(self.vert_data) - 1 - level
+            # select the nearest level available
+            level = np.abs(self.vert_data - self.level).argmin()
+            if abs(self.vert_data[level] - self.level) > 1e-3 * np.abs(np.diff(self.vert_data).mean()):
+                raise ValueError("Requested elevation not available.")
             self.actual_level = self.vert_data[level]
         logging.debug("loading data for time step {} ({}), level index {} (level {})".format(
-                      timestep, self.fc_time, level, self.level))
+                      timestep, self.fc_time, level, self.actual_level))
         for name, var in list(self.data_vars.items()):
             if level is None or len(var.shape) == 3:
                 # 2D fields: time, lat, lon.

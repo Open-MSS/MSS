@@ -587,6 +587,7 @@ def _parse_text(text, entry_length):
         result[name] = {"unit": unit, "data": data}
     return result
 
+
 _PROFILES = _parse_text(_PROFILES_TEXT, 20)
 _SURFACE = _parse_text(_SURFACE_TEXT, 3)
 
@@ -1000,7 +1001,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                   "number_of_wcb_trajectories", "number_of_insitu_trajectories", "number_of_mix_trajectories"]),
 
                 ("ertel_potential_vorticity", "PVU", "pv",
-                 ("atmosphere_ertel_potential_vorticity_coordinate", [2, 3, 4]),
+                 ("atmosphere_ertel_potential_vorticity_coordinate", [2, 2.5, 3, 3.5, 4]),
                  ["air_potential_temperature", "geopotential_height", "air_pressure"]),
 
                 ("geopotential_height", "ALTITUDE_LEVELS", "ml",
@@ -1052,6 +1053,7 @@ def main():
     examples.create_server_config(detailed_information=True)
     examples.create_data()
     print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
+
 
 if __name__ == '__main__':
     main()

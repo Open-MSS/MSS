@@ -3,6 +3,7 @@
 # platform: linux-64
 pep8
 py
+pycodestyle
 pytest
 pytest-cache
 pytest-pep8
