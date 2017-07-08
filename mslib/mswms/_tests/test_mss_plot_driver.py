@@ -222,8 +222,11 @@ class Test_HSec(object):
         assert img is not None
 
     def test_HS_PVTropoStyle_PV_01(self):
-        img = self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=2)
+        # test fractional levels and non-existing levels
+        img = self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=2.5)
         assert img is not None
+        with pytest.raises(ValueError):
+            img = self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=2.75)
 
     def test_HS_VIProbWCB_Style_01(self):
         img = self.plot(mpl_hsec_styles.HS_VIProbWCB_Style_01(driver=self.hsec))

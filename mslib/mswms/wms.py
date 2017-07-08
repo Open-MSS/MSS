@@ -387,10 +387,9 @@ class WMSServer(object):
 
             # Vertical level, if applicable.
             level = query.get('ELEVATION')
-            level = int(level) if level else None
+            level = float(level) if level else None
             layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
-            if (("ml" in layer_datatypes) or ("pl" in layer_datatypes)) \
-                    and not level:
+            if (("ml" in layer_datatypes) or ("pl" in layer_datatypes)) and not level:
                 # Use the default value.
                 level = -1
             elif ("sfc" in layer_datatypes) and ("ml" not in layer_datatypes) \
