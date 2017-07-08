@@ -40,7 +40,7 @@ class Test_WMS(object):
         environ = {
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
             'QUERY_STRING':
-                'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=20&srs=EPSG%3A4326&format=image%2Fpng&'
+                'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=200&srs=EPSG%3A4326&format=image%2Fpng&'
                 'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
