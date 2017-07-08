@@ -704,7 +704,8 @@ class MSSChemDataAccess(NWPDataAccess):
 
     """
     _file_template = "%s_$Y-$m-$d_%s_%s_%s.nc"
-    _file_regexp = "(?P<model>.*)_(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})_(?P<hour>\d{2})_(?P<vartype>.*)_(?P<variable>.*)\.nc$"
+    _file_regexp = "(?P<model>.*)_(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})_" \
+        "(?P<hour>\d{2})_(?P<vartype>.*)_(?P<variable>.*)\.nc$"
 
     def __init__(self, rootpath, modelname, modelstr, vert):
         NWPDataAccess.__init__(self, rootpath)

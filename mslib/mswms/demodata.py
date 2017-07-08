@@ -587,6 +587,7 @@ def _parse_text(text, entry_length):
         result[name] = {"unit": unit, "data": data}
     return result
 
+
 _PROFILES = _parse_text(_PROFILES_TEXT, 20)
 _SURFACE = _parse_text(_SURFACE_TEXT, 3)
 
@@ -1052,6 +1053,7 @@ def main():
     examples.create_server_config(detailed_information=True)
     examples.create_data()
     print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
+
 
 if __name__ == '__main__':
     main()
