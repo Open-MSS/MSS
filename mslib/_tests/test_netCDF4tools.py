@@ -95,7 +95,7 @@ class Test_netCDF4tools(object):
     def test_identify_CF_isopotvort(self):
         hybrid_name, hybrid_var, orientation = identify_CF_isopotvort(self.ncfile_pv)
         assert hybrid_name == "isopv"
-        assert hybrid_var.size == 3
+        assert hybrid_var.size == 5
         assert orientation == 1
 
     def test_identify_CF_isoaltitude(self):
