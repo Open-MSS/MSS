@@ -52,10 +52,13 @@ class VSecViewMockup(mock.Mock):
     getPlotSizePx = mock.Mock(return_value=(200, 100))
 
 
-class Test_HSecWMSControlWidget(object):
-    def setup(self):
+class WMSControlWidgetSetup(object):
+    def _setup(self, widget_type):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.view = HSecViewMockup()
+        if widget_type == "hsec":
+            self.view = HSecViewMockup()
+        else:
+            self.view = VSecViewMockup()
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
@@ -66,7 +69,14 @@ class Test_HSecWMSControlWidget(object):
             args=(mslib.mswms.wms.application,),
             kwargs={"host": "127.0.0.1", "port": "8082", "use_threadpool": False})
         self.thread.start()
-        self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
+        if widget_type == "hsec":
+            self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
+        else:
+            initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
+            waypoints_model = ft.WaypointsTableModel("")
+            waypoints_model.insertRows(0, rows=len(initial_waypoints), waypoints=initial_waypoints)
+            self.window = wc.VSecWMSControlWidget(
+                view=self.view, wms_cache=self.tempdir, waypoints_model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
@@ -91,6 +101,11 @@ class Test_HSecWMSControlWidget(object):
         QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
+
+
+class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
+    def setup(self):
+        self._setup("hsec")
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_no_server(self, mockbox):
@@ -232,50 +247,9 @@ class Test_HSecWMSControlWidget(object):
         assert self.view.drawMetadata.call_count == 1
 
 
-class Test_VSecWMSControlWidget(object):
+class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     def setup(self):
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.view = VSecViewMockup()
-        self.tempdir = tempfile.mkdtemp()
-        if not os.path.exists(self.tempdir):
-            os.mkdir(self.tempdir)
-        paste.httpserver.ServerExit()
-        QtTest.QTest.qWait(2000)
-        self.thread = multiprocessing.Process(
-            target=paste.httpserver.serve,
-            args=(mslib.mswms.wms.application,),
-            kwargs={"host": "127.0.0.1", "port": "8082", "use_threadpool": False})
-        self.thread.start()
-
-        initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
-        waypoints_model = ft.WaypointsTableModel("")
-        waypoints_model.insertRows(
-            0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = wc.VSecWMSControlWidget(
-            view=self.view, wms_cache=self.tempdir, waypoints_model=waypoints_model)
-        self.window.show()
-
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
-        QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-
-    def teardown(self):
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        shutil.rmtree(self.tempdir)
-        self.thread.terminate()
-
-    def query_server(self, url):
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.keyClicks(self.window.cbWMS_URL, url)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        self._setup("vsec")
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
