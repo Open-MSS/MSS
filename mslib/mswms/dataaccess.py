@@ -136,8 +136,8 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
                 with open(filename, "rb") as fileobj:
                     valid_times = pickle.load(fileobj)
             except (pickle.UnpicklingError, OSError, IOError) as ex:
-                logging.error(u"Error reading cache file '{}': {} - {}".format(filename, type(ex), ex))
-                logging.error(u"os.stat: {}".format(os.stat(filename)))
+                logging.error(u"Error reading cache file '%s': %s - %s", filename, type(ex), ex)
+                logging.error(u"os.stat: %s", os.stat(filename))
 
         return valid_times
 
@@ -152,7 +152,7 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
                 with open(filename, "wb") as fileobj:
                     pickle.dump(valid_times, fileobj)
             except (pickle.PicklingError, OSError, IOError) as ex:
-                logging.error(u"Error writing cache file '{}': {} - {}".format(filename, type(ex), ex))
+                logging.error(u"Error writing cache file '%s': %s - %s", filename, type(ex), ex)
 
     def serviceCache(self):
         """Service the cache: Remove all files older than the maximum file
@@ -185,11 +185,11 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
                 try:
                     os.remove(filename)
                 except (OSError, IOError) as ex:
-                    logging.error(u"Could not remove {:}: {:} - {:}".format(filename, type(ex), ex))
-                    logging.error(u"os.stat: {}".format(os.stat(filename)))
+                    logging.error(u"Could not remove '%s': %s - %s", filename, type(ex), ex)
+                    logging.error(u"os.stat: '%s'", os.stat(filename))
                 else:
                     removed_files += 1
-        logging.info(u"cache has been cleaned ({:d} files removed).".format(removed_files))
+        logging.info(u"cache has been cleaned (%d files removed).", removed_files)
 
     _mfDatasetArgsDict = {}
 
@@ -287,7 +287,7 @@ class ECMWFDataAccess(NWPDataAccess):
            the variable <variable> of the forecast specified by
            init_time and valid_time.
         """
-        variable_dict = self._data_organisation_table.get(variable, None)
+        variable_dict = self._data_organisation_table.get(variable)
 
         # Compute the time step in hours from the forecast valid time
         # and the initialisation time.
@@ -735,8 +735,8 @@ class MSSChemDataAccess(NWPDataAccess):
 
         # Substitute variable identifiers in the template filename.
         if vartype not in variable_dict:
-            raise ValueError("variable type %s not available for variable %s"
-                             % (vartype, variable))
+            raise ValueError("variable type '{}' not available for variable '{}'".format(
+                vartype, variable))
 
         if type(variable_dict[vartype]) == str:
             # The string stored for the given variable type contains the

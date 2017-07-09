@@ -170,7 +170,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if filename.endswith(".ftml"):
                 self.loadFromFTML(filename)
             else:
-                logging.debug(u"No known file extension! '{}'".format(filename))
+                logging.debug(u"No known file extension! '%s'", filename)
 
         if waypoints:
             self.replaceWaypoints(waypoints)

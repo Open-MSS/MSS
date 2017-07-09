@@ -582,7 +582,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     else:
                         raise
         except UnicodeEncodeError:
-            logging.error(u"got a unicode url?!: '{}'".format(base_url))
+            logging.error(u"got a unicode url?!: '%s'", base_url)
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
         except Exception as ex:
@@ -974,8 +974,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                     interpretation_successful = False
 
                             if not interpretation_successful:
-                                logging.error(u"Can't understand time string {}."
-                                              u" Please check the implementation.".format(time_item))
+                                logging.error(u"Can't understand time string '%s'."
+                                              u" Please check the implementation.", time_item)
 
             # No time extent tag was found: Set allowed_valid_times to None
             # (used by validTimeChanged()).
@@ -990,26 +990,26 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # parent.
             lobj = lobj.parent
 
-        logging.debug(u"determined init time format: {}".format(self.init_time_format))
+        logging.debug(u"determined init time format: '%s'", self.init_time_format)
         if enable_inittime and self.init_time_format is None:
             msg = "cannot determine init time format."
-            logging.warning(u"WARNING: {}".format(msg))
+            logging.warning(u"WARNING: %s", msg)
             if self.cbInitTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
-                QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                               self.tr(u"ERROR: {}".format(msg)))
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("Web Map Service"), self.tr(u"ERROR: {}".format(msg)))
             self.init_time_format = ""
 
-        logging.debug(u"determined valid time format: {}".format(self.valid_time_format))
+        logging.debug(u"determined valid time format: '%s'", self.valid_time_format)
         if enable_validtime and self.valid_time_format is None:
             msg = "cannot determine valid time format."
-            logging.warning(u"WARNING: {}".format(msg))
+            logging.warning(u"WARNING: %s", msg)
             if self.cbValidTime.count() == 0:
                 # If no values could be read from the extent tag notify
                 # the user.
-                QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                               self.tr(u"ERROR: {}".format(msg)))
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("Web Map Service"), self.tr(u"ERROR: {}".format(msg)))
             self.valid_time_format = ""
 
         self.enableLevelElements(enable_elevation)
@@ -1404,11 +1404,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                                    "(watch out for the strikethrough)!"))
             return
 
-        logging.debug(u"fetching layer {}; style {}, width {:d}, height {:d}".format(layer, style, width, height))
-        logging.debug(u"crs={}, path={}".format(crs, path_string))
-        logging.debug(u"init_time={}, valid_time={}".format(init_time, valid_time))
-        logging.debug(u"level={}".format(level))
-        logging.debug(u"transparent={}".format(transparent))
+        logging.debug(u"fetching layer '%s'; style '%s', width %d, height %d",
+                      layer, style, width, height)
+        logging.debug(u"crs=%s, path=%s", crs, path_string)
+        logging.debug(u"init_time=%s, valid_time=%s", init_time, valid_time)
+        logging.debug(u"level=%s", level)
+        logging.debug(u"transparent=%s", transparent)
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1485,7 +1486,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     @QtCore.pyqtSlot(object, object, object, object, object, object, object)
     def continueRetrieveImage(self, img, legend_img, layer, style, init_time, valid_time, md5_filename):
-        logging.debug(u"{} {} {}".format(self.pdlg.wasCanceled(), self.expected_img != md5_filename, md5_filename))
         if self.pdlg.wasCanceled() or self.expected_img != md5_filename:
             return
         self.pdlg.close()
@@ -1526,7 +1526,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     try:
                         os.remove(os.path.join(self.wms_cache, f))
                     except Exception as ex:
-                        logging.error(u"ERROR: {} {}".format(type(ex), ex))
+                        logging.error(u"ERROR: %s %s", type(ex), ex)
                 logging.debug("cache has been cleared.")
             else:
                 logging.debug("no cache exists that can be cleared.")

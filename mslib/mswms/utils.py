@@ -196,7 +196,7 @@ class Targets(object):
         return Targets.UNITS.get(standard_name, (None, 1))
 
     @staticmethod
-    def get_range(standard_name, level="total", type=None):
+    def get_range(standard_name, level="total", typ=None):
         """
         Returns valid range of values for target at given level
         Args:
@@ -208,10 +208,10 @@ class Targets(object):
             Tuple of lowest and highest valid value
         """
         if standard_name in Targets.RANGES:
-            if type in Targets.RANGES[standard_name]:
-                if level in Targets.RANGES[standard_name][type]:
+            if typ in Targets.RANGES[standard_name]:
+                if level in Targets.RANGES[standard_name][typ]:
                     return [_x * Targets.get_unit(standard_name)[1]
-                            for _x in Targets.RANGES[standard_name][type][level]]
+                            for _x in Targets.RANGES[standard_name][typ][level]]
                 elif level is None:
                     return 0, 0
             if level == "total" and "total" in Targets.RANGES[standard_name]:
@@ -278,7 +278,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
     cmap = matplotlib.pyplot.cm.rainbow
     ticks = None
 
-    if any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)]):
+    if any(isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)):
         cmin, cmax = 0, 1
 
     if style == "default":
