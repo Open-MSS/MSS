@@ -719,7 +719,7 @@ class MSSChemDataAccess(NWPDataAccess):
         self._data_organisation_table = {
             stdname: {vert: shortname.lower()}
             for stdname, (shortname, _, _, _) in list(MSSChemTargets.items())}
-        self._data_organisation_table["air_pressure"] = {vert: "p"}
+        self._data_organisation_table["air_pressure"] = {vert: "air_pressure"}
 
     def _determine_filename(self, variable, vartype, init_time, valid_time):
         """Determines the name of the CAMS global data file that contains

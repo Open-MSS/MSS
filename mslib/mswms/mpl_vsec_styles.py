@@ -1457,7 +1457,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         # for altitude level model data, when we don't have air_pressure information, we want to warn users that the
         # vertical section is only an approximation
         if (self.name[-2:] == "al") and\
-                ("p" not in list(self.driver.data_access.build_filetree().values())[0].values()[0]):
+                ("air_pressure" not in list(self.driver.data_access.build_filetree().values())[0].values()[0]):
             self.title = self.title.replace(" al)", " al; WARNING: vert. distribution only approximate!)")
 
     def _prepare_datafields(self):
