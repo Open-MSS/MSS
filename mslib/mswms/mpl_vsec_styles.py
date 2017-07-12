@@ -1555,6 +1555,11 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
             # at all (e.g., CAMS reg. Ensemble)
             # In those cases we derive air_pressure from the altitude alone, in the _prepare_datafields() method
             add_data = []
+        elif vert == 'pl':
+            # "pl" are pressure levels.  Here, the air_pressure information is implicitly contained in the vertical
+            # dimension coordinate, so we don't need to explicitly load it here.
+            add_data = []
+
         else:
             # all other layer types need to read air_pressure from the data
             add_data = [(vert, "air_pressure")]
