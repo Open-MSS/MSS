@@ -140,7 +140,7 @@ class WMSServer(object):
         # provided layer class for all datasets and register the layer
         # instances with the datasets.
         for dataset in datasets:
-            layer = layer_class()
+            layer = layer_class(self.hsec_drivers[dataset])
             logging.debug("registering horizontal section layer '{}' with "
                           "dataset '{}'".format(layer.name, dataset))
             # Check if the current dataset has already been registered. If
@@ -162,7 +162,7 @@ class WMSServer(object):
         # provided layer class for all datasets and register the layer
         # instances with the datasets.
         for dataset in datasets:
-            layer = layer_class()
+            layer = layer_class(self.vsec_drivers[dataset])
             logging.debug(u"registering vertical section layer '{}' with dataset '{}'".format(layer.name, dataset))
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
