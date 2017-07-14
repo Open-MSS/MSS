@@ -150,7 +150,6 @@ class WMSServer(object):
                     self.hsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError(u"dataset '{}' not available".format(dataset))
-            layer.set_driver(self.hsec_drivers[dataset])
             self.hsec_layer_registry[dataset][layer.name] = layer
 
     def register_vsec_layer(self, datasets, layer_class):
@@ -171,7 +170,6 @@ class WMSServer(object):
                     self.vsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError(u"dataset '{}' not available".format(dataset))
-            layer.set_driver(self.vsec_drivers[dataset])
             self.vsec_layer_registry[dataset][layer.name] = layer
 
     def is_service_exception(self, var):
