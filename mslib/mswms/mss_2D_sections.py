@@ -123,7 +123,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         Assumes that the same elevation levels are available for all time
         steps.
         """
-        logging.debug(u"checking vertical dimensions for layer {}..".format(self.name))
+        logging.debug(u"checking vertical dimensions for layer '%s'.", self.name)
         successful = False
         if self.driver is not None and not all(_x[0] in ["sfc"] for _x in self.required_datafields):
             # Get the latest init time.
@@ -141,13 +141,12 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
             # files are available.
             for time in init_times:
                 try:
-                    self.driver.set_plot_parameters(self,
-                                                    init_time=time,
-                                                    valid_time=time)
+                    self.driver.set_plot_parameters(
+                        self, init_time=time, valid_time=time)
                 except (IOError, ValueError) as ex:
                     logging.debug(u"WARNING: unsuccessfully examined data for "
-                                  u"init time '{}'.. trying next time.".format(time))
-                    logging.debug(u"(Error message: {} {})".format(type(ex), ex))
+                                  u"init time '%s'.. trying next time.", time)
+                    logging.debug(u"(Error message: %s %s)", type(ex), ex)
                 else:
                     successful = True
                     break
@@ -162,14 +161,13 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
                     valid_times = self.driver.get_valid_times(varname, vartype, it)
                     for vt in valid_times:
                         try:
-                            self.driver.set_plot_parameters(self,
-                                                            init_time=it,
-                                                            valid_time=vt)
+                            self.driver.set_plot_parameters(
+                                self, init_time=it, valid_time=vt)
                         except (IOError, ValueError) as ex:
                             logging.debug("WARNING: unsuccessfully examined data for "
-                                          "init time {}, valid time {}.. trying next "
-                                          "time.".format(it, vt))
-                            logging.debug(u"(Error message: {} {})".format(type(ex), ex))
+                                          "init time %s, valid time %s.. trying next "
+                                          "time.", it, vt)
+                            logging.debug(u"(Error message: %s %S )", type(ex), ex)
                         else:
                             successful = True
                             break

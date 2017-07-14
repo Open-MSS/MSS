@@ -112,7 +112,7 @@ class AbstractLagrantoDataItem(object):
                     self.gxElements['general']['linestyle']) + '/' + str(
                         self.gxElements['general']['linewidth'])
             except Exception as ex:
-                logging.debug(u"caught a wildcard Exception: {}, {}".format(type(ex), ex))
+                logging.debug(u"caught a wildcard Exception: %s, %s", type(ex), ex)
                 return ''
         elif column == 3:
             # Item markers.
@@ -120,7 +120,7 @@ class AbstractLagrantoDataItem(object):
             try:
                 s += u'time({})'.format(self.gxElements['general']['timeMarkerInterval'].strftime('%H:%M'))
             except Exception as ex:
-                logging.debug(u"caught a wildcard Exception: {}, {}".format(type(ex), ex))
+                logging.debug(u"caught a wildcard Exception: %s, %s", type(ex), ex)
             return s
         else:
             return ''
@@ -426,7 +426,7 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().find(identifier) >= 0:
                     self.timeVariableChild = item
-                    logging.debug(u"identified time variable <{}>".format(item.getName()))
+                    logging.debug(u"identified time variable <%s>", item.getName())
                     #
                     # The time variable has to be modified a bit: convert
                     # seconds to hours and change the name correspondingly.
@@ -443,8 +443,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.lonVariableChild = item
-                    logging.debug(u"identified longitude variable <{}> with "
-                                  u"identifier <{}>".format(item.getName(), identifier))
+                    logging.debug(u"identified longitude variable <%s> with "
+                                  u"identifier <%s>", item.getName(), identifier)
                     break
             if self.lonVariableChild is not None:
                 break
@@ -454,8 +454,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.latVariableChild = item
-                    logging.debug(u"identified latitude variable <{}> with "
-                                  u"identifier <{}>".format(item.getName(), identifier))
+                    logging.debug(u"identified latitude variable <%s> with "
+                                  u"identifier <%s>", item.getName(), identifier)
                     break
             if self.latVariableChild is not None:
                 break
@@ -465,8 +465,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.pressureVariableChild = item
-                    logging.debug(u"identified pressure variable <{}> with "
-                                  u"identifier <{}>".format(item.getName(), identifier))
+                    logging.debug(u"identified pressure variable <%s> with "
+                                  u"identifier <%s>", item.getName(), identifier)
                     break
             if self.pressureVariableChild is not None:
                 break

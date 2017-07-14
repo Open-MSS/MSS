@@ -122,8 +122,8 @@ class Test_TableView(object):
         QtWidgets.QApplication.processEvents()
         wps2 = self.window.waypoints_model.waypoints
         assert len(self.window.waypoints_model.waypoints) == 6
-        assert all([_x == _y for _x, _y in zip(wps[:3], wps2[:3])]), (wps, wps2)
-        assert all([_x == _y for _x, _y in zip(wps[3:], wps2[4:])]), (wps, wps2)
+        assert all(_x == _y for _x, _y in zip(wps[:3], wps2[:3])), (wps, wps2)
+        assert all(_x == _y for _x, _y in zip(wps[3:], wps2[4:])), (wps, wps2)
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)

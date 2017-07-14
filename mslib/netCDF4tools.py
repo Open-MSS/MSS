@@ -88,14 +88,12 @@ def identify_CF_coordhybrid(ncfile, check=CHECK_NONE):
     lat_name, lat_var = identify_variable(ncfile, "latitude")
     hybrid_name, hybrid_var = identify_variable(ncfile, "atmosphere_hybrid_sigma_pressure_coordinate")
 
-    if check == CHECK_LATLON:
-        if not (lat_var and lon_var):
-            raise NetCDFVariableError("Cannot identify lat/lon coordinate system "
-                                      "in NetCDF-CF input.")
-    elif check == CHECK_LATLONHYB:
-        if not (lat_var and lon_var and hybrid_var):
-            raise NetCDFVariableError("Cannot identify lat/lon/hybrid coordinate system "
-                                      "in NetCDF-CF input.")
+    if check == CHECK_LATLON and not (lat_var and lon_var):
+        raise NetCDFVariableError(
+            "Cannot identify lat/lon coordinate system in NetCDF-CF input.")
+    elif check == CHECK_LATLONHYB and not (lat_var and lon_var and hybrid_var):
+        raise NetCDFVariableError(
+            "Cannot identify lat/lon/hybrid coordinate system in NetCDF-CF input.")
 
     return lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var
 

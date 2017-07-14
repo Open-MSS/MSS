@@ -221,8 +221,8 @@ class PathV(WaypointsPath):
         waypoints = [[wp.lat, wp.lon] for wp in wps_model.allWaypointData()]
         intermediate_indexes = []
         ipoint = 0
-        for i in range(len(lats)):
-            if abs(lats[i] - waypoints[ipoint][0]) < 1E-10 and abs(lons[i] - waypoints[ipoint][1]) < 1E-10:
+        for i, (lat, lon) in enumerate(zip(lats, lons)):
+            if abs(lat - waypoints[ipoint][0]) < 1E-10 and abs(lon - waypoints[ipoint][1]) < 1E-10:
                 intermediate_indexes.append(i)
                 ipoint += 1
             if ipoint >= len(waypoints):
@@ -840,8 +840,8 @@ class HPathInteractor(PathInteractor):
             x, y = event.xdata, event.ydata
             best_index = self.pathpatch.get_path() \
                 .index_of_closest_segment(x, y, eps=self.appropriateEpsilon())
-            logging.debug(u"TopView insert point: clicked at ({:f}, {:f}), "
-                          u"best index: {:d}".format(x, y, best_index))
+            logging.debug(u"TopView insert point: clicked at (%f, %f), "
+                          u"best index: %d", x, y, best_index)
             self.pathpatch.get_path().insert_vertex(best_index, [x, y],
                                                     WaypointsPath.LINETO)
 
@@ -858,8 +858,8 @@ class HPathInteractor(PathInteractor):
             elif len(wpm.allWaypointData()) > 0 and best_index == 0:
                 flightlevel = wpm.waypointData(0).flightlevel
             else:
-                logging.error(u"Cannot copy flightlevel. best_index: {}, len: {}".format(
-                              best_index, len(wpm.allWaypointData())))
+                logging.error(u"Cannot copy flightlevel. best_index: %s, len: %s",
+                              best_index, len(wpm.allWaypointData()))
                 flightlevel = 0
             new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
             wpm.insertRows(best_index, rows=1, waypoints=[new_wp])

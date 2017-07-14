@@ -120,10 +120,8 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 cbar = self.fig.colorbar(lcc, fraction=0.05, pad=-0.02, shrink=0.7)
                 cbar.set_label("Cloud cover fraction in grid box (0-1)")
             else:
-                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                          width="3%",  # width = % of parent_bbox width
-                                                                          height="30%",  # height : %
-                                                                          loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                    ax, width="3%", height="30%", loc=4)
                 cbar = self.fig.colorbar(lcc, cax=axins1, orientation="vertical")
                 axins1.yaxis.set_ticks_position("left")
 
@@ -133,11 +131,8 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             if not self.noframe:
                 self.fig.colorbar(mcc, fraction=0.05, pad=-0.02, shrink=0.7, format='')
             else:
-                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                          width="2%" if self.style == "TOT" else "3%",
-                                                                          # width = % of parent_bbox width
-                                                                          height="30%",  # height : %
-                                                                          loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                    ax, width="2%" if self.style == "TOT" else "3%", height="30%", loc=4)
                 cbar = self.fig.colorbar(mcc, cax=axins1, orientation="vertical",
                                          format='' if self.style == "TOT" else "%.1f")
                 axins1.yaxis.set_ticks_position("left")
@@ -150,11 +145,8 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             if not self.noframe:
                 self.fig.colorbar(hcc, fraction=0.05, pad=0.08, shrink=0.7, format='')
             else:
-                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                          width="1%" if self.style == "TOT" else "3%",
-                                                                          # width = % of parent_bbox width
-                                                                          height="30%",  # height : %
-                                                                          loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                    ax, width="1%" if self.style == "TOT" else "3%", height="30%", loc=4)
                 cbar = self.fig.colorbar(hcc, cax=axins1, orientation="vertical",
                                          format='' if self.style == "TOT" else "%.1f")
                 axins1.yaxis.set_ticks_position("left")
@@ -306,10 +298,8 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(scs, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Solar Elevation Angle (degrees)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(scs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -387,10 +377,8 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(scs, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Sea Ice Cover Fraction (0-1)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(scs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -446,10 +434,8 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Temperature (degC)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -462,7 +448,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         cs = bm.contour(lonmesh, latmesh, tempC,
                         thin_contours, colors="saddlebrown", linewidths=1)
 
-        titlestring = "Temperature (degC) at model level %i" % self.level
+        titlestring = "Temperature (degC) at model level {}".format(self.level)
         time_step = self.valid_time - self.init_time
         time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -685,10 +671,8 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Temperature (degC)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -711,7 +695,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
         titlestring = "Temperature (degC) and Geopotential Height (m) at " \
-                      "%i hPa" % self.level
+            "{:.0f} hPa".format(self.level)
         time_step = self.valid_time - self.init_time
         time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -781,10 +765,8 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Wind Speed (m/s)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -814,7 +796,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
 
         # Plot title.
         titlestring = "Geopotential Height (m) and Horizontal Wind (m/s) " \
-                      "at %i hPa" % self.level
+            "at {:.0f} hPa".format(self.level)
         time_step = self.valid_time - self.init_time
         time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -874,10 +856,8 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(rhc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Relative Humidity (%)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(rhc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -898,7 +878,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
         titlestring = "Relative Humditiy (%%) and Geopotential Height (m) at " \
-                      "%i hPa" % self.level
+            "{:.0f} hPa".format(self.level)
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -958,10 +938,8 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(eqptc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Equivalent Potential Temperature (degC)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(eqptc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -982,7 +960,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
         titlestring = "Equivalent Potential Temperature (degC) and Geopotential Height (m) at " \
-                      "%i hPa" % self.level
+                      "{:.0f} hPa".format(self.level)
         time_step = self.valid_time - self.init_time
         time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -1040,10 +1018,8 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(wc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Vertical velocity (cm/s)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(wc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1067,7 +1043,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
         titlestring = "Vertical Velocity (cm/s) and Geopotential Height (m) at " \
-                      "%i hPa" % self.level
+                      "{:.0f} hPa".format(self.level)
         time_step = self.valid_time - self.init_time
         time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -1129,7 +1105,7 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax.clabel(cs, geop_contours[::2], fontsize=10, fmt='%i')
 
         titlestring = "Divergence (positive: red, negative: blue) and Geopotential Height (m) at " \
-                      "%i hPa" % self.level
+            "{:.0f} hPa".format(self.level)
         time_step = self.valid_time - self.init_time
         time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -1189,14 +1165,12 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Tracer (relative)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
-        titlestring = "EMAC Eyjafjallajokull Tracer (relative) at model level %i" % self.level
+        titlestring = "EMAC Eyjafjallajokull Tracer (relative) at model level {:.0f}".format(self.level)
         time_step = self.valid_time - self.init_time
         time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -1265,10 +1239,8 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("column density (kg/m^2)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1356,10 +1328,8 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label(label)
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1371,13 +1341,13 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
 
         if self.style == "PRES":
             titlestring = "Dynamical Tropopause Pressure (hPa) at " \
-                          "%i PVU" % (int(self.level) // 1000)
+                          "{:.1f} PVU".format(int(self.level) // 1000)
         elif self.style == "PT":
             titlestring = "Dynamical Tropopause Potential Temperature (K) at " \
-                          "%i PVU" % (int(self.level) // 1000)
+                          "{:.1f} PVU".format(int(self.level) // 1000)
         elif self.style == "GEOP":
             titlestring = "Dynamical Tropopause Geopotential Height (m) at " \
-                          "%i PVU" % (int(self.level) // 1000)
+                          "{:.1f} PVU".format(int(self.level) // 1000)
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -1439,10 +1409,8 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         if not self.noframe:
             self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1517,10 +1485,8 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         if not self.noframe:
             self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1583,10 +1549,8 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         if not self.noframe:
             self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 
@@ -1650,10 +1614,8 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Brightness Temperature (K)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="3%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=4)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
 

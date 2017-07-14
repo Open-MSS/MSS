@@ -342,8 +342,8 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
 
             # LOOP over TIMESTEPS **********************************************
             for istep, step in enumerate(steps):
-                retrieve = url.format(step)
-                logging.debug(u"attempting to retrieve image file: '{}'".format(retrieve))
+                retrieve = url % step
+                logging.debug(u"attempting to retrieve image file: '%s'", retrieve)
                 try:
                     auth_required = True
                     while auth_required:
@@ -369,7 +369,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                                 # returned by the server and ask the user for username
                                 # and password.
                                 realm = ex.hdrs["WWW-Authenticate"].split('"')[1]
-                                logging.debug(u"'{}' asks for authentication.".format(realm))
+                                logging.debug(u"'%s' asks for authentication.", realm)
                                 dlg = MSS_WMS_AuthenticationDialog(parent=self)
                                 dlg.lblMessage.setText(realm)
                                 dlg.setModal(True)
@@ -391,7 +391,7 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
                         valid_time = init_time + timedelta(seconds=3600 * step)
                         pixmap_cache.append((qp, valid_time))
                 except urllib.error.HTTPError as ex:
-                    logging.debug("timestep {:03d} not available (HTTP error {d})".format(step, ex.code))
+                    logging.debug("timestep %03d not available (HTTP error %d)", step, ex.code)
 
                 # Update progress dialog.
                 self.pdlg.setValue((float(ilevel) + (float(istep) / num_steps)) / num_levels * 100.)
@@ -493,12 +493,10 @@ class ImageLoopWidget(QtWidgets.QWidget, ui.Ui_ImageLoopWidget):
             # A) The easy case, no time information has been passed: Increment
             # or decrement image pointer unless we are at the end or beginning
             # of the image series.
-            if forward:
-                if self.current_pixmap < len(self.pixmaps[self.current_level]) - 1:
-                    self.current_pixmap += 1
-            else:
-                if self.current_pixmap > 0:
-                    self.current_pixmap -= 1
+            if forward and self.current_pixmap < len(self.pixmaps[self.current_level]) - 1:
+                self.current_pixmap += 1
+            elif (not forward) and self.current_pixmap > 0:
+                self.current_pixmap -= 1
             # We assign the global valid time now, so we are synchronized.
             self.synchronized = True
         else:

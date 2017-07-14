@@ -148,7 +148,7 @@ Example:
         fname -- file name of the lsl-file, without path (i.e. only 'lsl_...').
         """
 
-        logging.debug(u"Parsing output file '{}'".format(fname))
+        logging.debug(u"Parsing output file '%s'", fname)
 
         #
         # Open the lsl text file and read its contents into the list 'lines',
@@ -160,7 +160,7 @@ Example:
         # Open and read the metadata file, if existent.
         metafile = os.path.join(self.lagrantoOutputPath, fname) + '.meta.pyl'
         if os.path.exists(metafile):
-            logging.debug(u"Reading metadata file '{}'".format(os.path.basename(metafile)))
+            logging.debug(u"Reading metadata file '%s'", os.path.basename(metafile))
             # ToDo example file without UnicodeDecodeError: 'ascii' codec can't decode byte 0xfa in
             # position 1: ordinal not in range(128)
             with open(metafile, "rb") as fileobj:
@@ -169,7 +169,7 @@ Example:
                 duration = pickle.load(fileobj)
 
         else:
-            logging.debug(u"No metadata file '{}' found.".format(metafile))
+            logging.debug(u"No metadata file '%s' found.", metafile)
             startCoordinates = None
             startTime = None
             duration = None
@@ -255,7 +255,7 @@ Example:
         #
         # This method is similar to __read_lslFile(). Only those parts of the
         # source code are documented that differ from __read_lslFile().
-        logging.debug("Parsing output file %s" % fname)
+        logging.debug("Parsing output file '%s'", fname)
 
         flsl = open(os.path.join(self.lagrantoOutputPath, fname), 'r')
         lines = flsl.readlines()
