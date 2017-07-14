@@ -204,7 +204,10 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
             if isopressure_var is not None:
                 vert_data = isopressure_var[:]
                 vert_orientation = isopressure_orientation
-                vert_units = "hPa"
+                try:
+                    vert_units = isopressure_var.units
+                except AttributeError:
+                    vert_units = "unknown units"
 
         if vert_data is None:
             isopotvort_name, isopotvort_var, isopotvort_orientation = \
@@ -212,7 +215,10 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
             if isopotvort_var is not None:
                 vert_data = isopotvort_var[:]
                 vert_orientation = isopotvort_orientation
-                vert_units = "10^-3 PVU"
+                try:
+                    vert_units = isopotvort_var.units
+                except AttributeError:
+                    vert_units = "unknown units"
 
         if vert_data is None:
             isoalt_name, isoalt_var, isoalt_orientation = \
