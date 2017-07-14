@@ -1457,7 +1457,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         # for altitude level model data, when we don't have air_pressure information, we want to warn users that the
         # vertical section is only an approximation
         if (self.name[-2:] == "al") and\
-                ("p" not in list(self.driver.data_access.build_filetree().values())[0].values()[0]):
+                ("air_pressure" not in list(self.driver.data_access.build_filetree().values())[0].values()[0]):
             self.title = self.title.replace(" al)", " al; WARNING: vert. distribution only approximate!)")
 
     def _prepare_datafields(self):
@@ -1555,6 +1555,11 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
             # at all (e.g., CAMS reg. Ensemble)
             # In those cases we derive air_pressure from the altitude alone, in the _prepare_datafields() method
             add_data = []
+        elif vert == 'pl':
+            # "pl" are pressure levels.  Here, the air_pressure information is implicitly contained in the vertical
+            # dimension coordinate, so we don't need to explicitly load it here.
+            add_data = []
+
         else:
             # all other layer types need to read air_pressure from the data
             add_data = [(vert, "air_pressure")]

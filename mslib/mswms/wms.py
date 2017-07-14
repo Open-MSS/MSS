@@ -140,7 +140,7 @@ class WMSServer(object):
         # provided layer class for all datasets and register the layer
         # instances with the datasets.
         for dataset in datasets:
-            layer = layer_class()
+            layer = layer_class(self.hsec_drivers[dataset])
             logging.debug("registering horizontal section layer '{}' with "
                           "dataset '{}'".format(layer.name, dataset))
             # Check if the current dataset has already been registered. If
@@ -150,7 +150,6 @@ class WMSServer(object):
                     self.hsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError(u"dataset '{}' not available".format(dataset))
-            layer.set_driver(self.hsec_drivers[dataset])
             self.hsec_layer_registry[dataset][layer.name] = layer
 
     def register_vsec_layer(self, datasets, layer_class):
@@ -162,7 +161,7 @@ class WMSServer(object):
         # provided layer class for all datasets and register the layer
         # instances with the datasets.
         for dataset in datasets:
-            layer = layer_class()
+            layer = layer_class(self.vsec_drivers[dataset])
             logging.debug(u"registering vertical section layer '{}' with dataset '{}'".format(layer.name, dataset))
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
@@ -171,7 +170,6 @@ class WMSServer(object):
                     self.vsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError(u"dataset '{}' not available".format(dataset))
-            layer.set_driver(self.vsec_drivers[dataset])
             self.vsec_layer_registry[dataset][layer.name] = layer
 
     def is_service_exception(self, var):
