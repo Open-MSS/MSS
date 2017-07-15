@@ -446,25 +446,6 @@ class CLAMSICEDataAccess(ECMWFDataAccess):
     _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
 
 
-class GWFCDataAccess(ECMWFDataAccess):
-    """Subclass to ECMWFDataAccess for accessing gravity wave forecast and related data.
-    """
-    _file_template = "$Y$m$d_$H_gravity_wave_forecast.{gridtype}.{domain_id}.{fc_step:03d}.{vartype}.nc"
-    _file_regexp = "(?P<date>\d{8})_(?P<time>\d{2})_gravity_wave_forecast\.(?P<vartype>.*)\.%s\.(?P<step>\d{3}).*\.nc$"
-    _forecast_times = list(range(0, 150, 6))
-    _data_organisation_table = {
-        "gravity_wave_temperature_perturbation": {"ml": "ALTITUDE_LEVELS"},
-        "air_pressure": {"ml": "ALTITUDE_LEVELS"},
-        "air_potential_temperature": {"ml": "ALTITUDE_LEVELS"},
-        "brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
-        "square_of_brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
-        "tropopause_altitude": {"sfc": "SFC"},
-        "tropopause_air_pressure": {"sfc": "SFC"},
-        "max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air": {"sfc": "SFC"},
-        "mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air": {"sfc": "SFC"},
-    }
-
-
 class AutomaticDataAccess(NWPDataAccess):
     """
     Subclass to NWPDataAccess for accessing properly constructed NetCDF files
