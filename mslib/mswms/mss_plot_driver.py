@@ -183,66 +183,21 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
             dataset.close()
             raise
 
-        # Try to load vertical hybrid coordinate (model levels), isopressure
-        # coordinate (pressure levels) or iso-potential-vorticity (pv levels).
-        # NOTE: This code assumes that a file contains data on exactly one level
-        # type, not on more that one!
-        vert_data = None
-        vert_orientation = None
-        vert_units = None
+        try:
+            _, vert_data, vert_orientation, vert_units, _ = netCDF4tools.identify_vertical_axis(dataset)
+            self.vert_data = vert_data
+            self.vert_order = vert_orientation
+            self.vert_units = vert_units
+        except RuntimeError:
+            self.vert_data = None
+            self.vert_order = None
+            self.vert_units = None
 
-        hybrid_name, hybrid_var, hybrid_orientation = \
-            netCDF4tools.identify_CF_hybrid(dataset)
-        if hybrid_var is not None:
-            vert_data = hybrid_var[:]
-            vert_orientation = hybrid_orientation
-            vert_units = "model_level"
-
-        if vert_data is None:
-            isopressure_name, isopressure_var, isopressure_orientation = \
-                netCDF4tools.identify_CF_isopressure(dataset)
-            if isopressure_var is not None:
-                vert_data = isopressure_var[:]
-                vert_orientation = isopressure_orientation
-                try:
-                    vert_units = isopressure_var.units
-                except AttributeError:
-                    vert_units = "unknown units"
-
-        if vert_data is None:
-            isopotvort_name, isopotvort_var, isopotvort_orientation = \
-                netCDF4tools.identify_CF_isopotvort(dataset)
-            if isopotvort_var is not None:
-                vert_data = isopotvort_var[:]
-                vert_orientation = isopotvort_orientation
-                try:
-                    vert_units = isopotvort_var.units
-                except AttributeError:
-                    vert_units = "unknown units"
-
-        if vert_data is None:
-            isoalt_name, isoalt_var, isoalt_orientation = \
-                netCDF4tools.identify_CF_isoaltitude(dataset)
-            if isoalt_var is not None:
-                vert_data = isoalt_var[:]
-                vert_orientation = isoalt_orientation
-                vert_units = isoalt_var.units
-
-        if vert_data is None:
-            isoalt_name, isoalt_var, isoalt_orientation = \
-                netCDF4tools.identify_CF_isopottemp(dataset)
-            if isoalt_var is not None:
-                vert_data = isoalt_var[:]
-                vert_orientation = isoalt_orientation
-                vert_units = isoalt_var.units
         self.dataset = dataset
         self.times = times
         self.lat_data = lat_data
         self.lon_data = lon_data
         self.lat_order = lat_order
-        self.vert_data = vert_data
-        self.vert_order = vert_orientation
-        self.vert_units = vert_units
 
         # Identify the variable objects from the NetCDF file that correspond
         # to the data fields required by the plot object.

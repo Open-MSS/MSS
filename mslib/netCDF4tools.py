@@ -184,6 +184,45 @@ def identify_CF_isopottemp(ncfile):
     return isopottemp_name, isopottemp_var, orientation
 
 
+def identify_vertical_axis(dataset):
+    """
+    Try to load vertical hybrid coordinate (model levels), isopressure
+    coordinate (pressure levels) or iso-potential-vorticity (pv levels).
+    NOTE: This code assumes that a file contains data on exactly one level
+    type, not on more that one!
+    """
+
+    vert_name, vert_var, vert_orientation = identify_CF_hybrid(dataset)
+    if vert_var is not None:
+        return vert_name, vert_var[:], vert_orientation, "model_level", "ml"
+
+    vert_name, vert_var, vert_orientation = identify_CF_isopressure(dataset)
+    if vert_var is not None:
+        try:
+            vert_units = vert_var.units
+        except AttributeError:
+            vert_units = "unknown units"
+        return vert_name, vert_var[:], vert_orientation, vert_units, "pl"
+
+    vert_name, vert_var, vert_orientation = identify_CF_isopotvort(dataset)
+    if vert_var is not None:
+        try:
+            vert_units = vert_var.units
+        except AttributeError:
+            vert_units = "unknown units"
+        return vert_name, vert_var[:], vert_orientation, vert_units, "pv"
+
+    vert_name, vert_var, vert_orientation = identify_CF_isoaltitude(dataset)
+    if vert_var is not None:
+        return vert_name, vert_var[:], vert_orientation, vert_var.units, "al"
+
+    vert_name, vert_var, vert_orientation = identify_CF_isopottemp(dataset)
+    if vert_var is not None:
+        return vert_name, vert_var[:], vert_orientation, vert_var.units, "tl"
+
+    raise RuntimeError("Could not identify vertical axis")
+
+
 def identify_CF_time(ncfile):
     """
     Identify the time variable from a CF-compliant NetCDF file.
