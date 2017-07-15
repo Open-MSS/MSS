@@ -11,6 +11,8 @@ installation.
 
 We have methods to use data for ECMWF, CLaMS, GWFC, EMAC, METEOSAT implemented.
 The data have to use for their parameters the CF attribute standard_name.
+A new method should be able to deal with any CF conforming file following a
+couple of simple additional requirements.
 
 Per configuration you could register horizontal (*register_horizontal_layers*)
 or vertical layers (*register_vertical_layers*), give a basemap
@@ -84,14 +86,93 @@ For the standalone server *mswms* you need the path of your mss_wms_settings.py 
  export PYTHONPATH=/home/mss/config
 
 
+.. _meteo_data:
+
+meteorological data
+--------------------
+
+Data for the MSS server shall be provided in CF-compliant NetCDF format.
+Several specific data access methods are provided for ECMWF, Meteoc, and several other formats.
+
+The prefered method "AutomaticDataAccess" shall supplant most of these, but requires the data
+to be organised in the fashion described in the following.
+
+All data files belonging to one "set" shall have a common string in its name. Each set must share
+the same time, longitude, and latitude grid. Different sets may be used to offer different
+geographical regions or results of different simulation models.
+
+Each file of a set must contain only one or no vertical axis. If
+the data is required to be given on multiple vertical axis (such as providing data
+for horizontal plots on both pressure and theta levels), one (or more separate) file for each
+vertical axis type must be provided. All files for one axis type shall provide the same levels.
+If no vertical axis can be identified, it is assumed that the file contains 3-D data (time, lon, lat)
+such as, e.g., surface pressure or tropopause altitude.
+
+The vertical coordinate variable is identified by the standard_name being one of the following names:
+
+- atmosphere_hybrid_sigma_pressure_coordinate - "ml"
+
+- atmosphere_pressure_coordinate - "pl"
+
+- atmosphere_ertel_potential_vorticity_coordinate - "pv"
+
+- atmosphere_altitude_coordinate - "al"
+
+- atmosphere_potential_temperature_coordinate - "tl"
+
+The two-letter abbreviation is used for brief identification in the plotting routines in addition
+to the standard_name of the variable to uniquely identify which data shall be used.
+The data shall be organized with the dimensions in the order of "time", "vertical coordinate",
+"latitudes", and "longitudes". Data variables are identified by their standard_name, which
+is expected to be CF compliant.
+
+It is assumed that forecast data is given from one initialisation time onward for several time steps
+into the future. For each file, the init time is determined by the units attribute of the "time"
+variable. The time variable is identified by its standard_name being "time".
+The date given after "since" is interpreted as the init time such that the numerical value
+of "0" were the init time (which need not be present in the file).
+For example, if the units field of "time" contains "hours since 2012-10-17T12:00:00.000Z", 2012-10-17T12Z would
+be the init time. Data for different time steps may be contained in one file or split over several ones.
+
+An exemplary header for a file containing ozone on a vertical pressure coordinate would look as follows:
+
+::
+
+    netcdf example_ASIA {
+    dimensions:
+            press = 13 ;
+            lat = 51 ;
+            lon = 141 ;
+            time = 12 ;
+    variables:
+            float press(press) ;
+                    press:units = "hPa" ;
+                    press:positive = "down" ;
+                    press:standard_name = "atmosphere_pressure_coordinate" ;
+            float lat(lat) ;
+                    lat:units = "degrees_north" ;
+                    lat:standard_name = "latitude_north" ;
+            float lon(lon) ;
+                    lon:units = "degrees_east" ;
+                    lon:standard_name = "longitude_east" ;
+            float time(time) ;
+                    time:units = "hours since 2012-10-17T12:00:00Z" ;
+                    time:standard_name = "time" ;
+            float O3(time, press, lat, lon) ;
+                    O3:units = "mol/mol" ;
+                    O3:standard_name = "mole_fraction_of_ozone_in_air" ;
+    }
+
+
 .. _demodata:
+
 
 demodata - simulated data
 --------------------------
 
 We provide demodata by executing the demodata programm. This creates in your home directory data files and also
-the needed server configuration file. The program creates 70MB of examples.
-This script does not overwrite an existing mss_wms_settings.py
+the needed server configuration file. The program creates 70MB of examples. All generated files follow the
+guidelines given above. This script does not overwrite an existing mss_wms_settings.py
 
 ::
 
