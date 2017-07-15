@@ -61,7 +61,7 @@ from chameleon import PageTemplateLoader
 try:
     import mss_wms_settings
 except ImportError as ex:
-    logging.warning(u"Couldn't import mss_wms_settings (ImportError:'{}'), creating dummy config.".format(ex))
+    logging.warning(u"Couldn't import mss_wms_settings (ImportError:'%s'), creating dummy config.", ex)
 
     class mss_wms_settings(object):
         base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -91,7 +91,7 @@ print(mss_wms_settings.__file__)
 try:
     import mss_wms_auth
 except ImportError as ex:
-    logging.warning(u"Couldn't import mss_wms_auth (ImportError:'{}'), creating dummy config.".format(ex))
+    logging.warning(u"Couldn't import mss_wms_auth (ImportError:'{%s), creating dummy config.", ex)
 
     class mss_wms_auth(object):
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
@@ -140,17 +140,16 @@ class WMSServer(object):
         # provided layer class for all datasets and register the layer
         # instances with the datasets.
         for dataset in datasets:
-            layer = layer_class()
-            logging.debug("registering horizontal section layer '{}' with "
-                          "dataset '{}'".format(layer.name, dataset))
+            layer = layer_class(self.hsec_drivers[dataset])
+            logging.debug("registering horizontal section layer '%s' with "
+                          "dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
             if dataset not in self.hsec_layer_registry:
                 if dataset in self.hsec_drivers:
                     self.hsec_layer_registry[dataset] = {}
                 else:
-                    raise ValueError(u"dataset '{}' not available".format(dataset))
-            layer.set_driver(self.hsec_drivers[dataset])
+                    raise ValueError(u"dataset '%s' not available", dataset)
             self.hsec_layer_registry[dataset][layer.name] = layer
 
     def register_vsec_layer(self, datasets, layer_class):
@@ -162,16 +161,15 @@ class WMSServer(object):
         # provided layer class for all datasets and register the layer
         # instances with the datasets.
         for dataset in datasets:
-            layer = layer_class()
-            logging.debug(u"registering vertical section layer '{}' with dataset '{}'".format(layer.name, dataset))
+            layer = layer_class(self.vsec_drivers[dataset])
+            logging.debug(u"registering vertical section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
             if dataset not in self.vsec_layer_registry:
                 if dataset in self.vsec_drivers:
                     self.vsec_layer_registry[dataset] = {}
                 else:
-                    raise ValueError(u"dataset '{}' not available".format(dataset))
-            layer.set_driver(self.vsec_drivers[dataset])
+                    raise ValueError(u"dataset '%s' not available", dataset)
             self.vsec_layer_registry[dataset][layer.name] = layer
 
     def is_service_exception(self, var):
@@ -199,7 +197,7 @@ class WMSServer(object):
 
     def get_capabilities(self, server_url=None):
         template = templates['get_capabilities.pt']
-        logging.debug("server-url '{0}'".format(server_url))
+        logging.debug("server-url '%s'", server_url)
 
         # Horizontal Layers
         hsec_layers = []
@@ -269,7 +267,7 @@ class WMSServer(object):
 
         # Image size.
         figsize = float(query.get('WIDTH', 900)), float(query.get('HEIGHT', 600))
-        logging.debug("  requested image size = {:}x{:}".format(figsize[0], figsize[1]))
+        logging.debug("  requested image size = %sx%s", figsize[0], figsize[1])
 
         # Requested layers.
         layers = [layer for layer in query.get('LAYERS', '').strip().split(',') if layer]
@@ -278,12 +276,12 @@ class WMSServer(object):
             dataset, layer = layer.split(".")
         else:
             dataset = None
-        logging.debug(u"  requested dataset = '{}', layer = '{}'".format(dataset, layer))
+        logging.debug(u"  requested dataset = '%s', layer = '%s'", dataset, layer)
 
         # Requested style(s).
         styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
         style = styles[0] if len(styles) > 0 else None
-        logging.debug(u"  requested style = '{}'".format(style))
+        logging.debug(u"  requested style = '%s'", style)
 
         # Forecast initialisation time.
         init_time = query.get('DIM_INIT_TIME')
@@ -291,10 +289,10 @@ class WMSServer(object):
             try:
                 init_time = datetime.strptime(init_time, "%Y-%m-%dT%H:%M:%SZ")
             except ValueError:
-                return self.service_exception(code="InvalidDimensionValue",
-                                              text="DIM_INIT_TIME has wrong format "
-                                              "(needs to be 2005-08-29T13:00:00Z)")
-        logging.debug(u"  requested initialisation time = '{}'".format(init_time))
+                return self.service_exception(
+                    code="InvalidDimensionValue",
+                    text="DIM_INIT_TIME has wrong format (needs to be 2005-08-29T13:00:00Z)")
+        logging.debug(u"  requested initialisation time = '%s'", init_time)
 
         # Forecast valid time.
         valid_time = query.get('TIME')
@@ -302,10 +300,10 @@ class WMSServer(object):
             try:
                 valid_time = datetime.strptime(valid_time, "%Y-%m-%dT%H:%M:%SZ")
             except ValueError:
-                return self.service_exception(code="InvalidDimensionValue",
-                                              text="TIME has wrong format "
-                                              "(needs to be 2005-08-29T13:00:00Z)")
-        logging.debug(u"  requested (valid) time = '{}'".format(valid_time))
+                return self.service_exception(
+                    code="InvalidDimensionValue",
+                    text="TIME has wrong format (needs to be 2005-08-29T13:00:00Z)")
+        logging.debug(u"  requested (valid) time = '%s'", valid_time)
 
         # Coordinate reference system.
         crs = query.get('SRS', 'EPSG:4326')
@@ -326,7 +324,7 @@ class WMSServer(object):
             logging.error(msg)
             return self.service_exception(code="InvalidSRS", text=msg)
         else:
-            logging.debug(u"  requested coordinate reference system = {}".format(crs))
+            logging.debug(u"  requested coordinate reference system = '%s'", crs)
 
         # Create a frameless figure (WMS) or one with title and legend
         # (MSS specific)? Default is WMS mode (frameless).
@@ -339,9 +337,9 @@ class WMSServer(object):
 
         # Return format (image/png, text/xml, etc.).
         return_format = query.get('FORMAT', 'IMAGE/PNG').lower()
-        logging.debug(u"  requested return format = '{}'".format(return_format))
+        logging.debug(u"  requested return format = '%s'", return_format)
         if return_format not in ["image/png", "text/xml"]:
-            msg = u"unsupported FORMAT: {}".format(return_format)
+            msg = u"unsupported FORMAT: '{}'".format(return_format)
             logging.error(msg)
             return self.service_exception(code="InvalidFORMAT", text=msg)
 
@@ -361,8 +359,7 @@ class WMSServer(object):
             # Check if the layer requires time information and if they are given.
             if self.hsec_layer_registry[dataset][layer].uses_time_dimensions():
                 if init_time is None:
-                    msg = "INIT_TIME not specified (use the "\
-                          "DIM_INIT_TIME keyword)"
+                    msg = "INIT_TIME not specified (use the DIM_INIT_TIME keyword)"
                     logging.error(msg)
                     return self.service_exception(code="MissingDimensionValue", text=msg)
                 if valid_time is None:
@@ -378,8 +375,7 @@ class WMSServer(object):
 
             # Bounding box.
             try:
-                bbox = [float(v) for v in query.get('BBOX',
-                                                    '-180,-90,180,90').split(',')]
+                bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
             except ValueError:
                 msg = u"Invalid BBOX: {}".format(query.get("BBOX"))
                 logging.error(msg)
@@ -413,7 +409,7 @@ class WMSServer(object):
                                                 transparent=transparent,
                                                 return_format=return_format)
             except (IOError, ValueError) as ex:
-                logging.error(u"ERROR: {}".format(ex))
+                logging.error(u"ERROR: %s %s", type(ex), ex)
                 msg = u"The data corresponding to your request " \
                       u"is not available. Please check the " \
                       u"times and/or levels you have specified." \
@@ -433,7 +429,7 @@ class WMSServer(object):
                 msg = u"Invalid PATH: {}".format(path)
                 logging.error(msg)
                 return self.service_exception(text=msg)
-            logging.debug(u"VSEC PATH: {}".format(path))
+            logging.debug(u"VSEC PATH: %s", path)
 
             # Check requested layers.
             if (dataset not in self.vsec_layer_registry) or \
@@ -477,7 +473,7 @@ class WMSServer(object):
                                                 transparent=transparent,
                                                 return_format=return_format)
             except (IOError, ValueError) as ex:
-                logging.error(u"ERROR: {}".format(ex))
+                logging.error(u"ERROR: %s %s", type(ex), ex)
                 msg = u"The data corresponding to your request " \
                       u"is not available. Please check the " \
                       u"times and/or path you have specified." \
@@ -509,7 +505,7 @@ def application(environ, start_response):
     try:
         # Request info
         query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))
-        logging.debug(u"ENVIRON: {}".format(environ))
+        logging.debug(u"ENVIRON: %s", environ)
 
         # Processing
         request = str(query.get('request'))

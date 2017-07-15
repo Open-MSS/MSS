@@ -88,14 +88,12 @@ def identify_CF_coordhybrid(ncfile, check=CHECK_NONE):
     lat_name, lat_var = identify_variable(ncfile, "latitude")
     hybrid_name, hybrid_var = identify_variable(ncfile, "atmosphere_hybrid_sigma_pressure_coordinate")
 
-    if check == CHECK_LATLON:
-        if not (lat_var and lon_var):
-            raise NetCDFVariableError("Cannot identify lat/lon coordinate system "
-                                      "in NetCDF-CF input.")
-    elif check == CHECK_LATLONHYB:
-        if not (lat_var and lon_var and hybrid_var):
-            raise NetCDFVariableError("Cannot identify lat/lon/hybrid coordinate system "
-                                      "in NetCDF-CF input.")
+    if check == CHECK_LATLON and not (lat_var and lon_var):
+        raise NetCDFVariableError(
+            "Cannot identify lat/lon coordinate system in NetCDF-CF input.")
+    elif check == CHECK_LATLONHYB and not (lat_var and lon_var and hybrid_var):
+        raise NetCDFVariableError(
+            "Cannot identify lat/lon/hybrid coordinate system in NetCDF-CF input.")
 
     return lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var
 
@@ -184,6 +182,45 @@ def identify_CF_isopottemp(ncfile):
     if isopottemp_var:
         orientation = hybrid_orientation(isopottemp_var)
     return isopottemp_name, isopottemp_var, orientation
+
+
+def identify_vertical_axis(dataset):
+    """
+    Try to load vertical hybrid coordinate (model levels), isopressure
+    coordinate (pressure levels) or iso-potential-vorticity (pv levels).
+    NOTE: This code assumes that a file contains data on exactly one level
+    type, not on more that one!
+    """
+
+    vert_name, vert_var, vert_orientation = identify_CF_hybrid(dataset)
+    if vert_var is not None:
+        return vert_name, vert_var[:], vert_orientation, "model_level", "ml"
+
+    vert_name, vert_var, vert_orientation = identify_CF_isopressure(dataset)
+    if vert_var is not None:
+        try:
+            vert_units = vert_var.units
+        except AttributeError:
+            vert_units = "unknown units"
+        return vert_name, vert_var[:], vert_orientation, vert_units, "pl"
+
+    vert_name, vert_var, vert_orientation = identify_CF_isopotvort(dataset)
+    if vert_var is not None:
+        try:
+            vert_units = vert_var.units
+        except AttributeError:
+            vert_units = "unknown units"
+        return vert_name, vert_var[:], vert_orientation, vert_units, "pv"
+
+    vert_name, vert_var, vert_orientation = identify_CF_isoaltitude(dataset)
+    if vert_var is not None:
+        return vert_name, vert_var[:], vert_orientation, vert_var.units, "al"
+
+    vert_name, vert_var, vert_orientation = identify_CF_isopottemp(dataset)
+    if vert_var is not None:
+        return vert_name, vert_var[:], vert_orientation, vert_var.units, "tl"
+
+    raise RuntimeError("Could not identify vertical axis")
 
 
 def identify_CF_time(ncfile):
