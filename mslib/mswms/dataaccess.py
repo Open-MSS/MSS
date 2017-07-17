@@ -464,7 +464,11 @@ class AutomaticDataAccess(NWPDataAccess):
         """
         self.build_filetree()
 
-        return self._filetree[vartype][init_time][variable][valid_time]
+        try:
+            return self._filetree[vartype][init_time][variable][valid_time]
+        except KeyError:
+            raise ValueError(u"variable type {} not available for variable {}"
+                             .format(vartype, variable))
 
     def build_filetree(self):
         """
@@ -543,7 +547,10 @@ class AutomaticDataAccess(NWPDataAccess):
         """
         self.build_filetree()
 
-        return sorted(list(self._filetree[vartype][init_time][variable].keys()))
+        try:
+            return sorted(list(self._filetree[vartype][init_time][variable].keys()))
+        except KeyError:
+            return []
 
     def get_all_valid_times(self, variable, vartype):
         """Similar to get_valid_times(), but returns the combined valid times
@@ -552,6 +559,8 @@ class AutomaticDataAccess(NWPDataAccess):
         self.build_filetree()
 
         all_valid_times = []
+        if vartype not in self._filetree:
+            return []
         for init_time in self._filetree[vartype]:
             if variable in self._filetree[vartype][init_time]:
                 all_valid_times.extend(list(self._filetree[vartype][init_time][variable].keys()))
