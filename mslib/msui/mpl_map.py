@@ -795,7 +795,7 @@ class MapCanvas(basemap.Basemap):
             # longitude range defined by the locations. This breaks potentially down in case
             # that the locations are too far apart (>180 degree), but this is not the typical
             # use case and will thus hopefully not pose a problem.
-            if self.projection == "cyl":
+            if self.projection == "cyl" and npoints > 0:
                 lonlats = np.asarray(lonlats)
                 milon = min(lons[i], lons[i + 1])
                 malon = max(lons[i], lons[i + 1])

@@ -13,8 +13,12 @@
 # serve to show the default.
 import os
 
-# until readthedocs has a newer python version we have to hardcode the string here
-__version__ = "1.5.0"
+# readthedocs has no past.builtins
+try:
+    from past.builtins import execfile
+except ImportError:
+    pass
+execfile('../mslib/version.py')
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 

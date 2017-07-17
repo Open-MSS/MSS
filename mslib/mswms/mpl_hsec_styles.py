@@ -506,7 +506,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
 
         # Format for colorbar labels
         cbar_label = self.title
-        cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
+        cbar_format = get_cbar_label_format(self.style, np.median(np.abs(clevs)))
 
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
