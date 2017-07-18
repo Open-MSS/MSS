@@ -1524,7 +1524,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         self._latlon_logp_setup(titlestring=self.title)
 
         # Format for colorbar labels
-        cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
+        cbar_format = get_cbar_label_format(self.style, np.median(np.abs(clevs)))
         cbar_label = self.title
 
         # Add colorbar.

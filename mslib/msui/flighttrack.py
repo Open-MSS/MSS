@@ -152,8 +152,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     flight performance calculations.
     """
 
-    dataChanged = QtCore.pyqtSignal([QtCore.QModelIndex, QtCore.QModelIndex])
-
     def __init__(self, name="", filename=None, waypoints=None):
         super(WaypointsTableModel, self).__init__()
         self.name = name  # a name for this flight track

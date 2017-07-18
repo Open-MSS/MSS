@@ -446,25 +446,6 @@ class CLAMSICEDataAccess(ECMWFDataAccess):
     _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
 
 
-class GWFCDataAccess(ECMWFDataAccess):
-    """Subclass to ECMWFDataAccess for accessing gravity wave forecast and related data.
-    """
-    _file_template = "$Y$m$d_$H_gravity_wave_forecast.{gridtype}.{domain_id}.{fc_step:03d}.{vartype}.nc"
-    _file_regexp = "(?P<date>\d{8})_(?P<time>\d{2})_gravity_wave_forecast\.(?P<vartype>.*)\.%s\.(?P<step>\d{3}).*\.nc$"
-    _forecast_times = list(range(0, 150, 6))
-    _data_organisation_table = {
-        "gravity_wave_temperature_perturbation": {"ml": "ALTITUDE_LEVELS"},
-        "air_pressure": {"ml": "ALTITUDE_LEVELS"},
-        "air_potential_temperature": {"ml": "ALTITUDE_LEVELS"},
-        "brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
-        "square_of_brunt_vaisala_frequency_in_air": {"ml": "ALTITUDE_LEVELS"},
-        "tropopause_altitude": {"sfc": "SFC"},
-        "tropopause_air_pressure": {"sfc": "SFC"},
-        "max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air": {"sfc": "SFC"},
-        "mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air": {"sfc": "SFC"},
-    }
-
-
 class AutomaticDataAccess(NWPDataAccess):
     """
     Subclass to NWPDataAccess for accessing properly constructed NetCDF files
@@ -483,7 +464,11 @@ class AutomaticDataAccess(NWPDataAccess):
         """
         self.build_filetree()
 
-        return self._filetree[vartype][init_time][variable][valid_time]
+        try:
+            return self._filetree[vartype][init_time][variable][valid_time]
+        except KeyError:
+            raise ValueError(u"variable type {} not available for variable {}"
+                             .format(vartype, variable))
 
     def build_filetree(self):
         """
@@ -562,7 +547,10 @@ class AutomaticDataAccess(NWPDataAccess):
         """
         self.build_filetree()
 
-        return sorted(list(self._filetree[vartype][init_time][variable].keys()))
+        try:
+            return sorted(list(self._filetree[vartype][init_time][variable].keys()))
+        except KeyError:
+            return []
 
     def get_all_valid_times(self, variable, vartype):
         """Similar to get_valid_times(), but returns the combined valid times
@@ -571,6 +559,8 @@ class AutomaticDataAccess(NWPDataAccess):
         self.build_filetree()
 
         all_valid_times = []
+        if vartype not in self._filetree:
+            return []
         for init_time in self._filetree[vartype]:
             if variable in self._filetree[vartype][init_time]:
                 all_valid_times.extend(list(self._filetree[vartype][init_time][variable].keys()))

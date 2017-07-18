@@ -348,7 +348,6 @@ class WMSServer(object):
         # =======================================================
 
         if mode == "GetMap":
-
             # Check requested layer.
             if (dataset not in self.hsec_layer_registry) or \
                (layer not in self.hsec_layer_registry[dataset]):
@@ -408,6 +407,7 @@ class WMSServer(object):
                                                 noframe=noframe,
                                                 transparent=transparent,
                                                 return_format=return_format)
+                image = plot_driver.plot()
             except (IOError, ValueError) as ex:
                 logging.error(u"ERROR: %s %s", type(ex), ex)
                 msg = u"The data corresponding to your request " \
@@ -417,7 +417,6 @@ class WMSServer(object):
                 return self.service_exception(text=msg)
 
         elif mode == "GetVSec":
-
             # Vertical secton path.
             path = query.get("PATH")
             if not path:
@@ -472,6 +471,7 @@ class WMSServer(object):
                                                 noframe=noframe,
                                                 transparent=transparent,
                                                 return_format=return_format)
+                image = plot_driver.plot()
             except (IOError, ValueError) as ex:
                 logging.error(u"ERROR: %s %s", type(ex), ex)
                 msg = u"The data corresponding to your request " \
@@ -479,9 +479,6 @@ class WMSServer(object):
                       u"times and/or path you have specified." \
                       u"\n\nError message: {}".format(ex)
                 return self.service_exception(text=msg)
-
-        # Produce the image.
-        image = plot_driver.plot()
 
         # 4) Return the produced image.
         # =============================
