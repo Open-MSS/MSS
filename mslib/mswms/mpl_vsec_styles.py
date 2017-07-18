@@ -712,7 +712,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
     required_datafields = [
         ("ml", "air_pressure"),
         ("ml", "air_temperature"),
-        ("ml", "omega")]
+        ("ml", "lagrangian_tendency_of_air_pressure")]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
@@ -724,7 +724,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
                 thermolib.pot_temp(self.data['air_pressure'],
                                    self.data['air_temperature'])
         self.data["upward_wind"] = \
-            thermolib.omega_to_w(self.data["omega"],
+            thermolib.omega_to_w(self.data["lagrangian_tendency_of_air_pressure"],
                                  self.data['air_pressure'],
                                  self.data["air_temperature"])
 
