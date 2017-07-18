@@ -78,7 +78,7 @@ datapath = {
 # variable can be found. Objects are instances of subclasses of NWPDataAccess,
 # which provides the methods fc_filename() and full_fc_path().
 nwpaccess = {
-    "ecmwf_NH_LL05": mslib.mswms.dataaccess.ECMWFDataAccess(datapath["ecmwf"], "NH_LL05")
+    "ecmwf_NH_LL05": mslib.mswms.dataaccess.AutomaticDataAccess(datapath["ecmwf"], "NH_LL05")
     #    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
     #    "meteosat_EUR_LL05": mslib.mswms.dataaccess.MeteosatDataAccess(datapath["meteosat"], "EUR_LL05"),
     #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccess.EMACDataAccess(datapath["emac"])
