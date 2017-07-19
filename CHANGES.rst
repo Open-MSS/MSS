@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+Version 1.5.2
+-------------
+
+Bug Fixes:
+ - Server not giving WMS compliant error messages for invalid time/elevation data, #205
+ - colour bar labels for generic plots do not show sufficient significant digits, #209
+ - Open File Dialogue broken in PyQt5, #212
+ - Table View not properly updated in PyQt5, #213
+
+
 Version 1.5.1
 -------------
 
