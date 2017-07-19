@@ -563,7 +563,7 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
     globals()[name] = fnord
 
 
-for vert in ["pl", "ml", "tl"]:
+for vert in ["pl", "ml", "tl", "al"]:
     for ent in Targets.get_targets():
         make_generic_class("HS_GenericStyle_{}_{}".format(vert.upper(), ent), ent, vert)
     make_generic_class(
@@ -582,7 +582,7 @@ for vert in ["pl", "ml", "tl"]:
         fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
     make_generic_class(
         "HS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
-        "gravity_wave_temperature_perturbation", vert,
+        "air_temperature_residual", vert,
         [("sfc", "tropopause_altitude")],
         [("tropopause_altitude", [8, 10, 12, 14, 16], "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("gravity_wave_temperature_perturbation", "")])
@@ -1401,6 +1401,14 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         # temperature, a rainbow colourmap is used (blue=low temps, red=hight
         # temps).
         fcmap = plt.cm.terrain
+
+        if self.data_units["tropopause_altitude"] != "km":
+            raise ValueError("tropopause_altitude has wrong unit %s. Should be 'km'",
+                             self.data_units["tropopause_altitude"])
+        if self.data_units["secondary_tropopause_altitude"] != "km":
+            raise ValueError("secondary_tropopause_altitude has wrong unit %s. Should be 'km'",
+                             self.data_units["secondary_tropopause_altitude"])
+
         if self.style == "default":
             vardata = data["tropopause_altitude"]
             label = "Primary Tropopause (km)"
@@ -1419,8 +1427,8 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                                filled_contours, cmap=fcmap, extend="both")
 
         data["secondary_tropopause_altitude"] = np.ma.masked_invalid(data["secondary_tropopause_altitude"])
-        print(data["secondary_tropopause_altitude"].mask)
-        print(~data["secondary_tropopause_altitude"].mask)
+        print(data["tropopause_altitude"].compressed())
+        print(data["secondary_tropopause_altitude"])
 
         if self.style == "default":
             mask = np.ma.masked_where(

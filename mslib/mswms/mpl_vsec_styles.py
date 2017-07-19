@@ -127,15 +127,21 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         if self.name[-2:] == "pl":
             self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
             self.data["air_pressure"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+            self.data_units["air_pressure"] = self.driver.vert_units
         elif self.name[-2:] == "tl":
             self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
             self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+
+        if self.data_units["air_pressure"] not in ["Pa", "hPa"]:
+            raise ValueError("air_pressure neither hPa nor Pa: %s", self.data_units["air_pressure"])
+        if self.data_units["air_pressure"] == "hPa":
+            self.data["air_pressure"] *= 100
 
     def _plot_style(self):
         ax = self.ax
         curtain_cc = self.data[self.dataname] * self.unit_scale
         curtain_cc = np.ma.masked_invalid(curtain_cc)
-        curtain_p = self.data["air_pressure"] * 100
+        curtain_p = self.data["air_pressure"]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -260,17 +266,18 @@ for vert in ["pl", "ml", "tl"]:
         "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
         "square_of_brunt_vaisala_frequency_in_air", vert, add_data=_ADD_DATA[vert],
         fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
-vert = "ml"
+vert = "al"
 make_generic_class(
     "VS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
-    "gravity_wave_temperature_perturbation", vert,
-    add_data=[("sfc", "tropopause_air_pressure"), ("ml", "air_pressure")],
-    add_contours=[("tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
+    "air_temperature_residual", vert,
+    add_data=[("sfc", "secondary_tropopause_air_pressure"), ("sfc", "tropopause_air_pressure"), ("al", "air_pressure")],
+    add_contours=[("tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True),
+                  ("secondary_tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
     fix_styles=[("gravity_wave_temperature_perturbation", "")])
 make_generic_class(
     "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
     "square_of_brunt_vaisala_frequency_in_air", vert,
-    add_data=[("sfc", "tropopause_air_pressure"), ("ml", "air_pressure")],
+    add_data=[("sfc", "tropopause_air_pressure"), ("al", "air_pressure")],
     add_contours=[("tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
     fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 

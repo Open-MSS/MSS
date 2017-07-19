@@ -384,11 +384,12 @@ class WMSServer(object):
             level = query.get('ELEVATION')
             level = float(level) if level else None
             layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
-            if (("ml" in layer_datatypes) or ("pl" in layer_datatypes)) and not level:
+            if any(_x in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and level is None:
                 # Use the default value.
                 level = -1
-            elif ("sfc" in layer_datatypes) and ("ml" not in layer_datatypes) \
-                    and ("pl" not in layer_datatypes) and level:
+            elif ("sfc" in layer_datatypes) and \
+                    all(_x not in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and \
+                    level is not None:
                 msg = u"ELEVATION argument not applicable for layer " \
                       u"'{}'. Please omit this argument.".format(layer)
                 logging.error(msg)
