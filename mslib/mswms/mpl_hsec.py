@@ -231,6 +231,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         # Copy parameters to properties.
         self.data = data
+        self.data_units = self.driver.data_units.copy()
         self.lats = lats
         self.lons = lons
         self.level = level

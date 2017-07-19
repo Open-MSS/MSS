@@ -171,6 +171,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         # Copy parameters to properties.
         self.data = data
+        self.data_units = self.driver.data_units.copy()
         self.lats = lats
         self.lat_inds = np.arange(len(lats))
         self.lons = lons
