@@ -37,6 +37,7 @@ import re
 import os
 import logging
 import netCDF4
+import numpy
 from datetime import datetime, timedelta
 import time
 import hashlib
@@ -149,6 +150,7 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
             os.makedirs(valid_time_cache)
         filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if not os.path.exists(filename):
+            assert isinstance(valid_times, numpy.ndarray), (type(valid_times), valid_times)
             try:
                 with open(filename, "wb") as fileobj:
                     pickle.dump(valid_times, fileobj)
@@ -452,21 +454,28 @@ class AutomaticDataAccess(NWPDataAccess):
     Constructor needs information on domain ID.
     """
 
+    # Workaround for the numerical issue concering the lon dimension in
+    # NetCDF files produced by netcdf-java 4.3..
+    _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
+
     def __init__(self, rootpath, domain_id):
         NWPDataAccess.__init__(self, rootpath)
         self._domain_id = domain_id
+        self._available_files = None
         self._filetree = None
+
+        self.build_filetree()
 
     def _determine_filename(self, variable, vartype, init_time, valid_time):
         """Determines the name of the ECMWF data file the contains
            the variable <variable> of the forecast specified by
            init_time and valid_time.
         """
-        self.build_filetree()
-
         try:
             return self._filetree[vartype][init_time][variable][valid_time]
-        except KeyError:
+        except KeyError as ex:
+            logging.error("Could not identify filename. %s %s %s %s %s %s",
+                          variable, vartype, init_time, valid_time, type(ex), ex)
             raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
@@ -479,16 +488,16 @@ class AutomaticDataAccess(NWPDataAccess):
         if self._filetree is not None:
             return self._filetree
 
-        self._filetree = {}
-
         # Get a list of the available data files.
-        available_files = [
+        self._available_files = [
             _filename for _filename in os.listdir(self._root_path) if self._domain_id in _filename]
         logging.info("Files identified for domain '%s': %s",
-                     self._domain_id, available_files)
+                     self._domain_id, self._available_files)
+
+        self._filetree = {}
 
         # Build the tree structure.
-        for filename in available_files:
+        for filename in self._available_files:
             logging.info("Opening candidate '%s'", filename)
             with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
                 time_name, time_var = netCDF4tools.identify_CF_time(dataset)
@@ -535,8 +544,6 @@ class AutomaticDataAccess(NWPDataAccess):
     def get_init_times(self):
         """Returns a list of available forecast init times (base times).
         """
-        self.build_filetree()
-
         init_times = set(itertools.chain.from_iterable(
             self._filetree[_x].keys() for _x in self._filetree))
         return sorted(list(init_times))
@@ -545,19 +552,16 @@ class AutomaticDataAccess(NWPDataAccess):
         """Returns a list of available valid times for the specified
            variable at the specified init time.
         """
-        self.build_filetree()
-
         try:
             return sorted(list(self._filetree[vartype][init_time][variable].keys()))
-        except KeyError:
+        except KeyError as ex:
+            logging.error("Could not find times! %s %s", type(ex), ex)
             return []
 
     def get_all_valid_times(self, variable, vartype):
         """Similar to get_valid_times(), but returns the combined valid times
            of all available init times.
         """
-        self.build_filetree()
-
         all_valid_times = []
         if vartype not in self._filetree:
             return []
@@ -569,7 +573,7 @@ class AutomaticDataAccess(NWPDataAccess):
     def get_all_datafiles(self):
         """Return a list of all available data files.
         """
-        return os.listdir(self._root_path)
+        return self._available_files
 
 
 class EMACDataAccess(NWPDataAccess):
