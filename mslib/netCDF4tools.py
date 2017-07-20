@@ -378,6 +378,10 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
         # Get names of master dimensions.
         masterDims = list(cdfm.dimensions.keys())
+        # Check that each dimension has a coordinate dimension
+        for dimName in masterDims:
+            if dimName not in cdfm.variables:
+                raise IOError(u"dimension '{}' has no coordinate variable in master '{}'".format(dimName, master))
 
         # Create the following:
         #   cdf       list of Dataset instances
@@ -405,6 +409,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                 if dimName not in skipDimCheck:
                     if dimName not in masterDims:
                         raise IOError(u"dimension '{}' not defined in master '{}'".format(dimName, master))
+                    if dimName not in part.variables:
+                        raise IOError(u"dimension '{}' has no coordinate variable in file '{}'".format(dimName, f))
                     if len(part.dimensions[dimName]) != len(cdfm.dimensions[dimName]) or \
                             (part.variables[dimName][:] != cdfm.variables[dimName][:]).any():
                         raise IOError(u"dimension '{}' differs in master '{}' and "
