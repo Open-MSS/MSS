@@ -213,10 +213,12 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         <data_vars> can be accessed as <self.data_vars>.
         """
         self.data_vars = {}
+        self.data_units = {}
         for df_type, df_name in self.plot_object.required_datafields:
             varname, var = netCDF4tools.identify_variable(self.dataset, df_name, check=True)
             logging.debug("\tidentified variable <%s> for field <%s>", varname, df_name)
             self.data_vars[df_name] = var
+            self.data_units[df_name] = getattr(var, "units", None)
 
     @abstractmethod
     def set_plot_parameters(self, plot_object, init_time=None, valid_time=None,
@@ -413,6 +415,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         if self.dataset is None:
             return {}
         data = {}
+
         timestep = self.times.searchsorted(self.fc_time)
         logging.debug("loading data for time step %s (%s)", timestep, self.fc_time)
 
