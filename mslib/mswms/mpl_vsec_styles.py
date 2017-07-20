@@ -167,7 +167,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         # Contour lines
         for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
             if cont_levels is None:
-                pl_cont = ax.plot(self.lat_inds, self.data[cont_data].reshape(-1), "o", color="k", zorder=100)
+                pl_cont = ax.plot(self.lat_inds, self.data[cont_data].reshape(-1), "o", color=cont_colour, zorder=100)
                 plt.setp(pl_cont, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
             else:
                 cs_pv = ax.contour(curtain_lat, curtain_p, self.data[cont_data], cont_levels,
@@ -242,44 +242,50 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
 
 
 _ADD_DATA = {
-    "pl": [("pl", "ertel_potential_vorticity"), ("pl", "air_potential_temperature")],
+    "al": [("al", "ertel_potential_vorticity"), ("al", "air_pressure"), ("al", "air_potential_temperature")],
     "ml": [("ml", "ertel_potential_vorticity"), ("ml", "air_pressure"), ("ml", "air_potential_temperature")],
-    "tl": [("tl", "ertel_potential_vorticity"), ("tl", "air_pressure")]
+    "pl": [("pl", "ertel_potential_vorticity"), ("pl", "air_potential_temperature")],
+    "tl": [("tl", "ertel_potential_vorticity"), ("tl", "air_pressure")],
 }
 
-for vert in ["pl", "ml", "tl"]:
+for vert in ["al", "ml", "pl", "tl"]:
     for ent in Targets.get_targets():
         make_generic_class(
-            "VS_GenericStyle_{}_{}".format(vert.upper(), ent),
-            ent, vert, add_data=_ADD_DATA[vert])
+            "VS_GenericStyle_{}_{}".format(vert.upper(), ent), ent, vert,
+            add_data=_ADD_DATA[vert])
     make_generic_class(
         "VS_GenericStyle_{}_{}".format(vert.upper(), "ertel_potential_vorticity"),
-        "ertel_potential_vorticity", vert, add_data=_ADD_DATA[vert],
+        "ertel_potential_vorticity", vert,
+        add_data=_ADD_DATA[vert],
         fix_styles=[("ertel_potential_vorticity_nh", "northern hemisphere"),
                     ("ertel_potential_vorticity_sh", "southern hemisphere")])
     make_generic_class(
         "VS_GenericStyle_{}_{}".format(vert.upper(), "equivalent_latitude"),
-        "equivalent_latitude", vert, add_data=_ADD_DATA[vert],
+        "equivalent_latitude", vert,
+        add_data=_ADD_DATA[vert],
         fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
                     ("equivalent_latitude_sh", "southern hemisphere")])
     make_generic_class(
         "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
-        "square_of_brunt_vaisala_frequency_in_air", vert, add_data=_ADD_DATA[vert],
+        "square_of_brunt_vaisala_frequency_in_air", vert,
+        add_data=_ADD_DATA[vert],
         fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
-vert = "al"
-make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
-    "air_temperature_residual", vert,
-    add_data=[("sfc", "secondary_tropopause_air_pressure"), ("sfc", "tropopause_air_pressure"), ("al", "air_pressure")],
-    add_contours=[("tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True),
-                  ("secondary_tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
-    fix_styles=[("gravity_wave_temperature_perturbation", "")])
-make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
-    "square_of_brunt_vaisala_frequency_in_air", vert,
-    add_data=[("sfc", "tropopause_air_pressure"), ("al", "air_pressure")],
-    add_contours=[("tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
-    fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
+    make_generic_class(
+        "VS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
+        "air_temperature_residual", vert,
+        add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure"),
+                                    ("sfc", "secondary_tropopause_air_pressure")],
+        add_contours=[("tropopause_air_pressure", None, "darkgrey", "darkgrey", "solid", 2, True),
+                      ("secondary_tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
+        fix_styles=[("gravity_wave_temperature_perturbation", "")])
+    make_generic_class(
+        "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
+        "square_of_brunt_vaisala_frequency_in_air", vert,
+        add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure"),
+                                    ("sfc", "secondary_tropopause_air_pressure")],
+        add_contours=[("tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True),
+                      ("secondary_tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
+        fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 
 vert = "pl"
 make_generic_class(

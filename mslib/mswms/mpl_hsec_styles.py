@@ -563,7 +563,7 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
     globals()[name] = fnord
 
 
-for vert in ["pl", "ml", "tl", "al"]:
+for vert in ["al", "ml", "pl", "tl"]:
     for ent in Targets.get_targets():
         make_generic_class("HS_GenericStyle_{}_{}".format(vert.upper(), ent), ent, vert)
     make_generic_class(
@@ -584,7 +584,7 @@ for vert in ["pl", "ml", "tl", "al"]:
         "HS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
         "air_temperature_residual", vert,
         [("sfc", "tropopause_altitude")],
-        [("tropopause_altitude", [8, 10, 12, 14, 16], "dimgrey", "dimgrey", "solid", 2, True)],
+        [("tropopause_altitude", [8, 10, 12, 14, 16, 18], "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("gravity_wave_temperature_perturbation", "")])
     make_generic_class(
         "HS_GenericStyle_{}_{}".format(vert.upper(), "cloud_ice_mixing_ratio"),
@@ -620,17 +620,17 @@ for vert in ["pl", "ml", "tl", "al"]:
 make_generic_class(
     "HS_GenericStyle_SFC_tropopause_altitude",
     "tropopause_altitude", "sfc", [],
-    [("tropopause_altitude", np.arange(5, 18.1, 0.500), "yellow", "red", "solid", 0.5, False)],
+    [("tropopause_altitude", np.arange(5, 20.1, 0.500), "yellow", "red", "solid", 0.5, False)],
     fix_styles=[("tropopause_altitude", "tropopause_altitude")])
 make_generic_class(
     "HS_GenericStyle_SFC_max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air",
     "max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air", "sfc", [("sfc", "tropopause_altitude")],
-    [("tropopause_altitude", np.arange(6, 16.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
+    [("tropopause_altitude", np.arange(6, 20.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
     fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 make_generic_class(
     "HS_GenericStyle_SFC_mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air",
     "mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air", "sfc", [("sfc", "tropopause_altitude")],
-    [("tropopause_altitude", np.arange(6, 16.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
+    [("tropopause_altitude", np.arange(6, 20.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
     fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 
 
