@@ -95,17 +95,20 @@ Data for the MSS server shall be provided in CF-compliant NetCDF format.
 Several specific data access methods are provided for ECMWF, Meteoc, and several other formats.
 
 The prefered method "AutomaticDataAccess" shall supplant most of these, but requires the data
-to be organised in the fashion described in the following.
+to be organised in the fashion described in the following (the others pose mostly the same
+requirements).
 
-All data files belonging to one "set" shall have a common string in its name. Each set must share
-the same time, longitude, and latitude grid. Different sets may be used to offer different
+All data files belonging to one "set" shall have a common string in its name that can be used to uniquely
+identify all files of this set. Each set must share
+the same time, longitude, and latitude grid. Each set must use the same elevation layers for each type of
+vertical axis. Different data sets may be used to offer different
 geographical regions or results of different simulation models.
 
 Each file of a set must contain only one or no vertical axis. If
 the data is required to be given on multiple vertical axis (such as providing data
 for horizontal plots on both pressure and theta levels), one (or more separate) file for each
 vertical axis type must be provided. All files for one axis type shall provide the same levels.
-If no vertical axis can be identified, it is assumed that the file contains 3-D data (time, lon, lat)
+If no vertical axis can be identified, it is assumed that the file contains 3-D data (time, lat, lon)
 such as, e.g., surface pressure or tropopause altitude.
 
 The vertical coordinate variable is identified by the standard_name being one of the following names:
@@ -123,8 +126,11 @@ The vertical coordinate variable is identified by the standard_name being one of
 The two-letter abbreviation is used for brief identification in the plotting routines in addition
 to the standard_name of the variable to uniquely identify which data shall be used.
 The data shall be organized with the dimensions in the order of "time", "vertical coordinate",
-"latitudes", and "longitudes". Data variables are identified by their standard_name, which
-is expected to be CF compliant.
+"latitudes", and "longitudes" (This is important to reduce disk access when generating the plots).
+Data variables are identified by their standard_name, which is expected to be CF compliant.
+Data variables should contain a "units" attribute that may be used by the plotting routines
+for checking and/or conversion. Please bear in mind that the vertical axis of all vertical
+sections is pressure in 'Pa'.
 
 It is assumed that forecast data is given from one initialisation time onward for several time steps
 into the future. For each file, the init time is determined by the units attribute of the "time"
@@ -134,7 +140,8 @@ of "0" were the init time (which need not be present in the file).
 For example, if the units field of "time" contains "hours since 2012-10-17T12:00:00.000Z", 2012-10-17T12Z would
 be the init time. Data for different time steps may be contained in one file or split over several ones.
 
-An exemplary header for a file containing ozone on a vertical pressure coordinate would look as follows:
+An exemplary header for a file containing ozone on a vertical pressure coordinate and a 3-D tropopause
+would look as follows:
 
 ::
 
@@ -146,21 +153,24 @@ An exemplary header for a file containing ozone on a vertical pressure coordinat
             time = 12 ;
     variables:
             float press(press) ;
-                    press:units = "hPa" ;
+                    press:units = "Pa" ;
                     press:positive = "down" ;
                     press:standard_name = "atmosphere_pressure_coordinate" ;
             float lat(lat) ;
                     lat:units = "degrees_north" ;
-                    lat:standard_name = "latitude_north" ;
+                    lat:standard_name = "latitude" ;
             float lon(lon) ;
                     lon:units = "degrees_east" ;
-                    lon:standard_name = "longitude_east" ;
+                    lon:standard_name = "longitude" ;
             float time(time) ;
                     time:units = "hours since 2012-10-17T12:00:00Z" ;
                     time:standard_name = "time" ;
             float O3(time, press, lat, lon) ;
                     O3:units = "mol/mol" ;
                     O3:standard_name = "mole_fraction_of_ozone_in_air" ;
+            float tropopause(time, lat, lon) ;
+                    tropopause:units = "Pa" ;
+                    tropopause:standard_name = "tropopause_air_pressure" ;
     }
 
 
