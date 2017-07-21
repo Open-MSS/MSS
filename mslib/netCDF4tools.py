@@ -111,11 +111,11 @@ def identify_vertical_axis(dataset):
         orientation = hybrid_orientation(var)
         if var is not None:
             units = getattr(var, "units", "unknown units")
-            result.append((name, var[:], orientation, units, layertype))
+            result.append((name, var, orientation, units, layertype))
     if len(result) == 0:
-        raise RuntimeError("Could not identify vertical axis")
+        return None, None, None, None, "sfc"
     if len(result) > 1:
-        raise RuntimeError("Identified more than one vertical axis: {}".format(result))
+        raise IOError("Identified more than one vertical axis: {}".format(result))
     return result[0]
 
 
@@ -313,26 +313,3 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
            contains <varname>.
         """
         return self._cdfOrigin[varname]
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-# The following methods are inherited from MFDataset:
-
-#     def __setattr__(self, name, value):
-#         """override base class attribute creation"""
-#         self.__dict__[name] = value
-
-#     def __getattribute__(self, name):
-#         if name in ['variables','dimensions','file_format']:
-#             if name == 'dimensions': return self._dims
-#             if name == 'variables': return self._vars
-#             if name == 'file_format': return self._file_format
-#         else:
-#             return netCDF4.Dataset.__getattribute__(self, name)
-
-#     def ncattrs(self):
-#         return self._cdf[0].__dict__.keys()
-
-#     def close(self):
-#         for dset in self._cdf:
-#             dset.close()
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

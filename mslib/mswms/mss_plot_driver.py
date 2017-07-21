@@ -176,22 +176,16 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
 
         # Load lat/lon dimensions.
         try:
-            lat_data, lon_data, lat_order = \
-                netCDF4tools.get_latlon_data(dataset)
+            lat_data, lon_data, lat_order = netCDF4tools.get_latlon_data(dataset)
         except Exception as ex:
             logging.error(u"ERROR: %s %s", type(ex), ex)
             dataset.close()
             raise
 
-        try:
-            _, vert_data, vert_orientation, vert_units, _ = netCDF4tools.identify_vertical_axis(dataset)
-            self.vert_data = vert_data
-            self.vert_order = vert_orientation
-            self.vert_units = vert_units
-        except RuntimeError:
-            self.vert_data = None
-            self.vert_order = None
-            self.vert_units = None
+        _, vert_data, vert_orientation, vert_units, _ = netCDF4tools.identify_vertical_axis(dataset)
+        self.vert_data = vert_data[:] if vert_data is not None else None
+        self.vert_order = vert_orientation
+        self.vert_units = vert_units
 
         self.dataset = dataset
         self.times = times
