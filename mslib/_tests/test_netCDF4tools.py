@@ -29,10 +29,8 @@ import os
 import pytest
 import datetime
 from netCDF4 import Dataset
-from mslib.netCDF4tools import (identify_variable, identify_CF_coordhybrid, identify_CF_hybrid, hybrid_orientation,
-                                identify_CF_isopressure, identify_CF_isopotvort, identify_CF_isoaltitude,
-                                identify_CF_isopottemp, identify_CF_time, identify_CF_ensemble, num2date,
-                                get_latlon_data
+from mslib.netCDF4tools import (identify_variable, identify_CF_lonlat, hybrid_orientation,
+                                identify_vertical_axis, identify_CF_time, num2date, get_latlon_data
                                 )
 
 from mslib._tests.utils import DATA_DIR
@@ -41,7 +39,7 @@ DATA_FILE_ML = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.CC.EUR_LL015.0
 DATA_FILE_PL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc")
 DATA_FILE_PV = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.PVU.EUR_LL015.036.pv.nc")
 DATA_FILE_TL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc")
-DATA_FILE_AL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc")
+DATA_FILE_AL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.al.nc")
 
 
 class Test_netCDF4tools(object):
@@ -63,7 +61,7 @@ class Test_netCDF4tools(object):
         checklist = [('time', u'time'),
                      ('latitude', u'lat'),
                      ('longitude', u'lon'),
-                     ('atmosphere_pressure_coordinate', 'hyam'),
+                     ('atmosphere_hybrid_pressure_coordinate', 'hyam'),
                      ('atmosphere_hybrid_height_coordinate', 'hybm'),
                      ('cloud_area_fraction_in_atmosphere_layer', 'cloud_area_fraction_in_atmosphere_layer')]
         for standard_name, short_name in checklist:
@@ -71,43 +69,49 @@ class Test_netCDF4tools(object):
             assert variable[0] == short_name
 
     def test_identify_CF_coordhybrid(self):
-        lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var = identify_CF_coordhybrid(self.ncfile_ml)
-        assert (lat_name, lon_name, hybrid_name) == (u'lat', u'lon', 'hybrid')
+        lat_name, lat_var, lon_name, lon_var = identify_CF_lonlat(self.ncfile_ml)
+        assert (lat_name, lon_name) == (u'lat', u'lon')
         assert lat_var.size == 40
         assert lon_var.size == 50
 
-    def test_hybrid_orientation(self):
-        lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var = identify_CF_coordhybrid(self.ncfile_ml)
-        assert hybrid_orientation(hybrid_var) == 1
-
     def test_identify_CF_hybrid(self):
-        hybrid_name, hybrid_var, orientation = identify_CF_hybrid(self.ncfile_ml)
+        hybrid_name, hybrid_var, orientation, units, lt = identify_vertical_axis(self.ncfile_ml)
         assert hybrid_name == "hybrid"
         assert hybrid_var.size == 19
+        assert units == "sigma"
+        assert lt == "ml"
         assert orientation == 1
 
     def test_identify_CF_isopressure(self):
-        hybrid_name, hybrid_var, orientation = identify_CF_isopressure(self.ncfile_ml)
-        assert hybrid_name == "hyam"
-        assert hybrid_var.size == 19
-        assert orientation == -1
+        hybrid_name, hybrid_var, orientation, units, lt = identify_vertical_axis(self.ncfile_pl)
+        assert hybrid_name == "isobaric"
+        assert hybrid_var.size == 14
+        assert units == "hPa"
+        assert lt == "pl"
+        assert orientation == 1
 
     def test_identify_CF_isopotvort(self):
-        hybrid_name, hybrid_var, orientation = identify_CF_isopotvort(self.ncfile_pv)
+        hybrid_name, hybrid_var, orientation, units, lt = identify_vertical_axis(self.ncfile_pv)
         assert hybrid_name == "isopv"
         assert hybrid_var.size == 5
+        assert units == "PVU"
+        assert lt == "pv"
         assert orientation == 1
 
     def test_identify_CF_isoaltitude(self):
-        hybrid_name, hybrid_var, orientation = identify_CF_isoaltitude(self.ncfile_al)
+        hybrid_name, hybrid_var, orientation, units, lt = identify_vertical_axis(self.ncfile_al)
         assert hybrid_name == "height"
         assert hybrid_var.size == 21
+        assert units == "m"
+        assert lt == "al"
         assert orientation == 1
 
     def test_identify_CF_isopottemp(self):
-        hybrid_name, hybrid_var, orientation = identify_CF_isopottemp(self.ncfile_tl)
+        hybrid_name, hybrid_var, orientation, units, lt = identify_vertical_axis(self.ncfile_tl)
         assert hybrid_name == "isentropic"
         assert hybrid_var.size == 8
+        assert units == "K"
+        assert lt == "tl"
         assert orientation == 1
 
     def test_identify_CF_time(self):

@@ -37,6 +37,7 @@ import re
 import os
 import logging
 import netCDF4
+import numpy
 from datetime import datetime, timedelta
 import time
 import hashlib
@@ -149,6 +150,7 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
             os.makedirs(valid_time_cache)
         filename = os.path.join(valid_time_cache, self.md5_filename(filename))
         if not os.path.exists(filename):
+            assert isinstance(valid_times, numpy.ndarray), (type(valid_times), valid_times)
             try:
                 with open(filename, "wb") as fileobj:
                     pickle.dump(valid_times, fileobj)
@@ -452,21 +454,28 @@ class AutomaticDataAccess(NWPDataAccess):
     Constructor needs information on domain ID.
     """
 
+    # Workaround for the numerical issue concering the lon dimension in
+    # NetCDF files produced by netcdf-java 4.3..
+    _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
+
     def __init__(self, rootpath, domain_id):
         NWPDataAccess.__init__(self, rootpath)
         self._domain_id = domain_id
+        self._available_files = None
         self._filetree = None
+
+        self.build_filetree()
 
     def _determine_filename(self, variable, vartype, init_time, valid_time):
         """Determines the name of the ECMWF data file the contains
            the variable <variable> of the forecast specified by
            init_time and valid_time.
         """
-        self.build_filetree()
-
         try:
             return self._filetree[vartype][init_time][variable][valid_time]
-        except KeyError:
+        except KeyError as ex:
+            logging.error("Could not identify filename. %s %s %s %s %s %s",
+                          variable, vartype, init_time, valid_time, type(ex), ex)
             raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
@@ -479,34 +488,53 @@ class AutomaticDataAccess(NWPDataAccess):
         if self._filetree is not None:
             return self._filetree
 
-        self._filetree = {}
-
         # Get a list of the available data files.
-        available_files = [
+        self._available_files = [
             _filename for _filename in os.listdir(self._root_path) if self._domain_id in _filename]
         logging.info("Files identified for domain '%s': %s",
-                     self._domain_id, available_files)
+                     self._domain_id, self._available_files)
+
+        self._filetree = {}
 
         # Build the tree structure.
-        for filename in available_files:
+        for filename in self._available_files:
             logging.info("Opening candidate '%s'", filename)
-            with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
-                time_name, time_var = netCDF4tools.identify_CF_time(dataset)
-                init_time = netCDF4tools.num2date(0, time_var.units)
-                valid_times = netCDF4tools.num2date(time_var[:], time_var.units)
+            try:
+                with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
 
-                try:
-                    vert_name, _, _, _, vert_type = netCDF4tools.identify_vertical_axis(dataset)
-                except RuntimeError:
-                    vert_name, vert_type = None, "sfc"
+                    time_name, time_var = netCDF4tools.identify_CF_time(dataset)
+                    init_time = netCDF4tools.num2date(0, time_var.units)
+                    valid_times = netCDF4tools.num2date(time_var[:], time_var.units)
+                    lat_name, lat_var, lon_name, lon_var = netCDF4tools.identify_CF_lonlat(dataset)
+                    vert_name, vert_var, _, _, vert_type = netCDF4tools.identify_vertical_axis(dataset)
 
-                standard_names = []
-                for ncvarname, ncvar in dataset.variables.items():
-                    if hasattr(ncvar, "standard_name"):
-                        if len(ncvar.shape) == 4 and vert_name in ncvar.dimensions:
-                            standard_names.append(ncvar.standard_name)
-                        elif len(ncvar.shape) == 3 and vert_type == "sfc":
-                            standard_names.append(ncvar.standard_name)
+                    if len(time_var.dimensions) != 1 or time_var.dimensions[0] != time_name:
+                        logging.error("Skipping file '%s': problem with time coordinate variable", filename)
+                        continue
+                    if len(lat_var.dimensions) != 1 or lat_var.dimensions[0] != lat_name:
+                        logging.error("Skipping file '%s': problem with latitude coordinate variable", filename)
+                        continue
+                    if len(lon_var.dimensions) != 1 or lon_var.dimensions[0] != lon_name:
+                        logging.error("Skipping file '%s': problem with longitude coordinate variable", filename)
+                        continue
+
+                    standard_names = []
+                    for ncvarname, ncvar in dataset.variables.items():
+                        if hasattr(ncvar, "standard_name"):
+                            if (len(ncvar.dimensions) >= 3 and (
+                                    ncvar.dimensions[0] != time_name or
+                                    ncvar.dimensions[-2] != lat_name or
+                                    ncvar.dimensions[-1] != lon_name)):
+                                logging.error("Skipping variable '%s' in file '%s': Incorrect order of dimensions",
+                                              ncvarname, filename)
+                                continue
+                            if len(ncvar.shape) == 4 and vert_name in ncvar.dimensions:
+                                standard_names.append(ncvar.standard_name)
+                            elif len(ncvar.shape) == 3 and vert_type == "sfc":
+                                standard_names.append(ncvar.standard_name)
+            except IOError as ex:
+                logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
+                continue
 
             logging.info("File '%s' identified as '%s' type", filename, vert_type)
             logging.info("Found init time '%s', %s valid_times and %s standard_names",
@@ -523,7 +551,7 @@ class AutomaticDataAccess(NWPDataAccess):
                 var_leaf = leaf.setdefault(standard_name, {})
                 for valid_time in valid_times:
                     if valid_time in var_leaf:
-                        logging.error(
+                        logging.warn(
                             "some data was found twice! vartype='%s' init_time='%s' standard_name='%s' "
                             "valid_time='%s' first_file='%s' second_file='%s'",
                             vert_type, init_time, standard_name, valid_time, var_leaf[valid_time], filename)
@@ -535,8 +563,6 @@ class AutomaticDataAccess(NWPDataAccess):
     def get_init_times(self):
         """Returns a list of available forecast init times (base times).
         """
-        self.build_filetree()
-
         init_times = set(itertools.chain.from_iterable(
             self._filetree[_x].keys() for _x in self._filetree))
         return sorted(list(init_times))
@@ -545,19 +571,16 @@ class AutomaticDataAccess(NWPDataAccess):
         """Returns a list of available valid times for the specified
            variable at the specified init time.
         """
-        self.build_filetree()
-
         try:
             return sorted(list(self._filetree[vartype][init_time][variable].keys()))
-        except KeyError:
+        except KeyError as ex:
+            logging.error("Could not find times! %s %s", type(ex), ex)
             return []
 
     def get_all_valid_times(self, variable, vartype):
         """Similar to get_valid_times(), but returns the combined valid times
            of all available init times.
         """
-        self.build_filetree()
-
         all_valid_times = []
         if vartype not in self._filetree:
             return []
@@ -569,7 +592,7 @@ class AutomaticDataAccess(NWPDataAccess):
     def get_all_datafiles(self):
         """Return a list of all available data files.
         """
-        return os.listdir(self._root_path)
+        return self._available_files
 
 
 class EMACDataAccess(NWPDataAccess):

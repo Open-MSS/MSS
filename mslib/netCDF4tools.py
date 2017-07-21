@@ -27,34 +27,21 @@
 """
 
 import glob
-import re
-
 import netCDF4
 
 
-class NetCDFVariableError(Exception):
-    """Exception class to handle error concerning NetCDF variables.
-    """
-    pass
-
-
-NO_FIELDS = 1
-
-CHECK_NONE = 512
-CHECK_LATLON = 1024
-CHECK_LATLONHYB = 2048
-
-# Regular expression to match a time units string of format
-# "2010-02-01T00:00:00Z" (as used by netcdf-java).
-re_datetime = re.compile("(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})Z")
-# Expression used to identify the time variable by its units string.
-re_timeunits = re.compile("\w+ since \d{4}-\d{1,2}-\d{1,2}.\d{1,2}")
-
+VERTICAL_AXIS = {
+    "al": "atmosphere_altitude_coordinate",
+    "ml": "atmosphere_hybrid_sigma_pressure_coordinate",
+    "pl": "atmosphere_pressure_coordinate",
+    "pv": "atmosphere_ertel_potential_vorticity_coordinate",
+    "tl": "atmosphere_potential_temperature_coordinate",
+}
 
 # NETCDF FILE TOOLS
 
 
-def identify_variable(ncfile, standard_name, check=False):
+def identify_variable(ncfile, standard_names, check=False):
     """
     Identify the variable in ncfile that is described by specified rules.
 
@@ -65,37 +52,31 @@ def identify_variable(ncfile, standard_name, check=False):
                              found. If False, return None.
 
     """
+    if not isinstance(standard_names, list):
+        standard_names = [standard_names]
 
     for var_name, variable in list(ncfile.variables.items()):
-        if "standard_name" in variable.ncattrs() and variable.standard_name == standard_name:
+        if "standard_name" in variable.ncattrs() and variable.standard_name in standard_names:
             return var_name, variable
     if check:
-        raise NetCDFVariableError(u"cannot identify NetCDF variable "
-                                  u"specified by <{}>".format(standard_name))
+        raise IOError(u"cannot identify NetCDF variable "
+                      u"specified by {}".format(standard_names))
     return None, None
 
 
-def identify_CF_coordhybrid(ncfile, check=CHECK_NONE):
+def identify_CF_lonlat(ncfile):
     """
     Identify variables representing longitude, latitude, hybrid model levels
     in ECMWF files.
 
 
     Returns:
-    lon_name, lon_var, lat_name, lat_var, hybrid_name, hybrid_var
+    lat_name, lat_var, lon_name, lon_var
     """
-    lon_name, lon_var = identify_variable(ncfile, "longitude")
-    lat_name, lat_var = identify_variable(ncfile, "latitude")
-    hybrid_name, hybrid_var = identify_variable(ncfile, "atmosphere_hybrid_sigma_pressure_coordinate")
+    lat_name, lat_var = identify_variable(ncfile, ["latitude", "latitude_north"], check=True)
+    lon_name, lon_var = identify_variable(ncfile, ["longitude", "longitude_east"], check=True)
 
-    if check == CHECK_LATLON and not (lat_var and lon_var):
-        raise NetCDFVariableError(
-            "Cannot identify lat/lon coordinate system in NetCDF-CF input.")
-    elif check == CHECK_LATLONHYB and not (lat_var and lon_var and hybrid_var):
-        raise NetCDFVariableError(
-            "Cannot identify lat/lon/hybrid coordinate system in NetCDF-CF input.")
-
-    return lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var
+    return lat_name, lat_var, lon_name, lon_var
 
 
 def hybrid_orientation(hybrid_var):
@@ -103,6 +84,8 @@ def hybrid_orientation(hybrid_var):
     Returns -1 if orientation of hybrid_var is down (largest value first),
     otherwise 1.
     """
+    if hybrid_var is None:
+        return None
     hybrid_levels = hybrid_var[:]
     if hybrid_levels[0] > hybrid_levels[-1]:
         # Vertical axis INDEX orientation is down (largest value is the first,
@@ -114,76 +97,6 @@ def hybrid_orientation(hybrid_var):
         return 1
 
 
-def identify_CF_hybrid(ncfile):
-    """
-    Identify the vertical variable from a CF-compliant NetCDF file.
-
-    Returns: hybrid_name, hybrid_var, hybrid_orientation
-    """
-    hybrid_name, hybrid_var = identify_variable(ncfile, "atmosphere_hybrid_sigma_pressure_coordinate")
-
-    orientation = None
-    if hybrid_var:
-        orientation = hybrid_orientation(hybrid_var)
-    return hybrid_name, hybrid_var, orientation
-
-
-def identify_CF_isopressure(ncfile):
-    """
-    Identify the vertical variable from a CF-compliant NetCDF file.
-
-    Returns: isopressure_name, isopressure_var, isopressure_orientation
-    """
-
-    isopressure_name, isopressure_var = identify_variable(ncfile, "atmosphere_pressure_coordinate")
-
-    orientation = None
-    if isopressure_var:
-        orientation = hybrid_orientation(isopressure_var)
-    return isopressure_name, isopressure_var, orientation
-
-
-def identify_CF_isopotvort(ncfile, isopotvortname_override=None):
-    """
-    Identify the vertical variable from a CF-compliant NetCDF file.
-
-    Returns: isopotvort_name, isopotvort_var, isopotvort_orientation
-    """
-    isopotvort_name, isopotvort_var = identify_variable(ncfile, "atmosphere_ertel_potential_vorticity_coordinate")
-
-    orientation = None
-    if isopotvort_var:
-        orientation = hybrid_orientation(isopotvort_var)
-    return isopotvort_name, isopotvort_var, orientation
-
-
-def identify_CF_isoaltitude(ncfile):
-    """
-    Identify the vertical variable from a CF-compliant NetCDF file.
-
-    Returns: isoaltitude_name, isoaltiude_var, isoalttiude_orientation
-    """
-    isoaltitude_name, isoaltitude_var = identify_variable(ncfile, "atmosphere_altitude_coordinate")
-    orientation = None
-    if isoaltitude_var:
-        orientation = hybrid_orientation(isoaltitude_var)
-    return isoaltitude_name, isoaltitude_var, orientation
-
-
-def identify_CF_isopottemp(ncfile):
-    """
-    Identify the vertical variable from a CF-compliant NetCDF file.
-
-    Returns: isoaltitude_name, isoaltiude_var, isoalttiude_orientation
-    """
-    isopottemp_name, isopottemp_var = identify_variable(ncfile, "atmosphere_potential_temperature_coordinate")
-
-    orientation = None
-    if isopottemp_var:
-        orientation = hybrid_orientation(isopottemp_var)
-    return isopottemp_name, isopottemp_var, orientation
-
-
 def identify_vertical_axis(dataset):
     """
     Try to load vertical hybrid coordinate (model levels), isopressure
@@ -192,35 +105,18 @@ def identify_vertical_axis(dataset):
     type, not on more that one!
     """
 
-    vert_name, vert_var, vert_orientation = identify_CF_hybrid(dataset)
-    if vert_var is not None:
-        return vert_name, vert_var[:], vert_orientation, "model_level", "ml"
-
-    vert_name, vert_var, vert_orientation = identify_CF_isopressure(dataset)
-    if vert_var is not None:
-        try:
-            vert_units = vert_var.units
-        except AttributeError:
-            vert_units = "unknown units"
-        return vert_name, vert_var[:], vert_orientation, vert_units, "pl"
-
-    vert_name, vert_var, vert_orientation = identify_CF_isopotvort(dataset)
-    if vert_var is not None:
-        try:
-            vert_units = vert_var.units
-        except AttributeError:
-            vert_units = "unknown units"
-        return vert_name, vert_var[:], vert_orientation, vert_units, "pv"
-
-    vert_name, vert_var, vert_orientation = identify_CF_isoaltitude(dataset)
-    if vert_var is not None:
-        return vert_name, vert_var[:], vert_orientation, vert_var.units, "al"
-
-    vert_name, vert_var, vert_orientation = identify_CF_isopottemp(dataset)
-    if vert_var is not None:
-        return vert_name, vert_var[:], vert_orientation, vert_var.units, "tl"
-
-    raise RuntimeError("Could not identify vertical axis")
+    result = []
+    for layertype, standard_name in VERTICAL_AXIS.items():
+        name, var = identify_variable(dataset, standard_name)
+        orientation = hybrid_orientation(var)
+        if var is not None:
+            units = getattr(var, "units", "unknown units")
+            result.append((name, var, orientation, units, layertype))
+    if len(result) == 0:
+        return None, None, None, None, "sfc"
+    if len(result) > 1:
+        raise IOError("Identified more than one vertical axis: {}".format(result))
+    return result[0]
 
 
 def identify_CF_time(ncfile):
@@ -239,35 +135,14 @@ def identify_CF_time(ncfile):
     return time_name, time_var
 
 
-def identify_CF_ensemble(ncfile, ensname_override=None):
-    """
-    Identify the ensemble dimension from a CF-compliant NetCDF file.
-
-    Returns: ens_name, ens_var
-    """
-    ens_name, ens_var = identify_variable(ncfile, "ensemble")
-
-    if ens_name not in ncfile.dimensions:
-        # Make sure that the found variable is a dimension variable.
-        return None, None
-    else:
-        return ens_name, ens_var
-
-
 def num2date(times, units, calendar='standard'):
     """
     Extension to the netCDF4.num2date() function to correctly handle
     time strings of format '2010-01-01T00:00:00Z', as used by netcdf-java.
 
-    Simply replaces an occurence of '2010-01-01T00:00:00Z' in units by
-    '2010-01-01 00:00:00 0:00', which is the CF-compliant format.
-
     Refer to netCDF4.num2date() for further documentation.
     """
-    # Replace any "2010-01-01T00:00:00Z" string by "2010-01-01 00:00:00 0:00"
-    # (cut the 'T' and replace 'Z' by 0:00; cf. CF-conventions document).
-    units_new = re_datetime.sub(r'\1-\2-\3 \4:\5:\6 0:00', units)
-    return netCDF4.num2date(times, units_new, calendar=calendar)
+    return netCDF4.num2date(times, units, calendar=calendar)
 
 
 def get_latlon_data(ncfile, autoreverse=True):
@@ -284,8 +159,7 @@ def get_latlon_data(ncfile, autoreverse=True):
     reverse record variables (e.g. temperature[:,:,::lat_order,:]).
     """
     # Get coordinate dimensions.
-    lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var = \
-        identify_CF_coordhybrid(ncfile)
+    lat_name, lat_var, lon_name, lon_var = identify_CF_lonlat(ncfile)
 
     # Get lat and lon data. NOTE that MARS stores longitude from 0 to 360,
     # more common is the range -180 to 180. Hence shift ECMWF longitude
@@ -293,18 +167,13 @@ def get_latlon_data(ncfile, autoreverse=True):
     # in decreasing order, to make it strictly increasing (needed for the
     # interpolation routine below).
     lat_order = 1
-    if lat_var is None:
-        raise ValueError("Cannot determine latitude variable")
     lat_data = lat_var[:]
-    if lat_data[0] > lat_data[1]:
-        if autoreverse:
-            lat_data = lat_data[::-1]
+    if lat_data[0] > lat_data[1] and autoreverse:
+        lat_data = lat_data[::-1]
         lat_order = -1
 
     # If longitudes are already stored in -180..180 the transformation won't
     # change anything.
-    if lon_var is None:
-        raise ValueError("Cannot determine longitude variable")
     lon_data = ((lon_var[:] + 180) % 360) - 180
 
     return lat_data, lon_data, lat_order
@@ -450,26 +319,3 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
            contains <varname>.
         """
         return self._cdfOrigin[varname]
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-# The following methods are inherited from MFDataset:
-
-#     def __setattr__(self, name, value):
-#         """override base class attribute creation"""
-#         self.__dict__[name] = value
-
-#     def __getattribute__(self, name):
-#         if name in ['variables','dimensions','file_format']:
-#             if name == 'dimensions': return self._dims
-#             if name == 'variables': return self._vars
-#             if name == 'file_format': return self._file_format
-#         else:
-#             return netCDF4.Dataset.__getattribute__(self, name)
-
-#     def ncattrs(self):
-#         return self._cdf[0].__dict__.keys()
-
-#     def close(self):
-#         for dset in self._cdf:
-#             dset.close()
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #

@@ -185,6 +185,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
             else:
                 return []
         else:
+            logging.debug("Only surface layers or no driver")
             return []
 
     def get_elevation_units(self):

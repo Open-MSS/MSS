@@ -951,7 +951,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 newvar = ecmwf.createVariable('hyam', 'f4', 'hybrid')
                 newvar[:] = get_profile("hybrid", values, "atmosphere_hybrid_pressure_coordinate")[0]
                 newvar.units = 'Pa'
-                newvar.standard_name = "atmosphere_pressure_coordinate"
+                newvar.standard_name = "atmosphere_hybrid_pressure_coordinate"
                 newvar = ecmwf.createVariable('hybm', 'f4', 'hybrid')
                 newvar[:] = get_profile("hybrid", values, "atmosphere_hybrid_height_coordinate")[0]
                 newvar.units = '1'
@@ -1004,7 +1004,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                  ("atmosphere_ertel_potential_vorticity_coordinate", [2, 2.5, 3, 3.5, 4]),
                  ["air_potential_temperature", "geopotential_height", "air_pressure"]),
 
-                ("geopotential_height", "ALTITUDE_LEVELS", "ml",
+                ("geopotential_height", "ALTITUDE_LEVELS", "al",
                  ("atmosphere_altitude_coordinate", np.arange(5000, 15001, 500)),
                  ["air_pressure", "ertel_potential_vorticity", "mole_fraction_of_ozone_in_air"]),
 
@@ -1034,7 +1034,9 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 [standard_name])
 
         self.generate_file(
-            None, "SFC", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), list(_SURFACE.keys()))
+            None, "SFC", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)),
+            [_x for _x in _SURFACE.keys() if _x not in [
+                "vertically_integrated_probability_of_wcb_occurrence", "solar_elevation_angle"]])
         self.generate_file(
             None, "ProbWCB_LAGRANTO_derived", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)),
             ["vertically_integrated_probability_of_wcb_occurrence"])
