@@ -98,11 +98,11 @@ class WMSControlWidgetSetup(object):
             QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClicks(self.window.cbWMS_URL, url)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWait(2000)  # time for the server to start up
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWait(3000)  # time for the server to parse all netcdf data
         QtWidgets.QApplication.processEvents()
 
 
