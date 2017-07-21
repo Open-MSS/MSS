@@ -29,9 +29,8 @@ import os
 import pytest
 import datetime
 from netCDF4 import Dataset
-from mslib.netCDF4tools import (identify_variable, identify_CF_coordhybrid, hybrid_orientation,
-                                identify_vertical_axis, identify_CF_time, identify_CF_ensemble, num2date,
-                                get_latlon_data
+from mslib.netCDF4tools import (identify_variable, identify_CF_lonlat, hybrid_orientation,
+                                identify_vertical_axis, identify_CF_time, num2date, get_latlon_data
                                 )
 
 from mslib._tests.utils import DATA_DIR
@@ -70,14 +69,10 @@ class Test_netCDF4tools(object):
             assert variable[0] == short_name
 
     def test_identify_CF_coordhybrid(self):
-        lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var = identify_CF_coordhybrid(self.ncfile_ml)
-        assert (lat_name, lon_name, hybrid_name) == (u'lat', u'lon', 'hybrid')
+        lat_name, lat_var, lon_name, lon_var = identify_CF_lonlat(self.ncfile_ml)
+        assert (lat_name, lon_name) == (u'lat', u'lon')
         assert lat_var.size == 40
         assert lon_var.size == 50
-
-    def test_hybrid_orientation(self):
-        lat_name, lat_var, lon_name, lon_var, hybrid_name, hybrid_var = identify_CF_coordhybrid(self.ncfile_ml)
-        assert hybrid_orientation(hybrid_var) == 1
 
     def test_identify_CF_hybrid(self):
         hybrid_name, hybrid_var, orientation, units, lt = identify_vertical_axis(self.ncfile_ml)

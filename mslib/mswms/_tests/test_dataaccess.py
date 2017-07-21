@@ -28,7 +28,6 @@
 
 import os
 import numpy
-import logging
 from datetime import datetime
 from mslib.mswms import dataaccess
 from mslib.mswms.dataaccess import ECMWFDataAccess, AutomaticDataAccess
