@@ -499,38 +499,42 @@ class AutomaticDataAccess(NWPDataAccess):
         # Build the tree structure.
         for filename in self._available_files:
             logging.info("Opening candidate '%s'", filename)
-            with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
+            try:
+                with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
 
-                time_name, time_var = netCDF4tools.identify_CF_time(dataset)
-                init_time = netCDF4tools.num2date(0, time_var.units)
-                valid_times = netCDF4tools.num2date(time_var[:], time_var.units)
-                lat_name, lat_var, lon_name, lon_var = netCDF4tools.identify_CF_lonlat(dataset)
-                vert_name, vert_var, _, _, vert_type = netCDF4tools.identify_vertical_axis(dataset)
+                    time_name, time_var = netCDF4tools.identify_CF_time(dataset)
+                    init_time = netCDF4tools.num2date(0, time_var.units)
+                    valid_times = netCDF4tools.num2date(time_var[:], time_var.units)
+                    lat_name, lat_var, lon_name, lon_var = netCDF4tools.identify_CF_lonlat(dataset)
+                    vert_name, vert_var, _, _, vert_type = netCDF4tools.identify_vertical_axis(dataset)
 
-                if len(time_var.dimensions) != 1 or time_var.dimensions[0] != time_name:
-                    logging.error("Skipping file '%s': problem with time coordinate variable", filename)
-                    continue
-                if len(lat_var.dimensions) != 1 or lat_var.dimensions[0] != lat_name:
-                    logging.error("Skipping file '%s': problem with latitude coordinate variable", filename)
-                    continue
-                if len(lon_var.dimensions) != 1 or lon_var.dimensions[0] != lon_name:
-                    logging.error("Skipping file '%s': problem with longitude coordinate variable", filename)
-                    continue
+                    if len(time_var.dimensions) != 1 or time_var.dimensions[0] != time_name:
+                        logging.error("Skipping file '%s': problem with time coordinate variable", filename)
+                        continue
+                    if len(lat_var.dimensions) != 1 or lat_var.dimensions[0] != lat_name:
+                        logging.error("Skipping file '%s': problem with latitude coordinate variable", filename)
+                        continue
+                    if len(lon_var.dimensions) != 1 or lon_var.dimensions[0] != lon_name:
+                        logging.error("Skipping file '%s': problem with longitude coordinate variable", filename)
+                        continue
 
-                standard_names = []
-                for ncvarname, ncvar in dataset.variables.items():
-                    if hasattr(ncvar, "standard_name"):
-                        if (len(ncvar.dimensions) >= 3 and (
-                                ncvar.dimensions[0] != time_name or
-                                ncvar.dimensions[-2] != lat_name or
-                                ncvar.dimensions[-1] != lon_name)):
-                            logging.error("Skipping variable '%s' in file '%s': Incorrect order of dimensions",
-                                          ncvarname, filename)
-                            continue
-                        if len(ncvar.shape) == 4 and vert_name in ncvar.dimensions:
-                            standard_names.append(ncvar.standard_name)
-                        elif len(ncvar.shape) == 3 and vert_type == "sfc":
-                            standard_names.append(ncvar.standard_name)
+                    standard_names = []
+                    for ncvarname, ncvar in dataset.variables.items():
+                        if hasattr(ncvar, "standard_name"):
+                            if (len(ncvar.dimensions) >= 3 and (
+                                    ncvar.dimensions[0] != time_name or
+                                    ncvar.dimensions[-2] != lat_name or
+                                    ncvar.dimensions[-1] != lon_name)):
+                                logging.error("Skipping variable '%s' in file '%s': Incorrect order of dimensions",
+                                              ncvarname, filename)
+                                continue
+                            if len(ncvar.shape) == 4 and vert_name in ncvar.dimensions:
+                                standard_names.append(ncvar.standard_name)
+                            elif len(ncvar.shape) == 3 and vert_type == "sfc":
+                                standard_names.append(ncvar.standard_name)
+            except IOError as ex:
+                logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
+                continue
 
             logging.info("File '%s' identified as '%s' type", filename, vert_type)
             logging.info("Found init time '%s', %s valid_times and %s standard_names",
