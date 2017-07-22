@@ -392,7 +392,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
     elif style == "tropopause_altitude":
         cmap = matplotlib.pyplot.cm.terrain
         norm = None
-        clev = np.arange(5, 16.1, 0.25)
+        clev = np.arange(5, 18.1, 0.25)
     elif style == "log_ice_cloud":
         cmap = matplotlib.pyplot.cm.colors.ListedColormap(
             [(0.8, 0.8, 0.8, 1.0),

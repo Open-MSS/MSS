@@ -57,7 +57,12 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         """Returns a list containing the datatypes required by the
            data fields requested by the style.
         """
-        return [datafield[0] for datafield in self.required_datafields]
+        result = [datafield[0] for datafield in self.required_datafields]
+        if len(result) > 2 and "sfc" not in result:
+            msg = "A Plot may contain only 'sfc' and *one* 4-D type! ({})".format(type(self))
+            logging.fatal(msg)
+            raise RuntimeError(msg)
+        return result
 
     def _prepare_datafields(self):
         """Optional re-implementation: Use this function to process some
@@ -128,6 +133,8 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         if self.driver is not None and not all(_x[0] in ["sfc"] for _x in self.required_datafields):
             # Get the latest init time.
             init_times = self.driver.get_init_times()
+            valid_times = self.get_all_valid_times()
+
             if len(init_times) == 0:
                 logging.error("ERROR: cannot determine initialisation time(s) "
                               "of this dataset. Check that file structure is "
@@ -141,8 +148,12 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
             # files are available.
             for time in init_times:
                 try:
+                    valid_time = time
+                    if valid_time in valid_times:
+                        logging.error("init_time is not contained in valid_times")
+                        valid_time = valid_times[0]
                     self.driver.set_plot_parameters(
-                        self, init_time=time, valid_time=time)
+                        self, init_time=time, valid_time=valid_time)
                 except (IOError, ValueError) as ex:
                     logging.debug(u"WARNING: unsuccessfully examined data for "
                                   u"init time '%s'.. trying next time.", time)

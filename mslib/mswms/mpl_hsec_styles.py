@@ -563,7 +563,7 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
     globals()[name] = fnord
 
 
-for vert in ["pl", "ml", "tl"]:
+for vert in ["al", "ml", "pl", "tl"]:
     for ent in Targets.get_targets():
         make_generic_class("HS_GenericStyle_{}_{}".format(vert.upper(), ent), ent, vert)
     make_generic_class(
@@ -582,9 +582,9 @@ for vert in ["pl", "ml", "tl"]:
         fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
     make_generic_class(
         "HS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
-        "gravity_wave_temperature_perturbation", vert,
+        "air_temperature_residual", vert,
         [("sfc", "tropopause_altitude")],
-        [("tropopause_altitude", [8, 10, 12, 14, 16], "dimgrey", "dimgrey", "solid", 2, True)],
+        [("tropopause_altitude", [8, 10, 12, 14, 16, 18], "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("gravity_wave_temperature_perturbation", "")])
     make_generic_class(
         "HS_GenericStyle_{}_{}".format(vert.upper(), "cloud_ice_mixing_ratio"),
@@ -620,17 +620,17 @@ for vert in ["pl", "ml", "tl"]:
 make_generic_class(
     "HS_GenericStyle_SFC_tropopause_altitude",
     "tropopause_altitude", "sfc", [],
-    [("tropopause_altitude", np.arange(5, 16.1, 0.500), "yellow", "red", "solid", 0.5, False)],
+    [("tropopause_altitude", np.arange(5, 20.1, 0.500), "yellow", "red", "solid", 0.5, False)],
     fix_styles=[("tropopause_altitude", "tropopause_altitude")])
 make_generic_class(
     "HS_GenericStyle_SFC_max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air",
     "max_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air", "sfc", [("sfc", "tropopause_altitude")],
-    [("tropopause_altitude", np.arange(6, 16.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
+    [("tropopause_altitude", np.arange(6, 20.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
     fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 make_generic_class(
     "HS_GenericStyle_SFC_mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air",
     "mean_of_square_of_brunt_vaisala_frequency_above_tropopause_in_air", "sfc", [("sfc", "tropopause_altitude")],
-    [("tropopause_altitude", np.arange(6, 16.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
+    [("tropopause_altitude", np.arange(6, 20.1, 2), "dimgrey", "dimgrey", "solid", 2, True)],
     fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
 
 
@@ -987,7 +987,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "omega"),
+        ("pl", "lagrangian_tendency_of_air_pressure"),
         ("pl", "air_temperature"),
         ("pl", "geopotential_height")]
 
@@ -995,7 +995,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         """Computes relative humidity from p, t, q.
         """
         self.data["upward_wind"] = \
-            thermolib.omega_to_w(self.data["omega"],
+            thermolib.omega_to_w(self.data["lagrangian_tendency_of_air_pressure"],
                                  self.level * 100.,
                                  self.data["air_temperature"])
 
@@ -1361,6 +1361,94 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         else:
             ax.text(bm.llcrnrx, bm.llcrnry, titlestring,
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
+
+
+class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
+    """
+    Dynamical (2PVU) Tropopause Fields
+    Dynamical tropopause plots (2-PVU level). Three styles are available:
+    Pressure, potential temperature, and geopotential height.
+    """
+    name = "ThermalTropo01"
+    title = "Thermal Tropopause"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("sfc", "tropopause_altitude"),
+        ("sfc", "secondary_tropopause_altitude"),
+    ]
+
+    styles = [
+        ("default", "Overview"),
+        ("primary", "Primary Thermal Tropopause"),
+        ("secondary", "Secondary Thermal Tropopause"),
+    ]
+
+    def _plot_style(self):
+        """
+        """
+        bm = self.bm
+        ax = self.bm.ax
+        data = self.data
+
+        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
+        lonmesh, latmesh = bm(lonmesh_, latmesh_)
+
+        # Define colourbars and contour levels for the three styles. For
+        # pressure and height, a terrain colourmap is used (bluish colours for
+        # low altitudes, brownish colours for high altitudes). For potential
+        # temperature, a rainbow colourmap is used (blue=low temps, red=hight
+        # temps).
+        fcmap = plt.cm.terrain
+
+        if self.data_units["tropopause_altitude"] != "km":
+            raise ValueError("tropopause_altitude has wrong unit %s. Should be 'km'",
+                             self.data_units["tropopause_altitude"])
+        if self.data_units["secondary_tropopause_altitude"] != "km":
+            raise ValueError("secondary_tropopause_altitude has wrong unit %s. Should be 'km'",
+                             self.data_units["secondary_tropopause_altitude"])
+
+        if self.style == "default":
+            vardata = data["tropopause_altitude"]
+            label = "Primary Tropopause (km)"
+        elif self.style == "primary":
+            vardata = data["tropopause_altitude"]
+            label = "Primary Tropopause (km)"
+        elif self.style == "secondary":
+            vardata = data["secondary_tropopause_altitude"]
+            label = "Secondary Tropopause (km)"
+        filled_contours = np.arange(5, 18, 0.25)
+        thin_contours = np.arange(5, 18, 1.0)
+
+        # Filled contour plot of pressure/geop./pot.temp. Extend the colourbar
+        # to fill regions whose values exceed the colourbar range.
+        contours = bm.contourf(lonmesh, latmesh, vardata,
+                               filled_contours, cmap=fcmap, extend="both")
+
+        data["secondary_tropopause_altitude"] = np.ma.masked_invalid(data["secondary_tropopause_altitude"])
+        print(data["tropopause_altitude"].compressed())
+        print(data["secondary_tropopause_altitude"])
+
+        if self.style == "default":
+            mask = np.ma.masked_where(
+                data["secondary_tropopause_altitude"].mask, data["secondary_tropopause_altitude"].mask)
+            bm.pcolor(lonmesh, latmesh, mask, alpha=0, hatch="xx")
+
+        if not self.noframe:
+            cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
+            cbar.set_label(label)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="30%", loc=4)
+            self.fig.colorbar(contours, cax=axins1, orientation="vertical")
+            axins1.yaxis.set_ticks_position("left")
+
+        # Colors in python2.6/site-packages/matplotlib/colors.py
+        cs = bm.contour(lonmesh, latmesh, vardata,
+                        thin_contours, colors="yellow",
+                        linewidths=0.5, linestyles="solid")
+        ax.clabel(cs, thin_contours[::2], colors="red", fontsize=11, fmt='%i')
 
 
 class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
