@@ -528,11 +528,17 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                                                          "Flight track XML (*.ftml)")
         filename = filename[0] if isinstance(filename, list) and USE_PYQT5 else str(filename)
         if filename:
-            if filename.endswith('.ftml'):
-                self.createNewFlightTrack(filename=filename, activate=True)
-            else:
-                QtWidgets.QMessageBox.warning(self, "Open flight track",
-                                              u"No supported file extension recognized!\n{:}".format(filename))
+            try:
+                if filename.endswith('.ftml'):
+                    self.createNewFlightTrack(filename=filename, activate=True)
+                else:
+                    QtWidgets.QMessageBox.warning(self, "Open flight track",
+                                                  u"No supported file extension recognized!\n{:}".format(filename))
+
+            except (SyntaxError, OSError, IOError) as ex:
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("Problem while opening flight track FTML:"),
+                    self.tr(u"ERROR: {} {}".format(type(ex), ex)))
 
     def closeFlightTrack(self):
         """Slot to close the currently selected flight track. Flight tracks can
