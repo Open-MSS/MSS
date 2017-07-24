@@ -90,8 +90,6 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             self.waypoints_model.performance_settings = dlg.get_settings()
             self.waypoints_model.update_distances(0)
             self.waypoints_model.saveSettings()
-            self.waypoints_model.dataChanged.emit(
-                self.waypoints_model.index(0, 0), self.waypoints_model.index(0, 0))
             self.resizeColumns()
         dlg.destroy()
 

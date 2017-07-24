@@ -58,6 +58,7 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
+TIME_UTC = 9
 
 
 def seconds_to_string(seconds):
@@ -498,6 +499,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             wp1.leg_fuel = fuel
             wp1.rem_fuel = wp0.rem_fuel - wp1.leg_fuel
             wp1.weight = wp0.weight - wp1.leg_fuel
+
+        index1 = self.createIndex(0, TIME_UTC)
+        self.dataChanged.emit(index1, index1)
+
 
     def invertDirection(self):
         self.waypoints = self.waypoints[::-1]
