@@ -307,7 +307,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 else:
                     waypoint.lat = value
                     waypoint.location = u""
-                    loc = find_location(waypoint.lat, waypoint.lon)
+                    loc = find_location(waypoint.lat, waypoint.lon, 0)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
                         waypoint.location = loc[1]
@@ -330,7 +330,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 else:
                     waypoint.lon = value
                     waypoint.location = u""
-                    loc = find_location(waypoint.lat, waypoint.lon)
+                    loc = find_location(waypoint.lat, waypoint.lon, 0)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
                         waypoint.location = loc[1]
