@@ -43,6 +43,7 @@ import datetime
 import codecs
 import logging
 import xml.dom.minidom
+import xml.parsers.expat
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, USE_PYQT5
@@ -563,7 +564,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def loadFromFTML(self, filename):
         """Load a flight track from an XML file at <filename>.
         """
-        doc = xml.dom.minidom.parse(filename)
+        try:
+            doc = xml.dom.minidom.parse(filename)
+        except xml.parsers.expat.ExpatError as ex:
+            raise SyntaxError(str(ex))
 
         ft_el = doc.getElementsByTagName("FlightTrack")[0]
 
