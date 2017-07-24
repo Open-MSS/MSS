@@ -242,7 +242,7 @@ kg.kg-1
   5.16e-03   2.37e-03
   5.64e-03   2.44e-03
   6.07e-03   2.55e-03
-omega
+lagrangian_tendency_of_air_pressure
 Pa.s-1
  -2.45e-04   5.71e-03
  -4.91e-04   7.48e-03
@@ -567,7 +567,7 @@ _ALLOW_NEGATIVE = ['surface_geopotential',
                    'ertel_potential_vorticity',
                    'eastward_wind',
                    'northward_wind',
-                   'omega',
+                   'lagrangian_tendency_of_air_pressure',
                    'divergence_of_wind']
 
 
@@ -951,7 +951,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 newvar = ecmwf.createVariable('hyam', 'f4', 'hybrid')
                 newvar[:] = get_profile("hybrid", values, "atmosphere_hybrid_pressure_coordinate")[0]
                 newvar.units = 'Pa'
-                newvar.standard_name = "atmosphere_pressure_coordinate"
+                newvar.standard_name = "atmosphere_hybrid_pressure_coordinate"
                 newvar = ecmwf.createVariable('hybm', 'f4', 'hybrid')
                 newvar[:] = get_profile("hybrid", values, "atmosphere_hybrid_height_coordinate")[0]
                 newvar.units = '1'
@@ -996,7 +996,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                   np.array([30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900])),
                  ["air_potential_temperature", "air_pressure", "air_temperature",
                   "eastward_wind", "ertel_potential_vorticity", "geopotential_height",
-                  "northward_wind", "specific_humidity", "omega", "divergence_of_wind",
+                  "northward_wind", "specific_humidity", "lagrangian_tendency_of_air_pressure", "divergence_of_wind",
                   "mass_fraction_of_ozone_in_air", "mole_fraction_of_ozone_in_air", "equivalent_latitude",
                   "number_of_wcb_trajectories", "number_of_insitu_trajectories", "number_of_mix_trajectories"]),
 
@@ -1004,7 +1004,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                  ("atmosphere_ertel_potential_vorticity_coordinate", [2, 2.5, 3, 3.5, 4]),
                  ["air_potential_temperature", "geopotential_height", "air_pressure"]),
 
-                ("geopotential_height", "ALTITUDE_LEVELS", "ml",
+                ("geopotential_height", "ALTITUDE_LEVELS", "al",
                  ("atmosphere_altitude_coordinate", np.arange(5000, 15001, 500)),
                  ["air_pressure", "ertel_potential_vorticity", "mole_fraction_of_ozone_in_air"]),
 
@@ -1026,7 +1026,7 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 ("T", "air_temperature"),
                 ("U", "eastward_wind"),
                 ("V", "northward_wind"),
-                ("W", "omega"),
+                ("W", "lagrangian_tendency_of_air_pressure"),
                 ("Q", "specific_humidity")):
             self.generate_file(
                 "hybrid", varname, "ml",
@@ -1034,7 +1034,9 @@ from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
                 [standard_name])
 
         self.generate_file(
-            None, "SFC", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), list(_SURFACE.keys()))
+            None, "SFC", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)),
+            [_x for _x in _SURFACE.keys() if _x not in [
+                "vertically_integrated_probability_of_wcb_occurrence", "solar_elevation_angle"]])
         self.generate_file(
             None, "ProbWCB_LAGRANTO_derived", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)),
             ["vertically_integrated_probability_of_wcb_occurrence"])

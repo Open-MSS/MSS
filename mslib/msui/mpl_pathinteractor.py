@@ -643,7 +643,7 @@ class VPathInteractor(PathInteractor):
        vertical profile of the flight track.
     """
 
-    def __init__(self, ax, waypoints, redrawXAxis=None, numintpoints=101):
+    def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
         """Constructor passes a PathV instance its parent.
 
         Arguments:
@@ -655,7 +655,8 @@ class VPathInteractor(PathInteractor):
         redrawXAxis -- callback function to redraw the x-axis on path changes.
         """
         self.numintpoints = numintpoints
-        self.redrawXAxis = redrawXAxis
+        self.redraw_xaxis = redraw_xaxis
+        self.clear_figure = clear_figure
         PathInteractor.__init__(
             self, ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
 
@@ -670,8 +671,10 @@ class VPathInteractor(PathInteractor):
            Calls the callback function 'redrawXAxis()'.
         """
         self.redraw_path()
-        if self.redrawXAxis is not None:
-            self.redrawXAxis(self.path.ilats, self.path.ilons, self.path.itimes)
+        if self.clear_figure() is not None:
+            self.clear_figure()
+        if self.redraw_xaxis is not None:
+            self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
         self.ax.figure.canvas.draw()
 
     def button_release_callback(self, event):
@@ -737,18 +740,14 @@ class VPathInteractor(PathInteractor):
         # profile needs to be redrawn (redraw_path()). If the horizontal
         # position of a waypoint has changed, the entire figure needs to be
         # redrawn, as this affects the x-position of all points.
-        if index1.column() == ft.FLIGHTLEVEL or index1.column() == ft.PRESSURE:
-            i = index1.row()
-            pres = self.waypoints_model.waypointData(i).pressure
-            vertices = self.pathpatch.get_path().vertices
-            vertices[i] = vertices[i][0], pres
-            self.redraw_path(vertices)
+        self.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
+        if index1.column() in [ft.FLIGHTLEVEL, ft.PRESSURE, ft.LOCATION]:
+            self.redraw_path(self.pathpatch.get_path().vertices)
         elif index1.column() in [ft.LAT, ft.LON]:
-            self.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
             self.redraw_figure()
-        elif index1.column() == ft.LOCATION:
-            self.redraw_figure()
-
+        elif index1.column() in [ft.TIME_UTC]:
+            if self.redraw_xaxis is not None:
+                self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
 
 #
 # CLASS HPathInteractor

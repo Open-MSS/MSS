@@ -129,7 +129,7 @@ def find_location(lat, lon, tolerance=5):
     distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
                  for loc, (loc_lat, loc_lon) in list(locations.items())]
     distances.sort()
-    if len(distances) > 0 and distances[0][0] < tolerance:
+    if len(distances) > 0 and distances[0][0] <= tolerance:
         return locations[distances[0][1]], distances[0][1]
     else:
         return None

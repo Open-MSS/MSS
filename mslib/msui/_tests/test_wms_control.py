@@ -98,9 +98,12 @@ class WMSControlWidgetSetup(object):
             QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClicks(self.window.cbWMS_URL, url)
         QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(2000)  # time for the server to start up
+        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWait(3000)  # time for the server to parse all netcdf data
+        QtWidgets.QApplication.processEvents()
 
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
@@ -176,7 +179,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(3000)
+        QtTest.QTest.qWait(1000)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(6000)
         assert mockbox.critical.call_count == 0
 
         assert self.view.drawImage.call_count == 1
@@ -193,7 +198,11 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWait(1000)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(6000)
+        QtWidgets.QApplication.processEvents()
+
         assert mockbox.critical.call_count == 0
 
         assert self.view.drawImage.call_count == 1
@@ -206,6 +215,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(1000)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(1000)
+
         assert mockbox.critical.call_count == 0
 
         assert self.view.drawImage.call_count == 1
@@ -239,7 +251,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWait(1000)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(6000)
 
         assert mockbox.critical.call_count == 0
         assert self.view.drawImage.call_count == 1
@@ -259,7 +273,9 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server("http://127.0.0.1:8082")
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWait(1000)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(6000)
 
         assert mockbox.critical.call_count == 0
         assert self.view.drawImage.call_count == 1
