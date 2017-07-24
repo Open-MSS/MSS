@@ -258,7 +258,7 @@ class MplSideViewCanvas(MplCanvas):
                 self.ax, self.waypoints_model,
                 numintpoints=config_loader(dataset="num_interpolation_points",
                                            default=mss_default.num_interpolation_points),
-                redrawXAxis=self.redrawXAxis
+                redraw_xaxis=self.redraw_xaxis, clear_figure=self.clear_figure
             )
 
     def setupSideView(self):
@@ -323,19 +323,20 @@ class MplSideViewCanvas(MplCanvas):
         ax.set_xlabel("lat/lon")
         ax.set_ylabel("pressure (hPa)")
 
-    def redrawXAxis(self, lats, lons, times):
-        """Redraw the x-axis of the side view on path changes. Also remove
-           a vertical section image if one exists, as it is invalid after
-           a path change.
-        """
+    def clear_figure(self):
         logging.debug("path of side view has changed.. removing invalidated "
                       "image (if existent) and redrawing.")
-
-        # Remove image (it is now invalid).
         if self.image is not None:
             self.image.remove()
             self.image = None
             self.ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
+
+    def redraw_xaxis(self, lats, lons, times):
+        """Redraw the x-axis of the side view on path changes. Also remove
+           a vertical section image if one exists, as it is invalid after
+           a path change.
+        """
+        logging.debug("redrawing x-axis")
 
         # Re-label x-axis.
         self.ax.set_xlim(0, len(lats) - 1)
@@ -355,6 +356,7 @@ class MplSideViewCanvas(MplCanvas):
                                                   lons[::tick_index_step],
                                                   times[::tick_index_step])],
                                     rotation=25, fontsize=10, horizontalalignment="right")
+        self.draw()
 
     def setVerticalExtent(self, pbot, ptop):
         """Set the vertical extent of the view to the specified pressure
