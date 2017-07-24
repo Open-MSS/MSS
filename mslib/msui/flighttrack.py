@@ -504,7 +504,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         index1 = self.createIndex(0, TIME_UTC)
         self.dataChanged.emit(index1, index1)
 
-
     def invertDirection(self):
         self.waypoints = self.waypoints[::-1]
         if len(self.waypoints) > 0:
