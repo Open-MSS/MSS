@@ -2,6 +2,14 @@ Changelog
 =========
 
 
+Version 1.5.3
+-------------
+
+Bug Fixes:
+ - incorrect time info on side view plots, #227
+ - Coordinates close to Locations cannot be entered into TableView, #228
+
+
 Version 1.5.2
 -------------
 
