@@ -301,16 +301,8 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
     lats, lons, times = None, None, None
 
     if connection == 'linear':
-        if p2[LAT] - p1[LAT] == 0:
-            lats = np.ones(numpoints) * p1[LAT]
-        else:
-            lat_step = float(p2[LAT] - p1[LAT]) / (numpoints - 1)
-            lats = np.arange(p1[LAT], p2[LAT] + (lat_step / 2), lat_step)
-        if p2[LON] - p1[LON] == 0:
-            lons = np.ones(numpoints) * p1[LON]
-        else:
-            lon_step = float(p2[LON] - p1[LON]) / (numpoints - 1)
-            lons = np.arange(p1[LON], p2[LON] + (lon_step / 2), lon_step)
+        lats = np.linspace(p1[LAT], p2[LAT], numpoints)
+        lons = np.linspace(p1[LON], p2[LON], numpoints)
     elif connection == 'greatcircle':
         if numpoints > 2:
             gc = pyproj.Geod(ellps="WGS84")
@@ -322,13 +314,7 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
             lons = np.asarray([p1[LON], p2[LON]])
 
     p1_time, p2_time = nc.date2num([p1[TIME], p2[TIME]], "seconds since 2000-01-01")
-    if p2_time - p1_time == 0:
-        times = np.ones(numpoints) * p1_time
-    else:
-        time_step = float(p2_time - p1_time) / (numpoints - 1)
-        times = np.arange(p1_time, p2_time + (time_step / 2), time_step)
-
-    assert (len(lats) == len(lons)) and (len(times) == len(lons))
+    times = np.linspace(p1_time, p2_time, numpoints)
 
     return lats, lons, nc.num2date(times, "seconds since 2000-01-01")
 
@@ -374,9 +360,9 @@ def path_points(points, numpoints=100, connection='linear'):
     # same coordinates. Return arrays with numpoints points all having these
     # coordinate.
     if total_length == 0.:
-        lons = np.ones(numpoints) * points[0][LON]
-        lats = np.ones(numpoints) * points[0][LAT]
-        times = np.ones(numpoints) * points[0][TIME]
+        lons = np.repeat(points[0][LON], numpoints)
+        lats = np.repeat(points[0][LAT], numpoints)
+        times = np.repeat(points[0][TIME], numpoints)
         return lats, lons, times
 
     # For each segment, determine the number of points to be computed
