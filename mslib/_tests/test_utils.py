@@ -112,3 +112,120 @@ class TestConverter(object):
     def test_convert_pressure_to_altitude(self):
         assert utils.convertHPAToKM(1013.25) == 0
         assert int(utils.convertHPAToKM(25) * 1000) == 22415
+
+
+class TestLatLonPoints(object):
+    def test_linear(self):
+        ref_times = [datetime.datetime(2012, 7, 12, 10, 30), datetime.datetime(2012, 7, 12, 10, 35)]
+        ref_lats = [0, 10]
+        ref_lons = [0, 0]
+
+        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                numpoints=2, connection="linear")
+        assert len(lats) == len(ref_lats)
+        assert all(lats == ref_lats)
+        assert len(lons) == len(ref_lons)
+        assert all(lons == ref_lons)
+        assert len(times) == len(ref_times)
+        assert all(times == ref_times)
+
+        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                numpoints=3, connection="linear")
+        assert len(lats) == 3
+        assert len(lons) == 3
+        assert len(times) == 3
+        assert all(lats == [0, 5, 10])
+
+        ref_lats = [0, 0]
+        ref_lons = [0, 10]
+        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                numpoints=3, connection="linear")
+        assert len(lats) == 3
+        assert len(lons) == 3
+        assert len(times) == 3
+        assert all(lons == [0, 5, 10])
+        assert times[1] - times[0] == times[2] - times[1]
+
+        ref_times = [datetime.datetime(2012, 7, 12, 10, 30), datetime.datetime(2012, 7, 12, 10, 30)]
+        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                numpoints=3, connection="linear")
+        assert len(lats) == 3
+        assert len(lons) == 3
+        assert len(times) == 3
+        assert all(lons == [0, 5, 10])
+        assert times[0] == times[1]
+        assert times[1] == times[2]
+
+    def test_greatcircle(self):
+        ref_times = [datetime.datetime(2012, 7, 12, 10, 30), datetime.datetime(2012, 7, 12, 10, 35)]
+        ref_lats = [0, 10]
+        ref_lons = [0, 0]
+
+        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                numpoints=2, connection="greatcircle")
+        assert len(lats) == len(ref_lats)
+        assert all(lats == ref_lats)
+        assert len(lons) == len(ref_lons)
+        assert all(lons == ref_lons)
+        assert len(times) == len(ref_times)
+        assert all(times == ref_times)
+
+        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                numpoints=3, connection="linear")
+        assert len(lats) == 3
+        assert len(lons) == 3
+        assert len(times) == 3
+        assert all(lats == [0, 5, 10])
+
+        ref_lats = [0, 0]
+        ref_lons = [0, 10]
+        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                numpoints=3, connection="linear")
+        assert len(lats) == 3
+        assert len(lons) == 3
+        assert len(times) == 3
+        assert all(lons == [0, 5, 10])
+        assert(times[1] - times[0] == times[2] - times[1])
+
+
+def test_pathpoints():
+    p1 = [0, 0, datetime.datetime(2012, 7, 1, 10, 30)]
+    p2 = [10, 10, datetime.datetime(2012, 7, 1, 10, 40)]
+    p3 = [-20, 20, datetime.datetime(2012, 7, 1, 10, 40)]
+
+    result = utils.path_points([p1, p1], 100, "linear")
+    assert all(len(_x) == 100 for _x in result)
+    assert all(result[i][0] == p1[i] for i in range(3))
+    assert all(result[i][-1] == p1[i] for i in range(3))
+
+    result = utils.path_points([p1, p1], 100, "greatcircle")
+    assert all(len(_x) == 100 for _x in result)
+    assert all(result[i][0] == p1[i] for i in range(3))
+    assert all(result[i][-1] == p1[i] for i in range(3))
+
+    result = utils.path_points([p1, p2], 200, "linear")
+    assert all(len(_x) == 200 for _x in result)
+    assert all(result[i][0] == p1[i] for i in range(3))
+    assert all(result[i][-1] == p2[i] for i in range(3))
+
+    result = utils.path_points([p1, p2], 200, "greatcircle")
+    assert all(len(_x) == 200 for _x in result)
+    assert all(result[i][0] == p1[i] for i in range(3))
+    assert all(result[i][-1] == p2[i] for i in range(3))
+
+    result = utils.path_points([p1, p2, p3], 100, "linear")
+    assert all(len(_x) == 100 for _x in result)
+    assert all(result[i][0] == p1[i] for i in range(3))
+    assert all(result[i][-1] == p3[i] for i in range(3))
+
+    result = utils.path_points([p1, p2, p3], 100, "greatcircle")
+    assert all(len(_x) == 100 for _x in result)
+    assert all(result[i][0] == p1[i] for i in range(3))
+    assert all(result[i][-1] == p3[i] for i in range(3))
