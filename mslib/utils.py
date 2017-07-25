@@ -312,10 +312,14 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
             lon_step = float(p2[LON] - p1[LON]) / (numpoints - 1)
             lons = np.arange(p1[LON], p2[LON] + (lon_step / 2), lon_step)
     elif connection == 'greatcircle':
-        gc = pyproj.Geod(ellps="WGS84")
-        pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints)
-        lats = np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]])
-        lons = np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]])
+        if numpoints > 2:
+            gc = pyproj.Geod(ellps="WGS84")
+            pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints - 2)
+            lats = np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]])
+            lons = np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]])
+        else:
+            lats = np.asarray([p1[LAT], p2[LAT]])
+            lons = np.asarray([p1[LON], p2[LON]])
 
     p1_time, p2_time = nc.date2num([p1[TIME], p2[TIME]], "seconds since 2000-01-01")
     if p2_time - p1_time == 0:
@@ -323,6 +327,8 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
     else:
         time_step = float(p2_time - p1_time) / (numpoints - 1)
         times = np.arange(p1_time, p2_time + (time_step / 2), time_step)
+
+    assert (len(lats) == len(lons)) and (len(times) == len(lons))
 
     return lats, lons, nc.num2date(times, "seconds since 2000-01-01")
 
