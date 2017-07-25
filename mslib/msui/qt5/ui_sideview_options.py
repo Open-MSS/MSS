@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_sideview_options.ui'
+# Form implementation generated from reading ui file 'ui/ui_sideview_options.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -11,13 +11,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_SideViewOptionsDialog(object):
     def setupUi(self, SideViewOptionsDialog):
         SideViewOptionsDialog.setObjectName("SideViewOptionsDialog")
-        SideViewOptionsDialog.resize(460, 519)
+        SideViewOptionsDialog.resize(489, 519)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(SideViewOptionsDialog)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.groupBox = QtWidgets.QGroupBox(SideViewOptionsDialog)
+        self.groupBox.setMinimumSize(QtCore.QSize(0, 100))
         self.groupBox.setObjectName("groupBox")
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.groupBox)
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.groupBox)
+        self.verticalLayout_6.setContentsMargins(-1, -1, -1, 7)
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.label_2 = QtWidgets.QLabel(self.groupBox)
@@ -49,7 +51,24 @@ class Ui_SideViewOptionsDialog(object):
         self.sbPtop.setProperty("value", 200)
         self.sbPtop.setObjectName("sbPtop")
         self.horizontalLayout.addWidget(self.sbPtop)
-        self.horizontalLayout_2.addLayout(self.horizontalLayout)
+        self.verticalLayout_6.addLayout(self.horizontalLayout)
+        self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
+        self.label_4 = QtWidgets.QLabel(self.groupBox)
+        self.label_4.setObjectName("label_4")
+        self.horizontalLayout_7.addWidget(self.label_4)
+        self.cbVerticalAxis = QtWidgets.QComboBox(self.groupBox)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.cbVerticalAxis.sizePolicy().hasHeightForWidth())
+        self.cbVerticalAxis.setSizePolicy(sizePolicy)
+        self.cbVerticalAxis.setObjectName("cbVerticalAxis")
+        self.cbVerticalAxis.addItem("")
+        self.cbVerticalAxis.addItem("")
+        self.cbVerticalAxis.addItem("")
+        self.horizontalLayout_7.addWidget(self.cbVerticalAxis)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_7)
         self.verticalLayout_4.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(SideViewOptionsDialog)
         font = QtGui.QFont()
@@ -177,6 +196,10 @@ class Ui_SideViewOptionsDialog(object):
         self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hPa"))
         self.label_3.setText(_translate("SideViewOptionsDialog", "to"))
         self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hPa"))
+        self.label_4.setText(_translate("SideViewOptionsDialog", "Vertical axis units:"))
+        self.cbVerticalAxis.setItemText(0, _translate("SideViewOptionsDialog", "pressure"))
+        self.cbVerticalAxis.setItemText(1, _translate("SideViewOptionsDialog", "pressure altitude"))
+        self.cbVerticalAxis.setItemText(2, _translate("SideViewOptionsDialog", "flight level"))
         self.groupBox_2.setTitle(_translate("SideViewOptionsDialog", "Flight Levels"))
         self.cbDrawFlightLevels.setText(_translate("SideViewOptionsDialog", "draw the following flight levels:"))
         item = self.tableWidget.horizontalHeaderItem(0)
