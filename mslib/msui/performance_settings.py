@@ -93,16 +93,17 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
             self, "Open Aircraft Performance JSON File", constants.MSS_CONFIG_PATH, "(*.json)")
         filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
 
-        try:
-            performance = config_loader(config_file=filename)
-            self.aircraft = aircrafts.SimpleAircraft(performance)
-            self.lbAircraftName.setText(self.aircraft.name)
-            self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
-            self.dsbFuel.setValue(self.aircraft.fuel)
+        if filename:
+            try:
+                performance = config_loader(config_file=filename)
+                self.aircraft = aircrafts.SimpleAircraft(performance)
+                self.lbAircraftName.setText(self.aircraft.name)
+                self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
+                self.dsbFuel.setValue(self.aircraft.fuel)
 
-        except KeyError as ex:
-            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                           self.tr(u"JSON File missing '{}' entry".format(ex)))
-        except (FatalUserError, ValueError) as ex:
-            QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                           self.tr(u"JSON File has Syntax Problems:\n{}".format(ex)))
+            except KeyError as ex:
+                QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                               self.tr(u"JSON File missing '{}' entry".format(ex)))
+            except (FatalUserError, ValueError) as ex:
+                QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
+                                               self.tr(u"JSON File has Syntax Problems:\n{}".format(ex)))
