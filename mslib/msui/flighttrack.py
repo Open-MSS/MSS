@@ -302,6 +302,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     value = float(value)
+                except TypeError as ex:
+                    logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
                     pass
                 else:
@@ -325,6 +327,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     value = float(value)
+                except TypeError as ex:
+                    logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
                     pass
                 else:
@@ -343,6 +347,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     flightlevel = float(value)
                     pressure = thermolib.flightlevel2pressure(flightlevel)
+                except TypeError as ex:
+                    logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
                     pass
                 else:
@@ -362,6 +368,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                         raise ValueError
                     flightlevel = round(thermolib.pressure2flightlevel(pressure))
                     pressure = thermolib.flightlevel2pressure(flightlevel)
+                except TypeError as ex:
+                    logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
                     pass
                 else:
