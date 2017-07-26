@@ -721,9 +721,16 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.fetcher.started_request.connect(self.displayProgressDialog)  # implicitely uses a queued connection
 
         if self.cbInitTime.count() > 0:
-            self.cbInitTime.setCurrentIndex(0)
+            self.cbInitTime.setCurrentIndex(self.cbInitTime.count() - 1)
             self.initTimeChanged()
-        if self.cbValidTime.count() > 0:
+        if self.cbInitTime.count() > 0 and self.cbValidTime.count() > 0:
+            self.cbValidTime.setCurrentIndex(0)
+            for i in range(self.cbValidTime.count()):
+                if self.cbValidTime.itemText(i) == self.cbInitTime.currentText():
+                    self.cbValidTime.setCurrentIndex(i)
+                    break
+            self.validTimeChanged()
+        elif self.cbValidTime.count() > 0:
             self.cbValidTime.setCurrentIndex(0)
             self.validTimeChanged()
 
