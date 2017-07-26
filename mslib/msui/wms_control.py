@@ -682,6 +682,18 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.cbLayer.currentIndexChanged.disconnect(self.layerChanged)
         self.cbLayer.clear()
         self.cbStyle.clear()
+        self.cbLevel.clear()
+        self.cbStyle.clear()
+        self.cbInitTime.clear()
+        self.cbValidTime.clear()
+
+        self.cbLayer.setEnabled(False)
+        self.cbStyle.setEnabled(False)
+        self.enableLevelElements(False)
+        self.enableValidTimeElements(False)
+        self.enableInitTimeElements(False)
+        self.pbViewCapabilities.setEnabled(False)
+        self.cbTransparent.setChecked(False)
 
         # Parse layer tree of the wms object and discover usable layers.
         stack = list(wms.contents.values())
@@ -729,7 +741,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Reconnect layerChanged.
         self.cbLayer.currentIndexChanged.connect(self.layerChanged)
-        self.btGetMap.setEnabled(True)
+        if len(filtered_layers) > 0:
+            self.btGetMap.setEnabled(True)
 
     def viewCapabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities
