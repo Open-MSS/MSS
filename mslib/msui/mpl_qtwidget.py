@@ -213,6 +213,7 @@ class MplSideViewCanvas(MplCanvas):
 
         # Default settings.
         self.settings_dict = {"vertical_extent": (1050, 180),
+                              "vertical_axis": "pressure",
                               "flightlevels": [],
                               "draw_flightlevels": True,
                               "draw_flighttrack": True,
@@ -261,6 +262,66 @@ class MplSideViewCanvas(MplCanvas):
                 redraw_xaxis=self.redraw_xaxis, clear_figure=self.clear_figure
             )
 
+    def redraw_yaxis(self):
+        vaxis = self.settings_dict["vertical_axis"]
+        if vaxis == "pressure":
+            # Compute the position of major and minor ticks. Major ticks are labelled.
+            # By default, major ticks are drawn every 100hPa. If p_top < 100hPa,
+            # the distance is reduced to every 10hPa above 100hPa.
+            label_distance = 10000
+            label_bot = self.p_bot - (self.p_bot % label_distance)
+            major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
+
+            # .. check step reduction to 10 hPa ..
+            if self.p_top < 10000:
+                major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1, -label_distance // 10)
+                len_major_ticks = len(major_ticks)
+                major_ticks = np.resize(major_ticks,
+                                        len_major_ticks + len(major_ticks2) - 1)
+                major_ticks[len_major_ticks:] = major_ticks2[1:]
+
+            labels = ["{:d}".format(int(l / 100.)) for l in major_ticks]
+
+            # .. the same for the minor ticks ..
+            p_top_minor = max(label_distance, self.p_top)
+            label_distance_minor = 1000
+            label_bot_minor = self.p_bot - (self.p_bot % label_distance_minor)
+            minor_ticks = np.arange(label_bot_minor, p_top_minor - 1,
+                                    -label_distance_minor)
+
+            if self.p_top < 10000:
+                minor_ticks2 = np.arange(minor_ticks[-1], self.p_top - 1, -label_distance_minor // 10)
+                len_minor_ticks = len(minor_ticks)
+                minor_ticks = np.resize(minor_ticks,
+                                        len_minor_ticks + len(minor_ticks2) - 1)
+                minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
+            self.ax.set_ylabel("pressure (hPa)")
+        elif vaxis == "pressure altitude":
+            major_heights = np.arange(0, 30, 2)
+            minor_heights = np.arange(0, 30, 0.25)
+            major_fl = 10 * major_heights / 0.3048
+            minor_fl = 10 * minor_heights / 0.3048
+            major_ticks = thermolib.flightlevel2pressure_a(major_fl)
+            minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
+            labels = major_heights
+            self.ax.set_ylabel("pressure altitude (km)")
+        elif vaxis == "flight level":
+            major_fl = np.arange(0, 1000, 50)
+            minor_fl = np.arange(0, 1000, 10)
+            major_ticks = thermolib.flightlevel2pressure_a(major_fl)
+            minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
+            labels = major_fl
+            self.ax.set_ylabel("flight level (hft)")
+        else:
+            raise RuntimeError("Unsupported vertical axis type: '{}'".format(vaxis))
+
+        # Draw ticks and tick labels.
+        self.ax.set_yticks(minor_ticks, minor=True)
+        self.ax.set_yticks(major_ticks, minor=False)
+        self.ax.set_yticklabels([], minor=True, fontsize=10)
+        self.ax.set_yticklabels(labels, minor=False, fontsize=10)
+        self.ax.set_ylim(self.p_bot, self.p_top)
+
     def setupSideView(self):
         """Set up a vertical section view.
 
@@ -274,54 +335,14 @@ class MplSideViewCanvas(MplCanvas):
         ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
         ax.set_xlim(0, 10)
 
-        p_bot = self.p_bot
-        p_top = self.p_top
-
         ax.set_yscale("log")
 
-        # Compute the position of major and minor ticks. Major ticks are labelled.
-        # By default, major ticks are drawn every 100hPa. If p_top < 100hPa,
-        # the distance is reduced to every 10hPa above 100hPa.
-        label_distance = 10000
-        label_bot = p_bot - (p_bot % label_distance)
-        major_ticks = np.arange(label_bot, p_top - 1, -label_distance)
-
-        # .. check step reduction to 10 hPa ..
-        if p_top < 10000:
-            major_ticks2 = np.arange(major_ticks[-1], p_top - 1, -label_distance // 10)
-            len_major_ticks = len(major_ticks)
-            major_ticks = np.resize(major_ticks,
-                                    len_major_ticks + len(major_ticks2) - 1)
-            major_ticks[len_major_ticks:] = major_ticks2[1:]
-
-        labels = ["{:d}".format(int(l / 100.)) for l in major_ticks]
-
-        # .. the same for the minor ticks ..
-        p_top_minor = max(label_distance, p_top)
-        label_distance_minor = 1000
-        label_bot_minor = p_bot - (p_bot % label_distance_minor)
-        minor_ticks = np.arange(label_bot_minor, p_top_minor - 1,
-                                -label_distance_minor)
-
-        if p_top < 10000:
-            minor_ticks2 = np.arange(minor_ticks[-1], p_top - 1, -label_distance_minor // 10)
-            len_minor_ticks = len(minor_ticks)
-            minor_ticks = np.resize(minor_ticks,
-                                    len_minor_ticks + len(minor_ticks2) - 1)
-            minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
-
-        # Draw ticks and tick labels.
-        ax.set_yticks(minor_ticks, minor=True)
-        ax.set_yticks(major_ticks, minor=False)
-        ax.set_yticklabels([], minor=True, fontsize=10)
-        ax.set_yticklabels(labels, minor=False, fontsize=10)
-
         # Set axis limits and draw grid for major ticks.
-        ax.set_ylim(p_bot, p_top)
+        ax.set_ylim(self.p_bot, self.p_top)
         ax.grid(b=True)
 
         ax.set_xlabel("lat/lon")
-        ax.set_ylabel("pressure (hPa)")
+        self.redraw_yaxis()
 
     def clear_figure(self):
         logging.debug("path of side view has changed.. removing invalidated "
@@ -375,6 +396,8 @@ class MplSideViewCanvas(MplCanvas):
                 self.image = None
             self.setupSideView()
             self.waypoints_interactor.redraw_figure()
+        else:
+            self.redraw_yaxis()
 
     def getVerticalExtent(self):
         """Returns the bottom and top pressure (hPa) of the plot.
