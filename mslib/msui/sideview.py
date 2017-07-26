@@ -64,6 +64,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.setupUi(self)
 
         default_settings_dict = {"vertical_extent": (1050, 180),
+                                 "vertical_axis": "pressure",
                                  "flightlevels": [300, 320, 340],
                                  "draw_flightlevels": True,
                                  "draw_flighttrack": True,
@@ -85,6 +86,10 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         for i, level in enumerate(flightlevels):
             tableitem = QtWidgets.QTableWidgetItem(str(int(level)))
             self.tableWidget.setItem(i, 0, tableitem)
+
+        for i in range(self.cbVerticalAxis.count()):
+            if self.cbVerticalAxis.itemText(i) == settings_dict["vertical_axis"]:
+                self.cbVerticalAxis.setCurrentIndex(i)
 
         self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
@@ -174,6 +179,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         """
         settings_dict = {
             "vertical_extent": (int(self.sbPbot.value()), int(self.sbPtop.value())),
+            "vertical_axis": self.cbVerticalAxis.currentText(),
             "flightlevels": self.getFlightLevels(),
             "draw_flightlevels": self.cbDrawFlightLevels.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
