@@ -62,6 +62,14 @@ except ImportError:
 
     USE_PYQT5 = True
 
+
+def localized_float(string):
+    value, ok = QtCore.QLocale().toDouble(string)
+    if not ok:
+        raise ValueError
+    return value
+
+
 # Import all Dialogues from the proper module directory.
 for mod in [
         "ui_about_dialog",
