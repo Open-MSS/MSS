@@ -50,8 +50,8 @@ def save_to_txt(filename, name, waypoints):
         out_file.write(u"Track name: {:}\n".format(name))
         line = u"{0:5d}  {1:{2}}  {3:10.3f}  {4:11.3f}  {5:11.3f}  {6:14.3f}  {7:14.1f}  {8:15.1f}  {9:{10}}\n"
         header = u"Index  {0:{1}}  Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  " \
-                 u"Leg dist. (km)  Cum. dist. (km)  {2:{3}}\n".format("Location", max_loc_len, "Comments",
-                                                                     max_com_len)
+                 u"Leg dist. (km)  Cum. dist. (km)  {2:{3}}\n".format(
+                     "Location", max_loc_len, "Comments", max_com_len)
         out_file.write(header)
         for i, wp in enumerate(waypoints):
             # ToDo check str(str( .. ) and may be use csv write
