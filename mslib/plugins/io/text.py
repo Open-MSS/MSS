@@ -31,7 +31,7 @@ from __future__ import division
 from builtins import str
 
 import logging
-
+import codecs
 import mslib.msui.flighttrack as ft
 from mslib import thermolib
 
@@ -45,31 +45,31 @@ def save_to_txt(filename, name, waypoints):
             max_loc_len = len(str(wp.location))
         if len(str(wp.comments)) > max_com_len:
             max_com_len = len(str(wp.comments))
-    with open(filename, "w") as out_file:
-        out_file.write("# Do not modify if you plan to import this file again!\n")
-        out_file.write("Track name: {:}\n".format(name.encode("ascii", "replace")))
-        line = "{0:5d}  {1:{2}}  {3:10.3f}  {4:11.3f}  {5:11.3f}  {6:14.3f}  {7:14.1f}  {8:15.1f}  {9:{10}}\n"
-        header = "Index  {0:{1}}  Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  " \
-                 "Leg dist. (km)  Cum. dist. (km)  {2:{3}}\n".format("Location", max_loc_len, "Comments",
+    with codecs.open(filename, "w", encoding="utf-8") as out_file:
+        out_file.write(u"# Do not modify if you plan to import this file again!\n")
+        out_file.write(u"Track name: {:}\n".format(name))
+        line = u"{0:5d}  {1:{2}}  {3:10.3f}  {4:11.3f}  {5:11.3f}  {6:14.3f}  {7:14.1f}  {8:15.1f}  {9:{10}}\n"
+        header = u"Index  {0:{1}}  Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  " \
+                 u"Leg dist. (km)  Cum. dist. (km)  {2:{3}}\n".format("Location", max_loc_len, "Comments",
                                                                      max_com_len)
         out_file.write(header)
         for i, wp in enumerate(waypoints):
             # ToDo check str(str( .. ) and may be use csv write
-            loc = str(str(wp.location).encode("ascii", "replace"))
+            loc = str(wp.location)
             lat = wp.lat
             lon = wp.lon
             lvl = wp.flightlevel
             pre = wp.pressure / 100.
             leg = wp.distance_to_prev
             cum = wp.distance_total
-            com = str(str(wp.comments).encode("ascii", "replace"))
+            com = str(wp.comments)
             out_file.write(line.format(i, loc, max_loc_len, lat, lon, lvl, pre, leg, cum, com, max_com_len))
 
 
 def load_from_txt(filename):
     name = ""
     waypoints = []
-    with open(filename, "r") as in_file:
+    with codecs.open(filename, "r", encoding="utf-8") as in_file:
         pos = []
         for line in in_file:
             if line.startswith("#"):
