@@ -88,8 +88,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ipoint = 0
         for i, (lat, lon) in enumerate(zip(self.lats, self.lons)):
             if (ipoint < len(self.highlight) and
-                 np.hypot(lat - self.highlight[ipoint][0],
-                          lon - self.highlight[ipoint][1]) < 2E-10):
+                np.hypot(lat - self.highlight[ipoint][0],
+                         lon - self.highlight[ipoint][1]) < 2E-10):
                 ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
                 ipoint += 1
 
