@@ -62,6 +62,19 @@ class Test_VSec(object):
                                       show=False)
         return self.vsec.plot()
 
+    def test_repeated_locations(self):
+        p1 = [45.00, 8.]
+        p2 = [50.00, 12.]
+        self.path = [p1, p1]
+        img = self.plot(mpl_vsec_styles.VS_TemperatureStyle_01(driver=self.vsec))
+        assert img is not None
+        self.path = [p1, p1, p2]
+        img = self.plot(mpl_vsec_styles.VS_TemperatureStyle_01(driver=self.vsec))
+        assert img is not None
+        self.path = [p1, p2, p2]
+        img = self.plot(mpl_vsec_styles.VS_TemperatureStyle_01(driver=self.vsec))
+        assert img is not None
+
     def test_VS_TemperatureStyle_01(self):
         img = self.plot(mpl_vsec_styles.VS_TemperatureStyle_01(driver=self.vsec))
         assert img is not None
@@ -141,6 +154,19 @@ class Test_HSec(object):
                                       style=style,
                                       show=False)
         return self.hsec.plot()
+
+    def test_repeated_locations(self):
+        p1 = [45.00, 8.]
+        p2 = [50.00, 12.]
+        self.path = [p1, p1]
+        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_ML_01(driver=self.hsec), level=10)
+        assert img is not None
+        self.path = [p1, p1, p2]
+        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_ML_01(driver=self.hsec), level=10)
+        assert img is not None
+        self.path = [p1, p2, p2]
+        img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_ML_01(driver=self.hsec), level=10)
+        assert img is not None
 
     def test_HS_CloudsStyle_01(self):
         for style in ["TOT", "HIGH", "MED", "LOW"]:
