@@ -2,6 +2,19 @@ Changelog
 =========
 
 
+Version 1.5.4
+-------------
+
+Bug Fixes:
+ - MSS crashes if one cancels the load performance data dialogue, #229
+ - Crash in MSWMS vertical section plot If the two last waypoints share the same coordinate, #232
+ - MSS crashes in SideView if the flightpath consists of exactly two identical points, #233
+ - MSS crashes occasionally when moving a point in TopView, #238
+ - txt export plugin broken, #240
+ - Trying to clean WMC image cache may crash application (rights), #243
+ - Inserting Waypoint in steorographic view is much too magnetic to locations, #245
+
+
 Version 1.5.3
 -------------
 
