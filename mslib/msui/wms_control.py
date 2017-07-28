@@ -1524,7 +1524,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 try:
                     for f in cached_files:
                         os.remove(os.path.join(self.wms_cache, f))
-                except IOError, OSError as ex:
+                except (IOError, OSError) as ex:
                     msg = u"ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
                     logging.error(msg)
                     QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
@@ -1567,7 +1567,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                              default=mss_default.wms_cache_max_age_seconds)):
                     os.remove(f)
                     removed_files += 1
-        except IOError, OSError as ex:
+        except (IOError, OSError) as ex:
             msg = u"ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
             logging.error(msg)
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
