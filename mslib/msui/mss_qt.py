@@ -63,11 +63,18 @@ except ImportError:
     USE_PYQT5 = True
 
 
-def localized_float(string):
-    value, ok = QtCore.QLocale().toDouble(string)
-    if not ok:
-        raise ValueError
-    return value
+def localized_float(value):
+    if isinstance(value, float):
+        return value
+    try:
+        float_value, ok = QtCore.QLocale().toDouble(value)
+        if not ok:
+            raise ValueError
+    except TypeError:  # neither float nor string, try Python conversion
+        logging.error("Unexpected type in float conversion: %s=%s",
+                      type(value), value)
+        float_value = float(value)
+    return float_value
 
 
 # Import all Dialogues from the proper module directory.
