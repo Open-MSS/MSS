@@ -2,6 +2,12 @@ Changelog
 =========
 
 
+Version 1.5.5
+-------------
+
+Bug Fixes:
+ - Changing WP in TopView and SideView by mouse broken, #248
+
 Version 1.5.4
 -------------
 
