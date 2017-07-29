@@ -240,7 +240,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             extension, module, function = self._imported_plugins[name]
             try:
                 imported_module = importlib.import_module(module)
+            # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
+                logging.error(u"Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
@@ -248,7 +250,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 continue
             try:
                 self.addImportFilter(name, extension, getattr(imported_module, function))
-            except AttributeError as ex:
+            # wildcard exception to be resilient against error introduced by user code
+            except Exception as ex:
+                logging.error(u"Error on installing plugin: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
@@ -260,7 +264,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             extension, module, function = self._exported_plugins[name]
             try:
                 imported_module = importlib.import_module(module)
+            # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
+                logging.error(u"Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
@@ -268,7 +274,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 continue
             try:
                     self.addExportFilter(name, extension, getattr(imported_module, function))
+            # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
+                logging.error(u"Error on installing plugin: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error"),
                     self.tr(u"ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
@@ -309,7 +317,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
-                except (SyntaxError, IndexError, OSError, IOError) as ex:
+                # wildcard exception to be resilient against error introduced by user code
+                except Exception as ex:
+                    logging.error("file io plugin error: %s %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(u"ERROR: {} {}".format(type(ex), ex)))
@@ -344,7 +354,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if filename:
                 try:
                     function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
-                except (OSError, IOError) as ex:
+                # wildcard exception to be resilient against error introduced by user code
+                except Exception as ex:
+                    logging.error("file io plugin error: %s %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(u"ERROR: {} {}".format(type(ex), ex)))

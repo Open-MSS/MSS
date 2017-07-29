@@ -798,9 +798,11 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         width = int(round(ax_bounds[2]))
-        map_delta_x = abs(self.map.llcrnrx - self.map.urcrnrx)
+        if self.map.projection in ['stere', 'lcc']:
+            map_delta_x = (self.map.llcrnrx - self.map.urcrnrx) / 1000.
+        else:
+            map_delta_x = abs(self.map.llcrnrx - self.map.urcrnrx)
         map_coords_per_px_x = map_delta_x / width
-
         return map_coords_per_px_x * px
 
     def appropriateEpsilon2(self, px=5):
@@ -816,9 +818,11 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
-        map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
+        if self.map.projection in ['stere', 'lcc']:
+            map_delta = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx) / 1000.
+        else:
+            map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
         km_per_px = map_delta / diagonal
-
         return km_per_px * px
 
     def button_release_callback(self, event):

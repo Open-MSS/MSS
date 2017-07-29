@@ -1540,14 +1540,16 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # Delete all files in cache.
             if self.wms_cache is not None:
                 cached_files = os.listdir(self.wms_cache)
-                logging.debug("clearing cache; deleting %i files..",
-                              len(cached_files))
-                for f in cached_files:
-                    try:
+                logging.debug("clearing cache; deleting %i files...", len(cached_files))
+                try:
+                    for f in cached_files:
                         os.remove(os.path.join(self.wms_cache, f))
-                    except Exception as ex:
-                        logging.error(u"ERROR: %s %s", type(ex), ex)
-                logging.debug("cache has been cleared.")
+                except (IOError, OSError) as ex:
+                    msg = u"ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
+                    logging.error(msg)
+                    QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
+                else:
+                    logging.debug("cache has been cleared.")
             else:
                 logging.debug("no cache exists that can be cleared.")
 
@@ -1556,11 +1558,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            age specified in mss_settings, and remove the oldest files if the
            maximum cache size has been reached.
         """
-        logging.debug("servicing cache..")
+        logging.debug("servicing cache...")
 
         # Create a list of all files in the cache.
-        files = [os.path.join(self.wms_cache, f)
-                 for f in os.listdir(self.wms_cache)]
+        files = [os.path.join(self.wms_cache, f) for f in os.listdir(self.wms_cache)]
         # Add the ages of the files (via modification times in sec since epoch)
         # and the file sizes.
         # (current time in sec since epoch)
@@ -1577,15 +1578,19 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # file age will also be removed.
         cum_size_bytes = 0
         removed_files = 0
-        for f, fsize, fage in files:
-            cum_size_bytes += fsize
-            if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes",
-                                               default=mss_default.wms_cache_max_size_bytes) or
-                    fage > config_loader(dataset="wms_cache_max_age_seconds",
-                                         default=mss_default.wms_cache_max_age_seconds)):
-                os.remove(f)
-                removed_files += 1
-
+        try:
+            for f, fsize, fage in files:
+                cum_size_bytes += fsize
+                if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes",
+                                                   default=mss_default.wms_cache_max_size_bytes) or
+                        fage > config_loader(dataset="wms_cache_max_age_seconds",
+                                             default=mss_default.wms_cache_max_age_seconds)):
+                    os.remove(f)
+                    removed_files += 1
+        except (IOError, OSError) as ex:
+            msg = u"ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
+            logging.error(msg)
+            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
         logging.debug("cache has been cleaned (%i files removed).", removed_files)
 
         ################################################################################
