@@ -221,7 +221,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
             err_message = str(se_tree.find('ServiceException').text).strip()
-            raise owslib.wms.ServiceException(err_message, se_xml)
+            raise owslib.util.ServiceException(err_message, se_xml)
         return u
 
     def get_redirect_url(self, method="Get"):
