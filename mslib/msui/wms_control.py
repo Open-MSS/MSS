@@ -842,6 +842,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Handle dimensions:
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        save_level = self.cbLevel.currentText()
         save_init_time = self.dteInitTime.dateTime()
         save_valid_time = self.dteValidTime.dateTime()
 
@@ -859,6 +860,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 elev_list = [u"{} ({})".format(e.strip(), units) for e in
                              lobj.extents["elevation"]["values"]]
                 self.cbLevel.addItems(elev_list)
+                if save_level in elev_list:
+                    idx = elev_list.index(save_level)
+                    self.cbLevel.setCurrentIndex(idx)
                 enable_elevation = True
                 break
 
