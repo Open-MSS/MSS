@@ -798,10 +798,7 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         width = int(round(ax_bounds[2]))
-        if self.map.projection in ['stere', 'lcc']:
-            map_delta_x = (self.map.llcrnrx - self.map.urcrnrx) / 1000.
-        else:
-            map_delta_x = abs(self.map.llcrnrx - self.map.urcrnrx)
+        map_delta_x = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx)
         map_coords_per_px_x = map_delta_x / width
         return map_coords_per_px_x * px
 
@@ -841,12 +838,11 @@ class HPathInteractor(PathInteractor):
         elif self.editmode == INSERT and event.inaxes is not None:
             # Get position for new vertex.
             x, y = event.xdata, event.ydata
-            best_index = self.pathpatch.get_path() \
-                .index_of_closest_segment(x, y, eps=self.appropriate_epsilon())
+            best_index = self.pathpatch.get_path().index_of_closest_segment(
+                x, y, eps=self.appropriateEpsilon())
             logging.debug(u"TopView insert point: clicked at (%f, %f), "
                           u"best index: %d", x, y, best_index)
-            self.pathpatch.get_path().insert_vertex(best_index, [x, y],
-                                                    WaypointsPath.LINETO)
+            self.pathpatch.get_path().insert_vertex(best_index, [x, y], WaypointsPath.LINETO)
 
             lon, lat = self.map(x, y, inverse=True)
             loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
