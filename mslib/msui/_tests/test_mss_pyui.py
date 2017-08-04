@@ -47,7 +47,7 @@ class Test_MSSSideViewWindow(object):
         self.application = QtWidgets.QApplication(sys.argv)
 
         self.window = mss_pyui.MSSMainWindow()
-        self.window.createNewFlightTrack(activate=True)
+        self.window.create_new_flight_track(activate=True)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -212,8 +212,8 @@ class Test_MSSSideViewWindow(object):
                 return_value=save_txt)
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_plugin_txt(self, mockbox, mocksave, mockopen):
-        self.window.addImportFilter("_TXT", "txt", load_from_txt)
-        self.window.addExportFilter("_TXT", "txt", save_to_txt)
+        self.window.add_import_filter("_TXT", "txt", load_from_txt)
+        self.window.add_export_filter("_TXT", "txt", save_to_txt)
 
         assert self.window.listFlightTracks.count() == 1
         self.window.actionImportFlightTrack_TXT()
@@ -236,7 +236,7 @@ class Test_MSSSideViewWindow(object):
                 return_value=os.path.join(sample_path, "flitestar.txt"))
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_plugin_flitestar(self, mockbox, mockopen):
-        self.window.addImportFilter("_FliteStar", "txt", load_from_flitestar)
+        self.window.add_import_filter("_FliteStar", "txt", load_from_flitestar)
         assert self.window.listFlightTracks.count() == 1
         self.window.actionImportFlightTrack_FliteStar()
         QtWidgets.QApplication.processEvents()

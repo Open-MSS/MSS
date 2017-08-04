@@ -191,7 +191,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             "draw_tangents": self.cbDrawTangents.isChecked(),
             "show_solar_angle": self.cbShowSolarAngle.isChecked(),
         }
-        self.view.setRemoteSensingAppearance(settings)
+        self.view.set_remote_sensing_appearance(settings)
 
     def set_tangentpoint_colour(self):
         """Slot for the colour buttons: Opens a QColorDialog and sets the

@@ -93,10 +93,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         the overlay if loaded.
         """
         if self.view is not None and self.cbOverlay.isChecked() and self.patch is not None:
-            self.view.plotKML(self.patch)
+            self.view.plot_kml(self.patch)
             self.patch.update(self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
         elif self.patch is not None:
-            self.view.plotKML(None)
+            self.view.plot_kml(None)
 
     def select_colour(self):
         button = self.pbSelectColour
@@ -128,7 +128,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if self.patch is not None:
             self.patch.remove()
-            self.view.plotKML(None)
+            self.view.plot_kml(None)
             self.patch = None
             self.cbOverlay.setEnabled(False)
         try:
@@ -138,7 +138,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                       self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
             self.cbOverlay.setEnabled(True)
             if self.view is not None and self.cbOverlay.isChecked():
-                self.view.plotKML(self.patch)
+                self.view.plot_kml(self.patch)
         except (IOError, pykml.parser.etree.XMLSyntaxError) as ex:
             logging.error("KML Overlay - %s: %s", type(ex), ex)
             QtWidgets.QMessageBox.critical(

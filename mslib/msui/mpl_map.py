@@ -932,7 +932,7 @@ class KMLPatch(object):
         self.overwrite = overwrite
         self.draw()
 
-    def computeXY(self, coordinates):
+    def compute_xy(self, coordinates):
         coords = str(coordinates).split()
         lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
         return self.map(lons, lats)
@@ -946,7 +946,7 @@ class KMLPatch(object):
         kwargs = self.styles.get(style, {}).get("PolyStyle", {"linewidth": self.linewidth, "color": self.color})
         for boundary in ["outerBoundaryIs", "innerBoundaryIs"]:
             if hasattr(polygon, boundary):
-                x, y = self.computeXY(getattr(polygon, boundary).LinearRing.coordinates)
+                x, y = self.compute_xy(getattr(polygon, boundary).LinearRing.coordinates)
                 self.patches.append(self.map.plot(x, y, "-", **kwargs))
 
     def add_point(self, point, style, name):
@@ -956,7 +956,7 @@ class KMLPatch(object):
         :param point: pykml object specifying point
         :param name: name of placemark for annotation
         """
-        x, y = self.computeXY(point.coordinates)
+        x, y = self.compute_xy(point.coordinates)
         self.patches.append(self.map.plot(x[0], y[0], "o", color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(name, xy=(x[0], y[0]), xycoords="data",
@@ -970,7 +970,7 @@ class KMLPatch(object):
         :param line: pykml LineString object
         """
         kwargs = self.styles.get(style, {}).get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
-        x, y = self.computeXY(line.coordinates)
+        x, y = self.compute_xy(line.coordinates)
         self.patches.append(self.map.plot(x, y, "-", **kwargs))
 
     def parse_geometries(self, placemark, style=None, name=None):

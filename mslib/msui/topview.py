@@ -100,7 +100,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
 
-    def getSettings(self):
+    def get_settings(self):
         """
         """
         settings_dict = {
@@ -160,20 +160,20 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.docks = [None, None, None, None, None]
 
         self.settings_tag = "topview"
-        self.loadSettings()
+        self.load_settings()
 
         # Initialise the GUI elements (map view, items of combo boxes etc.).
-        self.setupTopView()
+        self.setup_top_view()
 
         # Connect slots and signals.
         # ==========================
 
         # Map controls.
-        self.btMapRedraw.clicked.connect(self.mpl.canvas.redrawMap)
+        self.btMapRedraw.clicked.connect(self.mpl.canvas.redraw_map)
         self.cbChangeMapSection.activated.connect(self.changeMapSection)
 
         # Settings
-        self.btSettings.clicked.connect(self.settingsDlg)
+        self.btSettings.clicked.connect(self.settings_dialogue)
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
@@ -190,7 +190,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
 
-    def setupTopView(self):
+    def setup_top_view(self):
         """Initialise GUI elements. (This method is called before signals/slots
            are connected).
         """
@@ -209,7 +209,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Initialise the map and the flight track. Get the initial projection
         # parameters from the tables in mss_settings.
         kwargs = self.changeMapSection(only_kwargs=True)
-        self.mpl.canvas.initMap(**kwargs)
+        self.mpl.canvas.init_map(**kwargs)
         self.setFlightTrackModel(self.waypoints_model)
 
     def openTool(self, index):
@@ -268,36 +268,36 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             return kwargs
 
         logging.debug("switching to map section %s", current_map_key)
-        self.mpl.canvas.redrawMap(kwargs)
+        self.mpl.canvas.redraw_map(kwargs)
 
     def setIdentifier(self, identifier):
         super(MSSTopViewWindow, self).setIdentifier(identifier)
         self.mpl.canvas.map.set_identifier(identifier)
 
-    def settingsDlg(self):
+    def settings_dialogue(self):
         """
         """
-        settings = self.getView().getMapAppearance()
+        settings = self.getView().get_map_appearance()
         dlg = MSS_TV_MapAppearanceDialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
-            settings = dlg.getSettings()
-            self.getView().setMapAppearance(settings)
-            self.saveSettings()
+            settings = dlg.get_settings()
+            self.getView().set_map_appearance(settings)
+            self.save_settings()
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
 
-    def saveSettings(self):
+    def save_settings(self):
         """Save the current settings (map appearance) to the file
            self.settingsfile.
         """
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        settings = self.getView().getMapAppearance()
+        settings = self.getView().get_map_appearance()
         save_settings_pickle(self.settings_tag, settings)
 
-    def loadSettings(self):
+    def load_settings(self):
         """Load settings from the file self.settingsfile.
         """
         settings = load_settings_pickle(self.settings_tag, {})
-        self.getView().setMapAppearance(settings)
+        self.getView().set_map_appearance(settings)
