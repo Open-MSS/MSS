@@ -419,6 +419,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.valid_time_name = ""
 
         self.layerChangeInProgress = False
+        self.save_level = None
 
         # Initialise GUI elements that control WMS parameters.
         self.cbLayer.clear()
@@ -842,7 +843,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Handle dimensions:
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        save_level = self.cbLevel.currentText()
+        if self.cbLevel.isEnabled():
+            self.save_level = self.cbLevel.currentText()
         save_init_time = self.dteInitTime.dateTime()
         save_valid_time = self.dteValidTime.dateTime()
 
@@ -860,8 +862,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 elev_list = [u"{} ({})".format(e.strip(), units) for e in
                              lobj.extents["elevation"]["values"]]
                 self.cbLevel.addItems(elev_list)
-                if save_level in elev_list:
-                    idx = elev_list.index(save_level)
+                if self.save_level in elev_list:
+                    idx = elev_list.index(self.save_level)
                     self.cbLevel.setCurrentIndex(idx)
                 enable_elevation = True
                 break
