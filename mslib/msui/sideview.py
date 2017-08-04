@@ -168,19 +168,19 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         item.setText(str(int(flightlevel)))
         self.tableWidget.sortItems(0)
 
-    def getFlightLevels(self):
+    def get_flight_levels(self):
         """Returns the flight level values contained in the table.
         """
         return [int(str(self.tableWidget.item(row, 0).text()))
                 for row in range(self.tableWidget.rowCount())]
 
-    def getSettings(self):
+    def get_settings(self):
         """Return settings dictionary with values from the GUI elements.
         """
         settings_dict = {
             "vertical_extent": (int(self.sbPbot.value()), int(self.sbPtop.value())),
             "vertical_axis": self.cbVerticalAxis.currentText(),
-            "flightlevels": self.getFlightLevels(),
+            "flightlevels": self.get_flight_levels(),
             "draw_flightlevels": self.cbDrawFlightLevels.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "fill_flighttrack": self.cbFillFlightTrack.isChecked(),
@@ -216,13 +216,13 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         self.setFlightTrackModel(model)
 
         self.settings_tag = "sideview"
-        self.loadSettings()
+        self.load_settings()
 
         # Connect slots and signals.
         # ==========================
 
         # Buttons to set sideview options.
-        self.btOptions.clicked.connect(self.setOptions)
+        self.btOptions.clicked.connect(self.set_options)
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
@@ -265,29 +265,29 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 
-    def setOptions(self):
+    def set_options(self):
         """Slot to open a dialog that lets the user specifiy sideview options.
         """
-        settings = self.getView().getSettings()
+        settings = self.getView().get_settings()
         dlg = MSS_SV_OptionsDialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
-            settings = dlg.getSettings()
-            self.getView().setSettings(settings)
-            self.saveSettings()
+            settings = dlg.get_settings()
+            self.getView().set_settings(settings)
+            self.save_settings()
         dlg.destroy()
 
-    def saveSettings(self):
+    def save_settings(self):
         """Save the current settings (vertical extent, displayed flightlevels
            etc.) to the file self.settingsfile.
         """
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        settings = self.getView().getSettings()
+        settings = self.getView().get_settings()
         save_settings_pickle(self.settings_tag, settings)
 
-    def loadSettings(self):
+    def load_settings(self):
         """Load settings from the file self.settingsfile.
         """
         settings = load_settings_pickle(self.settings_tag)
-        self.getView().setSettings(settings)
+        self.getView().set_settings(settings)

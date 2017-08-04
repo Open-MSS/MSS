@@ -63,7 +63,7 @@ class Test_MSS_TV_MapAppearanceDialog(object):
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_get(self, mockcrit):
         assert mockcrit.critical.call_count == 0
-        self.window.getSettings()
+        self.window.get_settings()
         assert mockcrit.critical.call_count == 0
 
 
@@ -277,5 +277,5 @@ class Test_TopViewWMS(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
         QtWidgets.QApplication.processEvents()
-        self.window.mpl.canvas.redrawMap()
+        self.window.mpl.canvas.redraw_map()
         assert mockbox.critical.call_count == 0

@@ -133,7 +133,7 @@ class MSSMplViewWindow(MSSViewWindow):
         """
         self.waypoints_model = model
         if self.mpl is not None:
-            self.mpl.canvas.setWaypointsModel(model)
+            self.mpl.canvas.set_waypoints_model(model)
 
     def getView(self):
         """Return the MplCanvas instance of the window.

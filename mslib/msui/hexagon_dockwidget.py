@@ -101,7 +101,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                                         default=mss_default.new_flighttrack_flightlevel)
         else:
             row = index.row() + 1
-            flightlevel = waypoints_model.waypointData(row - 1).flightlevel
+            flightlevel = waypoints_model.waypoint_data(row - 1).flightlevel
         waypoints = []
         for i, point in enumerate(points):
             waypoints.append(
@@ -122,21 +122,21 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
             if not index.isValid():
                 raise HexagonException("A waypoint of the hexagon must be selected.")
             row = index.row()
-            comm = str(waypoints_model.waypointData(row).comments)
+            comm = str(waypoints_model.waypoint_data(row).comments)
             if len(comm) == 9 and comm.startswith("Hexagon "):
-                if (len(waypoints_model.allWaypointData()) - 7) < 2:  # = 3 waypoints + 7 hexagon points
+                if (len(waypoints_model.all_waypoint_data()) - 7) < 2:  # = 3 waypoints + 7 hexagon points
                     raise HexagonException("Cannot remove hexagon, the flight track needs to consist "
                                            "of at least two points.")
                 idx = int(comm[-1])
                 row_min = row - (idx - 1)
                 row_max = row + (7 - idx)
-                if row_min < 0 or row_max > len(waypoints_model.allWaypointData()):
+                if row_min < 0 or row_max > len(waypoints_model.all_waypoint_data()):
                     raise HexagonException("Cannot remove hexagon, hexagon is not complete "
                                            "(min, max = {:d}, {:d})".format(row_min, row_max))
                 else:
                     found_one = False
                     for i in range(0, row_max - row_min):
-                        if str(waypoints_model.waypointData(row_min + i).comments) != "Hexagon {:d}".format(i + 1):
+                        if str(waypoints_model.waypoint_data(row_min + i).comments) != "Hexagon {:d}".format(i + 1):
                             found_one = True
                             break
                     if found_one:

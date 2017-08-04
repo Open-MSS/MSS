@@ -100,7 +100,7 @@ class Test_TrajectoryToolComples(object):
         self.application = QtWidgets.QApplication(sys.argv)
 
         self.window = mss_pyui.MSSMainWindow()
-        self.window.createNewFlightTrack(activate=True)
+        self.window.create_new_flight_track(activate=True)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
