@@ -289,10 +289,15 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         NOTE: Performance computations loose their validity if a change is made.
         """
         if index.isValid() and 0 <= index.row() < len(self.waypoints):
-            if not USE_PYQT5:
-                value = value.toString()
-            elif isinstance(value, QtCore.QVariant):
-                value = value.value()
+            if isinstance(value, QtCore.QVariant):
+                if USE_PYQT5:
+                    value = value.value()
+                else:
+                    value_p, isok = value.toDouble()
+                    if isok:
+                        value = value_p
+                    else:
+                        value = value.toString()
             waypoint = self.waypoints[index.row()]
             column = index.column()
             index2 = index  # in most cases only one field is being changed
