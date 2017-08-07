@@ -89,7 +89,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             self.waypoints_model.performance_settings = dlg.get_settings()
             self.waypoints_model.update_distances(0)
-            self.waypoints_model.saveSettings()
+            self.waypoints_model.save_settings()
             self.resizeColumns()
         dlg.destroy()
 
@@ -106,7 +106,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             self.createDockWidget(index, title, widget)
 
     def invertDirection(self):
-        self.waypoints_model.invertDirection()
+        self.waypoints_model.invert_direction()
 
     def addWayPoint(self):
         """Handler for button <btAddWayPointToFlightTrack>. Adds a new waypoint
@@ -120,10 +120,10 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             flightlevel = 0
         else:
             row = index.row() + 1
-            flightlevel = self.waypoints_model.waypointData(row - 1).flightlevel
-            if row < len(self.waypoints_model.allWaypointData()):
-                wp_prev = self.waypoints_model.waypointData(row - 1)
-                wp_next = self.waypoints_model.waypointData(row)
+            flightlevel = self.waypoints_model.waypoint_data(row - 1).flightlevel
+            if row < len(self.waypoints_model.all_waypoint_data()):
+                wp_prev = self.waypoints_model.waypoint_data(row - 1)
+                wp_next = self.waypoints_model.waypoint_data(row)
                 gc = pyproj.Geod(ellps="WGS84")  # a=40e6, b=40e6)
                 lon, lat = gc.npts(wp_prev.lon, wp_prev.lat, wp_next.lon, wp_next.lat, 3)[1]
 
@@ -146,7 +146,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         If the flight track consists of only two points deleting a waypoint
         is not possible. In this case the user is informed correspondingly.
         """
-        wps = self.waypoints_model.allWaypointData()
+        wps = self.waypoints_model.all_waypoint_data()
         if len(wps) < 3:
             QtWidgets.QMessageBox.warning(
                 None, "Remove waypoint",

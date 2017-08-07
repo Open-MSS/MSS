@@ -166,7 +166,7 @@ class WaypointsPath(mpath.Path):
         """
         """
         Path = mpath.Path
-        wps = wps_model.allWaypointData()
+        wps = wps_model.all_waypoint_data()
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i, _ in enumerate(wps[1:]):
@@ -213,12 +213,12 @@ class PathV(WaypointsPath):
         waypoints makes no sense).
         """
         # Compute intermediate points.
-        lats, lons, times = wps_model.intermediatePoints(
+        lats, lons, times = wps_model.intermediate_points(
             numpoints=self.numintpoints, connection="greatcircle")
 
         # Determine indices of waypoints in list of intermediate points.
         # Store these indices.
-        waypoints = [[wp.lat, wp.lon] for wp in wps_model.allWaypointData()]
+        waypoints = [[wp.lat, wp.lon] for wp in wps_model.all_waypoint_data()]
         intermediate_indexes = []
         ipoint = 0
         for i, (lat, lon) in enumerate(zip(lats, lons)):
@@ -287,7 +287,7 @@ class PathH_GC(PathH):
         Path = mpath.Path
 
         # Waypoint coordinates.
-        wps = wps_model.allWaypointData()
+        wps = wps_model.all_waypoint_data()
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
@@ -559,7 +559,7 @@ class PathInteractor(object):
             wp.remove()
         self.wp_labels = []  # remove doesn't seem to be necessary
         x, y = list(zip(*vertices))
-        wpd = self.waypoints_model.allWaypointData()
+        wpd = self.waypoints_model.all_waypoint_data()
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
@@ -601,7 +601,7 @@ class PathInteractor(object):
         If the flight track consists of only two points deleting a waypoint
         is not possible. In this case the user is informed correspondingly.
         """
-        wps = self.waypoints_model.allWaypointData()
+        wps = self.waypoints_model.all_waypoint_data()
         if len(wps) < 3:
             QtWidgets.QMessageBox.warning(
                 None, "Remove waypoint",
@@ -785,7 +785,7 @@ class HPathInteractor(PathInteractor):
                                 marker='',
                                 label_waypoints=label_waypoints)
 
-    def appropriateEpsilon(self, px=5):
+    def appropriate_epsilon(self, px=5):
         """Determine an epsilon value appropriate for the current projection and
            figure size.
 
@@ -798,12 +798,11 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         width = int(round(ax_bounds[2]))
-        map_delta_x = abs(self.map.llcrnrx - self.map.urcrnrx)
+        map_delta_x = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx)
         map_coords_per_px_x = map_delta_x / width
-
         return map_coords_per_px_x * px
 
-    def appropriateEpsilon2(self, px=5):
+    def appropriate_epsilon_km(self, px=5):
         """Determine an epsilon value appropriate for the current projection and
            figure size.
 
@@ -816,9 +815,11 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
-        map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
+        if self.map.projection in ['stere', 'lcc']:
+            map_delta = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx) / 1000.
+        else:
+            map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
         km_per_px = map_delta / diagonal
-
         return km_per_px * px
 
     def button_release_callback(self, event):
@@ -837,28 +838,27 @@ class HPathInteractor(PathInteractor):
         elif self.editmode == INSERT and event.inaxes is not None:
             # Get position for new vertex.
             x, y = event.xdata, event.ydata
-            best_index = self.pathpatch.get_path() \
-                .index_of_closest_segment(x, y, eps=self.appropriateEpsilon())
+            best_index = self.pathpatch.get_path().index_of_closest_segment(
+                x, y, eps=self.appropriateEpsilon())
             logging.debug(u"TopView insert point: clicked at (%f, %f), "
                           u"best index: %d", x, y, best_index)
-            self.pathpatch.get_path().insert_vertex(best_index, [x, y],
-                                                    WaypointsPath.LINETO)
+            self.pathpatch.get_path().insert_vertex(best_index, [x, y], WaypointsPath.LINETO)
 
             lon, lat = self.map(x, y, inverse=True)
-            loc = find_location(lat, lon, tolerance=self.appropriateEpsilon2(px=15))
+            loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
             if loc is not None:
                 (lat, lon), location = loc
             else:
                 lat, lon = round(lat, 2), round(lon, 2)
                 location = u""
             wpm = self.waypoints_model
-            if len(wpm.allWaypointData()) > 0 and 0 < best_index <= len(wpm.allWaypointData()):
-                flightlevel = wpm.waypointData(best_index - 1).flightlevel
-            elif len(wpm.allWaypointData()) > 0 and best_index == 0:
-                flightlevel = wpm.waypointData(0).flightlevel
+            if len(wpm.all_waypoint_data()) > 0 and 0 < best_index <= len(wpm.all_waypoint_data()):
+                flightlevel = wpm.waypoint_data(best_index - 1).flightlevel
+            elif len(wpm.all_waypoint_data()) > 0 and best_index == 0:
+                flightlevel = wpm.waypoint_data(0).flightlevel
             else:
                 logging.error(u"Cannot copy flightlevel. best_index: %s, len: %s",
-                              best_index, len(wpm.allWaypointData()))
+                              best_index, len(wpm.all_waypoint_data()))
                 flightlevel = 0
             new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
             wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
@@ -869,7 +869,7 @@ class HPathInteractor(PathInteractor):
             vertices = self.pathpatch.get_path().wp_vertices
             lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
                                 inverse=True)
-            loc = find_location(lat, lon, tolerance=self.appropriateEpsilon2(px=15))
+            loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
             if loc is not None:
                 lat, lon = loc[0]
             else:
@@ -945,8 +945,8 @@ class HPathInteractor(PathInteractor):
         # necessary as scatter() does not provide a set_data method.
         self.line.set_data(list(zip(*vertices)))
 
-        wp_heights = [(wp.flightlevel * 0.03048) for wp in self.waypoints_model.allWaypointData()]
-        wp_times = [wp.utc_time for wp in self.waypoints_model.allWaypointData()]
+        wp_heights = [(wp.flightlevel * 0.03048) for wp in self.waypoints_model.all_waypoint_data()]
+        wp_times = [wp.utc_time for wp in self.waypoints_model.all_waypoint_data()]
 
         if self.tangent_lines is not None:
             self.tangent_lines.remove()
@@ -977,11 +977,11 @@ class HPathInteractor(PathInteractor):
                                           visible=self.showverts)
 
         # Draw waypoint labels.
-        label_offset = self.appropriateEpsilon(px=5)
+        label_offset = self.appropriate_epsilon(px=5)
         for wp_label in self.wp_labels:
             wp_label.remove()
         self.wp_labels = []  # remove doesn't seem to be necessary
-        wpd = self.waypoints_model.allWaypointData()
+        wpd = self.waypoints_model.all_waypoint_data()
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":

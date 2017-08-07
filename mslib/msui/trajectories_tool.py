@@ -414,7 +414,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
                 logging.debug(u"Connecting to view window <%s>",
                               view_window.identifier)
                 self.connected_views.append(view_window)
-                view.setTrajectoryModel(self.traj_item_tree)
+                view.set_trajectory_model(self.traj_item_tree)
 
     def removeCurrentItemFromView(self):
         """

@@ -62,6 +62,21 @@ except ImportError:
 
     USE_PYQT5 = True
 
+
+def localized_float(value):
+    if isinstance(value, float):
+        return value
+    try:
+        float_value, ok = QtCore.QLocale().toDouble(value)
+        if not ok:
+            raise ValueError
+    except TypeError:  # neither float nor string, try Python conversion
+        logging.error("Unexpected type in float conversion: %s=%s",
+                      type(value), value)
+        float_value = float(value)
+    return float_value
+
+
 # Import all Dialogues from the proper module directory.
 for mod in [
         "ui_about_dialog",
@@ -117,26 +132,31 @@ def excepthook(type_, value, traceback_):
     """
     This dumps the error to console, logging (i.e. logfile), and tries to open a MessageBox for GUI users.
     """
+    import mslib
+    import sys
+    import mslib.utils
     tb = "".join(traceback.format_exception(type_, value, traceback_))
     traceback.print_exception(type_, value, traceback_)
     logging.critical(u"Fatal error: %s", tb)
-    import mslib.utils
+    logging.critical(u"MSS Version: %s", mslib.__version__)
+    logging.critical(u"Platform: %s", sys.platform)
+
     if type_ is mslib.utils.FatalUserError:
         QtWidgets.QMessageBox.critical(
             None, u"fatal error",
-            u"Fatal error\n"
+            u"Fatal user error in MSS {} on {}\n"
             u"\n"
-            u"{}".format(value))
+            u"{}".format(mslib.__version__, sys.platform, value))
     else:
         QtWidgets.QMessageBox.critical(
             None, u"fatal error",
-            u"Fatal error\n"
+            u"Fatal error in MSS {} on {}\n"
             u"\n"
             u"Please report bugs in MSS to https://bitbucket.org/wxmetvis/mss\n"
             u"\n"
             u"Information about the fatal error:\n"
             u"\n"
-            u"{}".format(tb))
+            u"{}".format(mslib.__version__, sys.platform, tb))
     QtCore.qFatal('')
 
 

@@ -60,7 +60,7 @@ class Test_MSS_SV_OptionsDialog(object):
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_get(self, mockcrit):
-        self.window.getSettings()
+        self.window.get_settings()
         assert mockcrit.critical.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
@@ -76,11 +76,11 @@ class Test_MSS_SV_OptionsDialog(object):
         assert mockcrit.critical.call_count == 0
 
     def test_getFlightLevels(self):
-        levels = self.window.getFlightLevels()
+        levels = self.window.get_flight_levels()
         assert all(x == y for x, y in zip(levels, [300, 320, 340]))
         QtTest.QTest.mouseClick(self.window.btAdd, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        levels = self.window.getFlightLevels()
+        levels = self.window.get_flight_levels()
         assert all(x == y for x, y in zip(levels, [0, 300, 320, 340]))
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())

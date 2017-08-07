@@ -57,9 +57,9 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         """Returns a list containing the datatypes required by the
            data fields requested by the style.
         """
-        result = [datafield[0] for datafield in self.required_datafields]
+        result = set([datafield[0] for datafield in self.required_datafields])
         if len(result) > 2 and "sfc" not in result:
-            msg = "A Plot may contain only 'sfc' and *one* 4-D type! ({})".format(type(self))
+            msg = "A Plot may contain only 'sfc' and *one* 4-D type! ({}: {})".format(type(self), result)
             logging.fatal(msg)
             raise RuntimeError(msg)
         return result

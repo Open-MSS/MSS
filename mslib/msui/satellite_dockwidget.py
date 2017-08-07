@@ -119,15 +119,15 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         self.overpass_segments = None
 
         # Connect slots and signals.
-        self.btSelectFile.clicked.connect(self.selectFile)
-        self.btLoadFile.clicked.connect(self.loadFile)
-        self.cbSatelliteOverpasses.currentIndexChanged.connect(self.plotOverpassTrack)
+        self.btSelectFile.clicked.connect(self.select_file)
+        self.btLoadFile.clicked.connect(self.load_file)
+        self.cbSatelliteOverpasses.currentIndexChanged.connect(self.plot_overpass_track)
 
         self.settings_tag = "satellitedock"
         settings = load_settings_pickle(self.settings_tag, {"filename": ""})
         self.leFile.setText(settings["filename"])
 
-    def selectFile(self):
+    def select_file(self):
         """Slot that opens a file dialog to choose a file with satellite
            overpass predictions.
         """
@@ -140,7 +140,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         self.leFile.setText(filename)
         save_settings_pickle(self.settings_tag, {"filename": filename})
 
-    def loadFile(self):
+    def load_file(self):
         """Load the file specified in leFile and fill the combobox with the
            available track segments.
         """
@@ -164,7 +164,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
 
             self.overpass_segments = overpass_segments
 
-    def plotOverpassTrack(self, index):
+    def plot_overpass_track(self, index):
         """
         """
         index -= 1
@@ -173,4 +173,4 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         if 0 <= index < len(self.overpass_segments):
             segment = self.overpass_segments[index]
         if self.view is not None:
-            self.view.plotSatelliteOverpass(segment)
+            self.view.plot_satellite_overpass(segment)

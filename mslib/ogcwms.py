@@ -133,8 +133,8 @@ def openURL(url_base, data=None, method='Get', cookies=None,
         req.raise_for_status()
 
     # check for service exceptions without the http header set
-    if 'Content-Type' in req.headers and req.headers['Content-Type'] in ['text/xml', 'application/xml',
-                                                                         'application/vnd.ogc.se_xml']:
+    if 'Content-Type' in req.headers and req.headers['Content-Type'] in [
+            'text/xml', 'application/xml', 'application/vnd.ogc.se_xml', 'application/vnd.ogc.wms_xml']:
         # just in case 400 headers were not set, going to have to read the xml to see if it's an exception report.
         se_tree = etree.fromstring(req.content)
 
