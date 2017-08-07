@@ -2,6 +2,20 @@ Changelog
 =========
 
 
+Version 1.5.6
+-------------
+
+Bug Fixes:
+ - Using non-US locale and pyqt4, moving points with mouse may not work, #255
+
+
+Version 1.5.5
+-------------
+
+Bug Fixes:
+ - Changing WP in TopView and SideView by mouse broken, #248
+
+
 Version 1.5.4
 -------------
 
