@@ -839,7 +839,7 @@ class HPathInteractor(PathInteractor):
             # Get position for new vertex.
             x, y = event.xdata, event.ydata
             best_index = self.pathpatch.get_path().index_of_closest_segment(
-                x, y, eps=self.appropriateEpsilon())
+                x, y, eps=self.appropriate_epsilon())
             logging.debug(u"TopView insert point: clicked at (%f, %f), "
                           u"best index: %d", x, y, best_index)
             self.pathpatch.get_path().insert_vertex(best_index, [x, y], WaypointsPath.LINETO)

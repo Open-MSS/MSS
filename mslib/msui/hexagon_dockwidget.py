@@ -43,18 +43,18 @@ class HexagonException(Exception):
 
 def create_hexagon(center_lat, center_lon, radius, angle=0.):
     coords_0 = (radius, 0.)
-    CoordsCart_0 = [rotate_point(coords_0, angle=0. + angle),
-                    rotate_point(coords_0, angle=60. + angle),
-                    rotate_point(coords_0, angle=120. + angle),
-                    rotate_point(coords_0, angle=180. + angle),
-                    rotate_point(coords_0, angle=240. + angle),
-                    rotate_point(coords_0, angle=300. + angle),
-                    rotate_point(coords_0, angle=360. + angle)]
-    CoordsSphere_rot = [
+    coords_cart_0 = [rotate_point(coords_0, angle=0. + angle),
+                     rotate_point(coords_0, angle=60. + angle),
+                     rotate_point(coords_0, angle=120. + angle),
+                     rotate_point(coords_0, angle=180. + angle),
+                     rotate_point(coords_0, angle=240. + angle),
+                     rotate_point(coords_0, angle=300. + angle),
+                     rotate_point(coords_0, angle=360. + angle)]
+    coords_sphere_rot = [
         (center_lat + (vec[0] / 110.),
          center_lon + (vec[1] / (110. * np.cos(np.deg2rad((vec[0] / 110.) + center_lat)))))
-        for vec in CoordsCart_0]
-    return CoordsSphere_rot
+        for vec in coords_cart_0]
+    return coords_sphere_rot
 
 
 class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):

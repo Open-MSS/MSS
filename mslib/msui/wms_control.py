@@ -1649,7 +1649,7 @@ class VSecWMSControlWidget(WMSControlWidget):
 
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
-        width, height = self.view.getPlotSizePx()
+        width, height = self.view.get_plot_size_in_px()
 
         # Retrieve the image.
         self.retrieve_image(crs, bbox, path_string, width, height)
@@ -1662,10 +1662,10 @@ class VSecWMSControlWidget(WMSControlWidget):
             style_title = self.get_layer_object(layer).styles[style]["title"]
         else:
             style_title = None
-        self.view.drawMetadata(title=self.get_layer_object(layer).title,
-                               init_time=init_time,
-                               valid_time=valid_time,
-                               style=style_title)
+        self.view.draw_metadata(title=self.get_layer_object(layer).title,
+                                init_time=init_time,
+                                valid_time=valid_time,
+                                style=style_title)
 
 
 #
@@ -1713,7 +1713,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         bbox = self.view.getBBOX()
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
-        width, height = self.view.getPlotSizePx()
+        width, height = self.view.get_plot_size_in_px()
         # Retrieve the image.
         self.retrieve_image(crs, bbox, None, width, height)
 
@@ -1723,11 +1723,11 @@ class HSecWMSControlWidget(WMSControlWidget):
             style_title = self.get_layer_object(layer).styles[style]["title"]
         else:
             style_title = None
-        self.view.drawMetadata(title=self.get_layer_object(layer).title,
-                               init_time=init_time,
-                               valid_time=valid_time,
-                               level=level,
-                               style=style_title)
+        self.view.draw_metadata(title=self.get_layer_object(layer).title,
+                                init_time=init_time,
+                                valid_time=valid_time,
+                                level=level,
+                                style=style_title)
         self.view.draw_image(img)
         self.view.draw_legend(legend_img)
         self.view.waypoints_interactor.update()
