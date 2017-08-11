@@ -29,7 +29,7 @@
 from future import standard_library
 standard_library.install_aliases()
 
-from past.builtins import basestring
+from past.builtins import basestring, unicode
 from builtins import str
 
 import time

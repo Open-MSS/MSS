@@ -46,7 +46,7 @@ import xml.dom.minidom
 import xml.parsers.expat
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, localized_float, USE_PYQT5
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, variant_to_string, variant_to_float, USE_PYQT5
 
 # local application imports
 from mslib import utils
@@ -289,25 +289,16 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         NOTE: Performance computations loose their validity if a change is made.
         """
         if index.isValid() and 0 <= index.row() < len(self.waypoints):
-            if isinstance(value, QtCore.QVariant):
-                if USE_PYQT5:
-                    value = value.value()
-                else:
-                    value_p, isok = value.toDouble()
-                    if isok:
-                        value = value_p
-                    else:
-                        value = value.toString()
             waypoint = self.waypoints[index.row()]
             column = index.column()
             index2 = index  # in most cases only one field is being changed
             if column == LOCATION:
-                waypoint.location = value
+                waypoint.location = variant_to_string(value)
             elif column == LAT:
                 try:
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
-                    value = localized_float(value)
+                    value = variant_to_float(value)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
@@ -315,7 +306,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 else:
                     waypoint.lat = value
                     waypoint.location = u""
-                    loc = find_location(waypoint.lat, waypoint.lon, 0)
+                    loc = find_location(waypoint.lat, waypoint.lon, 1e-3)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
                         waypoint.location = loc[1]
@@ -332,7 +323,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 try:
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
-                    value = localized_float(value)
+                    value = variant_to_float(value)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
@@ -340,7 +331,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 else:
                     waypoint.lon = value
                     waypoint.location = u""
-                    loc = find_location(waypoint.lat, waypoint.lon, 0)
+                    loc = find_location(waypoint.lat, waypoint.lon, 1e-3)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
                         waypoint.location = loc[1]
@@ -351,7 +342,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 try:
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
-                    flightlevel = localized_float(value)
+                    flightlevel = variant_to_float(value)
                     pressure = thermolib.flightlevel2pressure(flightlevel)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
@@ -369,7 +360,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 try:
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
-                    pressure = localized_float(value) * 100  # convert hPa to Pa
+                    pressure = variant_to_float(value) * 100  # convert hPa to Pa
                     if pressure > 200000:
                         raise ValueError
                     flightlevel = round(thermolib.pressure2flightlevel(pressure))
@@ -385,7 +376,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                         self.update_distances(index.row())
                     index2 = self.createIndex(index.row(), FLIGHTLEVEL)
             else:
-                waypoint.comments = value
+                waypoint.comments = variant_to_string(value)
             self.modified = True
             # Performance computations loose their validity if a change is made.
             self.dataChanged.emit(index, index2)
