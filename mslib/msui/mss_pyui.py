@@ -633,7 +633,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 for idx in range(self.listFlightTracks.count()):
                     if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
                         self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
-                self.lblActiveFlightTrack.setText(self.active_flight_track.name)
             else:
                 QtWidgets.QMessageBox.warning(self, "Save flight track",
                                               u"File extension is not '.ftml'!\n{:}".format(filename))
@@ -644,10 +643,14 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            displayed at a time).
         """
         self.active_flight_track = item.flighttrack_model
-        self.lblActiveFlightTrack.setText(item.flighttrack_model.name)
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
             view_item.window.setFlightTrackModel(self.active_flight_track)
+        font = QtGui.QFont()
+        for i in range(self.listFlightTracks.count()):
+            self.listFlightTracks.item(i).setFont(font)
+        font.setBold(True)
+        item.setFont(font)
 
     def show_online_help(self):
         """Open Documentation in a browser"""
