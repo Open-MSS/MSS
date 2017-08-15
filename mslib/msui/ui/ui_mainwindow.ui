@@ -75,26 +75,16 @@
         <widget class="QListWidget" name="listFlightTracks">
          <property name="toolTip">
           <string>List of open flight tracks.
-Double-click a flight track to rename it.</string>
+Double-click a flight track to activate it.
+Save a flight track to name it.</string>
          </property>
          <property name="alternatingRowColors">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
          <property name="textElideMode">
           <enum>Qt::ElideNone</enum>
          </property>
         </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <widget class="QPushButton" name="btSelectFlightTrack">
-           <property name="text">
-            <string>set selected flight track active</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
       </layout>
      </widget>

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'ui/ui_mainwindow.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -64,16 +64,10 @@ class Ui_MSSMainWindow(object):
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.verticalLayout_6.addWidget(self.label_2)
         self.listFlightTracks = QtGui.QListWidget(self.groupBox_3)
-        self.listFlightTracks.setAlternatingRowColors(True)
+        self.listFlightTracks.setAlternatingRowColors(False)
         self.listFlightTracks.setTextElideMode(QtCore.Qt.ElideNone)
         self.listFlightTracks.setObjectName(_fromUtf8("listFlightTracks"))
         self.verticalLayout_6.addWidget(self.listFlightTracks)
-        self.horizontalLayout_3 = QtGui.QHBoxLayout()
-        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
-        self.btSelectFlightTrack = QtGui.QPushButton(self.groupBox_3)
-        self.btSelectFlightTrack.setObjectName(_fromUtf8("btSelectFlightTrack"))
-        self.horizontalLayout_3.addWidget(self.btSelectFlightTrack)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_3)
         self.verticalLayout.addWidget(self.groupBox_3)
         self.groupBox = QtGui.QGroupBox(self.centralwidget)
         self.groupBox.setFlat(True)
@@ -180,8 +174,8 @@ class Ui_MSSMainWindow(object):
         self.lblActiveFlightTrack.setText(_translate("MSSMainWindow", "(active flight track)", None))
         self.label_2.setText(_translate("MSSMainWindow", "Open flight tracks:", None))
         self.listFlightTracks.setToolTip(_translate("MSSMainWindow", "List of open flight tracks.\n"
-"Double-click a flight track to rename it.", None))
-        self.btSelectFlightTrack.setText(_translate("MSSMainWindow", "set selected flight track active", None))
+"Double-click a flight track to activate it.\n"
+"Save a flight track to name it.", None))
         self.groupBox.setTitle(_translate("MSSMainWindow", "Open Views:", None))
         self.listViews.setToolTip(_translate("MSSMainWindow", "Double-click a view to bring it to the front.", None))
         self.groupBox_2.setTitle(_translate("MSSMainWindow", "Open Tools:", None))
