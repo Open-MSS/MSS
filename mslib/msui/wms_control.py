@@ -1320,20 +1320,20 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if USE_PYQT5:
             return self.cbLayer.currentText().split(" | ")[-1]
         else:
-            return unicode(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
+            return str(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
 
     def get_style(self):
         if USE_PYQT5:
             return self.cbStyle.currentText().split(" |")[0]
         else:
-            return unicode(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
+            return str(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
 
     def get_level(self):
         if self.cbLevelOn.isChecked():
             if USE_PYQT5:
                 return self.cbLevel.currentText().split(" (")[0]
             else:
-                return unicode(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
+                return str(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
         else:
             return None
 
@@ -1692,7 +1692,7 @@ class HSecWMSControlWidget(WMSControlWidget):
             if USE_PYQT5:
                 s = self.cbLevel.currentText()
             else:
-                s = unicode(self.cbLevel.currentText(), errors="ignore")
+                s = str(self.cbLevel.currentText(), errors="ignore")
             if s == "":
                 return
             lvl = float(s.split(" (")[0])
