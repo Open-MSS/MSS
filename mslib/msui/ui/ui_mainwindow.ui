@@ -113,10 +113,13 @@ Save a flight track to name it.</string>
     </widget>
     <addaction name="actionNewFlightTrack"/>
     <addaction name="actionOpenFlightTrack"/>
-    <addaction name="actionCloseSelectedFlightTrack"/>
+    <addaction name="separator"/>
+    <addaction name="actionActivateSelectedFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
+    <addaction name="separator"/>
+    <addaction name="actionCloseSelectedFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="menuImport_Flight_Track"/>
     <addaction name="menuExport_Active_Flight_Track"/>
@@ -164,7 +167,7 @@ Save a flight track to name it.</string>
   </action>
   <action name="actionNewFlightTrack">
    <property name="text">
-    <string>&amp;New Flight Track...</string>
+    <string>&amp;New Flight Track</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -195,20 +198,32 @@ Save a flight track to name it.</string>
    <property name="text">
     <string>&amp;Close Selected Flight Track</string>
    </property>
+   <property name="shortcut">
+    <string/>
+   </property>
   </action>
   <action name="actionTopView">
    <property name="text">
     <string>&amp;Top View (Horizontal Section)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
    </property>
   </action>
   <action name="actionSideView">
    <property name="text">
     <string>&amp;Side View (Vertical Section)</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
   </action>
   <action name="actionTableView">
    <property name="text">
     <string>T&amp;able View</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
   <action name="actionLoopView">
@@ -239,6 +254,14 @@ Save a flight track to name it.</string>
   <action name="actionOnlineHelp">
    <property name="text">
     <string>Online &amp;Help</string>
+   </property>
+  </action>
+  <action name="actionActivateSelectedFlightTrack">
+   <property name="text">
+    <string>Activate Selected Flight Track</string>
+   </property>
+   <property name="shortcut">
+    <string/>
    </property>
   </action>
  </widget>
