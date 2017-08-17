@@ -29,6 +29,7 @@ import importlib
 import logging
 import traceback
 import sys
+from past.builtins import unicode
 
 USE_PYQT5 = False
 try:
@@ -44,6 +45,27 @@ try:
     from PyQt4.QtCore import QString  # import QString as this does not exist in PyQt5
 
     QtTest.QTest.qWaitForWindowExposed = QtTest.QTest.qWaitForWindowShown
+
+    def value(self):
+        """
+        Backport of needed stuff from PyQt5 value function
+        """
+        if self.typeName() in ["float", "double"]:
+            result, ok = self.toDouble()
+            if not ok:
+                raise RuntimeError("Problem in converting: {}".format(self))
+            return result
+        if self.typeName() in ["int"]:
+            result, ok = self.toInt()
+            if not ok:
+                raise RuntimeError("Problem in converting: {}".format(self))
+            return result
+        if self.typeName() in ["QString"]:
+            return self.toString()
+        raise RuntimeError("Unsupported type in conversion: {}".format(self.typeName()))
+
+    QtCore.QVariant.value = value
+
     _qt_ui_prefix = "mslib.msui.qt4."
 
 except ImportError:
@@ -63,11 +85,17 @@ except ImportError:
     USE_PYQT5 = True
 
 
-def localized_float(value):
-    if isinstance(value, float):
+def variant_to_string(variant):
+    return unicode(variant.value())
+
+
+def variant_to_float(variant, locale=QtCore.QLocale()):
+    value = variant.value()
+
+    if isinstance(value, (int, float)):
         return value
     try:
-        float_value, ok = QtCore.QLocale().toDouble(value)
+        float_value, ok = locale.toDouble(value)
         if not ok:
             raise ValueError
     except TypeError:  # neither float nor string, try Python conversion

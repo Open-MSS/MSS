@@ -98,8 +98,8 @@ class MplCanvas(FigureCanvas):
             result = result[:100]
         return result + ".png"
 
-    def drawMetadata(self, title="", init_time=None, valid_time=None,
-                     level=None, style=None):
+    def draw_metadata(self, title="", init_time=None, valid_time=None,
+                      level=None, style=None):
         """Draw a title indicating the init and valid time of the
            image that has been drawn, and the vertical elevation level.
         """
@@ -137,7 +137,7 @@ class MplCanvas(FigureCanvas):
         # without the repaint the title is not properly updated
         self.repaint()
 
-    def getPlotSizePx(self):
+    def get_plot_size_in_px(self):
         """Determines the size of the current figure in pixels.
 
         Returns the tuple width, height.
@@ -661,7 +661,7 @@ class MplTopViewCanvas(MplCanvas):
         if self.kmloverlay:
             self.kmloverlay.update()
 
-        self.drawMetadata("Top view")
+        self.draw_metadata("Top view")
 
         # Update in case of a projection change
         self.waypoints_interactor.update()
@@ -854,13 +854,13 @@ class MplTopViewWidget(MplNavBarWidget):
            Redraws the map after the user has zoomed or panned the image.
         """
         if self.navbar.mode in ["zoom rect", "pan/zoom"]:
-            self.canvas.redrawMap()
+            self.canvas.redraw_map()
 
     def historyEvent(self):
         """Slot to react to clicks on one of the history buttons in the
            navigation toolbar. Redraws the image.
         """
-        self.canvas.redrawMap()
+        self.canvas.redraw_map()
 
 
 class MplTimeSeriesViewCanvas(MplCanvas):
