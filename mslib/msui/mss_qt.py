@@ -29,6 +29,8 @@ import importlib
 import logging
 import traceback
 import sys
+from builtins import str
+import platform
 
 USE_PYQT5 = False
 try:
@@ -44,6 +46,27 @@ try:
     from PyQt4.QtCore import QString  # import QString as this does not exist in PyQt5
 
     QtTest.QTest.qWaitForWindowExposed = QtTest.QTest.qWaitForWindowShown
+
+    def value(self):
+        """
+        Backport of needed stuff from PyQt5 value function
+        """
+        if self.typeName() in ["float", "double"]:
+            result, ok = self.toDouble()
+            if not ok:
+                raise RuntimeError("Problem in converting: {}".format(self))
+            return result
+        if self.typeName() in ["int"]:
+            result, ok = self.toInt()
+            if not ok:
+                raise RuntimeError("Problem in converting: {}".format(self))
+            return result
+        if self.typeName() in ["QString"]:
+            return self.toString()
+        raise RuntimeError("Unsupported type in conversion: {}".format(self.typeName()))
+
+    QtCore.QVariant.value = value
+
     _qt_ui_prefix = "mslib.msui.qt4."
 
 except ImportError:
@@ -63,11 +86,17 @@ except ImportError:
     USE_PYQT5 = True
 
 
-def localized_float(value):
-    if isinstance(value, float):
+def variant_to_string(variant):
+    return str(variant.value())
+
+
+def variant_to_float(variant, locale=QtCore.QLocale()):
+    value = variant.value()
+
+    if isinstance(value, (int, float)):
         return value
     try:
-        float_value, ok = QtCore.QLocale().toDouble(value)
+        float_value, ok = locale.toDouble(value)
         if not ok:
             raise ValueError
     except TypeError:  # neither float nor string, try Python conversion
@@ -133,30 +162,32 @@ def excepthook(type_, value, traceback_):
     This dumps the error to console, logging (i.e. logfile), and tries to open a MessageBox for GUI users.
     """
     import mslib
-    import sys
     import mslib.utils
     tb = "".join(traceback.format_exception(type_, value, traceback_))
     traceback.print_exception(type_, value, traceback_)
-    logging.critical(u"Fatal error: %s", tb)
     logging.critical(u"MSS Version: %s", mslib.__version__)
-    logging.critical(u"Platform: %s", sys.platform)
+    logging.critical(u"Python Version: %s", sys.version)
+    logging.critical(u"Platform: %s (%s)", platform.platform(), platform.architecture())
+    logging.critical(u"Fatal error: %s", tb)
 
     if type_ is mslib.utils.FatalUserError:
         QtWidgets.QMessageBox.critical(
             None, u"fatal error",
             u"Fatal user error in MSS {} on {}\n"
+            u"Python {}\n"
             u"\n"
-            u"{}".format(mslib.__version__, sys.platform, value))
+            u"{}".format(mslib.__version__, platform.platform(), sys.version, value))
     else:
         QtWidgets.QMessageBox.critical(
             None, u"fatal error",
             u"Fatal error in MSS {} on {}\n"
+            u"Python {}\n"
             u"\n"
             u"Please report bugs in MSS to https://bitbucket.org/wxmetvis/mss\n"
             u"\n"
             u"Information about the fatal error:\n"
             u"\n"
-            u"{}".format(mslib.__version__, sys.platform, tb))
+            u"{}".format(mslib.__version__, platform.platform(), sys.version, tb))
     QtCore.qFatal('')
 
 

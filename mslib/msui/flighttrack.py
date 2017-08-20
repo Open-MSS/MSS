@@ -36,17 +36,17 @@
 
 from __future__ import division
 
-from past.builtins import basestring
 from builtins import str
 
 import datetime
 import codecs
 import logging
+import os
 import xml.dom.minidom
 import xml.parsers.expat
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, localized_float, USE_PYQT5
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, variant_to_string, variant_to_float, USE_PYQT5
 
 # local application imports
 from mslib import utils
@@ -109,7 +109,7 @@ class Waypoint(object):
         self.pressure = thermolib.flightlevel2pressure(flightlevel)
         self.distance_to_prev = 0.
         self.distance_total = 0.
-        self._comments = comments
+        self.comments = comments
 
         # Performance fields (for values read from the flight performance
         # service).
@@ -123,23 +123,12 @@ class Waypoint(object):
         self.wpnumber_major = None
         self.wpnumber_minor = None
 
-    def get_comments(self):
-        return self._comments
-
-    def set_comments(self, string):
-        if isinstance(string, basestring):
-            self._comments = QString(string)
-        else:
-            self._comments = string
-
-    comments = property(get_comments, set_comments)
-
     def __str__(self):
         """String representation of the waypoint (e.g., when used with the print
            statement).
         """
-        return "WAYPOINT(LAT={:f}, LON={:f}, FL={:f})".format(self.lat, self.lon,
-                                                              self.flightlevel)
+        return "WAYPOINT(LAT={:f}, LON={:f}, FL={:f})".format(
+            self.lat, self.lon, self.flightlevel)
 
 
 class WaypointsTableModel(QtCore.QAbstractTableModel):
@@ -187,10 +176,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         save_settings_pickle(self.settings_tag, self.performance_settings)
-
-    def set_name(self, name):
-        self.name = name
-        self.modified = True
 
     def flags(self, index):
         """Used to specify which table columns can be edited by the user;
@@ -289,25 +274,16 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         NOTE: Performance computations loose their validity if a change is made.
         """
         if index.isValid() and 0 <= index.row() < len(self.waypoints):
-            if isinstance(value, QtCore.QVariant):
-                if USE_PYQT5:
-                    value = value.value()
-                else:
-                    value_p, isok = value.toDouble()
-                    if isok:
-                        value = value_p
-                    else:
-                        value = value.toString()
             waypoint = self.waypoints[index.row()]
             column = index.column()
             index2 = index  # in most cases only one field is being changed
             if column == LOCATION:
-                waypoint.location = value
+                waypoint.location = variant_to_string(value)
             elif column == LAT:
                 try:
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
-                    value = localized_float(value)
+                    value = variant_to_float(value)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
@@ -315,7 +291,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 else:
                     waypoint.lat = value
                     waypoint.location = u""
-                    loc = find_location(waypoint.lat, waypoint.lon, 0)
+                    loc = find_location(waypoint.lat, waypoint.lon, 1e-3)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
                         waypoint.location = loc[1]
@@ -332,7 +308,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 try:
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
-                    value = localized_float(value)
+                    value = variant_to_float(value)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
@@ -340,7 +316,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 else:
                     waypoint.lon = value
                     waypoint.location = u""
-                    loc = find_location(waypoint.lat, waypoint.lon, 0)
+                    loc = find_location(waypoint.lat, waypoint.lon, 1e-3)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
                         waypoint.location = loc[1]
@@ -351,7 +327,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 try:
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
-                    flightlevel = localized_float(value)
+                    flightlevel = variant_to_float(value)
                     pressure = thermolib.flightlevel2pressure(flightlevel)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
@@ -369,7 +345,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 try:
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
-                    pressure = localized_float(value) * 100  # convert hPa to Pa
+                    pressure = variant_to_float(value) * 100  # convert hPa to Pa
                     if pressure > 200000:
                         raise ValueError
                     flightlevel = round(thermolib.pressure2flightlevel(pressure))
@@ -385,7 +361,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                         self.update_distances(index.row())
                     index2 = self.createIndex(index.row(), FLIGHTLEVEL)
             else:
-                waypoint.comments = value
+                waypoint.comments = variant_to_string(value)
             self.modified = True
             # Performance computations loose their validity if a change is made.
             self.dataChanged.emit(index, index2)
@@ -545,20 +521,16 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     specified filename will be used. If no filename has been
                     specified at all, a ValueError exception will be raised.
         """
-        if filename:
-            self.filename = filename
-        if not self.filename:
-            raise ValueError("filename to save flight track cannot be None")
+        if not filename:
+            raise ValueError("filename to save flight track cannot be None or empty")
+
+        self.filename = filename
+        self.name = os.path.basename(filename.replace(".ftml", "").strip())
 
         doc = xml.dom.minidom.Document()
 
         ft_el = doc.createElement("FlightTrack")
         doc.appendChild(ft_el)
-
-        # Element that contains the name of the flight track.
-        name_el = doc.createElement("Name")
-        name_el.appendChild(doc.createTextNode(self.name))
-        ft_el.appendChild(name_el)
 
         # The list of waypoint elements.
         wp_el = doc.createElement("ListOfWaypoints")
@@ -588,8 +560,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         ft_el = doc.getElementsByTagName("FlightTrack")[0]
 
-        name_el = ft_el.getElementsByTagName("Name")[0]
-        self.name = name_el.childNodes[0].data.strip()
+        self.name = os.path.basename(filename.replace(".ftml", "").strip())
 
         waypoints_list = []
         for wp_el in ft_el.getElementsByTagName("Waypoint"):
@@ -692,7 +663,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                 model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
             else:
                 for wp in self.parent().waypoints_model.all_waypoint_data():
-                    if loc == wp.location:
+                    if loc == str(wp.location):
                         lat, lon = wp.lat, wp.lon
                         # Don't update distances and flight performance twice, hence
                         # set update=False for LAT.

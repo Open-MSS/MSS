@@ -31,7 +31,9 @@ from __future__ import division
 
 from builtins import str
 
-import csv
+import unicodecsv as csv
+import os
+
 import mslib.msui.flighttrack as ft
 
 
@@ -39,19 +41,19 @@ def save_to_csv(filename, name, waypoints):
     if not filename:
         raise ValueError("filename to save flight track cannot be None")
     with open(filename, "w") as out_file:
-        csv_writer = csv.writer(out_file, dialect='excel', delimiter=";", lineterminator="\n")
-        csv_writer.writerow([name.encode("ascii", "replace")])
+        csv_writer = csv.writer(out_file, encoding="utf-8", dialect='excel', delimiter=";", lineterminator="\n")
+        csv_writer.writerow([str(name)])
         csv_writer.writerow(["Index", "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
                              "Leg dist. (km)", "Cum. dist. (km)", "Comments"])
         for i, wp in enumerate(waypoints):
-            loc = str(wp.location).encode("ascii", "replace")
+            loc = str(wp.location)
             lat = "{:.3f}".format(wp.lat)
             lon = "{:.3f}".format(wp.lon)
             lvl = "{:.3f}".format(wp.flightlevel)
             pre = "{:.3f}".format(wp.pressure / 100.)
             leg = "{:.3f}".format(wp.distance_to_prev)
             cum = "{:.3f}".format(wp.distance_total)
-            com = str(wp.comments).encode("ascii", "replace")
+            com = str(wp.comments)
             csv_writer.writerow([i, loc, lat, lon, lvl, pre, leg, cum, com])
 
 
@@ -62,7 +64,7 @@ def load_from_csv(filename):
     if len(lines) < 4:
         raise SyntaxError("CSV file requires at least 4 lines!")
     dialect = csv.Sniffer().sniff(lines[-1])
-    csv_reader = csv.reader(lines, dialect=dialect)
+    csv_reader = csv.reader(lines, encoding="utf-8", dialect=dialect)
     name = next(csv_reader)[0]
     next(csv_reader)  # header
     for row in csv_reader:
@@ -76,4 +78,5 @@ def load_from_csv(filename):
         wp.distance_total = float(row[7])
         wp.comments = row[8]
         waypoints.append(wp)
+    name = os.path.basename(filename.replace(".csv", "").strip())
     return name, waypoints

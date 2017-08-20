@@ -29,7 +29,7 @@
 from future import standard_library
 standard_library.install_aliases()
 
-from past.builtins import basestring
+from past.builtins import basestring, unicode
 from builtins import str
 
 import time
@@ -1320,20 +1320,20 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if USE_PYQT5:
             return self.cbLayer.currentText().split(" | ")[-1]
         else:
-            return unicode(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
+            return str(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
 
     def get_style(self):
         if USE_PYQT5:
             return self.cbStyle.currentText().split(" |")[0]
         else:
-            return unicode(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
+            return str(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
 
     def get_level(self):
         if self.cbLevelOn.isChecked():
             if USE_PYQT5:
                 return self.cbLevel.currentText().split(" (")[0]
             else:
-                return unicode(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
+                return str(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
         else:
             return None
 
@@ -1649,7 +1649,7 @@ class VSecWMSControlWidget(WMSControlWidget):
 
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
-        width, height = self.view.getPlotSizePx()
+        width, height = self.view.get_plot_size_in_px()
 
         # Retrieve the image.
         self.retrieve_image(crs, bbox, path_string, width, height)
@@ -1662,10 +1662,10 @@ class VSecWMSControlWidget(WMSControlWidget):
             style_title = self.get_layer_object(layer).styles[style]["title"]
         else:
             style_title = None
-        self.view.drawMetadata(title=self.get_layer_object(layer).title,
-                               init_time=init_time,
-                               valid_time=valid_time,
-                               style=style_title)
+        self.view.draw_metadata(title=self.get_layer_object(layer).title,
+                                init_time=init_time,
+                                valid_time=valid_time,
+                                style=style_title)
 
 
 #
@@ -1692,7 +1692,7 @@ class HSecWMSControlWidget(WMSControlWidget):
             if USE_PYQT5:
                 s = self.cbLevel.currentText()
             else:
-                s = unicode(self.cbLevel.currentText(), errors="ignore")
+                s = str(self.cbLevel.currentText(), errors="ignore")
             if s == "":
                 return
             lvl = float(s.split(" (")[0])
@@ -1713,7 +1713,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         bbox = self.view.getBBOX()
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
-        width, height = self.view.getPlotSizePx()
+        width, height = self.view.get_plot_size_in_px()
         # Retrieve the image.
         self.retrieve_image(crs, bbox, None, width, height)
 
@@ -1723,11 +1723,11 @@ class HSecWMSControlWidget(WMSControlWidget):
             style_title = self.get_layer_object(layer).styles[style]["title"]
         else:
             style_title = None
-        self.view.drawMetadata(title=self.get_layer_object(layer).title,
-                               init_time=init_time,
-                               valid_time=valid_time,
-                               level=level,
-                               style=style_title)
+        self.view.draw_metadata(title=self.get_layer_object(layer).title,
+                                init_time=init_time,
+                                valid_time=valid_time,
+                                level=level,
+                                style=style_title)
         self.view.draw_image(img)
         self.view.draw_legend(legend_img)
         self.view.waypoints_interactor.update()

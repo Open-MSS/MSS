@@ -157,7 +157,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that an aborted getmap call does not change the displayed image
         """
         self.query_server("http://127.0.0.1:8082")
-
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(20)
@@ -165,9 +164,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
-        assert self.view.drawImage.call_count == 0
-        assert self.view.drawLegend.call_count == 0
-        assert self.view.drawMetadata.call_count == 0
+        assert self.view.draw_image.call_count == 0
+        assert self.view.draw_legend.call_count == 0
+        assert self.view.draw_metadata.call_count == 0
         self.view.reset_mock()
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
@@ -184,9 +183,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.qWait(6000)
         assert mockbox.critical.call_count == 0
 
-        assert self.view.drawImage.call_count == 1
-        assert self.view.drawLegend.call_count == 1
-        assert self.view.drawMetadata.call_count == 1
+        assert self.view.draw_image.call_count == 1
+        assert self.view.draw_legend.call_count == 1
+        assert self.view.draw_metadata.call_count == 1
         self.view.reset_mock()
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
@@ -205,9 +204,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         assert mockbox.critical.call_count == 0
 
-        assert self.view.drawImage.call_count == 1
-        assert self.view.drawLegend.call_count == 1
-        assert self.view.drawMetadata.call_count == 1
+        assert self.view.draw_image.call_count == 1
+        assert self.view.draw_legend.call_count == 1
+        assert self.view.draw_metadata.call_count == 1
         self.view.reset_mock()
 
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
@@ -220,9 +219,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         assert mockbox.critical.call_count == 0
 
-        assert self.view.drawImage.call_count == 1
-        assert self.view.drawLegend.call_count == 1
-        assert self.view.drawMetadata.call_count == 1
+        assert self.view.draw_image.call_count == 1
+        assert self.view.draw_legend.call_count == 1
+        assert self.view.draw_metadata.call_count == 1
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_server_service_cache(self, mockbox):
@@ -238,9 +237,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 1
-        assert self.view.drawImage.call_count == 0
-        assert self.view.drawLegend.call_count == 0
-        assert self.view.drawMetadata.call_count == 0
+        assert self.view.draw_image.call_count == 0
+        assert self.view.draw_legend.call_count == 0
+        assert self.view.draw_metadata.call_count == 0
         mockbox.reset_mock()
 
         QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_2)
@@ -256,9 +255,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.qWait(6000)
 
         assert mockbox.critical.call_count == 0
-        assert self.view.drawImage.call_count == 1
-        assert self.view.drawLegend.call_count == 1
-        assert self.view.drawMetadata.call_count == 1
+        assert self.view.draw_image.call_count == 1
+        assert self.view.draw_legend.call_count == 1
+        assert self.view.draw_metadata.call_count == 1
 
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
@@ -278,7 +277,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.qWait(6000)
 
         assert mockbox.critical.call_count == 0
-        assert self.view.drawImage.call_count == 1
-        assert self.view.drawLegend.call_count == 1
-        assert self.view.drawMetadata.call_count == 1
+        assert self.view.draw_image.call_count == 1
+        assert self.view.draw_legend.call_count == 1
+        assert self.view.draw_metadata.call_count == 1
         self.view.reset_mock()
