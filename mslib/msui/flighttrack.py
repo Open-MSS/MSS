@@ -36,7 +36,6 @@
 
 from __future__ import division
 
-from past.builtins import basestring
 from builtins import str
 
 import datetime
@@ -109,7 +108,7 @@ class Waypoint(object):
         self.pressure = thermolib.flightlevel2pressure(flightlevel)
         self.distance_to_prev = 0.
         self.distance_total = 0.
-        self._comments = comments
+        self.comments = comments
 
         # Performance fields (for values read from the flight performance
         # service).
@@ -123,23 +122,12 @@ class Waypoint(object):
         self.wpnumber_major = None
         self.wpnumber_minor = None
 
-    def get_comments(self):
-        return self._comments
-
-    def set_comments(self, string):
-        if isinstance(string, basestring):
-            self._comments = QString(string)
-        else:
-            self._comments = string
-
-    comments = property(get_comments, set_comments)
-
     def __str__(self):
         """String representation of the waypoint (e.g., when used with the print
            statement).
         """
-        return "WAYPOINT(LAT={:f}, LON={:f}, FL={:f})".format(self.lat, self.lon,
-                                                              self.flightlevel)
+        return "WAYPOINT(LAT={:f}, LON={:f}, FL={:f})".format(
+            self.lat, self.lon, self.flightlevel)
 
 
 class WaypointsTableModel(QtCore.QAbstractTableModel):
@@ -683,7 +671,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                 model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
             else:
                 for wp in self.parent().waypoints_model.all_waypoint_data():
-                    if loc == wp.location:
+                    if loc == str(wp.location):
                         lat, lon = wp.lat, wp.lon
                         # Don't update distances and flight performance twice, hence
                         # set update=False for LAT.

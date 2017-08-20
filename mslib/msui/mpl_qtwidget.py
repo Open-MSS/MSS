@@ -31,8 +31,6 @@ from __future__ import division
 # Parts of the code have been adapted from Chapter 6 of Sandro Tosi,
 # 'Matplotlib for Python Developers'.
 
-
-from past.builtins import basestring
 from datetime import datetime
 
 import logging
@@ -106,9 +104,9 @@ class MplCanvas(FigureCanvas):
         self.default_filename = ""
         if title:
             self.default_filename += u"_{:>5}".format(title.split()[0])
-        if isinstance(style, basestring) and style:
+        if style:
             title += u' ({})'.format(style)
-        if isinstance(level, basestring):
+        if level:
             title += u' at {}'.format(level)
             self.default_filename += u"_{}".format(level.split()[0])
         if isinstance(valid_time, datetime) and isinstance(init_time, datetime):
