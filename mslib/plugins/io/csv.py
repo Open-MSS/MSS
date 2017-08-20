@@ -31,8 +31,9 @@ from __future__ import division
 
 from builtins import str
 
-import codecs
 import unicodecsv as csv
+import os
+
 import mslib.msui.flighttrack as ft
 
 
@@ -77,4 +78,5 @@ def load_from_csv(filename):
         wp.distance_total = float(row[7])
         wp.comments = row[8]
         waypoints.append(wp)
+    name = os.path.basename(filename.replace(".csv", "").strip())
     return name, waypoints

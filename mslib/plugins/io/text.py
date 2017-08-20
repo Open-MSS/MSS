@@ -34,6 +34,7 @@ import logging
 import codecs
 import mslib.msui.flighttrack as ft
 from mslib import thermolib
+import os
 
 
 def save_to_txt(filename, name, waypoints):
@@ -67,7 +68,7 @@ def save_to_txt(filename, name, waypoints):
 
 
 def load_from_txt(filename):
-    name = ""
+    name = os.path.basename(filename.replace(".txt", "").strip())
     waypoints = []
     with codecs.open(filename, "r", encoding="utf-8") as in_file:
         pos = []
@@ -86,7 +87,6 @@ def load_from_txt(filename):
                 pos.append(line.find("Comments"))  # 8
                 continue
             if line.startswith("Track name: "):
-                name = line.split(':')[1].strip()
                 continue
 
             if len(pos) == 0:

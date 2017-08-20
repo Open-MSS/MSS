@@ -47,7 +47,7 @@ class Test_MSSSideViewWindow(object):
         self.application = QtWidgets.QApplication(sys.argv)
 
         self.window = mss_pyui.MSSMainWindow()
-        self.window.create_new_flight_track(activate=True)
+        self.window.create_new_flight_track()
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -163,6 +163,12 @@ class Test_MSSSideViewWindow(object):
         assert mockcrit.call_count == 0
         assert os.path.exists(self.save_ftml)
         os.remove(self.save_ftml)
+        flighttrack = self.window.listFlightTracks.visualItemRect(
+            self.window.listFlightTracks.item(1))
+        QtTest.QTest.mouseClick(
+            self.window.listFlightTracks.viewport(),
+            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, flighttrack.center())
+        QtWidgets.QApplication.processEvents()
         self.window.actionCloseSelectedFlightTrack.trigger()
         assert self.window.listFlightTracks.count() == 2
         assert mockopen.call_count == 1
@@ -177,11 +183,11 @@ class Test_MSSSideViewWindow(object):
             QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, flighttrack.center())
         QtWidgets.QApplication.processEvents()
         self.window.actionCloseSelectedFlightTrack.trigger()
-        assert self.window.listFlightTracks.count() == 1
         assert mockopen.call_count == 1
         assert mocksave.call_count == 1
         assert mockcrit.call_count == 0
         assert mockinfo.call_count == 1
+        assert self.window.listFlightTracks.count() == 1
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
                 return_value=os.path.join(sample_path, "example.csv"))

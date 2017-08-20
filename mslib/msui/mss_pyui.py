@@ -140,14 +140,6 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
         self.parent = parent
         self.flighttrack_model = flighttrack_model
 
-        if parent is not None:
-            parent.itemChanged.connect(self.name_changed)
-
-    def name_changed(self, item):
-        """Slot to change the name of a flight track.
-        """
-        item.flighttrack_model.set_name(str(item.text()))
-
 
 class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
@@ -189,15 +181,16 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None
-        self.lastSaveDir = os.getcwd()
+        self.last_save_directory = os.getcwd()
 
         # Connect Qt SIGNALs:
         # ===================
 
         # File menu.
-        self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None, False))
+        self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
         self.actionOpenFlightTrack.triggered.connect(self.open_flight_track)
-        self.actionCloseSelectedFlightTrack.triggered.connect(self.close_flight_track)
+        self.actionActivateSelectedFlightTrack.triggered.connect(self.activate_selected_flight_track)
+        self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
         self.actionSaveActiveFlightTrack.triggered.connect(self.save_flight_track)
         self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_flight_track_as)
 
@@ -219,8 +212,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionLoad_Configuration.triggered.connect(self.open_config_file)
 
         # Flight Tracks.
-        self.listFlightTracks.itemChanged.connect(self.flight_track_name_changed)
-        self.btSelectFlightTrack.clicked.connect(self.set_flight_track_active)
+        self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
 
         # Views.
         self.listViews.itemActivated.connect(self.activate_sub_window)
@@ -353,7 +345,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         def load_function_wrapper(self):
             filename = QtWidgets.QFileDialog.getOpenFileName(
-                self, "Import Flight Track", "", name + " (*." + extension + ")")
+                self, "Import Flight Track", self.last_save_directory, name + " (*." + extension + ")")
             filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
             if filename:
                 try:
@@ -370,10 +362,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     waypoints_model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
 
                     listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
-                    listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
                     self.listFlightTracks.setCurrentItem(listitem)
-                    self.set_flight_track_active()
+                    self.activate_flight_track(listitem)
 
         setattr(self, full_name, types.MethodType(load_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))
@@ -389,8 +381,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.menuExport_Active_Flight_Track.addAction(action)
 
         def save_function_wrapper(self):
+            default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + "." + extension)
             filename = QtWidgets.QFileDialog.getSaveFileName(
-                self, "Export Flight Track", "", name + " (*." + extension + ")")
+                self, "Export Flight Track", default_filename, name + " (*." + extension + ")")
             filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
             if filename:
                 try:
@@ -505,7 +498,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
     new_flight_track_counter = 0
 
-    def create_new_flight_track(self, template=None, filename=None, activate=False):
+    def create_new_flight_track(self, template=None, filename=None):
         """Creates a new flight track model from a template. Adds a new entry to
            the list of flight tracks. Called when the user selects the 'new/open
            flight track' menu entries.
@@ -514,7 +507,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         template -- copy the specified template to the new flight track (so that
                     it is not empty).
         filename -- if not None, load the flight track in the specified file.
-        activate -- set the new flight track to be the active flight track.
         """
         if template is None:
             template = []
@@ -539,16 +531,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Make a copy of the template. Otherwise all new flight tracks would
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
-            waypoints_model.insertRows(0, rows=len(template_copy),
-                                       waypoints=template_copy)
+            waypoints_model.insertRows(0, rows=len(template_copy), waypoints=template_copy)
         # Create a new list entry for the flight track. Make the item name
         # editable.
         listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
-        listitem.setFlags(QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+        listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
-        if activate:
-            self.listFlightTracks.setCurrentItem(listitem)
-            self.set_flight_track_active()
+        self.activate_flight_track(listitem)
 
     def open_config_file(self):
         """
@@ -577,13 +566,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            passes the result to createNewFlightTrack().
         """
         filename = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                         "Open Flight Track", "",
+                                                         "Open Flight Track", self.last_save_directory,
                                                          "Flight track XML (*.ftml)")
         filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
         if filename:
             try:
                 if filename.endswith('.ftml'):
-                    self.create_new_flight_track(filename=filename, activate=True)
+                    self.create_new_flight_track(filename=filename)
                 else:
                     QtWidgets.QMessageBox.warning(self, "Open flight track",
                                                   u"No supported file extension recognized!\n{:}".format(filename))
@@ -593,7 +582,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self, self.tr("Problem while opening flight track FTML:"),
                     self.tr(u"ERROR: {} {}".format(type(ex), ex)))
 
-    def close_flight_track(self):
+    def activate_selected_flight_track(self):
+        item = self.listFlightTracks.currentItem()
+        self.activate_flight_track(item)
+
+    def close_selected_flight_track(self):
         """Slot to close the currently selected flight track. Flight tracks can
            only be closed if at least one other flight track remains open. The
            currently active flight track cannot be closed.
@@ -632,41 +625,35 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def save_flight_track_as(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
         """
-        default_filename = os.path.join(self.lastSaveDir, self.active_flight_track.name + ".ftml")
+        default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         filename = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save Flight Track", default_filename, "Flight track XML (*.ftml)")
         filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
         if filename:
-            self.lastSaveDir = os.path.dirname(filename)
+            self.last_save_directory = os.path.dirname(filename)
             if filename.endswith('.ftml'):
                 self.active_flight_track.save_to_ftml(filename)
+                for idx in range(self.listFlightTracks.count()):
+                    if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
+                        self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
             else:
                 QtWidgets.QMessageBox.warning(self, "Save flight track",
                                               u"File extension is not '.ftml'!\n{:}".format(filename))
 
-    def set_flight_track_active(self):
+    def activate_flight_track(self, item):
         """Set the currently selected flight track to be the active one, i.e.
            the one that is displayed in the views (only one flight track can be
            displayed at a time).
         """
-        item = self.listFlightTracks.currentItem()
         self.active_flight_track = item.flighttrack_model
-        self.lblActiveFlightTrack.setText(item.flighttrack_model.name)
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
             view_item.window.setFlightTrackModel(self.active_flight_track)
-
-    def flight_track_name_changed(self, item):
-        """Slot to react to a name change of the flight tracks in the list
-           (i.e. when the user has edited a name). If the changed name
-           belongs to the currently active flight track, change its name
-           in the label that displays the active track.
-        """
-        if item.flighttrack_model == self.active_flight_track:
-            self.lblActiveFlightTrack.setText(item.text())
-        filename = item.flighttrack_model.filename \
-            if item.flighttrack_model.filename else ""
-        item.setToolTip(filename)
+        font = QtGui.QFont()
+        for i in range(self.listFlightTracks.count()):
+            self.listFlightTracks.item(i).setFont(font)
+        font.setBold(True)
+        item.setFont(font)
 
     def show_online_help(self):
         """Open Documentation in a browser"""
@@ -769,7 +756,7 @@ def main():
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = MSSMainWindow()
     mainwindow.configure_menu()
-    mainwindow.create_new_flight_track(activate=True)
+    mainwindow.create_new_flight_track()
     mainwindow.show()
     sys.exit(application.exec_())
 

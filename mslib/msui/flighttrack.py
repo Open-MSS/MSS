@@ -41,6 +41,7 @@ from builtins import str
 import datetime
 import codecs
 import logging
+import os
 import xml.dom.minidom
 import xml.parsers.expat
 
@@ -175,10 +176,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
         # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         save_settings_pickle(self.settings_tag, self.performance_settings)
-
-    def set_name(self, name):
-        self.name = name
-        self.modified = True
 
     def flags(self, index):
         """Used to specify which table columns can be edited by the user;
@@ -524,20 +521,16 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     specified filename will be used. If no filename has been
                     specified at all, a ValueError exception will be raised.
         """
-        if filename:
-            self.filename = filename
-        if not self.filename:
-            raise ValueError("filename to save flight track cannot be None")
+        if not filename:
+            raise ValueError("filename to save flight track cannot be None or empty")
+
+        self.filename = filename
+        self.name = os.path.basename(filename.replace(".ftml", "").strip())
 
         doc = xml.dom.minidom.Document()
 
         ft_el = doc.createElement("FlightTrack")
         doc.appendChild(ft_el)
-
-        # Element that contains the name of the flight track.
-        name_el = doc.createElement("Name")
-        name_el.appendChild(doc.createTextNode(self.name))
-        ft_el.appendChild(name_el)
 
         # The list of waypoint elements.
         wp_el = doc.createElement("ListOfWaypoints")
@@ -567,8 +560,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         ft_el = doc.getElementsByTagName("FlightTrack")[0]
 
-        name_el = ft_el.getElementsByTagName("Name")[0]
-        self.name = name_el.childNodes[0].data.strip()
+        self.name = os.path.basename(filename.replace(".ftml", "").strip())
 
         waypoints_list = []
         for wp_el in ft_el.getElementsByTagName("Waypoint"):
