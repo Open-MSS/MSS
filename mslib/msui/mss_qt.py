@@ -29,7 +29,8 @@ import importlib
 import logging
 import traceback
 import sys
-from past.builtins import unicode
+from builtins import str
+import platform
 
 USE_PYQT5 = False
 try:
@@ -86,7 +87,7 @@ except ImportError:
 
 
 def variant_to_string(variant):
-    return unicode(variant.value())
+    return str(variant.value())
 
 
 def variant_to_float(variant, locale=QtCore.QLocale()):
@@ -161,30 +162,32 @@ def excepthook(type_, value, traceback_):
     This dumps the error to console, logging (i.e. logfile), and tries to open a MessageBox for GUI users.
     """
     import mslib
-    import sys
     import mslib.utils
     tb = "".join(traceback.format_exception(type_, value, traceback_))
     traceback.print_exception(type_, value, traceback_)
-    logging.critical(u"Fatal error: %s", tb)
     logging.critical(u"MSS Version: %s", mslib.__version__)
-    logging.critical(u"Platform: %s", sys.platform)
+    logging.critical(u"Python Version: %s", sys.version)
+    logging.critical(u"Platform: %s (%s)", platform.platform(), platform.architecture())
+    logging.critical(u"Fatal error: %s", tb)
 
     if type_ is mslib.utils.FatalUserError:
         QtWidgets.QMessageBox.critical(
             None, u"fatal error",
             u"Fatal user error in MSS {} on {}\n"
+            u"Python {}\n"
             u"\n"
-            u"{}".format(mslib.__version__, sys.platform, value))
+            u"{}".format(mslib.__version__, platform.platform(), sys.version, value))
     else:
         QtWidgets.QMessageBox.critical(
             None, u"fatal error",
             u"Fatal error in MSS {} on {}\n"
+            u"Python {}\n"
             u"\n"
             u"Please report bugs in MSS to https://bitbucket.org/wxmetvis/mss\n"
             u"\n"
             u"Information about the fatal error:\n"
             u"\n"
-            u"{}".format(mslib.__version__, sys.platform, tb))
+            u"{}".format(mslib.__version__, platform.platform(), sys.version, tb))
     QtCore.qFatal('')
 
 

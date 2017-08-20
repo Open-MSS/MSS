@@ -32,19 +32,19 @@ from __future__ import print_function
 
 from builtins import str
 
+import argparse
 import copy
+import functools
+import hashlib
 import importlib
 import logging
 import os
+import platform
 import re
+import requests
 import shutil
 import sys
 import types
-import functools
-import platform
-import argparse
-import hashlib
-import requests
 
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
@@ -720,7 +720,11 @@ def main():
 
     setup_logging(args)
 
-    logging.info("Launching user interface...")
+    logging.info(u"MSS Version: %s", __version__)
+    logging.info(u"Python Version: %s", sys.version)
+    logging.info(u"Platform: %s (%s)", platform.platform(), platform.architecture())
+    logging.info(u"Launching user interface...")
+
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = MSSMainWindow()
     mainwindow.configure_menu()
