@@ -57,6 +57,7 @@ from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import loopview
 from mslib.msui import constants
+from mslib.msui import wms_control
 from mslib.utils import config_loader, setup_logging
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
@@ -233,6 +234,46 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self._imported_plugins, self._exported_plugins = {}, {}
         self.add_plugins()
         # self.actionLoopView.setVisible(config_loader(dataset="enable_loopview", default=False))
+
+        preload_urls = config_loader(dataset="WMS_preload", default=[])
+        self.preload_wms(preload_urls)
+
+    @staticmethod
+    def preload_wms(urls):
+        """
+        This method accesses a list of WMS servers and load their capability documents.
+        :param urls: List of URLs
+        """
+        pdlg = QtWidgets.QProgressDialog("Preloading WMS servers...", "Cancel", 0, len(urls))
+        pdlg.reset()
+        pdlg.setValue(0)
+        pdlg.setModal(True)
+        pdlg.show()
+        QtWidgets.QApplication.processEvents()
+        for i, base_url in enumerate(urls):
+            pdlg.setValue(i)
+            QtWidgets.QApplication.processEvents()
+            logging.info(base_url)
+            # initialize login cache fomr config file, but do not overwrite existing keys
+            for key, value in list(config_loader(dataset="WMS_login", default={}).items()):
+                if key not in constants.WMS_LOGIN_CACHE:
+                    constants.WMS_LOGIN_CACHE[key] = value
+            username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
+
+            try:
+                request = requests.get(base_url)
+                if pdlg.wasCanceled():
+                    break
+                wms = wms_control.MSSWebMapService(request.url, version='1.1.1',
+                                          username=username, password=password)
+                wms_control.WMS_SERVICE_CACHE[wms.url] = wms
+                logging.info("Stored WMS info for '%s'", wms.url)
+            except Exception as ex:
+                logging.error("Error in preloading '%s': '%s'", type(ex), ex)
+            if pdlg.wasCanceled():
+                break
+        logging.debug("Contents of WMS_SERVICE_CACHE: %s", wms_control.WMS_SERVICE_CACHE.keys())
+        pdlg.close()
 
     def add_plugins(self):
         self._imported_plugins = config_loader(dataset="import_plugins", default={})
