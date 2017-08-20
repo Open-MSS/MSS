@@ -618,7 +618,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                                                  u"Saving flight track to '{:s}'. Continue?".format(filename),
                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if sel == QtWidgets.QMessageBox.Yes:
-                self.active_flight_track.save_to_ftml(filename)
+                try:
+                    self.active_flight_track.save_to_ftml(filename)
+                except (OSError, IOError) as ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("Problem while saving flight track to FTML:"),
+                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
         else:
             self.save_flight_track_as()
 
@@ -632,7 +637,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if filename:
             self.last_save_directory = os.path.dirname(filename)
             if filename.endswith('.ftml'):
-                self.active_flight_track.save_to_ftml(filename)
+                try:
+                    self.active_flight_track.save_to_ftml(filename)
+                except (OSError, IOError) as ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("Problem while saving flight track to FTML:"),
+                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
                 for idx in range(self.listFlightTracks.count()):
                     if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
                         self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
