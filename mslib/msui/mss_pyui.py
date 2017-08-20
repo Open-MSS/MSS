@@ -257,7 +257,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 if pdlg.wasCanceled():
                     break
                 wms = wms_control.MSSWebMapService(request.url, version='1.1.1',
-                                          username=username, password=password)
+                                                   username=username, password=password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
                 logging.info("Stored WMS info for '%s'", wms.url)
             except Exception as ex:
