@@ -42,6 +42,7 @@ requirements:
         - tk 8.5.*
         - pykml
         - owslib
+        - unicodecsv
         - future  # [py2k]
 
 test:
