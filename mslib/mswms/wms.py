@@ -57,6 +57,7 @@ import paste.util.multidict
 import tempfile
 import urllib.parse
 from chameleon import PageTemplateLoader
+import mss_wms_data_access_settings
 
 try:
     import mss_wms_settings
@@ -115,18 +116,10 @@ templates = PageTemplateLoader(mss_wms_settings.__dict__.get("xml_template_locat
 
 class WMSServer(object):
 
-    def __init__(self, data_access_dict):
-        self.hsec_layer_registry = {}
-        self.hsec_drivers = {}
-        for key in data_access_dict:
-            self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
-                data_access_dict[key])
-
-        self.vsec_layer_registry = {}
-        self.vsec_drivers = {}
-        for key in data_access_dict:
-            self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
-                data_access_dict[key])
+    def __init__(self):
+        """
+        init method for wms server
+        """
 
     def register_hsec_layer(self, datasets, layer_class):
         """Register horizontal section layer in internal dict of layers.
@@ -140,7 +133,10 @@ class WMSServer(object):
         # provided layer class for all datasets and register the layer
         # instances with the datasets.
         for dataset in datasets:
-            layer = layer_class(self.hsec_drivers[dataset])
+            try:
+                layer = layer_class(self.hsec_drivers[dataset])
+            except KeyError:
+                continue
             logging.debug("registering horizontal section layer '%s' with "
                           "dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
@@ -196,6 +192,30 @@ class WMSServer(object):
         return [template(code=code, text=text), "text/xml"]
 
     def get_capabilities(self, server_url=None):
+        self.hsec_layer_registry = {}
+        # ToDo find a more elegant method to do the same
+        # Preferable we don't want a seperate data_access module to be configured
+        reload(mss_wms_data_access_settings)
+        data_access_dict = mss_wms_data_access_settings.data
+
+        self.hsec_drivers = {}
+        for key in data_access_dict:
+            self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
+                data_access_dict[key])
+
+        self.vsec_layer_registry = {}
+        self.vsec_drivers = {}
+        for key in data_access_dict:
+            self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
+                data_access_dict[key])
+
+        self.hsec_layer_registry = {}
+        for layer, datasets in mss_wms_settings.register_horizontal_layers:
+            self.register_hsec_layer(datasets, layer)
+        self.vsec_layer_registry = {}
+        for layer, datasets in mss_wms_settings.register_vertical_layers:
+            self.register_vsec_layer(datasets, layer)
+
         template = templates['get_capabilities.pt']
         logging.debug("server-url '%s'", server_url)
 
@@ -224,7 +244,6 @@ class WMSServer(object):
                 vsec_layers.append((dataset, layer))
 
         # return_format = 'text/xml'
-
         return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, server_url=server_url,
                                service_name=mss_wms_settings.__dict__.get("service_name", "OGC:WMS"),
                                service_title=mss_wms_settings.__dict__.get("service_title",
@@ -486,13 +505,7 @@ class WMSServer(object):
         return image, return_format
 
 
-app = WMSServer(mss_wms_settings.nwpaccess)
-
-for layer, datasets in mss_wms_settings.register_horizontal_layers:
-    app.register_hsec_layer(datasets, layer)
-
-for layer, datasets in mss_wms_settings.register_vertical_layers:
-    app.register_vsec_layer(datasets, layer)
+app = WMSServer()
 
 # Simple Caching Solutions
 # It maps the Requested URL to Tuble of ( data_format, response_body )
