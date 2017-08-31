@@ -157,7 +157,10 @@ class WMSServer(object):
         # provided layer class for all datasets and register the layer
         # instances with the datasets.
         for dataset in datasets:
-            layer = layer_class(self.vsec_drivers[dataset])
+            try:
+                layer = layer_class(self.vsec_drivers[dataset])
+            except KeyError:
+                continue
             logging.debug(u"registering vertical section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
