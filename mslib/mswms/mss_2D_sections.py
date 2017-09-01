@@ -149,7 +149,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
             for time in init_times:
                 try:
                     valid_time = time
-                    if valid_time in valid_times:
+                    if valid_time not in valid_times:
                         logging.error("init_time is not contained in valid_times")
                         valid_time = valid_times[0]
                     self.driver.set_plot_parameters(
