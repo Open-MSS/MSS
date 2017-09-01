@@ -448,7 +448,7 @@ class CLAMSICEDataAccess(ECMWFDataAccess):
     _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
 
 
-class AutomaticDataAccess(NWPDataAccess):
+class DefaultDataAccess(NWPDataAccess):
     """
     Subclass to NWPDataAccess for accessing properly constructed NetCDF files
     Constructor needs information on domain ID.

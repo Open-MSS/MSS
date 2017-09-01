@@ -840,7 +840,7 @@ mslib.mswms.dataaccess.valid_time_cache = _vt_cache
 _datapath = r"{data_dir}"
 
 nwpaccess = {{
-    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.AutomaticDataAccess(_datapath, "EUR_LL015"),
+    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
 }}
 
 epsg_to_mpl_basemap_table = {{
