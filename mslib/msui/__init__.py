@@ -160,53 +160,6 @@ class MissionSupportSystemDefaultConfig(object):
     # flighttrack template
     new_flighttrack_flightlevel = 0
 
-    # LoopView configuration: The products defined in the following
-    # dictionary are displayed by the ProductChooserDialog in the
-    # loopview.
-
-    loop_configuration = {
-        "ECMWF forecasts": {
-            # URL to the Mission Support website at which the batch image
-            # products are located.
-            "url": "http://www.your-server.de/forecasts",
-            # Initialisation times every init_timestep hours.
-            "init_timestep": 12,
-            # Products available on the webpage. Add new products here!
-            # Each product listed here will be loaded as one group, so
-            # that the defined times can be navigated with <wheel> and
-            # the defined levels can be navigated with <shift+wheel>.
-            # Times not found in the listed range of forecast_steps
-            # are ignored, its hence save to define the entire forecast
-            # range with the smalled available time step.
-            "products": {
-                "Geopotential and Wind": {
-                    "abbrev": "geop",
-                    "regions": {"Europe": "eur", "Germany": "de"},
-                    "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": list(range(0, 240, 3))},
-                "Temperature": {
-                    "abbrev": "temp",
-                    "regions": {"Europe": "eur", "Germany": "de"},
-                    "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": list(range(0, 240, 3))},
-                "Equivalent Potential Temperature": {
-                    "abbrev": "eqpt",
-                    "regions": {"Europe": "eur", "Germany": "de"},
-                    "levels": [500, 700, 850, 925],
-                    "forecast_steps": list(range(0, 240, 3))},
-                "Relative Humidity": {
-                    "abbrev": "rhu",
-                    "regions": {"Europe": "eur", "Germany": "de"},
-                    "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": list(range(0, 243, 3))},
-                "Vertical Velocity": {
-                    "abbrev": "vert",
-                    "regions": {"Europe": "eur", "Germany": "de"},
-                    "levels": [200, 250, 300, 500, 700, 850, 925],
-                    "forecast_steps": list(range(0, 243, 3))}
-            }
-        }
-    }
     # None is not wanted here
     proxies = {}
 

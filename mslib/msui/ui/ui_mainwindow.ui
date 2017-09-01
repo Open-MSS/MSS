@@ -94,7 +94,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>424</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -143,7 +143,6 @@ Save a flight track to name it.</string>
     <addaction name="actionTrajectoryToolLagranto"/>
     <addaction name="actionTimeSeriesViewTrajectories"/>
     <addaction name="separator"/>
-    <addaction name="actionLoopView"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -224,11 +223,6 @@ Save a flight track to name it.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+T</string>
-   </property>
-  </action>
-  <action name="actionLoopView">
-   <property name="text">
-    <string>&amp;Loop View (Images)</string>
    </property>
   </action>
   <action name="actionTimeSeriesViewTrajectories">
