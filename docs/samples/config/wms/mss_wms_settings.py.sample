@@ -66,45 +66,7 @@ mslib.mswms.dataaccess.valid_time_cache_max_age_seconds = 10 * 86400
 # Paths to data directories. Process callables (the functions that are
 # executed by the dispatcher system) can access these paths, hence
 # simply define the key/value pairs that are required.
-datapath = {
-    "ecmwf": "/path/to/data/mss/grid/ecmwf/netcdf",
-    "emac": "/path/to/data/mss/grid/emac/netcdf",
-    "meteosat": "/path/to/data/mss/grid/meteosat/netcdf",
-    "camsglobal": "/path/to/data/mss/grid/camsglobal/netcdf",
-}
 
-
-# Objects that let the user query the filename in which a particular
-# variable can be found. Objects are instances of subclasses of NWPDataAccess,
-# which provides the methods fc_filename() and full_fc_path().
-nwpaccess = {
-    "ecmwf_NH_LL05": mslib.mswms.dataaccess.AutomaticDataAccess(datapath["ecmwf"], "NH_LL05")
-    #    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.ECMWFDataAccess(datapath["ecmwf"], "EUR_LL015"),
-    #    "meteosat_EUR_LL05": mslib.mswms.dataaccess.MeteosatDataAccess(datapath["meteosat"], "EUR_LL05"),
-    #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccess.EMACDataAccess(datapath["emac"])
-
-    #        The MSS-Chem project provides an easy way to download and prepare
-    #        forecasts from a range of different CTMs.
-    #        The MSSChemDataAccess class is meant to provide access to
-    #        the chemistry forecasts prepared by MSS-Chem.  Therefore, it has
-    #        to be more general than the other DataAccess classes.
-    #        Its contstructor takes four arguments:
-    #
-    #        1. The path to the data files.  This directory has to contain one
-    #           folder for each init_time, which is called "%Y-%m-%d_%H"
-    #        2. The model name, to be displayed in plot titles
-    #        3. The string with which the filenames start
-    #        4. The vertical layer type of the model; one of
-    #           - "pl" (pressure level)
-    #           - "ml" (model level)
-    #           - "tl" (potential temperature level)
-    #           - "al" (altitude level) -> CAUTION <- Only use if absolutely necessary, for models without any pressure
-    #             information.  For vertical sections, air_pressure will be determined on-the-fly, from the layer
-    #             altitude alone, which is not very accurate
-    #    "CAMSglb": mslib.mswms.dataaccess.MSSChemDataAccess(datapath["camsglobal"], "CAMSglobal", "cams-global", "ml"),
-}
-
-nwpaccess[nwpaccess.keys()[0]].serviceCache()
 
 #
 # HTTP Authentication                               ###
