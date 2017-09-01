@@ -704,6 +704,7 @@ class DataFiles(object):
         self.vt_cache = vt_cache
         self.server_config_file = os.path.join(server_config_dir, "mss_wms_settings.py")
         self.server_auth_config_file = os.path.join(server_config_dir, "mss_wms_auth.py")
+        self.data_access_settings_file = os.path.join(server_config_dir, "mss_wms_data_access_settings.py")
         # define file dimension / geographical  range
 
     def create_datadir(self):
@@ -837,12 +838,6 @@ import mslib.mswms
 _vt_cache = r"{vt_cache}"
 mslib.mswms.dataaccess.valid_time_cache = _vt_cache
 
-_datapath = r"{data_dir}"
-
-nwpaccess = {{
-    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
-}}
-
 epsg_to_mpl_basemap_table = {{
     # EPSG:4326, the standard cylindrical lat/lon projection.
     4326: {{"projection": "cyl"}}
@@ -889,15 +884,31 @@ if mpl_vsec_styles is not None:
         (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
-            simple_server_config = simple_server_config.format(vt_cache=self.vt_cache,
-                                                               data_dir=self.data_dir)
+            simple_server_config = simple_server_config.format(vt_cache=self.vt_cache)
         else:
             simple_server_config = '''"""
 simple server config for demodata
 """
-from mslib.mswms.demodata import (nwpaccess, epsg_to_mpl_basemap_table,
+from mslib.mswms.demodata import (epsg_to_mpl_basemap_table,
                                   register_horizontal_layers, register_vertical_layers)
 '''
+
+        data_access_settings = '''"""
+simple data access for demodata
+"""
+
+from mslib.mswms.dataaccess import DefaultDataAccess
+_datapath = r"{data_dir}"
+
+data = {{
+    "ecmwf_EUR_LL015": DefaultDataAccess(_datapath, "EUR_LL015"),
+}}
+'''
+        data_access_settings = data_access_settings.format(data_dir=self.data_dir)
+        if not os.path.exists(self.data_access_settings_file):
+            fid = open(self.data_access_settings_file, 'w')
+            fid.write(data_access_settings)
+            fid.close()
         if not os.path.exists(self.server_config_file):
             fid = open(self.server_config_file, 'w')
             fid.write(simple_server_config)
