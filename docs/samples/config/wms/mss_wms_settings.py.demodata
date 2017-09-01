@@ -81,14 +81,8 @@ import mslib.mswms
 #xml_template_location = os.path.join(base_dir, "xml_templates")
 
 
-_vt_cache = r"/home/icg105/mss/vt_cache"
+_vt_cache = r"/path/to/mss/vt_cache"
 mslib.mswms.dataaccess.valid_time_cache = _vt_cache
-
-_datapath = r"/home/icg105/mss/testdata"
-
-nwpaccess = {
-    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.AutomaticDataAccess(_datapath, "EUR_LL015"),
-}
 
 epsg_to_mpl_basemap_table = {
     # EPSG:4326, the standard cylindrical lat/lon projection.

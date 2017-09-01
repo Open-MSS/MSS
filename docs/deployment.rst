@@ -73,7 +73,15 @@ The configuration file have to become added to the /home/mss/config directory
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
 
 
-You have to adopt this file to your data.
+The data access module has to be a separate module. This module becomes on each users
+*get capabilities* call reloaded and shows to the user an uptodate list of available data.
+
+**/home/mss/config/mss_wms_data_access_settings.py**
+
+ .. literalinclude:: samples/config/wms/mss_wms_data_access_settings.py.sample
+
+
+You have to adopt these file to your data.
 
 
 .. _mswms-deployment:
@@ -81,7 +89,8 @@ You have to adopt this file to your data.
 Standalone server setup
 ------------------------------
 
-For the standalone server *mswms* you need the path of your mss_wms_settings.py added to the PYTHONPATH. E.g.::
+For the standalone server *mswms* you need the path of your mss_wms_settings.py and other configuration files
+added to the PYTHONPATH. E.g.::
 
  export PYTHONPATH=/home/mss/config
 
@@ -181,7 +190,7 @@ demodata - simulated data
 --------------------------
 
 We provide demodata by executing the demodata programm. This creates in your home directory data files and also
-the needed server configuration file. The program creates 70MB of examples. All generated files follow the
+the needed server configuration files. The program creates 70MB of examples. All generated files follow the
 guidelines given above. This script does not overwrite an existing mss_wms_settings.py
 
 ::
@@ -189,6 +198,7 @@ guidelines given above. This script does not overwrite an existing mss_wms_setti
   mss
   ├── mss_wms_auth.py
   ├── mss_wms_settings.py
+  ├── mss_wms_data_access_settings.py
   └── testdata
       ├── 20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc
       ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
@@ -225,6 +235,8 @@ Detailed server configuration *mss_wms_settings.py* for this demodata
 
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
 
+ .. literalinclude:: samples/config/wms/mss_wms_data_access_settings.py.demodata
+
 For setting authentication see *mss_wms_auth.py*
 
  .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
@@ -245,6 +257,7 @@ Our examples are based on the following directories located in the home director
  .
  ├── config
  │   └── mss_wms_settings.py
+ |   └── mss_wms_data_access_settings.py
  |   └── mss_wms_auth.py
  ├── log
  │   └── mss_error.log
