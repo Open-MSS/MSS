@@ -34,7 +34,6 @@ Mission Support User Interface (mss). Among others, define
  - vertical section interpolation options
  - the lists of predefined web service URLs
  - predefined waypoints for the table view
- - batch products for the loop view in this file.
 
 If you don't have a mss_settings.json then default configuration is in place.
 
@@ -94,12 +93,6 @@ and add those lines in your mss_settings pointing to the proxy server.
 
 .. literalinclude:: samples/config/mss/snippets/proxies.sample
 
-Loop View
-~~~~~~~~~
-
-If you have an image server you can configure the loop view by
-
-.. literalinclude:: samples/config/mss/snippets/loopview.sample
 
 Trajectory Tool
 ~~~~~~~~~~~~~~~

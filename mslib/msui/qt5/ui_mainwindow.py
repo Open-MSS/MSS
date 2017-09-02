@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -49,7 +49,7 @@ class Ui_MSSMainWindow(object):
         self.verticalLayout.addWidget(self.groupBox_2)
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 424, 26))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 424, 25))
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
@@ -83,8 +83,6 @@ class Ui_MSSMainWindow(object):
         self.actionSideView.setObjectName("actionSideView")
         self.actionTableView = QtWidgets.QAction(MSSMainWindow)
         self.actionTableView.setObjectName("actionTableView")
-        self.actionLoopView = QtWidgets.QAction(MSSMainWindow)
-        self.actionLoopView.setObjectName("actionLoopView")
         self.actionTimeSeriesViewTrajectories = QtWidgets.QAction(MSSMainWindow)
         self.actionTimeSeriesViewTrajectories.setObjectName("actionTimeSeriesViewTrajectories")
         self.actionTrajectoryToolLagranto = QtWidgets.QAction(MSSMainWindow)
@@ -120,7 +118,6 @@ class Ui_MSSMainWindow(object):
         self.menu_Tools.addAction(self.actionTrajectoryToolLagranto)
         self.menu_Tools.addAction(self.actionTimeSeriesViewTrajectories)
         self.menu_Tools.addSeparator()
-        self.menu_Tools.addAction(self.actionLoopView)
         self.menu_Help.addAction(self.actionOnlineHelp)
         self.menu_Help.addAction(self.actionAboutMSUI)
         self.menubar.addAction(self.menu_File.menuAction())
@@ -165,7 +162,6 @@ class Ui_MSSMainWindow(object):
         self.actionSideView.setShortcut(_translate("MSSMainWindow", "Ctrl+V"))
         self.actionTableView.setText(_translate("MSSMainWindow", "T&able View"))
         self.actionTableView.setShortcut(_translate("MSSMainWindow", "Ctrl+T"))
-        self.actionLoopView.setText(_translate("MSSMainWindow", "&Loop View (Images)"))
         self.actionTimeSeriesViewTrajectories.setText(_translate("MSSMainWindow", "T&ime Series View (Trajectories)"))
         self.actionTrajectoryToolLagranto.setText(_translate("MSSMainWindow", "&Trajectory Tool (Lagranto)"))
         self.actionAboutMSUI.setText(_translate("MSSMainWindow", "&About MSS"))
