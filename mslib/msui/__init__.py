@@ -45,7 +45,6 @@ class MissionSupportSystemDefaultConfig(object):
      -- vertical section interpolation options
      -- the lists of predefined web service URLs
      -- predefined waypoints for the table view
-     -- batch products for the loop view
     in this file.
 
     Do not change any value for good reasons.
