@@ -110,10 +110,7 @@ def variant_to_float(variant, locale=QtCore.QLocale()):
 for mod in [
         "ui_about_dialog",
         "ui_hexagon_dockwidget",
-        "ui_imageloop_load_dialog",
-        "ui_imageloop_widget",
         "ui_kmloverlay_dockwidget",
-        "ui_loopwindow",
         "ui_mainwindow",
         "ui_performance_settings",
         "ui_remotesensing_dockwidget",

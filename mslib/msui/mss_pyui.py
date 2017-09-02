@@ -55,7 +55,6 @@ from mslib.msui import topview
 from mslib.msui import sideview
 from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
-from mslib.msui import loopview
 from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.utils import config_loader, setup_logging
@@ -202,7 +201,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Tools menu.
         self.actionTrajectoryToolLagranto.triggered.connect(self.create_new_tool)
         self.actionTimeSeriesViewTrajectories.triggered.connect(self.create_new_tool)
-        self.actionLoopView.triggered.connect(self.create_new_tool)
 
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
@@ -225,7 +223,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         self._imported_plugins, self._exported_plugins = {}, {}
         self.add_plugins()
-        # self.actionLoopView.setVisible(config_loader(dataset="enable_loopview", default=False))
 
         preload_urls = config_loader(dataset="WMS_preload", default=[])
         self.preload_wms(preload_urls)
@@ -469,10 +466,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         elif self.sender() == self.actionTimeSeriesViewTrajectories:
             # Time series view.
             tool_window = timeseriesview.MSSTimeSeriesViewWindow()
-        elif self.sender() == self.actionLoopView:
-            # Loop view.
-            tool_window = loopview.MSSLoopWindow(
-                config_loader(dataset="loop_configuration", default=mss_default.loop_configuration))
 
         if tool_window is not None:
             # Make sure view window will be deleted after being closed, not
@@ -681,14 +674,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         disables menu entries which won't work, because libraries missing or not configured
         """
-        # loopview
-        try:
-            loop_configuration = config_loader(dataset="loop_configuration", default=mss_default.loop_configuration)
-            url = loop_configuration["ECMWF forecasts"]["url"]
-            requests.head(url)
-        except (KeyError, requests.exceptions.ConnectionError):
-            self.actionLoopView.setEnabled(False)
-
         # trajectory analyses
         if not HAVE_NAPPY:
             self.actionTrajectoryToolLagranto.setEnabled(False)

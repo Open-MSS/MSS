@@ -116,14 +116,6 @@ class Test_MSSSideViewWindow(object):
         assert self.window.listTools.count() == 1
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    def test_open_loopview_tool(self, mockbox):
-        assert self.window.listTools.count() == 0
-        self.window.actionLoopView.trigger()
-        QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
-        assert self.window.listTools.count() == 1
-
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_open_about(self, mockbox):
         self.window.actionAboutMSUI.trigger()
         QtWidgets.QApplication.processEvents()
