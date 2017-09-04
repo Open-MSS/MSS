@@ -53,11 +53,6 @@ import mslib.mswms
 # SETTINGS                                  ###
 #
 
-# Paths to data directories. Process callables (the functions that are
-# executed by the dispatcher system) can access these paths, hence
-# simply define the key/value pairs that are required.
-
-
 #
 # HTTP Authentication                               ###
 #
