@@ -119,6 +119,28 @@ class WMSServer(object):
         """
         init method for wms server
         """
+        data_access_dict = mss_wms_settings.data
+
+        for key in data_access_dict:
+            data_access_dict[key].setup()
+
+        self.hsec_drivers = {}
+        for key in data_access_dict:
+            self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
+                data_access_dict[key])
+
+        self.vsec_drivers = {}
+        for key in data_access_dict:
+            self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
+                data_access_dict[key])
+
+        self.hsec_layer_registry = {}
+        for layer, datasets in mss_wms_settings.register_horizontal_layers:
+            self.register_hsec_layer(datasets, layer)
+
+        self.vsec_layer_registry = {}
+        for layer, datasets in mss_wms_settings.register_vertical_layers:
+            self.register_vsec_layer(datasets, layer)
 
     def register_hsec_layer(self, datasets, layer_class):
         """Register horizontal section layer in internal dict of layers.
@@ -194,31 +216,12 @@ class WMSServer(object):
         return [template(code=code, text=text), "text/xml"]
 
     def get_capabilities(self, server_url=None):
-        self.hsec_layer_registry = {}
         # ToDo find a more elegant method to do the same
         # Preferable we don't want a seperate data_access module to be configured
         data_access_dict = mss_wms_settings.data
 
         for key in data_access_dict:
             data_access_dict[key].setup()
-
-        self.hsec_drivers = {}
-        for key in data_access_dict:
-            self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
-                data_access_dict[key])
-
-        self.vsec_layer_registry = {}
-        self.vsec_drivers = {}
-        for key in data_access_dict:
-            self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
-                data_access_dict[key])
-
-        self.hsec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_horizontal_layers:
-            self.register_hsec_layer(datasets, layer)
-        self.vsec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_vertical_layers:
-            self.register_vsec_layer(datasets, layer)
 
         template = templates['get_capabilities.pt']
         logging.debug("server-url '%s'", server_url)

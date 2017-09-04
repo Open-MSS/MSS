@@ -149,10 +149,14 @@ class DefaultDataAccess(NWPDataAccess):
         try:
             return self._filetree[vartype][init_time][variable][valid_time]
         except KeyError as ex:
-            logging.error("Could not identify filename. %s %s %s %s %s %s",
-                          variable, vartype, init_time, valid_time, type(ex), ex)
-            raise ValueError(u"variable type {} not available for variable {}"
-                             .format(vartype, variable))
+            self.update()
+            try:
+                return self._filetree[vartype][init_time][variable][valid_time]
+            except KeyError as ex:
+                logging.error("Could not identify filename. %s %s %s %s %s %s",
+                              variable, vartype, init_time, valid_time, type(ex), ex)
+                raise ValueError(u"variable type {} not available for variable {}"
+                                 .format(vartype, variable))
 
     def setup(self):
         # Get a list of the available data files.
