@@ -33,6 +33,7 @@ import itertools
 import os
 import logging
 import netCDF4
+import numpy as np
 
 from mslib import netCDF4tools
 from future.utils import with_metaclass
@@ -162,6 +163,7 @@ class DefaultDataAccess(NWPDataAccess):
                      self._domain_id, self._available_files)
 
         self._filetree = {}
+        elevations = {}
 
         # Build the tree structure.
         for filename in self._available_files:
@@ -184,6 +186,14 @@ class DefaultDataAccess(NWPDataAccess):
                     if len(lon_var.dimensions) != 1 or lon_var.dimensions[0] != lon_name:
                         logging.error("Skipping file '%s': problem with longitude coordinate variable", filename)
                         continue
+
+                    if vert_type != "sfc":
+                        if vert_type in elevations:
+                            if not np.allclose(vert_var[:], elevations[vert_type]):
+                                logging.error("Skipping file '%s': elevations do not fit to previous elevations.", filename)
+                                continue
+                        else:
+                            elevations[vert_type] = vert_var[:]
 
                     standard_names = []
                     for ncvarname, ncvar in dataset.variables.items():
