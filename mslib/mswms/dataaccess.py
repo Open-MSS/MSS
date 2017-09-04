@@ -150,7 +150,7 @@ class DefaultDataAccess(NWPDataAccess):
         try:
             return self._filetree[vartype][init_time][variable][valid_time]
         except KeyError as ex:
-            self.update()
+            self.setup()
             try:
                 return self._filetree[vartype][init_time][variable][valid_time]
             except KeyError as ex:
