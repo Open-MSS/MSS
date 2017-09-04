@@ -82,7 +82,7 @@ except ImportError as ex:
         service_access_constraints = "This service is intended for research purposes only."
         register_horizontal_layers = []
         register_vertical_layers = []
-        nwpaccess = {
+        data = {
             "ecmwf_NH_LL05": os.path.join(tempfile.gettempdir(), "mss/grid/ecmwf/netcdf")
         }
         enable_basic_http_authentication = False

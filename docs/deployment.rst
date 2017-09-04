@@ -16,7 +16,7 @@ couple of simple additional requirements.
 
 Per configuration you could register horizontal (*register_horizontal_layers*)
 or vertical layers (*register_vertical_layers*), give a basemap
-table for EPSG mapping (*epsg_to_mpl_basemap_table*) and at all how to access the data (*nwpaccess*).
+table for EPSG mapping (*epsg_to_mpl_basemap_table*) and at all how to access the data.
 
 
 A few notes:
