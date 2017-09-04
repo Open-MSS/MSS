@@ -29,6 +29,9 @@
 import os
 import sys
 
+# on a productions system you may want to limit the amout of tracebacks to 0
+# sys.tracebacklimit = 0
+
 # Configuration of Python's code search path
 # If you already have set up the PYTHONPATH environment variable for the
 # stuff you see below, you don't need to do a1) and a2).
