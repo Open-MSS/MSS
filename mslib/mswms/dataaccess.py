@@ -47,12 +47,6 @@ from mslib import netCDF4tools
 from mslib.mswms.msschem import MSSChemTargets
 from future.utils import with_metaclass
 
-valid_time_cache = None
-# Maximum size of the cache in bytes.
-valid_time_cache_max_size_bytes = 10 * 1024 * 1024
-# Maximum age of a cached file in seconds.
-valid_time_cache_max_age_seconds = 10 * 86400
-
 
 class NWPDataAccess(with_metaclass(ABCMeta, object)):
     """Abstract superclass providing a framework to let the user query
