@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_wms_dockwidget.ui'
+# Form implementation generated from reading ui file 'ui/ui_wms_dockwidget.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -46,6 +46,7 @@ class Ui_WMSDockWidget(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.cbWMS_URL.sizePolicy().hasHeightForWidth())
         self.cbWMS_URL.setSizePolicy(sizePolicy)
+        self.cbWMS_URL.setStyleSheet(_fromUtf8("QComboBox QAbstractItemView { min-width: 800px; }"))
         self.cbWMS_URL.setEditable(True)
         self.cbWMS_URL.setObjectName(_fromUtf8("cbWMS_URL"))
         self.cbWMS_URL.addItem(_fromUtf8(""))
@@ -71,6 +72,10 @@ class Ui_WMSDockWidget(object):
         self.cbAutoUpdate.setMaximumSize(QtCore.QSize(200, 16777215))
         self.cbAutoUpdate.setObjectName(_fromUtf8("cbAutoUpdate"))
         self.horizontalLayout_9.addWidget(self.cbAutoUpdate)
+        self.btClearMap = QtGui.QPushButton(WMSDockWidget)
+        self.btClearMap.setMaximumSize(QtCore.QSize(200, 16777215))
+        self.btClearMap.setObjectName(_fromUtf8("btClearMap"))
+        self.horizontalLayout_9.addWidget(self.btClearMap)
         self.btGetMap = QtGui.QPushButton(WMSDockWidget)
         self.btGetMap.setMaximumSize(QtCore.QSize(200, 16777215))
         font = QtGui.QFont()
@@ -220,10 +225,10 @@ class Ui_WMSDockWidget(object):
         self.dteValidTime = QtGui.QDateTimeEdit(WMSDockWidget)
         self.dteValidTime.setMinimumSize(QtCore.QSize(160, 0))
         self.dteValidTime.setMaximumSize(QtCore.QSize(160, 16777215))
-        self.dteValidTime.setDate(QtCore.QDate(2010, 1, 16))
-        self.dteValidTime.setMinimumDateTime(QtCore.QDateTime(QtCore.QDate(2000, 1, 1), QtCore.QTime(6, 0, 0)))
+        self.dteValidTime.setDate(QtCore.QDate(2010, 1, 15))
+        self.dteValidTime.setMinimumDateTime(QtCore.QDateTime(QtCore.QDate(2000, 1, 1), QtCore.QTime(5, 0, 0)))
         self.dteValidTime.setMinimumDate(QtCore.QDate(2000, 1, 1))
-        self.dteValidTime.setMinimumTime(QtCore.QTime(6, 0, 0))
+        self.dteValidTime.setMinimumTime(QtCore.QTime(5, 0, 0))
         self.dteValidTime.setCalendarPopup(False)
         self.dteValidTime.setTimeSpec(QtCore.Qt.UTC)
         self.dteValidTime.setObjectName(_fromUtf8("dteValidTime"))
@@ -360,7 +365,8 @@ class Ui_WMSDockWidget(object):
         self.pbViewCapabilities.setToolTip(_translate("WMSDockWidget", "Show information on the selected WMS server.", None))
         self.pbViewCapabilities.setText(_translate("WMSDockWidget", "view", None))
         self.cbAutoUpdate.setToolTip(_translate("WMSDockWidget", "Automatically request an updated map when the layer parameters have changed.", None))
-        self.cbAutoUpdate.setText(_translate("WMSDockWidget", "update on changes", None))
+        self.cbAutoUpdate.setText(_translate("WMSDockWidget", "auto-update", None))
+        self.btClearMap.setText(_translate("WMSDockWidget", "clear map", None))
         self.btGetMap.setToolTip(_translate("WMSDockWidget", "<html><head/><body><p>Request a map with the specifed parameters.</p><p>Keyboard shortcut: Enter</p></body></html>", None))
         self.btGetMap.setText(_translate("WMSDockWidget", "get map", None))
         self.btGetMap.setShortcut(_translate("WMSDockWidget", "Return", None))
@@ -410,7 +416,7 @@ class Ui_WMSDockWidget(object):
         self.cbCacheEnabled.setToolTip(_translate("WMSDockWidget", "Enable the image cache (retrieved images will be stored locally to speed up repeated retrievals).", None))
         self.cbCacheEnabled.setText(_translate("WMSDockWidget", "on", None))
         self.btClearCache.setToolTip(_translate("WMSDockWidget", "Clear all cache contents.", None))
-        self.btClearCache.setText(_translate("WMSDockWidget", "clear", None))
+        self.btClearCache.setText(_translate("WMSDockWidget", "clear cache", None))
         self.cbValidOn.setText(_translate("WMSDockWidget", "Valid:", None))
         self.cbLevelOn.setText(_translate("WMSDockWidget", "Level:", None))
         self.cbInitialisationOn.setText(_translate("WMSDockWidget", "Initialisation:", None))

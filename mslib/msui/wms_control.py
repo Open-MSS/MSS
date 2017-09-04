@@ -476,6 +476,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.btGetCapabilities.clicked.connect(self.get_capabilities)
         self.pbViewCapabilities.clicked.connect(self.view_capabilities)
 
+        self.btClearMap.clicked.connect(self.clear_map)
+
         self.cbLayer.currentIndexChanged.connect(self.layer_changed)
         self.cbStyle.currentIndexChanged.connect(self.style_changed)
         self.cbLevel.currentIndexChanged.connect(self.level_changed)
@@ -630,6 +632,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pdlg.setValue(5)
         self.pdlg.setModal(True)
         self.pdlg.show()
+
+    def clear_map(self):
+        logging.debug("clear figure")
+        self.view.clear_figure()
 
     def get_capabilities(self):
         """Query the WMS server in the URL combobox for its capabilities. Fill
