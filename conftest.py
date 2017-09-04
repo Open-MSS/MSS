@@ -48,13 +48,9 @@ if not os.path.exists(utils.DATA_DIR):
     print('\n configure testdata')
     # ToDo check pytest tmpdir_factory
     examples = DataFiles(data_dir=utils.DATA_DIR,
-                         vt_cache=utils.VT_CACHE,
                          server_config_dir=utils.BASE_DIR)
     examples.create_datadir()
     examples.create_server_config(detailed_information=True)
-    examples.create_data()
-    if not os.path.exists(utils.VT_CACHE):
-        os.makedirs(utils.VT_CACHE)
 
 imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
 

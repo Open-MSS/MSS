@@ -52,16 +52,6 @@ import mslib.mswms
 #
 # SETTINGS                                  ###
 #
-# Valid time cache settings:
-# Path to the cache directory. Set to None to disable cache.
-# valid_time_cache = "./vt_cache"
-mslib.mswms.dataaccess.valid_time_cache = os.path.join(os.environ["HOME"], ".mss", "mswms", "vt_cache")
-if not os.path.exists(valid_time_cache):
-    os.makedirs(valid_time_cache)
-# Maximum size of the cache in bytes.
-mslib.mswms.dataaccess.valid_time_cache_max_size_bytes = 10 * 1024 * 1024
-# Maximum age of a cached file in seconds.
-mslib.mswms.dataaccess.valid_time_cache_max_age_seconds = 10 * 86400
 
 # Paths to data directories. Process callables (the functions that are
 # executed by the dispatcher system) can access these paths, hence

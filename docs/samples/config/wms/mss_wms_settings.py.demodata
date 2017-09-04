@@ -81,9 +81,6 @@ import mslib.mswms
 #xml_template_location = os.path.join(base_dir, "xml_templates")
 
 
-_vt_cache = r"/path/to/mss/vt_cache"
-mslib.mswms.dataaccess.valid_time_cache = _vt_cache
-
 epsg_to_mpl_basemap_table = {
     # EPSG:4326, the standard cylindrical lat/lon projection.
     4326: {"projection": "cyl"}

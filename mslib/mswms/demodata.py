@@ -699,9 +699,8 @@ class DataFiles(object):
         "time": ("time", "hours since 2012-10-17T12:00:00.000Z", "")
     }
 
-    def __init__(self, data_dir=None, vt_cache=None, server_config_dir=None):
+    def __init__(self, data_dir=None, server_config_dir=None):
         self.data_dir = data_dir
-        self.vt_cache = vt_cache
         self.server_config_file = os.path.join(server_config_dir, "mss_wms_settings.py")
         self.server_auth_config_file = os.path.join(server_config_dir, "mss_wms_auth.py")
         self.data_access_settings_file = os.path.join(server_config_dir, "mss_wms_data_access_settings.py")
@@ -835,9 +834,6 @@ import mslib.mswms
 #xml_template_location = os.path.join(base_dir, "xml_templates")
 
 
-_vt_cache = r"{vt_cache}"
-mslib.mswms.dataaccess.valid_time_cache = _vt_cache
-
 epsg_to_mpl_basemap_table = {{
     # EPSG:4326, the standard cylindrical lat/lon projection.
     4326: {{"projection": "cyl"}}
@@ -884,7 +880,7 @@ if mpl_vsec_styles is not None:
         (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
-            simple_server_config = simple_server_config.format(vt_cache=self.vt_cache)
+            simple_server_config = simple_server_config.format()
         else:
             simple_server_config = '''"""
 simple server config for demodata
@@ -1085,7 +1081,6 @@ def main():
     creates various test data files and also the server configuration
     """
     examples = DataFiles(data_dir=os.path.join(os.path.expanduser("~"), "mss", 'testdata'),
-                         vt_cache=os.path.join(os.path.expanduser("~"), "mss", "vt_cache"),
                          server_config_dir=os.path.join(os.path.expanduser("~"), "mss"))
     examples.create_datadir()
     examples.create_server_config(detailed_information=True)

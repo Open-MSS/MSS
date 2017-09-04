@@ -11,7 +11,6 @@ msui/mss.topview.cfg
 msui/mss_settings.py
 msui/wms_cache/
 mswms/mss_wms_settings.py
-mswms/vt_cache/
 docs/_build
 build/
 mss.egg-info/
