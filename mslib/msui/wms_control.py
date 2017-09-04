@@ -403,8 +403,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if default_WMS is not None:
             add_wms_urls(self.cbWMS_URL, default_WMS)
-        if self.cbWMS_URL.count() > 0:
-            self.cbWMS_URL.setCurrentIndex(0)
 
         # Compile regular expression used in crsAllowed() to filter
         # layers accordings to their CRS.
@@ -521,6 +519,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.prefetcher = None
         self.fetcher = None
         self.expected_img = None
+
+        if self.cbWMS_URL.count() > 0:
+            self.cbWMS_URL.setCurrentIndex(0)
+            self.wms_url_changed(self.cbWMS_URL.currentText())
 
     def __del__(self):
         """Destructor.
