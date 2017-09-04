@@ -194,7 +194,8 @@ class DefaultDataAccess(NWPDataAccess):
                     if vert_type != "sfc":
                         if vert_type in elevations:
                             if not np.allclose(vert_var[:], elevations[vert_type]):
-                                logging.error("Skipping file '%s': elevations do not fit to previous elevations.", filename)
+                                logging.error("Skipping file '%s': elevations do not fit to previous elevations.",
+                                              filename)
                                 continue
                         else:
                             elevations[vert_type] = vert_var[:]
