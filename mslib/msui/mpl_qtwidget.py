@@ -349,6 +349,7 @@ class MplSideViewCanvas(MplCanvas):
             self.image.remove()
             self.image = None
             self.ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
+            self.ax.figure.canvas.draw()
 
     def redraw_xaxis(self, lats, lons, times):
         """Redraw the x-axis of the side view on path changes. Also remove
@@ -694,6 +695,14 @@ class MplTopViewCanvas(MplCanvas):
 
         bbox = (axis[0], axis[2], axis[1], axis[3])
         return bbox
+
+    def clear_figure(self):
+        logging.debug("Removing image")
+        if self.map.image is not None:
+            self.map.image.remove()
+            self.map.image = None
+            self.ax.set_title("Top view", horizontalalignment="left", x=0)
+            self.ax.figure.canvas.draw()
 
     def draw_image(self, img):
         """Draw the image img on the current plot.

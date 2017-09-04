@@ -52,6 +52,9 @@
        <property name="toolTip">
         <string>Enter a valid WMS URL here.</string>
        </property>
+       <property name="styleSheet">
+        <string notr="true">QComboBox QAbstractItemView { min-width: 800px; }</string>
+       </property>
        <property name="editable">
         <bool>true</bool>
        </property>
@@ -112,7 +115,20 @@
         <string>Automatically request an updated map when the layer parameters have changed.</string>
        </property>
        <property name="text">
-        <string>update on changes</string>
+        <string>auto-update</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btClearMap">
+       <property name="maximumSize">
+        <size>
+         <width>200</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>clear map</string>
        </property>
       </widget>
      </item>
@@ -520,12 +536,12 @@ p, li { white-space: pre-wrap; }
             <date>
              <year>2010</year>
              <month>1</month>
-             <day>16</day>
+             <day>15</day>
             </date>
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>6</hour>
+             <hour>5</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2000</year>
@@ -542,7 +558,7 @@ p, li { white-space: pre-wrap; }
            </property>
            <property name="minimumTime">
             <time>
-             <hour>6</hour>
+             <hour>5</hour>
              <minute>0</minute>
              <second>0</second>
             </time>
@@ -709,7 +725,7 @@ p, li { white-space: pre-wrap; }
             <string>Clear all cache contents.</string>
            </property>
            <property name="text">
-            <string>clear</string>
+            <string>clear cache</string>
            </property>
           </widget>
          </item>
