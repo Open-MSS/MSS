@@ -41,13 +41,14 @@ class Test_VSec(object):
         p2 = [50.00, 12.]
         p3 = [51.00, 15.]
         p4 = [48.00, 11.]
-        nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+        data = mss_wms_settings.data["ecmwf_EUR_LL015"]
+        data.setup()
 
         self.path = [p1, p2, p3, p4]
         self.bbox = [3, 500, 3, 10]
         self.init_time = datetime(2012, 10, 17, 12)
         self.valid_time = datetime(2012, 10, 17, 12)
-        self.vsec = VerticalSectionDriver(nwpaccess)
+        self.vsec = VerticalSectionDriver(data)
 
     def plot(self, plot_object, style="default"):
         self.vsec.set_plot_parameters(plot_object=plot_object,
@@ -135,13 +136,14 @@ class Test_VSec(object):
 
 class Test_HSec(object):
     def setup(self):
-        nwpaccess = mss_wms_settings.nwpaccess["ecmwf_EUR_LL015"]
+        data = mss_wms_settings.data["ecmwf_EUR_LL015"]
+        data.setup()
 
         self.bbox = [-22.5, 27.5, 55, 62.5]
 
         self.init_time = datetime(2012, 10, 17, 12)
         self.valid_time = datetime(2012, 10, 17, 12)
-        self.hsec = HorizontalSectionDriver(nwpaccess)
+        self.hsec = HorizontalSectionDriver(data)
 
     def plot(self, plot_object, style="default", level=None):
         self.hsec.set_plot_parameters(plot_object=plot_object,

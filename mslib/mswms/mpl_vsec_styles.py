@@ -1469,9 +1469,15 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         self.title = self._title_tpl.format(modelname=self.driver.data_access._modelname)
         # for altitude level model data, when we don't have air_pressure information, we want to warn users that the
         # vertical section is only an approximation
-        if (self.name[-2:] == "al") and\
-                ("air_pressure" not in list(self.driver.data_access.build_filetree().values())[0].values()[0]):
-            self.title = self.title.replace(" al)", " al; WARNING: vert. distribution only approximate!)")
+        vert = self.name[-2:]
+        if vert != "pl":
+            # look for valid times including air_pressure
+            init_times = self.driver.data_access.get_init_times()
+            valid_times = self.driver.data_access.get_init_times.get_valid_times(
+                "air_pressure", vert, init_times[0])
+            if len(valid_times) == 0:
+                self.title = self.title.replace(
+                    " " + vert + ")", " " + vert + "; WARNING: vert. distribution only approximate!)")
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if

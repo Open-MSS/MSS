@@ -73,15 +73,7 @@ The configuration file have to become added to the /home/mss/config directory
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
 
 
-The data access module has to be a separate module. This module becomes on each users
-*get capabilities* call reloaded and shows to the user an uptodate list of available data.
-
-**/home/mss/config/mss_wms_data_access_settings.py**
-
- .. literalinclude:: samples/config/wms/mss_wms_data_access_settings.py.sample
-
-
-You have to adopt these file to your data.
+You have to adopt this file to your data.
 
 
 .. _mswms-deployment:
@@ -198,7 +190,6 @@ guidelines given above. This script does not overwrite an existing mss_wms_setti
   mss
   ├── mss_wms_auth.py
   ├── mss_wms_settings.py
-  ├── mss_wms_data_access_settings.py
   └── testdata
       ├── 20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc
       ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
@@ -234,8 +225,6 @@ e.g.
 Detailed server configuration *mss_wms_settings.py* for this demodata
 
  .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
-
- .. literalinclude:: samples/config/wms/mss_wms_data_access_settings.py.demodata
 
 For setting authentication see *mss_wms_auth.py*
 
