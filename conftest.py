@@ -51,6 +51,7 @@ if not os.path.exists(utils.DATA_DIR):
                          server_config_dir=utils.BASE_DIR)
     examples.create_datadir()
     examples.create_server_config(detailed_information=True)
+    examples.create_data()
 
 imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
 

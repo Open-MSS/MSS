@@ -57,7 +57,6 @@ import paste.util.multidict
 import tempfile
 import urllib.parse
 from chameleon import PageTemplateLoader
-import mss_wms_data_access_settings
 
 try:
     import mss_wms_settings
@@ -120,6 +119,28 @@ class WMSServer(object):
         """
         init method for wms server
         """
+        data_access_dict = mss_wms_settings.data
+
+        for key in data_access_dict:
+            data_access_dict[key].setup()
+
+        self.hsec_drivers = {}
+        for key in data_access_dict:
+            self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
+                data_access_dict[key])
+
+        self.vsec_drivers = {}
+        for key in data_access_dict:
+            self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
+                data_access_dict[key])
+
+        self.hsec_layer_registry = {}
+        for layer, datasets in mss_wms_settings.register_horizontal_layers:
+            self.register_hsec_layer(datasets, layer)
+
+        self.vsec_layer_registry = {}
+        for layer, datasets in mss_wms_settings.register_vertical_layers:
+            self.register_vsec_layer(datasets, layer)
 
     def register_hsec_layer(self, datasets, layer_class):
         """Register horizontal section layer in internal dict of layers.
@@ -195,29 +216,12 @@ class WMSServer(object):
         return [template(code=code, text=text), "text/xml"]
 
     def get_capabilities(self, server_url=None):
-        self.hsec_layer_registry = {}
         # ToDo find a more elegant method to do the same
         # Preferable we don't want a seperate data_access module to be configured
-        reload(mss_wms_data_access_settings)
-        data_access_dict = mss_wms_data_access_settings.data
+        data_access_dict = mss_wms_settings.data
 
-        self.hsec_drivers = {}
         for key in data_access_dict:
-            self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
-                data_access_dict[key])
-
-        self.vsec_layer_registry = {}
-        self.vsec_drivers = {}
-        for key in data_access_dict:
-            self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
-                data_access_dict[key])
-
-        self.hsec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_horizontal_layers:
-            self.register_hsec_layer(datasets, layer)
-        self.vsec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_vertical_layers:
-            self.register_vsec_layer(datasets, layer)
+            data_access_dict[key].setup()
 
         template = templates['get_capabilities.pt']
         logging.debug("server-url '%s'", server_url)
@@ -510,10 +514,6 @@ class WMSServer(object):
 
 app = WMSServer()
 
-# Simple Caching Solutions
-# It maps the Requested URL to Tuble of ( data_format, response_body )
-cache = {}
-
 
 def application(environ, start_response):
     try:
@@ -529,25 +529,19 @@ def application(environ, start_response):
         url = paste.request.construct_url(environ)
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if url in cache:
-            return_format, output = cache[url]
-        else:
-            if request.lower() == 'getcapabilities':
-                return_format = 'text/xml'
-                return_data = app.get_capabilities(server_url)
+        if request.lower() == 'getcapabilities':
+            return_format = 'text/xml'
+            return_data = app.get_capabilities(server_url)
+            output = str(return_data).encode('utf-8')
+        elif request.lower() in ['getmap', 'getvsec']:
+            return_data, return_format = app.produce_plot(environ, request)
+            # ToDo refactor
+            if not app.is_service_exception(return_data):
+                return_format = return_format.lower()  # MAYBE TO BE DELETED
+                output = return_data
+            else:
+                return_format = "text/xml"
                 output = str(return_data).encode('utf-8')
-            elif request.lower() in ['getmap', 'getvsec']:
-                return_data, return_format = app.produce_plot(environ, request)
-                # ToDo refactor
-                if not app.is_service_exception(return_data):
-                    return_format = return_format.lower()  # MAYBE TO BE DELETED
-                    output = return_data
-                else:
-                    return_format = "text/xml"
-                    output = str(return_data).encode('utf-8')
-
-                # Saving the result in a cache
-                cache[url] = (return_format, output)
 
         # Preparing the Response
         status = '200 OK'

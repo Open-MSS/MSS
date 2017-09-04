@@ -42,6 +42,7 @@ class Test_VSec(object):
         p3 = [51.00, 15.]
         p4 = [48.00, 11.]
         data = mss_wms_settings.data["ecmwf_EUR_LL015"]
+        data.setup()
 
         self.path = [p1, p2, p3, p4]
         self.bbox = [3, 500, 3, 10]
@@ -136,6 +137,7 @@ class Test_VSec(object):
 class Test_HSec(object):
     def setup(self):
         data = mss_wms_settings.data["ecmwf_EUR_LL015"]
+        data.setup()
 
         self.bbox = [-22.5, 27.5, 55, 62.5]
 
