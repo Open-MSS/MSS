@@ -28,23 +28,13 @@
 
 from __future__ import division
 
-from past.builtins import basestring
-
 from abc import ABCMeta, abstractmethod
 import itertools
-import glob
-import re
 import os
 import logging
 import netCDF4
-import numpy
-from datetime import datetime, timedelta
-import time
-import hashlib
-import pickle
 
 from mslib import netCDF4tools
-from mslib.mswms.msschem import MSSChemTargets
 from future.utils import with_metaclass
 
 
@@ -66,6 +56,13 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
         """
         self._root_path = rootpath
         self._modelname = ""
+
+    @abstractmethod
+    def setup(self):
+        """Checks for existing files etc. and sets up the class. Called by
+           server whenever a client requests a current capability document.
+        """
+        pass
 
     def get_filename(self, variable, vartype, init_time, valid_time,
                      fullpath=False):
@@ -143,13 +140,12 @@ class DefaultDataAccess(NWPDataAccess):
         self._available_files = None
         self._filetree = None
 
-        self.build_filetree()
-
     def _determine_filename(self, variable, vartype, init_time, valid_time):
         """Determines the name of the ECMWF data file the contains
            the variable <variable> of the forecast specified by
            init_time and valid_time.
         """
+        assert self._filetree is not None, "filetree is None. Forgot to call setup()?"
         try:
             return self._filetree[vartype][init_time][variable][valid_time]
         except KeyError as ex:
@@ -158,15 +154,7 @@ class DefaultDataAccess(NWPDataAccess):
             raise ValueError(u"variable type {} not available for variable {}"
                              .format(vartype, variable))
 
-    def build_filetree(self):
-        """
-        Build a tree structure with information on the available
-        forecast times and variables.
-        """
-
-        if self._filetree is not None:
-            return self._filetree
-
+    def setup(self):
         # Get a list of the available data files.
         self._available_files = [
             _filename for _filename in os.listdir(self._root_path) if self._domain_id in _filename]

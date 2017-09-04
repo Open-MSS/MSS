@@ -41,15 +41,15 @@ import mslib.msui.wms_control as wc
 
 
 class HSecViewMockup(mock.Mock):
-    getCRS = mock.Mock(return_value="EPSG:4326")
+    get_crs = mock.Mock(return_value="EPSG:4326")
     getBBOX = mock.Mock(return_value=(0, 0, 10, 10))
-    getPlotSizePx = mock.Mock(return_value=(200, 100))
+    get_plot_size_in_px = mock.Mock(return_value=(200, 100))
 
 
 class VSecViewMockup(mock.Mock):
-    getCRS = mock.Mock(return_value="VERT:LOGP")
+    get_crs = mock.Mock(return_value="VERT:LOGP")
     getBBOX = mock.Mock(return_value=(3, 500, 3, 10))
-    getPlotSizePx = mock.Mock(return_value=(200, 100))
+    get_plot_size_in_px = mock.Mock(return_value=(200, 100))
 
 
 class WMSControlWidgetSetup(object):

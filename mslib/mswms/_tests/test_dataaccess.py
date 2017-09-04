@@ -27,9 +27,7 @@
 """
 
 import os
-import numpy
 from datetime import datetime
-from mslib.mswms import dataaccess
 from mslib.mswms.dataaccess import DefaultDataAccess
 from mslib._tests.utils import DATA_DIR
 
@@ -37,6 +35,7 @@ from mslib._tests.utils import DATA_DIR
 class Test_DefaultDataAccess(object):
     def setup(self):
         self.dut = DefaultDataAccess(DATA_DIR, "EUR_LL015")
+        self.dut.setup()
 
     def test_get_filename(self):
         filename = self.dut.get_filename("air_pressure", "ml",
