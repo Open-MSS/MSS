@@ -403,8 +403,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if default_WMS is not None:
             add_wms_urls(self.cbWMS_URL, default_WMS)
-        if self.cbWMS_URL.count() > 0:
-            self.cbWMS_URL.setCurrentIndex(0)
 
         # Compile regular expression used in crsAllowed() to filter
         # layers accordings to their CRS.
@@ -476,6 +474,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.btGetCapabilities.clicked.connect(self.get_capabilities)
         self.pbViewCapabilities.clicked.connect(self.view_capabilities)
 
+        self.btClearMap.clicked.connect(self.clear_map)
+
         self.cbLayer.currentIndexChanged.connect(self.layer_changed)
         self.cbStyle.currentIndexChanged.connect(self.style_changed)
         self.cbLevel.currentIndexChanged.connect(self.level_changed)
@@ -521,6 +521,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.prefetcher = None
         self.fetcher = None
         self.expected_img = None
+
+        if self.cbWMS_URL.count() > 0:
+            self.cbWMS_URL.setCurrentIndex(0)
+            self.wms_url_changed(self.cbWMS_URL.currentText())
 
     def __del__(self):
         """Destructor.
@@ -630,6 +634,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pdlg.setValue(5)
         self.pdlg.setModal(True)
         self.pdlg.show()
+
+    def clear_map(self):
+        logging.debug("clear figure")
+        self.view.clear_figure()
 
     def get_capabilities(self):
         """Query the WMS server in the URL combobox for its capabilities. Fill
