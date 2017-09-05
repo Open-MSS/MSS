@@ -530,11 +530,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         doc = xml.dom.minidom.Document()
 
         ft_el = doc.createElement("FlightTrack")
+        ft_el.setAttribute("version", str(__version__))
         doc.appendChild(ft_el)
-        version_el = doc.createElement("Version")
-        version_el.appendChild(doc.createTextNode(__version__))
-        ft_el.appendChild(version_el)
-
         # The list of waypoint elements.
         wp_el = doc.createElement("ListOfWaypoints")
         ft_el.appendChild(wp_el)
