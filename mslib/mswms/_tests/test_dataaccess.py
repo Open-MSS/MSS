@@ -40,12 +40,12 @@ class Test_DefaultDataAccess(object):
     def test_get_filename(self):
         filename = self.dut.get_filename("air_pressure", "ml",
                                          datetime(2012, 10, 17, 12, 0),
-                                         datetime(2012, 10, 17, 15, 0))
+                                         datetime(2012, 10, 17, 18, 0))
         assert filename == "20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc"
 
         filename = self.dut.get_filename("air_pressure", "ml",
                                          datetime(2012, 10, 17, 12, 0),
-                                         datetime(2012, 10, 17, 15, 0),
+                                         datetime(2012, 10, 17, 18, 0),
                                          fullpath=True)
         assert filename == os.path.join(DATA_DIR, filename)
 
@@ -67,32 +67,20 @@ class Test_DefaultDataAccess(object):
     def test_get_valid_times(self):
         valid_times = self.dut.get_valid_times("air_pressure", "ml", datetime(2012, 10, 17, 12, 0))
         assert valid_times == [datetime(2012, 10, 17, 12, 0),
-                               datetime(2012, 10, 17, 15, 0),
                                datetime(2012, 10, 17, 18, 0),
-                               datetime(2012, 10, 17, 21, 0),
                                datetime(2012, 10, 18, 0, 0),
-                               datetime(2012, 10, 18, 3, 0),
                                datetime(2012, 10, 18, 6, 0),
-                               datetime(2012, 10, 18, 9, 0),
                                datetime(2012, 10, 18, 12, 0),
-                               datetime(2012, 10, 18, 15, 0),
                                datetime(2012, 10, 18, 18, 0),
-                               datetime(2012, 10, 18, 21, 0),
                                datetime(2012, 10, 19, 0, 0)]
 
     def test_get_all_valid_times(self):
         all_valid_times = self.dut.get_all_valid_times("air_pressure", "ml")
         assert sorted(all_valid_times) == \
-            sorted([datetime(2012, 10, 17, 15, 0),
-                    datetime(2012, 10, 17, 21, 0),
-                    datetime(2012, 10, 18, 21, 0),
-                    datetime(2012, 10, 18, 18, 0),
-                    datetime(2012, 10, 18, 3, 0),
-                    datetime(2012, 10, 18, 15, 0),
+            sorted([datetime(2012, 10, 18, 18, 0),
                     datetime(2012, 10, 18, 0, 0),
                     datetime(2012, 10, 17, 12, 0),
                     datetime(2012, 10, 18, 6, 0),
                     datetime(2012, 10, 17, 18, 0),
                     datetime(2012, 10, 18, 12, 0),
-                    datetime(2012, 10, 18, 9, 0),
                     datetime(2012, 10, 19, 0, 0)])

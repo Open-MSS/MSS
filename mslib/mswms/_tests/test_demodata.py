@@ -46,7 +46,7 @@ class TestDemodate(object):
         imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
 
     def test_get_profile(self):
-        mean, std = demodata.get_profile("air_pressure", [10, 100, 500], "air_temperature")
+        mean, std = demodata.get_profile("air_pressure", [1000, 10000, 50000], "air_temperature")
         assert np.allclose(mean, [215., 212., 255.])
         assert np.allclose(std, [3.79, 6.31, 6.33])
 
