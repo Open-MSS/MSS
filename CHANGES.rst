@@ -1,6 +1,60 @@
 Changelog
 =========
 
+Version 1.6.0
+-------------
+
+New Features:
+ - disable traceback for server, #156
+ - hybrid sigma coordinate whould work with float values, #203
+ - WMS data access classes difficult to set up, #210
+ - add mss to docker platform, 211
+ - loading a flighttrackfile does not set filename, #214
+ - MSWMS consistency checks for data files, #218
+ - Provide units field to Plot routines, #219
+ - WMS Server get capabilities update if the data files changed, #221
+ - Altitude scale in side view plots, #226
+ - Add button to remove the WMS overlay graphic from flightplan, #234
+ - Change wms control in such a way that the latest not the first init_time is chosen by default, #236
+ - Change wms control in a way that the level keeps the same on a layer change, if feasible, #237
+ - Already cached WMS information is not activated upon start of wms_control for default WMS server, #247
+ - Try preloading WMS servers on startup, #250
+ - traceback should show version info, #256
+ - add version info to output files, #259
+ - completly remove vt_cache, #260
+ - update layer list on get_capabilities, #268
+
+Bug Fixes:
+ - WMS Server crashes if (some) files do not contain a variable associated with a dimension, #220
+ - the proper Cf standard_name "omega" is "lagrangian_tendency_of_air_pressure", #225
+ - WMS_control does not disable controls in all necessary circumstances, #239
+ - MSS provides unhelpful error message when requesting unsupported projections from non-WMS servers, #244
+ - WMSServer' object has no attribute 'hsec_layer_registry', #270
+
+Other Changes:
+ - Remove loop view until a maintainer is found, #275
+
+
+Hint:
+~~~~~
+
+DefaultDataAccess
++++++++++++++++++
+
+With 1.6.0 we introduced a DefaultDataAccess Class. This requires a change in your server configuration.
+This is an example from demodata.
+data = {
+   "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
+}
+This class substitutes all previous defined classes for data access.
+The Constructor needs information on data path and domain ID.
+Also we replaced the name from nwpaccess to data.
+The vt_cache caching was removed.
+
+WMS Server
+++++++++++
+The server does not need a restart by new data. Any get capability request by the user loads the recent data.
+
 
 Version 1.5.6
 -------------
