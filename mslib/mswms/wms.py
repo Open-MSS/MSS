@@ -122,7 +122,10 @@ class WMSServer(object):
         data_access_dict = mss_wms_settings.data
 
         for key in data_access_dict:
-            data_access_dict[key].setup()
+            try:
+                data_access_dict[key].setup()
+            except AttributeError:
+                pass
 
         self.hsec_drivers = {}
         for key in data_access_dict:
