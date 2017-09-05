@@ -72,12 +72,12 @@ class Test_netCDF4tools(object):
         lat_name, lat_var, lon_name, lon_var = identify_CF_lonlat(self.ncfile_ml)
         assert (lat_name, lon_name) == (u'lat', u'lon')
         assert lat_var.size == 40
-        assert lon_var.size == 50
+        assert lon_var.size == 100
 
     def test_identify_CF_hybrid(self):
         hybrid_name, hybrid_var, orientation, units, lt = identify_vertical_axis(self.ncfile_ml)
         assert hybrid_name == "hybrid"
-        assert hybrid_var.size == 19
+        assert hybrid_var.size == 18
         assert units == "sigma"
         assert lt == "ml"
         assert orientation == 1
@@ -117,7 +117,7 @@ class Test_netCDF4tools(object):
     def test_identify_CF_time(self):
         time_name, time_var = identify_CF_time(self.ncfile_ml)
         assert time_name == "time"
-        assert time_var.size == 13
+        assert time_var.size == 7
 
     def test_identify_CF_ensemble(self):
         pytest.skip("no demodata available yet")
@@ -125,7 +125,7 @@ class Test_netCDF4tools(object):
     def test_get_latlon_data(self):
         lat_data, lon_data, lat_order = get_latlon_data(self.ncfile_pl)
         assert lat_data.size == 40
-        assert lon_data.size == 50
+        assert lon_data.size == 100
         assert lat_order == -1
 
     def test_num2date(self):

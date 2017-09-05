@@ -362,7 +362,6 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         # Contour spacing for temperature lines.
         delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
-
         # Filled contour plot of cloud cover.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
