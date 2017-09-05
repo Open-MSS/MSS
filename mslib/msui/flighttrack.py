@@ -49,7 +49,7 @@ import xml.parsers.expat
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, variant_to_string, variant_to_float, USE_PYQT5
 
 # local application imports
-from mslib import utils
+from mslib import utils, __version__
 from mslib import thermolib
 from mslib.utils import config_loader, find_location, save_settings_pickle, load_settings_pickle
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
@@ -531,6 +531,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         ft_el = doc.createElement("FlightTrack")
         doc.appendChild(ft_el)
+        version_el = doc.createElement("Version")
+        version_el.appendChild(doc.createTextNode(__version__))
+        ft_el.appendChild(version_el)
 
         # The list of waypoint elements.
         wp_el = doc.createElement("ListOfWaypoints")
