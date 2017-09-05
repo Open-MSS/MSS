@@ -266,11 +266,6 @@ for vert in ["al", "ml", "pl", "tl"]:
         fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
                     ("equivalent_latitude_sh", "southern hemisphere")])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
-        "square_of_brunt_vaisala_frequency_in_air", vert,
-        add_data=_ADD_DATA[vert],
-        fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
-    make_generic_class(
         "VS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
         "air_temperature_residual", vert,
         add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure"),
