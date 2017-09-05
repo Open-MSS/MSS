@@ -1,10 +1,10 @@
 mss - User Interface
 ======================================
 
-The executable for the user interface application is "**mss**". It
-does not provide any command line options. Warnings about CDAT
-features are due to the NAppy package and can be ignored. The program
-should open the main window of the user interface, from which you can
+The executable for the user interface application is "**mss**".
+A short description of how to start the program is given by the --help option.
+Warnings about CDAT features are due to the NAppy package and can be ignored.
+The program should open the main window of the user interface, from which you can
 open further windows, including top view, side view and so on.
 
 Configuration for the user interface is located in

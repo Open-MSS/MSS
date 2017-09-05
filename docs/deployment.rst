@@ -9,7 +9,7 @@ A short description of how to start the program is given by the --help option.
 The file "wms.wsgi" is intended to be used with an Apache web server
 installation.
 
-We have methods to use data for ECMWF, CLaMS, GWFC, EMAC, METEOSAT implemented.
+We have a single method to use data for ECMWF, CLaMS, GWFC, EMAC, METEOSAT implemented.
 The data have to use for their parameters the CF attribute standard_name.
 A new method should be able to deal with any CF conforming file following a
 couple of simple additional requirements.
@@ -40,9 +40,8 @@ A few notes:
 - Creating the capabilities document can take very long (> 1 min) if
   the forecast data files have to be read for the first time (the WMS
   program opens all files and tries to determine the available data
-  and elevation ranges). Once the information used for the
-  capabilities are in the cache, however, a GetCapabilities request
-  should return a document within 1-2 seconds.
+  and elevation ranges). A GetCapabilities request
+  should return a document within a few seconds.
 
 - A typical bottleneck for plot generation is when the forecast data
   files are located on a different computer than the WMS server. In
@@ -95,7 +94,7 @@ meteorological data
 Data for the MSS server shall be provided in CF-compliant NetCDF format.
 Several specific data access methods are provided for ECMWF, Meteoc, and several other formats.
 
-The prefered method "AutomaticDataAccess" shall supplant most of these, but requires the data
+The prefered method "DefaultDataAccess" shall supplant most of these, but requires the data
 to be organised in the fashion described in the following (the others pose mostly the same
 requirements).
 
@@ -246,7 +245,6 @@ Our examples are based on the following directories located in the home director
  .
  ├── config
  │   └── mss_wms_settings.py
- |   └── mss_wms_data_access_settings.py
  |   └── mss_wms_auth.py
  ├── log
  │   └── mss_error.log
