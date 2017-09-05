@@ -39,8 +39,8 @@ surface_geopotential
 m2.s-2
   2.12e+03   4.74e+03
 air_pressure_at_sea_level
-hPa
-  9.89e+02   5.30e+03
+Pa
+  9.89e+04   5.30e+02
 total_cloud_cover
 (0.-.1)
   6.32e-01   3.93e-01
@@ -83,25 +83,25 @@ vertically_integrated_probability_of_wcb_occurrence
 
 _PROFILES_TEXT = """\
 air_pressure
-hPa
-  20         2
-  30         3
-  50         5
-  70         7
-  100       10
-  150       15
-  200       20
-  250       25
-  300       30
-  400       40
-  500       50
-  600       60
-  700       70
-  800       80
-  850       85
-  900       90
-  925       95
-  950       100
+Pa
+  2000         200
+  3000         300
+  5000         500
+  7000         700
+  10000       1000
+  15000       1500
+  20000       2000
+  25000       2500
+  30000       3000
+  40000       4000
+  50000       5000
+  60000       6000
+  70000       7000
+  80000       8000
+  85000       8500
+  90000       9000
+  92500       9500
+  95000       10000
 ertel_potential_vorticity
 PVU
   1.04e+02   2.25e+01
@@ -984,7 +984,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
         """
         Method to generate all required model data for testing purposes.
         """
-        times, lats, lons = np.arange(0, 39, 3), np.arange(70, 30, -1), np.arange(0, 50)
+        times, lats, lons = np.arange(0, 39, 6), np.arange(70, 30, -1), np.arange(-50, 50)
 
         for coordinate, label, levtype, coord_levels, variables in (
                 ("air_pressure", "PRESSURE_LEVELS", "pl",
@@ -1026,7 +1026,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
                 ("Q", "specific_humidity")):
             self.generate_file(
                 "hybrid", varname, "ml",
-                (("time", times), ("hybrid", np.arange(0, 19)), ("latitude", lats), ("longitude", lons)),
+                (("time", times), ("hybrid", np.arange(0, 18)), ("latitude", lats), ("longitude", lons)),
                 [standard_name])
 
         self.generate_file(
