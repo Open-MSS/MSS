@@ -81,13 +81,10 @@ except ImportError as ex:
         service_access_constraints = "This service is intended for research purposes only."
         register_horizontal_layers = []
         register_vertical_layers = []
-        data = {
-            "ecmwf_NH_LL05": os.path.join(tempfile.gettempdir(), "mss/grid/ecmwf/netcdf")
-        }
+        data = {}
         enable_basic_http_authentication = False
         __file__ = None
 
-print(mss_wms_settings.__file__)
 try:
     import mss_wms_auth
 except ImportError as ex:
@@ -99,7 +96,6 @@ except ImportError as ex:
         __file__ = None
 
 from mslib.mswms import mss_plot_driver
-
 from mslib.utils import CaseInsensitiveMultiDict
 
 # Logging the Standard Output, which will be added to the Apache Log Files
