@@ -30,6 +30,7 @@ Bug Fixes:
  - WMS_control does not disable controls in all necessary circumstances, #239
  - MSS provides unhelpful error message when requesting unsupported projections from non-WMS servers, #244
  - WMSServer' object has no attribute 'hsec_layer_registry', #270
+ - demodata vertical pressure levels contain wrong units, #276
 
 Other Changes:
  - Remove loop view until a maintainer is found, #275
@@ -47,7 +48,7 @@ data = {
    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
 }
 This class substitutes all previous defined classes for data access.
-The Constructor needs information on data path and domain ID.
+The Constructor needs information on data path and domain ID, see documentation.
 Also we replaced the name from nwpaccess to data.
 The vt_cache caching was removed.
 
