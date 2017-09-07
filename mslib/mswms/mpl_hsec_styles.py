@@ -534,13 +534,13 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
         add_contours = [("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
 
     class fnord(HS_GenericStyle):
-        name = entity + "_" + vert
+        name = u"{}_{}".format(entity, vert)
         dataname = entity
         title = Targets.TITLES.get(entity, entity)
         long_name = entity
         units, unit_scale = Targets.get_unit(entity)
         if units:
-            title += " ({})".format(units)
+            title += u" ({})".format(units)
 
         required_datafields = [(vert, entity)] + add_data
         contours = add_contours
@@ -1808,11 +1808,11 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         _contourname = "_pcontours"
 
     class fnord(HS_MSSChemStyle):
-        name = "HS_" + entity + "_" + vert + _contourname
+        name = u"HS_{}_{}{}".format(entity, vert, _contourname)
         dataname = entity
         units = units
         unit_scale = scale
-        _title_tpl = nam + " ({modelname}, " + vert + ")"
+        _title_tpl = u"{} ({{modelname}}, {})".format(nam, vert)
         long_name = entity
         if units:
             _title_tpl += u" ({})".format(units)
