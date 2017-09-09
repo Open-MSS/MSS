@@ -180,7 +180,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def flags(self, index):
         """Used to specify which table columns can be edited by the user;
            overrides the corresponding QAbstractTableModel method.
-
         """
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
@@ -499,10 +498,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             self.waypoints[0].distance_to_prev = 0
             self.waypoints[0].distance_total = 0
         for i in range(1, len(self.waypoints)):
-            wp_comm = str(self.waypoints[i].comments)
+            wp_comm = self.waypoints[i].comments
             if len(wp_comm) == 9 and wp_comm.startswith("Hexagon "):
-                wp_comm = "Hexagon {:d}".format(8 - int(wp_comm[-1]))
-                self.waypoints[i].comments = QString(wp_comm)
+                wp_comm = u"Hexagon {:d}".format(8 - int(wp_comm[-1]))
+                self.waypoints[i].comments = wp_comm
         self.update_distances(position=0, rows=len(self.waypoints))
         index = self.index(0, 0)
 
@@ -663,7 +662,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                 model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
             else:
                 for wp in self.parent().waypoints_model.all_waypoint_data():
-                    if loc == str(wp.location):
+                    if loc == wp.location:
                         lat, lon = wp.lat, wp.lon
                         # Don't update distances and flight performance twice, hence
                         # set update=False for LAT.
