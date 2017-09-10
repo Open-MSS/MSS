@@ -1,6 +1,14 @@
 Changelog
 =========
 
+
+Version 1.6.1
+-------------
+
+Bug Fixes:
+ - Location names are not displayed in Table view, #281
+
+
 Version 1.6.0
 -------------
 
