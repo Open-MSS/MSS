@@ -194,12 +194,17 @@ class DefaultDataAccess(NWPDataAccess):
 
                     if vert_type != "sfc":
                         if vert_type in elevations:
-                            if not np.allclose(vert_var[:], elevations[vert_type]):
-                                logging.error("Skipping file '%s': elevations do not fit to previous elevations.",
-                                              filename)
+                            if len(vert_var[:]) != len(elevations[vert_type]["levels"]):
+                                logging.error("Skipping file '%s': number of vertical levels does not fit to levels of "
+                                              "previous file '%s'.", filename, elevations[vert_type]["filename"])
+                                continue
+
+                            if not np.allclose(vert_var[:], elevations[vert_type]["levels"]):
+                                logging.error("Skipping file '%s': vertical levels do not fit to levels of previous "
+                                              "file '%s'.", filename, elevations[vert_type]["filename"])
                                 continue
                         else:
-                            elevations[vert_type] = vert_var[:]
+                            elevations[vert_type] = {"filename": filename, "levels": vert_var[:]}
 
                     standard_names = []
                     for ncvarname, ncvar in dataset.variables.items():
