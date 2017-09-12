@@ -1467,7 +1467,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         if vert != "pl":
             # look for valid times including air_pressure
             init_times = self.driver.data_access.get_init_times()
-            valid_times = self.driver.data_access.get_init_times.get_valid_times(
+            valid_times = self.driver.data_access.get_valid_times(
                 "air_pressure", vert, init_times[0])
             if len(valid_times) == 0:
                 self.title = self.title.replace(
