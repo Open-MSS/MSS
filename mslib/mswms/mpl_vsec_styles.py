@@ -1582,7 +1582,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
     class fnord(VS_MSSChemStyle):
         name = "VS_" + entity + "_" + vert
         dataname = entity
-        # units, unit_scale = Targets.get_unit(dataname)
+        units, unit_scale = Targets.get_unit(dataname)
         units = units
         unit_scale = scale
         _title_tpl = nam + " ({modelname}, " + vert + ")"
@@ -1592,7 +1592,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
         required_datafields = [(vert, entity)] + add_data
         contours = add_contours if add_contours else []
 
-    fnord.__name__ = name
+    fnord.__name__ = nam
     fnord.styles = list(fnord.styles)
     if Targets.get_thresholds(entity) is not None:
         fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
