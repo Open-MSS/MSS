@@ -1813,7 +1813,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         units, unit_scale = Targets.get_unit(dataname)
         units = units
         unit_scale = scale
-        _title_tpl = nam + " ({modelname}, " + vert + ")"
+        _title_tpl = nam + " (" + vert + ")"
         long_name = entity
         if units:
             _title_tpl += u" ({})".format(units)
