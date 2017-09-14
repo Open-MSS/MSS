@@ -54,7 +54,6 @@ import traceback
 import paste
 import paste.request
 import paste.util.multidict
-import tempfile
 import urllib.parse
 from chameleon import PageTemplateLoader
 
@@ -518,7 +517,7 @@ def application(environ, start_response):
         logging.debug(u"ENVIRON: %s", environ)
 
         # Processing
-        request = str(query.get('request'))
+        request = query.get('request')
         output = ""
         return_format = 'text/plain'
 
@@ -528,7 +527,7 @@ def application(environ, start_response):
         if request.lower() == 'getcapabilities':
             return_format = 'text/xml'
             return_data = app.get_capabilities(server_url)
-            output = str(return_data).encode('utf-8')
+            output = return_data.encode('utf-8')
         elif request.lower() in ['getmap', 'getvsec']:
             return_data, return_format = app.produce_plot(environ, request)
             # ToDo refactor
@@ -537,7 +536,7 @@ def application(environ, start_response):
                 output = return_data
             else:
                 return_format = "text/xml"
-                output = str(return_data).encode('utf-8')
+                output = return_data.encode('utf-8')
 
         # Preparing the Response
         status = '200 OK'

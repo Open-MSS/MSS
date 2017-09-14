@@ -93,17 +93,17 @@ class Targets(object):
 
     UNITS = {
         "air_temperature": ("K", 1),
-        "eastward_wind": ("ms$^{-1}$", 1),
+        "eastward_wind": ("1/ms", 1),
         "equivalent_latitude": ("degree N", 1),
         "ertel_potential_vorticity": ("PVU", 1),
         "gravity_wave_temperature_perturbation": ("K", 1),
         "mean_age_of_air": ("month", 1),
-        "northward_wind": ("ms$^{-1}$", 1),
-        "square_of_brunt_vaisala_frequency_in_air": ("s$^{-2}$", 1),
+        "northward_wind": ("1/ms", 1),
+        "square_of_brunt_vaisala_frequency_in_air": (u"1/s²", 1),
         "tropopause_altitude": ("km", 1),
         "cloud_ice_mixing_ratio": ("ppmv", 1),
-        "number_concentration_of_ice_crystals_in_air": ("cm$^{-3}$", 1),
-        "mean_mass_radius_of_cloud_ice_crystals": ("$\mu$m", 1),
+        "number_concentration_of_ice_crystals_in_air": (u"1/cm³", 1),
+        "mean_mass_radius_of_cloud_ice_crystals": (u"µm", 1),
         "maximum_pressure_on_backtrajectory": ("hPa", 1),
         "maximum_relative_humidity_wrt_ice_on_backtrajectory": ("%", 1),
     }
@@ -134,7 +134,7 @@ class Targets(object):
             "mole_fraction_of_ozone_in_air",
             "mole_fraction_of_water_vapor_in_air",
     ]:
-        UNITS[standard_name] = ("$\mu$mol mol$^{-1}$", 1e6)
+        UNITS[standard_name] = (u"µmol/mol", 1e6)
 
     for standard_name in [
             "mole_fraction_of_carbon_monoxide_in_air",
@@ -142,7 +142,7 @@ class Targets(object):
             "mole_fraction_of_nitric_acid_in_air",
             "mole_fraction_of_nitrous_oxide_in_air",
     ]:
-        UNITS[standard_name] = ("nmol mol$^{-1}$", 1e9)
+        UNITS[standard_name] = ("nmol/mol", 1e9)
 
     for standard_name in [
             "mole_fraction_of_carbon_tetrachloride_in_air",
@@ -155,7 +155,7 @@ class Targets(object):
             "mole_fraction_of_peroxyacetyl_nitrate_in_air",
             "mole_fraction_of_sulfur_dioxide_in_air",
     ]:
-        UNITS[standard_name] = ("pmol mol$^{-1}$", 1e12)
+        UNITS[standard_name] = ("pmol/mol", 1e12)
 
     for standard_name in [
             "fraction_below_6months_of_age_of_air_spectrum",
@@ -164,10 +164,10 @@ class Targets(object):
         UNITS[standard_name] = ("%", 100)
 
     TITLES = {
-        "ertel_potential_vorticity": "PV",
-        "square_of_brunt_vaisala_frequency_in_air": "N$^2$",
-        "gravity_wave_temperature_perturbation": "Gravity Wave Temperature Residual",
-        "tropopause_altitude": "Thermal Tropopause",
+        "ertel_potential_vorticity": u"PV",
+        "square_of_brunt_vaisala_frequency_in_air": u"N²",
+        "gravity_wave_temperature_perturbation": u"Gravity Wave Temperature Residual",
+        "tropopause_altitude": u"Thermal Tropopause",
     }
     for standard_name in _TARGETS:
         if standard_name.startswith("mole_fraction_of_") and standard_name.endswith("_in_air"):
