@@ -228,14 +228,16 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         tplines = [self.tangent_point_coordinates(
             fine_lines[i][0], fine_lines[i][1], line_heights[i],
             cut_height=self.dsbTangentHeight.value()) for i in range(len(fine_lines))]
-        for i, line in enumerate(tplines):
+        dirlines = self.direction_coordinates(wp_lons, wp_lats)
+        lines = tplines + dirlines
+        for i, line in enumerate(lines):
             for j, (lon, lat) in enumerate(line):
                 line[j] = bmap(lon, lat)
-            tplines[i] = line
+            lines[i] = line
         return LineCollection(
-            tplines,
+            lines,
             colors=QtGui.QPalette(self.btTangentsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
-            zorder=2, animated=True, linewidth=3, linestyles=':')
+            zorder=2, animated=True, linewidth=3, linestyles=[':'] * len(tplines) + ['-'] * len(dirlines))
 
     def compute_solar_lines(self, bmap, wp_vertices, wp_heights, wp_times):
         """
@@ -324,8 +326,10 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         Returns: List of tuples of longitude/latitude coordinates
 
         """
-        lon_lin2 = np.array(lon_lin) * np.cos(np.deg2rad(np.array(lat_lin)))
-        lins = list(zip(lon_lin2[0:-1], lon_lin2[1:], lat_lin[0:-1], lat_lin[1:]))
+        lins = list(zip(lon_lin[0:-1], lon_lin[1:], lat_lin[0:-1], lat_lin[1:]))
+        lins = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
+                for x0, x1, y0, y1 in lins]
+
         direction = [(x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
         direction = [(_x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
                      for _x, _y in direction]
@@ -344,6 +348,37 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         tps = [(x0 + tp_x, y0 + tp_y) for
                ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lins, tp_dir)]
         tps = [(x0 / np.cos(np.deg2rad(y0)), y0) for (x0, y0) in tps]
+        return tps
+
+    def direction_coordinates(self, lon_lin, lat_lin):
+        """
+        Computes coordinates of tangent points given coordinates of flight path.
+
+        Args:
+            lon_lin: longitudes of flight path
+            lat_lin: latitudes of flight path
+            flight_alt: altitude of aircraft (scalar or numpy array)
+            cut_height: altitude of tangent points
+
+        Returns: List of tuples of longitude/latitude coordinates
+
+        """
+        lins = list(zip(lon_lin[0:-1], lon_lin[1:], lat_lin[0:-1], lat_lin[1:]))
+        lins = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
+                for x0, x1, y0, y1 in lins]
+
+        direction = [(0.5 * (x0 + x1), 0.5 * (y0 + y1), x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
+        direction = [(_u, _v, _x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
+                     for _u, _v, _x, _y in direction]
+        los = [rotate_point(point[2:], -self.dsbObsAngle.value()) for point in direction]
+
+        dist = 1.
+
+        tp_dir = (np.array(los).T * dist).T
+
+        tps = [(x0, y0, x0 + tp_x, y0 + tp_y) for
+               ((x0, y0, _, _), (tp_x, tp_y)) in zip(direction, tp_dir)]
+        tps = [[(x0 / np.cos(np.deg2rad(y0)), y0), (x1 / np.cos(np.deg2rad(y0)), y1)] for (x0, y0, x1, y1) in tps]
         return tps
 
     @staticmethod
