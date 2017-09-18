@@ -54,14 +54,14 @@ def load_from_flitestar(filename):
                     NS = -1.
                 else:
                     NS = np.nan
-                lat = round((float(line[5]) + (float(line[6]) / 60.)) * NS, 2)
+                lat = round((float(line[5]) + (float(line[6]) / 60.)) * NS, 3)
                 if line[7] == 'E':
                     EW = 1.
                 elif line[7] == 'W':
                     EW = -1.
                 else:
                     EW = np.nan
-                lon = round((float(line[8]) + (float(line[9]) / 60.)) * EW, 2)
+                lon = round((float(line[8]) + (float(line[9]) / 60.)) * EW, 3)
 
                 wp = ft.Waypoint()
                 wp.location = line[3]
