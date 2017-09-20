@@ -177,7 +177,7 @@ def load_settings_pickle(tag, default_settings=None):
         try:
             with open(settingsfile, "rb") as fileobj:
                 settings = pickle.load(fileobj)
-        except (pickle.UnpicklingError, KeyError, OSError, IOError, ImportError) as ex:
+        except (pickle.UnpicklingError, ValueError, KeyError, OSError, IOError, ImportError) as ex:
             logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
                           tag, type(ex), ex)
     if isinstance(settings, dict):
