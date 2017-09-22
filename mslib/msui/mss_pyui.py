@@ -242,7 +242,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         for i, base_url in enumerate(urls):
             pdlg.setValue(i)
             QtWidgets.QApplication.processEvents()
-            logging.info(base_url)
             # initialize login cache fomr config file, but do not overwrite existing keys
             for key, value in list(config_loader(dataset="WMS_login", default={}).items()):
                 if key not in constants.WMS_LOGIN_CACHE:

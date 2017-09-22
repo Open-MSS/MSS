@@ -534,13 +534,13 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
         add_contours = [("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
 
     class fnord(HS_GenericStyle):
-        name = entity + "_" + vert
+        name = u"{}_{}".format(entity, vert)
         dataname = entity
         title = Targets.TITLES.get(entity, entity)
         long_name = entity
         units, unit_scale = Targets.get_unit(entity)
         if units:
-            title += " ({})".format(units)
+            title += u" ({})".format(units)
 
         required_datafields = [(vert, entity)] + add_data
         contours = add_contours
@@ -1427,13 +1427,10 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                                filled_contours, cmap=fcmap, extend="both")
 
         data["secondary_tropopause_altitude"] = np.ma.masked_invalid(data["secondary_tropopause_altitude"])
-        print(data["tropopause_altitude"].compressed())
-        print(data["secondary_tropopause_altitude"])
 
         if self.style == "default":
-            mask = np.ma.masked_where(
-                data["secondary_tropopause_altitude"].mask, data["secondary_tropopause_altitude"].mask)
-            bm.pcolor(lonmesh, latmesh, mask, alpha=0, hatch="xx")
+            mask = ~data["secondary_tropopause_altitude"].mask
+            bm.contourf(lonmesh, latmesh, mask, [0, 0.5, 1.5], hatches=["", "xx"], alpha=0)
 
         if not self.noframe:
             cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
@@ -1443,6 +1440,12 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+
+            # adjust colorbar fontsize to figure height
+            fontsize = self.fig.bbox.height * 0.024
+            for x in axins1.yaxis.majorTicks:
+                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
+                x.label1.set_fontsize(fontsize)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, vardata,
@@ -1808,11 +1811,11 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         _contourname = "_pcontours"
 
     class fnord(HS_MSSChemStyle):
-        name = "HS_" + entity + "_" + vert + _contourname
+        name = u"HS_{}_{}{}".format(entity, vert, _contourname)
         dataname = entity
         units = units
         unit_scale = scale
-        _title_tpl = nam + " ({modelname}, " + vert + ")"
+        _title_tpl = u"{} ({{modelname}}, {})".format(nam, vert)
         long_name = entity
         if units:
             _title_tpl += u" ({})".format(units)
