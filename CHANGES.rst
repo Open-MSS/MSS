@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 1.6.2
+-------------
+
+Bug Fixes:
+ - Update MSSChemDataAccess from example configuration in documentation, #291
+ - cfg pickle files of older Version cause a crash of more recent MSS under windows only, #284
+ - flightstar input plugin rounds coordinates, #283
+ - DefaultDataAccess class crashes in case that two files of same
+   vertical coordinate type have different number of levels, #282
+
 
 Version 1.6.1
 -------------
