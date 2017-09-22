@@ -1460,18 +1460,17 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
     # rather sets the driver only after initialization.
     def set_driver(self, driver):
         super(VS_MSSChemStyle, self).set_driver(driver=driver)
-        self.title = self._title_tpl.format(modelname=self.driver.data_access._modelname)
         # for altitude level model data, when we don't have air_pressure information, we want to warn users that the
         # vertical section is only an approximation
         vert = self.name[-2:]
         if vert != "pl":
             # look for valid times including air_pressure
             init_times = self.driver.data_access.get_init_times()
-            valid_times = self.driver.data_access.get_init_times.get_valid_times(
+            valid_times = self.driver.data_access.get_valid_times(
                 "air_pressure", vert, init_times[0])
             if len(valid_times) == 0:
                 self.title = self.title.replace(
-                    " " + vert + ")", " " + vert + "; WARNING: vert. distribution only approximate!)")
+                    "(" + vert + ")", "(" + vert + "; WARNING: vert. distribution only approximate!)")
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
@@ -1582,17 +1581,17 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
     class fnord(VS_MSSChemStyle):
         name = u"VS_{}_{}".format(entity, vert)
         dataname = entity
-        # units, unit_scale = Targets.get_unit(dataname)
+        units, unit_scale = Targets.get_unit(dataname)
         units = units
         unit_scale = scale
-        _title_tpl = u"{} ({{modelname}}, {})".format(nam, vert)
+        title = nam + " (" + vert + ")"
         long_name = entity
         if units:
-            _title_tpl += u" ({})".format(units)
+            title += u" ({})".format(units)
         required_datafields = [(vert, entity)] + add_data
         contours = add_contours if add_contours else []
 
-    fnord.__name__ = name
+    fnord.__name__ = nam
     fnord.styles = list(fnord.styles)
     if Targets.get_thresholds(entity) is not None:
         fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]

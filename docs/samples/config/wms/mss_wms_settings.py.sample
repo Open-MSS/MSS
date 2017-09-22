@@ -71,35 +71,11 @@ datapath = {
 # which provides the methods fc_filename() and full_fc_path().
 
 data = {
-    "ecmwf_NH_LL05": mslib.mswms.dataaccess.DefaultDataAccess(datapath["ecmwf"], "NH_LL05")
+    "ecmwf_NH_LL05": mslib.mswms.dataaccess.DefaultDataAccess(datapath["ecmwf"], "NH_LL05"),
     #    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(datapath["ecmwf"], "EUR_LL015"),
     #    "meteosat_EUR_LL05": mslib.mswms.dataaccess.DefaultDataAccess(datapath["meteosat"], "EUR_LL05"),
-    #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccess.DefaultDataAccess(datapath["emac"])
-
-    #        The MSS-Chem project provides an easy way to download and prepare
-    #        forecasts from a range of different CTMs.
-    #        The MSSChemDataAccess class is meant to provide access to
-    #        the chemistry forecasts prepared by MSS-Chem.  Therefore, it has
-    #        to be more general than the other DataAccess classes.
-    #        Its contstructor takes four arguments:
-    #
-    #        1. The path to the data files.  This directory has to contain one
-    #           folder for each init_time, which is called "%Y-%m-%d_%H"
-    #        2. The model name, to be displayed in plot titles
-    #        3. The string with which the filenames start
-    #        4. The vertical layer type of the model; one of
-    #           - "pl" (pressure level)
-    #           - "ml" (model level)
-
-    #           - "tl" (potential temperature level)
-
-    #           - "al" (altitude level) -> CAUTION <- Only use if absolutely necessary, for models without any pressure
-
-    #             information.  For vertical sections, air_pressure will be determined on-the-fly, from the layer
-
-    #             altitude alone, which is not very accurate
-
-    #    "CAMSglb": mslib.mswms.dataaccess.MSSChemDataAccess(datapath["camsglobal"], "CAMSglobal", "cams-global", "ml"),
+    #    "emac_GLOBAL_LL1125": mslib.mswms.dataaccess.DefaultDataAccess(datapath["emac"]),
+    #    "CAMSglb": mslib.mswms.dataaccess.DefaultDataAccess(datapath["camsglobal"]),
 
 }
 
@@ -171,6 +147,35 @@ register_horizontal_layers = [
     (mpl_hsec_styles.HS_Meteosat_BT108_01, ["meteosat_EUR_LL05"]),
 
     # MSS-Chem chemistry forecasts
+    #
+    # The MSS-Chem project (http://mss-chem.rtfd.io) provides an easy way to
+    # download and prepare chemical weather forecasts from a range of different
+    # CTMs.  The plot style classes are called `HS_MSSChemStyle_XL_YYY_zzzzz`
+    # and `VS_MSSChemStyle_XL_YYY_zzzzz` for horizontal and vertical sections,
+    # i.e., "maps" and "cross-sections", respectively.
+    #
+    # In the class name, X determines the type of vertical layering of the model
+    # data, and can be one of
+    # - "P" for model data defined on pressure levels
+    # - "M" for model data defined on model levels
+    # - "A" for model data defined on altitude levels.
+    #   CAUTION: In the latter case, the vertical axis in vertical section plots
+    #   (VS_MSSChemStyle_AL_YYY_zzzz) is only approximate, as the air pressure
+    #   can only be estimated using the barometric formula.
+    #
+    # YYY stands for the chemical species to be displayed (in UPPER CASE), e.g.,
+    # "NO2".
+    #
+    # zzzzz determines the type of quantity, and can be one of
+    # - mfrac -> mass fraction, kg/kg
+    # - mconc -> mass concentration, kg/m3
+    # - nfrac -> mole fraction, mol/mol
+    # - nconc -> mole_concentration, mol/m3
+    #
+    # Putting this together, the following class provides a horizontal ("HS")
+    # section of model-level ("ML") mass fractions ("mfrac") of nitrogen dioxide
+    # ("NO2"):
+
     # (mpl_hsec_styles.HS_MSSChemStyle_ML_NO2_mfrac, ["CAMSglb"]),
 ]
 
