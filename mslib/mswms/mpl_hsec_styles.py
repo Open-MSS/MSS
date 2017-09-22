@@ -1813,9 +1813,10 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
     class fnord(HS_MSSChemStyle):
         name = u"HS_{}_{}{}".format(entity, vert, _contourname)
         dataname = entity
+        units, unit_scale = Targets.get_unit(dataname)
         units = units
         unit_scale = scale
-        _title_tpl = u"{} ({{modelname}}, {})".format(nam, vert)
+        _title_tpl = nam + " (" + vert + ")"
         long_name = entity
         if units:
             _title_tpl += u" ({})".format(units)
@@ -1823,7 +1824,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         required_datafields = [(vert, entity)] + add_data
         contours = add_contours
 
-    fnord.__name__ = name
+    fnord.__name__ = nam
     fnord.styles = list(fnord.styles)
 
     return fnord

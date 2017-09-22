@@ -29,7 +29,7 @@ import importlib
 import logging
 import traceback
 import sys
-from builtins import str
+from past.builtins import unicode
 import platform
 
 USE_PYQT5 = False
@@ -87,11 +87,16 @@ except ImportError:
 
 
 def variant_to_string(variant):
-    return str(variant.value())
+    if isinstance(variant, QtCore.QVariant):
+        return unicode(variant.value())
+    return unicode(variant)
 
 
 def variant_to_float(variant, locale=QtCore.QLocale()):
-    value = variant.value()
+    if isinstance(variant, QtCore.QVariant):
+        value = variant.value()
+    else:
+        value = variant
 
     if isinstance(value, (int, float)):
         return value
