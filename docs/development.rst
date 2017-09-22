@@ -5,6 +5,13 @@ This chapter will get you started with MSS development.
 
 MSS is written in Python.
 
+Once a stable release is published we do only bug fixes in stable and release regulary
+new minor versions. If a fix needs a API change or it is likly more a new feature you have
+to make a pull request to the develop branch. Documentation of changes is done by using our
+`issue tracker <https://bitbucket.org/wxmetvis/mss/issues>`_.
+
+When it is ready the developer version becomes the next stable.
+
 
 Style guide
 ~~~~~~~~~~~~~~~~
@@ -100,6 +107,15 @@ To build the html version of it, you need to have sphinx installed::
 
 
 Then point a web browser at docs/_build/html/index.html.
+
+Update local stable branch
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you don't have a stable branch, create one first or change to that branch::
+
+   git checkout [-b] stable
+   git pull git@bitbucket.org:wxmetvis/mss.git stable
+   git push
 
 
 Merging stable into develop
