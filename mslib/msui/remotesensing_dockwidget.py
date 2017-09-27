@@ -373,6 +373,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         lins = list(zip(lon_lin[0:-1], lon_lin[1:], lat_lin[0:-1], lat_lin[1:]))
         lins = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
                 for x0, x1, y0, y1 in lins]
+        lens = [np.hypot(x1 - x0, y1 - y0) * 110. for x0, x1, y0, y1 in lins]
+        lins = [_x for _x, _l in zip(lins, lens) if _l > 10]
 
         direction = [(0.5 * (x0 + x1), 0.5 * (y0 + y1), x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
         direction = [(_u, _v, _x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
