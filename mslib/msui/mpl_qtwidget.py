@@ -32,12 +32,14 @@ from __future__ import division
 # 'Matplotlib for Python Developers'.
 
 from datetime import datetime
+import os
 
 import logging
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 # related third party imports
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 # local application imports
@@ -48,7 +50,7 @@ from mslib import thermolib
 
 
 # Python Qt4 bindings for GUI objects
-from mslib.msui.mss_qt import QtCore, QtWidgets, FigureCanvas, NavigationToolbar
+from mslib.msui.mss_qt import USE_PYQT5, QtCore, QtWidgets, FigureCanvas, NavigationToolbar2QT
 
 # Matplotlib Figure object
 from matplotlib.figure import Figure
@@ -167,10 +169,220 @@ class MplWidget(QtWidgets.QWidget):
         self.setLayout(self.vbl)
 
 
+class NavigationToolbar(NavigationToolbar2QT):
+    # only display the buttons we need
+
+    def __init__(self, canvas, parent, sideview=False, coordinates=True):
+        if sideview:
+            self.toolitems = [
+                _x for _x in NavigationToolbar2QT.toolitems if _x[0] in ('Save',)]
+        else:
+            self.toolitems = [
+                _x for _x in NavigationToolbar2QT.toolitems if
+                _x[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save') or _x[0] is None]
+
+        self.sideview = sideview
+        NavigationToolbar2QT.__init__(self, canvas, parent, coordinates)
+        self.canvas = canvas
+        self._idMotion = None
+
+    def insert_wp(self, *args):
+        """Activate the pan/zoom tool. pan with left button, zoom with right"""
+        # set the pointer icon and button press funcs to the
+        # appropriate callbacks
+
+        if self._active == 'INSERT_WP':
+            self._active = None
+        else:
+            self._active = 'INSERT_WP'
+
+        if self._idPress is not None:
+            self._idPress = self.canvas.mpl_disconnect(self._idPress)
+            self.mode = ''
+
+        if self._idRelease is not None:
+            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
+            self.mode = ''
+
+        if self._idMotion is not None:
+            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
+
+        if self._active:
+            self._idPress = self.canvas.mpl_connect(
+                'button_press_event', self.press_wp)
+            self._idRelease = self.canvas.mpl_connect(
+                'button_release_event', self.canvas.waypoints_interactor.button_release_insert_callback)
+            self.mode = 'insert waypoint'
+            self.canvas.widgetlock(self)
+        else:
+            self.canvas.widgetlock.release(self)
+
+        self.set_message(self.mode)
+        self._update_buttons_checked()
+
+    def delete_wp(self, *args):
+        """Activate the pan/zoom tool. pan with left button, zoom with right"""
+        # set the pointer icon and button press funcs to the
+        # appropriate callbacks
+
+        if self._active == 'DELETE_WP':
+            self._active = None
+        else:
+            self._active = 'DELETE_WP'
+        if self._idPress is not None:
+            self._idPress = self.canvas.mpl_disconnect(self._idPress)
+            self.mode = ''
+
+        if self._idRelease is not None:
+            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
+            self.mode = ''
+
+        if self._idMotion is not None:
+            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
+
+        if self._active:
+            self._idPress = self.canvas.mpl_connect(
+                'button_press_event', self.press_wp)
+            self._idRelease = self.canvas.mpl_connect(
+                'button_release_event', self.canvas.waypoints_interactor.button_release_delete_callback)
+            self.mode = 'delete waypoint'
+            self.canvas.widgetlock(self)
+        else:
+            self.canvas.widgetlock.release(self)
+
+        for a in self.canvas.figure.get_axes():
+            a.set_navigate_mode(self._active)
+
+        self.set_message(self.mode)
+        self._update_buttons_checked()
+
+    def move_wp(self, *args):
+        """Activate the pan/zoom tool. pan with left button, zoom with right"""
+        # set the pointer icon and button press funcs to the
+        # appropriate callbacks
+
+        if self._active == 'MOVE_WP':
+            self._active = None
+        else:
+            self._active = 'MOVE_WP'
+
+        if self._idPress is not None:
+            self._idPress = self.canvas.mpl_disconnect(self._idPress)
+            self.mode = ''
+
+        if self._idRelease is not None:
+            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
+            self.mode = ''
+
+        if self._idMotion is not None:
+            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
+
+        if self._active:
+            self._idPress = self.canvas.mpl_connect(
+                'button_press_event', self.press_wp)
+            self._idRelease = self.canvas.mpl_connect(
+                'button_release_event', self.canvas.waypoints_interactor.button_release_move_callback)
+            self._idMotion = self.canvas.mpl_connect(
+                'motion_notify_event', self.motion_wp)
+
+            self.mode = 'move waypoint'
+            self.canvas.widgetlock(self)
+        else:
+            self.canvas.widgetlock.release(self)
+
+        self.set_message(self.mode)
+        self._update_buttons_checked()
+
+    def pan(self, *args):
+        if self._idMotion is not None:
+            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
+        NavigationToolbar2QT.pan(self, *args)
+
+    def zoom(self, *args):
+        if self._idMotion is not None:
+            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
+        NavigationToolbar2QT.zoom(self, *args)
+
+    def motion_wp(self, event):
+        self.canvas.waypoints_interactor.motion_notify_callback(event)
+
+    def press_wp(self, event):
+        self.canvas.waypoints_interactor.button_press_callback(event)
+
+    def _init_toolbar(self):
+        self.basedir = os.path.join(matplotlib.rcParams['datapath'], 'images')
+        for text, tooltip_text, image_file, callback in self.toolitems:
+            if text is None:
+                self.addSeparator()
+            else:
+                a = self.addAction(self._icon(image_file + '.png'),
+                                   text, getattr(self, callback))
+                self._actions[callback] = a
+                if callback in ['zoom', 'pan']:
+                    a.setCheckable(True)
+                if tooltip_text is not None:
+                    a.setToolTip(tooltip_text)
+                if text == 'Subplots':
+                    a = self.addAction(self._icon("qt4_editor_options.png"),
+                                       'Customize', self.edit_parameters)
+                    a.setToolTip('Edit axis, curve and image parameters')
+        if self.sideview:
+            wp_tools = [('Mv WP', 'Move waypoints', 'move_wp')]
+        else:
+            wp_tools = [
+                ('Mv WP', 'Move waypoints', 'move_wp'),
+                ('Ins WP', 'Insert waypoints', 'insert_wp'),
+                ('Del WP', 'Delete waypoints', 'delete_wp'),
+            ]
+        for text, tooltip_text, callback in wp_tools:
+            self.addSeparator()
+            a = self.addAction(text, getattr(self, callback))
+            self._actions[callback] = a
+            a.setCheckable(True)
+            a.setToolTip(tooltip_text)
+
+        self.buttons = {}
+
+        # Add the x,y location widget at the right side of the toolbar
+        # The stretch factor is 1 which means any resizing of the toolbar
+        # will resize this label instead of the buttons.
+        if self.coordinates:
+            self.locLabel = QtWidgets.QLabel("", self)
+            self.locLabel.setAlignment(
+                QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
+            self.locLabel.setSizePolicy(
+                QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                                      QtWidgets.QSizePolicy.Ignored))
+            labelAction = self.addWidget(self.locLabel)
+            labelAction.setVisible(True)
+
+        # reference holder for subplots_adjust window
+        self.adj_window = None
+
+        # Esthetic adjustments - we need to set these explicitly in PyQt5
+        # otherwise the layout looks different - but we don't want to set it if
+        # not using HiDPI icons otherwise they look worse than before.
+        if USE_PYQT5:
+            self.setIconSize(QtCore.QSize(24, 24))
+            self.layout().setSpacing(12)
+
+    def _update_buttons_checked(self):
+        # sync button checkstates to match active mode
+        if 'pan' in self._actions:
+            self._actions['pan'].setChecked(self._active == 'PAN')
+        if 'zoom' in self._actions:
+            self._actions['zoom'].setChecked(self._active == 'ZOOM')
+        if 'insert_wp' in self._actions:
+            self._actions['insert_wp'].setChecked(self._active == 'INSERT_WP')
+        if 'delete_wp' in self._actions:
+            self._actions['delete_wp'].setChecked(self._active == 'DELETE_WP')
+        self._actions['move_wp'].setChecked(self._active == 'MOVE_WP')
+
+
 class MplNavBarWidget(QtWidgets.QWidget):
     """Matplotlib canvas widget with navigation toolbar defined in Qt Designer"""
 
-    def __init__(self, parent=None, canvas=None):
+    def __init__(self, sideview=False, parent=None, canvas=None):
         # initialization of Qt MainWindow widget
         QtWidgets.QWidget.__init__(self, parent)
 
@@ -181,7 +393,7 @@ class MplNavBarWidget(QtWidgets.QWidget):
             self.canvas = MplCanvas()
 
         # instantiate the navigation toolbar
-        self.navbar = NavigationToolbar(self.canvas, self)
+        self.navbar = NavigationToolbar(self.canvas, self, sideview)
 
         # create a vertical box layout
         self.vbl = QtWidgets.QVBoxLayout()
@@ -538,7 +750,7 @@ class MplSideViewWidget(MplNavBarWidget):
     """
 
     def __init__(self, parent=None):
-        super(MplSideViewWidget, self).__init__(parent=parent,
+        super(MplSideViewWidget, self).__init__(sideview=True, parent=parent,
                                                 canvas=MplSideViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
@@ -546,7 +758,7 @@ class MplSideViewWidget(MplNavBarWidget):
         actions = self.navbar.actions()
         for action in actions:
             if action.text() in ["Home", "Back", "Forward", "Pan", "Zoom",
-                                 "Subplots", "Customize"]:
+                                 "Subplots", "Customize", "Ins WP", "Del WP"]:
                 action.setEnabled(False)
 
 
@@ -842,7 +1054,7 @@ class MplTopViewWidget(MplNavBarWidget):
     """
 
     def __init__(self, parent=None):
-        super(MplTopViewWidget, self).__init__(parent=parent,
+        super(MplTopViewWidget, self).__init__(sideview=False, parent=parent,
                                                canvas=MplTopViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,

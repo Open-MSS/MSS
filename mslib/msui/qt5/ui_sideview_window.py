@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_sideview_window.ui'
+# Form implementation generated from reading ui file 'ui/ui_sideview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -30,7 +30,7 @@ class Ui_SideViewWindow(object):
         self.btOptions = QtWidgets.QPushButton(self.centralwidget)
         self.btOptions.setObjectName("btOptions")
         self.horizontalLayout.addWidget(self.btOptions)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.cbTools = QtWidgets.QComboBox(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
@@ -44,26 +44,6 @@ class Ui_SideViewWindow(object):
         self.horizontalLayout.addWidget(self.cbTools)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setObjectName("label")
-        self.horizontalLayout.addWidget(self.label)
-        self.btMvWaypoint = QtWidgets.QToolButton(self.centralwidget)
-        self.btMvWaypoint.setCheckable(True)
-        self.btMvWaypoint.setChecked(True)
-        self.btMvWaypoint.setAutoExclusive(True)
-        self.btMvWaypoint.setObjectName("btMvWaypoint")
-        self.horizontalLayout.addWidget(self.btMvWaypoint)
-        self.btInsWaypoint = QtWidgets.QToolButton(self.centralwidget)
-        self.btInsWaypoint.setEnabled(False)
-        self.btInsWaypoint.setCheckable(True)
-        self.btInsWaypoint.setAutoExclusive(True)
-        self.btInsWaypoint.setObjectName("btInsWaypoint")
-        self.horizontalLayout.addWidget(self.btInsWaypoint)
-        self.btDelWaypoint = QtWidgets.QToolButton(self.centralwidget)
-        self.btDelWaypoint.setCheckable(True)
-        self.btDelWaypoint.setAutoExclusive(True)
-        self.btDelWaypoint.setObjectName("btDelWaypoint")
-        self.horizontalLayout.addWidget(self.btDelWaypoint)
         self.verticalLayout.addLayout(self.horizontalLayout)
         SideViewWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(SideViewWindow)
@@ -80,12 +60,5 @@ class Ui_SideViewWindow(object):
         self.btOptions.setText(_translate("SideViewWindow", "options"))
         self.cbTools.setItemText(0, _translate("SideViewWindow", "(select to open control)"))
         self.cbTools.setItemText(1, _translate("SideViewWindow", "WMS"))
-        self.label.setText(_translate("SideViewWindow", "Waypoint edit mode:"))
-        self.btMvWaypoint.setText(_translate("SideViewWindow", "Mv"))
-        self.btMvWaypoint.setShortcut(_translate("SideViewWindow", "M"))
-        self.btInsWaypoint.setText(_translate("SideViewWindow", "Ins"))
-        self.btInsWaypoint.setShortcut(_translate("SideViewWindow", "I"))
-        self.btDelWaypoint.setText(_translate("SideViewWindow", "Del"))
-        self.btDelWaypoint.setShortcut(_translate("SideViewWindow", "D"))
 
 from mslib.msui.mpl_qtwidget import MplSideViewWidget

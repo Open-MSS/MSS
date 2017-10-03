@@ -39,7 +39,7 @@ try:
     from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
     # import the NavigationToolbar Qt4Agg widget
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 
     from PyQt4 import QtGui, QtCore, QtTest
     QtWidgets = QtGui  # Follow the PyQt5 style and access objects from the modules of PyQt5
@@ -76,7 +76,7 @@ except ImportError:
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
     # import the NavigationToolbar Qt5Agg widget
-    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
     from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
     QString = str  # QString is not exposed anymore but is used transparently by PyQt5

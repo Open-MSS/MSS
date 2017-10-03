@@ -59,8 +59,6 @@ from mslib.utils import get_distance, find_location
 # local application imports
 from mslib.msui import flighttrack as ft
 
-MOVE, DELETE, INSERT = list(range(3))
-
 
 def distance_point_linesegment(p, l1, l2):
     """Computes the distance between a point p and a line segment given by its
@@ -378,7 +376,6 @@ class PathInteractor(object):
         self.waypoints_model = None
         self.background = None
         self._ind = None  # the active vertex
-        self.editmode = MOVE
 
         # Create a PathPatch representing the interactively editable path
         # (vertical profile or horizontal flight track in subclasses).
@@ -407,9 +404,6 @@ class PathInteractor(object):
         # Connect mpl events to handler routines: mouse movements and picks.
         canvas = self.ax.figure.canvas
         canvas.mpl_connect('draw_event', self.draw_callback)
-        canvas.mpl_connect('button_press_event', self.button_press_callback)
-        canvas.mpl_connect('button_release_event', self.button_release_callback)
-        canvas.mpl_connect('motion_notify_event', self.motion_notify_callback)
         self.canvas = canvas
 
         # Set the waypoints model, connect to the change() signals of the model
@@ -530,16 +524,6 @@ class PathInteractor(object):
         for t in self.wp_labels:
             t.set_visible(self.showverts and self.label_waypoints)
         self.canvas.draw()
-
-    def set_edit_mode(self, mode):
-        """Set the edit mode to one of [MOVE, INSERT, DELETE].
-        """
-        if mode not in [MOVE, INSERT, DELETE]:
-            return
-        self.editmode = mode
-
-    def get_edit_mode(self):
-        return self.editmode
 
     def redraw_path(self, vertices=None):
         """Redraw the matplotlib artists that represent the flight track
@@ -677,24 +661,30 @@ class VPathInteractor(PathInteractor):
             self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
         self.ax.figure.canvas.draw()
 
-    def button_release_callback(self, event):
+    def button_release_delete_callback(self, event):
         """Called whenever a mouse button is released.
         """
-        if not self.showverts:
-            return
-        if event.button != 1:
+        if not self.showverts or event.button != 1:
             return
 
-        if self.editmode == DELETE and self._ind is not None:
+        if self._ind is not None:
             if self.confirm_delete_waypoint(self._ind):
                 # removeRows() will trigger a signal that will redraw the path.
                 self.waypoints_model.removeRows(self._ind)
+            self._ind = None
 
-        elif self.editmode == INSERT:
-            # TODO: Inserting points is currently not available for side view.
-            pass
+    def button_release_insert_callback(self, event):
+        """Called whenever a mouse button is released.
+        """
+        self._ind = None
 
-        elif self.editmode == MOVE and self._ind is not None:
+    def button_release_move_callback(self, event):
+        """Called whenever a mouse button is released.
+        """
+        if not self.showverts or event.button != 1:
+            return
+
+        if self._ind is not None:
             # Submit the new pressure (the only value that can be edited
             # in the side view) to the data model.
             vertices = self.pathpatch.get_path().vertices
@@ -715,15 +705,7 @@ class VPathInteractor(PathInteractor):
         Hence, points can only be moved in the vertical direction (y position
         in this view).
         """
-        if not self.showverts:
-            return
-        if not self.editmode == MOVE:
-            return
-        if self._ind is None:
-            return
-        if event.inaxes is None:
-            return
-        if event.button != 1:
+        if not self.showverts or self._ind is None or event.inaxes is None or event.button != 1:
             return
         vertices = self.pathpatch.get_path().vertices
         # Set the new y position of the vertex to event.ydata. Keep the
@@ -822,65 +804,76 @@ class HPathInteractor(PathInteractor):
         km_per_px = map_delta / diagonal
         return km_per_px * px
 
-    def button_release_callback(self, event):
+    def button_release_insert_callback(self, event):
         """Called whenever a mouse button is released.
         """
-        if not self.showverts:
-            return
-        if event.button != 1:
+        if not self.showverts or event.button != 1 or event.inaxes is None:
             return
 
-        if self.editmode == DELETE and self._ind is not None:
-            if self.confirm_delete_waypoint(self._ind):
-                # removeRows() will trigger a signal that will redraw the path.
-                self.waypoints_model.removeRows(self._ind)
+        # Get position for new vertex.
+        x, y = event.xdata, event.ydata
+        best_index = self.pathpatch.get_path().index_of_closest_segment(
+            x, y, eps=self.appropriate_epsilon())
+        logging.debug(u"TopView insert point: clicked at (%f, %f), "
+                      u"best index: %d", x, y, best_index)
+        self.pathpatch.get_path().insert_vertex(best_index, [x, y], WaypointsPath.LINETO)
 
-        elif self.editmode == INSERT and event.inaxes is not None:
-            # Get position for new vertex.
-            x, y = event.xdata, event.ydata
-            best_index = self.pathpatch.get_path().index_of_closest_segment(
-                x, y, eps=self.appropriate_epsilon())
-            logging.debug(u"TopView insert point: clicked at (%f, %f), "
-                          u"best index: %d", x, y, best_index)
-            self.pathpatch.get_path().insert_vertex(best_index, [x, y], WaypointsPath.LINETO)
+        lon, lat = self.map(x, y, inverse=True)
+        loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
+        if loc is not None:
+            (lat, lon), location = loc
+        else:
+            lat, lon = round(lat, 2), round(lon, 2)
+            location = u""
+        wpm = self.waypoints_model
+        if len(wpm.all_waypoint_data()) > 0 and 0 < best_index <= len(wpm.all_waypoint_data()):
+            flightlevel = wpm.waypoint_data(best_index - 1).flightlevel
+        elif len(wpm.all_waypoint_data()) > 0 and best_index == 0:
+            flightlevel = wpm.waypoint_data(0).flightlevel
+        else:
+            logging.error(u"Cannot copy flightlevel. best_index: %s, len: %s",
+                          best_index, len(wpm.all_waypoint_data()))
+            flightlevel = 0
+        new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
+        wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
+        self.redraw_path()
 
-            lon, lat = self.map(x, y, inverse=True)
-            loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
-            if loc is not None:
-                (lat, lon), location = loc
-            else:
-                lat, lon = round(lat, 2), round(lon, 2)
-                location = u""
-            wpm = self.waypoints_model
-            if len(wpm.all_waypoint_data()) > 0 and 0 < best_index <= len(wpm.all_waypoint_data()):
-                flightlevel = wpm.waypoint_data(best_index - 1).flightlevel
-            elif len(wpm.all_waypoint_data()) > 0 and best_index == 0:
-                flightlevel = wpm.waypoint_data(0).flightlevel
-            else:
-                logging.error(u"Cannot copy flightlevel. best_index: %s, len: %s",
-                              best_index, len(wpm.all_waypoint_data()))
-                flightlevel = 0
-            new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
-            wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
-            self.redraw_path()
+        self._ind = None
 
-        elif self.editmode == MOVE and self._ind is not None:
-            # Submit the new position to the data model.
-            vertices = self.pathpatch.get_path().wp_vertices
-            lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
-                                inverse=True)
-            loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
-            if loc is not None:
-                lat, lon = loc[0]
-            else:
-                lat, lon = round(lat, 2), round(lon, 2)
-            # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
-            # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
-            #      twice?
-            qt_index = self.waypoints_model.createIndex(self._ind, ft.LAT)
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(lat))
-            qt_index = self.waypoints_model.createIndex(self._ind, ft.LON)
-            self.waypoints_model.setData(qt_index, QtCore.QVariant(lon))
+    def button_release_move_callback(self, event):
+        """Called whenever a mouse button is released.
+        """
+        if not self.showverts or event.button != 1 or self._ind is None:
+            return
+
+        # Submit the new position to the data model.
+        vertices = self.pathpatch.get_path().wp_vertices
+        lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
+                            inverse=True)
+        loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
+        if loc is not None:
+            lat, lon = loc[0]
+        else:
+            lat, lon = round(lat, 2), round(lon, 2)
+        # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
+        # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
+        #      twice?
+        qt_index = self.waypoints_model.createIndex(self._ind, ft.LAT)
+        self.waypoints_model.setData(qt_index, QtCore.QVariant(lat))
+        qt_index = self.waypoints_model.createIndex(self._ind, ft.LON)
+        self.waypoints_model.setData(qt_index, QtCore.QVariant(lon))
+
+        self._ind = None
+
+    def button_release_delete_callback(self, event):
+        """Called whenever a mouse button is released.
+        """
+        if not self.showverts or event.button != 1:
+            return
+
+        if self._ind is not None and self.confirm_delete_waypoint(self._ind):
+            # removeRows() will trigger a signal that will redraw the path.
+            self.waypoints_model.removeRows(self._ind)
 
         self._ind = None
 
@@ -889,8 +882,6 @@ class HPathInteractor(PathInteractor):
            picked and dragged.
         """
         if not self.showverts:
-            return
-        if not self.editmode == MOVE:
             return
         if self._ind is None:
             return
