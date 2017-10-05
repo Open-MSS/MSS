@@ -70,7 +70,7 @@ def config_loader(config_file=None, dataset=None, default=None):
     if config_file is None:
         config_file = constants.CACHED_CONFIG_FILE
     if config_file is None:
-        logging.info('Default MSS config file missing.')
+        logging.info('Default MSS config file missing, see http://mss.rtfd.io/en/stable/usage.html')
         default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
         if dataset is None:
             return default_config
