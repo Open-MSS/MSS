@@ -190,7 +190,6 @@ def excepthook(type_, value, traceback_):
             u"Information about the fatal error:\n"
             u"\n"
             u"{}".format(mslib.__version__, platform.platform(), sys.version, tb))
-    QtCore.qFatal('')
 
 
 sys.excepthook = excepthook
