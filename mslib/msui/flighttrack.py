@@ -76,7 +76,7 @@ TABLE_FULL = [
     ("Lat\n(+-90)", lambda waypoint: waypoint.lat, True),
     ("Lon\n(+-180)", lambda waypoint: waypoint.lon, True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
-    ("Pressure\n(hPa)", lambda waypoint: "{:.2f}".format((waypoint.pressure / 100.)), True),
+    ("Pressure\n(hPa)", lambda waypoint: QtCore.QLocale().toString(waypoint.pressure / 100., 'f', 2), True),
     ("Leg dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
         int(waypoint.distance_to_prev), int(waypoint.distance_to_prev / 1.852)), False),
     ("Cum. dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
