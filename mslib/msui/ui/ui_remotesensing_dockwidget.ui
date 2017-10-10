@@ -85,6 +85,12 @@ Aircraft altitude is taken from the flight path.</string>
      </item>
      <item>
       <widget class="QPushButton" name="btTangentsColour">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>135</width>
@@ -145,6 +151,54 @@ Aircraft altitude is taken from the flight path.</string>
        </property>
        <property name="text">
         <string>show solar angle (degree)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cbSolarType">
+       <item>
+        <property name="text">
+         <string>total difference (with sunset)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>total difference</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>azimuth difference</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>elevation difference</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="lbSolarCmap">
+       <property name="text">
+        <string>fill me</string>
        </property>
       </widget>
      </item>
