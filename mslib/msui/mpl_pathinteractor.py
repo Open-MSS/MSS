@@ -352,7 +352,7 @@ class PathInteractor(object):
     """
 
     showverts = True  # show the vertices of the path patch
-    epsilon = 5  # max pixel distance to count as a vertex hit when
+    epsilon = 12  # max pixel distance to count as a vertex hit when
 
     # picking points
 
