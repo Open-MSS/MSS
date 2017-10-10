@@ -117,7 +117,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # QString to str.
         nas_file = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open NASA Ames File", "", "NASA Ames files (*.nas)")
-        nas_file = nas_file[0] if isinstance(nas_file , tuple) and USE_PYQT5 else str(nas_file )
+        nas_file = nas_file[0] if isinstance(nas_file, tuple) and USE_PYQT5 else str(nas_file)
         if nas_file:
             logging.debug(u"Loading flight track data from '%s'", nas_file)
 
