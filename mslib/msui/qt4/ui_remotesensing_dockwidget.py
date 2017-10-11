@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_remotesensing_dockwidget.ui'
+# Form implementation generated from reading ui file 'ui/ui_remotesensing_dockwidget.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
 #
@@ -55,6 +55,11 @@ class Ui_RemoteSensingDockWidget(object):
         self.cbDrawTangents.setObjectName(_fromUtf8("cbDrawTangents"))
         self.horizontalLayout_5.addWidget(self.cbDrawTangents)
         self.btTangentsColour = QtGui.QPushButton(RemoteSensingDockWidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btTangentsColour.sizePolicy().hasHeightForWidth())
+        self.btTangentsColour.setSizePolicy(sizePolicy)
         self.btTangentsColour.setMinimumSize(QtCore.QSize(135, 0))
         self.btTangentsColour.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.btTangentsColour.setObjectName(_fromUtf8("btTangentsColour"))
@@ -73,9 +78,24 @@ class Ui_RemoteSensingDockWidget(object):
         self.cbShowSolarAngle.setMinimumSize(QtCore.QSize(145, 0))
         self.cbShowSolarAngle.setObjectName(_fromUtf8("cbShowSolarAngle"))
         self.horizontalLayout_6.addWidget(self.cbShowSolarAngle)
+        self.cbSolarType = QtGui.QComboBox(RemoteSensingDockWidget)
+        self.cbSolarType.setObjectName(_fromUtf8("cbSolarType"))
+        self.cbSolarType.addItem(_fromUtf8(""))
+        self.cbSolarType.addItem(_fromUtf8(""))
+        self.cbSolarType.addItem(_fromUtf8(""))
+        self.cbSolarType.addItem(_fromUtf8(""))
+        self.horizontalLayout_6.addWidget(self.cbSolarType)
+        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_6.addItem(spacerItem2)
         self.verticalLayout.addLayout(self.horizontalLayout_6)
-        spacerItem2 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem2)
+        self.horizontalLayout_2 = QtGui.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
+        self.lbSolarCmap = QtGui.QLabel(RemoteSensingDockWidget)
+        self.lbSolarCmap.setObjectName(_fromUtf8("lbSolarCmap"))
+        self.horizontalLayout_2.addWidget(self.lbSolarCmap)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout.addItem(spacerItem3)
 
         self.retranslateUi(RemoteSensingDockWidget)
         QtCore.QMetaObject.connectSlotsByName(RemoteSensingDockWidget)
@@ -92,4 +112,9 @@ class Ui_RemoteSensingDockWidget(object):
         self.dsbTangentHeight.setSuffix(_translate("RemoteSensingDockWidget", " km", None))
         self.cbShowSolarAngle.setToolTip(_translate("RemoteSensingDockWidget", "dark green if below horizon; otherwise reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180", None))
         self.cbShowSolarAngle.setText(_translate("RemoteSensingDockWidget", "show solar angle (degree)", None))
+        self.cbSolarType.setItemText(0, _translate("RemoteSensingDockWidget", "total difference (with sunset)", None))
+        self.cbSolarType.setItemText(1, _translate("RemoteSensingDockWidget", "total difference", None))
+        self.cbSolarType.setItemText(2, _translate("RemoteSensingDockWidget", "azimuth difference", None))
+        self.cbSolarType.setItemText(3, _translate("RemoteSensingDockWidget", "elevation difference", None))
+        self.lbSolarCmap.setText(_translate("RemoteSensingDockWidget", "fill me", None))
 

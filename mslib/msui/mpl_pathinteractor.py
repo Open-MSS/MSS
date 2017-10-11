@@ -775,7 +775,7 @@ class HPathInteractor(PathInteractor):
         self.tangent_lines = None
         self.show_tangent_points = False
         self.solar_lines = None
-        self.show_solar_angle = False
+        self.show_solar_angle = None
         self.remote_sensing = None
         PathInteractor.__init__(self, ax=mplmap.ax, waypoints=waypoints,
                                 mplpath=PathH_GC([[0, 0]], map=mplmap),
@@ -960,10 +960,10 @@ class HPathInteractor(PathInteractor):
 
         if self.solar_lines is not None:
             self.solar_lines.remove()
-        if self.show_solar_angle:
+        if self.show_solar_angle is not None:
             assert self.remote_sensing is not None
             self.solar_lines = self.remote_sensing.compute_solar_lines(
-                self.map, wp_vertices, wp_heights, wp_times)
+                self.map, wp_vertices, wp_heights, wp_times, self.show_solar_angle)
             self.ax.add_collection(self.solar_lines)
         else:
             self.solar_lines = None
@@ -1015,7 +1015,7 @@ class HPathInteractor(PathInteractor):
             self.ax.draw_artist(t)
         if self.show_tangent_points:
             self.ax.draw_artist(self.tangent_lines)
-        if self.show_solar_angle:
+        if self.show_solar_angle is not None:
             self.ax.draw_artist(self.solar_lines)
         self.canvas.blit(self.ax.bbox)
 
