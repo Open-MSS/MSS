@@ -8,6 +8,6 @@
     "_comment1": "_comment fields are just for self-documentation!",
     "_comment2": "takeoff_weight: weight(lbs)",
     "_comment3": "fuel: weight(lbs)",
-    "_comment4": "climb/descent: weight(lbs), altitude(m), duration(min), distance(nm), fuel(lbs)",
-    "_comment5": "cruise: weight(lbs), altitude(m), total air speed(nm/h), fuel flow(lbs/h)"
+    "_comment4": "climb/descent: weight(lbs), altitude(ft), duration(min), distance(nm), fuel(lbs)",
+    "_comment5": "cruise: weight(lbs), altitude(ft), total air speed(nm/h), fuel flow(lbs/h)"
 }
