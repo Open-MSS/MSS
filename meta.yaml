@@ -27,6 +27,7 @@ requirements:
         - basemap
         - chameleon
         - execnet
+        - jplephem
         - lxml
         - netcdf4
         - hdf4 4.2.12
@@ -38,6 +39,8 @@ requirements:
         - qt 5.*
         - requests
         - scipy
+        - sgp4
+        - skyfield
         - six
         - tk 8.5.*
         - owslib

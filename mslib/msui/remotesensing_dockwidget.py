@@ -27,113 +27,18 @@
 
 from __future__ import division
 
-
-import logging
 import numpy as np
+from mslib.msui.constants import MSS_CONFIG_PATH
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
-from mslib.utils import datetime_to_jsec, get_distance, rotate_point, fix_angle, compute_hour_of_day
+from mslib.utils import jsec_to_datetime, datetime_to_jsec, get_distance, rotate_point, fix_angle
 from matplotlib.collections import LineCollection
 from matplotlib.colors import BoundaryNorm, ListedColormap
 import collections
+from skyfield.api import Loader, Topos, utc
 
 
 EARTH_RADIUS = 6371.
-
-
-def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1, angle):
-    mlat = ((lat0 + lat1) / 2.)
-    lon0 *= np.cos(np.deg2rad(mlat))
-    lon1 *= np.cos(np.deg2rad(mlat))
-    dlon = lon1 - lon0
-    dlat = lat1 - lat0
-    obs_azi2 = fix_angle(angle + np.rad2deg(np.arctan2(dlon, dlat)))
-    return obs_azi2, -1
-
-
-def compute_solar_angle(jsec, lon, lat):
-    # The input to the Astronomer's almanach is the difference between
-    # the Julian date and JD 2451545.0 (noon, 1 January 2000)
-    time = (jsec / (60. * 60. * 24.)) - 0.5
-
-    # Mean longitude
-    mnlong = 280.460 + .9856474 * time
-    mnlong %= 360.
-    if mnlong < 0:
-        mnlong += 360
-        assert mnlong >= 0
-
-    # Mean anomaly
-    mnanom = 357.528 + .9856003 * time
-    mnanom = np.deg2rad(mnanom % 360.)
-    if mnanom < 0:
-        mnanom += 2 * np.pi
-        assert mnanom >= 0
-
-    # Ecliptic longitude and obliquity of ecliptic
-    eclong = mnlong + 1.915 * np.sin(mnanom) + 0.020 * np.sin(2 * mnanom)
-    eclong = np.deg2rad(eclong % 360.)
-    if (eclong < 0):
-        eclong += 2 * np.pi
-        assert (eclong >= 0)
-
-    oblqec = np.deg2rad(23.439 - 0.0000004 * time)
-
-    # Celestial coordinates
-    # Right ascension and declination
-    num = np.cos(oblqec) * np.sin(eclong)
-    den = np.cos(eclong)
-    ra = np.arctan(num / den)
-    if den < 0:
-        ra += np.pi
-    elif den >= 0 and num < 0:
-        ra += 2 * np.pi
-
-    dec = np.arcsin(np.sin(oblqec) * np.sin(eclong))
-    # Local coordinates
-    # Greenwich mean sidereal time
-    gmst = 6.697375 + .0657098242 * time + compute_hour_of_day(jsec)
-
-    gmst = gmst % 24.
-    if gmst < 0:
-        gmst += 24
-        assert gmst >= 0
-
-    # Local mean sidereal time
-    if lon < 0:
-        lon += 360
-        assert 0 <= lon <= 360
-
-    lmst = gmst + (lon / 15.)
-    lmst = np.deg2rad(15. * (lmst % 24.))
-
-    # Hour angle
-    ha = lmst - ra
-    if ha < -np.pi:
-        ha += 2 * np.pi
-
-    if ha > np.pi:
-        ha -= 2 * np.pi
-
-    assert -np.pi < ha < 2 * np.pi
-
-    # Latitude to radians
-    lat = np.deg2rad(lat)
-
-    # Azimuth and elevation
-    zenithAngle = np.arccos(np.sin(lat) * np.sin(dec) + np.cos(lat) * np.cos(dec) * np.cos(ha))
-    azimuthAngle = np.arccos(((np.sin(lat) * np.cos(zenithAngle) - np.sin(dec)) /
-                             (np.cos(lat) * np.sin(zenithAngle))))
-
-    if ha > 0:
-        azimuthAngle += np.pi
-    else:
-        azimuthAngle = 3 * np.pi - azimuthAngle % (2 * np.pi)
-
-    if azimuthAngle > np.pi:
-        azimuthAngle -= 2 * np.pi
-
-    return np.rad2deg(azimuthAngle), 90 - np.rad2deg(zenithAngle)
 
 
 class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidget):
@@ -150,6 +55,9 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.setupUi(self)
 
         self.view = view
+        self.load = Loader(MSS_CONFIG_PATH)
+        self.planets = self.load('de421.bsp')
+        self.timescale = self.load.timescale()
 
         button = self.btTangentsColour
         palette = QtGui.QPalette(button.palette())
@@ -159,15 +67,18 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         button.setPalette(palette)
 
         self.dsbTangentHeight.setValue(10.)
-        self.dsbObsAngle.setValue(90.)
+        self.dsbObsAngleAzimuth.setValue(90.)
+        self.dsbObsAngleElevation.setValue(-1.0)
 
         # update plot on every value change
         self.cbDrawTangents.stateChanged.connect(self.update_settings)
         self.cbShowSolarAngle.stateChanged.connect(self.update_settings)
         self.btTangentsColour.clicked.connect(self.set_tangentpoint_colour)
         self.dsbTangentHeight.valueChanged.connect(self.update_settings)
-        self.dsbObsAngle.valueChanged.connect(self.update_settings)
-        self.cbSolarType.currentIndexChanged.connect(self.update_settings)
+        self.dsbObsAngleAzimuth.valueChanged.connect(self.update_settings)
+        self.dsbObsAngleElevation.valueChanged.connect(self.update_settings)
+        self.cbSolarBody.currentIndexChanged.connect(self.update_settings)
+        self.cbSolarAngleType.currentIndexChanged.connect(self.update_settings)
         self.lbSolarCmap.setText(
             "Solar angle colours, dark to light: reds (0-15), violets (15-45), greens (45-180)")
         self.solar_cmap = ListedColormap([
@@ -185,6 +96,23 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         self.update_settings()
 
+    @staticmethod
+    def compute_view_angles(lon0, lat0, h0, lon1, lat1, h1, obs_azi, obs_ele):
+        mlat = ((lat0 + lat1) / 2.)
+        lon0 *= np.cos(np.deg2rad(mlat))
+        lon1 *= np.cos(np.deg2rad(mlat))
+        dlon = lon1 - lon0
+        dlat = lat1 - lat0
+        obs_azi_p = fix_angle(obs_azi + np.rad2deg(np.arctan2(dlon, dlat)))
+        return obs_azi_p, obs_ele
+
+    def compute_body_angle(self, body, jsec, lon, lat):
+        t = self.timescale.utc(utc.localize(jsec_to_datetime(jsec)))
+        loc = self.planets["earth"] + Topos(lat, lon)
+        astrometric = loc.at(t).observe(self.planets[body])
+        alt, az, d = astrometric.apparent().altaz()
+        return az.degrees, alt.degrees
+
     def update_settings(self):
         """
         Updates settings in TopView and triggers a redraw.
@@ -194,7 +122,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             "draw_tangents": self.cbDrawTangents.isChecked(),
         }
         if self.cbShowSolarAngle.isChecked():
-            settings["show_solar_angle"] = self.cbSolarType.currentText()
+            settings["show_solar_angle"] = self.cbSolarAngleType.currentText(), self.cbSolarBody.currentText()
         else:
             settings["show_solar_angle"] = None
 
@@ -246,7 +174,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             colors=QtGui.QPalette(self.btTangentsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             zorder=2, animated=True, linewidth=3, linestyles=[':'] * len(tplines) + ['-'] * len(dirlines))
 
-    def compute_solar_lines(self, bmap, wp_vertices, wp_heights, wp_times, type):
+    def compute_solar_lines(self, bmap, wp_vertices, wp_heights, wp_times, solartype):
         """
         Computes coloured overlay over the flight path that indicates
         the danger of looking into the sun with a limb sounder aboard
@@ -262,6 +190,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
                  angle
         """
         # calculate distances and times
+        body, difftype = solartype
+
         times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
         x, y = list(zip(*wp_vertices))
         wp_lons, wp_lats = bmap(x, y, inverse=True)
@@ -300,14 +230,16 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         vals = []
         for i in range(len(points) - 1):
             p0, p1 = points[i][0], points[i + 1][0]
-            sol_azi, sol_ele = compute_solar_angle(times[i], p0[0], p0[1])
+
+            sol_azi, sol_ele = self.compute_body_angle(body, times[i], p0[0], p0[1])
+            obs_azi, obs_ele = self.compute_view_angles(
+                p0[0], p0[1], heights[i], p1[0], p1[1], heights[i + 1],
+                self.dsbObsAngleAzimuth.value(), self.dsbObsAngleElevation.value())
             if sol_azi < 0:
                 sol_azi += 360
-            obs_azi, obs_ele = compute_view_angles(p0[0], p0[1], heights[i], p1[0], p1[1], heights[i + 1],
-                                                   self.dsbObsAngle.value())
             if obs_azi < 0:
                 obs_azi += 360
-            rating = self.calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, heights[i], type)
+            rating = self.calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, heights[i], difftype)
             vals.append(rating)
 
         # convert lon, lat to map points
@@ -340,7 +272,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         direction = [(x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
         direction = [(_x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
                      for _x, _y in direction]
-        los = [rotate_point(point, -self.dsbObsAngle.value()) for point in direction]
+        los = [rotate_point(point, -self.dsbObsAngleAzimuth.value()) for point in direction]
         los.append(los[-1])
 
         if isinstance(flight_alt, (collections.Sequence, np.ndarray)):
@@ -379,7 +311,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         direction = [(0.5 * (x0 + x1), 0.5 * (y0 + y1), x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
         direction = [(_u, _v, _x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
                      for _u, _v, _x, _y in direction]
-        los = [rotate_point(point[2:], -self.dsbObsAngle.value()) for point in direction]
+        los = [rotate_point(point[2:], -self.dsbObsAngleAzimuth.value()) for point in direction]
 
         dist = 1.
 
@@ -391,7 +323,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         return tps
 
     @staticmethod
-    def calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, height, type):
+    def calc_view_rating(obs_azi, obs_ele, sol_azi, sol_ele, height, difftype):
         """
         Calculates the angular distance between given directions under the
         condition that the sun is above the horizon.
@@ -405,17 +337,16 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         Returns: angular distance or 180 degrees if sun is below horizon
         """
-        logging.warning("%s", type)
         delta_azi = obs_azi - sol_azi
-        delta_ele = obs_ele + sol_ele
-        if type == "total difference":
-            return np.hypot(delta_azi, delta_ele)
-        elif type == "azimuth difference":
-            return np.abs(obs_azi - sol_azi)
-        elif type == "elevation difference":
-            return np.abs(obs_ele - sol_ele)
-        else:
+        delta_ele = obs_ele - sol_ele
+        if "horizon" in difftype:
             thresh = -np.rad2deg(np.arccos(EARTH_RADIUS / (height + EARTH_RADIUS))) - 3
             if sol_ele < thresh:
                 delta_ele = 180
+
+        if "azimuth" == difftype:
+            return np.abs(obs_azi - sol_azi)
+        elif "elevation" == difftype:
+            return np.abs(obs_ele - sol_ele)
+        else:
             return np.hypot(delta_azi, delta_ele)
