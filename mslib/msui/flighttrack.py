@@ -46,7 +46,7 @@ import xml.dom.minidom
 import xml.parsers.expat
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, QString, variant_to_string, variant_to_float, USE_PYQT5
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float, USE_PYQT5
 
 # local application imports
 from mslib import utils, __version__
@@ -419,7 +419,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         waypoints = self.waypoints
 
-        def get_duration_fuel(flightlevel0, flightlevel1, distance, weight):
+        def get_duration_fuel(flightlevel0, flightlevel1, distance, weight, lastleg):
             aircraft = self.performance_settings["aircraft"]
             if flightlevel0 == flightlevel1:
                 tas, fuelflow = aircraft.get_cruise_performance(flightlevel0 * 100, weight)
@@ -436,7 +436,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 duration = (duration1 - duration0) * 60  # convert from min to s
                 dist = (dist1 - dist0) * 1.852  # convert from nm to km
                 fuel = fuel1 - fuel0
-                duration_p, fuel_p = get_duration_fuel(flightlevel1, flightlevel1, distance - dist, weight)
+                if lastleg:
+                    duration_p, fuel_p = get_duration_fuel(flightlevel0, flightlevel0, distance - dist, weight, False)
+                else:
+                    duration_p, fuel_p = get_duration_fuel(flightlevel1, flightlevel1, distance - dist, weight, False)
                 return duration + duration_p, fuel + fuel_p
 
         pos = position
@@ -459,7 +462,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp1.distance_to_prev = utils.get_distance((wp0.lat, wp0.lon),
                                                           (wp1.lat, wp1.lon))
 
-                time, fuel = get_duration_fuel(wp0.flightlevel, wp1.flightlevel, wp1.distance_to_prev, wp0.weight)
+                last = (pos - 1 == rows)
+                time, fuel = get_duration_fuel(wp0.flightlevel, wp1.flightlevel, wp1.distance_to_prev, wp0.weight, lastleg=last)
                 wp1.leg_time = time
                 wp1.cum_time = wp0.cum_time + wp1.leg_time
                 wp1.utc_time = wp0.utc_time + datetime.timedelta(seconds=wp1.leg_time)
@@ -480,7 +484,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             wp1 = waypoints[i]
             wp1.distance_total = wp0.distance_total + wp1.distance_to_prev
             wp1.weight = wp0.weight - wp0.leg_fuel
-            time, fuel = get_duration_fuel(wp0.flightlevel, wp1.flightlevel, wp1.distance_to_prev, wp0.weight)
+            last = (i + 1 == len(waypoints))
+            time, fuel = get_duration_fuel(wp0.flightlevel, wp1.flightlevel, wp1.distance_to_prev, wp0.weight, lastleg=last)
 
             wp1.leg_time = time
             wp1.cum_time = wp0.cum_time + wp1.leg_time

@@ -38,7 +38,6 @@ from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow
-from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
@@ -177,15 +176,6 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
-
-        # Controls to interact with the flight track.
-        # (For usage of the functools.partial() function, see Chapter 4 (Section
-        # Signals and Slots) of 'Rapid GUI Programming with Python and Qt: The
-        # Definitive Guide to PyQt Programming' (Mark Summerfield).)
-        wpi = self.mpl.canvas.waypoints_interactor
-        self.btMvWaypoint.clicked.connect(functools.partial(wpi.set_edit_mode, mpl_pi.MOVE))
-        self.btInsWaypoint.clicked.connect(functools.partial(wpi.set_edit_mode, mpl_pi.INSERT))
-        self.btDelWaypoint.clicked.connect(functools.partial(wpi.set_edit_mode, mpl_pi.DELETE))
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
