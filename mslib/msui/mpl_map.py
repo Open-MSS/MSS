@@ -105,8 +105,8 @@ class MapCanvas(basemap.Basemap):
 
         # Set up the map appearance.
         if self.appearance["draw_coastlines"]:
-            self.map_coastlines = self.drawcoastlines()
-            self.map_countries = self.drawcountries()
+            self.map_coastlines = self.drawcoastlines(zorder=3)
+            self.map_countries = self.drawcountries(zorder=3)
         else:
             self.map_coastlines = None
             self.map_countries = None
@@ -122,7 +122,7 @@ class MapCanvas(basemap.Basemap):
         if self.appearance["fill_continents"]:
             self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
                                                       lake_color=self.appearance["colour_water"],
-                                                      zorder=0)
+                                                      zorder=1)
         else:
             self.map_continents = None
 
@@ -284,10 +284,10 @@ class MapCanvas(basemap.Basemap):
         #      range.
         self.map_parallels = self.drawparallels(np.arange(latStart, latStop,
                                                           spacingLat),
-                                                labels=[1, 1, 0, 0])
+                                                labels=[1, 1, 0, 0], zorder=3)
         self.map_meridians = self.drawmeridians(np.arange(lonStart, lonStop,
                                                           spacingLon),
-                                                labels=[0, 0, 0, 1])
+                                                labels=[0, 0, 0, 1], zorder=3)
 
     def set_graticule_visible(self, visible=True):
         """Set the visibily of the graticule.
@@ -341,7 +341,7 @@ class MapCanvas(basemap.Basemap):
             # doesn't.
             self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
                                                       lake_color=self.appearance["colour_water"],
-                                                      zorder=0)
+                                                      zorder=1)
             self.ax.figure.canvas.draw()
         elif not visible and self.map_continents is not None:
             # Remove current fills. They are stored as a list of polygon patches
@@ -356,7 +356,7 @@ class MapCanvas(basemap.Basemap):
                 patch.remove()
             self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
                                                       lake_color=self.appearance["colour_water"],
-                                                      zorder=0)
+                                                      zorder=1)
             self.ax.figure.canvas.draw()
 
     def set_coastlines_visible(self, visible=True):
@@ -364,8 +364,8 @@ class MapCanvas(basemap.Basemap):
         """
         self.appearance["draw_coastlines"] = visible
         if visible and self.map_coastlines is None and self.map_countries is None:
-            self.map_coastlines = self.drawcoastlines()
-            self.map_countries = self.drawcountries()
+            self.map_coastlines = self.drawcoastlines(zorder=3)
+            self.map_countries = self.drawcountries(zorder=3)
             self.ax.figure.canvas.draw()
         elif not visible and self.map_coastlines is not None and self.map_countries is not None:
             self.map_coastlines.remove()
@@ -503,7 +503,7 @@ class MapCanvas(basemap.Basemap):
         """
         if self.image is not None:
             self.image.remove()
-        self.image = super(MapCanvas, self).imshow(X, **kwargs)
+        self.image = super(MapCanvas, self).imshow(X, zorder=2, **kwargs)
         self.ax.figure.canvas.draw()
         return self.image
 
@@ -856,7 +856,7 @@ class SatelliteOverpassPatch(object):
         # Plot satellite track.
         sat = np.copy(self.sat)
         sat[:, 0], sat[:, 1] = self.map(sat[:, 0], sat[:, 1])
-        self.trackline = self.map.plot(sat[:, 0], sat[:, 1],
+        self.trackline = self.map.plot(sat[:, 0], sat[:, 1], zorder=10,
                                        marker='+', markerfacecolor='g')
 
         # Plot polygon patch that represents the swath of the sensor.
@@ -871,18 +871,20 @@ class SatelliteOverpassPatch(object):
         codes, verts = list(zip(*pathdata))
         path = mpl_pi.PathH(verts, codes, map=self.map)
         patch = mpatches.PathPatch(path, facecolor='yellow',
-                                   edgecolor='yellow', alpha=0.4)
+                                   edgecolor='yellow', alpha=0.4, zorder=10)
         self.patch = patch
         self.map.ax.add_patch(patch)
 
         # Draw text labels.
         self.texts.append(self.map.ax.text(sat[0, 0], sat[0, 1],
                                            self.utc[0].strftime("%H:%M:%S"),
+                                           zorder=10,
                                            bbox=dict(facecolor='white',
                                                      alpha=0.5,
                                                      edgecolor='none')))
         self.texts.append(self.map.ax.text(sat[-1, 0], sat[-1, 1],
                                            self.utc[-1].strftime("%H:%M:%S"),
+                                           zorder=10,
                                            bbox=dict(facecolor='white',
                                                      alpha=0.5,
                                                      edgecolor='none')))
@@ -947,7 +949,7 @@ class KMLPatch(object):
         for boundary in ["outerBoundaryIs", "innerBoundaryIs"]:
             if hasattr(polygon, boundary):
                 x, y = self.compute_xy(getattr(polygon, boundary).LinearRing.coordinates)
-                self.patches.append(self.map.plot(x, y, "-", **kwargs))
+                self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
 
     def add_point(self, point, style, name):
         """
@@ -957,10 +959,10 @@ class KMLPatch(object):
         :param name: name of placemark for annotation
         """
         x, y = self.compute_xy(point.coordinates)
-        self.patches.append(self.map.plot(x[0], y[0], "o", color=self.color))
+        self.patches.append(self.map.plot(x[0], y[0], "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(name, xy=(x[0], y[0]), xycoords="data",
-                                xytext=(5, 5), textcoords='offset points',
+                                xytext=(5, 5), textcoords='offset points', zorder=10,
                                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
 
     def add_line(self, line, style, _):
@@ -971,7 +973,7 @@ class KMLPatch(object):
         """
         kwargs = self.styles.get(style, {}).get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(line.coordinates)
-        self.patches.append(self.map.plot(x, y, "-", **kwargs))
+        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
 
     def parse_geometries(self, placemark, style=None, name=None):
         if style.startswith("#"):
