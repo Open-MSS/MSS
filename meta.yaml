@@ -24,7 +24,7 @@ requirements:
     run:
         - python
         - menuinst  # [win]
-        - basemap 1.0.7
+        - basemap
         - chameleon
         - execnet
         - lxml
