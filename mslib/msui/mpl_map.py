@@ -122,7 +122,7 @@ class MapCanvas(basemap.Basemap):
         if self.appearance["fill_continents"]:
             self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
                                                       lake_color=self.appearance["colour_water"],
-                                                      zorder=0)
+                                                      zorder=1)
         else:
             self.map_continents = None
 
@@ -284,10 +284,10 @@ class MapCanvas(basemap.Basemap):
         #      range.
         self.map_parallels = self.drawparallels(np.arange(latStart, latStop,
                                                           spacingLat),
-                                                labels=[1, 1, 0, 0])
+                                                labels=[1, 1, 0, 0], zorder=3)
         self.map_meridians = self.drawmeridians(np.arange(lonStart, lonStop,
                                                           spacingLon),
-                                                labels=[0, 0, 0, 1])
+                                                labels=[0, 0, 0, 1], zorder=3)
 
     def set_graticule_visible(self, visible=True):
         """Set the visibily of the graticule.
@@ -364,8 +364,8 @@ class MapCanvas(basemap.Basemap):
         """
         self.appearance["draw_coastlines"] = visible
         if visible and self.map_coastlines is None and self.map_countries is None:
-            self.map_coastlines = self.drawcoastlines()
-            self.map_countries = self.drawcountries()
+            self.map_coastlines = self.drawcoastlines(zorder=3)
+            self.map_countries = self.drawcountries(zorder=3)
             self.ax.figure.canvas.draw()
         elif not visible and self.map_coastlines is not None and self.map_countries is not None:
             self.map_coastlines.remove()
@@ -503,7 +503,7 @@ class MapCanvas(basemap.Basemap):
         """
         if self.image is not None:
             self.image.remove()
-        self.image = super(MapCanvas, self).imshow(X, **kwargs)
+        self.image = super(MapCanvas, self).imshow(X, zorder=2, **kwargs)
         self.ax.figure.canvas.draw()
         return self.image
 

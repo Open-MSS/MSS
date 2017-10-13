@@ -128,7 +128,7 @@
         </size>
        </property>
        <property name="text">
-        <string>clear map</string>
+        <string>remove</string>
        </property>
       </widget>
      </item>
@@ -150,7 +150,7 @@
         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Request a map with the specifed parameters.&lt;/p&gt;&lt;p&gt;Keyboard shortcut: Enter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="text">
-        <string>get map</string>
+        <string>retrieve</string>
        </property>
        <property name="shortcut">
         <string>Return</string>
@@ -536,12 +536,12 @@ p, li { white-space: pre-wrap; }
             <date>
              <year>2010</year>
              <month>1</month>
-             <day>15</day>
+             <day>14</day>
             </date>
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>5</hour>
+             <hour>4</hour>
              <minute>0</minute>
              <second>0</second>
              <year>2000</year>
@@ -558,7 +558,7 @@ p, li { white-space: pre-wrap; }
            </property>
            <property name="minimumTime">
             <time>
-             <hour>5</hour>
+             <hour>4</hour>
              <minute>0</minute>
              <second>0</second>
             </time>

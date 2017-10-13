@@ -1629,7 +1629,6 @@ class VSecWMSControlWidget(WMSControlWidget):
                                                    wms_cache=wms_cache,
                                                    view=view)
         self.waypoints_model = waypoints_model
-        self.btGetMap.setText("get vertical section")
         self.btGetMap.clicked.connect(self.get_vsec)
 
     def setFlightTrackModel(self, model):

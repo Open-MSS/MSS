@@ -125,7 +125,7 @@ class Test_MSSTopViewWindow(object):
         """
         Test inserting a point inside and outside the canvas
         """
-        QtTest.QTest.mouseClick(self.window.btInsWaypoint, QtCore.Qt.LeftButton)
+        self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
@@ -144,35 +144,39 @@ class Test_MSSTopViewWindow(object):
                 return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.critical")
     def test_remove_point_yes(self, mockcrit, mockbox):
-        QtTest.QTest.mouseClick(self.window.btInsWaypoint, QtCore.Qt.LeftButton)
+        self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
-        QtTest.QTest.mouseClick(self.window.btDelWaypoint, QtCore.Qt.LeftButton)
+        self.window.mpl.navbar._actions['delete_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.call_count == 1
-        assert len(self.window.waypoints_model.waypoints) == 3
         assert mockcrit.call_count == 0
+        assert len(self.window.waypoints_model.waypoints) == 3
+        assert mockbox.call_count == 1
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.No)
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.critical")
     def test_remove_point_no(self, mockcrit, mockbox):
-        QtTest.QTest.mouseClick(self.window.btInsWaypoint, QtCore.Qt.LeftButton)
+        self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
-        QtTest.QTest.mouseClick(self.window.btDelWaypoint, QtCore.Qt.LeftButton)
+        self.window.mpl.navbar._actions['delete_wp'].trigger()
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
+        QtTest.QTest.mousePress(self.window.mpl.canvas, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseRelease(self.window.mpl.canvas, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
         QtWidgets.QApplication.processEvents()
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 4
@@ -180,14 +184,14 @@ class Test_MSSTopViewWindow(object):
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_move_point(self, mockbox):
-        QtTest.QTest.mouseClick(self.window.btInsWaypoint, QtCore.Qt.LeftButton)
+        self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
-        QtTest.QTest.mouseClick(self.window.btMvWaypoint, QtCore.Qt.LeftButton)
+        self.window.mpl.navbar._actions['move_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mousePress(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
