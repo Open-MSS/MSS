@@ -1,6 +1,15 @@
 Changelog
 =========
 
+
+Version 1.6.3
+-------------
+
+Bug Fixes:
+ - Fix units in performance sample file comments, #300
+ - Table view (with German environment) displays pressure with '.' instead of ',', #305
+ - Test cases fail for pyqt5, #310
+
 Version 1.6.2
 -------------
 
