@@ -46,6 +46,8 @@ import shutil
 import sys
 import types
 
+from fs import open_fs, path
+from fslib.fs_filepicker import FilePicker
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
@@ -340,9 +342,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.menuImport_Flight_Track.addAction(action)
 
         def load_function_wrapper(self):
-            filename = QtWidgets.QFileDialog.getOpenFileName(
-                self, "Import Flight Track", self.last_save_directory, name + " (*." + extension + ")")
-            filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
+            dlg = FilePicker(self, self.last_save_directory, "*." + extension, title=u"Import Flight Track")
+            dlg.setModal(True)
+            dlg.exec_()
+            filename = None
+            if  dlg.filename is not None:
+                filename = path.combine(dlg.fs_url, path.join(dlg.selected_dir, dlg.filename))
             if filename:
                 try:
                     ft_name, new_waypoints = function(filename)
@@ -543,9 +548,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.tr("Opening a config file will reset application. Continue?"),
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
-            filename = QtWidgets.QFileDialog.getOpenFileName(
-                self, "Open Config file", "", "Supported files (*.json *.txt)")
-            filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
+            dlg = FilePicker(self, constants.MSS_CONFIG_PATH, u'*.json', title=u"Open Config file")
+            dlg.setModal(True)
+            dlg.exec_()
+            filename = None
+            if dlg.filename is not None:
+                filename = path.combine(dlg.fs_url, path.join(dlg.selected_dir, dlg.filename))
             if filename:
                 self.listViews.clear()
                 self.listTools.clear()
@@ -557,10 +565,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
            passes the result to createNewFlightTrack().
         """
-        filename = QtWidgets.QFileDialog.getOpenFileName(self,
-                                                         "Open Flight Track", self.last_save_directory,
-                                                         "Flight track XML (*.ftml)")
-        filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
+        dlg = FilePicker(self, self.last_save_directory, u'*.ftml', title=u"Open Flight Track")
+        dlg.setModal(True)
+        dlg.exec_()
+        filename = None
+        if dlg.filename is not None:
+            filename = path.combine(dlg.fs_url, path.join(dlg.selected_dir, dlg.filename))
+
         if filename:
             try:
                 if filename.endswith('.ftml'):
