@@ -134,7 +134,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.patch = None
             self.cbOverlay.setEnabled(False)
         try:
-            with _fs(name, 'r') as kmlf:
+            with _fs.open(_name, 'r') as kmlf:
                 self.kml = pykml.parser.parse(kmlf).getroot()
                 self.patch = KMLPatch(self.view.map, self.kml,
                                       self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
