@@ -42,7 +42,7 @@ import paste.util.multidict
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 from mslib.msui import MissionSupportSystemDefaultConfig
-
+from fs import open_fs
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
 except ImportError:
@@ -79,8 +79,10 @@ def config_loader(config_file=None, dataset=None, default=None):
                 return default_config[dataset]
             except KeyError:
                 return default
+    _dirname, _name = os.path.split(config_file)
+    _fs = open_fs(_dirname)
     try:
-        with open(os.path.join(config_file)) as source:
+        with _fs.open(_name, 'r') as source:
             data = json.load(source)
     except (AttributeError, IOError, TypeError) as ex:
         logging.error(u"MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
@@ -169,13 +171,15 @@ def load_settings_pickle(tag, default_settings=None):
         default_settings = {}
     assert isinstance(default_settings, dict)
     settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.{}.cfg".format(tag))
+    _dirname, _name = os.path.split(settingsfile)
+    _fs = open_fs(_dirname)
     settings = {}
     if not os.path.exists(settingsfile):
         logging.debug("settings file '%s' for %s not available", settingsfile, tag)
     else:
         logging.debug("loading settings file '%s' for %s", settingsfile, tag)
         try:
-            with open(settingsfile, "rb") as fileobj:
+            with _fs.open(_name, "rb") as fileobj:
                 settings = pickle.load(fileobj)
         except (pickle.UnpicklingError, ValueError, KeyError, OSError, IOError, ImportError) as ex:
             logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",

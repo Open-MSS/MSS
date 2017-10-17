@@ -35,7 +35,7 @@ import unicodecsv as csv
 import os
 
 import mslib.msui.flighttrack as ft
-
+from fs import open_fs
 
 def save_to_csv(filename, name, waypoints):
     if not filename:
@@ -59,7 +59,9 @@ def save_to_csv(filename, name, waypoints):
 
 def load_from_csv(filename):
     waypoints = []
-    with open(filename, "r") as in_file:
+    _dirname, _name = os.path.split(filename)
+    _fs = open_fs(_dirname)
+    with _fs.open(_name, "r") as in_file:
         lines = in_file.readlines()
     if len(lines) < 4:
         raise SyntaxError("CSV file requires at least 4 lines!")

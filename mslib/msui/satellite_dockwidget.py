@@ -36,7 +36,7 @@ import numpy as np
 from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
 from mslib.utils import save_settings_pickle, load_settings_pickle
-
+from fs import open_fs
 
 def read_nasa_satellite_prediction(fname):
     """Read a text file as downloaded from the NASA satellite prediction tool.
@@ -59,7 +59,9 @@ def read_nasa_satellite_prediction(fname):
                  multiplied by -1. ******
     """
     # Read the file into a list of strings.
-    satfile = open(fname, 'r')
+    _dirname, _name = os.path.split(fname)
+    _fs = open_fs(_dirname)
+    satfile = _fs.open(_name, 'r')
     satlines = satfile.readlines()
     satfile.close()
 

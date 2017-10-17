@@ -46,7 +46,7 @@ import shutil
 import sys
 import types
 
-#from fs import open_fs, path
+from fs import open_fs
 from fslib.fs_filepicker import fs_filepicker
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui

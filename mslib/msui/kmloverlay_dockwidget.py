@@ -36,7 +36,7 @@ from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
 from mslib.utils import save_settings_pickle, load_settings_pickle
-
+from fs import open_fs
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     """
@@ -126,13 +126,15 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Loads an KML file selected by the leFile box and constructs the
         corresponding patch.
         """
+        _dirname, _name = os.path.split(self.leFile.text()))
+        _fs = open_fs(_dirname)
         if self.patch is not None:
             self.patch.remove()
             self.view.plot_kml(None)
             self.patch = None
             self.cbOverlay.setEnabled(False)
         try:
-            with open(str(self.leFile.text())) as kmlf:
+            with _fs(name, 'r') as kmlf:
                 self.kml = pykml.parser.parse(kmlf).getroot()
                 self.patch = KMLPatch(self.view.map, self.kml,
                                       self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
