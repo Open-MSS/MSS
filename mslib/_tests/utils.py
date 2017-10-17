@@ -37,7 +37,7 @@ else:
     SHA = repo.head.object.hexsha
 
 
-BASE_DIR = os.path.join(tempfile.gettempdir(), "mss{}".format(SHA))
-DATA_DIR = os.path.join(BASE_DIR, 'testdata')
-SERVER_CONFIG_FILE = os.path.join(BASE_DIR, "mss_wms_settings.py")
+BASE_DIR = os.path.join(tempfile.gettempdir(), u"mss{}".format(SHA))
+DATA_DIR = os.path.join(BASE_DIR, u'testdata')
+SERVER_CONFIG_FILE = os.path.join(BASE_DIR, u"mss_wms_settings.py")
 os.environ["MSS_CONFIG_PATH"] = BASE_DIR

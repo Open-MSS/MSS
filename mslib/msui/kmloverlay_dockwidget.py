@@ -126,7 +126,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Loads an KML file selected by the leFile box and constructs the
         corresponding patch.
         """
-        _dirname, _name = os.path.split(self.leFile.text()))
+        _dirname, _name = os.path.split(self.leFile.text())
         _fs = open_fs(_dirname)
         if self.patch is not None:
             self.patch.remove()
