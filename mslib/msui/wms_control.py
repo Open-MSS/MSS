@@ -217,7 +217,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # to be scanned in urlopen as well as in a following method
         # (urllib2.urlopen objects only allow the content to be read once),
         # the "info" attribute is missing after the conversion..
-        if hasattr(u, "info") and u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
+        if hasattr(u, "info") and 'application/vnd.ogc.se_xml' in u.info()['Content-Type']:
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
             err_message = str(se_tree.find('ServiceException').text).strip()
