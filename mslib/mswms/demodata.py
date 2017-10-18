@@ -32,6 +32,7 @@ from __future__ import print_function
 import os
 import netCDF4 as nc
 import numpy as np
+import fs
 
 
 _SURFACE_TEXT = """\
@@ -699,18 +700,16 @@ class DataFiles(object):
         "time": ("time", "hours since 2012-10-17T12:00:00.000Z", "")
     }
 
-    def __init__(self, data_dir=None, server_config_dir=None):
-        self.data_dir = data_dir
-        self.server_config_file = os.path.join(server_config_dir, "mss_wms_settings.py")
-        self.server_auth_config_file = os.path.join(server_config_dir, "mss_wms_auth.py")
+    def __init__(self, data_fs=None, server_config_fs=None):
+        self.data_fs = data_fs
+        self.server_config_fs = server_config_fs
+        self.server_config_file = u"mss_wms_settings.py"
+        self.server_auth_config_file = u"mss_wms_auth.py"
         # define file dimension / geographical  range
 
-    def create_datadir(self):
-        if not os.path.exists(self.data_dir):
-            os.makedirs(self.data_dir)
 
     def create_server_config(self, detailed_information=False):
-        simple_auth_config = '''# -*- coding: utf-8 -*-
+        simple_auth_config = u'''# -*- coding: utf-8 -*-
 """
 
     mss_wms_settings
@@ -750,7 +749,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 
 '''
         if detailed_information:
-            simple_server_config = '''# -*- coding: utf-8 -*-
+            simple_server_config = u'''# -*- coding: utf-8 -*-
 """
 
     mss_wms_settings
@@ -885,7 +884,7 @@ if mpl_vsec_styles is not None:
         (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
-            simple_server_config = simple_server_config.format(data_dir=self.data_dir)
+            simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)
         else:
             simple_server_config = '''"""
 simple server config for demodata
@@ -894,16 +893,16 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
                                   register_horizontal_layers, register_vertical_layers)
 '''
 
-        if not os.path.exists(self.server_config_file):
-            fid = open(self.server_config_file, 'w')
+        if not self.server_config_fs.exists(self.server_config_file):
+            fid = self.server_config_fs.open(self.server_config_file, 'w')
             fid.write(simple_server_config)
             fid.close()
         else:
             print(u'''
 /!\ existing server config: "{}" for demodata not overwritten!
             '''.format(self.server_config_file))
-        if not os.path.exists(self.server_auth_config_file):
-            fid = open(self.server_auth_config_file, 'w')
+        if not self.server_config_fs.exists(self.server_auth_config_file):
+            fid = self.server_config_fs.open(self.server_auth_config_file, 'w')
             fid.write(simple_auth_config)
             fid.close()
         else:
@@ -921,8 +920,10 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
         :param dimvals: numerical values of vertical axis
         :param variables: list of standard_names of variables to write into file
         """
+        #ToDo nc.Dataset needs fid
+
         filename_out = os.path.join(
-            self.data_dir, u"20121017_12_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(label, leveltype))
+            self.data_fs.root_path, u"20121017_12_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(label, leveltype))
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
 
         for dim, values in dimvals:
@@ -1044,9 +1045,12 @@ def main():
     """
     creates various test data files and also the server configuration
     """
-    examples = DataFiles(data_dir=os.path.join(os.path.expanduser("~"), "mss", 'testdata'),
-                         server_config_dir=os.path.join(os.path.expanduser("~"), "mss"))
-    examples.create_datadir()
+    root_fs = fs.open_fs(u"~/")
+    if not root_fs.exists(u"mss/testdata"):
+        root_fs.makedirs(u"mss/testdata")
+
+    examples = DataFiles(data_fs=fs.open_fs(u"~/mss/testdata"),
+                         server_config_fs=fs.open_fs(u"~/mss"))
     examples.create_server_config(detailed_information=True)
     examples.create_data()
     print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
