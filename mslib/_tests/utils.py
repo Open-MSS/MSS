@@ -26,7 +26,8 @@
 """
 
 import os
-import tempfile
+import fs
+from fs.tempfs import TempFS
 
 try:
     import git
@@ -36,8 +37,18 @@ else:
     repo = git.Repo(search_parent_directories=True)
     SHA = repo.head.object.hexsha
 
+SERVER_CONFIG_FILE = u"mss_wms_settings.py"
+ROOT_FS = TempFS(identifier="mss{}".format(SHA))
+ROOT_DIR = ROOT_FS.root_path
 
-BASE_DIR = os.path.join(tempfile.gettempdir(), u"mss{}".format(SHA))
-DATA_DIR = os.path.join(BASE_DIR, u'testdata')
-SERVER_CONFIG_FILE = os.path.join(BASE_DIR, u"mss_wms_settings.py")
-os.environ["MSS_CONFIG_PATH"] = BASE_DIR
+if not ROOT_FS.exists(u"mss/testdata"):
+    ROOT_FS.makedirs(u"mss/testdata")
+SERVER_CONFIG_FS = fs.open_fs(fs.path.join(ROOT_DIR, u'mss'))
+DATA_FS = fs.open_fs(fs.path.join(ROOT_DIR, u'mss/testdata'))
+
+os.environ["MSS_CONFIG_PATH"] = SERVER_CONFIG_FS.root_path
+SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.root_path, SERVER_CONFIG_FILE)
+
+# just now
+DATA_DIR = DATA_FS.root_path
+BASE_DIR = ROOT_DIR

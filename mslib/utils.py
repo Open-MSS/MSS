@@ -42,7 +42,7 @@ import paste.util.multidict
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 from mslib.msui import MissionSupportSystemDefaultConfig
-from fs import open_fs
+from fs import open_fs, errors
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
 except ImportError:
@@ -84,7 +84,7 @@ def config_loader(config_file=None, dataset=None, default=None):
     try:
         with _fs.open(_name, 'r') as source:
             data = json.load(source)
-    except (AttributeError, IOError, TypeError) as ex:
+    except (AttributeError, IOError, TypeError, errors.ResourceNotFound) as ex:
         logging.error(u"MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
         if default is not None:
             return default

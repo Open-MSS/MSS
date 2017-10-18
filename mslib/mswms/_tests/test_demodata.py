@@ -31,19 +31,19 @@ from past.builtins import basestring
 import os
 import imp
 import numpy as np
-from mslib._tests.utils import BASE_DIR, DATA_DIR, SERVER_CONFIG_FILE
+from mslib._tests.utils import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE, SERVER_CONFIG_FILE_PATH
 import mslib.mswms.demodata as demodata
 
 
 class TestDemodate(object):
     def test_data_creation(self):
-        assert os.path.exists(BASE_DIR)
-        assert os.path.exists(DATA_DIR)
-        assert os.path.exists(SERVER_CONFIG_FILE)
-        assert len(os.listdir(DATA_DIR)) == 19
+        assert ROOT_FS.exists(u'.')
+        assert DATA_FS.exists(u'.')
+        assert SERVER_CONFIG_FS.exists(SERVER_CONFIG_FILE)
+        assert len(DATA_FS.listdir(u'.')) == 19
 
     def test_server_config_file(self):
-        imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE)
+        imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE_PATH)
 
     def test_get_profile(self):
         mean, std = demodata.get_profile("air_pressure", [1000, 10000, 50000], "air_temperature")

@@ -28,7 +28,6 @@ from __future__ import print_function
 
 
 import imp
-import os
 import sys
 import pytest
 
@@ -43,19 +42,17 @@ try:
 except ImportError:
     Display = None
 
-
-if not os.path.exists(utils.DATA_DIR):
+if not utils.SERVER_CONFIG_FS.exists(utils.SERVER_CONFIG_FILE):
     print('\n configure testdata')
     # ToDo check pytest tmpdir_factory
-    examples = DataFiles(data_dir=utils.DATA_DIR,
-                         server_config_dir=utils.BASE_DIR)
-    examples.create_datadir()
+    examples = DataFiles(data_fs=utils.DATA_FS,
+                         server_config_fs=utils.SERVER_CONFIG_FS)
     examples.create_server_config(detailed_information=True)
     examples.create_data()
 
-imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE)
+imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE_PATH)
 
-sys.path.insert(0, utils.BASE_DIR)
+sys.path.insert(0, utils.SERVER_CONFIG_FS.root_path)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -74,5 +71,5 @@ def configure_testsetup(request):
 
 @pytest.fixture(scope="class")
 def testdata_exists():
-    if not os.path.exists(BASE_DIR):
+    if not utils.ROOT_FS.exists(u'mss'):
         pytest.skip("testdata not existing")
