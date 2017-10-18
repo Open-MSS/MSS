@@ -31,7 +31,7 @@ import mock
 import os
 
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
-from mslib._tests.utils import BASE_DIR
+from mslib._tests.utils import ROOT_DIR
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.plugins.io.text import load_from_txt, save_to_txt
 from mslib.plugins.io.flitestar import load_from_flitestar
@@ -39,9 +39,9 @@ from mslib.plugins.io.flitestar import load_from_flitestar
 
 class Test_MSSSideViewWindow(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
-    save_csv = os.path.join(BASE_DIR, "example.csv")
-    save_ftml = os.path.join(BASE_DIR, "example.ftml")
-    save_txt = os.path.join(BASE_DIR, "example.txt")
+    save_csv = os.path.join(ROOT_DIR, "example.csv")
+    save_ftml = os.path.join(ROOT_DIR, "example.ftml")
+    save_txt = os.path.join(ROOT_DIR, "example.txt")
 
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
