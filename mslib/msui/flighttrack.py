@@ -44,6 +44,7 @@ import logging
 import os
 import xml.dom.minidom
 import xml.parsers.expat
+from fs import open_fs, path
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float, USE_PYQT5
@@ -55,7 +56,8 @@ from mslib.utils import config_loader, find_location, save_settings_pickle, load
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
-
+from mslib.utils import writexml
+xml.dom.minidom.Element.writexml = writexml
 # Constants for identifying the table columns when the WaypointsTableModel is
 # used with a QTableWidget.
 LOCATION, LAT, LON, FLIGHTLEVEL, PRESSURE = list(range(5))
@@ -533,32 +535,37 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         doc = xml.dom.minidom.Document()
 
-        ft_el = doc.createElement("FlightTrack")
-        ft_el.setAttribute("version", str(__version__))
+        ft_el = doc.createElement(u"FlightTrack")
+        ft_el.setAttribute(u"version", unicode(__version__))
         doc.appendChild(ft_el)
         # The list of waypoint elements.
-        wp_el = doc.createElement("ListOfWaypoints")
+        wp_el = doc.createElement(u"ListOfWaypoints")
         ft_el.appendChild(wp_el)
 
         for wp in self.waypoints:
-            element = doc.createElement("Waypoint")
+            element = doc.createElement(u"Waypoint")
             wp_el.appendChild(element)
-            element.setAttribute("location", str(wp.location))
-            element.setAttribute("lat", str(wp.lat))
-            element.setAttribute("lon", str(wp.lon))
-            element.setAttribute("flightlevel", str(wp.flightlevel))
-            comments = doc.createElement("Comments")
-            comments.appendChild(doc.createTextNode(str(wp.comments)))
+            element.setAttribute(u"location", unicode(wp.location))
+            element.setAttribute(u"lat", unicode(wp.lat))
+            element.setAttribute(u"lon", unicode(wp.lon))
+            element.setAttribute(u"flightlevel", unicode(wp.flightlevel))
+            comments = doc.createElement(u"Comments")
+            comments.appendChild(doc.createTextNode(unicode(wp.comments)))
             element.appendChild(comments)
 
-        with codecs.open(self.filename, 'w', encoding="utf-8") as file_object:
-            doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+        _dirname, _name = os.path.split(self.filename)
+        _fs = open_fs(_dirname)
+        with _fs.open(_name, 'w') as file_object:
+            doc.writexml(file_object, indent=u"  ", addindent=u"  ", newl=u"\n", encoding=u"utf-8")
 
     def load_from_ftml(self, filename):
         """Load a flight track from an XML file at <filename>.
         """
+        _dirname, _name = os.path.split(filename)
+        _fs = open_fs(_dirname)
+        datasource = _fs.open(_name)
         try:
-            doc = xml.dom.minidom.parse(filename)
+            doc = xml.dom.minidom.parse(datasource)
         except xml.parsers.expat.ExpatError as ex:
             raise SyntaxError(str(ex))
 

@@ -182,7 +182,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None
-        self.last_save_directory = os.getcwd()
+        self.last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
 
         # Connect Qt SIGNALs:
         # ===================
@@ -617,11 +617,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def save_flight_track_as(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
         """
-        default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
-        filename = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save Flight Track", default_filename, "Flight track XML (*.ftml)")
-        filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
-        if filename:
+        #default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
+        default_filename = self.active_flight_track.name + ".ftml"
+
+        filename = fs_filepicker(self, self.last_save_directory, u'*.ftml', title=u"Save Flight Track",
+                                 default_filename=default_filename, show_save_action=True)
+
+        if filename is not None:
             self.last_save_directory = os.path.dirname(filename)
             if filename.endswith('.ftml'):
                 try:

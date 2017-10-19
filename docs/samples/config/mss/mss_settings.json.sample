@@ -1,5 +1,6 @@
 
 {
+    "data_dir:" "~/mssdata",
 
     "layout": {
        "topview": [963, 702],
