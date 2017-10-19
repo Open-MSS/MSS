@@ -30,7 +30,7 @@
 
 import os
 
-HOME = "~/"
+HOME = os.path.expanduser("~/")
 MSS_CONFIG_PATH = os.getenv("MSS_CONFIG_PATH", os.path.join(HOME, u".config", u"mss"))
 if not os.path.exists(MSS_CONFIG_PATH):
     os.makedirs(MSS_CONFIG_PATH)
