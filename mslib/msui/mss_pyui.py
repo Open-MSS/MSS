@@ -377,10 +377,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.menuExport_Active_Flight_Track.addAction(action)
 
         def save_function_wrapper(self):
-            default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + "." + extension)
-            filename = QtWidgets.QFileDialog.getSaveFileName(
-                self, "Export Flight Track", default_filename, name + " (*." + extension + ")")
-            filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
+            default_filename = self.active_flight_track.name + "." + extension
+            filename = fs_filepicker(self, self.last_save_directory, u"*." + extension, title=u"Export Flight Track",
+                                     default_filename=default_filename, show_save_action=True)
             if filename:
                 try:
                     function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
