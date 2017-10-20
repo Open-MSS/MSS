@@ -920,7 +920,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
         :param dimvals: numerical values of vertical axis
         :param variables: list of standard_names of variables to write into file
         """
-        #ToDo nc.Dataset needs fid
+        # ToDo nc.Dataset needs fileobject like access
 
         filename_out = os.path.join(
             self.data_fs.root_path, u"20121017_12_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(label, leveltype))
