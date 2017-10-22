@@ -45,8 +45,8 @@ import requests
 import shutil
 import sys
 import types
+import fs
 
-from fs import open_fs
 from fslib.fs_filepicker import fs_filepicker
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
@@ -183,6 +183,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # views.
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
+
+        # create default or configured data_dir
+        try:
+            projects_fs = fs.open_fs(self.last_save_directory)
+        except fs.errors.CreateFailed:
+            projects_fs = fs.open_fs(self.last_save_directory, create=True)
 
         # Connect Qt SIGNALs:
         # ===================
@@ -622,8 +628,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         filename = fs_filepicker(self, self.last_save_directory, u'*.ftml', title=u"Save Flight Track",
                                  default_filename=default_filename, show_save_action=True)
 
+
         if filename is not None:
-            self.last_save_directory = os.path.dirname(filename)
+            self.last_save_directory = fs.path.dirname(filename)
             if filename.endswith('.ftml'):
                 try:
                     self.active_flight_track.save_to_ftml(filename)
