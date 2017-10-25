@@ -131,7 +131,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """Slot that opens a file dialog to choose a file with satellite
            overpass predictions.
         """
-        filename = QtGui.QFileDialog.getOpenFileName(
+        filename = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open NASA satellite overpass prediction",
             os.path.dirname(str(self.leFile.text())), "(*.*)")
         filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
