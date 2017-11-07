@@ -630,7 +630,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 
         if filename is not None:
-            self.last_save_directory = fs.path.dirname(filename)
+            # ToDo add again, after fs_filepicker has an additional scope for different directories
+            # self.last_save_directory = fs.path.dirname(filename)
             if filename.endswith('.ftml'):
                 try:
                     self.active_flight_track.save_to_ftml(filename)
