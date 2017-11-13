@@ -35,7 +35,7 @@ import codecs
 import mslib.msui.flighttrack as ft
 from mslib import thermolib
 import os
-
+from fs import open_fs
 
 def save_to_txt(filename, name, waypoints):
     if not filename:
@@ -70,7 +70,9 @@ def save_to_txt(filename, name, waypoints):
 def load_from_txt(filename):
     name = os.path.basename(filename.replace(".txt", "").strip())
     waypoints = []
-    with codecs.open(filename, "r", encoding="utf-8") as in_file:
+    _dirname, _name = os.path.split(filename)
+    _fs = open_fs(_dirname)
+    with _fs.open(_name, "r") as in_file:
         pos = []
         for line in in_file:
             if line.startswith("#"):

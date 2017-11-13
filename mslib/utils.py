@@ -42,7 +42,7 @@ import paste.util.multidict
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 from mslib.msui import MissionSupportSystemDefaultConfig
-
+from fs import open_fs, errors
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
 except ImportError:
@@ -79,10 +79,12 @@ def config_loader(config_file=None, dataset=None, default=None):
                 return default_config[dataset]
             except KeyError:
                 return default
+    _dirname, _name = os.path.split(config_file)
+    _fs = open_fs(_dirname)
     try:
-        with open(os.path.join(config_file)) as source:
+        with _fs.open(_name, 'r') as source:
             data = json.load(source)
-    except (AttributeError, IOError, TypeError) as ex:
+    except (AttributeError, IOError, TypeError, errors.ResourceNotFound) as ex:
         logging.error(u"MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
         if default is not None:
             return default
@@ -145,7 +147,7 @@ def save_settings_pickle(tag, settings):
     """
     assert isinstance(tag, basestring)
     assert isinstance(settings, dict)
-    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.{}.cfg".format(tag))
+    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, u"mss.{}.cfg".format(tag))
     logging.debug("storing settings for %s to %s", tag, settingsfile)
     try:
         with open(settingsfile, "wb") as fileobj:
@@ -168,14 +170,16 @@ def load_settings_pickle(tag, default_settings=None):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
-    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, "mss.{}.cfg".format(tag))
+    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, u"mss.{}.cfg".format(tag))
+    _dirname, _name = os.path.split(settingsfile)
+    _fs = open_fs(_dirname)
     settings = {}
-    if not os.path.exists(settingsfile):
+    if not _fs.exists(_name):
         logging.debug("settings file '%s' for %s not available", settingsfile, tag)
     else:
         logging.debug("loading settings file '%s' for %s", settingsfile, tag)
         try:
-            with open(settingsfile, "rb") as fileobj:
+            with _fs.open(_name, "rb") as fileobj:
                 settings = pickle.load(fileobj)
         except (pickle.UnpicklingError, ValueError, KeyError, OSError, IOError, ImportError) as ex:
             logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
@@ -448,3 +452,36 @@ def setup_logging(args):
             fh.setLevel(logging.DEBUG)
             fh.setFormatter(debug_formatter)
             logger.addHandler(fh)
+
+
+# modified Verion from minidom
+# all writings as unicode not str
+from xml.dom.minidom import _write_data, Node
+
+def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
+    # indent = current indentation
+    # addindent = indentation to add to higher levels
+    # newl = newline string
+    writer.write(indent+u"<" + self.tagName)
+
+    attrs = self._get_attributes()
+    a_names = attrs.keys()
+    a_names.sort()
+
+    for a_name in a_names:
+        writer.write(u" %s=\"" % a_name)
+        _write_data(writer, attrs[a_name].value)
+        writer.write(u"\"")
+    if self.childNodes:
+        writer.write(u">")
+        if (len(self.childNodes) == 1 and
+            self.childNodes[0].nodeType == Node.TEXT_NODE):
+            self.childNodes[0].writexml(writer, '', '', '')
+        else:
+            writer.write(newl)
+            for node in self.childNodes:
+                node.writexml(writer, indent+addindent, addindent, newl)
+            writer.write(indent)
+        writer.write(u"</%s>%s" % (self.tagName, newl))
+    else:
+        writer.write(u"/>%s"%(newl))

@@ -23,6 +23,39 @@ interface (top view and side view).
 Configuration of mss
 ++++++++++++++++++++
 
+For storage capabilities mss uses the `pyfilesystem <http://pyfilesystem2.readthedocs.io>` approach.
+The default data dir is predefined as a directory: `~/mssdata` which is the same as `osfs://~/mssdata`.
+
+
+PyFilesystem can open a filesystem via an *FS URL*, which is similar to a URL you might enter in to a
+browser. FS URLs are useful if you want to specify a filesystem dynamically, such as in a conf file or
+from the command line.
+
+
+Format
+------
+
+FS URLs are formatted in the following way::
+
+    <protocol>://<username>:<password>@<resource>
+
+The components are as follows:
+
+* ``<protocol>`` Identifies the type of filesystem to create. e.g. ``osfs``, ``ftp``.
+* ``<username>`` Optional username.
+* ``<password>`` Optional password.
+* ``<resource>`` A *resource*, which may be a domain, path, or both.
+
+Here are a few examples::
+
+    osfs://~/projects
+    osfs://c://system32
+    ftp://ftp.example.org/pub
+    mem://
+    ftp://[user[:password]@]host[:port]/[directory]
+    webdav://[user[:password]@]host[:port]/[directory]
+    ssh://[user[:password]@]host[:port]/[directory]
+
 
 Settings file
 .............
