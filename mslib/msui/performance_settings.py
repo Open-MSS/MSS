@@ -25,12 +25,11 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from mslib.msui.mss_qt import QtCore, QtWidgets, get_open_filename
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import aircrafts
 from mslib.msui import constants
 from mslib.msui.mss_qt import ui_performance_settings as ui_ps
-from fslib.fs_filepicker import getOpenFileName
 
 
 DEFAULT_PERFORMANCE = {
@@ -87,9 +86,9 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
         """
         Gets a filename for a JSON file specifying aircraft performance and initializes an SimpleAircraft model.
         """
-
-        filename = getOpenFileName(self, constants.MSS_CONFIG_PATH, u'Config File (*.json)',
-                                   title=u"Open Aircraft Performance JSON File")
+        filename = get_open_filename(
+            self, "Open Aircraft Performance JSON File", constants.MSS_CONFIG_PATH,
+            "Performance File (*.json)", pickertag="filepicker_performance")
         if filename is not None:
             try:
                 performance = config_loader(config_file=filename)

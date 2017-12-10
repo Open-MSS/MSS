@@ -26,23 +26,95 @@
 """
 
 import importlib
+import os
 import logging
 import traceback
 import sys
-from past.builtins import unicode
 import platform
+from past.builtins import unicode
+
+from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
+
+from mslib.utils import config_loader, FatalUserError
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # import the Qt5Agg FigureCanvas object, that binds Figure to
 # Qt5Agg backend. It also inherits from QWidget
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
 
-# import the NavigationToolbar Qt5Agg widget
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-
-from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
+from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
 QString = str  # QString is not exposed anymore but is used transparently by PyQt5
 
 _qt_ui_prefix = "mslib.msui.qt5."
+
+
+def get_open_filename_qt(*args):
+    filename = QtWidgets.QFileDialog.getOpenFileName(*args)
+    return filename[0] if isinstance(filename, tuple) else str(filename)
+
+
+def get_save_filename_qt(*args):
+    filename = QtWidgets.QFileDialog.getSaveFileName(*args)
+    return filename[0] if isinstance(filename, tuple) else str(filename)
+
+
+def get_existing_directory_qt(*args):
+    dirname = QtWidgets.QFileDialog.getExistingDirectory(*args)
+    return dirname[0] if isinstance(dirname, tuple) else str(dirname)
+
+
+def get_pickertype(tag, typ):
+    default = config_loader(dataset="filepicker_default", default=mss_default.filepicker_default)
+    if typ is None:
+        if tag is None:
+            typ = default
+        else:
+            typ = config_loader(dataset=tag, default=default)
+    return typ
+
+
+def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=None):
+    pickertype = get_pickertype(pickertag, pickertype)
+    if pickertype == "fs":
+        filename = getOpenFileName(parent, dirname, filt, title=u"Import Flight Track")
+    elif pickertype in ["qt", "default"]:
+        filename = get_open_filename_qt(parent, title, dirname, filt)
+    else:
+        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+    logging.debug("Selected '%s'", filename)
+    if filename == "":
+        filename = None
+    return filename
+
+
+def get_save_filename(parent, title, filename, filt, pickertag=None, pickertype=None):
+    pickertype = get_pickertype(pickertag, pickertype)
+    if pickertype == "fs":
+        dirname, filename = os.path.split(filename)
+        filename = getSaveFileName(
+            parent, dirname, filt, title=title, default_filename=filename, show_save_action=True)
+    elif pickertype in ["qt", "default"]:
+        filename = get_save_filename_qt(parent, title, filename, filt)
+    else:
+        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+    logging.debug("Selected '%s'", filename)
+    if filename == "":
+        filename = None
+    return filename
+
+
+def get_existing_directory(parent, title, defaultdir, pickertag=None, pickertype=None):
+    pickertype = get_pickertype(pickertag, pickertype)
+    if pickertype == "fs":
+        dirname = getExistingDirectory(parent, title=title, fs_url=defaultdir)[0]
+    elif pickertype in ["qt", "default"]:
+        dirname = get_existing_directory_qt(parent, title, defaultdir)
+    else:
+        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+    logging.debug("Selected '%s'", dirname)
+    if dirname == "":
+        dirname = None
+    return dirname
 
 
 def variant_to_string(variant):

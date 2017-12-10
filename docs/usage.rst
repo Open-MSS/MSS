@@ -80,6 +80,7 @@ by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
 
 .. literalinclude:: samples/config/mss/mss_settings.json.sample
 
+
 Flight track import/export
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -185,6 +186,28 @@ The TopView has a docking widget that allows the visualization of KML files on t
 currently does not support all features of KML, for example, external resources such as images are not supported.
 Some example KML files are located at :download:`docs/samples/kml/line.kml <samples/kml/line.kml>` and
 :download:`docs/samples/kml/folder.kml <samples/kml/folder.kml>`.
+
+
+File picker dialogue
+~~~~~~~~~~~~~~~~~~~~
+
+MSS supports the use of a general file picker to access locations on remote machines
+facilitating collaboration on campaigns. To enable this feature apply
+
+.. code:: json
+
+    "filepicker_default": "fs",
+
+to your configuration file. The allowed values are "qt" for QT-based dialogues, "fs" for
+fsfile_picker-based dialogues supporting remote locations, or "default" for the default
+dialogues. The default is currently identical to "qt", but may change in upcoming releases.
+The dialogues may also be configured more fine grained with the parameters of
+'filepicker_flightrack for saving and loading flight tracks,
+'filepicker_matplotlib' for saving figures, "filepicker_config" for loading json configuration
+files, "filepicker_performance" for loading performance data, "filepicker_satellitetrack" for 
+loading satellite track data, and "filepicker_trajectories" for loading data in the
+trajectory tool. Additionally, the dialogue type may be configured for each export/import plugin
+individually by a fourth, optional, parameter.
 
 
 Example WMS Server
