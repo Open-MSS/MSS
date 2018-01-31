@@ -32,12 +32,13 @@ import os
 
 import mslib.msui.flighttrack as ft
 from mslib import thermolib
-
+from fs import open_fs
 
 def load_from_flitestar(filename):
     waypoints = []
-
-    with open(filename, 'r') as f:
+    _dirname, _name = os.path.split(filename)
+    _fs = open_fs(_dirname)
+    with _fs.open(_name, 'r') as f:
         firstline = f.readline()
         if not firstline.startswith("# FliteStar/FliteMap generated flight plan."):
             raise SyntaxError("The file does not seem to be a FliteStar file!")

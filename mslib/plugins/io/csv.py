@@ -35,14 +35,16 @@ import unicodecsv as csv
 import os
 
 import mslib.msui.flighttrack as ft
-
+from fs import open_fs
 
 def save_to_csv(filename, name, waypoints):
     if not filename:
-        raise ValueError("filename to save flight track cannot be None")
-    with open(filename, "w") as out_file:
-        csv_writer = csv.writer(out_file, encoding="utf-8", dialect='excel', delimiter=";", lineterminator="\n")
-        csv_writer.writerow([str(name)])
+        raise ValueError("fileexportname to save flight track cannot be None")
+    _dirname, _name = os.path.split(filename)
+    _fs = open_fs(_dirname)
+    with _fs.open(_name, "wb") as csvfile:
+        csv_writer = csv.writer(csvfile, dialect='excel', delimiter=";", lineterminator="\n")
+        csv_writer.writerow([name])
         csv_writer.writerow(["Index", "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
                              "Leg dist. (km)", "Cum. dist. (km)", "Comments"])
         for i, wp in enumerate(waypoints):
@@ -59,7 +61,9 @@ def save_to_csv(filename, name, waypoints):
 
 def load_from_csv(filename):
     waypoints = []
-    with open(filename, "r") as in_file:
+    _dirname, _name = os.path.split(filename)
+    _fs = open_fs(_dirname)
+    with _fs.open(_name, "r") as in_file:
         lines = in_file.readlines()
     if len(lines) < 4:
         raise SyntaxError("CSV file requires at least 4 lines!")

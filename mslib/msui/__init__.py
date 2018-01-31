@@ -50,6 +50,8 @@ class MissionSupportSystemDefaultConfig(object):
     Do not change any value for good reasons.
     Your values can be set in your personal mss_settings.json file
     """
+    # dir where mss output files are stored
+    data_dir = u"~/mssdata"
 
     # layout of different views, with immutable they can't resized
     layout = {"topview": (963, 702),
