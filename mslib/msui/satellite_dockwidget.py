@@ -38,6 +38,7 @@ from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
 from mslib.utils import save_settings_pickle, load_settings_pickle
 from fs import open_fs
 
+
 def read_nasa_satellite_prediction(fname):
     """Read a text file as downloaded from the NASA satellite prediction tool.
 

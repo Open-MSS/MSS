@@ -37,6 +37,7 @@ from mslib import thermolib
 import os
 from fs import open_fs
 
+
 def save_to_txt(filename, name, waypoints):
     if not filename:
         raise ValueError("filename to save flight track cannot be None")

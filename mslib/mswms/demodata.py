@@ -707,7 +707,6 @@ class DataFiles(object):
         self.server_auth_config_file = u"mss_wms_auth.py"
         # define file dimension / geographical  range
 
-
     def create_server_config(self, detailed_information=False):
         simple_auth_config = u'''# -*- coding: utf-8 -*-
 """
