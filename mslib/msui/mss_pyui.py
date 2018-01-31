@@ -622,13 +622,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def save_flight_track_as(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
         """
-        #default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
+        # default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         default_filename = self.active_flight_track.name + ".ftml"
 
         filename = fs_filepicker(self, self.last_save_directory, u'*.ftml', title=u"Save Flight Track",
                                  default_filename=default_filename, show_save_action=True)
-
-
         if filename is not None:
             # ToDo add again, after fs_filepicker has an additional scope for different directories
             # self.last_save_directory = fs.path.dirname(filename)

@@ -34,6 +34,7 @@ import mslib.msui.flighttrack as ft
 from mslib import thermolib
 from fs import open_fs
 
+
 def load_from_flitestar(filename):
     waypoints = []
     _dirname, _name = os.path.split(filename)

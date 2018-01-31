@@ -458,11 +458,12 @@ def setup_logging(args):
 # all writings as unicode not str
 from xml.dom.minidom import _write_data, Node
 
+
 def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
     # indent = current indentation
     # addindent = indentation to add to higher levels
     # newl = newline string
-    writer.write(indent+u"<" + self.tagName)
+    writer.write(indent + u"<" + self.tagName)
 
     attrs = self._get_attributes()
     a_names = attrs.keys()
@@ -474,14 +475,13 @@ def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
         writer.write(u"\"")
     if self.childNodes:
         writer.write(u">")
-        if (len(self.childNodes) == 1 and
-            self.childNodes[0].nodeType == Node.TEXT_NODE):
+        if (len(self.childNodes) == 1 and self.childNodes[0].nodeType == Node.TEXT_NODE):
             self.childNodes[0].writexml(writer, '', '', '')
         else:
             writer.write(newl)
             for node in self.childNodes:
-                node.writexml(writer, indent+addindent, addindent, newl)
+                node.writexml(writer, indent + addindent, addindent, newl)
             writer.write(indent)
         writer.write(u"</%s>%s" % (self.tagName, newl))
     else:
-        writer.write(u"/>%s"%(newl))
+        writer.write(u"/>%s" % (newl))

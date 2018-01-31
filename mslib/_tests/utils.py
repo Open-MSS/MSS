@@ -51,4 +51,3 @@ SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.root_path, SERVER_CONFIG
 
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2
 DATA_DIR = DATA_FS.root_path
-
