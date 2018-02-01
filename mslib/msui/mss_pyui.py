@@ -184,12 +184,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
 
-        # create default or configured data_dir
-        try:
-            projects_fs = fs.open_fs(self.last_save_directory)
-        except fs.errors.CreateFailed:
-            projects_fs = fs.open_fs(self.last_save_directory, create=True)
-
         # Connect Qt SIGNALs:
         # ===================
 

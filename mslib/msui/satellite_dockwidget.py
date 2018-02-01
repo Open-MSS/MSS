@@ -33,7 +33,7 @@ import os
 from datetime import datetime, timedelta
 import numpy as np
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtWidgets, USE_PYQT5
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
 from mslib.utils import save_settings_pickle, load_settings_pickle
 from fs import open_fs
