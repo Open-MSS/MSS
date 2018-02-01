@@ -45,7 +45,7 @@ import urllib.parse
 import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets
 
 import mslib.ogcwms
 import owslib.util
@@ -1325,23 +1325,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbValidTime_cbfwd.setEnabled(enable)
 
     def get_layer(self):
-        if USE_PYQT5:
-            return self.cbLayer.currentText().split(" | ")[-1]
-        else:
-            return str(self.cbLayer.currentText(), errors="ignore").split(" | ")[-1]
+        return self.cbLayer.currentText().split(" | ")[-1]
 
     def get_style(self):
-        if USE_PYQT5:
-            return self.cbStyle.currentText().split(" |")[0]
-        else:
-            return str(self.cbStyle.currentText(), errors="ignore").split(" |")[0]
+        return self.cbStyle.currentText().split(" |")[0]
 
     def get_level(self):
         if self.cbLevelOn.isChecked():
-            if USE_PYQT5:
-                return self.cbLevel.currentText().split(" (")[0]
-            else:
-                return str(self.cbLevel.currentText(), errors="ignore").split(" (")[0]
+            return self.cbLevel.currentText().split(" (")[0]
         else:
             return None
 
@@ -1696,10 +1687,7 @@ class HSecWMSControlWidget(WMSControlWidget):
 
     def level_changed(self):
         if self.cbLevelOn.isChecked():
-            if USE_PYQT5:
-                s = self.cbLevel.currentText()
-            else:
-                s = str(self.cbLevel.currentText(), errors="ignore")
+            s = self.cbLevel.currentText()
             if s == "":
                 return
             lvl = float(s.split(" (")[0])

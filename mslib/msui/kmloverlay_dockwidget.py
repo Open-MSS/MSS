@@ -32,7 +32,7 @@ import os
 import pykml.parser
 
 # local application imports
-from mslib.msui.mss_qt import QtGui, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
 from mslib.utils import save_settings_pickle, load_settings_pickle
@@ -116,7 +116,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         filename = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open KML Polygonal File", os.path.dirname(str(self.leFile.text())), "(*.kml)")
-        filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
+        if isinstance(filename, tuple):
+            filename = filename[0]
 
         if not filename:
             return

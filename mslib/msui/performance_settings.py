@@ -27,7 +27,7 @@
 
 from builtins import str
 
-from mslib.msui.mss_qt import QtCore, QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets
 
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import aircrafts
@@ -91,7 +91,8 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
         """
         filename = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open Aircraft Performance JSON File", constants.MSS_CONFIG_PATH, "(*.json)")
-        filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
+        if isinstance(filename, tuple):
+            filename = filename[0]
 
         if filename:
             try:

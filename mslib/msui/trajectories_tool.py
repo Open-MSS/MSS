@@ -31,7 +31,7 @@ from builtins import str
 import logging
 import os
 
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui, USE_PYQT5
+from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_trajectories_window as ui
 from mslib.msui import trajectory_item_tree as titree
 
@@ -117,7 +117,8 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # QString to str.
         nas_file = QtWidgets.QFileDialog.getOpenFileName(
             self, "Open NASA Ames File", "", "NASA Ames files (*.nas)")
-        nas_file = nas_file[0] if isinstance(nas_file, tuple) and USE_PYQT5 else str(nas_file)
+        if isinstance(nas_file, tuple):
+            nas_file = nas_file[0]
         if nas_file:
             logging.debug(u"Loading flight track data from '%s'", nas_file)
 

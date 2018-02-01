@@ -8,8 +8,8 @@
 
     This file is part of mss.
 
-    :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017 - 2018 Joern Ungermann, Reimar Bauer
+    :copyright: Copyright 2017 - 2018 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,58 +32,17 @@ import sys
 from past.builtins import unicode
 import platform
 
-USE_PYQT5 = False
-try:
-    # import the Qt4Agg FigureCanvas object, that binds Figure to
-    # Qt4Agg backend. It also inherits from QWidget
-    from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+# import the Qt5Agg FigureCanvas object, that binds Figure to
+# Qt5Agg backend. It also inherits from QWidget
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
-    # import the NavigationToolbar Qt4Agg widget
-    from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+# import the NavigationToolbar Qt5Agg widget
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
-    from PyQt4 import QtGui, QtCore, QtTest
-    QtWidgets = QtGui  # Follow the PyQt5 style and access objects from the modules of PyQt5
-    from PyQt4.QtCore import QString  # import QString as this does not exist in PyQt5
+from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
+QString = str  # QString is not exposed anymore but is used transparently by PyQt5
 
-    QtTest.QTest.qWaitForWindowExposed = QtTest.QTest.qWaitForWindowShown
-
-    def value(self):
-        """
-        Backport of needed stuff from PyQt5 value function
-        """
-        if self.typeName() in ["float", "double"]:
-            result, ok = self.toDouble()
-            if not ok:
-                raise RuntimeError("Problem in converting: {}".format(self))
-            return result
-        if self.typeName() in ["int"]:
-            result, ok = self.toInt()
-            if not ok:
-                raise RuntimeError("Problem in converting: {}".format(self))
-            return result
-        if self.typeName() in ["QString"]:
-            return self.toString()
-        raise RuntimeError("Unsupported type in conversion: {}".format(self.typeName()))
-
-    QtCore.QVariant.value = value
-
-    _qt_ui_prefix = "mslib.msui.qt4."
-
-except ImportError:
-    logging.warning("Did not find PyQt4. Switching to PyQt5.")
-    # import the Qt5Agg FigureCanvas object, that binds Figure to
-    # Qt5Agg backend. It also inherits from QWidget
-    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-
-    # import the NavigationToolbar Qt5Agg widget
-    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-
-    from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
-    QString = str  # QString is not exposed anymore but is used transparently by PyQt5
-
-    _qt_ui_prefix = "mslib.msui.qt5."
-
-    USE_PYQT5 = True
+_qt_ui_prefix = "mslib.msui.qt5."
 
 
 def variant_to_string(variant):
@@ -135,27 +94,10 @@ for mod in [
 
 # Add some functions that are used.
 # TODO Can probably be tidied up in a neater fashion by rewriting the using code.
-if USE_PYQT5:
-    def _fromUtf8(s):
-        return s
+def _fromUtf8(s):
+    return s
 
-    _translate = QtCore.QCoreApplication.translate
-
-else:
-    try:
-        _fromUtf8 = QtCore.QString.fromUtf8
-    except AttributeError:
-        def _fromUtf8(s):
-            return s
-
-    try:
-        _encoding = QtGui.QApplication.UnicodeUTF8
-
-        def _translate(context, text, disambig):
-            return QtGui.QApplication.translate(context, text, disambig, _encoding)
-    except AttributeError:
-        def _translate(context, text, disambig):
-            return QtGui.QApplication.translate(context, text, disambig)
+_translate = QtCore.QCoreApplication.translate
 
 
 # PyQt5 silently aborts on a Python Exception and PyQt4 does not inform GUI users
