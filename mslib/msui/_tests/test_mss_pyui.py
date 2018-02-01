@@ -29,7 +29,6 @@
 import sys
 import mock
 import os
-import fs
 from mslib.msui.mss_qt import QtWidgets, QtTest
 from mslib._tests.utils import ROOT_DIR
 import mslib.msui.mss_pyui as mss_pyui
@@ -38,7 +37,7 @@ from mslib.plugins.io.flitestar import load_from_flitestar
 
 
 class Test_MSSSideViewWindow(object):
-    sample_path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
+    sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
     save_csv = os.path.join(ROOT_DIR, "example.csv")
     save_ftml = os.path.join(ROOT_DIR, "example.ftml")
     save_txt = os.path.join(ROOT_DIR, "example.txt")
@@ -132,7 +131,7 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_ftml)
         os.remove(self.save_ftml)
 
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=fs.path.join(sample_path, u"example.csv"))
+    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path, u"example.csv"))
     def test_plugin_csv_read(self, mockread):
         assert self.window.listFlightTracks.count() == 1
         assert mockread.call_count == 0
@@ -152,7 +151,7 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_csv)
         os.remove(self.save_csv)
 
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=fs.path.join(sample_path, u"example.txt"))
+    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path, u"example.txt"))
     def test_plugin_txt_read(self, mockread):
         self.window.add_import_filter("_TXT", "txt", load_from_txt)
         assert self.window.listFlightTracks.count() == 1
@@ -175,7 +174,7 @@ class Test_MSSSideViewWindow(object):
         os.remove(self.save_txt)
 
     @mock.patch("mslib.msui.mss_pyui.fs_filepicker",
-                return_value=fs.path.join(sample_path, u"flitestar.txt"))
+                return_value=os.path.join(sample_path, u"flitestar.txt"))
     def test_plugin_flitestar(self, mockopen):
         self.window.last_save_directory = self.sample_path
         self.window.add_import_filter("_FliteStar", "txt", load_from_flitestar)
