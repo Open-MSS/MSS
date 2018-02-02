@@ -72,27 +72,20 @@ class Test_TrajectoriesTool(object):
         assert mockopen.call_count == 1
         assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    # @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
-    #            return_value=os.path.join(sample_path, "nas", "sample.nas"))
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path, "nas", "sample.nas"))
-    def test_load_nas(self, mockopen, mockcrit):
+    @mock.patch("mslib.msui.trajectories_tool.fs_filepicker",
+                return_value=os.path.join(sample_path, "nas", "sample.nas"))
+    def test_load_nas(self, mockopen):
         if not HAVE_NAPPY:
             pytest.skip("nappy not available")
         self.window.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    # @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
-    #            return_value=os.path.join(sample_path, "kml", "line.kml"))
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path, "kml", "line.kml"))
-    def test_load_nas_kml(self, mockopen, mockcrit):
+    @mock.patch("mslib.msui.trajectories_tool.fs_filepicker", return_value=os.path.join(sample_path, "kml", "line.kml"))
+    def test_load_nas_kml(self, mockopen):
         self.window.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.critical.call_count == 1
 
 
 class Test_TrajectoryToolComples(object):
@@ -124,17 +117,14 @@ class Test_TrajectoryToolComples(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    # @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
-    #            return_value=os.path.join(sample_path, "nas", "sample.nas"))
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path,"nas", "sample.nas"))
-    def test_show_nas(self, mockopen, mockcrit):
+    @mock.patch("mslib.msui.trajectories_tool.fs_filepicker",
+                return_value=os.path.join(sample_path, "nas", "sample.nas"))
+    def test_show_nas(self, mockopen):
         if not HAVE_NAPPY:
             pytest.skip("nappy not available")
         self.trajtool.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.critical.call_count == 0
         self.trajtool.cbPlotInView.setCurrentIndex(1)
         QtWidgets.QApplication.processEvents()
         root = self.trajtool.traj_item_tree.getRootItem()
@@ -146,7 +136,6 @@ class Test_TrajectoryToolComples(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.trajtool.btPlotInView, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockcrit.critical.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getExistingDirectory",
