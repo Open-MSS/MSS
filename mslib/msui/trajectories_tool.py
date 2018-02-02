@@ -27,14 +27,13 @@
 """
 
 from builtins import str
-
 import logging
 import os
-
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui, USE_PYQT5
+from fslib.fs_filepicker import fs_filepicker
+from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_trajectories_window as ui
+from mslib.msui import constants
 from mslib.msui import trajectory_item_tree as titree
-
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.icons import icons
 
@@ -115,10 +114,15 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         # Ask for a file to open, convert the return file name from type
         # QString to str.
-        nas_file = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open NASA Ames File", "", "NASA Ames files (*.nas)")
-        nas_file = nas_file[0] if isinstance(nas_file, tuple) and USE_PYQT5 else str(nas_file)
-        if nas_file:
+        filename = fs_filepicker(self, constants.MSS_CONFIG_PATH, u'*.nas', title=u"Open NASA Ames File")
+        # ToDo nappy needs filelike object first
+        # _dirname, _name = os.path.split(filename)
+        # _fs = open_fs(_dirname)
+        if filename:
+            # until nappy knows filelike objects
+            # nas_file = _fs.open(_name, "wb")
+            nas_file = os.path.expanduser(filename)
+
             logging.debug(u"Loading flight track data from '%s'", nas_file)
 
             # Add the flight track to the data tree.

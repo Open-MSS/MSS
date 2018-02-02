@@ -73,8 +73,9 @@ class Test_TrajectoriesTool(object):
         assert mockcrit.critical.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
-                return_value=os.path.join(sample_path, "nas", "sample.nas"))
+    # @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+    #            return_value=os.path.join(sample_path, "nas", "sample.nas"))
+    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path, "nas", "sample.nas"))
     def test_load_nas(self, mockopen, mockcrit):
         if not HAVE_NAPPY:
             pytest.skip("nappy not available")
@@ -84,8 +85,9 @@ class Test_TrajectoriesTool(object):
         assert mockcrit.critical.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
-                return_value=os.path.join(sample_path, "kml", "line.kml"))
+    # @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+    #            return_value=os.path.join(sample_path, "kml", "line.kml"))
+    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path, "kml", "line.kml"))
     def test_load_nas_kml(self, mockopen, mockcrit):
         self.window.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
@@ -123,8 +125,9 @@ class Test_TrajectoryToolComples(object):
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
-                return_value=os.path.join(sample_path, "nas", "sample.nas"))
+    # @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+    #            return_value=os.path.join(sample_path, "nas", "sample.nas"))
+    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path,"nas", "sample.nas"))
     def test_show_nas(self, mockopen, mockcrit):
         if not HAVE_NAPPY:
             pytest.skip("nappy not available")
