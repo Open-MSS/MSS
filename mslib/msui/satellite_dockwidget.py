@@ -33,10 +33,11 @@ import os
 from datetime import datetime, timedelta
 import numpy as np
 
-from mslib.msui.mss_qt import QtWidgets, USE_PYQT5
+from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
 from mslib.utils import save_settings_pickle, load_settings_pickle
 from fs import open_fs
+from fslib.fs_filepicker import fs_filepicker
 
 
 def read_nasa_satellite_prediction(fname):
@@ -134,10 +135,8 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """Slot that opens a file dialog to choose a file with satellite
            overpass predictions.
         """
-        filename = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Open NASA satellite overpass prediction",
-            os.path.dirname(str(self.leFile.text())), "(*.*)")
-        filename = filename[0] if isinstance(filename, tuple) and USE_PYQT5 else str(filename)
+        filename = fs_filepicker(self, os.path.join(os.path.dirname(str(self.leFile.text())), ''), u'*.*',
+                                 title=u"Open NASA satellite overpass prediction")
         if not filename:
             return
         self.leFile.setText(filename)
@@ -147,6 +146,9 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """Load the file specified in leFile and fill the combobox with the
            available track segments.
         """
+        # ToDo nappy needs filelike object first
+        # _dirname, _name = os.path.split(self.leFile.text())
+        # _fs = open_fs(_dirname)
         filename = str(self.leFile.text())
         logging.debug("loading satellite overpasses in file '%s'", filename)
 
