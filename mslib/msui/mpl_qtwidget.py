@@ -33,7 +33,7 @@ from __future__ import division
 
 from datetime import datetime
 import os
-
+import six
 import logging
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -48,6 +48,7 @@ from mslib.msui import mpl_map
 from mslib.msui import trajectory_item_tree as titree
 from mslib import thermolib
 
+from fslib.fs_filepicker import fs_filepicker
 
 # Python Qt4 bindings for GUI objects
 from mslib.msui.mss_qt import USE_PYQT5, QtCore, QtWidgets, FigureCanvas, NavigationToolbar2QT
@@ -59,6 +60,7 @@ from matplotlib.figure import Figure
 # imshow(). See Basemap __init__.py file, in which the same issue occurs
 # (https://github.com/matplotlib/basemap/pull/52). (mr, 08Feb2013)
 from matplotlib import __version__ as _matplotlib_version
+from fs import open_fs
 
 if _matplotlib_version >= '1.2':
     # orientation of arrays returned by pil_to_array
@@ -168,6 +170,57 @@ class MplWidget(QtWidgets.QWidget):
         # set the layout to th vertical box
         self.setLayout(self.vbl)
 
+def _getSaveFileName(parent, title="Choose a filename to save to", filename=u"test.png",
+                     filters="u*.png", selectedFilter="u*.png"):
+    _dirname, _name = os.path.split(filename)
+    _dirname = os.path.join(_dirname, "")
+    filename = fs_filepicker(parent, fs_url=_dirname, file_pattern=selectedFilter,
+                             title=title, default_filename=_name, show_save_action=True)
+    return filename, selectedFilter
+
+
+def save_figure(self, *args):
+    filetypes = self.canvas.get_supported_filetypes_grouped()
+    sorted_filetypes = list(six.iteritems(filetypes))
+    sorted_filetypes.sort()
+    default_filetype = self.canvas.get_default_filetype()
+
+    startpath = matplotlib.rcParams.get('savefig.directory', '')
+    startpath = os.path.expanduser(startpath)
+    start = os.path.join(startpath, self.canvas.get_default_filename())
+    filters = []
+    selectedFilter = None
+    for name, exts in sorted_filetypes:
+        exts_list = " ".join(['*.%s' % ext for ext in exts])
+        filter = '%s (%s)' % (name, exts_list)
+        if default_filetype in exts:
+            selectedFilter = filter
+        filters.append(filter)
+    filters = ';;'.join(filters)
+
+    fname, filter = _getSaveFileName(self.parent,
+                                     "Choose a filename to save to",
+                                     start, filters, selectedFilter)
+    if fname:
+        if startpath == '':
+            # explicitly missing key or empty str signals to use cwd
+            matplotlib.rcParams['savefig.directory'] = startpath
+        else:
+            # save dir for next time
+            savefig_dir = os.path.dirname(six.text_type(fname))
+            matplotlib.rcParams['savefig.directory'] = savefig_dir
+        try:
+            _dirname, _name = os.path.split(fname)
+            _fs = open_fs(_dirname)
+            with _fs.open(_name, 'wb') as source:
+             self.canvas.print_figure(source)
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self, "Error saving file", six.text_type(e),
+                QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.NoButton)
+
+
+NavigationToolbar2QT.save_figure = save_figure
 
 class NavigationToolbar(NavigationToolbar2QT):
     # only display the buttons we need
@@ -180,6 +233,8 @@ class NavigationToolbar(NavigationToolbar2QT):
             self.toolitems = [
                 _x for _x in NavigationToolbar2QT.toolitems if
                 _x[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save') or _x[0] is None]
+
+
 
         self.sideview = sideview
         NavigationToolbar2QT.__init__(self, canvas, parent, coordinates)
