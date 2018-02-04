@@ -170,6 +170,7 @@ class MplWidget(QtWidgets.QWidget):
         # set the layout to th vertical box
         self.setLayout(self.vbl)
 
+
 def _getSaveFileName(parent, title="Choose a filename to save to", filename=u"test.png",
                      filters="u*.png", selectedFilter="u*.png"):
     _dirname, _name = os.path.split(filename)
@@ -213,7 +214,7 @@ def save_figure(self, *args):
             _dirname, _name = os.path.split(fname)
             _fs = open_fs(_dirname)
             with _fs.open(_name, 'wb') as source:
-             self.canvas.print_figure(source)
+                self.canvas.print_figure(source)
         except Exception as e:
             QtWidgets.QMessageBox.critical(
                 self, "Error saving file", six.text_type(e),
@@ -221,6 +222,7 @@ def save_figure(self, *args):
 
 
 NavigationToolbar2QT.save_figure = save_figure
+
 
 class NavigationToolbar(NavigationToolbar2QT):
     # only display the buttons we need
@@ -233,8 +235,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             self.toolitems = [
                 _x for _x in NavigationToolbar2QT.toolitems if
                 _x[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save') or _x[0] is None]
-
-
 
         self.sideview = sideview
         NavigationToolbar2QT.__init__(self, canvas, parent, coordinates)
