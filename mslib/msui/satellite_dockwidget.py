@@ -37,7 +37,7 @@ from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
 from mslib.utils import save_settings_pickle, load_settings_pickle
 from fs import open_fs
-from fslib.fs_filepicker import fs_filepicker
+from fslib.fs_filepicker import getOpenFileName
 
 
 def read_nasa_satellite_prediction(fname):
@@ -135,8 +135,8 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """Slot that opens a file dialog to choose a file with satellite
            overpass predictions.
         """
-        filename = fs_filepicker(self, os.path.join(os.path.dirname(str(self.leFile.text())), ''), u'*.*',
-                                 title=u"Open NASA satellite overpass prediction")
+        filename = getOpenFileName(self, os.path.join(os.path.dirname(str(self.leFile.text())), ''), u'All Files (*)',
+                                   title=u"Open NASA satellite overpass prediction")
         if not filename:
             return
         self.leFile.setText(filename)

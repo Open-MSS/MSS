@@ -29,7 +29,7 @@
 from builtins import str
 import logging
 import os
-from fslib.fs_filepicker import fs_filepicker
+from fslib.fs_filepicker import getOpenFileName
 from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_trajectories_window as ui
 from mslib.msui import constants
@@ -114,7 +114,8 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         # Ask for a file to open, convert the return file name from type
         # QString to str.
-        filename = fs_filepicker(self, constants.MSS_CONFIG_PATH, u'*.nas', title=u"Open NASA Ames File")
+        filename = getOpenFileName(self, constants.MSS_CONFIG_PATH, u'NASA AMes File (*.nas)',
+                                   title=u"Open NASA Ames File")
         # ToDo nappy needs filelike object first
         # _dirname, _name = os.path.split(filename)
         # _fs = open_fs(_dirname)

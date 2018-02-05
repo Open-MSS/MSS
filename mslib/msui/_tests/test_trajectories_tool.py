@@ -72,7 +72,7 @@ class Test_TrajectoriesTool(object):
         assert mockopen.call_count == 1
         assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.trajectories_tool.fs_filepicker",
+    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
                 return_value=os.path.join(sample_path, "nas", "sample.nas"))
     def test_load_nas(self, mockopen):
         if not HAVE_NAPPY:
@@ -81,7 +81,8 @@ class Test_TrajectoriesTool(object):
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
 
-    @mock.patch("mslib.msui.trajectories_tool.fs_filepicker", return_value=os.path.join(sample_path, "kml", "line.kml"))
+    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
+                return_value=os.path.join(sample_path, "kml", "line.kml"))
     def test_load_nas_kml(self, mockopen):
         self.window.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
@@ -117,7 +118,7 @@ class Test_TrajectoryToolComples(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.trajectories_tool.fs_filepicker",
+    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
                 return_value=os.path.join(sample_path, "nas", "sample.nas"))
     def test_show_nas(self, mockopen):
         if not HAVE_NAPPY:
