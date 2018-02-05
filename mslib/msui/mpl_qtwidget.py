@@ -185,7 +185,7 @@ def save_figure(self, *args):
     sorted_filetypes = list(six.iteritems(filetypes))
     sorted_filetypes.sort()
     default_filetype = self.canvas.get_default_filetype()
-
+    # ToDo add data_dir
     startpath = matplotlib.rcParams.get('savefig.directory', '')
     startpath = os.path.expanduser(startpath)
     start = os.path.join(startpath, self.canvas.get_default_filename())
