@@ -120,7 +120,7 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=save_ftml)
+    @mock.patch("mslib.msui.mss_pyui.getSaveFileName", return_value=save_ftml)
     def test_plugin_ftml_saveas(self, mocksave):
         assert self.window.listFlightTracks.count() == 1
         assert mocksave.call_count == 0
@@ -131,17 +131,17 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_ftml)
         os.remove(self.save_ftml)
 
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path, u"example.csv"))
-    def test_plugin_csv_read(self, mockread):
+    @mock.patch("mslib.msui.mss_pyui.getOpenFileName", return_value=os.path.join(sample_path, u"example.csv"))
+    def test_plugin_csv_read(self, mockopen):
         assert self.window.listFlightTracks.count() == 1
-        assert mockread.call_count == 0
+        assert mockopen.call_count == 0
         self.window.last_save_directory = self.sample_path
         self.window.actionImportFlightTrackCSV()
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
-        assert mockread.call_count == 1
+        assert mockopen.call_count == 1
 
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=save_csv)
+    @mock.patch("mslib.msui.mss_pyui.getSaveFileName", return_value=save_csv)
     def test_plugin_csv_write(self, mocksave):
         assert self.window.listFlightTracks.count() == 1
         assert mocksave.call_count == 0
@@ -151,18 +151,18 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_csv)
         os.remove(self.save_csv)
 
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=os.path.join(sample_path, u"example.txt"))
-    def test_plugin_txt_read(self, mockread):
+    @mock.patch("mslib.msui.mss_pyui.getOpenFileName", return_value=os.path.join(sample_path, u"example.txt"))
+    def test_plugin_txt_read(self, mockopen):
         self.window.add_import_filter("_TXT", "txt", load_from_txt)
         assert self.window.listFlightTracks.count() == 1
-        assert mockread.call_count == 0
+        assert mockopen.call_count == 0
         self.window.last_save_directory = self.sample_path
         self.window.actionImportFlightTrack_TXT()
-        assert mockread.call_count == 1
+        assert mockopen.call_count == 1
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
 
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker", return_value=save_txt)
+    @mock.patch("mslib.msui.mss_pyui.getSaveFileName", return_value=save_txt)
     def test_plugin_txt_write(self, mocksave):
         self.window.add_export_filter("_TXT", "txt", save_to_txt)
         self.window.last_save_directory = ROOT_DIR
@@ -173,7 +173,7 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_txt)
         os.remove(self.save_txt)
 
-    @mock.patch("mslib.msui.mss_pyui.fs_filepicker",
+    @mock.patch("mslib.msui.mss_pyui.getOpenFileName",
                 return_value=os.path.join(sample_path, u"flitestar.txt"))
     def test_plugin_flitestar(self, mockopen):
         self.window.last_save_directory = self.sample_path
