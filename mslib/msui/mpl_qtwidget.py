@@ -48,9 +48,6 @@ from mslib.msui import mpl_map
 from mslib.msui import trajectory_item_tree as titree
 from mslib import thermolib
 
-from fslib.fs_filepicker import fs_filepicker
-
-# Python Qt4 bindings for GUI objects
 from mslib.msui.mss_qt import USE_PYQT5, QtCore, QtWidgets, FigureCanvas, NavigationToolbar2QT
 
 # Matplotlib Figure object
@@ -61,6 +58,7 @@ from matplotlib.figure import Figure
 # (https://github.com/matplotlib/basemap/pull/52). (mr, 08Feb2013)
 from matplotlib import __version__ as _matplotlib_version
 from fs import open_fs
+from fslib.fs_filepicker import getSaveFileNameAndFilter
 
 if _matplotlib_version >= '1.2':
     # orientation of arrays returned by pil_to_array
@@ -172,36 +170,33 @@ class MplWidget(QtWidgets.QWidget):
 
 
 def _getSaveFileName(parent, title="Choose a filename to save to", filename=u"test.png",
-                     filters="u*.png", selectedFilter="u*.png"):
+                     filters=u" Images (*.png)"):
     _dirname, _name = os.path.split(filename)
     _dirname = os.path.join(_dirname, "")
-    filename = fs_filepicker(parent, fs_url=_dirname, file_pattern=selectedFilter,
-                             title=title, default_filename=_name, show_save_action=True)
-    return filename, selectedFilter
+    return getSaveFileNameAndFilter(parent, fs_url=_dirname, file_pattern=filters,
+                                    title=title, default_filename=_name, show_save_action=True)
 
 
 def save_figure(self, *args):
+    # ToDo move initial path to start config, so we need only to update this
+    last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
+    matplotlib.rcParams['savefig.directory'] = last_save_directory
     filetypes = self.canvas.get_supported_filetypes_grouped()
     sorted_filetypes = list(six.iteritems(filetypes))
     sorted_filetypes.sort()
-    default_filetype = self.canvas.get_default_filetype()
-    # ToDo add data_dir
-    startpath = matplotlib.rcParams.get('savefig.directory', '')
+    startpath = matplotlib.rcParams.get('savefig.directory', last_save_directory)
     startpath = os.path.expanduser(startpath)
     start = os.path.join(startpath, self.canvas.get_default_filename())
     filters = []
-    selectedFilter = None
     for name, exts in sorted_filetypes:
         exts_list = " ".join(['*.%s' % ext for ext in exts])
         filter = '%s (%s)' % (name, exts_list)
-        if default_filetype in exts:
-            selectedFilter = filter
         filters.append(filter)
-    filters = ';;'.join(filters)
 
     fname, filter = _getSaveFileName(self.parent,
-                                     "Choose a filename to save to",
-                                     start, filters, selectedFilter)
+                                     title="Choose a filename to save to",
+                                     filename=start, filters=filters)
+    fname = filter.replace('*', fname)
     if fname:
         if startpath == '':
             # explicitly missing key or empty str signals to use cwd
@@ -214,7 +209,7 @@ def save_figure(self, *args):
             _dirname, _name = os.path.split(fname)
             _fs = open_fs(_dirname)
             with _fs.open(_name, 'wb') as source:
-                self.canvas.print_figure(source)
+                self.canvas.print_figure(source, format=filter.replace('*.', ''))
         except Exception as e:
             QtWidgets.QMessageBox.critical(
                 self, "Error saving file", six.text_type(e),
