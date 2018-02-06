@@ -37,7 +37,7 @@ from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
 from mslib.utils import save_settings_pickle, load_settings_pickle
 from fs import open_fs
-from fslib.fs_filepicker import fs_filepicker
+from fslib.fs_filepicker import getOpenFileName
 
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
@@ -114,8 +114,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     def select_file(self):
         """Slot that opens a file dialog to choose a kml file
         """
-        filename = fs_filepicker(self, os.path.join(os.path.dirname(str(self.leFile.text())), ''),
-                                 u'*.kml', title=u"Open KML Polygonal File")
+        filename = getOpenFileName(self, os.path.join(os.path.dirname(str(self.leFile.text())), ''),
+                                   u'KML Files (*.kml)', title=u"Open KML Polygonal File")
         if not filename:
             return
         self.leFile.setText(filename)
