@@ -67,6 +67,8 @@ if _matplotlib_version >= '1.2':
 else:
     PIL_image_origin = "lower"
 
+last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
+matplotlib.rcParams['savefig.directory'] = last_save_directory
 
 class MplCanvas(FigureCanvas):
     """Class to represent the FigureCanvas widget.
@@ -178,9 +180,6 @@ def _getSaveFileName(parent, title="Choose a filename to save to", filename=u"te
 
 
 def save_figure(self, *args):
-    # ToDo move initial path to start config, so we need only to update this
-    last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
-    matplotlib.rcParams['savefig.directory'] = last_save_directory
     filetypes = self.canvas.get_supported_filetypes_grouped()
     sorted_filetypes = list(six.iteritems(filetypes))
     sorted_filetypes.sort()
