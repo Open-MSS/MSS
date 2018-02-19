@@ -70,6 +70,7 @@ else:
 last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
 matplotlib.rcParams['savefig.directory'] = last_save_directory
 
+
 class MplCanvas(FigureCanvas):
     """Class to represent the FigureCanvas widget.
 
