@@ -196,7 +196,8 @@ def save_figure(self, *args):
                                      title="Choose a filename to save to",
                                      filename=start, filters=filters)
     if fname is not None:
-        fname = filter.replace('*', fname)
+        if not fname.endswith(filter[1:]):
+            fname = filter.replace('*', fname)
         if startpath == '':
             # explicitly missing key or empty str signals to use cwd
             matplotlib.rcParams['savefig.directory'] = startpath
