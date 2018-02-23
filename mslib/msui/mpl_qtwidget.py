@@ -43,9 +43,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 # local application imports
+from mslib.msui.mss_qt import QtGui
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui import trajectory_item_tree as titree
+from mslib.msui.icons import icons
 from mslib import thermolib
 
 from mslib.msui.mss_qt import USE_PYQT5, QtCore, QtWidgets, FigureCanvas, NavigationToolbar2QT
@@ -378,16 +380,17 @@ class NavigationToolbar(NavigationToolbar2QT):
                                        'Customize', self.edit_parameters)
                     a.setToolTip('Edit axis, curve and image parameters')
         if self.sideview:
-            wp_tools = [('Mv WP', 'Move waypoints', 'move_wp')]
+            wp_tools = [('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp')]
         else:
             wp_tools = [
-                ('Mv WP', 'Move waypoints', 'move_wp'),
-                ('Ins WP', 'Insert waypoints', 'insert_wp'),
-                ('Del WP', 'Delete waypoints', 'delete_wp'),
+                ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
+                ('Ins WP', icons("32x32", "wp_insert.png"),  'Insert waypoints', 'insert_wp'),
+                ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
             ]
-        for text, tooltip_text, callback in wp_tools:
+
+        for text, img, tooltip_text, callback in wp_tools:
             self.addSeparator()
-            a = self.addAction(text, getattr(self, callback))
+            a = self.addAction(QtGui.QIcon(img), text, getattr(self, callback))
             self._actions[callback] = a
             a.setCheckable(True)
             a.setToolTip(tooltip_text)
