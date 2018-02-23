@@ -33,7 +33,7 @@ from __future__ import division
 
 from datetime import datetime
 import os
-
+import six
 import logging
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -48,8 +48,6 @@ from mslib.msui import mpl_map
 from mslib.msui import trajectory_item_tree as titree
 from mslib import thermolib
 
-
-# Python Qt4 bindings for GUI objects
 from mslib.msui.mss_qt import USE_PYQT5, QtCore, QtWidgets, FigureCanvas, NavigationToolbar2QT
 
 # Matplotlib Figure object
@@ -59,6 +57,8 @@ from matplotlib.figure import Figure
 # imshow(). See Basemap __init__.py file, in which the same issue occurs
 # (https://github.com/matplotlib/basemap/pull/52). (mr, 08Feb2013)
 from matplotlib import __version__ as _matplotlib_version
+from fs import open_fs
+from fslib.fs_filepicker import getSaveFileNameAndFilter
 
 if _matplotlib_version >= '1.2':
     # orientation of arrays returned by pil_to_array
@@ -66,6 +66,9 @@ if _matplotlib_version >= '1.2':
     PIL_image_origin = "upper"
 else:
     PIL_image_origin = "lower"
+
+last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
+matplotlib.rcParams['savefig.directory'] = last_save_directory
 
 
 class MplCanvas(FigureCanvas):
@@ -167,6 +170,54 @@ class MplWidget(QtWidgets.QWidget):
 
         # set the layout to th vertical box
         self.setLayout(self.vbl)
+
+
+def _getSaveFileName(parent, title="Choose a filename to save to", filename=u"test.png",
+                     filters=u" Images (*.png)"):
+    _dirname, _name = os.path.split(filename)
+    _dirname = os.path.join(_dirname, "")
+    return getSaveFileNameAndFilter(parent, fs_url=_dirname, file_pattern=filters,
+                                    title=title, default_filename=_name, show_save_action=True)
+
+
+def save_figure(self, *args):
+    filetypes = self.canvas.get_supported_filetypes_grouped()
+    sorted_filetypes = list(six.iteritems(filetypes))
+    sorted_filetypes.sort()
+    startpath = matplotlib.rcParams.get('savefig.directory', last_save_directory)
+    startpath = os.path.expanduser(startpath)
+    start = os.path.join(startpath, self.canvas.get_default_filename())
+    filters = []
+    for name, exts in sorted_filetypes:
+        exts_list = " ".join(['*.%s' % ext for ext in exts])
+        filter = '%s (%s)' % (name, exts_list)
+        filters.append(filter)
+
+    fname, filter = _getSaveFileName(self.parent,
+                                     title="Choose a filename to save to",
+                                     filename=start, filters=filters)
+    if fname is not None:
+        if not fname.endswith(filter[1:]):
+            fname = filter.replace('*', fname)
+        if startpath == '':
+            # explicitly missing key or empty str signals to use cwd
+            matplotlib.rcParams['savefig.directory'] = startpath
+        else:
+            # save dir for next time
+            savefig_dir = os.path.dirname(six.text_type(fname))
+            matplotlib.rcParams['savefig.directory'] = savefig_dir
+        try:
+            _dirname, _name = os.path.split(fname)
+            _fs = open_fs(_dirname)
+            with _fs.open(_name, 'wb') as source:
+                self.canvas.print_figure(source, format=filter.replace('*.', ''))
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self, "Error saving file", six.text_type(e),
+                QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.NoButton)
+
+
+NavigationToolbar2QT.save_figure = save_figure
 
 
 class NavigationToolbar(NavigationToolbar2QT):
