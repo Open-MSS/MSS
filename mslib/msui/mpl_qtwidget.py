@@ -387,9 +387,8 @@ class NavigationToolbar(NavigationToolbar2QT):
                 ('Ins WP', icons("32x32", "wp_insert.png"),  'Insert waypoints', 'insert_wp'),
                 ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
             ]
-
+        self.addSeparator()
         for text, img, tooltip_text, callback in wp_tools:
-            self.addSeparator()
             a = self.addAction(QtGui.QIcon(img), text, getattr(self, callback))
             self._actions[callback] = a
             a.setCheckable(True)
