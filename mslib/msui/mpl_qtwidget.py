@@ -384,7 +384,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         else:
             wp_tools = [
                 ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
-                ('Ins WP', icons("32x32", "wp_insert.png"),  'Insert waypoints', 'insert_wp'),
+                ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
                 ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
             ]
         self.addSeparator()
