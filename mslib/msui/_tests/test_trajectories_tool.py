@@ -60,37 +60,31 @@ class Test_TrajectoriesTool(object):
     def test_show(self, mockcrit):
         assert mockcrit.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getExistingDirectory",
+    @mock.patch("mslib.msui.trajectories_tool.getExistingDirectory",
                 return_value=os.path.join(sample_path, "trajectories"))
-    def test_load_trajectories(self, mockopen, mockcrit):
+    def test_load_trajectories(self, mockopen):
         if sys.version_info.major > 2:
             pytest.skip("can't load example pickle file")
         pytest.skip('{RuntimeError} dictionary changed size during iteration')
         self.window.actionOpenTrajectories.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
                 return_value=os.path.join(sample_path, "nas", "sample.nas"))
-    def test_load_nas(self, mockopen, mockcrit):
+    def test_load_nas(self, mockopen):
         if not HAVE_NAPPY:
             pytest.skip("nappy not available")
         self.window.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
                 return_value=os.path.join(sample_path, "kml", "line.kml"))
-    def test_load_nas_kml(self, mockopen, mockcrit):
+    def test_load_nas_kml(self, mockopen):
         self.window.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.critical.call_count == 1
 
 
 class Test_TrajectoryToolComples(object):
@@ -98,7 +92,6 @@ class Test_TrajectoryToolComples(object):
 
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-
         self.window = mss_pyui.MSSMainWindow()
         self.window.create_new_flight_track()
         self.window.show()
@@ -122,16 +115,14 @@ class Test_TrajectoryToolComples(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
                 return_value=os.path.join(sample_path, "nas", "sample.nas"))
-    def test_show_nas(self, mockopen, mockcrit):
+    def test_show_nas(self, mockopen):
         if not HAVE_NAPPY:
             pytest.skip("nappy not available")
         self.trajtool.actionOpenFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.critical.call_count == 0
         self.trajtool.cbPlotInView.setCurrentIndex(1)
         QtWidgets.QApplication.processEvents()
         root = self.trajtool.traj_item_tree.getRootItem()
@@ -143,19 +134,16 @@ class Test_TrajectoryToolComples(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.trajtool.btPlotInView, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getExistingDirectory",
+    @mock.patch("mslib.msui.trajectories_tool.getExistingDirectory",
                 return_value=os.path.join(sample_path, "trajectories"))
-    def test_show_trajectories(self, mockopen, mockcrit):
+    def test_show_trajectories(self, mockopen):
         if sys.version_info.major > 2:
             pytest.skip("can't load example pickle file")
         pytest.skip('{RuntimeError} dictionary changed size during iteration')
         self.trajtool.actionOpenTrajectories.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.critical.call_count == 0
         self.trajtool.cbPlotInView.setCurrentIndex(1)
         QtWidgets.QApplication.processEvents()
         root = self.trajtool.traj_item_tree.getRootItem()
@@ -168,4 +156,3 @@ class Test_TrajectoryToolComples(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.trajtool.btPlotInView, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockcrit.critical.call_count == 0

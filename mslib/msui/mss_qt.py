@@ -4,7 +4,7 @@
     mslib.msui.mss_qt
     ~~~~~~~~~~~~~~~~~
 
-    This module switches qt4 or qt5
+    This module helps with qt
 
     This file is part of mss.
 
@@ -96,6 +96,7 @@ for mod in [
 # TODO Can probably be tidied up in a neater fashion by rewriting the using code.
 def _fromUtf8(s):
     return s
+
 
 _translate = QtCore.QCoreApplication.translate
 

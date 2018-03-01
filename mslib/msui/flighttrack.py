@@ -39,12 +39,11 @@ from __future__ import division
 from builtins import str
 
 import datetime
-import codecs
 import logging
 import os
 import xml.dom.minidom
 import xml.parsers.expat
-from fs import open_fs, path
+from fs import open_fs
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float

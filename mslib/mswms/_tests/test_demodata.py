@@ -28,7 +28,6 @@
 
 from past.builtins import basestring
 
-import os
 import imp
 import numpy as np
 from mslib._tests.utils import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE, SERVER_CONFIG_FILE_PATH
