@@ -46,7 +46,7 @@ import xml.parsers.expat
 from fs import open_fs
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float, USE_PYQT5
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float
 
 # local application imports
 from mslib import utils, __version__
@@ -647,10 +647,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
             return QtWidgets.QItemDelegate.createEditor(self, parent, option, index)
 
     def setEditorData(self, editor, index):
-        if USE_PYQT5:
-            text = index.model().data(index, QtCore.Qt.DisplayRole).value()
-        else:
-            text = index.model().data(index, QtCore.Qt.DisplayRole).toString()
+        text = index.model().data(index, QtCore.Qt.DisplayRole).value()
         if index.column() in (LOCATION,):
             i = editor.findText(text)
             if i == -1:

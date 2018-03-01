@@ -50,7 +50,7 @@ from mslib.msui import trajectory_item_tree as titree
 from mslib.msui.icons import icons
 from mslib import thermolib
 
-from mslib.msui.mss_qt import USE_PYQT5, QtCore, QtWidgets, FigureCanvas, NavigationToolbar2QT
+from mslib.msui.mss_qt import QtCore, QtWidgets, FigureCanvas, NavigationToolbar2QT
 
 # Matplotlib Figure object
 from matplotlib.figure import Figure
@@ -415,9 +415,9 @@ class NavigationToolbar(NavigationToolbar2QT):
         # Esthetic adjustments - we need to set these explicitly in PyQt5
         # otherwise the layout looks different - but we don't want to set it if
         # not using HiDPI icons otherwise they look worse than before.
-        if USE_PYQT5:
-            self.setIconSize(QtCore.QSize(24, 24))
-            self.layout().setSpacing(12)
+
+        self.setIconSize(QtCore.QSize(24, 24))
+        self.layout().setSpacing(12)
 
     def _update_buttons_checked(self):
         # sync button checkstates to match active mode
