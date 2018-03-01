@@ -87,6 +87,7 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
         """
         Gets a filename for a JSON file specifying aircraft performance and initializes an SimpleAircraft model.
         """
+
         filename = getOpenFileName(self, constants.MSS_CONFIG_PATH, u'Config File (*.json)',
                                    title=u"Open Aircraft Performance JSON File")
         if filename:
