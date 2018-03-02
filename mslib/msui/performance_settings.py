@@ -90,7 +90,7 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
 
         filename = getOpenFileName(self, constants.MSS_CONFIG_PATH, u'Config File (*.json)',
                                    title=u"Open Aircraft Performance JSON File")
-        if filename:
+        if filename is not None:
             try:
                 performance = config_loader(config_file=filename)
                 self.aircraft = aircrafts.SimpleAircraft(performance)

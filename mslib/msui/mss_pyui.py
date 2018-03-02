@@ -344,7 +344,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         def load_function_wrapper(self):
             filename = getOpenFileName(self, self.last_save_directory, "All Files (*." + extension + ')',
                                        title=u"Import Flight Track")
-            if filename:
+            if filename is not None:
                 try:
                     ft_name, new_waypoints = function(filename)
                 # wildcard exception to be resilient against error introduced by user code
@@ -381,7 +381,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             default_filename = self.active_flight_track.name + "." + extension
             filename = getSaveFileName(self, self.last_save_directory, u"All Files (*." + extension + ')',
                                        title=u"Export Flight Track", default_filename=default_filename)
-            if filename:
+            if filename is not None:
                 try:
                     function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
                 # wildcard exception to be resilient against error introduced by user code
@@ -513,7 +513,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self.tr("ERROR:Flighttrack template in configuration is too short. "
                             "Please add at least two valid locations."))
 
-        if filename:
+        if filename is not None:
             waypoints_model = ft.WaypointsTableModel(filename=filename)
         else:
             # Create a new flight track from the waypoints template.
@@ -545,7 +545,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             filename = getOpenFileName(self, constants.MSS_CONFIG_PATH, u'Config Files (*.json)',
                                        title=u"Open Config file")
-            if filename:
+            if filename is not None:
                 self.listViews.clear()
                 self.listTools.clear()
                 self.remove_plugins()
@@ -558,7 +558,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         filename = getOpenFileName(self, self.last_save_directory, u'Flight Track Files (*.ftml)',
                                    title=u"Open Flight Track")
-        if filename:
+        if filename is not None:
             try:
                 if filename.endswith('.ftml'):
                     self.create_new_flight_track(filename=filename)

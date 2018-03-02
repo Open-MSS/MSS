@@ -156,7 +156,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.load_settings()
 
         # If a filename is passed to the constructor, load data from this file.
-        if filename:
+        if filename is not None:
             if filename.endswith(".ftml"):
                 self.load_from_ftml(filename)
             else:

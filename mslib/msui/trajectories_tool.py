@@ -123,7 +123,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # ToDo nappy needs filelike object first
         # _dirname, _name = os.path.split(filename)
         # _fs = open_fs(_dirname)
-        if filename:
+        if filename is not None:
             # until nappy knows filelike objects
             # nas_file = _fs.open(_name, "wb")
             nas_file = os.path.expanduser(filename)
