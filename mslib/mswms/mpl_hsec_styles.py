@@ -75,7 +75,7 @@ import mpl_toolkits.basemap
 from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, convert_to
 from mslib.mswms.msschem import MSSChemTargets
 from mslib import thermolib
 
@@ -647,6 +647,10 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "air_temperature"),
         ("pl", "geopotential_height")]
 
+    def _prepare_datafields(self):
+        self.data["geopotential_height"] = convert_to(
+            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+
     def _plot_style(self):
         """
         """
@@ -688,7 +692,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         linewidths=1, linestyles="solid")
 
         # Plot geopotential height contours.
-        gpm = (self.data["geopotential_height"] / 9.81)
+        gpm = self.data["geopotential_height"]
         geop_contours = np.arange(400, 28000, 40)
         cs = bm.contour(lonmesh, latmesh, gpm,
                         geop_contours, colors="black", linewidths=1)
@@ -730,6 +734,10 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         ("pl", "geopotential_height"),
         ("pl", "eastward_wind"),
         ("pl", "northward_wind")]
+
+    def _prepare_datafields(self):
+        self.data["geopotential_height"] = convert_to(
+            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
 
     def _plot_style(self):
         """
@@ -787,7 +795,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
                  linewidths=0.5, length=6)
 
         # Plot geopotential height contours.
-        gpm = (self.data["geopotential_height"] / 9.81)
+        gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -830,10 +838,10 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
-        self.data["relative_humidity"] = \
-            thermolib.rel_hum(self.level * 100.,
-                              self.data["air_temperature"],
-                              self.data["specific_humidity"])
+        self.data["geopotential_height"] = convert_to(
+            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+        self.data["relative_humidity"] = thermolib.rel_hum(
+            self.level * 100., self.data["air_temperature"], self.data["specific_humidity"])
 
     def _plot_style(self):
         """
@@ -870,7 +878,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
-        gpm = self.data["geopotential_height"] / 9.81
+        gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -912,10 +920,10 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
-        self.data["equivalent_potential_temperature"] = \
-            thermolib.eqpt_approx(self.level * 100.,
-                                  self.data["air_temperature"],
-                                  self.data["specific_humidity"])
+        self.data["geopotential_height"] = convert_to(
+            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+        self.data["equivalent_potential_temperature"] = thermolib.eqpt_approx(
+            self.level * 100., self.data["air_temperature"], self.data["specific_humidity"])
 
     def _plot_style(self):
         """
@@ -952,7 +960,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
-        gpm = (self.data["geopotential_height"] / 9.81)
+        gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -994,10 +1002,11 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
-        self.data["upward_wind"] = \
-            thermolib.omega_to_w(self.data["lagrangian_tendency_of_air_pressure"],
-                                 self.level * 100.,
-                                 self.data["air_temperature"])
+        self.data["geopotential_height"] = convert_to(
+            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+        self.data["upward_wind"] = thermolib.omega_to_w(
+            self.data["lagrangian_tendency_of_air_pressure"],
+            self.level * 100., self.data["air_temperature"])
 
     def _plot_style(self):
         """
@@ -1035,7 +1044,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
-        gpm = (self.data["geopotential_height"] / 9.81)
+        gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -1073,6 +1082,10 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "divergence_of_wind"),
         ("pl", "geopotential_height")]
 
+    def _prepare_datafields(self):
+        self.data["geopotential_height"] = convert_to(
+            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+
     def _plot_style(self):
         """
         """
@@ -1097,7 +1110,7 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         linewidths=2, linestyles="solid")
 
         # Plot geopotential height contours.
-        gpm = (self.data["geopotential_height"] / 9.81)
+        gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
         cs = bm.contour(lonmesh, latmesh, gpm,
@@ -1282,6 +1295,12 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         ("PT", "Potential Temperature (K)"),
         ("PRES", "Pressure (hPa)")]
 
+    def _prepare_datafields(self):
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "hPa", 1)
+        self.data["geopotential_height"] = convert_to(
+            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+
     def _plot_style(self):
         """
         """
@@ -1304,7 +1323,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         if self.style == "PRES":
             filled_contours = np.arange(120, 551, 10)
             thin_contours = np.arange(100, 601, 40)
-            vardata = (data["air_pressure"] / 100.)
+            vardata = data["air_pressure"]
             label = "Pressure (hPa)"
             fcmap = plt.cm.terrain_r
         elif self.style == "PT":
@@ -1316,7 +1335,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         elif self.style == "GEOP":
             filled_contours = np.arange(5000, 15000, 250)
             thin_contours = np.arange(5000, 15000, 500)
-            vardata = (data["geopotential_height"] / 9.81)
+            vardata = data["geopotential_height"]
             label = "Geopotential Height (m)"
             fcmap = plt.cm.terrain
 
@@ -1341,13 +1360,13 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
 
         if self.style == "PRES":
             titlestring = "Dynamical Tropopause Pressure (hPa) at " \
-                          "{:.1f} PVU".format(int(self.level) // 1000)
+                          "{:.1f} PVU".format(int(self.level))
         elif self.style == "PT":
             titlestring = "Dynamical Tropopause Potential Temperature (K) at " \
-                          "{:.1f} PVU".format(int(self.level) // 1000)
+                          "{:.1f} PVU".format(int(self.level))
         elif self.style == "GEOP":
             titlestring = "Dynamical Tropopause Geopotential Height (m) at " \
-                          "{:.1f} PVU".format(int(self.level) // 1000)
+                          "{:.1f} PVU".format(int(self.level))
         time_step = self.valid_time - self.init_time
         time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
         titlestring += '\nValid: {} (step {:d} hrs from {})' \
@@ -1610,6 +1629,13 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         ("sfc", "air_pressure_at_sea_level"),
         ("sfc", "atmosphere_boundary_layer_thickness")]
 
+    def _prepare_datafields(self):
+        self.data["air_pressure_at_sea_level"] = convert_to(
+            self.data["air_pressure_at_sea_level"], self.data_units["air_pressure_at_sea_level"], "hPa", 1)
+        self.data["atmosphere_boundary_layer_thickness"] = convert_to(
+            self.data["atmosphere_boundary_layer_thickness"],
+            self.data_units["atmosphere_boundary_layer_thickness"], "m", 1)
+
     def _plot_style(self):
         """
         """
@@ -1624,7 +1650,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
-        mslp = 0.01 * data["air_pressure_at_sea_level"]
+        mslp = data["air_pressure_at_sea_level"]
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, mslp,

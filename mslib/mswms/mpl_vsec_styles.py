@@ -38,7 +38,7 @@ from matplotlib import patheffects
 import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, convert_to
 from mslib.mswms.msschem import MSSChemTargets
 from mslib import thermolib
 
@@ -63,6 +63,8 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         if 'air_potential_temperature' not in self.data:
             self.data['air_potential_temperature'] = \
                 thermolib.pot_temp(self.data['air_pressure'],
@@ -131,11 +133,10 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         elif self.name[-2:] == "tl":
             self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
             self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
-
         if self.data_units["air_pressure"] not in ["Pa", "hPa"]:
             raise ValueError("air_pressure neither hPa nor Pa: %s", self.data_units["air_pressure"])
-        if self.data_units["air_pressure"] == "hPa":
-            self.data["air_pressure"] *= 100
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
 
     def _plot_style(self):
         ax = self.ax
@@ -341,10 +342,10 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
         """Make a cloud cover vertical section with temperature/potential
@@ -428,12 +429,12 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
-        self.data["horizontal_wind"] = np.sqrt(self.data["eastward_wind"] ** 2 +
-                                               self.data["northward_wind"] ** 2)
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
+        self.data["horizontal_wind"] = np.hypot(
+            self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
         """Make a cloud cover vertical section with wind speed and potential
@@ -509,14 +510,13 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
-        self.data["relative_humidity"] = \
-            thermolib.rel_hum(self.data['air_pressure'],
-                              self.data["air_temperature"],
-                              self.data["specific_humidity"])
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
+        self.data["relative_humidity"] = thermolib.rel_hum(
+            self.data['air_pressure'], self.data["air_temperature"],
+            self.data["specific_humidity"])
 
     def _plot_style(self):
         """Make a relative humidity vertical section with temperature/potential
@@ -613,10 +613,10 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
         """Make a relative humidity vertical section with temperature/potential
@@ -726,14 +726,13 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         it has not been passed as a data field. Also computes vertical
         velocity in cm/s.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
-        self.data["upward_wind"] = \
-            thermolib.omega_to_w(self.data["lagrangian_tendency_of_air_pressure"],
-                                 self.data['air_pressure'],
-                                 self.data["air_temperature"])
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
+        self.data["upward_wind"] = thermolib.omega_to_w(
+            self.data["lagrangian_tendency_of_air_pressure"],
+            self.data['air_pressure'], self.data["air_temperature"])
 
     def _plot_style(self):
         """Make a vertical velocity vertical section with temperature/potential
@@ -831,12 +830,12 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
-        self.data["horizontal_wind"] = np.sqrt(self.data["eastward_wind"] ** 2 +
-                                               self.data["northward_wind"] ** 2)
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
+        self.data["horizontal_wind"] = np.hypot(
+            self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
         """Make a horizontal velocity vertical section with temperature/potential
@@ -1069,12 +1068,12 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
-        self.data["horizontal_wind"] = np.sqrt(self.data["eastward_wind"] ** 2 +
-                                               self.data["northward_wind"] ** 2)
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
+        self.data["horizontal_wind"] = np.hypot(
+            self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
         """Make a horizontal velocity vertical section with temperature/potential
@@ -1202,12 +1201,12 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
-        self.data["horizontal_wind"] = np.sqrt(self.data["eastward_wind"] ** 2 +
-                                               self.data["northward_wind"] ** 2)
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
+        self.data["horizontal_wind"] = np.hypot(
+            self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
         """Make a horizontal velocity vertical section with temperature/potential
@@ -1301,6 +1300,10 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
         ("pl", "number_of_mix_trajectories")
     ]
 
+    def _prepare_datafields(self):
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+
     def _plot_style(self):
         """Make a horizontal velocity vertical section with temperature/potential
            temperature overlay.
@@ -1373,10 +1376,10 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
+        self.data["air_pressure"] = convert_to(
+            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
         """Make a volcanic ash cloud cover vertical section with temperature/potential
