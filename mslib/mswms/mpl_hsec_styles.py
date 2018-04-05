@@ -511,8 +511,8 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
                                      norm=norm, label=cbar_label, format=cbar_format, ticks=ticks)
-            cbar.set_ticklabels(clevs)
             cbar.set_ticks(clevs)
+            cbar.set_ticklabels(clevs)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="3%", height="40%", loc=cbar_location)
@@ -1811,8 +1811,8 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
                                      norm=norm, label=cbar_label, format=cbar_format, ticks=ticks)
-            cbar.set_ticklabels(clevs)
             cbar.set_ticks(clevs)
+            cbar.set_ticklabels(clevs)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="3%", height="40%", loc=cbar_location)
