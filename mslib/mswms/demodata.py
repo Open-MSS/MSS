@@ -898,7 +898,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             fid.close()
         else:
             print(u'''
-/!\ existing server config: "{}" for demodata not overwritten!
+/!\\ existing server config: "{}" for demodata not overwritten!
             '''.format(self.server_config_file))
         if not self.server_config_fs.exists(self.server_auth_config_file):
             fid = self.server_config_fs.open(self.server_auth_config_file, 'w')
@@ -906,7 +906,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             fid.close()
         else:
             print(u'''
-/!\ existing server auth config: "{}" for demodata not overwritten!
+/!\\ existing server auth config: "{}" for demodata not overwritten!
                 '''.format(self.server_auth_config_file))
 
     def generate_file(self, coordinate, label, leveltype, dimvals, variables):

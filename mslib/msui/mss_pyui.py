@@ -78,7 +78,7 @@ sys.path.append(constants.MSS_CONFIG_PATH)
 
 
 def clean_string(string):
-    return re.sub('\W|^(?=\d)', '_', string)
+    return re.sub(r'\W|^(?=\d)', '_', string)
 
 
 class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
