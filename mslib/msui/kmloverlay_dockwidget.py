@@ -27,16 +27,19 @@
 
 from builtins import str
 
+from fs import open_fs
 import logging
+from lxml import etree, objectify
 import os
-import pykml.parser
 
 # local application imports
 from mslib.msui.mss_qt import QtGui, QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
 from mslib.utils import save_settings_pickle, load_settings_pickle
-from fs import open_fs
+
+
+KMLPARSER = objectify.makeparser(strip_cdata=False)
 
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
@@ -133,13 +136,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.cbOverlay.setEnabled(False)
         try:
             with _fs.open(_name, 'r') as kmlf:
-                self.kml = pykml.parser.parse(kmlf).getroot()
+                self.kml = objectify.parse(kmlf, parser=KMLPARSER).getroot()
                 self.patch = KMLPatch(self.view.map, self.kml,
                                       self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
             self.cbOverlay.setEnabled(True)
             if self.view is not None and self.cbOverlay.isChecked():
                 self.view.plot_kml(self.patch)
-        except (IOError, pykml.parser.etree.XMLSyntaxError) as ex:
+        except (IOError, etree.XMLSyntaxError) as ex:
             logging.error("KML Overlay - %s: %s", type(ex), ex)
             QtWidgets.QMessageBox.critical(
                 self, self.tr("KML Overlay"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
