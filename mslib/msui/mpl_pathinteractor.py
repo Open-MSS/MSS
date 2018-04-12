@@ -192,7 +192,7 @@ class PathV(WaypointsPath):
                         points.
         """
         self.numintpoints = kwargs.pop("numintpoints")
-        WaypointsPath.__init__(self, *args, **kwargs)
+        super(PathV, self).__init__(*args, **kwargs)
 
     def update_from_WaypointsTableModel(self, wps_model):
         """Extended version of the corresponding WaypointsPath method.
@@ -255,7 +255,7 @@ class PathH(WaypointsPath):
            vertex cooredinates between lat/lon and projection coordinates.
         """
         self.map = kwargs.pop("map")
-        WaypointsPath.__init__(self, *args, **kwargs)
+        super(PathH, self).__init__(*args, **kwargs)
 
     def transform_waypoint(self, wps_list, index):
         """Transform lon/lat to projection coordinates.
@@ -641,8 +641,8 @@ class VPathInteractor(PathInteractor):
         self.numintpoints = numintpoints
         self.redraw_xaxis = redraw_xaxis
         self.clear_figure = clear_figure
-        PathInteractor.__init__(
-            self, ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
+        super(VPathInteractor, self).__init__(
+            ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
 
     def get_num_interpolation_points(self):
         return self.numintpoints
@@ -759,13 +759,12 @@ class HPathInteractor(PathInteractor):
         self.solar_lines = None
         self.show_solar_angle = None
         self.remote_sensing = None
-        PathInteractor.__init__(self, ax=mplmap.ax, waypoints=waypoints,
-                                mplpath=PathH_GC([[0, 0]], map=mplmap),
-                                facecolor='none', edgecolor='none',
-                                linecolor=linecolor,
-                                markerfacecolor=markerfacecolor,
-                                marker='',
-                                label_waypoints=label_waypoints)
+        super(HPathInteractor, self).__init__(
+            ax=mplmap.ax, waypoints=waypoints,
+            mplpath=PathH_GC([[0, 0]], map=mplmap),
+            facecolor='none', edgecolor='none', linecolor=linecolor,
+            markerfacecolor=markerfacecolor, marker='',
+            label_waypoints=label_waypoints)
 
     def appropriate_epsilon(self, px=5):
         """Determine an epsilon value appropriate for the current projection and
