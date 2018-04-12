@@ -555,7 +555,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         wms = None
         # initialize login cache fomr config file, but do not overwrite existing keys
-        for key, value in list(config_loader(dataset="WMS_login", default={}).items()):
+        for key, value in config_loader(dataset="WMS_login", default={}).items():
             if key not in constants.WMS_LOGIN_CACHE:
                 constants.WMS_LOGIN_CACHE[key] = value
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))

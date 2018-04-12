@@ -630,7 +630,7 @@ class TrajectoryItem(LagrantoMapItem):
                         self.timeVariableChild.getVariableData()[-1])
         elif column == 6:
             s = ''
-            for key, value in list(self.metadata.items()):
+            for key, value in self.metadata.items():
                 if key not in ["starttime", "file", "starttime_filename",
                                "startcoordinates", "duration"]:
                     s += u"{} = {}, ".format(key, str(value))
