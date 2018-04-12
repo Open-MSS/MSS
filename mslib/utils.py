@@ -153,7 +153,7 @@ def save_settings_pickle(tag, settings):
         with open(settingsfile, "wb") as fileobj:
             pickle.dump(settings, fileobj)
     except (OSError, IOError) as ex:
-        logging.warn("Problems storing %s settings (%s: %s).", tag, type(ex), ex)
+        logging.warning("Problems storing %s settings (%s: %s).", tag, type(ex), ex)
 
 
 def load_settings_pickle(tag, default_settings=None):
