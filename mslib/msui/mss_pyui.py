@@ -30,8 +30,6 @@
 """
 from __future__ import print_function
 
-from builtins import str
-
 import argparse
 import copy
 import functools
@@ -47,7 +45,6 @@ import sys
 import types
 import fs
 
-from fslib.fs_filepicker import getOpenFileName, getSaveFileName
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
@@ -65,7 +62,7 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8, get_open_filename, get_save_filename
 
 try:
     import nappy
@@ -220,8 +217,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Tools.
         self.listTools.itemActivated.connect(self.activate_sub_window)
 
-        self.add_import_filter("CSV", "csv", load_from_csv)
-        self.add_export_filter("CSV", "csv", save_to_csv)
+        self.add_import_filter("CSV", "csv", load_from_csv, pickertag="filepicker_flightrack")
+        self.add_export_filter("CSV", "csv", save_to_csv, pickertag="filepicker_flightrack")
 
         self._imported_plugins, self._exported_plugins = {}, {}
         self.add_plugins()
@@ -266,9 +263,15 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         pdlg.close()
 
     def add_plugins(self):
+        picker_default = config_loader(
+            dataset="filepicker_default", default=mss_default.filepicker_default)
+
         self._imported_plugins = config_loader(dataset="import_plugins", default={})
         for name in self._imported_plugins:
-            extension, module, function = self._imported_plugins[name]
+            extension, module, function = self._imported_plugins[name][:3]
+            picker_type = picker_default
+            if len(self._imported_plugins[name]) == 4:
+                picker_type = self._imported_plugins[name][3]
             try:
                 imported_module = importlib.import_module(module)
             # wildcard exception to be resilient against error introduced by user code
@@ -280,7 +283,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                         self._imported_plugins, type(ex), ex)))
                 continue
             try:
-                self.add_import_filter(name, extension, getattr(imported_module, function))
+                self.add_import_filter(name, extension, getattr(imported_module, function), pickertype=picker_type)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error(u"Error on installing plugin: %s: %s", type(ex), ex)
@@ -292,7 +295,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         self._exported_plugins = config_loader(dataset="export_plugins", default={})
         for name in self._exported_plugins:
-            extension, module, function = self._exported_plugins[name]
+            extension, module, function = self._exported_plugins[name][:3]
+            picker_type = picker_default
+            if len(self._exported_plugins[name]) == 4:
+                picker_type = self._exported_plugins[name][3]
             try:
                 imported_module = importlib.import_module(module)
             # wildcard exception to be resilient against error introduced by user code
@@ -304,7 +310,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                         self._exported_plugins, type(ex), ex)))
                 continue
             try:
-                    self.add_export_filter(name, extension, getattr(imported_module, function))
+                    self.add_export_filter(name, extension, getattr(imported_module, function), pickertype=picker_type)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error(u"Error on installing plugin: %s: %s", type(ex), ex)
@@ -331,7 +337,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.menuExport_Active_Flight_Track.removeAction(actions[0])
             delattr(self, full_name)
 
-    def add_import_filter(self, name, extension, function):
+    def add_import_filter(self, name, extension, function, pickertag=None, pickertype=None):
         full_name = "actionImportFlightTrack" + clean_string(name)
         if hasattr(self, full_name):
             raise ValueError(u"'{}' has already been set!".format(full_name))
@@ -342,8 +348,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.menuImport_Flight_Track.addAction(action)
 
         def load_function_wrapper(self):
-            filename = getOpenFileName(self, self.last_save_directory, "All Files (*." + extension + ')',
-                                       title=u"Import Flight Track")
+            filename = get_open_filename(
+                self, u"Import Flight Track", self.last_save_directory,
+                u"All Files (*." + extension + ")", pickertype=pickertype)
             if filename is not None:
                 try:
                     ft_name, new_waypoints = function(filename)
@@ -367,7 +374,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         setattr(self, full_name, types.MethodType(load_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))
 
-    def add_export_filter(self, name, extension, function):
+    def add_export_filter(self, name, extension, function, pickertag=None, pickertype=None):
         full_name = "actionExportFlightTrack" + clean_string(name)
         if hasattr(self, full_name):
             raise ValueError(u"'{}' has already been set!".format(full_name))
@@ -379,8 +386,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         def save_function_wrapper(self):
             default_filename = self.active_flight_track.name + "." + extension
-            filename = getSaveFileName(self, self.last_save_directory, u"All Files (*." + extension + ')',
-                                       title=u"Export Flight Track", default_filename=default_filename)
+            filename = get_save_filename(
+                self, u"Export Flight Track", default_filename,
+                name + " (*." + extension + ")", pickertype=pickertype)
             if filename is not None:
                 try:
                     function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
@@ -543,8 +551,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.tr("Opening a config file will reset application. Continue?"),
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
-            filename = getOpenFileName(self, constants.MSS_CONFIG_PATH, u'Config Files (*.json)',
-                                       title=u"Open Config file")
+            filename = get_open_filename(
+                self, u"Open Config file", constants.MSS_CONFIG_PATH, u'Config Files (*.json)',
+                pickertag="filepicker_config")
             if filename is not None:
                 self.listViews.clear()
                 self.listTools.clear()
@@ -556,8 +565,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
            passes the result to createNewFlightTrack().
         """
-        filename = getOpenFileName(self, self.last_save_directory, u'Flight Track Files (*.ftml)',
-                                   title=u"Open Flight Track")
+        filename = get_open_filename(
+            self, u"Open Flight Track", self.last_save_directory, u'Flight Track Files (*.ftml)',
+            pickertag="filepicker_flightrack")
         if filename is not None:
             try:
                 if filename.endswith('.ftml'):
@@ -619,14 +629,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def save_flight_track_as(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
         """
-        # default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
-        default_filename = self.active_flight_track.name + ".ftml"
-
-        filename = getSaveFileName(self, self.last_save_directory, u'Flight Track (*.ftml)', title=u"Save Flight Track",
-                                   default_filename=default_filename)
-        if filename is not None:
-            # ToDo add again, after fs_filepicker has an additional scope for different directories
-            # self.last_save_directory = fs.path.dirname(filename)
+        default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
+        filename = get_save_filename(
+            self, "Save Flight Track", default_filename, u"Flight Track (*.ftml)", pickertag="filepicker_flightrack")
+        logging.debug("filename : '%s'", filename)
+        if filename:
+            self.last_save_directory = fs.path.dirname(filename)
             if filename.endswith('.ftml'):
                 try:
                     self.active_flight_track.save_to_ftml(filename)

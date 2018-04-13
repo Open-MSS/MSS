@@ -60,7 +60,7 @@ class Test_TrajectoriesTool(object):
     def test_show(self, mockcrit):
         assert mockcrit.call_count == 0
 
-    @mock.patch("mslib.msui.trajectories_tool.getExistingDirectory",
+    @mock.patch("mslib.msui.trajectories_tool.get_existing_directory",
                 return_value=os.path.join(sample_path, "trajectories"))
     def test_load_trajectories(self, mockopen):
         if sys.version_info.major > 2:
@@ -70,7 +70,7 @@ class Test_TrajectoriesTool(object):
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
 
-    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
+    @mock.patch("mslib.msui.trajectories_tool.get_open_filename",
                 return_value=os.path.join(sample_path, "nas", "sample.nas"))
     def test_load_nas(self, mockopen):
         if not HAVE_NAPPY:
@@ -79,7 +79,7 @@ class Test_TrajectoriesTool(object):
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
 
-    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
+    @mock.patch("mslib.msui.trajectories_tool.get_open_filename",
                 return_value=os.path.join(sample_path, "kml", "line.kml"))
     def test_load_nas_kml(self, mockopen):
         self.window.actionOpenFlightTrack.trigger()
@@ -115,7 +115,7 @@ class Test_TrajectoryToolComples(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.trajectories_tool.getOpenFileName",
+    @mock.patch("mslib.msui.trajectories_tool.get_open_filename",
                 return_value=os.path.join(sample_path, "nas", "sample.nas"))
     def test_show_nas(self, mockopen):
         if not HAVE_NAPPY:
@@ -135,7 +135,7 @@ class Test_TrajectoryToolComples(object):
         QtTest.QTest.mouseClick(self.trajtool.btPlotInView, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.trajectories_tool.getExistingDirectory",
+    @mock.patch("mslib.msui.trajectories_tool.get_existing_directory",
                 return_value=os.path.join(sample_path, "trajectories"))
     def test_show_trajectories(self, mockopen):
         if sys.version_info.major > 2:
