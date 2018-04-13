@@ -238,7 +238,7 @@ class DefaultDataAccess(NWPDataAccess):
                 var_leaf = leaf.setdefault(standard_name, {})
                 for valid_time in valid_times:
                     if valid_time in var_leaf:
-                        logging.warn(
+                        logging.warning(
                             "some data was found twice! vartype='%s' init_time='%s' standard_name='%s' "
                             "valid_time='%s' first_file='%s' second_file='%s'",
                             vert_type, init_time, standard_name, valid_time, var_leaf[valid_time], filename)

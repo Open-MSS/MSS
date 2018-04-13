@@ -50,6 +50,9 @@ class MissionSupportSystemDefaultConfig(object):
     Do not change any value for good reasons.
     Your values can be set in your personal mss_settings.json file
     """
+    # Default for general filepicker. Pick "default", "qt", or "fs"
+    filepicker_default = "default"
+
     # dir where mss output files are stored
     data_dir = u"~/mssdata"
 

@@ -30,14 +30,12 @@ from builtins import str
 import logging
 import os
 
-from fslib.fs_filepicker import getOpenFileName, getExistingDirectory
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
+from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui, get_open_filename, get_existing_directory
 from mslib.msui.mss_qt import ui_trajectories_window as ui
-from mslib.msui import constants
 from mslib.msui import trajectory_item_tree as titree
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.icons import icons
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
 
 
@@ -118,8 +116,9 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         # Ask for a file to open, convert the return file name from type
         # QString to str.
-        filename = getOpenFileName(self, constants.MSS_CONFIG_PATH, u'NASA AMes File (*.nas)',
-                                   title=u"Open NASA Ames File")
+        filename = get_open_filename(
+            self, "Open NASA Ames File", "", "NASA Ames files (*.nas)",
+            pickertag="filepicker_trajectories")
         # ToDo nappy needs filelike object first
         # _dirname, _name = os.path.split(filename)
         # _fs = open_fs(_dirname)
@@ -147,9 +146,9 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
            and reads the selected trajectory file using lagrantooutputreader.
         """
         # Ask for a directory to open.
-        traj_dir = getExistingDirectory(
-            self, title="Open Lagranto Output Directory", fs_url=self.last_save_directory)
-        if traj_dir:
+        traj_dir = get_existing_directory(
+            self, "Open Lagranto Output Directory", self.last_save_directory)
+        if traj_dir is not None:
             logging.debug(u"Loading trajectory data from '%s'", traj_dir)
 
             # Test if selected directory contains subdirectories (as is
