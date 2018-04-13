@@ -454,11 +454,11 @@ def setup_logging(args):
             logger.addHandler(fh)
 
 
-# modified Verion from minidom
-# all writings as unicode not str
+# modified Version from minidom, https://github.com/python/cpython/blob/2.7/Lib/xml/dom/minidom.py
+# MSS needed to change all writings as unicode not str
 from xml.dom.minidom import _write_data, Node
-
-
+# Copyright © 2001-2018 Python Software Foundation. All rights reserved.
+# Copyright © 2000 BeOpen.com. All rights reserved.
 def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
     # indent = current indentation
     # addindent = indentation to add to higher levels
