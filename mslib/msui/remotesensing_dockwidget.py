@@ -405,7 +405,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         Returns: angular distance or 180 degrees if sun is below horizon
         """
-        logging.warn("%s", type)
+        logging.warning("%s", type)
         delta_azi = obs_azi - sol_azi
         delta_ele = obs_ele + sol_ele
         if type == "total difference":
