@@ -983,8 +983,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                                                  self.valid_time_format)
                                     # Parse interval strings of format "PT3H" (= 3 hours)
                                     # or "PT24H" (24 hours).
-                                    time_interval_hours = int(re.match("PT(\d+)H",
-                                                                       list_desc[2]).group(1))
+                                    time_interval_hours = int(
+                                        re.match(r"PT(\d+)H", list_desc[2]).group(1))
 
                                     # Register all time values of the list.
                                     while time_val <= end_time:
