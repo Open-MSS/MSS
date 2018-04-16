@@ -40,15 +40,13 @@ import logging
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-# With Matplotlib 1.2, PIL images are rotated differently when plotted with
-# imshow(). See Basemap __init__.py file, in which the same issue occurs
-# (https://github.com/matplotlib/basemap/pull/52). (mr, 08Feb2013)
-from matplotlib import __version__ as _matplotlib_version
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
 
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
+
 # local application imports
+from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import QtGui
@@ -56,23 +54,17 @@ from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui import trajectory_item_tree as titree
 from mslib.msui.icons import icons
-from mslib import thermolib
-from mslib.msui.mss_qt import QtCore, QtWidgets, FigureCanvas, NavigationToolbar2QT
+from mslib.msui.mss_qt import QtCore, QtWidgets
 
 
-if _matplotlib_version >= '1.2':
-    # orientation of arrays returned by pil_to_array
-    # changed (https://github.com/matplotlib/matplotlib/pull/616)
-    PIL_image_origin = "upper"
-else:
-    PIL_image_origin = "lower"
+__PIL_IMAGE_ORIGIN = "upper"
+__LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
 
-last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
-matplotlib.rcParams['savefig.directory'] = last_save_directory
+matplotlib.rcParams['savefig.directory'] = __LAST_SAVE_DIRECTORY
 
 
-class MplCanvas(FigureCanvas):
-    """Class to represent the FigureCanvas widget.
+class MplCanvas(FigureCanvasQTAgg):
+    """Class to represent the FigureCanvasQTAgg widget.
 
     Main axes instance has zorder 99 (important when additional
     axes are added).
@@ -80,20 +72,19 @@ class MplCanvas(FigureCanvas):
 
     def __init__(self):
         # setup Matplotlib Figure and Axis
-        self.fig = Figure(facecolor="w")  # 0.75
+        self.fig = matplotlib.figure.Figure(facecolor="w")  # 0.75
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.default_filename = "_image"
 
         # initialization of the canvas
-        FigureCanvas.__init__(self, self.fig)
+        super(MplCanvas, self).__init__(self.fig)
 
         # we define the widget as expandable
-        FigureCanvas.setSizePolicy(self,
-                                   QtWidgets.QSizePolicy.Expanding,
-                                   QtWidgets.QSizePolicy.Expanding)
+        super(MplCanvas, self).setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         # notify the system of updated policy
-        FigureCanvas.updateGeometry(self)
+        super(MplCanvas, self).updateGeometry()
 
     def get_default_filename(self):
         result = self.basename + self.default_filename
@@ -157,7 +148,7 @@ class MplWidget(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         # initialization of Qt MainWindow widget
-        QtWidgets.QWidget.__init__(self, parent)
+        super(MplWidget, self).__init__(parent)
 
         # set the canvas to the Matplotlib widget
         self.canvas = MplCanvas()
@@ -194,7 +185,7 @@ def save_figure(self, *args):
         filetypes = self.canvas.get_supported_filetypes_grouped()
         sorted_filetypes = list(six.iteritems(filetypes))
         sorted_filetypes.sort()
-        startpath = matplotlib.rcParams.get('savefig.directory', last_save_directory)
+        startpath = matplotlib.rcParams.get('savefig.directory', __LAST_SAVE_DIRECTORY)
         startpath = os.path.expanduser(startpath)
         start = os.path.join(startpath, self.canvas.get_default_filename())
         filters = []
@@ -246,7 +237,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 _x[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save') or _x[0] is None]
 
         self.sideview = sideview
-        NavigationToolbar2QT.__init__(self, canvas, parent, coordinates)
+        super(NavigationToolbar, self).__init__(canvas, parent, coordinates)
         self.canvas = canvas
         self._idMotion = None
 
@@ -448,7 +439,7 @@ class MplNavBarWidget(QtWidgets.QWidget):
 
     def __init__(self, sideview=False, parent=None, canvas=None):
         # initialization of Qt MainWindow widget
-        QtWidgets.QWidget.__init__(self, parent)
+        super(MplNavBarWidget, self).__init__(parent)
 
         # set the canvas to the Matplotlib widget
         if canvas:
@@ -798,12 +789,9 @@ class MplSideViewCanvas(MplCanvas):
 
         # Plot the new image in the image axes and adjust the axes limits.
         self.image = self.imgax.imshow(img, interpolation="nearest", aspect="auto",
-                                       origin=PIL_image_origin)
+                                       origin=__PIL_IMAGE_ORIGIN)
         self.imgax.set_xlim(0, ix - 1)
-        if _matplotlib_version >= "1.2":
-            self.imgax.set_ylim(iy - 1, 0)
-        else:
-            self.imgax.set_ylim(0, iy - 1)
+        self.imgax.set_ylim(iy - 1, 0)
         self.draw()
         logging.debug("done.")
 
@@ -814,8 +802,8 @@ class MplSideViewWidget(MplNavBarWidget):
     """
 
     def __init__(self, parent=None):
-        super(MplSideViewWidget, self).__init__(sideview=True, parent=parent,
-                                                canvas=MplSideViewCanvas())
+        super(MplSideViewWidget, self).__init__(
+            sideview=True, parent=parent, canvas=MplSideViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
         #                    Customize, Save
@@ -985,7 +973,7 @@ class MplTopViewCanvas(MplCanvas):
         """
         logging.debug("plotting image..")
         self.wms_image = self.map.imshow(img, interpolation="nearest", alpha=1.,
-                                         origin=PIL_image_origin)
+                                         origin=__PIL_IMAGE_ORIGIN)
         # NOTE: imshow always draws the images to the lowest z-level of the
         # plot.
         # See these mailing list entries:
@@ -1033,7 +1021,7 @@ class MplTopViewCanvas(MplCanvas):
                 self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
 
             # Plot the new legimg in the legax axes.
-            self.legimg = self.legax.imshow(img, origin=PIL_image_origin, aspect="equal",
+            self.legimg = self.legax.imshow(img, origin=__PIL_IMAGE_ORIGIN, aspect="equal",
                                             interpolation="nearest")
         self.draw()
         # required so that it is actually drawn...
@@ -1118,8 +1106,8 @@ class MplTopViewWidget(MplNavBarWidget):
     """
 
     def __init__(self, parent=None):
-        super(MplTopViewWidget, self).__init__(sideview=False, parent=parent,
-                                               canvas=MplTopViewCanvas())
+        super(MplTopViewWidget, self).__init__(
+            sideview=False, parent=parent, canvas=MplTopViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
         #                    Customize, Save
@@ -1360,8 +1348,8 @@ class MplTimeSeriesViewWidget(MplNavBarWidget):
     """
 
     def __init__(self, parent=None):
-        super(MplTimeSeriesViewWidget, self).__init__(parent=parent,
-                                                      canvas=MplTimeSeriesViewCanvas())
+        super(MplTimeSeriesViewWidget, self).__init__(
+            parent=parent, canvas=MplTimeSeriesViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
         #                    Customize, Save
