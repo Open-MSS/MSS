@@ -37,6 +37,7 @@
 from __future__ import division
 
 from builtins import str
+from past.builtins import unicode
 
 import datetime
 import logging

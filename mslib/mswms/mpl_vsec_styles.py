@@ -1614,7 +1614,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
 
 
 for vert in ["ml", "tl", "pl", "al"]:
-    for stdname, props in list(MSSChemTargets.items()):
+    for stdname, props in MSSChemTargets.items():
         name, qty, units, scale = props
         key = "VS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty
         globals()[key] = make_msschem_class(stdname, name, vert, units, scale)

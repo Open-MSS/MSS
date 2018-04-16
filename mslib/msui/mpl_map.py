@@ -309,12 +309,12 @@ class MapCanvas(basemap.Basemap):
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            for item in list(self.map_parallels.values()):
+            for item in self.map_parallels.values():
                 for line in item[0]:
                     line.remove()
                 for text in item[1]:
                     text.remove()
-            for item in list(self.map_meridians.values()):
+            for item in self.map_meridians.values():
                 for line in item[0]:
                     line.remove()
                 for text in item[1]:

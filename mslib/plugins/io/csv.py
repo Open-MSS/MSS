@@ -64,11 +64,11 @@ def load_from_csv(filename):
     waypoints = []
     _dirname, _name = os.path.split(filename)
     _fs = open_fs(_dirname)
-    with _fs.open(_name, "r") as in_file:
+    with _fs.open(_name, "rb") as in_file:
         lines = in_file.readlines()
     if len(lines) < 4:
         raise SyntaxError("CSV file requires at least 4 lines!")
-    dialect = csv.Sniffer().sniff(lines[-1])
+    dialect = csv.Sniffer().sniff(lines[-1].decode("utf-8"))
     csv_reader = csv.reader(lines, encoding="utf-8", dialect=dialect)
     name = next(csv_reader)[0]
     next(csv_reader)  # header

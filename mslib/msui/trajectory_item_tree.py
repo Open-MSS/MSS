@@ -204,7 +204,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
     def __init__(self, name, visible, parent=None):
         """
         """
-        AbstractLagrantoDataItem.__init__(self, name, visible, parent)
+        super(LagrantoMapItem, self).__init__(name, visible, parent)
         self.timeVariableChild = None
         self.lonVariableChild = None
         self.latVariableChild = None
@@ -400,8 +400,8 @@ class FlightTrackItem(LagrantoMapItem):
         visible,
             parent  -- inherited from LagrantoMapItem
         """
-        LagrantoMapItem.__init__(self, os.path.basename(nasFileName),
-                                 visible, parent)
+        super(FlightTrackItem, self).__init__(
+            os.path.basename(nasFileName), visible, parent)
         self.setGxElementProperty("general", "colour", "blue")
         self.setGxElementProperty("general", "linestyle", "-")
         self.setGxElementProperty("general", "linewidth", 1)
@@ -539,8 +539,8 @@ class LagrantoOutputItem(LagrantoMapItem):
         visible,
         parent -- inherited from LagrantoMapItem
         """
-        LagrantoMapItem.__init__(self, os.path.basename(os.path.normpath(path)),
-                                 visible, parent)
+        super(LagrantoOutputItem, self).__init__(
+            os.path.basename(os.path.normpath(path)), visible, parent)
 
         self.path = path
         self.loutput = None
@@ -584,7 +584,7 @@ class TrajectoryItem(LagrantoMapItem):
         trmetadata -- trajectory metadata dictionary, as returned by
                       LagrantoOutputReader
         """
-        LagrantoMapItem.__init__(self, trajectoryname, visible, parent)
+        super(TrajectoryItem, self).__init__(trajectoryname, visible, parent)
         self.setGxElementProperty("general", "colour", "red")
         self.setGxElementProperty("general", "linestyle", "-")
         self.setGxElementProperty("general", "linewidth", 1)
@@ -630,7 +630,7 @@ class TrajectoryItem(LagrantoMapItem):
                         self.timeVariableChild.getVariableData()[-1])
         elif column == 6:
             s = ''
-            for key, value in list(self.metadata.items()):
+            for key, value in self.metadata.items():
                 if key not in ["starttime", "file", "starttime_filename",
                                "startcoordinates", "duration"]:
                     s += u"{} = {}, ".format(key, str(value))
@@ -682,7 +682,7 @@ class AbstractVariableItem(AbstractLagrantoDataItem):
         """The constructor takes the same arguments as AbstractLagrantoDataItem.
            Only the constructor of the superclass is called.
         """
-        AbstractLagrantoDataItem.__init__(self, name, visible, parent)
+        super(AbstractVariableItem, self).__init__(name, visible, parent)
 
     def getVariableName(self):
         """Return the name of the variable.
@@ -786,7 +786,7 @@ class LagrantoMapItemsTreeModel(QtCore.QAbstractItemModel):
     """
 
     def __init__(self, data=None, parent=None):
-        QtCore.QAbstractItemModel.__init__(self, parent)
+        super(LagrantoMapItemsTreeModel, self).__init__(parent)
 
         self.header = ['Items', 'Connected Views', 'Line Properties', 'Marker',
                        'Start [lon, lat, p]', 'Start Time', 'Metadata']

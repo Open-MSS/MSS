@@ -115,7 +115,6 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
            and reads the selected NASA Ames file using nappy.
         """
         # Ask for a file to open, convert the return file name from type
-        # QString to str.
         filename = get_open_filename(
             self, "Open NASA Ames File", "", "NASA Ames files (*.nas)",
             pickertag="filepicker_trajectories")

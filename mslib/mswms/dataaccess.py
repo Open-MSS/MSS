@@ -252,14 +252,14 @@ class DefaultDataAccess(NWPDataAccess):
         """
         init_times = set(itertools.chain.from_iterable(
             self._filetree[_x].keys() for _x in self._filetree))
-        return sorted(list(init_times))
+        return sorted(init_times)
 
     def get_valid_times(self, variable, vartype, init_time):
         """Returns a list of available valid times for the specified
            variable at the specified init time.
         """
         try:
-            return sorted(list(self._filetree[vartype][init_time][variable].keys()))
+            return sorted(self._filetree[vartype][init_time][variable].keys())
         except KeyError as ex:
             logging.error("Could not find times! %s %s", type(ex), ex)
             return []
@@ -274,7 +274,7 @@ class DefaultDataAccess(NWPDataAccess):
         for init_time in self._filetree[vartype]:
             if variable in self._filetree[vartype][init_time]:
                 all_valid_times.extend(list(self._filetree[vartype][init_time][variable].keys()))
-        return sorted(list(set(all_valid_times)))
+        return sorted(set(all_valid_times))
 
     def get_all_datafiles(self):
         """Return a list of all available data files.

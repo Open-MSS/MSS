@@ -129,7 +129,7 @@ def find_location(lat, lon, tolerance=5):
     """
     locations = config_loader(dataset='locations', default=MissionSupportSystemDefaultConfig.locations)
     distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
-                 for loc, (loc_lat, loc_lon) in list(locations.items())]
+                 for loc, (loc_lat, loc_lon) in locations.items()]
     distances.sort()
     if len(distances) > 0 and distances[0][0] <= tolerance:
         return locations[distances[0][1]], distances[0][1]
@@ -181,7 +181,7 @@ def load_settings_pickle(tag, default_settings=None):
         try:
             with _fs.open(_name, "rb") as fileobj:
                 settings = pickle.load(fileobj)
-        except (pickle.UnpicklingError, ValueError, KeyError, OSError, IOError, ImportError) as ex:
+        except (pickle.UnpicklingError, ValueError, KeyError, OSError, IOError, ImportError, TypeError) as ex:
             logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
                           tag, type(ex), ex)
     if isinstance(settings, dict):
@@ -459,6 +459,8 @@ def setup_logging(args):
 from xml.dom.minidom import _write_data, Node
 # Copyright © 2001-2018 Python Software Foundation. All rights reserved.
 # Copyright © 2000 BeOpen.com. All rights reserved.
+
+
 def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
     # indent = current indentation
     # addindent = indentation to add to higher levels
@@ -466,10 +468,8 @@ def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
     writer.write(indent + u"<" + self.tagName)
 
     attrs = self._get_attributes()
-    a_names = attrs.keys()
-    a_names.sort()
 
-    for a_name in a_names:
+    for a_name in sorted(attrs.keys()):
         writer.write(u" %s=\"" % a_name)
         _write_data(writer, attrs[a_name].value)
         writer.write(u"\"")

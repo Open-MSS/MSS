@@ -62,7 +62,7 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 
 # related third party imports
-from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, _translate, _fromUtf8, get_open_filename, get_save_filename
+from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, get_open_filename, get_save_filename
 
 try:
     import nappy
@@ -132,8 +132,8 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
                   to name changes of the item.
         """
         view_name = flighttrack_model.name
-        super(QFlightTrackListWidgetItem, self).__init__(view_name, parent,
-                                                         type)
+        super(QFlightTrackListWidgetItem, self).__init__(
+            view_name, parent, type)
 
         self.parent = parent
         self.flighttrack_model = flighttrack_model
@@ -242,7 +242,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             pdlg.setValue(i)
             QtWidgets.QApplication.processEvents()
             # initialize login cache fomr config file, but do not overwrite existing keys
-            for key, value in list(config_loader(dataset="WMS_login", default={}).items()):
+            for key, value in config_loader(dataset="WMS_login", default={}).items():
                 if key not in constants.WMS_LOGIN_CACHE:
                     constants.WMS_LOGIN_CACHE[key] = value
             username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
@@ -324,7 +324,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         for name in self._imported_plugins:
             full_name = "actionImportFlightTrack" + clean_string(name)
             actions = [_x for _x in self.menuImport_Flight_Track.actions()
-                       if _x.objectName() == _fromUtf8(full_name)]
+                       if _x.objectName() == full_name]
             assert len(actions) == 1
             self.menuImport_Flight_Track.removeAction(actions[0])
             delattr(self, full_name)
@@ -332,7 +332,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         for name in self._exported_plugins:
             full_name = "actionExportFlightTrack" + clean_string(name)
             actions = [_x for _x in self.menuExport_Active_Flight_Track.actions()
-                       if _x.objectName() == _fromUtf8(full_name)]
+                       if _x.objectName() == full_name]
             assert len(actions) == 1
             self.menuExport_Active_Flight_Track.removeAction(actions[0])
             delattr(self, full_name)
@@ -343,8 +343,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             raise ValueError(u"'{}' has already been set!".format(full_name))
 
         action = QtWidgets.QAction(self)
-        action.setObjectName(_fromUtf8(full_name))
-        action.setText(_translate("MSSMainWindow", name, None))
+        action.setObjectName(full_name)
+        action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
         self.menuImport_Flight_Track.addAction(action)
 
         def load_function_wrapper(self):
@@ -380,8 +380,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             raise ValueError(u"'{}' has already been set!".format(full_name))
 
         action = QtWidgets.QAction(self)
-        action.setObjectName(_fromUtf8(full_name))
-        action.setText(_translate("MSSMainWindow", name, None))
+        action.setObjectName(full_name)
+        action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
         self.menuExport_Active_Flight_Track.addAction(action)
 
         def save_function_wrapper(self):

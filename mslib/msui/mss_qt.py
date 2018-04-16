@@ -26,26 +26,19 @@
 """
 
 import importlib
-import os
 import logging
-import traceback
-import sys
-import platform
+import os
 from past.builtins import unicode
+import platform
+import sys
+import traceback
 
 from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
 
+from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
+
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-
-# import the Qt5Agg FigureCanvas object, that binds Figure to
-# Qt5Agg backend. It also inherits from QWidget
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT
-
-from PyQt5 import QtCore, QtGui, QtTest, QtWidgets
-QString = str  # QString is not exposed anymore but is used transparently by PyQt5
-
-_qt_ui_prefix = "mslib.msui.qt5."
 
 
 def get_open_filename_qt(*args):
@@ -161,16 +154,7 @@ for mod in [
         "ui_wms_capabilities",
         "ui_wms_dockwidget",
         "ui_wms_password_dialog"]:
-    globals()[mod] = importlib.import_module(_qt_ui_prefix + mod)
-
-
-# Add some functions that are used.
-# TODO Can probably be tidied up in a neater fashion by rewriting the using code.
-def _fromUtf8(s):
-    return s
-
-
-_translate = QtCore.QCoreApplication.translate
+    globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 
 
 # PyQt5 silently aborts on a Python Exception and PyQt4 does not inform GUI users
