@@ -40,7 +40,6 @@ requirements:
         - scipy
         - six
         - tk 8.5.*
-        - pykml
         - owslib
         - unicodecsv
         - fs_filepicker
