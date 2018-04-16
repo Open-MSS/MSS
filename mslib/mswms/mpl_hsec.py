@@ -307,7 +307,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                 useful = {}
                 for idx, key in enumerate(BASEMAP_REQUESTS):
                     useful[key] = useful.get(key, 0) + idx
-                least_useful = sorted([(value, key) for key, value in list(useful.items())])[:-basemap_cache_size]
+                least_useful = sorted([(value, key) for key, value in useful.items()])[:-basemap_cache_size]
                 for _, key in least_useful:
                     del BASEMAP_CACHE[key]
                     BASEMAP_REQUESTS[:] = [_x for _x in BASEMAP_REQUESTS if key != _x]

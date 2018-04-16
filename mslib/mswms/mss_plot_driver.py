@@ -430,7 +430,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         lon_indices = lon_data.argsort()
         lon_data = lon_data[lon_indices]
 
-        for name, var in list(self.data_vars.items()):
+        for name, var in self.data_vars.items():
             if len(var.shape) == 4:
                 var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
             else:
@@ -594,7 +594,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
             self.actual_level = self.vert_data[level]
         logging.debug("loading data for time step %s (%s), level index %s (level %s)",
                       timestep, self.fc_time, level, self.actual_level)
-        for name, var in list(self.data_vars.items()):
+        for name, var in self.data_vars.items():
             if level is None or len(var.shape) == 3:
                 # 2D fields: time, lat, lon.
                 var_data = var[timestep, ::self.lat_order, :]

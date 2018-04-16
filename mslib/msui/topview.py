@@ -192,8 +192,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.cbChangeMapSection.clear()
         predefined_map_sections = config_loader(dataset="predefined_map_sections",
                                                 default=mss_default.predefined_map_sections)
-        items = list(predefined_map_sections.keys())
-        items.sort()
+        items = sorted(predefined_map_sections.keys())
         self.cbChangeMapSection.addItems(items)
 
         # Initialise the map and the flight track. Get the initial projection

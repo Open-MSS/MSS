@@ -224,7 +224,7 @@ class WMSServer(object):
         # Horizontal Layers
         hsec_layers = []
         for dataset in self.hsec_layer_registry:
-            for layer in list(self.hsec_layer_registry[dataset].values()):
+            for layer in self.hsec_layer_registry[dataset].values():
                 if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
                     logging.error("layer %s/%s has no init times!", layer, dataset)
                     continue
@@ -236,7 +236,7 @@ class WMSServer(object):
         # Vertical Layers
         vsec_layers = []
         for dataset in self.vsec_layer_registry:
-            for layer in list(self.vsec_layer_registry[dataset].values()):
+            for layer in self.vsec_layer_registry[dataset].values():
                 if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
                     logging.error("layer %s/%s has no init times!", layer, dataset)
                     continue

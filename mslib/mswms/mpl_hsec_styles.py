@@ -1857,7 +1857,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
 
 
 for vert in ["ml", "al", "pl"]:
-    for stdname, props in list(MSSChemTargets.items()):
+    for stdname, props in MSSChemTargets.items():
         name, qty, units, scale = props
         key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty
         globals()[key] = make_msschem_class(stdname, name, vert, units, scale)
@@ -1865,7 +1865,7 @@ for vert in ["ml", "al", "pl"]:
 _pressurelevels = np.linspace(5000, 95000, 19)
 _npressurelevels = len(_pressurelevels)
 for vert in ["ml"]:
-    for stdname, props in list(MSSChemTargets.items()):
+    for stdname, props in MSSChemTargets.items():
         name, qty, units, scale = props
         # ToDo string substitution
         key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty + "_pcontours"
