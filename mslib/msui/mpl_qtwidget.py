@@ -188,7 +188,7 @@ def save_figure(self, *args):
                                    default=mss_default.filepicker_default)
     picker_type = config_loader(dataset="filepicker_matplotlib",
                                 default=picker_default)
-    if picker_type == "default":
+    if picker_type in ["default", "qt"]:
         save_figure_original(self, *args)
     elif picker_type == "fs":
         filetypes = self.canvas.get_supported_filetypes_grouped()
