@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>465</width>
-    <height>133</height>
+    <height>146</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,12 +29,12 @@
 0 degree is towards flight direction.</string>
        </property>
        <property name="text">
-        <string>Viewing direction</string>
+        <string>Viewing direction: azimuth</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="dsbObsAngle">
+      <widget class="QDoubleSpinBox" name="dsbObsAngleAzimuth">
        <property name="decimals">
         <number>0</number>
        </property>
@@ -46,6 +46,23 @@
        </property>
        <property name="singleStep">
         <double>15.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>elevation</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="dsbObsAngleElevation">
+       <property name="minimum">
+        <double>-90.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>90.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -150,36 +167,61 @@ Aircraft altitude is taken from the flight path.</string>
         <string>dark green if below horizon; otherwise reds: 0,5,10,15, purples: 15,25,35,45,60, greens: 60,90,135,180</string>
        </property>
        <property name="text">
-        <string>show solar angle (degree)</string>
+        <string>show angle (degree)</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cbSolarType">
+      <widget class="QComboBox" name="cbSolarAngleType">
        <item>
         <property name="text">
-         <string>total difference (with sunset)</string>
+         <string>sun</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>total difference</string>
+         <string>moon</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>azimuth difference</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>elevation difference</string>
+         <string>venus</string>
         </property>
        </item>
       </widget>
      </item>
      <item>
-      <spacer name="horizontalSpacer_3">
+      <widget class="QComboBox" name="cbSolarBody">
+       <property name="minimumSize">
+        <size>
+         <width>170</width>
+         <height>0</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string>total (horizon)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>total</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>azimuth</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>elevation</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
