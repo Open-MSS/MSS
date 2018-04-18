@@ -34,7 +34,7 @@ import mslib.mswms.wms as wms
 class Test_WMS(object):
     def test_get_capabilities(self):
         xml = wms.app.get_capabilities("http://localhost:8082")
-        assert isinstance(xml, basestring)
+        assert isinstance(xml, basestring), xml
 
     def test_produce_hsec_plot(self):
         environ = {
@@ -45,9 +45,9 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
         result = wms.app.produce_plot(environ, 'GetMap')
-        assert len(result) == 2
-        assert result[0] is not None
-        assert result[1] == "image/png"
+        assert len(result) == 2, result
+        assert result[0] is not None, result
+        assert result[1] == "image/png", result
 
     def test_produce_hsec_service_exception(self):
         environ = {
@@ -74,10 +74,10 @@ class Test_WMS(object):
                 ("bbox=-50.0%2C20.0%2C20.0%2C75.0", "bbox=-abcd%2C20.0%2C20.0%2C75.0")]:
             environ["QUERY_STRING"] = query_string.replace(orig, fake)
             result = wms.app.produce_plot(environ, 'GetMap')
-            assert len(result) == 2
-            assert isinstance(result[0], basestring)
-            assert result[0].count("ServiceExceptionReport") > 0
-            assert result[1] == "text/xml"
+            assert len(result) == 2, result
+            assert isinstance(result[0], basestring), result
+            assert result[0].count("ServiceExceptionReport") > 0, result
+            assert result[1] == "text/xml", result
 
     def test_produce_vsec_plot(self):
         environ = {
@@ -88,9 +88,9 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=201%2C500.0%2C10%2C100.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C48.08%2C11.28&transparent=FALSE'}
         result = wms.app.produce_plot(environ, 'GetMap')
-        assert len(result) == 2
-        assert result[0] is not None
-        assert result[1] == "image/png"
+        assert len(result) == 2, result
+        assert result[0] is not None, result
+        assert result[1] == "image/png", result
 
     def test_produce_vsec_service_exception(self):
         environ = {
@@ -113,7 +113,7 @@ class Test_WMS(object):
                 ("bbox=201%2C500.0%2C10%2C100.0", "bbox=aaa%2C500.0%2C10%2C100.0")]:
             environ["QUERY_STRING"] = query_string.replace(orig, fake)
             result = wms.app.produce_plot(environ, 'GetMap')
-            assert len(result) == 2
-            assert isinstance(result[0], basestring)
-            assert result[0].count("ServiceExceptionReport") > 0
-            assert result[1] == "text/xml"
+            assert len(result) == 2, result
+            assert isinstance(result[0], basestring), result
+            assert result[0].count("ServiceExceptionReport") > 0, result
+            assert result[1] == "text/xml", result
