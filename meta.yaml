@@ -27,6 +27,7 @@ requirements:
     - basemap 1.1.*
     - chameleon
     - execnet
+    - jplephem
     - lxml
     - netcdf4
     - hdf4
