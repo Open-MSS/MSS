@@ -25,34 +25,27 @@
     limitations under the License.
 """
 
-from mslib.msui.remotesensing_dockwidget import compute_solar_angle, compute_view_angles
+from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
 
 
 class TestAngles(object):
     """
     tests about angles
     """
-    def test_compute_solar_angle(self):
-        azimuth_angle, zenith_angle = compute_solar_angle(0, 7.56607, 50.355136)
-        assert int(azimuth_angle * 1000) == 13510
-        assert int(zenith_angle * 1000) == -62205
-        azimuth_angle, zenith_angle = compute_solar_angle(12, 7.56607, 50.355136)
-        assert int(azimuth_angle * 1000) == 13607
-        assert int(zenith_angle * 1000) == -62197
-
     def test_view_angles(self):
-        angle = compute_view_angles(0, 0, 0, 1, 0, 0, 0)
+        compute_view_angles = RemoteSensingControlWidget.compute_view_angles
+        angle = compute_view_angles(0, 0, 0, 1, 0, 0, 0, -1)
         assert angle[0] == 90.0
         assert angle[1] == -1
-        angle = compute_view_angles(0, 0, 0, -1, 0, 0, 0)
+        angle = compute_view_angles(0, 0, 0, -1, 0, 0, 0, -1)
         assert angle[0] == 270.0
         assert angle[1] == -1
-        angle = compute_view_angles(0, 0, 0, 1, 0, 0, 90)
+        angle = compute_view_angles(0, 0, 0, 1, 0, 0, 90, -1)
         assert angle[0] == 180.0
         assert angle[1] == -1
-        angle = compute_view_angles(0, 0, 0, 0, 1, 0, 0)
+        angle = compute_view_angles(0, 0, 0, 0, 1, 0, 0, -1)
         assert angle[0] == 0.0
         assert angle[1] == -1
-        angle = compute_view_angles(0, 0, 0, 0, -1, 0, 0)
+        angle = compute_view_angles(0, 0, 0, 0, -1, 0, 0, -1)
         assert angle[0] == 180.0
         assert angle[1] == -1
