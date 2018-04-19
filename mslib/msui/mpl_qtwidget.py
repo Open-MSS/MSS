@@ -57,10 +57,10 @@ from mslib.msui.icons import icons
 from mslib.msui.mss_qt import QtCore, QtWidgets
 
 
-__PIL_IMAGE_ORIGIN = "upper"
-__LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
+PIL_IMAGE_ORIGIN = "upper"
+LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
 
-matplotlib.rcParams['savefig.directory'] = __LAST_SAVE_DIRECTORY
+matplotlib.rcParams['savefig.directory'] = LAST_SAVE_DIRECTORY
 
 
 class MplCanvas(FigureCanvasQTAgg):
@@ -185,7 +185,7 @@ def save_figure(self, *args):
         filetypes = self.canvas.get_supported_filetypes_grouped()
         sorted_filetypes = list(six.iteritems(filetypes))
         sorted_filetypes.sort()
-        startpath = matplotlib.rcParams.get('savefig.directory', __LAST_SAVE_DIRECTORY)
+        startpath = matplotlib.rcParams.get('savefig.directory', LAST_SAVE_DIRECTORY)
         startpath = os.path.expanduser(startpath)
         start = os.path.join(startpath, self.canvas.get_default_filename())
         filters = []
@@ -789,7 +789,7 @@ class MplSideViewCanvas(MplCanvas):
 
         # Plot the new image in the image axes and adjust the axes limits.
         self.image = self.imgax.imshow(img, interpolation="nearest", aspect="auto",
-                                       origin=__PIL_IMAGE_ORIGIN)
+                                       origin=PIL_IMAGE_ORIGIN)
         self.imgax.set_xlim(0, ix - 1)
         self.imgax.set_ylim(iy - 1, 0)
         self.draw()
@@ -973,7 +973,7 @@ class MplTopViewCanvas(MplCanvas):
         """
         logging.debug("plotting image..")
         self.wms_image = self.map.imshow(img, interpolation="nearest", alpha=1.,
-                                         origin=__PIL_IMAGE_ORIGIN)
+                                         origin=PIL_IMAGE_ORIGIN)
         # NOTE: imshow always draws the images to the lowest z-level of the
         # plot.
         # See these mailing list entries:
@@ -1021,7 +1021,7 @@ class MplTopViewCanvas(MplCanvas):
                 self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
 
             # Plot the new legimg in the legax axes.
-            self.legimg = self.legax.imshow(img, origin=__PIL_IMAGE_ORIGIN, aspect="equal",
+            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal",
                                             interpolation="nearest")
         self.draw()
         # required so that it is actually drawn...

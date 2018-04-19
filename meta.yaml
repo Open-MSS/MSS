@@ -38,6 +38,8 @@ requirements:
     - qt 5.*
     - requests
     - scipy
+    - sgp4
+    - skyfield
     - six
     - tk
     - owslib
