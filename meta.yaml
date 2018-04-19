@@ -1,79 +1,80 @@
 {% set version = load_setup_py_data().version %}
 
+
 package:
-    name: mss
-    version: {{ version }}
+  name: mss
+  version: {{ version }}
 
 source:
-    git_url: https://bitbucket.org/wxmetvis/mss.git
+  git_url: https://bitbucket.org/wxmetvis/mss.git
 
 build:
-    number: 0
-    skip: True  # [py3k]
-    entry_points:
-      - mss = mslib.msui.mss_pyui:main
-      - mswms = mslib.mswms.mswms:main
-      - demodata = mslib.mswms.demodata:main
+  number: 0
+  entry_points:
+    - mss = mslib.msui.mss_pyui:main
+    - mswms = mslib.mswms.mswms:main
+    - demodata = mslib.mswms.demodata:main
 
 requirements:
-    build:
-        - python
-        - setuptools
-        - future
-        - menuinst  # [win]
-    run:
-        - python
-        - menuinst  # [win]
-        - basemap
-        - chameleon
-        - execnet
-        - jplephem
-        - lxml
-        - netcdf4
-        - hdf4 4.2.12
-        - paste
-        - pillow
-        - python-dateutil
-        - pytz
-        - pyqt 5.*
-        - qt 5.*
-        - requests
-        - scipy
-        - sgp4
-        - skyfield
-        - six
-        - tk 8.5.*
-        - owslib
-        - unicodecsv
-        - fs_filepicker
-        - future  # [py2k]
+  build:
+    - python
+    - setuptools
+    - future
+    - menuinst  # [win]
+  run:
+    - python
+    - menuinst  # [win]
+    - basemap 1.1.*
+    - chameleon
+    - execnet
+    - jplephem
+    - lxml
+    - netcdf4
+    - hdf4
+    - paste
+    - pillow
+    - python-dateutil
+    - pytz
+    - pyqt 5.*
+    - qt 5.*
+    - requests
+    - scipy
+    - sgp4
+    - skyfield
+    - six
+    - tk
+    - owslib
+    - unicodecsv
+    - fs_filepicker
+    - future # [py2k]
 
 test:
-    imports:
-        - mslib
-    commands:
-        - mswms -h
-        - mss -h
+  imports:
+    - mslib
+  commands:
+    - mswms -h
+    - mss -h
+
 about:
-    summary: A web service based tool to plan atmospheric research flights
-    home: https://bitbucket.org/wxmetvis/mss
-    license: Apache 2.0
-    license_file: LICENSE
-    description: >
-  MSS - Mission Support System
+  summary: 'A web service based tool to plan atmospheric research flights.'
+  home: https://bitbucket.org/wxmetvis/mss
+  license: Apache 2.0
+  license_file: LICENSE
+  description: |
+    MSS - Mission Support System
 
-  http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
+    http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
 
-  Software for planning research Aircraft Missions.
-  For discussion of the possibilites of the research flights,
-  the Mission Support System (MSS) was developed.
-  This software helps to review a big amount of metereological and
-  model data by viewing the forecasted parameters of interest along possible regions
-  of a proposed flight path. Data and possible flight paths can
-  be displayed on a hoizontal view (map projection) or on a vertical
-  view (along the proposed flight path). Flight paths can be constructed
-  and modified on these views. Exchange through a waypoint table is also possible.
+    Software for planning research Aircraft Missions.
+    For discussion of the possibilites of the research flights,
+    the Mission Support System (MSS) was developed.
+    This software helps to review a big amount of metereological and
+    model data by viewing the forecasted parameters of interest along possible regions
+    of a proposed flight path. Data and possible flight paths can
+    be displayed on a hoizontal view (map projection) or on a vertical
+    view (along the proposed flight path). Flight paths can be constructed
+    and modified on these views. Exchange through a waypoint table is also possible.
 
 extra:
-    recipe-maintainers:
-        - ReimarBauer
+  recipe-maintainers:
+    - ReimarBauer
