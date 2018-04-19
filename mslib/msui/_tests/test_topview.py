@@ -108,7 +108,7 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
         rsdock.dsbTangentHeight.setValue(6)
         QtWidgets.QApplication.processEvents()
-        rsdock.dsbObsAngle.setValue(70)
+        rsdock.dsbObsAngleAzimuth.setValue(70)
         QtTest.QTest.mouseClick(rsdock.cbDrawTangents, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         rsdock.cbShowSolarAngle.setChecked(True)
