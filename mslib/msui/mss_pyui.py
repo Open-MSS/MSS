@@ -4,7 +4,7 @@
     mslib.msui.mss_pyui
     ~~~~~~~~~~~~~~~~~~~
 
-    Mission Support System Python/Qt4 User Interface
+    Mission Support System Python/Qt User Interface
     Main window of the user interface application. Manages view and tool windows
     (the user can open multiple windows) and provides functionalty to open, save,
     and switch between flight tracks.

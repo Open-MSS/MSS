@@ -4,7 +4,7 @@
     mslib.msui.viewindows
     ~~~~~~~~~~~~~~~~~~~~~
 
-    Common PyQt4-derived classes and methods required by all mss ui
+    Common PyQt-derived classes and methods required by all mss ui
     modules.
 
     This file is part of mss.

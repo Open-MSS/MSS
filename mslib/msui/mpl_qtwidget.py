@@ -4,7 +4,7 @@
     mslib.msui.mpl_qtwidget
     ~~~~~~~~~~~~~~~~~~~~~~~
 
-    Definitions of Matplotlib widgets for Qt4 Designer.
+    Definitions of Matplotlib widgets for Qt Designer.
 
     This file is part of mss.
 
