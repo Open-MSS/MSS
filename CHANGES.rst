@@ -32,6 +32,15 @@ Other Changes:
  - Installing on osx-64 installs in anaconda 4 root environment old versions due to dependencies, #302, #315
  - add LICENSE to MANIFEST, #301
 
+HINT:
+~~~~~
+
+With 1.7.0 we move to Python 3. At current state we still support Python 2. But as Python 2 will retire  we have
+ to move on.
+This release therefore has many refactoring changes. We removed PyQT4 because it is not compatible to PyFilesystem2.
+We decided to use PyFilesystem2 because of its unified great API for internal or external storages. This enables
+ for example to store flightpathes on a webdav server or other web storages by just entering a fs url.
+
 
 Version 1.6.3
 -------------
