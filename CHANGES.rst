@@ -24,7 +24,10 @@ Bug Fixes:
  - pykml replaced by xml library to fix the incompatibility to python 3, #187,
 
 Other Changes:
- - remove QT4, #321
+ - new json parameter introduced:
+    "data_dir": "~/mssdata", see section usage
+    "filepicker_default": "default", see section usage
+ - removed QT4, #321
  - add a better hint if Default MSS config file missing, #303, #307
  - Installing on osx-64 installs in anaconda 4 root environment old versions due to dependencies, #302, #315
  - add LICENSE to MANIFEST, #301

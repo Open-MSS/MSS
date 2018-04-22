@@ -209,6 +209,22 @@ loading satellite track data, and "filepicker_trajectories" for loading data in 
 trajectory tool. Additionally, the dialogue type may be configured for each export/import plugin
 individually by a fourth, optional, parameter.
 
+data dir
+~~~~~~~~
+
+With using the "filepicker_default": "fs" setting you can enable any implemented
+`pyfilesystem2 <http://pyfilesystem2.readthedocs.io/en/latest/openers.html>`_ fs url.
+Additional to the builtin fs urls we have added optional the `webdavfs <https://github.com/PyFilesystem/webdavfs>`_
+and `sshfs <https://github.com/libfuse/sshfs>`_ service.
+
+
+With setting the option "filepicker_default": "default" you can only access local storages.
+
+.. code:: json
+
+  "data_dir": "~/mssdata",
+
+
 
 Example WMS Server
 ++++++++++++++++++
