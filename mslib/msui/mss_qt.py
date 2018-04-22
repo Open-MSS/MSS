@@ -157,7 +157,7 @@ for mod in [
     globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 
 
-# PyQt5 silently aborts on a Python Exception and PyQt4 does not inform GUI users
+# PyQt5 silently aborts on a Python Exception
 def excepthook(type_, value, traceback_):
     """
     This dumps the error to console, logging (i.e. logfile), and tries to open a MessageBox for GUI users.

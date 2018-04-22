@@ -195,7 +195,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
 
 
 class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
-    """PyQt4 window implementing a matplotlib canvas as an interactive
+    """PyQt window implementing a matplotlib canvas as an interactive
        side view flight track editor.
     """
     name = "Side View"

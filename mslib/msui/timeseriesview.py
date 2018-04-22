@@ -31,7 +31,7 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtGui  # Qt4 bindings
+from mslib.msui.mss_qt import QtGui  # Qt bindings
 
 from mslib.msui.mss_qt import ui_timeseriesview_window as ui
 from mslib.msui.viewwindows import MSSMplViewWindow
@@ -39,7 +39,7 @@ from mslib.msui.icons import icons
 
 
 class MSSTimeSeriesViewWindow(MSSMplViewWindow, ui.Ui_TimeSeriesViewWindow):
-    """PyQt4 window implementing a time series view.
+    """PyQt window implementing a time series view.
     """
     name = "Time Series View"
 

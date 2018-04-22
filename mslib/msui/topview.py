@@ -143,7 +143,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
 
 
 class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
-    """PyQt4 window implementing a MapCanvas as an interactive flight track
+    """PyQt window implementing a MapCanvas as an interactive flight track
        editor.
     """
     name = "Top View"

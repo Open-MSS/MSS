@@ -1,6 +1,46 @@
 Changelog
 =========
 
+Version 1.7.0
+-------------
+
+New Features:
+ - Decrease unit depency of plotting styles, #328
+ - Support basemap 1.1.0, #315, #329
+ - zorder of several plot elements in topview is wrong, #314
+ - pyfilesystem2 implemented, #313
+ - Provide more information on solar angles in remote sensing view, #311
+ - remove not used UI elements from NavigationToolbar, #297
+ - basemap / matplotlib edge case artifacts, #296
+ - Add measurement directions for remote sensing overlay, 294
+ - "Clear map" button renamed for VSec plotting, #286
+ - Performance calculation flawed in case of long leg between penultimate and ultimate point with FL 0, #280
+ - Support unicode characters in WMS Plot titles, #278
+ - Minimize possible action when mouse-clicking on the topview plots, #269
+
+Bug Fixes:
+ - Satellite Dockwidget FileDialog crashes with pyqt5, #320
+ - Error message for EUMETSAT server for non-available stereographic projections unhelpful, #318
+ - pykml replaced by xml library to fix the incompatibility to python 3, #187,
+
+Other Changes:
+ - new json parameter introduced:
+    "data_dir": "~/mssdata", see section usage
+    "filepicker_default": "default", see section usage
+ - removed QT4, #321
+ - add a better hint if Default MSS config file missing, #303, #307
+ - Installing on osx-64 installs in anaconda 4 root environment old versions due to dependencies, #302, #315
+ - add LICENSE to MANIFEST, #301
+
+HINT:
+~~~~~
+
+With 1.7.0 we move to Python 3. At current state we still support Python 2. But as Python 2 will retire  we have
+ to move on.
+This release therefore has many refactoring changes. We removed PyQT4 because it is not compatible to PyFilesystem2.
+We decided to use PyFilesystem2 because of its unified great API for internal or external storages. This enables
+ for example to store flightpathes on a webdav server or other web storages by just entering a fs url.
+
 
 Version 1.6.3
 -------------

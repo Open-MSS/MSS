@@ -167,7 +167,7 @@ class MapCanvas(basemap.Basemap):
         in Basemap.set_axes_limits() that occurs in interactive matplotlib
         mode. If matplotlib.is_interactive() is True, Basemap.set_axes_limits()
         tries to redraw the canvas by accessing the pylab figure manager.
-        If the matplotlib object is embedded in a Qt4 application, this manager
+        If the matplotlib object is embedded in a Qt application, this manager
         is not available and an exception is raised. Hence, the interactive
         mode is disabled here before the original Basemap.set_axes_limits()
         method is called. It is restored afterwards.
