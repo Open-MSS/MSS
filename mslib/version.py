@@ -24,4 +24,4 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-__version__ = u'1.6.3'
+__version__ = u'1.7.0'
