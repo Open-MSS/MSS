@@ -25,7 +25,7 @@
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Omar Qunsul (oq)
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
