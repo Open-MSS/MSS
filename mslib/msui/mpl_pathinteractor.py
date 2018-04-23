@@ -170,9 +170,9 @@ class WaypointsPath(mpath.Path):
             for i, _ in enumerate(wps[1:]):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
 
-        self.codes, self.vertices = list(zip(*pathdata))
-        self.codes = np.array(self.codes, dtype=np.uint8)
-        self.vertices = np.array(self.vertices)
+        codes, vertices = list(zip(*pathdata))
+        self.codes = np.array(codes, dtype=np.uint8)
+        self.vertices = np.array(vertices)
 
 
 #
@@ -290,9 +290,9 @@ class PathH_GC(PathH):
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
-        self.wp_codes, self.wp_vertices = list(zip(*pathdata))
-        self.wp_codes = np.array(self.wp_codes, dtype=np.uint8)
-        self.wp_vertices = np.array(self.wp_vertices)
+        wp_codes, wp_vertices = list(zip(*pathdata))
+        self.wp_codes = np.array(wp_codes, dtype=np.uint8)
+        self.wp_vertices = np.array(wp_vertices)
 
         # Coordinates of intermediate great circle points.
         lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
@@ -302,9 +302,9 @@ class PathH_GC(PathH):
             pathdata = [(Path.MOVETO, (x[0], y[0]))]
             for i in range(len(x[1:])):
                 pathdata.append((Path.LINETO, (x[i + 1], y[i + 1])))
-        self.codes, self.vertices = list(zip(*pathdata))
-        self.codes = np.array(self.codes, dtype=np.uint8)
-        self.vertices = np.array(self.vertices)
+        codes, vertices = list(zip(*pathdata))
+        self.codes = np.array(codes, dtype=np.uint8)
+        self.vertices = np.array(vertices)
 
     def index_of_closest_segment(self, x, y, eps=5):
         """Find the index of the edge closest to the specified point at x,y.
