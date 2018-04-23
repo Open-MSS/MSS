@@ -272,7 +272,10 @@ def get_log_levels(cmin, cmax, levels=N_LEVELS):
 
 def get_style_parameters(dataname, style, cmin, cmax, data):
     if cmin is None or cmax is None:
-        cmin, cmax = data.min(), data.max()
+        try:
+            cmin, cmax = data.min(), data.max()
+        except ValueError:
+            cmin, cmax = 0, 1
         if 0 < cmin < 0.05 * cmax:
             cmin = 0.
     cmap = matplotlib.pyplot.cm.rainbow
