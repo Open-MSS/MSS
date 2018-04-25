@@ -42,10 +42,8 @@ Then you could choose between as system wide installation or one in a prefered e
 
 You also could install this project into an environment. ::
 
-   $ conda create -n mssenv python=3
+   $ conda create -n mssenv mss
    $ source activate mssenv
-   $ conda install mss
-
 
 For further details :ref:`mss-configuration`
 
