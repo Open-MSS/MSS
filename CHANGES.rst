@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 1.7.1
+-------------
+
+Bug Fixes:
+  - Some WMS VS plots create service exception when called for "empty" region, #331
+  - MSS crashes on point insertion, #330
+
 Version 1.7.0
 -------------
 
