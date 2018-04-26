@@ -12,7 +12,7 @@ FROM continuumio/miniconda3
 
 # install a libgl1 mesa package
 RUN apt-get --yes update
-RUN apt-get upgrade
+RUN apt-get --yes upgrade
 # Set the file maintainer (your name - the file's author)
 MAINTAINER Maintaner Reimar Bauer
 
