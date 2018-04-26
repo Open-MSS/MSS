@@ -8,11 +8,11 @@
 ##################################################################################
 
 # Set the base image debian with miniconda
-FROM continuumio/miniconda
+FROM continuumio/miniconda3
 
 # install a libgl1 mesa package
 RUN apt-get --yes update
-RUN apt-get --yes install libgl1-mesa-swx11
+RUN apt-get --yes upgrade
 # Set the file maintainer (your name - the file's author)
 MAINTAINER Maintaner Reimar Bauer
 
