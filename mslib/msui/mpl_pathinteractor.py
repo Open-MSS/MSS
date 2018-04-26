@@ -822,7 +822,7 @@ class HPathInteractor(PathInteractor):
         if loc is not None:
             (lat, lon), location = loc
         else:
-            lat, lon = round(lat, 2), round(lon, 2)
+            lat, lon = float(round(lat, 2)), float(round(lon, 2))
             location = u""
         wpm = self.waypoints_model
         if len(wpm.all_waypoint_data()) > 0 and 0 < best_index <= len(wpm.all_waypoint_data()):
@@ -853,7 +853,7 @@ class HPathInteractor(PathInteractor):
         if loc is not None:
             lat, lon = loc[0]
         else:
-            lat, lon = round(lat, 2), round(lon, 2)
+            lat, lon = float(round(lat, 2)), float(round(lon, 2))
         # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
         # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
         #      twice?
