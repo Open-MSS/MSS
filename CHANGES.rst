@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 1.7.2
+-------------
+
+Bug Fixes:
+  - update Dockerfile to Python3, #333
+  - tableview misses data, #332
+  - check selectors for conda-forge escpecialy for OSX, #306
+  - docker installations have issues with mss-post-link.sh, #207
+
+
 Version 1.7.1
 -------------
 
