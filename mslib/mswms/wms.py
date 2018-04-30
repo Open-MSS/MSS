@@ -524,8 +524,15 @@ def application(environ, start_response):
         url = paste.request.construct_url(environ)
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request == "getcapabilities":
-            return_data, return_format = app.get_capabilities(server_url), "text/xml"
+        if request is None:
+            server_url = "{}?service=WMS&request=GetCapabilities&version=1.1.1".format(server_url)
+            return_format = 'text/xml'
+            return_data = app.get_capabilities(server_url)
+            output = return_data.encode('utf-8')
+        elif request.lower() == 'getcapabilities':
+            return_format = 'text/xml'
+            return_data = app.get_capabilities(server_url)
+            output = return_data.encode('utf-8')
         elif request in ["getmap", "getvsec"]:
             return_data, return_format = app.produce_plot(environ, request)
             if not app.is_service_exception(return_data):
