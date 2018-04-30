@@ -54,7 +54,7 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
 
     def update_text(self):
         if self.cbFullView.isChecked():
-            self.txtCapabilities.setPlainText(self.capabilities.capabilities_document)
+            self.txtCapabilities.setPlainText(self.capabilities.capabilities_document.decode())
         else:
             text = (u"<b>Title:</b> {title}<p>"
                     u"<b>Service type:</b> {type} {version}<br>"
