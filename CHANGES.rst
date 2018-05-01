@@ -7,6 +7,7 @@ Version 1.7.3
 Bug Fixes:
   - wms capability view in mswms cannot show XML document in py3, #340
   - mswms crashes on a wms server when the request object is None, #339, #342
+  - data_dir not used for default filepicker, #337
   - post_link.sh update on conda-forge, #334
  
 
