@@ -517,9 +517,9 @@ def application(environ, start_response):
         logging.debug(u"ENVIRON: %s", environ)
 
         # Processing
-        request = query.get("request", "").lower()
-        return_data = ""
-        return_format = "text/plain"
+        request = query.get('request')
+        output = ""
+        return_format = 'text/plain'
 
         url = paste.request.construct_url(environ)
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
@@ -528,35 +528,36 @@ def application(environ, start_response):
             server_url = "{}?service=WMS&request=GetCapabilities&version=1.1.1".format(server_url)
             return_format = 'text/xml'
             return_data = app.get_capabilities(server_url)
-            # output = return_data.encode('utf-8')
+            output = return_data.encode('utf-8')
         elif request.lower() == 'getcapabilities':
             return_format = 'text/xml'
             return_data = app.get_capabilities(server_url)
-            # output = return_data.encode('utf-8')
-        elif request in ["getmap", "getvsec"]:
+            output = return_data.encode('utf-8')
+        elif request.lower() in ['getmap', 'getvsec']:
             return_data, return_format = app.produce_plot(environ, request)
+            # ToDo refactor
             if not app.is_service_exception(return_data):
                 return_format = return_format.lower()  # MAYBE TO BE DELETED
+                output = return_data
             else:
                 return_format = "text/xml"
-        else:
-            logging.error(u"unexpected request type: '%s' from ENVIRON '%s'", request, environ)
+                output = return_data.encode('utf-8')
 
         # Preparing the Response
         status = '200 OK'
-        return_data = str(return_data).encode('utf-8')
-        response_headers = [('Content-type', return_format.encode('utf-8')),
-                            ('Content-Length', str(len(return_data)))]
+        response_headers = [('Content-type', return_format), ('Content-Length', str(len(output)))]
         start_response(status, response_headers)
-        return [return_data]
+
+        return [output]
 
     except Exception as ex:
         status = '404 NOT FOUND'
+        error_message = u"{}: {}".format(type(ex), ex)
         # ToDo add a config var to disable output, replace by standard text, "Internal Server error"
-        error_message = u"{}:\n{}\n{}".format(type(ex), ex, traceback.format_exc())
+        error_message = error_message + "\n" + traceback.format_exc()
         logging.error(error_message)
-        error_message = error_message.encode('utf-8')
-        response_headers = [('Content-type', b'text/plain'),
+
+        response_headers = [('Content-type', 'text/plain'),
                             ('Content-Length', str(len(error_message)))]
         start_response(status, response_headers)
         return [error_message]
