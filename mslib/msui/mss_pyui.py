@@ -385,7 +385,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.menuExport_Active_Flight_Track.addAction(action)
 
         def save_function_wrapper(self):
-            default_filename = self.active_flight_track.name + "." + extension
+            default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name) + "." + extension
             filename = get_save_filename(
                 self, u"Export Flight Track", default_filename,
                 name + " (*." + extension + ")", pickertype=pickertype)
