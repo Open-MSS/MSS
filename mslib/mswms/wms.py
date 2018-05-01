@@ -544,7 +544,7 @@ def application(environ, start_response):
 
         # Preparing the Response
         status = '200 OK'
-        return_data = return_data.encode('utf-8')
+        return_data = str(return_data).encode('utf-8')
         response_headers = [('Content-type', return_format.encode('utf-8')),
                             ('Content-Length', str(len(return_data)))]
         start_response(status, response_headers)
