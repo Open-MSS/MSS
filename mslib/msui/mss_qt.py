@@ -71,7 +71,7 @@ def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=N
     if pickertype == "fs":
         filename = getOpenFileName(parent, dirname, filt, title=u"Import Flight Track")
     elif pickertype in ["qt", "default"]:
-        filename = get_open_filename_qt(parent, title, dirname, filt)
+        filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
         raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
     logging.debug("Selected '%s'", filename)
@@ -87,7 +87,7 @@ def get_save_filename(parent, title, filename, filt, pickertag=None, pickertype=
         filename = getSaveFileName(
             parent, dirname, filt, title=title, default_filename=filename, show_save_action=True)
     elif pickertype in ["qt", "default"]:
-        filename = get_save_filename_qt(parent, title, filename, filt)
+        filename = get_save_filename_qt(parent, title, os.path.expanduser(filename), filt)
     else:
         raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
     logging.debug("Selected '%s'", filename)
