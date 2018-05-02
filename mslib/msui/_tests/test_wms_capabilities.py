@@ -37,7 +37,7 @@ class Test_WMSCapabilities(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.capabilities = mock.Mock()
-        self.capabilities.capabilities_document = "Holla die Waldfee"
+        self.capabilities.capabilities_document = "Hölla die Waldfee".encode("utf-8")
         self.capabilities.provider = mock.Mock()
         self.capabilities.identification = mock.Mock()
 
