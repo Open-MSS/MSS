@@ -45,8 +45,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 
-from past.builtins import basestring
-
 import os
 import logging
 from datetime import datetime
@@ -153,8 +151,7 @@ class WMSServer(object):
                 layer = layer_class(self.hsec_drivers[dataset])
             except KeyError:
                 continue
-            logging.debug("registering horizontal section layer '%s' with "
-                          "dataset '%s'", layer.name, dataset)
+            logging.debug("registering horizontal section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
             if dataset not in self.hsec_layer_registry:
@@ -187,15 +184,7 @@ class WMSServer(object):
                     raise ValueError(u"dataset '%s' not available", dataset)
             self.vsec_layer_registry[dataset][layer.name] = layer
 
-    def is_service_exception(self, var):
-        """Returns True if the given parameter is an XML that contains
-           a service exception.
-        """
-        if isinstance(var, basestring) and var.find(b"<ServiceException") > 1:
-            return True
-        return False
-
-    def service_exception(self, code=None, text=""):
+    def create_service_exception(self, code=None, text=""):
         """Create a service exception XML from the XML template defined above.
 
         Arguments:
@@ -205,10 +194,9 @@ class WMSServer(object):
 
         Returns an XML as string.
         """
-        logging.debug("creating service exception..")
+        logging.error("creating service exception code='%s' text='%s'.", code, text)
         template = templates['service_exception.pt']
-        # return_format = "text/xml"
-        return [template(code=code, text=text), "text/xml"]
+        return template(code=code, text=text).encode("utf-8"), "text/xml"
 
     def get_capabilities(self, server_url=None):
         # ToDo find a more elegant method to do the same
@@ -245,28 +233,26 @@ class WMSServer(object):
                     continue
                 vsec_layers.append((dataset, layer))
 
-        # return_format = 'text/xml'
+        settings = mss_wms_settings.__dict__
         return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, server_url=server_url,
-                               service_name=mss_wms_settings.__dict__.get("service_name", "OGC:WMS"),
-                               service_title=mss_wms_settings.__dict__.get("service_title",
-                                                                           "Mission Support System Web Map Service"),
-                               service_abstract=mss_wms_settings.__dict__.get("service_abstract", ""),
-                               service_contact_person=mss_wms_settings.__dict__.get("service_contact_person", ""),
-                               service_contact_organisation=mss_wms_settings.__dict__.get(
-                                   "service_contact_organisation", ""),
-                               service_contact_position=mss_wms_settings.__dict__.get("service_contact_position", ""),
-                               service_email=mss_wms_settings.__dict__.get("service_email", ""),
-                               service_address_type=mss_wms_settings.__dict__.get("service_address_type", ""),
-                               service_address=mss_wms_settings.__dict__.get("service_address", ""),
-                               service_city=mss_wms_settings.__dict__.get("service_city", ""),
-                               service_state_or_province=mss_wms_settings.__dict__.get("service_state_or_province", ""),
-                               service_post_code=mss_wms_settings.__dict__.get("service_post_code", ""),
-                               service_country=mss_wms_settings.__dict__.get("service_country", ""),
-                               service_fees=mss_wms_settings.__dict__.get("service_fees", ""),
-                               service_access_constraints=mss_wms_settings.__dict__.get(
+                               service_name=settings.get("service_name", "OGC:WMS"),
+                               service_title=settings.get("service_title", "Mission Support System Web Map Service"),
+                               service_abstract=settings.get("service_abstract", ""),
+                               service_contact_person=settings.get("service_contact_person", ""),
+                               service_contact_organisation=settings.get("service_contact_organisation", ""),
+                               service_contact_position=settings.get("service_contact_position", ""),
+                               service_email=settings.get("service_email", ""),
+                               service_address_type=settings.get("service_address_type", ""),
+                               service_address=settings.get("service_address", ""),
+                               service_city=settings.get("service_city", ""),
+                               service_state_or_province=settings.get("service_state_or_province", ""),
+                               service_post_code=settings.get("service_post_code", ""),
+                               service_country=settings.get("service_country", ""),
+                               service_fees=settings.get("service_fees", ""),
+                               service_access_constraints=settings.get(
                                    "service_access_constraints",
                                    "This service is intended for research purposes only."))
-        return return_data
+        return return_data.encode("utf-8"), "text/xml"
 
     def produce_plot(self, environ, mode):
         """
@@ -310,7 +296,7 @@ class WMSServer(object):
             try:
                 init_time = datetime.strptime(init_time, "%Y-%m-%dT%H:%M:%SZ")
             except ValueError:
-                return self.service_exception(
+                return self.create_service_exception(
                     code="InvalidDimensionValue",
                     text="DIM_INIT_TIME has wrong format (needs to be 2005-08-29T13:00:00Z)")
         logging.debug(u"  requested initialisation time = '%s'", init_time)
@@ -321,7 +307,7 @@ class WMSServer(object):
             try:
                 valid_time = datetime.strptime(valid_time, "%Y-%m-%dT%H:%M:%SZ")
             except ValueError:
-                return self.service_exception(
+                return self.create_service_exception(
                     code="InvalidDimensionValue",
                     text="TIME has wrong format (needs to be 2005-08-29T13:00:00Z)")
         logging.debug(u"  requested (valid) time = '%s'", valid_time)
@@ -332,7 +318,8 @@ class WMSServer(object):
         # of type "VERT:??".
         msg = None
         if crs.startswith('VERT:LOGP'):
-            mode = "GetVSec"
+            logging.warn("Got VERT:LOGP as CRS in GetMap mode...?")
+            mode = "getvsec"
         elif crs.startswith('EPSG:'):
             try:
                 epsg = int(crs[5:])
@@ -342,16 +329,14 @@ class WMSServer(object):
             msg = u"The requested CRS '{}' is not supported.".format(crs)
 
         if msg is not None:
-            logging.error(msg)
-            return self.service_exception(code="InvalidSRS", text=msg)
-        else:
-            logging.debug(u"  requested coordinate reference system = '%s'", crs)
+            return self.create_service_exception(code="InvalidSRS", text=msg)
+        logging.debug(u"  requested coordinate reference system = '%s'", crs)
 
         # Create a frameless figure (WMS) or one with title and legend
         # (MSS specific)? Default is WMS mode (frameless).
         noframe = query.get('FRAME', 'OFF').upper() == 'OFF'
 
-        # Transparancy.
+        # Transparency.
         transparent = query.get('TRANSPARENT', 'FALSE').upper() == 'TRUE'
         if transparent:
             logging.debug("  requested transparent image")
@@ -360,46 +345,40 @@ class WMSServer(object):
         return_format = query.get('FORMAT', 'IMAGE/PNG').lower()
         logging.debug(u"  requested return format = '%s'", return_format)
         if return_format not in ["image/png", "text/xml"]:
-            msg = u"unsupported FORMAT: '{}'".format(return_format)
-            logging.error(msg)
-            return self.service_exception(code="InvalidFORMAT", text=msg)
+            return self.create_service_exception(
+                code="InvalidFORMAT",
+                text=u"unsupported FORMAT: '{}'".format(return_format))
 
         # 3) Check GetMap/GetVSec-specific parameters and produce
         #    the image with the corresponding section driver.
         # =======================================================
-
-        if mode == "GetMap":
+        if mode == "getmap":
             # Check requested layer.
-            if (dataset not in self.hsec_layer_registry) or \
-               (layer not in self.hsec_layer_registry[dataset]):
-                msg = u"Invalid LAYER '{}.{}' requested".format(dataset, layer)
-                logging.error(msg)
-                return self.service_exception(code="LayerNotDefined", text=msg)
+            if (dataset not in self.hsec_layer_registry) or (layer not in self.hsec_layer_registry[dataset]):
+                return self.create_service_exception(
+                    code="LayerNotDefined",
+                    text=u"Invalid LAYER '{}.{}' requested".format(dataset, layer))
 
             # Check if the layer requires time information and if they are given.
             if self.hsec_layer_registry[dataset][layer].uses_time_dimensions():
                 if init_time is None:
-                    msg = "INIT_TIME not specified (use the DIM_INIT_TIME keyword)"
-                    logging.error(msg)
-                    return self.service_exception(code="MissingDimensionValue", text=msg)
+                    return self.create_service_exception(
+                        code="MissingDimensionValue",
+                        text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)")
                 if valid_time is None:
-                    msg = "TIME not specified"
-                    logging.error(msg)
-                    return self.service_exception(code="MissingDimensionValue", text=msg)
+                    return self.create_service_exception(code="MissingDimensionValue", text="TIME not specified")
 
             # Check if the requested coordinate system is supported.
             if not self.hsec_layer_registry[dataset][layer].support_epsg_code(epsg):
-                msg = u"The requested CRS 'EPSG:{:d}' is not supported.".format(epsg)
-                logging.error(msg)
-                return self.service_exception(code="InvalidSRS", text=msg)
+                return self.create_service_exception(
+                    code="InvalidSRS",
+                    text=u"The requested CRS 'EPSG:{:d}' is not supported.".format(epsg))
 
             # Bounding box.
             try:
                 bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
             except ValueError:
-                msg = u"Invalid BBOX: {}".format(query.get("BBOX"))
-                logging.error(msg)
-                return self.service_exception(text=msg)
+                return self.create_service_exception(text=u"Invalid BBOX: {}".format(query.get("BBOX")))
 
             # Vertical level, if applicable.
             level = query.get('ELEVATION')
@@ -411,10 +390,8 @@ class WMSServer(object):
             elif ("sfc" in layer_datatypes) and \
                     all(_x not in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and \
                     level is not None:
-                msg = u"ELEVATION argument not applicable for layer " \
-                      u"'{}'. Please omit this argument.".format(layer)
-                logging.error(msg)
-                return self.service_exception(text=msg)
+                return self.create_service_exception(
+                    text=u"ELEVATION argument not applicable for layer '{}'. Please omit this argument.".format(layer))
 
             plot_driver = self.hsec_drivers[dataset]
             try:
@@ -432,51 +409,43 @@ class WMSServer(object):
                 image = plot_driver.plot()
             except (IOError, ValueError) as ex:
                 logging.error(u"ERROR: %s %s", type(ex), ex)
-                msg = u"The data corresponding to your request " \
-                      u"is not available. Please check the " \
-                      u"times and/or levels you have specified." \
-                      u"\n\nError message: '{}'".format(ex)
-                return self.service_exception(text=msg)
+                msg = u"The data corresponding to your request is not available. Please check the " \
+                      u"times and/or levels you have specified.\n\n" \
+                      u"Error message: '{}'".format(ex)
+                return self.create_service_exception(text=msg)
 
-        elif mode == "GetVSec":
+        elif mode == "getvsec":
             # Vertical secton path.
             path = query.get("PATH")
             if not path:
-                return self.service_exception(text="PATH not specified")
+                return self.create_service_exception(text="PATH not specified")
             try:
                 path = [float(v) for v in path.split(',')]
                 path = [[lat, lon] for lat, lon in zip(path[0::2], path[1::2])]
             except ValueError:
-                msg = u"Invalid PATH: {}".format(path)
-                logging.error(msg)
-                return self.service_exception(text=msg)
+                return self.create_service_exception(text=u"Invalid PATH: {}".format(path))
             logging.debug(u"VSEC PATH: %s", path)
 
             # Check requested layers.
-            if (dataset not in self.vsec_layer_registry) or \
-                    (layer not in self.vsec_layer_registry[dataset]):
-                msg = u"Invalid LAYER '{}.{}' requested".format(dataset, layer)
-                return self.service_exception(code="LayerNotDefined", text=msg)
+            if (dataset not in self.vsec_layer_registry) or (layer not in self.vsec_layer_registry[dataset]):
+                return self.create_service_exception(
+                    code="LayerNotDefined",
+                    text=u"Invalid LAYER '{}.{}' requested".format(dataset, layer))
 
             # Check if the layer requires time information and if they are given.
             if self.vsec_layer_registry[dataset][layer].uses_time_dimensions():
                 if init_time is None:
-                    msg = "INIT_TIME not specified (use the "\
-                          "DIM_INIT_TIME keyword)"
-                    logging.error(msg)
-                    return self.service_exception(code="MissingDimensionValue", text=msg)
+                    return self.create_service_exception(
+                        code="MissingDimensionValue",
+                        text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)")
                 if valid_time is None:
-                    msg = "TIME not specified"
-                    logging.error(msg)
-                    return self.service_exception(code="MissingDimensionValue", text=msg)
+                    return self.create_service_exception(code="MissingDimensionValue", text="TIME not specified")
 
             # Bounding box (num interp. points, p_bot, num labels, p_top).
             try:
                 bbox = [float(v) for v in query.get("BBOX", "101,1050,10,180").split(",")]
             except ValueError:
-                msg = u"Invalid BBOX: {}".format(query.get("BBOX"))
-                logging.error(msg)
-                return self.service_exception(text=msg)
+                return self.create_service_exception(text=u"Invalid BBOX: {}".format(query.get("BBOX")))
 
             plot_driver = self.vsec_drivers[dataset]
             try:
@@ -496,11 +465,10 @@ class WMSServer(object):
                 image = plot_driver.plot()
             except (IOError, ValueError) as ex:
                 logging.error(u"ERROR: %s %s", type(ex), ex)
-                msg = u"The data corresponding to your request " \
-                      u"is not available. Please check the " \
-                      u"times and/or path you have specified." \
-                      u"\n\nError message: {}".format(ex)
-                return self.service_exception(text=msg)
+                msg = u"The data corresponding to your request is not available. Please check the " \
+                      u"times and/or path you have specified.\n\n" \
+                      u"Error message: {}".format(ex)
+                return self.create_service_exception(text=msg)
 
         # 4) Return the produced image.
         # =============================
@@ -517,48 +485,29 @@ def application(environ, start_response):
         logging.debug(u"ENVIRON: %s", environ)
 
         # Processing
-        request = query.get('request')
-        output = ""
-        return_format = 'text/plain'
+        request = query.get('request', '').lower()
 
         url = paste.request.construct_url(environ)
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request is None:
-            server_url = "{}?service=WMS&request=GetCapabilities&version=1.1.1".format(server_url)
-            return_format = 'text/xml'
-            return_data = app.get_capabilities(server_url)
-            output = return_data.encode('utf-8')
-        elif request.lower() == 'getcapabilities':
-            return_format = 'text/xml'
-            return_data = app.get_capabilities(server_url)
-            output = return_data.encode('utf-8')
-        elif request.lower() in ['getmap', 'getvsec']:
+        if request == "getcapabilities":
+            return_data, return_format = app.get_capabilities(server_url)
+        elif request in ['getmap', 'getvsec']:
             return_data, return_format = app.produce_plot(environ, request)
-            # ToDo refactor
-            if not app.is_service_exception(return_data):
-                return_format = return_format.lower()  # MAYBE TO BE DELETED
-                output = return_data
-            else:
-                return_format = "text/xml"
-                output = return_data.encode('utf-8')
+        else:
+            raise RuntimeError(u"Request type '{}' is not valid.".format(request))
 
-        # Preparing the Response
-        status = '200 OK'
-        response_headers = [('Content-type', return_format), ('Content-Length', str(len(output)))]
-        start_response(status, response_headers)
+        response_headers = [('Content-type', return_format), ('Content-Length', str(len(return_data)))]
+        start_response('200 OK', response_headers)
 
-        return [output]
+        return [return_data]
 
     except Exception as ex:
-        status = '404 NOT FOUND'
-        error_message = u"{}: {}".format(type(ex), ex)
-        # ToDo add a config var to disable output, replace by standard text, "Internal Server error"
-        error_message = error_message + "\n" + traceback.format_exc()
+        error_message = u"{}: {}\n {}".format(type(ex), ex, traceback.format_exc())
         logging.error(error_message)
         error_message = error_message.encode("utf-8")
 
-        response_headers = [('Content-type', 'text/plain'),
-                            ('Content-Length', str(len(error_message)))]
-        start_response(status, response_headers)
+        response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
+        start_response('404 NOT FOUND', response_headers)
+
         return [error_message]
