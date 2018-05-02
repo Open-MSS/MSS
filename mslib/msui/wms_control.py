@@ -926,7 +926,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         lobj = layerobj
         while lobj is not None:
-
             if "time" in lobj.dimensions and "time" in lobj.extents:
                 self.valid_time_name = "time"
                 enable_validtime = True
@@ -937,6 +936,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             elif "forecast" in lobj.dimensions and "forecast" in lobj.extents:
                 # IBL web map service.
                 self.valid_time_name = "forecast"
+                enable_validtime = True
+            elif "time" in lobj.extents:
+                # fix for capability document of https://neowms.sci.gsfc.nasa.gov/wms/wms
+                self.valid_time_name = "time"
                 enable_validtime = True
 
             # Both time dimension and time extent tags were found. Try to determine the
@@ -1423,7 +1426,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             return
 
         valid_time = self.get_valid_time()
-        if valid_time is not None and valid_time not in self.allowed_valid_times:
+        if (valid_time is not None and
+                self.allowed_valid_times is not None and
+                valid_time not in self.allowed_valid_times):
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
                                            self.tr("ERROR: Invalid valid time chosen!\n"
                                                    "(watch out for the strikethrough)!"))
