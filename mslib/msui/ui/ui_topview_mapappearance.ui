@@ -348,7 +348,7 @@
         </size>
        </property>
        <property name="text">
-        <string>colour of vertices</string>
+        <string>colour of flight path</string>
        </property>
       </widget>
      </item>

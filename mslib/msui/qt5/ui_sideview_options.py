@@ -209,7 +209,7 @@ class Ui_SideViewOptionsDialog(object):
         self.groupBox_3.setTitle(_translate("SideViewOptionsDialog", "Flight Track Colours"))
         self.cbDrawFlightTrack.setText(_translate("SideViewOptionsDialog", "draw flight track"))
         self.btWaypointsColour.setText(_translate("SideViewOptionsDialog", "colour of waypoints"))
-        self.btVerticesColour.setText(_translate("SideViewOptionsDialog", "colour of vertices"))
+        self.btVerticesColour.setText(_translate("SideViewOptionsDialog", "colour of flight path"))
         self.cbFillFlightTrack.setText(_translate("SideViewOptionsDialog", "fill flight track"))
         self.btFillColour.setText(_translate("SideViewOptionsDialog", "colour"))
         self.cbLabelFlightTrack.setText(_translate("SideViewOptionsDialog", "label flight track"))
