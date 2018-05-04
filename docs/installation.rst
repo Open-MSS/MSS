@@ -33,17 +33,29 @@ Please add the channel conda-forge to your defaults::
   $ conda config --add channels conda-forge
   $ conda config --add channels defaults
 
-The last channel added gets on top of the list. This gives the order: First search in default packages
-then in conda-forge.
+The last channel added gets on top of the list. This gives the order:
+First search in default packages then in conda-forge.
 
-Then you could choose between as system wide installation or one in a prefered environment::
+You should install mss into a new environment to ensure the most recent
+versions for dependencies (On the Anaconda Prompt on Windows, you have to 
+leave out the 'source' here and below). ::
+
+   $ conda create -n mssenv mss python=3
+   $ source activate mssenv
+   $ mss
+
+One may also install mss into the base enviroment. ::
 
    $ conda install mss
+   $ mss
 
-You also could install this project into an environment. ::
+For updating an existing MSS installation to the current version, it is best to install
+it into a new environment. If an existing environment shall be updated, it is important
+to update all packages in this environment. ::
 
-   $ conda create -n mssenv mss
    $ source activate mssenv
+   $ conda update --all
+   $ mss
 
 For further details :ref:`mss-configuration`
 
