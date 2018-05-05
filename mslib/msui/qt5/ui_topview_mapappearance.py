@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_topview_mapappearance.ui'
+# Form implementation generated from reading ui file 'ui/ui_topview_mapappearance.ui'
 #
 # Created by: PyQt5 UI code generator 5.6
 #
@@ -163,6 +163,6 @@ class Ui_MapAppearanceDialog(object):
         self.btLandColour.setText(_translate("MapAppearanceDialog", "colour"))
         self.cbDrawFlightTrack.setText(_translate("MapAppearanceDialog", "draw flight track"))
         self.btWaypointsColour.setText(_translate("MapAppearanceDialog", "colour of waypoints"))
-        self.btVerticesColour.setText(_translate("MapAppearanceDialog", "colour of vertices"))
+        self.btVerticesColour.setText(_translate("MapAppearanceDialog", "colour of flight path"))
         self.cbLabelFlightTrack.setText(_translate("MapAppearanceDialog", "label flight track"))
 
