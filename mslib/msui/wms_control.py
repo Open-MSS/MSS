@@ -356,7 +356,15 @@ class WMSMapFetcher(QtCore.QObject):
             logging.debug("Retrieving legend from '%s'", urlstr)
             urlobject = requests.get(urlstr)
             image_io = io.BytesIO(urlobject.content)
-            legend_img_raw = PIL.Image.open(image_io)
+            try:
+                legend_img_raw = PIL.Image.open(image_io)
+            except Exception as ex:
+                # This exception may be triggered if there was a problem with the legend
+                # as present with http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi
+                # it is deemed preferential to display the WMS map and forget about the
+                # legend than not displaying anything.
+                logging.error("Wildecard Exception %s - %s.", type(ex), ex)
+                return None
             legend_img = legend_img_raw.crop(legend_img_raw.getbbox())
             # Store the retrieved image in the cache, if enabled.
             try:
@@ -894,6 +902,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             elif "run" in lobj.dimensions and "run" in lobj.extents:
                 # IBL web map service.
                 self.init_time_name = "run"
+                enable_inittime = True
+            elif "reference_time" in lobj.dimensions and "reference_time" in lobj.extents:
+                # To support http://geoservices.knmi.nl/cgi-bin/HARM_N25.cg
+                self.init_time_name = "reference_time"
                 enable_inittime = True
 
             # Initialisation tag was found: Try to determine the format of
