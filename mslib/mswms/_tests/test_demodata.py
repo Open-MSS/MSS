@@ -51,11 +51,11 @@ class TestDemodate(object):
 
         mean, std = demodata.get_profile("air_potential_temperature", [300, 350, 400], "geopotential_height")
         assert np.allclose(mean, [2953.99369248, 12007.44365002, 15285.95068235])
-        assert np.allclose(std, [1176.75343762, 2481.27730176, 1649.47761167])
+        assert np.allclose(std, [117.675343762, 248.127730176, 164.947761167])
 
         mean, std = demodata.get_profile("ertel_potential_vorticity", [2, 4, 8], "geopotential_height")
         assert np.allclose(mean, [9565.89928058, 11148.1865285, 14139.43661972])
-        assert np.allclose(std, [2557.05035971, 2579.43005181, 1965.91549296])
+        assert np.allclose(std, [255.705035971, 257.943005181, 196.591549296])
 
     def test_generate_field(self):
         data, unit = demodata.generate_field("air_pressure", [10, 100, 500], "geopotential_height", 2, 4, 5)
