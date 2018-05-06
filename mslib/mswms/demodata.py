@@ -125,24 +125,24 @@ PVU
   1.95e-01   4.09e-00
 geopotential_height
 m
-  2.57e+04   9.22e+02
-  2.33e+04   6.80e+02
-  2.01e+04   6.96e+02
-  1.81e+04   9.61e+02
-  1.59e+04   1.48e+03
-  1.34e+04   2.17e+03
-  1.17e+04   2.55e+03
-  1.02e+04   2.63e+03
-  9.07e+03   2.50e+03
-  7.11e+03   2.09e+03
-  5.51e+03   1.73e+03
-  4.15e+03   1.43e+03
-  2.97e+03   1.18e+03
-  1.91e+03   9.65e+02
-  1.43e+03   8.72e+02
-  9.68e+02   7.96e+02
-  7.46e+02   7.65e+02
-  5.29e+02   7.40e+02
+  2.57e+04   9.22e+01
+  2.33e+04   6.80e+01
+  2.01e+04   6.96e+01
+  1.81e+04   9.61e+01
+  1.59e+04   1.48e+02
+  1.34e+04   2.17e+02
+  1.17e+04   2.55e+02
+  1.02e+04   2.63e+02
+  9.07e+03   2.50e+02
+  7.11e+03   2.09e+02
+  5.51e+03   1.73e+02
+  4.15e+03   1.43e+02
+  2.97e+03   1.18e+02
+  1.91e+03   9.65e+01
+  1.43e+03   8.72e+01
+  9.68e+02   7.96e+01
+  7.46e+02   7.65e+01
+  5.29e+02   7.40e+01
 air_temperature
 K
   2.15e+02   3.79e+00
@@ -957,6 +957,8 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             ntimes, nlev, nlats, nlons = [len(dimvals[i][1]) for i in range(4)]
             dims = [self.dimensions[dimvals[i][0]][0] for i in range(4)]
             levels = dimvals[1][1]
+            if leveltype == "pl":
+                levels *= 100
         elif len(dimvals) == 3:
             ntimes, nlats, nlons = [len(dimvals[i][1]) for i in range(3)]
             dims = [self.dimensions[dimvals[i][0]][0] for i in range(3)]

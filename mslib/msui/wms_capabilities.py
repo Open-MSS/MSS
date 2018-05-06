@@ -26,6 +26,8 @@
     limitations under the License.
 """
 
+import collections
+
 from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_wms_capabilities as ui
 
@@ -54,8 +56,14 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
 
     def update_text(self):
         if self.cbFullView.isChecked():
-            self.txtCapabilities.setPlainText(self.capabilities.capabilities_document.decode())
+            self.txtCapabilities.setPlainText(self.capabilities.capabilities_document.decode("utf-8"))
         else:
+            provider = self.capabilities.provider
+            identification = self.capabilities.identification
+            if provider.contact is None:
+                contact = collections.defaultdict(lambda: None)
+            else:
+                contact = vars(provider.contact)
             text = (u"<b>Title:</b> {title}<p>"
                     u"<b>Service type:</b> {type} {version}<br>"
                     u"<b>Abstract:</b><br>{abstract}<br>"
@@ -68,18 +76,18 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
                     u"<b>Keywords:</b> {keywords}<br>\n"
                     u"<b>Access constraints:</b> {accessconstraints}<br>\n"
                     u"<b>Fees:</b> {fees}").format(
-                url=self.capabilities.provider.url,
-                type=self.capabilities.identification.type,
-                version=self.capabilities.identification.version,
-                title=self.capabilities.identification.title,
-                abstract=self.capabilities.identification.abstract,
-                name=self.capabilities.provider.contact.name,
-                organization=self.capabilities.provider.contact.organization,
-                email=self.capabilities.provider.contact.email,
-                address=self.capabilities.provider.contact.address,
-                postcode=self.capabilities.provider.contact.postcode,
-                city=self.capabilities.provider.contact.city,
-                keywords=self.capabilities.identification.keywords,
-                accessconstraints=self.capabilities.identification.accessconstraints,
-                fees=self.capabilities.identification.fees)
+                url=provider.url,
+                type=identification.type,
+                version=identification.version,
+                title=identification.title,
+                abstract=identification.abstract,
+                name=contact["name"],
+                organization=contact["organization"],
+                email=contact["email"],
+                address=contact["address"],
+                postcode=contact["postcode"],
+                city=contact["city"],
+                keywords=identification.keywords,
+                accessconstraints=identification.accessconstraints,
+                fees=identification.fees)
             self.txtCapabilities.setHtml(text)

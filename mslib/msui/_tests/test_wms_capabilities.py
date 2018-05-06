@@ -37,10 +37,18 @@ class Test_WMSCapabilities(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.capabilities = mock.Mock()
-        self.capabilities.capabilities_document = "Hölla die Waldfee".encode("utf-8")
+        self.capabilities.capabilities_document = u"Hölla die Waldfee".encode("utf-8")
         self.capabilities.provider = mock.Mock()
         self.capabilities.identification = mock.Mock()
+        self.capabilities.provider.contact = mock.Mock()
+        self.capabilities.provider.contact.name = None
+        self.capabilities.provider.contact.organization = None
+        self.capabilities.provider.contact.email = None
+        self.capabilities.provider.contact.address = None
+        self.capabilities.provider.contact.postcode = None
+        self.capabilities.provider.contact.city = None
 
+    def start_window(self):
         self.window = wc.WMSCapabilitiesBrowser(
             url="http://example.com",
             capabilities=self.capabilities)
@@ -57,10 +65,18 @@ class Test_WMSCapabilities(object):
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_window_start(self, mockbox):
+        self.start_window()
+        assert mockbox.critical.call_count == 0
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_window_contact_none(self, mockbox):
+        self.capabilities.provider.contact = None
+        self.start_window()
         assert mockbox.critical.call_count == 0
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_switch_view(self, mockbox):
+        self.start_window()
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
