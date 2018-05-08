@@ -52,6 +52,7 @@ import traceback
 import paste
 import paste.request
 import paste.util.multidict
+import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
 
@@ -93,7 +94,7 @@ except ImportError as ex:
         __file__ = None
 
 from mslib.mswms import mss_plot_driver
-from mslib.utils import CaseInsensitiveMultiDict
+from mslib.utils import CaseInsensitiveMultiDict, get_projection_params
 
 # Logging the Standard Output, which will be added to the Apache Log Files
 logging.basicConfig(level=logging.DEBUG,
@@ -151,7 +152,7 @@ class WMSServer(object):
                 layer = layer_class(self.hsec_drivers[dataset])
             except KeyError:
                 continue
-            logging.debug("registering horizontal section layer '%s' with dataset '%s'", layer.name, dataset)
+            logging.debug(u"registering horizontal section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
             if dataset not in self.hsec_layer_registry:
@@ -194,7 +195,7 @@ class WMSServer(object):
 
         Returns an XML as string.
         """
-        logging.error("creating service exception code='%s' text='%s'.", code, text)
+        logging.error(u"creating service exception code='%s' text='%s'.", code, text)
         template = templates['service_exception.pt']
         return template(code=code, text=text).encode("utf-8"), "text/xml"
 
@@ -207,17 +208,17 @@ class WMSServer(object):
             data_access_dict[key].setup()
 
         template = templates['get_capabilities.pt']
-        logging.debug("server-url '%s'", server_url)
+        logging.debug(u"server-url '%s'", server_url)
 
         # Horizontal Layers
         hsec_layers = []
         for dataset in self.hsec_layer_registry:
             for layer in self.hsec_layer_registry[dataset].values():
                 if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
-                    logging.error("layer %s/%s has no init times!", layer, dataset)
+                    logging.error(u"layer %s/%s has no init times!", layer, dataset)
                     continue
                 if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
-                    logging.error("layer %s/%s has no valid times!", layer, dataset)
+                    logging.error(u"layer %s/%s has no valid times!", layer, dataset)
                     continue
                 hsec_layers.append((dataset, layer))
 
@@ -226,10 +227,10 @@ class WMSServer(object):
         for dataset in self.vsec_layer_registry:
             for layer in self.vsec_layer_registry[dataset].values():
                 if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
-                    logging.error("layer %s/%s has no init times!", layer, dataset)
+                    logging.error(u"layer %s/%s has no init times!", layer, dataset)
                     continue
                 if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
-                    logging.error("layer %s/%s has no valid times!", layer, dataset)
+                    logging.error(u"layer %s/%s has no valid times!", layer, dataset)
                     continue
                 vsec_layers.append((dataset, layer))
 
@@ -274,7 +275,7 @@ class WMSServer(object):
 
         # Image size.
         figsize = float(query.get('WIDTH', 900)), float(query.get('HEIGHT', 600))
-        logging.debug("  requested image size = %sx%s", figsize[0], figsize[1])
+        logging.debug(u"  requested image size = %sx%s", figsize[0], figsize[1])
 
         # Requested layers.
         layers = [layer for layer in query.get('LAYERS', '').strip().split(',') if layer]
@@ -313,36 +314,30 @@ class WMSServer(object):
         logging.debug(u"  requested (valid) time = '%s'", valid_time)
 
         # Coordinate reference system.
-        crs = query.get('SRS', 'EPSG:4326')
-        # Allow to request vertical sections via GetMap, if the specified CRS is
-        # of type "VERT:??".
+        crs = query.get('SRS', 'EPSG:4326').lower()
+        # Allow to request vertical sections via GetMap, if the specified CRS is of type "VERT:??".
         msg = None
-        if crs.startswith('VERT:LOGP'):
-            logging.warn("Got VERT:LOGP as CRS in GetMap mode...?")
+        if crs.startswith('vert:logp'):
             mode = "getvsec"
-        elif crs.startswith('EPSG:'):
-            try:
-                epsg = int(crs[5:])
-            except ValueError:
-                msg = u"The requested CRS '{}' is not supported.".format(crs)
         else:
-            msg = u"The requested CRS '{}' is not supported.".format(crs)
-
-        if msg is not None:
-            return self.create_service_exception(code="InvalidSRS", text=msg)
+            try:
+                get_projection_params(crs)
+            except ValueError:
+                return self.create_service_exception(
+                    code="InvalidSRS", text=u"The requested CRS '{}' is not supported.".format(crs))
         logging.debug(u"  requested coordinate reference system = '%s'", crs)
 
         # Create a frameless figure (WMS) or one with title and legend
         # (MSS specific)? Default is WMS mode (frameless).
-        noframe = query.get('FRAME', 'OFF').upper() == 'OFF'
+        noframe = query.get('FRAME', 'off').lower() == 'off'
 
         # Transparency.
-        transparent = query.get('TRANSPARENT', 'FALSE').upper() == 'TRUE'
+        transparent = query.get('TRANSPARENT', 'false').lower() == 'true'
         if transparent:
             logging.debug("  requested transparent image")
 
         # Return format (image/png, text/xml, etc.).
-        return_format = query.get('FORMAT', 'IMAGE/PNG').lower()
+        return_format = query.get('FORMAT', 'image/png').lower()
         logging.debug(u"  requested return format = '%s'", return_format)
         if return_format not in ["image/png", "text/xml"]:
             return self.create_service_exception(
@@ -369,10 +364,10 @@ class WMSServer(object):
                     return self.create_service_exception(code="MissingDimensionValue", text="TIME not specified")
 
             # Check if the requested coordinate system is supported.
-            if not self.hsec_layer_registry[dataset][layer].support_epsg_code(epsg):
+            if not self.hsec_layer_registry[dataset][layer].support_epsg_code(crs):
                 return self.create_service_exception(
                     code="InvalidSRS",
-                    text=u"The requested CRS 'EPSG:{:d}' is not supported.".format(epsg))
+                    text=u"The requested CRS '{}' is not supported.".format(crs))
 
             # Bounding box.
             try:
@@ -382,7 +377,7 @@ class WMSServer(object):
 
             # Vertical level, if applicable.
             level = query.get('ELEVATION')
-            level = float(level) if level else None
+            level = float(level) if level is not None else None
             layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
             if any(_x in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and level is None:
                 # Use the default value.
@@ -395,20 +390,14 @@ class WMSServer(object):
 
             plot_driver = self.hsec_drivers[dataset]
             try:
-                plot_driver.set_plot_parameters(self.hsec_layer_registry[dataset][layer],
-                                                bbox=bbox,
-                                                level=level,
-                                                init_time=init_time,
-                                                valid_time=valid_time,
-                                                style=style,
-                                                figsize=figsize,
-                                                epsg=epsg,
-                                                noframe=noframe,
-                                                transparent=transparent,
+                plot_driver.set_plot_parameters(self.hsec_layer_registry[dataset][layer], bbox=bbox, level=level,
+                                                crs=crs, init_time=init_time, valid_time=valid_time, style=style,
+                                                figsize=figsize, noframe=noframe, transparent=transparent,
                                                 return_format=return_format)
                 image = plot_driver.plot()
             except (IOError, ValueError) as ex:
                 logging.error(u"ERROR: %s %s", type(ex), ex)
+                logging.debug(u"%s", traceback.format_exc())
                 msg = u"The data corresponding to your request is not available. Please check the " \
                       u"times and/or levels you have specified.\n\n" \
                       u"Error message: '{}'".format(ex)
@@ -417,7 +406,7 @@ class WMSServer(object):
         elif mode == "getvsec":
             # Vertical secton path.
             path = query.get("PATH")
-            if not path:
+            if path is None:
                 return self.create_service_exception(text="PATH not specified")
             try:
                 path = [float(v) for v in path.split(',')]

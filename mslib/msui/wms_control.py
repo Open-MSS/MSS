@@ -39,9 +39,10 @@ from datetime import datetime
 import io
 import hashlib
 import logging
+import mpl_toolkits.basemap as basemap
 import os
 import requests
-import re
+import traceback
 import urllib.parse
 import xml.etree.ElementTree as etree
 from mslib.utils import config_loader
@@ -159,8 +160,10 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # According to the WMS 1.1.1 standard, dimension names must be
         # prefixed with a "dim_", except for the in the standard predefined
         # dimensions "time" and "elevation".
-        time_name = time_name if time_name == "time" else "dim_" + time_name
-        init_time_name = "dim_" + init_time_name
+        if time is not None:
+            time_name = time_name if time_name == "time" else "dim_" + time_name
+        if init_time is not None:
+            init_time_name = "dim_" + init_time_name
 
         # If the parameters time and init_time are given as datetime objects,
         # create formatted strings with the given formatter. If they are
@@ -388,14 +391,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     prefetch = QtCore.pyqtSignal([list], name="prefetch")
     fetch = QtCore.pyqtSignal([list], name="fetch")
 
-    def __init__(self, parent=None, crs_filter=".*",
-                 default_WMS=None, wms_cache=None, view=None):
+    def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
-        crs_filter -- display only those layers in the 'Layers' combobox
-                      whose names match this regexp. Can be used to filter
-                      layers. Default is to display all layers.
         default_WMS -- list of strings that specify WMS URLs that will be
                        displayed in the URL combobox as default values.
         """
@@ -412,10 +411,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if default_WMS is not None:
             add_wms_urls(self.cbWMS_URL, default_WMS)
-
-        # Compile regular expression used in crsAllowed() to filter
-        # layers accordings to their CRS.
-        self.crs_filter = re.compile(crs_filter)
 
         # Initially allowed WMS parameters and date/time formats.
         self.allowed_init_times = []
@@ -631,6 +626,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     @QtCore.pyqtSlot(Exception)
     def display_exception(self, ex):
         logging.error(u"ERROR: %s %s", type(ex), ex)
+        logging.debug(u"%s", traceback.format_exc())
         QtWidgets.QMessageBox.critical(
             self, self.tr("Web Map Service"), self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
 
@@ -713,19 +709,17 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Parse layer tree of the wms object and discover usable layers.
         stack = list(wms.contents.values())
-        filtered_layers = []
+        filtered_layers = set()
         while len(stack) > 0:
             layer = stack.pop()
-            if len(layer.layers) == 0:
-                if self.crs_allowed(layer):
-                    cb_string = u"{} | {}".format(layer.title, layer.name)
-                    if cb_string not in filtered_layers:
-                        filtered_layers.append(cb_string)
-            else:
+            if len(layer.layers) > 0:
                 stack.extend(layer.layers)
+            elif self.is_layer_aligned(layer):
+                cb_string = u"{} | {}".format(layer.title, layer.name)
+                filtered_layers.add(cb_string)
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
-        filtered_layers.sort()
+        filtered_layers = sorted(filtered_layers)
         self.cbLayer.addItems(filtered_layers)
         self.cbLayer.setEnabled(self.cbLayer.count() > 1)
         self.wms = wms
@@ -779,18 +773,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 capabilities=self.wms)
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             wmsbrws.show()
-
-    def crs_allowed(self, layer):
-        """Check whether the CRS in which the layer can be provided are allowed
-           by the filter that was given to this module (in the constructor).
-        """
-        if hasattr(layer, "crsOptions") and layer.crsOptions is not None:
-            for crs in layer.crsOptions:
-                # If one of the CRS supported by the layer matches the filter
-                # return True.
-                if self.crs_filter.match(crs):
-                    return True
-        return False
 
     @staticmethod
     def interpret_timestring(timestring, return_format=False):
@@ -903,18 +885,30 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Gather dimensions and extents. Dimensions must be declared at one place only, extents may be
         # overwritten by leafs.
         dimensions, extents = {}, {}
+        self.allowed_crs = None
         lobj = layerobj
         while lobj is not None:
             dimensions.update(lobj.dimensions)
             for key in lobj.extents:
                 if key not in extents:
                     extents[key] = lobj.extents[key]
+            if self.allowed_crs is None:
+                self.allowed_crs = getattr(lobj, "crsOptions", None)
             lobj = lobj.parent
 
-        for key in list(extents.keys()):
-            if key not in dimensions:
-                logging.error("extent '%s' not in dimensions!", key)
-                del extents[key]
+        if self.allowed_crs is not None and \
+                self.parent() is not None and \
+                self.parent().parent() is not None:
+            logging.debug("Layer offers '%s' projections.", self.allowed_crs)
+            extra = [_code for _code in self.allowed_crs if _code.startswith("EPSG")]
+            extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
+            logging.debug("Selected '%s' for Combobox.", extra)
+
+            self.parent().parent().update_predefined_maps(extra)
+
+        for key in [_x for _x in extents.keys() if _x not in dimensions]:
+            logging.error("extent '%s' not in dimensions!", key)
+            del extents[key]
 
         # ~~~~ A) Elevation. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         enable_elevation = False
@@ -1339,6 +1333,21 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         level = self.get_level()
         transparent = self.cbTransparent.isChecked()
 
+        def normalize_crs(crs):
+            if any(crs.startswith(_prefix) for _prefix in ("MSS", "AUTO")):
+                return crs.split(",")[0]
+            return crs
+
+        if normalize_crs(crs) not in self.allowed_crs:
+            ret = QtWidgets.QMessageBox.warning(
+                self, self.tr("Web Map Service"),
+                self.tr("WARNING: Selected CRS '{}' not contained in allowed list of supported CRS for this WMS\n"
+                        "({})\n"
+                        "Continue ?".format(crs, self.allowed_crs)),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if ret != QtWidgets.QMessageBox.Yes:
+                return
+
         # get...Time() will return None if the corresponding checkboxes are
         # disabled. <None> objects passed to wms.getmap will not be included
         # in the query URL that is send to the server.
@@ -1540,14 +1549,10 @@ class VSecWMSControlWidget(WMSControlWidget):
        handle (non-standard) vertical sections.
     """
 
-    def __init__(self, parent=None, crs_filter="VERT:.*",
-                 default_WMS=None, waypoints_model=None,
+    def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
-        super(VSecWMSControlWidget, self).__init__(parent=parent,
-                                                   crs_filter=crs_filter,
-                                                   default_WMS=default_WMS,
-                                                   wms_cache=wms_cache,
-                                                   view=view)
+        super(VSecWMSControlWidget, self).__init__(
+            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_vsec)
 
@@ -1594,6 +1599,9 @@ class VSecWMSControlWidget(WMSControlWidget):
                                 valid_time=valid_time,
                                 style=style_title)
 
+    def is_layer_aligned(self, layer):
+        crss = getattr(layer, "crsOptions", None)
+        return crss is not None and any(crs.startswith("VERT") for crs in crss)
 
 #
 # CLASS HSecWMSControlWidget
@@ -1605,13 +1613,9 @@ class HSecWMSControlWidget(WMSControlWidget):
        handle (standard) horizontal sections, i.e. maps.
     """
 
-    def __init__(self, parent=None, crs_filter="EPSG:.*",
-                 default_WMS=None, view=None, wms_cache=None):
-        super(HSecWMSControlWidget, self).__init__(parent=parent,
-                                                   crs_filter=crs_filter,
-                                                   default_WMS=default_WMS,
-                                                   wms_cache=wms_cache,
-                                                   view=view)
+    def __init__(self, parent=None, default_WMS=None, view=None, wms_cache=None):
+        super(HSecWMSControlWidget, self).__init__(
+            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.btGetMap.clicked.connect(self.get_map)
 
     def level_changed(self):
@@ -1655,3 +1659,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         self.view.draw_image(img)
         self.view.draw_legend(legend_img)
         self.view.waypoints_interactor.update()
+
+    def is_layer_aligned(self, layer):
+        crss = getattr(layer, "crsOptions", None)
+        return crss is not None and not any(crs.startswith("VERT") for crs in crss)

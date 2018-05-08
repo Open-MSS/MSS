@@ -85,21 +85,28 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
     def supported_epsg_codes(self):
         return list(mss_wms_settings.epsg_to_mpl_basemap_table.keys())
 
-    def support_epsg_code(self, epsg):
+    def support_epsg_code(self, crs):
         """Returns a list of supported EPSG codes.
         """
-        return (epsg in mss_wms_settings.epsg_to_mpl_basemap_table or
-                get_projection_params(str(epsg)) is not None)
+        try:
+            get_projection_params(crs)
+        except ValueError:
+            return False
+        return True
 
     def supported_crs(self):
         """Returns a list of the coordinate reference systems supported by
            this style.
         """
-        crs_list = []
-        epsg_codes = self.supported_epsg_codes()
-        for code in epsg_codes:
-            crs_list.append("EPSG:{:d}".format(code))
-        return crs_list
+        crs_list = set([
+            "EPSG:3031",  # WGS 84 / Antarctic Polar Stereographic
+            "EPSG:3995",  # WGS 84 / Arctic Polar Stereographic
+            "EPSG:3857",  # WGS 84 / Spherical Mercator
+            "EPSG:4326",  # WGS 84 / cylindric
+            "MSS:stere"])
+        for code in self.supported_epsg_codes():
+            crs_list.add("EPSG:{:d}".format(code))
+        return sorted(crs_list)
 
     def _draw_auto_graticule(self, bm):
         """
@@ -107,22 +114,16 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Compute some map coordinates that are required below for the automatic
         # determination of which meridians and parallels to draw.
         axis = bm.ax.axis()
-        upperLeftCornerLon, upperLeftCornerLat = bm(axis[0], axis[3],
-                                                    inverse=True)
-        lowerRightCornerLon, lowerRightCornerLat = bm(axis[1], axis[2],
-                                                      inverse=True)
-        middleUpperBoundaryLon, middleUpperBoundaryLat = \
-            bm(np.mean([axis[0], axis[1]]),
-               axis[3], inverse=True)
-        middleLowerBoundaryLon, middleLowerBoundaryLat = \
-            bm(np.mean([axis[0], axis[1]]),
-               axis[2], inverse=True)
+        upperLeftCornerLon, upperLeftCornerLat = bm(axis[0], axis[3], inverse=True)
+        lowerRightCornerLon, lowerRightCornerLat = bm(axis[1], axis[2], inverse=True)
+        middleUpperBoundaryLon, middleUpperBoundaryLat = bm(np.mean([axis[0], axis[1]]), axis[3], inverse=True)
+        middleLowerBoundaryLon, middleLowerBoundaryLat = bm(np.mean([axis[0], axis[1]]), axis[2], inverse=True)
 
         # Determine which parallels and meridians should be drawn.
         #   a) determine which are the minimum and maximum visible
         #      longitudes and latitudes, respectively. These
         #      values depend on the map projection.
-        if bm.projection in ['stere', 'lcc']:
+        if bm.projection in ['npstere', 'spstere', 'stere', 'lcc']:
             # For stereographic projections: Draw meridians from the minimum
             # longitude contained in the map at one of the four corners to the
             # maximum longitude at one of these corner points. If
@@ -205,7 +206,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                                             color='0.5', dashes=[5, 5])
 
     def plot_hsection(self, data, lats, lons, bbox=(-180, -90, 180, 90),
-                      level=None, figsize=(960, 640), epsg=None,
+                      level=None, figsize=(960, 640), crs=None,
                       proj_params=None,
                       valid_time=None, init_time=None, style=None,
                       resolution=-1, noframe=False, show=False,
@@ -213,14 +214,12 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         """
         EPSG overrides proj_params!
         """
-        proj_params = proj_params or {"projection": "cyl"}
+        if proj_params is None:
+            proj_params = {"projection": "cyl"}
+            bbox_units = "latlon"
         # Projection parameters from EPSG code.
-        if epsg is not None:
-            proj_params = mss_wms_settings.epsg_to_mpl_basemap_table.get(epsg)
-            if proj_params is None:
-                proj_params = get_projection_params(str(epsg))["basemap"]
-            if proj_params is None:
-                raise ValueError("unknown EPSG code: {:d}".format(epsg))
+        if crs is not None:
+            proj_params, bbox_units = [get_projection_params(crs)[_x] for _x in ("basemap", "bbox")]
 
         logging.debug("plotting data..")
 
@@ -240,7 +239,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.style = style
         self.resolution = resolution
         self.noframe = noframe
-        self.epsg = epsg
+        self.crs = crs
 
         # Derive additional data fields and make the plot.
         logging.debug("preparing additional data fields..")
@@ -277,23 +276,38 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         # Some additional code to store the last 20 coastlines in memory for quicker
         # access.
-        key = repr((proj_params, bbox))
+        key = repr((proj_params, bbox, bbox_units))
         basemap_use_cache = getattr(mss_wms_settings, "basemap_use_cache", False)
         basemap_request_size = getattr(mss_wms_settings, "basemap_request_size ", 200)
         basemap_cache_size = getattr(mss_wms_settings, "basemap_cache_size", 20)
+        bm_params = {"area_thresh": 1000., "ax": ax, "fix_aspect": (not noframe)}
+        bm_params.update(proj_params)
+        if bbox_units == "degree":
+            bm_params.update({"llcrnrlon": bbox[0], "llcrnrlat": bbox[1],
+                              "urcrnrlon": bbox[2], "urcrnrlat": bbox[3]})
+        elif bbox_units.startswith("meter"):
+            # convert meters to degrees
+            try:
+                bm_p = basemap.Basemap(resolution=None, **bm_params)
+            except ValueError:  # projection requires some extent
+                bm_p = basemap.Basemap(resolution=None, width=1e7, height=1e7, **bm_params)
+            bm_center = [float(_x) for _x in bbox_units[6:-1].split(",")]
+            center_x, center_y = bm_p(*bm_center)
+            bbox_0, bbox_1 = bm_p(bbox[0] + center_x, bbox[1] + center_y, inverse=True)
+            bbox_2, bbox_3 = bm_p(bbox[2] + center_x, bbox[3] + center_y, inverse=True)
+            bm_params.update({"llcrnrlon": bbox_0, "llcrnrlat": bbox_1,
+                              "urcrnrlon": bbox_2, "urcrnrlat": bbox_3})
+        elif bbox_units == "no":
+            pass
+        else:
+            raise ValueError("bbox_units '{}' not known.".format(bbox_units))
         if basemap_use_cache and key in BASEMAP_CACHE:
-            bm = basemap.Basemap(llcrnrlon=bbox[0], llcrnrlat=bbox[1],
-                                 urcrnrlon=bbox[2], urcrnrlat=bbox[3],
-                                 resolution=None, area_thresh=1000., ax=ax,
-                                 fix_aspect=(not noframe), **proj_params)
+            bm = basemap.Basemap(resolution=None, **bm_params)
             (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,
              bm.coastsegs, bm.landpolygons, bm.lakepolygons, bm.cntrysegs) = BASEMAP_CACHE[key]
-            logging.debug("Loaded {} from basemap cache".format(key))
+            logging.debug(u"Loaded '%s' from basemap cache", key)
         else:
-            bm = basemap.Basemap(llcrnrlon=bbox[0], llcrnrlat=bbox[1],
-                                 urcrnrlon=bbox[2], urcrnrlat=bbox[3],
-                                 resolution='l', area_thresh=1000., ax=ax,
-                                 fix_aspect=(not noframe), **proj_params)
+            bm = basemap.Basemap(resolution='l', **bm_params)
             # read in countries manually, as those are laoded only on demand
             bm.cntrysegs, _ = bm._readboundarydata("countries")
             if basemap_use_cache:
@@ -358,8 +372,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Read the above stored png into a PIL image and create an adaptive
         # colour palette.
         output.seek(0)  # necessary for PIL.Image.open()
-        palette_img = PIL.Image.open(output).convert(mode="RGB"
-                                                     ).convert("P", palette=PIL.Image.ADAPTIVE)
+        palette_img = PIL.Image.open(output).convert(mode="RGB").convert("P", palette=PIL.Image.ADAPTIVE)
         output = io.BytesIO()
         if not transparent:
             logging.debug("saving figure as non-transparent PNG.")
@@ -382,7 +395,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                 facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
             facecolor_index = lut.index(tuple(facecolor_rgb))
 
-            logging.debug("saving figure as transparent PNG with transparency index {:d}.".format(facecolor_index))
+            logging.debug(u"saving figure as transparent PNG with transparency index %s.", facecolor_index)
             palette_img.save(output, format="PNG", transparency=facecolor_index)
 
         logging.debug("returning figure..")
@@ -402,8 +415,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)
         left_longitude = min(self.bm.llcrnrlon, ulcrnrlon)
-        logging.debug(u"shifting data grid to leftmost longitude in map "
-                      u"({:.2f})..".format(left_longitude))
+        logging.debug(u"shifting data grid to leftmost longitude in map %2.f..", left_longitude)
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
@@ -440,5 +452,5 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         mask = mask1 + mask2 + mask3 + mask4
         # mask data arrays.
         for key in self.data:
-            self.data[key] = np.ma.masked_array(self.data[key],
-                                                mask=mask, keep_mask=False)
+            self.data[key] = np.ma.masked_array(
+                self.data[key], mask=mask, keep_mask=False)

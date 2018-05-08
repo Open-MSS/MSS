@@ -229,6 +229,9 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
 
+    def update_predefined_maps(self, extra):
+        pass
+
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
         """

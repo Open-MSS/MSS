@@ -212,7 +212,7 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, mslp,
                         thick_contours, colors="darkblue", linewidths=2)
-        ax.clabel(cs, fontsize=12, fmt='%i')
+        ax.clabel(cs, fontsize=12, fmt='%.0f')
         cs = bm.contour(lonmesh, latmesh, mslp,
                         thin_contours, colors="darkblue", linewidths=1)
 
@@ -497,7 +497,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
-        if self.epsg == 77774020:
+        if self.crs.lower() == "epsg:77774020":
             cbar_location = 3
             tick_pos = 'right'
         else:
@@ -1833,7 +1833,7 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
-        if self.epsg == 77774020:
+        if self.crs.lower() == "epsg:77774020":
             cbar_location = 3
             tick_pos = 'right'
         else:

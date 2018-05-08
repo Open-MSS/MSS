@@ -152,8 +152,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
                     if valid_time not in valid_times:
                         logging.error("init_time is not contained in valid_times")
                         valid_time = valid_times[0]
-                    self.driver.set_plot_parameters(
-                        self, init_time=time, valid_time=valid_time)
+                    self.driver.set_plot_parameters(self, init_time=time, valid_time=valid_time)
                 except (IOError, ValueError) as ex:
                     logging.debug(u"WARNING: unsuccessfully examined data for "
                                   u"init time '%s'.. trying next time.", time)
@@ -172,8 +171,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
                     valid_times = self.driver.get_valid_times(varname, vartype, it)
                     for vt in valid_times:
                         try:
-                            self.driver.set_plot_parameters(
-                                self, init_time=it, valid_time=vt)
+                            self.driver.set_plot_parameters(self, init_time=it, valid_time=vt)
                         except (IOError, ValueError) as ex:
                             logging.debug("WARNING: unsuccessfully examined data for "
                                           "init time %s, valid time %s.. trying next "

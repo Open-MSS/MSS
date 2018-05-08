@@ -62,21 +62,6 @@ class MissionSupportSystemDefaultConfig(object):
               "tableview": (1236, 424),
               "immutable": False}
 
-    # Matplotlib Basemap Projection Parameters
-    # The following parameters configure the map projections available in
-    # the top view. Define EPSG codes you require in terms of Matplotlib
-    # basemap parameters. Predefined map regions that should be selectable
-    # by the user in the top view user interface can also be defined.
-
-    # Table to translate CRS (coordinate reference system) codes to matplotlib
-    # basemap projection parameters.
-    crs_to_mpl_basemap_table = {
-        "EPSG:4326": {"basemap": {"projection": "cyl"},
-                      "bbox": "latlon"},
-        "EPSG:77790000": {"basemap": {"projection": "stere", "lat_0": 90., "lon_0": 0.},
-                          "bbox": "latlon"}
-    }
-
     # Predefined map regions to be listed in the corresponding topview combobox.
     predefined_map_sections = {
         "01 Europe (cyl)": {"CRS": "EPSG:4326",
@@ -88,7 +73,7 @@ class MissionSupportSystemDefaultConfig(object):
         "03 Global (cyl)": {"CRS": "EPSG:4326",
                             "map": {"llcrnrlon": -180.0, "llcrnrlat": -90.0,
                                     "urcrnrlon": 180.0, "urcrnrlat": 90.0}},
-        "04 Northern Hemisphere (stereo)": {"CRS": "EPSG:77790000",
+        "04 Northern Hemisphere (stereo)": {"CRS": "MSS:stere,90,0,90",
                                             "map": {"llcrnrlon": -45.0, "llcrnrlat": 0.0,
                                                     "urcrnrlon": 135.0, "urcrnrlat": 0.0}}
     }

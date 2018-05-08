@@ -87,9 +87,9 @@ class Test_VSec(object):
         img = self.plot(mpl_vsec_styles.VS_GenericStyle_TL_mole_fraction_of_ozone_in_air(driver=self.vsec))
         assert img is not None
 
-    def test_VS_MSSChemStyle(self):
-        for style in mpl_vsec_styles.VS_MSSChemStyle_PL_O3_mfrac.styles:
-            img = self.plot(mpl_vsec_styles.VS_MSSChemStyle_PL_O3_mfrac(driver=self.vsec), style=style[0])
+    @pytest.mark.parametrize("style", mpl_vsec_styles.VS_MSSChemStyle_PL_O3_mfrac.styles)
+    def test_VS_MSSChemStyle(self, style):
+        img = self.plot(mpl_vsec_styles.VS_MSSChemStyle_PL_O3_mfrac(driver=self.vsec), style=style[0])
         assert img is not None
 
     def test_VS_CloudsStyle_01(self):
@@ -145,17 +145,32 @@ class Test_HSec(object):
         self.valid_time = datetime(2012, 10, 17, 12)
         self.hsec = HorizontalSectionDriver(data)
 
-    def plot(self, plot_object, style="default", level=None):
-        self.hsec.set_plot_parameters(plot_object=plot_object,
-                                      bbox=self.bbox,
-                                      epsg=77790010,
-                                      init_time=self.init_time,
-                                      valid_time=self.valid_time,
-                                      level=level,
-                                      noframe=False,
-                                      style=style,
+    def plot(self, plot_object, style="default", level=None, crs="EPSG:4326", bbox=None):
+        if bbox is None:
+            bbox = self.bbox
+        self.hsec.set_plot_parameters(plot_object=plot_object, bbox=bbox, level=level, crs=crs,
+                                      init_time=self.init_time, valid_time=self.valid_time, style=style, noframe=False,
                                       show=False)
         return self.hsec.plot()
+
+    @pytest.mark.parametrize("crs", [
+        "EPSG:4326",
+        "EPSG:77890010", "EPSG:77790010",
+        "MSS:stere,20,40,40", "MSS:lcc,20,0,40,20", "MSS:cass,20,40", "MSS:merc,40"])
+    def test_degree_crs_codes(self, crs):
+        img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs)
+        assert img is not None
+
+    @pytest.mark.parametrize("crs", ["EPSG:3031", "EPSG:3857", "EPSG:3995"])
+    def test_meter_crs_codes(self, crs):
+        bbox_meter = [-1e7, -1e7, 1e7, 1e7]
+        img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs, bbox=bbox_meter)
+        assert img is not None
+
+    @pytest.mark.parametrize("crs", ["EPSG:12345678", "FNORD", "MSS:lagranto"])
+    def test_invalid_crs_codes(self, crs):
+        with pytest.raises(ValueError):
+            self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs)
 
     def test_repeated_locations(self):
         p1 = [45.00, 8.]
@@ -183,9 +198,9 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_SEAStyle_01(driver=self.hsec))
         assert img is not None
 
-    def test_HS_SeaIceStyle_01(self):
-        for style in ["PCOL", "CONT"]:
-            img = self.plot(mpl_hsec_styles.HS_SeaIceStyle_01(driver=self.hsec), style=style)
+    @pytest.mark.parametrize("style", ["PCOL", "CONT"])
+    def test_HS_SeaIceStyle_01(self, style):
+        img = self.plot(mpl_hsec_styles.HS_SeaIceStyle_01(driver=self.hsec), style=style)
         assert img is not None
 
     def test_HS_TemperatureStyle_ML_01(self):
@@ -200,13 +215,14 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_GeopotentialWindStyle_PL(driver=self.hsec), level=300)
         assert img is not None
 
-    def test_HS_GenericStyle(self):
-        for style in ["default", "nonlinear", "auto", "log", "autolog"]:
-            img = self.plot(
-                mpl_hsec_styles.HS_GenericStyle_PL_mole_fraction_of_ozone_in_air(driver=self.hsec),
-                level=300, style=style)
-            assert img is not None
+    @pytest.mark.parametrize("style", ["default", "nonlinear", "auto", "log", "autolog"])
+    def test_HS_GenericStyle_styles(self, style):
+        img = self.plot(
+            mpl_hsec_styles.HS_GenericStyle_PL_mole_fraction_of_ozone_in_air(driver=self.hsec),
+            level=300, style=style)
+        assert img is not None
 
+    def test_HS_GenericStyle_other(self):
         img = self.plot(mpl_hsec_styles.HS_GenericStyle_TL_mole_fraction_of_ozone_in_air(driver=self.hsec), level=300)
         assert img is not None
 
@@ -220,9 +236,9 @@ class Test_HSec(object):
             style="equivalent_latitude", level=300)
         assert img is not None
 
-    def test_HS_MSSChemStyle(self):
-        for style in mpl_hsec_styles.HS_MSSChemStyle_PL_O3_mfrac.styles:
-            img = self.plot(mpl_hsec_styles.HS_MSSChemStyle_PL_O3_mfrac(driver=self.hsec), level=300, style=style[0])
+    @pytest.mark.parametrize("style", mpl_hsec_styles.HS_MSSChemStyle_PL_O3_mfrac.styles)
+    def test_HS_MSSChemStyle(self, style):
+        img = self.plot(mpl_hsec_styles.HS_MSSChemStyle_PL_O3_mfrac(driver=self.hsec), level=300, style=style[0])
         assert img is not None
 
     def test_HS_RelativeHumidityStyle_PL_01(self):
@@ -254,7 +270,7 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=2.5)
         assert img is not None
         with pytest.raises(ValueError):
-            img = self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=2.75)
+            self.plot(mpl_hsec_styles.HS_PVTropoStyle_PV_01(driver=self.hsec), level=2.75)
 
     def test_HS_VIProbWCB_Style_01(self):
         img = self.plot(mpl_hsec_styles.HS_VIProbWCB_Style_01(driver=self.hsec))

@@ -74,12 +74,17 @@ class MapCanvas(basemap.Basemap):
         """
         # Coordinate reference system identifier and coordinate system units.
         self.crs = CRS if CRS is not None else self.crs if hasattr(self, "crs") else None
-        self.bbox_units = BBOX_UNITS if BBOX_UNITS else self.bbox_units \
-            if hasattr(self, "bbox_units") else None
+        if BBOX_UNITS is not None:
+            self.bbox_units = BBOX_UNITS
+        else:
+            self.bbox_units = getattr(self, "bbox_units", None)
 
         # Dictionary containing map appearance settings.
-        param_appearance = appearance if appearance else self.appearance \
-            if hasattr(self, "appearance") else {}
+        if appearance is not None:
+            param_appearance = appearance
+        else:
+            param_appearance = getattr(self, "appearance", {})
+
         default_appearance = {"draw_graticule": True,
                               "draw_coastlines": True,
                               "fill_waterbodies": True,
@@ -91,8 +96,10 @@ class MapCanvas(basemap.Basemap):
 
         # Identifier of this map canvas (used to query data structures that
         # are observed by different views).
-        self.identifier = identifier if identifier else self.identifier \
-            if hasattr(self, "identifier") else None
+        if identifier is not None:
+            self.identifier = identifier
+        else:
+            self.identifier = getattr(self, "identifier", None)
 
         # Call the Basemap constructor. If a cylindrical projection was used
         # before, Basemap stores an EPSG code that will not be changed if
@@ -120,9 +127,8 @@ class MapCanvas(basemap.Basemap):
         # Curiously, plot() works fine without this setting, but scatter()
         # doesn't.
         if self.appearance["fill_continents"]:
-            self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
-                                                      lake_color=self.appearance["colour_water"],
-                                                      zorder=1)
+            self.map_continents = self.fillcontinents(
+                color=self.appearance["colour_land"], lake_color=self.appearance["colour_water"], zorder=1)
         else:
             self.map_continents = None
 
@@ -196,7 +202,7 @@ class MapCanvas(basemap.Basemap):
         #   a) determine which are the minimum and maximum visible
         #      longitudes and latitudes, respectively. These
         #      values depend on the map projection.
-        if self.projection in ['stere', 'lcc']:
+        if self.projection in ['npstere', 'spstere', 'stere', 'lcc']:
             # For stereographic projections: Draw meridians from the minimum
             # longitude contained in the map at one of the four corners to the
             # maximum longitude at one of these corner points. If
@@ -418,7 +424,8 @@ class MapCanvas(basemap.Basemap):
                       self.kwargs['llcrnrlat'], self.kwargs['llcrnrlon'],
                       self.kwargs['urcrnrlat'], self.kwargs['urcrnrlon'])
 
-        if self.kwargs["projection"] in ["cyl"]:
+        if (self.kwargs.get("projection") in ["cyl"] or
+                self.kwargs.get("epsg") in ["4326"]):
             # Latitudes in cylindrical projection need to be within -90..90.
             self.kwargs['llcrnrlat'] = max(self.kwargs['llcrnrlat'], -90)
             self.kwargs['urcrnrlat'] = max(self.kwargs['urcrnrlat'], -89)
@@ -468,6 +475,10 @@ class MapCanvas(basemap.Basemap):
         # Update kwargs if new parameters such as the map region have been
         # given.
         if kwargs_update:
+            proj_keys = ["epsg", "projection"]
+            if any(_x in kwargs_update for _x in proj_keys):
+                for key in (_x for _x in proj_keys if _x in self.kwargs):
+                    del self.kwargs[key]
             self.kwargs.update(kwargs_update)
         self.__init__(**self.kwargs)
 
