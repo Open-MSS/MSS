@@ -281,3 +281,293 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
         self.view.reset_mock()
+
+
+class TestWMSControlWidgetSetupSimple(object):
+    xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        <!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
+        <WMT_MS_Capabilities version="1.1.1" updateSequence="0">
+            <Service>
+            <Name>OGC:WMS</Name>
+            <Title>Mission Support System Web Map Service</Title>
+            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost:8081/"/>
+            </Service>
+            <Capability>
+                <Request>
+                    <GetCapabilities>
+                    <Format>application/vnd.ogc.wms_xml</Format>
+                    <DCPType> <HTTP> <Get>
+                        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost/?"/>
+                    </Get> </HTTP> </DCPType>
+                    </GetCapabilities>
+                    <GetMap>
+                    <Format>image/png</Format>
+                    <DCPType> <HTTP> <Get>
+                        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="http://localhost/?"/>
+                    </Get> </HTTP> </DCPType>
+                    </GetMap>
+                </Request>
+                <Exception>
+                    <Format>application/vnd.ogc.se_xml</Format>
+                </Exception>
+                <Layer>
+                    <Title>Mission Support WMS Server</Title>
+                    <Abstract>Mission Support WMS Server</Abstract>
+                    {}
+                    <Layer>
+                        <Name>ecmwf_EUR_LL015.PLTemp01</Name>
+                        <Title> Temperature (degC) and Geopotential Height (m) </Title>
+                        {}
+                        <LatLonBoundingBox minx="-180" maxx="180" miny="-90" maxy="90"></LatLonBoundingBox>
+                        {}
+                    </Layer>
+                </Layer>
+            </Capability>
+        </WMT_MS_Capabilities>
+    """
+
+    srs_base = "<SRS> CRS:84 </SRS> <SRS> EPSG:3031 </SRS> <SRS> MSS:stere </SRS>"
+
+    dimext_time = """
+        <Dimension name="TIME" units="ISO8610"> </Dimension>
+        <Extent name="TIME"> 2012-10-17T12:00:00Z,2012-10-17T18:00:00Z,2012-10-18T00:00:00Z </Extent>"""
+
+    dimext_inittime = """
+        <Dimension name="INIT_TIME" units="ISO8610"> </Dimension>
+        <Extent name="INIT_TIME"> 2012-10-16T12:00:00Z,2012-10-17T12:00:00Z </Extent>"""
+
+    dimext_elevation = """
+        <Dimension name="ELEVATION" units="hPa"> </Dimension>
+        <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
+
+    def setup(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.view = HSecViewMockup()
+        self.window = wc.HSecWMSControlWidget(view=self.view)
+        self.window.show()
+        QtWidgets.QApplication.processEvents()
+
+    def teardown(self):
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+
+    def test_xml(self):
+        testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+        assert self.window.cbLevel.isEnabled()
+        assert self.window.cbValidTime.isEnabled()
+        assert self.window.cbInitTime.isEnabled()
+
+    def test_xml_currenttag(self):
+        dimext_time = """
+            <Dimension name="TIME" units="ISO8610"> </Dimension>
+            <Extent name="TIME"> 2014-10-17T12:00:00Z/current/P1Y </Extent>"""
+        testxml = self.xml.format("", self.srs_base, dimext_time + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        print([self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())])
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())][:4] == \
+            ['2014-10-17T12:00:00Z', '2015-10-17T12:00:00Z', '2016-10-17T12:00:00Z', '2017-10-17T12:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+        assert self.window.cbLevel.isEnabled()
+        assert self.window.cbValidTime.isEnabled()
+        assert self.window.cbInitTime.isEnabled()
+
+    def test_xml_emptyextent(self):
+        dimext_time_empty = """<Dimension name="TIME" units="ISO8610"> </Dimension> <Extent name="TIME"> </Extent>"""
+        testxml = self.xml.format(
+            "", self.srs_base, dimext_time_empty + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+        assert self.window.cbLevel.isEnabled()
+        assert not self.window.cbValidTime.isEnabled()
+        assert self.window.cbInitTime.isEnabled()
+
+    def test_xml_onlytimedim(self):
+        dimext_time_noext = '<Dimension name="TIME" units="ISO8610"> </Dimension>'
+
+        testxml = self.xml.format("", self.srs_base, dimext_time_noext + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
+        assert not self.window.cbValidTime.isEnabled()
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+
+    def test_xml_separatedim(self):
+        dimext_time_dim = '<Dimension name="TIME" units="ISO8610"> </Dimension>'
+        dimext_time_ext = \
+            '<Extent name="TIME"> 2012-10-17T12:00:00Z,2012-10-17T18:00:00Z,2012-10-18T00:00:00Z </Extent>'
+        testxml = self.xml.format(
+            dimext_time_dim, self.srs_base, dimext_time_ext + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+
+    def test_xml_separate_leafs(self):
+        testxml = self.xml.format(
+            self.dimext_inittime, self.srs_base, self.dimext_time + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+
+    def test_xml_time_forecast(self):
+        dimext_time_forecast = """
+            <Dimension name="FORECAST" units="ISO8610"> </Dimension>
+            <Extent name="FORECAST"> 2013-10-17T12:00:00Z,2013-10-17T18:00:00Z,2013-10-18T00:00:00Z </Extent>"""
+        testxml = self.xml.format(
+            "", self.srs_base, dimext_time_forecast + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2013-10-17T12:00:00Z', '2013-10-17T18:00:00Z', '2013-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+
+    def test_xml_inittime_reference(self):
+        dimext_inittime_reference = """
+            <Dimension name="REFERENCE_TIME" units="ISO8610"> </Dimension>
+            <Extent name="REFERENCE_TIME"> 2013-10-16T12:00:00Z,2013-10-17T12:00:00Z </Extent>"""
+        testxml = self.xml.format(
+            "", self.srs_base, self.dimext_time + dimext_inittime_reference + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2013-10-16T12:00:00Z', '2013-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+
+    def test_xml_no_elevation(self):
+        testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == []
+        assert not self.window.cbLevel.isEnabled()
+
+    def test_xml_no_validtime(self):
+        testxml = self.xml.format("", self.srs_base, self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
+        assert not self.window.cbValidTime.isEnabled()
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+
+    def test_xml_no_inittime(self):
+        testxml = self.xml.format(
+            "", self.srs_base, self.dimext_time + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == []
+        assert not self.window.cbInitTime.isEnabled()
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+
+    def test_xml_time_period(self):
+        dimext_time_period = """
+            <Dimension name="TIME" units="ISO8610"> </Dimension>
+            <Extent name="TIME"> 2012-10-17T12:00:00Z/2012-10-18T00:00:00Z/PT6H </Extent>"""
+        testxml = self.xml.format(
+            "", self.srs_base, dimext_time_period + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+
+    def test_xml_time_multiperiod(self):
+        dimext_time_period = '<Dimension name="TIME" units="ISO8610"> </Dimension> ' \
+            '<Extent name="TIME"> 2010-10-17T12:00:00Z/2010-11-18T00:00:00Z/P1M, ' \
+            '2012-10-01T12:00:00Z,2012-10-17T12:00:00Z/2012-10-18T00:00:00Z/PT12H </Extent>'
+        testxml = self.xml.format(
+            "", self.srs_base, dimext_time_period + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2010-10-17T12:00:00Z', '2010-11-17T12:00:00Z',
+             '2012-10-01T12:00:00Z',
+             '2012-10-17T12:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+
+    def test_xml_time_init_period(self):
+        dimext_inittime_period = """
+            <Dimension name="INIT_TIME" units="ISO8610"> </Dimension>
+            <Extent name="INIT_TIME"> 2012-10-17T12:00:00Z/2012-10-24T12:00:00Z/P1W </Extent>"""
+        testxml = self.xml.format(
+            "", self.srs_base, self.dimext_time + dimext_inittime_period + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-17T12:00:00Z', '2012-10-24T12:00:00Z']
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
+            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
+
+    def test_xml_othertimeformat(self):
+        dimext_time_format = """
+            <Dimension name="TIME" units="ISO8610"> </Dimension>
+            <Extent name="TIME"> 2012-10-17,2012-10-18,2012-10-19 </Extent>"""
+        testxml = self.xml.format(
+            "", self.srs_base, dimext_time_format + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2012-10-17', '2012-10-18', '2012-10-19']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_xml_time_error(self, mockbox):
+        dimext_time_error = """
+            <Dimension name="TIME" units="ISO8610"> </Dimension>
+            <Extent name="TIME"> 2012-10-17aT12:00:00Z/2012-10-18T00:00:00Z/PT6H </Extent>"""
+        testxml = self.xml.format(
+            "", self.srs_base, dimext_time_error + self.dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        assert mockbox.critical.call_count == 1
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
