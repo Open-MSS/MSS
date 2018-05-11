@@ -369,9 +369,11 @@ class ServiceIdentification(object):
         else:
             self.abstract = None
         self.keywords = [f.text for f in self._root.findall('KeywordList/Keyword')]
-        accessconstraints = self._root.find('AccessConstraints')
-        if accessconstraints is not None:
-            self.accessconstraints = accessconstraints.text
+        # (mss) Always set a default value similar to abstract.
+        self.accessconstraints = self._root.find('AccessConstraints')
+        if self.accessconstraints is not None:
+            self.accessconstraints = self.accessconstraints.text
+        # (mss)
         fees = self._root.find('Fees')
         if fees is not None:
             self.fees = fees.text
