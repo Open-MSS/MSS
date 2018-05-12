@@ -33,7 +33,8 @@ from past.builtins import basestring
 from builtins import str
 
 import time
-from datetime import datetime, timedelta
+import isodate
+from datetime import datetime
 
 import io
 import hashlib
@@ -419,10 +420,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Initially allowed WMS parameters and date/time formats.
         self.allowed_init_times = []
         self.allowed_valid_times = []
-        self.init_time_format = "%Y-%m-%dT%H:%M:%SZ"
-        self.valid_time_format = "%Y-%m-%dT%H:%M:%SZ"
-        self.init_time_name = ""
-        self.valid_time_name = ""
+        self.init_time_format = None
+        self.valid_time_format = None
+        self.init_time_name = None
+        self.valid_time_name = None
 
         self.layerChangeInProgress = False
         self.save_level = None
@@ -471,11 +472,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Initialise date/time fields with current day, 00 UTC.
         self.dteInitTime.setDateTime(QtCore.QDateTime(
-            datetime.utcnow().replace(hour=0, minute=0, second=0,
-                                      microsecond=0)))
+            datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
         self.dteValidTime.setDateTime(QtCore.QDateTime(
-            datetime.utcnow().replace(hour=0, minute=0, second=0,
-                                      microsecond=0)))
+            datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
 
         # Connect slots and signals.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -836,6 +835,40 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     stack.extend(layer.layers)
         return None
 
+    def parse_time_extent(self, values):
+        format, times = None, []
+        for time_item in [i.strip() for i in values]:
+            try:
+                list_desc = time_item.split("/")
+
+                if len(list_desc) == 3:
+                    if format is None:
+                        format = self.interpret_timestring(list_desc[0], return_format=True)
+
+                    time_val = datetime.strptime(list_desc[0], format)
+                    if "current" in list_desc[1]:
+                        end_time = datetime.utcnow()
+                    else:
+                        end_time = datetime.strptime(list_desc[1], format)
+                    delta = isodate.parse_duration(list_desc[2])
+
+                    while time_val <= end_time:
+                        times.append(time_val)
+                        time_val += delta
+
+                elif len(list_desc) == 1:
+                    if format is None:
+                        format = self.interpret_timestring(time_item, return_format=True)
+                    times.append(datetime.strptime(time_item, format))
+
+                else:
+                    raise ValueError("value has incorrect number of entries.")
+
+            except Exception as ex:
+                logging.debug(u"Wildecard Exception %s - %s.", type(ex), ex)
+                logging.error(u"Can't understand time string '%s'. Please check the implementation.", time_item)
+        return format, times
+
     def layer_changed(self, index):
         """Slot that updates the <cbStyle> and <teLayerAbstract> GUI elements
            when the user selects a new layer in <cbLayer>.
@@ -849,8 +882,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         styles = layerobj.styles
         self.cbStyle.clear()
-        self.cbStyle.addItems([u"{} | {}".format(s, styles[s]["title"])
-                               for s in styles])
+        self.cbStyle.addItems([u"{} | {}".format(s, styles[s]["title"]) for s in styles])
         self.cbStyle.setEnabled(self.cbStyle.count() > 1)
 
         abstract_text = layerobj.abstract if layerobj.abstract else ""
@@ -864,206 +896,92 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         save_init_time = self.dteInitTime.dateTime()
         save_valid_time = self.dteValidTime.dateTime()
 
-        enable_elevation = False
-        enable_inittime = False
-        enable_validtime = False
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
-        # ~~~~ A) Elevation. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        # Gather dimensions and extents. Dimensions must be declared at one place only, extents may be
+        # overwritten by leafs.
+        dimensions, extents = {}, {}
         lobj = layerobj
         while lobj is not None:
-            if "elevation" in lobj.dimensions and "elevation" in lobj.extents:
-                units = lobj.dimensions["elevation"]["units"]
-                elev_list = [u"{} ({})".format(e.strip(), units) for e in
-                             lobj.extents["elevation"]["values"]]
-                self.cbLevel.addItems(elev_list)
-                if self.save_level in elev_list:
-                    idx = elev_list.index(self.save_level)
-                    self.cbLevel.setCurrentIndex(idx)
-                enable_elevation = True
-                break
-
-            # One step up in the level hierarchy: If no dimension values
-            # were identified, check if this layer inherits some from its
-            # parent.
+            dimensions.update(lobj.dimensions)
+            for key in lobj.extents:
+                if key not in extents:
+                    extents[key] = lobj.extents[key]
             lobj = lobj.parent
+
+        for key in list(extents.keys()):
+            if key not in dimensions:
+                logging.error("extent '%s' not in dimensions!", key)
+                del extents[key]
+
+        # ~~~~ A) Elevation. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        enable_elevation = False
+        if "elevation" in extents:
+            units = dimensions["elevation"]["units"]
+            elev_list = [u"{} ({})".format(e.strip(), units) for e in
+                         extents["elevation"]["values"]]
+            self.cbLevel.addItems(elev_list)
+            if self.save_level in elev_list:
+                idx = elev_list.index(self.save_level)
+                self.cbLevel.setCurrentIndex(idx)
+            enable_elevation = True
 
         # ~~~~ B) Initialisation time. ~~~~~~~~~~~~~~~~~~~~~~~~
-        self.allowed_init_times = []
-        self.init_time_format = None
+        try:
+            self.init_time_name = [x for x in ["init_time", "reference_time", "run"] if x in extents][0]
+            enable_init_time = True
+        except IndexError:
+            enable_init_time = False
 
-        lobj = layerobj
-        while lobj is not None:
-            if "init_time" in lobj.dimensions and "init_time" in lobj.extents:
-                # MSS web map service.
-                self.init_time_name = "init_time"
-                enable_inittime = True
-            elif "run" in lobj.dimensions and "run" in lobj.extents:
-                # IBL web map service.
-                self.init_time_name = "run"
-                enable_inittime = True
-            elif "reference_time" in lobj.dimensions and "reference_time" in lobj.extents:
-                # To support http://geoservices.knmi.nl/cgi-bin/HARM_N25.cg
-                self.init_time_name = "reference_time"
-                enable_inittime = True
-
-            # Initialisation tag was found: Try to determine the format of
-            # the date/time strings and read the provided extent values.
-            # Add the extent values to the init time combobox.
-            if enable_inittime:
-                self.init_time_format = self.interpret_timestring(
-                    lobj.extents[self.init_time_name]["values"][0].strip(),
-                    return_format=True)
-                if self.init_time_format is not None:
-                    # (otherwise self.init_time_format remains an emtpy list)
-                    self.allowed_init_times = [datetime.strptime(val.strip(), self.init_time_format)
-                                               for val in lobj.extents[self.init_time_name]["values"]]
-                self.cbInitTime.addItems(lobj.extents[self.init_time_name]["values"])
-                break
-
-            # One step up in the level hierarchy: If no dimension values
-            # were identified, check if this layer inherits some from its
-            # parent.
-            lobj = lobj.parent
+        # Both time dimension and time extent tags were found. Try to determine the
+        # format of the date/time strings.
+        if enable_init_time:
+            self.init_time_format, self.allowed_init_times = self.parse_time_extent(
+                extents[self.init_time_name]["values"])
+            self.cbInitTime.addItems(
+                [_time.strftime(self.init_time_format) for _time in self.allowed_init_times])
+            logging.debug(u"determined init time format: '%s'", self.valid_time_format)
+            if len(self.allowed_init_times) == 0:
+                msg = "cannot determine init time format."
+                logging.error(msg)
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("Web Map Service"), self.tr(u"ERROR: {}".format(msg)))
 
         # ~~~~ C) Valid/forecast time. ~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.cbValidOn.setToolTip("")
-        font = self.cbValidOn.font()
-        font.setBold(False)
-        self.cbValidOn.setFont(font)
+        try:
+            self.valid_time_name = [x for x in ["time", "forecast"] if x in extents][0]
+            enable_valid_time = True
+        except IndexError:
+            enable_valid_time = False
+
+        # TODO Relic from the past: Is this really necessary or even correct??
         vtime_no_extent = False
-        self.allowed_valid_times = []
-        self.valid_time_format = None
+        if not enable_valid_time and "time" in dimensions:
+            self.valid_time_name = "time"
+            enable_valid_time = True
+            vtime_no_extent = True
+            self.allowed_valid_times = []
 
-        lobj = layerobj
-        while lobj is not None:
-            if "time" in lobj.dimensions and "time" in lobj.extents:
-                self.valid_time_name = "time"
-                enable_validtime = True
-            elif "time" in lobj.dimensions:
-                enable_validtime = True
-                self.valid_time_name = "time"
-                vtime_no_extent = True
-            elif "forecast" in lobj.dimensions and "forecast" in lobj.extents:
-                # IBL web map service.
-                self.valid_time_name = "forecast"
-                enable_validtime = True
-            elif "time" in lobj.extents:
-                # fix for capability document of https://neowms.sci.gsfc.nasa.gov/wms/wms
-                self.valid_time_name = "time"
-                enable_validtime = True
+        # Both time dimension and time extent tags were found. Try to determine the
+        # format of the date/time strings.
+        if enable_valid_time and not vtime_no_extent:
+            self.valid_time_format, self.allowed_valid_times = self.parse_time_extent(
+                extents[self.valid_time_name]["values"])
+            self.cbValidTime.addItems(
+                [_time.strftime(self.valid_time_format) for _time in self.allowed_valid_times])
 
-            # Both time dimension and time extent tags were found. Try to determine the
-            # format of the date/time strings.
-            if enable_validtime and not vtime_no_extent:
-                items = [i.strip() for i in lobj.extents[self.valid_time_name]["values"]]
-                if len(items) > 0:
-                    if items[0].find("/") > 0:
-                        # A "/" indicates a time range. Do NOT put any
-                        # values in the combo box and try to determine the time
-                        # format. Times are specified only by the date/time element
-                        # in this case.
-                        self.valid_time_format = self.interpret_timestring(items[0].split("/")[0],
-                                                                           return_format=True)
-                        font = self.cbValidOn.font()
-                        font.setBold(True)
-                        self.cbValidOn.setFont(font)
-                        self.cbValidOn.setToolTip(items[0])
-                        vtime_no_extent = True
-
-                    else:  # (no time range)
-                        # Determine time format and try to determine allowed times.
-                        self.valid_time_format = self.interpret_timestring(items[0],
-                                                                           return_format=True)
-
-                        # Loop over all time items provided by the server:
-                        self.allowed_valid_times = []
-                        for time_item in items:
-                            interpretation_successful = True
-
-                            if time_item.find("/") > 0:
-                                # This item describes a list of time
-                                # values. Expand the list.
-                                list_desc = time_item.split("/")
-                                # We need three entries: start time, end time,
-                                # time interval.
-                                if len(list_desc) != 3:
-                                    interpretation_successful = False
-
-                                try:
-                                    time_val = datetime.strptime(list_desc[0],
-                                                                 self.valid_time_format)
-                                    end_time = datetime.strptime(list_desc[1],
-                                                                 self.valid_time_format)
-                                    # Parse interval strings of format "PT3H" (= 3 hours)
-                                    # or "PT24H" (24 hours).
-                                    time_interval_hours = int(
-                                        re.match(r"PT(\d+)H", list_desc[2]).group(1))
-
-                                    # Register all time values of the list.
-                                    while time_val <= end_time:
-                                        self.allowed_valid_times.append(time_val)
-                                        self.cbValidTime.addItem(
-                                            time_val.strftime(self.valid_time_format))
-                                        time_val += timedelta(hours=time_interval_hours)
-                                except Exception as ex:
-                                    logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
-                                    interpretation_successful = False
-
-                            else:
-                                # Single item, no list.
-                                try:
-                                    self.allowed_valid_times.append(
-                                        datetime.strptime(time_item,
-                                                          self.valid_time_format))
-                                    self.cbValidTime.addItem(time_item)
-                                except Exception as ex:
-                                    logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
-                                    interpretation_successful = False
-
-                            if not interpretation_successful:
-                                logging.error(u"Can't understand time string '%s'."
-                                              u" Please check the implementation.", time_item)
-
-            # No time extent tag was found: Set allowed_valid_times to None
-            # (used by validTimeChanged()).
-            if vtime_no_extent:
-                self.allowed_valid_times = None
-
-            if enable_validtime:
-                break
-
-            # One step up in the level hierarchy: If no dimension values
-            # were identified, check if this layer inherits some from its
-            # parent.
-            lobj = lobj.parent
-
-        logging.debug(u"determined init time format: '%s'", self.init_time_format)
-        if enable_inittime and self.init_time_format is None:
-            msg = "cannot determine init time format."
-            logging.warning(u"WARNING: %s", msg)
-            if self.cbInitTime.count() == 0:
-                # If no values could be read from the extent tag notify
-                # the user.
+            logging.debug(u"determined valid time format: '%s'", self.valid_time_format)
+            if len(self.allowed_valid_times) == 0:
+                msg = "cannot determine valid time format."
+                logging.error(msg)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("Web Map Service"), self.tr(u"ERROR: {}".format(msg)))
-            self.init_time_format = ""
-
-        logging.debug(u"determined valid time format: '%s'", self.valid_time_format)
-        if enable_validtime and self.valid_time_format is None:
-            msg = "cannot determine valid time format."
-            logging.warning(u"WARNING: %s", msg)
-            if self.cbValidTime.count() == 0:
-                # If no values could be read from the extent tag notify
-                # the user.
-                QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr(u"ERROR: {}".format(msg)))
-            self.valid_time_format = ""
 
         self.enable_level_elements(enable_elevation)
-        self.enable_valid_time_elements(enable_validtime)
-        self.enable_init_time_elements(enable_inittime)
+        self.enable_valid_time_elements(enable_valid_time)
+        self.enable_init_time_elements(enable_init_time)
 
         # Check whether dimension strings can be interpreted. If not, disable
         # the sync to the date/time elements.
@@ -1100,20 +1018,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
          c) 'XX days', where XX is an integer.
         """
         try:
-            minutes = int(timestep_string.split(" min")[0])
-            return minutes * 60
+            return 60 * int(timestep_string.split(" min")[0])
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-            pass
         try:
-            hours = int(timestep_string.split(" hour")[0])
-            return hours * 3600
+            return 3600 * int(timestep_string.split(" hour")[0])
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-            pass
         try:
-            days = int(timestep_string.split(" days")[0])
-            return days * 86400
+            return 86400 * int(timestep_string.split(" days")[0])
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
             raise ValueError(u"cannot convert '{}' to seconds: wrong format.".format(timestep_string))
@@ -1216,10 +1129,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         'strike through' to indicate an invalid time.
         """
         font = self.dteInitTime.font()
-        inittime_available = dt.toPyDateTime() in self.allowed_init_times
-        font.setStrikeOut(not inittime_available)
+        init_time_available = dt.toPyDateTime() in self.allowed_init_times
+        font.setStrikeOut(not init_time_available)
         self.dteInitTime.setFont(font)
-        if inittime_available:
+        if init_time_available and self.init_time_format is not None:
             iso8601_time = dt.toPyDateTime().strftime(self.init_time_format)
             index = self.cbInitTime.findText(iso8601_time)
             self.cbInitTime.setCurrentIndex(index)
@@ -1227,25 +1140,24 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def check_valid_time(self, dt):
         """Same as check_init_time, but for valid time.
         """
-        font = self.dteValidTime.font()
-        if self.allowed_valid_times is not None:
-            validtime_available = dt.toPyDateTime() in self.allowed_valid_times
-        else:
-            validtime_available = True
-        font.setStrikeOut(not validtime_available)
-        self.dteValidTime.setFont(font)
-        if validtime_available:
+        if self.allowed_valid_times:
+            valid_time_available = dt.toPyDateTime() in self.allowed_valid_times
             iso8601_time = dt.toPyDateTime().strftime(self.valid_time_format)
             index = self.cbValidTime.findText(iso8601_time)
             # setCurrentIndex also sets the date/time edit via signal.
             self.cbValidTime.setCurrentIndex(index)
+        else:
+            valid_time_available = True
+        font = self.dteValidTime.font()
+        font.setStrikeOut(not valid_time_available)
+        self.dteValidTime.setFont(font)
 
     def init_time_changed(self):
         """Slot to be called when the current index of the init time
            combo box is changed. The method tries to sync to the
            init time date/time edit.
         """
-        init_time = str(self.cbInitTime.currentText())
+        init_time = self.cbInitTime.currentText()
         if init_time != "":
             init_time = self.interpret_timestring(init_time)
             if init_time is not None:
@@ -1256,7 +1168,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def valid_time_changed(self):
         """Same as initTimeChanged(), but for the valid time elements.
         """
-        valid_time = str(self.cbValidTime.currentText())
+        valid_time = self.cbValidTime.currentText()
         if valid_time != "":
             valid_time = self.interpret_timestring(valid_time)
             if valid_time is not None:
