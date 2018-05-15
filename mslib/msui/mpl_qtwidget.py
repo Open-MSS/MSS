@@ -183,8 +183,7 @@ def save_figure(self, *args):
         save_figure_original(self, *args)
     elif picker_type == "fs":
         filetypes = self.canvas.get_supported_filetypes_grouped()
-        sorted_filetypes = list(six.iteritems(filetypes))
-        sorted_filetypes.sort()
+        sorted_filetypes = sorted(six.iteritems(filetypes))
         startpath = matplotlib.rcParams.get('savefig.directory', LAST_SAVE_DIRECTORY)
         startpath = os.path.expanduser(startpath)
         start = os.path.join(startpath, self.canvas.get_default_filename())
@@ -467,7 +466,6 @@ class MplSideViewCanvas(MplCanvas):
     """
 
     def __init__(self, model=None, settings=None, numlabels=None):
-
         """
         Arguments:
         model -- WaypointsTableModel defining the vertical section.

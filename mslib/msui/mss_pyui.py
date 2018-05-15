@@ -310,7 +310,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                         self._exported_plugins, type(ex), ex)))
                 continue
             try:
-                    self.add_export_filter(name, extension, getattr(imported_module, function), pickertype=picker_type)
+                self.add_export_filter(name, extension, getattr(imported_module, function), pickertype=picker_type)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error(u"Error on installing plugin: %s: %s", type(ex), ex)

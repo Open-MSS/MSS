@@ -47,6 +47,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     This class provides the interface for accessing KML files and
     adding the appropriate patches to the TopView canvas.
     """
+
     def __init__(self, parent=None, view=None):
         super(KMLOverlayControlWidget, self).__init__(parent)
         self.setupUi(self)
