@@ -156,7 +156,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
            values are corrected.
         """
         try:
-            flightlevel = int(float(str(item.text())))
+            flightlevel = int(item.text())
         except Exception as ex:
             logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
             flightlevel = 0
@@ -164,13 +164,13 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             flightlevel = 0
         if flightlevel > 999:
             flightlevel = 999
-        item.setText(str(int(flightlevel)))
+        item.setText(str(flightlevel))
         self.tableWidget.sortItems(0)
 
     def get_flight_levels(self):
         """Returns the flight level values contained in the table.
         """
-        return [int(str(self.tableWidget.item(row, 0).text()))
+        return [int(self.tableWidget.item(row, 0).text())
                 for row in range(self.tableWidget.rowCount())]
 
     def get_settings(self):

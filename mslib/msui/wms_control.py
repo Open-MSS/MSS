@@ -66,7 +66,7 @@ WMS_URL_LIST = QtGui.QStandardItemModel()
 
 
 def add_wms_urls(combo_box, url_list):
-    combo_box_urls = [str(combo_box.itemText(_i)) for _i in range(combo_box.count())]
+    combo_box_urls = [combo_box.itemText(_i) for _i in range(combo_box.count())]
     for url in (_url for _url in url_list if _url not in combo_box_urls):
         combo_box.addItem(url)
 
@@ -250,8 +250,8 @@ class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
     def getAuthInfo(self):
         """Return the entered username and password.
         """
-        return (str(self.leUsername.text()),
-                str(self.lePassword.text()))
+        return (self.leUsername.text(),
+                self.lePassword.text())
 
 
 class WMSMapFetcher(QtCore.QObject):
@@ -601,7 +601,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return wms
 
     def wms_url_changed(self, text):
-        text = str(text)
         wms = WMS_SERVICE_CACHE.get(text)
         if wms is not None and wms != self.wms:
             self.activate_wms(wms)
@@ -650,7 +649,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
 
-        base_url = str(self.cbWMS_URL.currentText())
+        base_url = self.cbWMS_URL.currentText()
         try:
             request = requests.get(base_url)
         except (requests.exceptions.TooManyRedirects,
@@ -1031,7 +1030,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Get QDateTime object from QtDateTimeEdit field.
         d = self.dteInitTime.dateTime()
         # Add value from cbInitTime_step and set new date.
-        secs = self.secs_from_timestep(str(self.cbInitTime_step.currentText()))
+        secs = self.secs_from_timestep(self.cbInitTime_step.currentText())
         self.dteInitTime.setDateTime(d.addSecs(-1. * secs))
         self.auto_update()
 
@@ -1041,7 +1040,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Get QDateTime object from QtDateTimeEdit field.
         d = self.dteInitTime.dateTime()
         # Add value from cbInitTime_step and set new date.
-        secs = self.secs_from_timestep(str(self.cbInitTime_step.currentText()))
+        secs = self.secs_from_timestep(self.cbInitTime_step.currentText())
         self.dteInitTime.setDateTime(d.addSecs(secs))
         self.auto_update()
 
@@ -1049,7 +1048,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Get QDateTime object from QtDateTimeEdit field.
         d = self.dteValidTime.dateTime()
         # Add value from cbInitTime_step and set new date.
-        secs = self.secs_from_timestep(str(self.cbValidTime_step.currentText()))
+        secs = self.secs_from_timestep(self.cbValidTime_step.currentText())
         self.dteValidTime.setDateTime(d.addSecs(-1. * secs))
         self.auto_update()
 
@@ -1057,7 +1056,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Get QDateTime object from QtDateTimeEdit field.
         d = self.dteValidTime.dateTime()
         # Add value from cbInitTime_step and set new date.
-        secs = self.secs_from_timestep(str(self.cbValidTime_step.currentText()))
+        secs = self.secs_from_timestep(self.cbValidTime_step.currentText())
         self.dteValidTime.setDateTime(d.addSecs(secs))
         self.auto_update()
 
@@ -1269,7 +1268,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if self.dteInitTime.isEnabled():
                 return self.dteInitTime.dateTime().toPyDateTime()
             else:
-                itime_str = str(self.cbInitTime.currentText())
+                itime_str = self.cbInitTime.currentText()
                 return itime_str
         else:
             return None
@@ -1281,7 +1280,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if self.dteValidTime.isEnabled():
                 return self.dteValidTime.dateTime().toPyDateTime()
             else:
-                vtime_str = str(self.cbValidTime.currentText())
+                vtime_str = self.cbValidTime.currentText()
                 return vtime_str
         else:
             return None
@@ -1424,11 +1423,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
                     ci_time, ci_level = self.cbValidTime.currentIndex(), self.cbLevel.currentIndex()
                     prefetch_key_values = \
-                        [("time", str(self.cbValidTime.itemText(ci_p)))
+                        [("time", self.cbValidTime.itemText(ci_p))
                          for ci_p in list(range(ci_time + 1, ci_time + 1 + pre_tfwd)) +
                             list(range(ci_time - pre_tbck, ci_time))
                          if 0 <= ci_p < self.cbValidTime.count()] + \
-                        [("level", str(self.cbLevel.itemText(ci_p)).split(" (")[0])
+                        [("level", self.cbLevel.itemText(ci_p).split(" (")[0])
                          for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)
                          if ci_p != ci_level and 0 <= ci_p < self.cbLevel.count()]
 
@@ -1455,7 +1454,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if img is None:
             return
 
-        complete_level = str(self.cbLevel.currentText())
+        complete_level = self.cbLevel.currentText()
         complete_level = complete_level if complete_level != "" else None
         self.display_retrieved_image(img, legend_img, layer, style, init_time, valid_time, complete_level)
 
