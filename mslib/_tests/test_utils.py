@@ -61,6 +61,7 @@ class TestGetDistance(object):
     tests for distance based calculations
     """
     # we don't test the utils method here, may be that method should me refactored off
+
     def test_get_distance(self):
         coordinates_distance = [((50.355136, 7.566077), (50.353968, 4.577915), 212),
                                 ((-5.135943, -42.792442), (4.606085, 120.028077), 18130)]
@@ -72,6 +73,7 @@ class TestTimes(object):
     """
     tests about times
     """
+
     def test_datetime_to_jsec(self):
         assert utils.datetime_to_jsec(datetime.datetime(2000, 2, 1, 0, 0, 0, 0)) == 2678400.0
         assert utils.datetime_to_jsec(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)) == 0
@@ -93,6 +95,7 @@ class TestAngles(object):
     """
     tests about angles
     """
+
     def test_normalize_angle(self):
         assert utils.fix_angle(0) == 0
         assert utils.fix_angle(180) == 180

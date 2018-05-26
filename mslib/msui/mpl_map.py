@@ -961,9 +961,9 @@ class KMLPatch(object):
         x, y = self.compute_xy(point.coordinates)
         self.patches.append(self.map.plot(x[0], y[0], "o", zorder=10, color=self.color))
         if name is not None:
-            self.patches.append([self.map.ax.annotate(name, xy=(x[0], y[0]), xycoords="data",
-                                xytext=(5, 5), textcoords='offset points', zorder=10,
-                                path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
+            self.patches.append([self.map.ax.annotate(
+                name, xy=(x[0], y[0]), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
+                path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
 
     def add_line(self, line, style, _):
         """

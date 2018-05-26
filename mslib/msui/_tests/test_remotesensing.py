@@ -32,6 +32,7 @@ class TestAngles(object):
     """
     tests about angles
     """
+
     def test_view_angles(self):
         compute_view_angles = RemoteSensingControlWidget.compute_view_angles
         angle = compute_view_angles(0, 0, 0, 1, 0, 0, 0, -1)

@@ -108,8 +108,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
                     valid_times.update(vtimes)
                 else:
                     valid_times.intersection_update(vtimes)
-        valid_times = list(valid_times)
-        valid_times.sort()
+        valid_times = sorted(valid_times)
         return valid_times
 
     def uses_time_dimensions(self):

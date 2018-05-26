@@ -129,9 +129,8 @@ def find_location(lat, lon, tolerance=5):
     :return: None or lat/lon, name
     """
     locations = config_loader(dataset='locations', default=MissionSupportSystemDefaultConfig.locations)
-    distances = [(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
-                 for loc, (loc_lat, loc_lon) in locations.items()]
-    distances.sort()
+    distances = sorted([(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
+                        for loc, (loc_lat, loc_lon) in locations.items()])
     if len(distances) > 0 and distances[0][0] <= tolerance:
         return locations[distances[0][1]], distances[0][1]
     else:

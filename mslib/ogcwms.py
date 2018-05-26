@@ -389,6 +389,7 @@ class ContentMetadata(object):
 
     Implements IContentMetadata.
     """
+
     def __init__(self, elem, parent=None):
         self.parent = parent
         if elem.tag != 'Layer':
@@ -500,8 +501,8 @@ class ContentMetadata(object):
                 #             self.styles[name.text] = style
                 #            # (mss) fixed style strip() problem.
             else:
-                style_name = name.text.strip() if type(name.text) is str else name.text
-                style_title = title.text.strip() if type(title.text) is str else title.text
+                style_name = name.text.strip() if isinstance(name.text, str) else name.text
+                style_title = title.text.strip() if isinstance(title.text, str) else title.text
             style = {'title': style_title}
             legend = s.find('LegendURL/OnlineResource')
             if legend is not None:
@@ -570,6 +571,7 @@ class WMSCapabilitiesReader(object):
             # opener = build_opener(auth_handler)
             # self._open = opener.open
         """
+
     def capabilities_url(self, service_url):
         """Return a capabilities url
         """

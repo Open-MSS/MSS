@@ -280,8 +280,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                                         0.000367 * t[idx_liq] +
                                         numpy.tanh(0.0415 * (t[idx_liq] - 218.8)) *
                                         (53.878 - (1331.22 / t[idx_liq]) -
-                                        9.44523 * numpy.log(t[idx_liq]) +
-                                        0.014025 * t[idx_liq])) / 100.)
+                                         9.44523 * numpy.log(t[idx_liq]) +
+                                         0.014025 * t[idx_liq])) / 100.)
 
         else:
             raise VapourPressureError(u"Unkown method for computing "
@@ -408,11 +408,11 @@ def rel_hum(p, t, q, liquid='HylandWexler', ice='GoffGratch',
     Returns: Relative humidity in [%]. Same dimension as input fields.
     """
     if not (numpy.isscalar(p) or numpy.isscalar(t) or numpy.isscalar(q)):
-        if type(p) is not numpy.ndarray:
+        if not isinstance(p, numpy.ndarray):
             p = numpy.array(p)
-        if type(t) is not numpy.ndarray:
+        if not isinstance(t, numpy.ndarray):
             t = numpy.array(t)
-        if type(q) is not numpy.ndarray:
+        if not isinstance(q, numpy.ndarray):
             q = numpy.array(q)
 
     # Compute mixing ratio w from specific humidiy q.
@@ -455,9 +455,9 @@ def virt_temp(t, q, method='exact'):
     Returns: Virtual temperature in [K]. Same dimension as input fields.
     """
     if not (numpy.isscalar(t) or numpy.isscalar(q)):
-        if type(t) is not numpy.ndarray:
+        if not isinstance(t, numpy.ndarray):
             t = numpy.array(t)
-        if type(q) is not numpy.ndarray:
+        if not isinstance(q, numpy.ndarray):
             q = numpy.array(q)
 
     if method == 'exact':
@@ -623,9 +623,9 @@ def dewpoint_approx(p, q, method='Bolton'):
     Returns: dew point temperature in [K].
     """
     if not (numpy.isscalar(p) or numpy.isscalar(q)):
-        if type(p) is not numpy.ndarray:
+        if not isinstance(p, numpy.ndarray):
             p = numpy.array(p)
-        if type(q) is not numpy.ndarray:
+        if not isinstance(q, numpy.ndarray):
             q = numpy.array(q)
 
     # Compute mixing ratio w from specific humidiy q.
@@ -870,7 +870,7 @@ def flightlevel2pressure_a(flightlevel):
         static pressure (Pa)
     """
     # Make sure flightlevel is a numpy array.
-    if type(flightlevel) is not numpy.ndarray:
+    if not isinstance(flightlevel, numpy.ndarray):
         raise ValueError("argument flightlevel must be a numpy array")
 
     # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
@@ -944,7 +944,7 @@ def pressure2flightlevel_a(p, fake_above_32km=False):
         flight level in hft
     """
     # Make sure p is a numpy array.
-    if type(p) is not numpy.ndarray:
+    if not isinstance(p, numpy.ndarray):
         raise ValueError("argument p must be a numpy array")
 
     # g and R are used by all equations below.
