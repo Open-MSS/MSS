@@ -266,7 +266,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         # Generally, an instance of this class will contain a list of
         # non-overlapping selection ranges.
         itemSelection = self.traj_item_tree.selectionFromQuery(
-            str(self.leSelectionQuery.text()),
+            self.leSelectionQuery.text(),
             index=rootIndex)
 
         # Items can be selected in the tree view by using the select()
@@ -292,7 +292,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """Informs traj_item_tree to change the colour of the selected elements
            to the one specified by cbColour.
         """
-        colour = str(self.cbColour.currentText())
+        colour = self.cbColour.currentText()
         if colour == 'None':
             colour = "blue"
         indices = self.selectedMapElements()
@@ -311,7 +311,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """Informs traj_item_tree to change the line style of the selected
            elements to the one specified by cbLineStyle.
         """
-        lineStyle = str(self.cbLineStyle.currentText())
+        lineStyle = self.cbLineStyle.currentText()
         if lineStyle == 'None':
             lineStyle = "-"
         indices = self.selectedMapElements()
@@ -408,7 +408,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         view_name = self.cbPlotInView.currentText()
         selection = self.selectedMapElements()
-        if str(view_name) != "None" and len(selection) > 0:
+        if view_name != "None" and len(selection) > 0:
             view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
                          self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
             logging.debug(u"Plotting selected elements in view <%s>", view_name)
@@ -427,7 +427,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         """
         """
         view_name = self.cbRemoveFromView.currentText()
-        if str(view_name) != "None":
+        if view_name != "None":
             view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
                          self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
             logging.debug(u"Removing selected elements from view <%s>", view_name)

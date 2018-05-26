@@ -942,20 +942,27 @@ class MplTopViewCanvas(MplCanvas):
         return self.map.crs
 
     def getBBOX(self):
-        """Get the bounding box of the map (returns a 4-tuple
-           lllon, lllat, urlon, urlat).
         """
-        # Get the bounding box of the current map view
-        # (bbox = llcrnrlon, llcrnrlat, urcrnrlon, urcrnrlat).
+        Get the bounding box of the map
+        (returns a 4-tuple llx, lly, urx, ury) in degree or meters.
+        """
+
         axis = self.ax.axis()
 
-        if self.map.bbox_units == "latlon":
+        if self.map.bbox_units == "degree":
             # Convert the current axis corners to lat/lon coordinates.
             axis0, axis2 = self.map(axis[0], axis[2], inverse=True)
             axis1, axis3 = self.map(axis[1], axis[3], inverse=True)
-            axis = [axis0, axis1, axis2, axis3]
+            bbox = (axis0, axis2, axis1, axis3)
 
-        bbox = (axis[0], axis[2], axis[1], axis[3])
+        elif self.map.bbox_units.startswith("meter"):
+            center_x, center_y = self.map(
+                *(float(_x) for _x in self.map.bbox_units[6:-1].split(",")))
+            bbox = (axis[0] - center_x, axis[2] - center_y, axis[1] - center_x, axis[3] - center_y)
+
+        else:
+            bbox = axis[0], axis[2], axis[1], axis[3]
+
         return bbox
 
     def clear_figure(self):
@@ -1258,7 +1265,6 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                                if variable.getVariableName() in self.subPlots]
 
             if mode in ["GXPROPERTY_CHANGE"]:
-                #
                 # If only a graphics property has been changed: Apply setp with
                 # the new properties to all variables of trajectory 'item'.
                 for variable in variablesToPlot:
@@ -1271,7 +1277,6 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                         linewidth=item.getGxElementProperty("general", "linewidth"))
 
             elif mode in ["REDRAW", "MARKER_CHANGE"]:
-                #
                 # Loop over all variables to plot.
                 for variable in variablesToPlot:
                     #
@@ -1290,15 +1295,12 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     #
                     # Plot the variable data with the colour determines above, store
                     # the plot instance in the variable's gxElements.
-                    plotInstance = ax.plot(x, y,
-                                           color=item.getGxElementProperty("general", "colour"),
-                                           linestyle=item.getGxElementProperty("general",
-                                                                               "linestyle"),
-                                           linewidth=item.getGxElementProperty("general",
-                                                                               "linewidth"))
-                    variable.setGxElementProperty("timeseries",
-                                                  u"instance::{}".format(self.identifier),
-                                                  plotInstance)
+                    plotInstance = ax.plot(
+                        x, y, color=item.getGxElementProperty("general", "colour"),
+                        linestyle=item.getGxElementProperty("general", "linestyle"),
+                        linewidth=item.getGxElementProperty("general", "linewidth"))
+                    variable.setGxElementProperty(
+                        "timeseries", u"instance::{}".format(self.identifier), plotInstance)
                     #
                     # If we've just plotted the pressure variable flip the y-axis
                     # upside down.
@@ -1333,9 +1335,9 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # The bottommost subplot gets the x-label: The name of the time
                     # variable.
                     if index == len(self.subPlots) - 1:
-                        ax.set_xlabel("time [hr since " +
-                                      earliestStartTime.strftime("%Y-%m-%d %H:%M UTC") +
-                                      "]")
+                        ax.set_xlabel(
+                            "time [hr since {}]".format(earliestStartTime.strftime("%Y-%m-%d %H:%M UTC")))
+
         # Update the figure canvas.
         self.fig.canvas.draw()
 

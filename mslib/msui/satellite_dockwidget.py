@@ -136,7 +136,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """
         filename = get_open_filename(
             self, "Open NASA satellite overpass prediction",
-            os.path.join(os.path.dirname(str(self.leFile.text()))), u"All Files (*)",
+            os.path.join(os.path.dirname(self.leFile.text())), u"All Files (*)",
             pickertag="filepicker_satellitetrack")
         if not filename:
             return
@@ -150,7 +150,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         # ToDo nappy needs filelike object first
         # _dirname, _name = os.path.split(self.leFile.text())
         # _fs = open_fs(_dirname)
-        filename = str(self.leFile.text())
+        filename = self.leFile.text()
         logging.debug("loading satellite overpasses in file '%s'", filename)
 
         try:

@@ -662,7 +662,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
            combobox, get the corresponding coordinates.
         """
         if index.column() == LOCATION:
-            loc = str(editor.currentText())
+            loc = editor.currentText()
             locations = config_loader(dataset='locations', default=mss_default.locations)
             if loc in locations:
                 lat, lon = locations[loc]

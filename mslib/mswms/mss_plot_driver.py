@@ -525,11 +525,9 @@ class HorizontalSectionDriver(MSSPlotDriver):
        to be registered).
     """
 
-    def set_plot_parameters(self, plot_object=None, bbox=None,
-                            level=None, epsg=None,
-                            init_time=None, valid_time=None, style=None,
-                            figsize=(800, 600), noframe=False, show=False,
-                            transparent=False, return_format="image/png"):
+    def set_plot_parameters(self, plot_object=None, bbox=None, level=None, crs=None, init_time=None, valid_time=None,
+                            style=None, figsize=(800, 600), noframe=False, show=False, transparent=False,
+                            return_format="image/png"):
         """
         """
         MSSPlotDriver.set_plot_parameters(self, plot_object,
@@ -542,14 +540,11 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                           return_format=return_format)
         self.level = level
         self.actual_level = None
-        self.epsg = epsg
+        self.crs = crs
         self.show = show
 
-    def update_plot_parameters(self, plot_object=None, bbox=None,
-                               level=None, epsg=None,
-                               init_time=None, valid_time=None, style=None,
-                               figsize=None, noframe=None, show=None,
-                               transparent=None, return_format=None):
+    def update_plot_parameters(self, plot_object=None, bbox=None, level=None, crs=None, init_time=None, valid_time=None,
+                               style=None, figsize=None, noframe=None, show=None, transparent=None, return_format=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
@@ -560,22 +555,13 @@ class HorizontalSectionDriver(MSSPlotDriver):
         style = style if style is not None else self.style
         bbox = bbox if bbox is not None else self.bbox
         level = level if level is not None else self.level
-        epsg = epsg if epsg is not None else self.epsg
+        crs = crs if crs is not None else self.crs
         show = show if show is not None else self.show
         transparent = transparent if transparent is not None else self.transparent
         return_format = return_format if return_format is not None else self.return_format
-        self.set_plot_parameters(plot_object=plot_object,
-                                 bbox=bbox,
-                                 level=level,
-                                 epsg=epsg,
-                                 init_time=init_time,
-                                 valid_time=valid_time,
-                                 style=style,
-                                 figsize=figsize,
-                                 noframe=noframe,
-                                 show=show,
-                                 transparent=transparent,
-                                 return_format=return_format)
+        self.set_plot_parameters(plot_object=plot_object, bbox=bbox, level=level, crs=crs, init_time=init_time,
+                                 valid_time=valid_time, style=style, figsize=figsize, noframe=noframe, show=show,
+                                 transparent=transparent, return_format=return_format)
 
     def _load_timestep(self):
         """Load the data fields as required by the horizontal section style
@@ -639,7 +625,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                                init_time=self.init_time,
                                                resolution=resolution,
                                                show=self.show,
-                                               epsg=self.epsg,
+                                               crs=self.crs,
                                                style=self.style,
                                                noframe=self.noframe,
                                                figsize=self.figsize,

@@ -189,17 +189,22 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.cbTools.addItems(toolitems)
 
         # Fill combobox for predefined map sections.
-        self.cbChangeMapSection.clear()
-        predefined_map_sections = config_loader(dataset="predefined_map_sections",
-                                                default=mss_default.predefined_map_sections)
-        items = sorted(predefined_map_sections.keys())
-        self.cbChangeMapSection.addItems(items)
+        self.update_predefined_maps()
 
         # Initialise the map and the flight track. Get the initial projection
         # parameters from the tables in mss_settings.
         kwargs = self.changeMapSection(only_kwargs=True)
         self.mpl.canvas.init_map(**kwargs)
         self.setFlightTrackModel(self.waypoints_model)
+
+    def update_predefined_maps(self, extra=None):
+        self.cbChangeMapSection.clear()
+        predefined_map_sections = config_loader(
+            dataset="predefined_map_sections", default=mss_default.predefined_map_sections)
+        self.cbChangeMapSection.addItems(sorted(predefined_map_sections.keys()))
+        if extra is not None and len(extra) > 0:
+            self.cbChangeMapSection.insertSeparator(self.cbChangeMapSection.count())
+            self.cbChangeMapSection.addItems(sorted(extra))
 
     def openTool(self, index):
         """Slot that handles requests to open control windows.
@@ -233,30 +238,24 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """Change the current map section to one of the predefined regions.
         """
         # Get the initial projection parameters from the tables in mss_settings.
-        current_map_key = str(self.cbChangeMapSection.currentText())
-        predefined_map_sections = config_loader(dataset="predefined_map_sections",
-                                                default=mss_default.predefined_map_sections)
-        current_map = predefined_map_sections[current_map_key]
-        crs_to_mpl_basemap_table = config_loader(dataset="crs_to_mpl_basemap_table",
-                                                 default=mss_default.crs_to_mpl_basemap_table)
-        proj_params = crs_to_mpl_basemap_table.get(current_map["CRS"])
-        if proj_params is None:
-            proj_params = get_projection_params(current_map["CRS"])
-        if proj_params is None:
-            raise ValueError(u"unknown EPSG code: {:}".format(current_map["CRS"]))
+        current_map_key = self.cbChangeMapSection.currentText()
+        predefined_map_sections = config_loader(
+            dataset="predefined_map_sections", default=mss_default.predefined_map_sections)
+        current_map = predefined_map_sections.get(
+            current_map_key, {"CRS": current_map_key, "map": {}})
+        proj_params = get_projection_params(current_map["CRS"])
 
         # Create a keyword arguments dictionary for basemap that contains
         # the projection parameters.
         kwargs = current_map["map"]
-        kwargs.update({"CRS": current_map["CRS"]})
-        kwargs.update({"BBOX_UNITS": proj_params["bbox"]})
+        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"]})
         kwargs.update(proj_params["basemap"])
 
         if only_kwargs:
             # Return kwargs dictionary and do NOT redraw the map.
             return kwargs
 
-        logging.debug("switching to map section %s", current_map_key)
+        logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
         self.mpl.canvas.redraw_map(kwargs)
 
     def setIdentifier(self, identifier):
