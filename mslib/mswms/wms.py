@@ -524,12 +524,7 @@ def application(environ, start_response):
         url = paste.request.construct_url(environ)
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request is None:
-            server_url = "{}?service=WMS&request=GetCapabilities&version=1.1.1".format(server_url)
-            return_format = 'text/xml'
-            return_data = app.get_capabilities(server_url)
-            output = return_data.encode('utf-8')
-        elif request.lower() == 'getcapabilities':
+        if request.lower() == 'getcapabilities':
             return_format = 'text/xml'
             return_data = app.get_capabilities(server_url)
             output = return_data.encode('utf-8')
