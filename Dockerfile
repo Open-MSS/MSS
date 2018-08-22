@@ -29,7 +29,7 @@ RUN apt-get --yes update && apt-get --yes upgrade && apt-get --yes install \
   xfonts-scalable
 
 # get keyboard working for mss gui
-RUN apt-get --yes update && RUN DEBIAN_FRONTEND=noninteractive \
+RUN apt-get --yes update && DEBIAN_FRONTEND=noninteractive \
   apt-get --yes install xserver-xorg-video-dummy \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
