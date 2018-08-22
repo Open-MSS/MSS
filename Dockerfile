@@ -4,7 +4,7 @@
 # docker build -t mss_img .
 # docker run -d --net=host --name mss_1  mss_img
 # # simple test
-# curl "http://localhost:18081/?service=WMS&request=GetCapabilities&version=1.1.1"
+# curl "http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1"
 #
 # For the mss ui:
 # xhost +local:docker
@@ -14,37 +14,39 @@
 #
 ##################################################################################
 
+
 # Set the base image debian with miniconda
 FROM continuumio/miniconda3
 
-# install a libgl1 mesa package
-RUN apt-get --yes update
-RUN apt-get --yes upgrade
+MAINTAINER Reimar Bauer <rb.proj@gmail.com>
 
-# install packages for qt X 
-RUN apt-get --yes install libgl1-mesa-glx python-xpyb libx11-xcb1 libxi6 xfonts-scalable
-# get keyboard working for mss
-RUN apt-get --yes update 
-RUN DEBIAN_FRONTEND=noninteractive apt-get --yes install xserver-xorg-video-dummy  
+# install packages for qt X
+RUN apt-get --yes update && apt-get --yes upgrade && apt-get --yes install \
+  python-xpyb \
+  libgl1-mesa-glx \
+  libx11-xcb1 \
+  libxi6 \
+  xfonts-scalable
 
-# Set the file maintainer (your name - the file's author)
-MAINTAINER Maintaner Reimar Bauer
+# get keyboard working for mss gui
+RUN apt-get --yes update && RUN DEBIAN_FRONTEND=noninteractive \
+  apt-get --yes install xserver-xorg-video-dummy \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # Set up conda-forge channel
-RUN conda config --add channels conda-forge
-RUN conda config --add channels defaults
+RUN conda config --add channels conda-forge && conda config --add channels defaults
 
 # create some desktop user directories
-RUN mkdir -p /root/.local/share/applications/
-RUN mkdir -p /root/.local/share/icons/hicolor/48x48/apps/
+# if there is no data attached e.g. demodata /srv/mss is the preferred dir
+RUN mkdir -p /root/.local/share/applications/ \
+  && mkdir -p /root/.local/share/icons/hicolor/48x48/apps/ \
+  && mkdir /srv/mss
 
-# first place to look for config and data
-# if there is no data attached run demodata
-RUN mkdir /srv/mss
-
-# Install MSS
+# Install Mission Support Software
 RUN conda install mss -y
 
+# path for data and mss_wms_settings config
 ENV PYTHONPATH="/srv/mss:/root/mss"
 
 # Run demodata
@@ -52,5 +54,4 @@ ENV PYTHONPATH="/srv/mss:/root/mss"
 # also you can replace the data in the demodata dir /root/mss.
 RUN demodata
 
-EXPOSE 18081
-CMD mswms --port 18081
+CMD ["mswms", "--port 80"]
