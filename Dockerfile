@@ -62,5 +62,6 @@ ENV PYTHONPATH="/srv/mss:/root/mss"
 # also you can replace the data in the demodata dir /root/mss.
 RUN demodata
 
+EXPOSE 80
 CMD /opt/conda/bin/mswms --port 80
 
