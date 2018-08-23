@@ -1,16 +1,20 @@
 ##################################################################################
 # Dockerfile to run Memcached Containers
 # Based on miniconda3 Image
-# docker build -t mss_img .
-# docker run -d --net=host --name mss_1  mss_img
-# # simple test
+# docker build -t mswms .
+# docker run -d --net=host --name mswms  mswms
+#
+# --- Read Capabilities ---
 # curl "http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1"
+#
+# docker ps
+# CONTAINER ID        IMAGE               COMMAND
+# b0bc7275d77f        mswms               "/usr/bin/tini -- /b…"
 #
 # For the mss ui:
 # xhost +local:docker
-# docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest  /bin/bash
-# mss&
-# mswms
+# docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest mss
+#
 #
 ##################################################################################
 
@@ -54,4 +58,5 @@ ENV PYTHONPATH="/srv/mss:/root/mss"
 # also you can replace the data in the demodata dir /root/mss.
 RUN demodata
 
-CMD ["mswms", "--port 80"]
+CMD /opt/conda/bin/mswms --port 80
+
