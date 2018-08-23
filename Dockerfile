@@ -13,8 +13,12 @@
 #
 # For the mss ui:
 # xhost +local:docker
-# docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest mss
+# docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest mss
 #
+# For the wms server:
+# docker run -d --net=host  dreimark/mss:latest
+# # --- Read Capabilities ---
+# curl "http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1"
 #
 ##################################################################################
 
