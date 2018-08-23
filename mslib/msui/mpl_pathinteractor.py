@@ -538,18 +538,17 @@ class PathInteractor(object):
         self.line.set_data(list(zip(*vertices)))
 
         # Draw waypoint labels.
-        label_offset = 0
         for wp in self.wp_labels:
             wp.remove()
         self.wp_labels = []  # remove doesn't seem to be necessary
         x, y = list(zip(*vertices))
         wpd = self.waypoints_model.all_waypoint_data()
         for i in range(len(wpd)):
-            textlabel = str(i)
+            textlabel = u"{:}   ".format(str(i))
             if wpd[i].location != "":
-                textlabel = u"{:}".format(wpd[i].location)
-            t = self.ax.text(x[i] + label_offset,
-                             y[i] + label_offset,
+                textlabel = u"{:}   ".format(wpd[i].location)
+            t = self.ax.text(x[i],
+                             y[i],
                              textlabel,
                              bbox=dict(boxstyle="round",
                                        facecolor="white",
@@ -557,6 +556,7 @@ class PathInteractor(object):
                                        edgecolor="none"),
                              fontweight="bold",
                              zorder=4,
+                             rotation=90,
                              animated=True,
                              clip_on=True,
                              visible=self.showverts and self.label_waypoints)
