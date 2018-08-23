@@ -512,19 +512,19 @@ app = WMSServer()
 
 def application(environ, start_response):
     try:
-        # Request info
         query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))
         logging.debug(u"ENVIRON: %s", environ)
-
-        # Processing
         request = query.get('request')
         output = ""
         return_format = 'text/plain'
+        status = '200 OK'
 
         url = paste.request.construct_url(environ)
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request.lower() == 'getcapabilities':
+        if request is None:
+            status = '404 Not Found'
+        elif request.lower() == 'getcapabilities':
             return_format = 'text/xml'
             return_data = app.get_capabilities(server_url)
             output = return_data.encode('utf-8')
@@ -535,11 +535,10 @@ def application(environ, start_response):
                 return_format = return_format.lower()  # MAYBE TO BE DELETED
                 output = return_data
             else:
+                status = '404 Not Found'
                 return_format = "text/xml"
                 output = return_data.encode('utf-8')
 
-        # Preparing the Response
-        status = '200 OK'
         response_headers = [('Content-type', return_format), ('Content-Length', str(len(output)))]
         start_response(status, response_headers)
 
