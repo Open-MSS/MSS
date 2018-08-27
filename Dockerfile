@@ -63,5 +63,5 @@ ENV PYTHONPATH="/srv/mss:/root/mss"
 RUN demodata
 
 EXPOSE 80
-CMD /opt/conda/bin/mswms --port 80
+CMD ["/opt/conda/bin/mswms", "--port", "80"]
 
