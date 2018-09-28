@@ -46,6 +46,7 @@ requirements:
     - owslib
     - unicodecsv
     - fs_filepicker
+    - cftime >= 1.0.1
     - future # [py2k]
 
 test:
