@@ -30,6 +30,25 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+# Hack to fix missing PROJ4 env var in root environment
+import os
+import setuptools
+
+
+if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
+    conda_file_dir = setuptools.__file__
+    conda_dir = conda_file_dir.split('lib')[0]
+    proj_lib = os.path.join(os.path.join(conda_dir, 'share'), 'proj')
+    os.environ["PROJ_LIB"] = proj_lib
+    # if proj4 is installed we have also in the base environment epsg data
+    if not os.path.exists(proj_lib):
+        os.makedirs(proj_lib)
+        epsg_file = os.path.join(proj_lib, 'epsg')
+        if not os.path.exists(epsg_file):
+            with open(os.path.join(proj_lib, 'epsg'), 'w') as fid:
+                fid.write("# Placeholder for epsg data")
+
+
 import paste.httpserver
 import argparse
 import logging
