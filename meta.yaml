@@ -24,7 +24,7 @@ requirements:
   run:
     - python
     - menuinst  # [win]
-    - basemap 1.1.*
+    - basemap >=1.1.0
     - chameleon
     - execnet
     - jplephem
@@ -47,6 +47,8 @@ requirements:
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
+    - matplotlib <3.0.0
+    - proj4
     - future # [py2k]
 
 test:
