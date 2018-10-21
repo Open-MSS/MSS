@@ -44,7 +44,7 @@ try:
     import nappy
     HAVE_NAPPY = True
 except ImportError:
-    logging.warning("*** NAppy is not available. You will not be able to read NASA Ames files. ***")
+    logging.debug("*** NAppy is not available. You will not be able to read NASA Ames files. ***")
     HAVE_NAPPY = False
 
 from mslib.msui import lagranto_output_reader
