@@ -36,17 +36,12 @@ Please add the channel conda-forge to your defaults::
 The last channel added gets on top of the list. This gives the order:
 First search in default packages then in conda-forge.
 
-You should install mss into a new environment to ensure the most recent
+You must install mss into a new environment to ensure the most recent
 versions for dependencies (On the Anaconda Prompt on Windows, you have to 
 leave out the 'source' here and below). ::
 
    $ conda create -n mssenv mss python=3
    $ source activate mssenv
-   $ mss
-
-One may also install mss into the base enviroment. ::
-
-   $ conda install mss
    $ mss
 
 For updating an existing MSS installation to the current version, it is best to install
