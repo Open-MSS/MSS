@@ -9,6 +9,7 @@ source:
   git_url: https://bitbucket.org/wxmetvis/mss.git
 
 build:
+  skip: true  # [py35]
   number: 0
   entry_points:
     - mss = mslib.msui.mss_pyui:main
@@ -24,7 +25,7 @@ requirements:
   run:
     - python
     - menuinst  # [win]
-    - basemap 1.1.*
+    - basemap >=1.1.0
     - chameleon
     - execnet
     - isodate
@@ -33,7 +34,7 @@ requirements:
     - netcdf4
     - hdf4
     - paste
-    - pillow
+    - pillow 5.*
     - python-dateutil
     - pytz
     - pyqt 5.*
@@ -47,6 +48,9 @@ requirements:
     - owslib
     - unicodecsv
     - fs_filepicker
+    - cftime >=1.0.1
+    - matplotlib <3.0.0
+    - proj4
     - future # [py2k]
 
 test:

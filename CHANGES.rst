@@ -1,6 +1,29 @@
 Changelog
 =========
 
+Version 1.7.4
+-------------
+
+Bug Fixes:
+  - netcdf cftime update needed for demodata / mswms, #366
+  - LinkError: post-link script failed for package conda-forge::mss-1.7.3-py36_0, #365
+  - msui on docker ImportError: libGL.so.1: cannot open shared object file, #362
+  - mss cannot start in root environment, PROJ_LIB Path, KeyError , #360
+  - Support http://msgcpp-ogc-realtime.knmi.nl/msgrt.cgi WMS Server, #352
+  - Support http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi WMS server, #351
+  - Support NASA WMS Server "https://neo.sci.gsfc.nasa.gov/wms/wms", #348
+  - wms server: return only on the getcapability request a capabilty document, #346
+  - demodata pressure levels uses inconsistent units, #341
+  - waypoint labels (in sideview) not readable, #317
+
+Other Changes:
+  - remove warning for non installed features, #359
+
+Hint:
+~~~~~
+The installation of mss in the root/base environment is deprecated.
+
+
 Version 1.7.3
 -------------
 
