@@ -149,17 +149,20 @@
     </item>
    </layout>
   </widget>
-  <action name="actionClose">
+  <action name="actionCloseWindow">
    <property name="text">
-    <string>E&amp;xit Module</string>
+    <string>Close Window</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+X</string>
+    <string>Ctrl+W</string>
    </property>
   </action>
   <action name="actionFlightPerformance_old">
    <property name="text">
-    <string>Flight Performance (first version, depracated)</string>
+    <string>Flight Performance (first version, deprecated)</string>
+   </property>
+   <property name="toolTip">
+    <string>Flight Performance (first version, deprecated)</string>
    </property>
   </action>
   <action name="actionFlightPerformance">
@@ -167,11 +170,12 @@
     <string>Flight &amp;Performance</string>
    </property>
   </action>
+  <addaction name="actionCloseWindow"/>
  </widget>
  <resources/>
  <connections>
   <connection>
-   <sender>actionClose</sender>
+   <sender>actionCloseWindow</sender>
    <signal>triggered()</signal>
    <receiver>TableViewWindow</receiver>
    <slot>close()</slot>

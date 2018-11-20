@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_sideview_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -46,12 +46,12 @@ class Ui_SideViewWindow(object):
         self.horizontalLayout.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout)
         SideViewWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(SideViewWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 931, 26))
-        self.menubar.setObjectName("menubar")
-        SideViewWindow.setMenuBar(self.menubar)
+        self.actionCloseWindow = QtWidgets.QAction(SideViewWindow)
+        self.actionCloseWindow.setObjectName("actionCloseWindow")
+        SideViewWindow.addAction(self.actionCloseWindow)
 
         self.retranslateUi(SideViewWindow)
+        self.actionCloseWindow.triggered.connect(SideViewWindow.close)
         QtCore.QMetaObject.connectSlotsByName(SideViewWindow)
 
     def retranslateUi(self, SideViewWindow):
@@ -60,5 +60,7 @@ class Ui_SideViewWindow(object):
         self.btOptions.setText(_translate("SideViewWindow", "options"))
         self.cbTools.setItemText(0, _translate("SideViewWindow", "(select to open control)"))
         self.cbTools.setItemText(1, _translate("SideViewWindow", "WMS"))
+        self.actionCloseWindow.setText(_translate("SideViewWindow", "CloseWindow"))
+        self.actionCloseWindow.setShortcut(_translate("SideViewWindow", "Ctrl+W"))
 
 from mslib.msui.mpl_qtwidget import MplSideViewWidget

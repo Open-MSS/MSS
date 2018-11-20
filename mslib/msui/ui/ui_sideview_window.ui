@@ -93,16 +93,15 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>931</width>
-     <height>26</height>
-    </rect>
+  <action name="actionCloseWindow">
+   <property name="text">
+    <string>CloseWindow</string>
    </property>
-  </widget>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <addaction name="actionCloseWindow"/>
  </widget>
  <customwidgets>
   <customwidget>
@@ -113,5 +112,22 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>actionCloseWindow</sender>
+   <signal>triggered()</signal>
+   <receiver>SideViewWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>465</x>
+     <y>317</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
