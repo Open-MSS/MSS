@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui/ui_topview_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -77,12 +77,12 @@ class Ui_TopViewWindow(object):
         self.horizontalLayout.addItem(spacerItem3)
         self.verticalLayout.addLayout(self.horizontalLayout)
         TopViewWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(TopViewWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 952, 26))
-        self.menubar.setObjectName("menubar")
-        TopViewWindow.setMenuBar(self.menubar)
+        self.actionCloseWindow = QtWidgets.QAction(TopViewWindow)
+        self.actionCloseWindow.setObjectName("actionCloseWindow")
+        TopViewWindow.addAction(self.actionCloseWindow)
 
         self.retranslateUi(TopViewWindow)
+        self.actionCloseWindow.triggered.connect(TopViewWindow.close)
         QtCore.QMetaObject.connectSlotsByName(TopViewWindow)
 
     def retranslateUi(self, TopViewWindow):
@@ -100,5 +100,7 @@ class Ui_TopViewWindow(object):
         self.cbChangeMapSection.setItemText(4, _translate("TopViewWindow", "Germany (ste)"))
         self.cbChangeMapSection.setItemText(5, _translate("TopViewWindow", "Europe (cyl)"))
         self.cbChangeMapSection.setItemText(6, _translate("TopViewWindow", "Germany (cyl)"))
+        self.actionCloseWindow.setText(_translate("TopViewWindow", "CloseWindow"))
+        self.actionCloseWindow.setShortcut(_translate("TopViewWindow", "Ctrl+W"))
 
 from mslib.msui.mpl_qtwidget import MplTopViewWidget

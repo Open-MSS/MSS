@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_tableview_window.ui'
+# Form implementation generated from reading ui file 'ui/ui_tableview_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -64,15 +64,16 @@ class Ui_TableViewWindow(object):
         self.horizontalLayout.addWidget(self.btInvertDirection)
         self.verticalLayout.addLayout(self.horizontalLayout)
         TableViewWindow.setCentralWidget(self.centralwidget)
-        self.actionClose = QtWidgets.QAction(TableViewWindow)
-        self.actionClose.setObjectName("actionClose")
+        self.actionCloseWindow = QtWidgets.QAction(TableViewWindow)
+        self.actionCloseWindow.setObjectName("actionCloseWindow")
         self.actionFlightPerformance_old = QtWidgets.QAction(TableViewWindow)
         self.actionFlightPerformance_old.setObjectName("actionFlightPerformance_old")
         self.actionFlightPerformance = QtWidgets.QAction(TableViewWindow)
         self.actionFlightPerformance.setObjectName("actionFlightPerformance")
+        TableViewWindow.addAction(self.actionCloseWindow)
 
         self.retranslateUi(TableViewWindow)
-        self.actionClose.triggered.connect(TableViewWindow.close)
+        self.actionCloseWindow.triggered.connect(TableViewWindow.close)
         QtCore.QMetaObject.connectSlotsByName(TableViewWindow)
 
     def retranslateUi(self, TableViewWindow):
@@ -84,8 +85,9 @@ class Ui_TableViewWindow(object):
         self.btAddWayPointToFlightTrack.setText(_translate("TableViewWindow", "insert"))
         self.btDeleteWayPoint.setText(_translate("TableViewWindow", "delete selected"))
         self.btInvertDirection.setText(_translate("TableViewWindow", "reverse"))
-        self.actionClose.setText(_translate("TableViewWindow", "E&xit Module"))
-        self.actionClose.setShortcut(_translate("TableViewWindow", "Ctrl+X"))
-        self.actionFlightPerformance_old.setText(_translate("TableViewWindow", "Flight Performance (first version, depracated)"))
+        self.actionCloseWindow.setText(_translate("TableViewWindow", "Close Window"))
+        self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+W"))
+        self.actionFlightPerformance_old.setText(_translate("TableViewWindow", "Flight Performance (first version, deprecated)"))
+        self.actionFlightPerformance_old.setToolTip(_translate("TableViewWindow", "Flight Performance (first version, deprecated)"))
         self.actionFlightPerformance.setText(_translate("TableViewWindow", "Flight &Performance"))
 
