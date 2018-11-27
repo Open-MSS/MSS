@@ -157,19 +157,6 @@
     <string>Ctrl+W</string>
    </property>
   </action>
-  <action name="actionFlightPerformance_old">
-   <property name="text">
-    <string>Flight Performance (first version, deprecated)</string>
-   </property>
-   <property name="toolTip">
-    <string>Flight Performance (first version, deprecated)</string>
-   </property>
-  </action>
-  <action name="actionFlightPerformance">
-   <property name="text">
-    <string>Flight &amp;Performance</string>
-   </property>
-  </action>
   <addaction name="actionCloseWindow"/>
  </widget>
  <resources/>
