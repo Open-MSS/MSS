@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/ui_tableview_window.ui'
+# Form implementation generated from reading ui file 'msui/ui/ui_tableview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -66,10 +66,6 @@ class Ui_TableViewWindow(object):
         TableViewWindow.setCentralWidget(self.centralwidget)
         self.actionCloseWindow = QtWidgets.QAction(TableViewWindow)
         self.actionCloseWindow.setObjectName("actionCloseWindow")
-        self.actionFlightPerformance_old = QtWidgets.QAction(TableViewWindow)
-        self.actionFlightPerformance_old.setObjectName("actionFlightPerformance_old")
-        self.actionFlightPerformance = QtWidgets.QAction(TableViewWindow)
-        self.actionFlightPerformance.setObjectName("actionFlightPerformance")
         TableViewWindow.addAction(self.actionCloseWindow)
 
         self.retranslateUi(TableViewWindow)
@@ -87,7 +83,4 @@ class Ui_TableViewWindow(object):
         self.btInvertDirection.setText(_translate("TableViewWindow", "reverse"))
         self.actionCloseWindow.setText(_translate("TableViewWindow", "Close Window"))
         self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+W"))
-        self.actionFlightPerformance_old.setText(_translate("TableViewWindow", "Flight Performance (first version, deprecated)"))
-        self.actionFlightPerformance_old.setToolTip(_translate("TableViewWindow", "Flight Performance (first version, deprecated)"))
-        self.actionFlightPerformance.setText(_translate("TableViewWindow", "Flight &Performance"))
 
