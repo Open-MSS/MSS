@@ -5,6 +5,7 @@ Version 1.7.4
 -------------
 
 Bug Fixes:
+  - remove py3.5 build because windows install fails with 1.7.3 build py_35_1, #370
   - netcdf cftime update needed for demodata / mswms, #366
   - LinkError: post-link script failed for package conda-forge::mss-1.7.3-py36_0, #365
   - msui on docker ImportError: libGL.so.1: cannot open shared object file, #362
