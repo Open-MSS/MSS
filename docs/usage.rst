@@ -137,6 +137,15 @@ can configure this view by
 .. literalinclude:: samples/config/mss/snippets/trajectorytool.sample
 
 
+Caching
+~~~~~~~
+
+For changing the default cache directory and behaviour to a named directory
+you can use these parameters. If you use shared directories you may have to solve access rights.
+
+.. literalinclude:: samples/config/mss/snippets/caching.sample
+
+
 Docking Widgets Configurations
 ..............................
 
