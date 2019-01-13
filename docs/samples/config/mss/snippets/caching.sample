@@ -1,0 +1,3 @@
+   "wms_cache": "/tmp/.cache/.mss/msui/wms_cache",
+   "wms_cache_max_size_bytes": 20971520,
+   "wms_cache_max_age_seconds": 432000,
