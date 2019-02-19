@@ -48,7 +48,6 @@ standard_library.install_aliases()
 import os
 import logging
 from datetime import datetime
-import traceback
 import paste
 import paste.request
 import paste.util.multidict
@@ -469,36 +468,28 @@ app = WMSServer()
 
 def application(environ, start_response):
     try:
+        # Request info
         query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))
         logging.debug(u"ENVIRON: %s", environ)
+
         # Processing
-        request = query.get('request', '').lower()
-        output = ""
-        return_format = 'text/plain'
-        status = '200 OK'
+        request = query.get('request')
+        if request is None:  # request may *actually* be set to None
+            request = ''
+        request = request.lower()
 
         url = paste.request.construct_url(environ)
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request is None:
-            status = '404 Not Found'
-        elif request == 'getcapabilities':
-            return_format = 'text/xml'
-            return_data = app.get_capabilities(server_url)
-            output = return_data.encode('utf-8')
+        if request == "getcapabilities":
+            return_data, return_format = app.get_capabilities(server_url)
         elif request in ['getmap', 'getvsec']:
             return_data, return_format = app.produce_plot(environ, request)
-            # ToDo refactor
-            if not app.is_service_exception(return_data):
-                return_format = return_format.lower()  # MAYBE TO BE DELETED
-                output = return_data
-            else:
-                status = '404 Not Found'
-                return_format = "text/xml"
-                output = return_data.encode('utf-8')
+        else:
+            raise RuntimeError(u"Request type '{}' is not valid.".format(request))
 
-        response_headers = [('Content-type', return_format), ('Content-Length', str(len(output)))]
-        start_response(status, response_headers)
+        response_headers = [('Content-type', return_format), ('Content-Length', str(len(return_data)))]
+        start_response('200 OK', response_headers)
 
         return [return_data]
 

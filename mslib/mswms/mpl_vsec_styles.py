@@ -175,7 +175,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
                 plt.setp(cs_pv.collections,
                          path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
-                cs_pv_lab = ax.clabel(cs_pv, colours=cont_label_colour, fontsize=8, fmt='%i')
+                cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fontsize=8, fmt='%i')
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # Pressure decreases with index, i.e. orography is stored at the
@@ -656,7 +656,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
                          filled_contours, cmap=plt.cm.YlGnBu)  # YlGnBu
         cs_q = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
                           curtain_p, curtain_q,
-                          filled_contours, colours="c", linestyles="solid", linewidths=1)
+                          filled_contours, colors="c", linestyles="solid", linewidths=1)
         ax.clabel(cs_q, fontsize=8, fmt='%.2f')
 
         # Contour line plot of northward wind (v).
@@ -1530,7 +1530,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
                 plt.setp(cs_pv.collections,
                          path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
-                cs_pv_lab = ax.clabel(cs_pv, colours=cont_label_colour, fontsize=8, fmt='%i')
+                cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fontsize=8, fmt='%i')
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # Pressure decreases with index, i.e. orography is stored at the

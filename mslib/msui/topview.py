@@ -28,8 +28,6 @@
     limitations under the License.
 """
 
-from builtins import str
-
 import functools
 import logging
 from mslib.utils import config_loader, get_projection_params, save_settings_pickle, load_settings_pickle

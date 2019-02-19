@@ -41,4 +41,5 @@ class TestMPLBasemapHorizontalSectionStyle(object):
 
     def test_supported_crs(self):
         example = MPLBasemapHorizontalSectionStyle()
-        assert example.supported_crs() == ['EPSG:4326']
+        assert sorted(example.supported_crs()) == \
+            sorted(["EPSG:3031", "EPSG:3995", "EPSG:3857", "EPSG:4326", "MSS:stere"])
