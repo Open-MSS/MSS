@@ -275,7 +275,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         los = [rotate_point(point, -self.dsbObsAngleAzimuth.value()) for point in direction]
         los.append(los[-1])
 
-        if isinstance(flight_alt, (collections.Sequence, np.ndarray)):
+        if isinstance(flight_alt, (collections.abc.Sequence, np.ndarray)):
             dist = [(np.sqrt(max((EARTH_RADIUS + a) ** 2 - (EARTH_RADIUS + cut_height) ** 2, 0)) / 110.)
                     for a in flight_alt[:-1]]
             dist.append(dist[-1])
