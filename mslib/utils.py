@@ -302,13 +302,13 @@ def get_projection_params(proj):
     elif proj.startswith("epsg:"):
         epsg = proj[5:]
         if epsg.startswith("777") and len(epsg) == 8:  # user defined MSS code. deprecated.
-            logging.warn("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
+            logging.warning("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
                 "basemap": {"projection": "stere", "lat_0": lat_0, "lon_0": lon_0},
                 "bbox": "degree"}
         elif epsg.startswith("778") and len(epsg) == 8:  # user defined MSS code. deprecated.
-            logging.warn("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
+            logging.warning("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
                 "basemap": {"projection": "stere", "lat_0": -lat_0, "lon_0": lon_0},
@@ -373,7 +373,7 @@ def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     data3D can be on an IRREGULAR lat/lon grid, coordinates given by lats, lons.
     The lats, lons arrays can have arbitrary order, they do not have to be uniform.
     """
-    # Create an empty field to accomodate the curtain.
+    # Create an empty field to accommodate the curtain.
     curtain = np.zeros([data3D.shape[0], len(lats)])
 
     # Transform lat/lon values to array index space. This is necessary to use
