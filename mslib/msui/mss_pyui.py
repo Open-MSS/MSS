@@ -733,6 +733,8 @@ def main():
         print("Version:", __version__)
         sys.exit()
 
+    setup_logging(args)
+
     if args.menu:
         # Experimental feature to get mss into application menue
         if platform.system() == "Linux":
@@ -748,6 +750,8 @@ def main():
             dirname = os.path.dirname(application_destination)
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
+            if prefix:
+                prefix = "({})".format(prefix)
             desktop = desktop.format(prefix,
                                      os.path.join(sys.prefix, "bin", "mss"),
                                      icon_destination)
@@ -765,8 +769,6 @@ def main():
             os.remove(icon_destination)
         logging.info("menu entry removed")
         sys.exit()
-
-    setup_logging(args)
 
     logging.info(u"MSS Version: %s", __version__)
     logging.info(u"Python Version: %s", sys.version)
