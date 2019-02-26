@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 1.7.5
+-------------
+
+Bug Fixes:
+  - Changed pyqt Version in conda environment. see #377
+  - PEP8 Fix, see #381
+
+Hint:
+  - Python 2 will no longer be supported in mss-1.8.0, see #381
+
 Version 1.7.4
 -------------
 

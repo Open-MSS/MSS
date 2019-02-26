@@ -33,6 +33,8 @@ import os
 import netCDF4 as nc
 import numpy as np
 import fs
+import warnings
+import platform
 
 
 _SURFACE_TEXT = """\
@@ -1046,6 +1048,13 @@ def main():
     """
     creates various test data files and also the server configuration
     """
+    pyversion = platform.python_version()
+    warnings.simplefilter("always")
+    if pyversion.startswith('2'):
+        warnings.warn(
+            'You are using Python {}, which will no longer be supported in mss 1.8.0'.format(pyversion),
+            DeprecationWarning
+        )
     root_fs = fs.open_fs(u"~/")
     if not root_fs.exists(u"mss/testdata"):
         root_fs.makedirs(u"mss/testdata")
