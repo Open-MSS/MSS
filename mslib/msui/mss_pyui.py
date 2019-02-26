@@ -63,6 +63,7 @@ import shutil
 import sys
 import types
 import fs
+import warnings
 
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
@@ -706,6 +707,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 
 def main():
+    pyversion = platform.python_version()
+    warnings.simplefilter("always")
+    if pyversion.startswith('2'):
+        warnings.warn(
+            "You are using Python %s, which will no longer be supported in mss 1.8.0" % (pyversion),
+            DeprecationWarning
+        )
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
     except KeyError:
