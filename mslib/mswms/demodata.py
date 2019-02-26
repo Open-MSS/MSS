@@ -1052,7 +1052,7 @@ def main():
     warnings.simplefilter("always")
     if pyversion.startswith('2'):
         warnings.warn(
-            "You are using Python %s, which will no longer be supported in mss 1.8.0" % (pyversion),
+            'You are using Python {}, which will no longer be supported in mss 1.8.0'.format(pyversion),
             DeprecationWarning
         )
     root_fs = fs.open_fs(u"~/")
