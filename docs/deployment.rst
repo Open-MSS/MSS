@@ -248,7 +248,7 @@ Our examples are based on the following directories located in the home director
  |   └── mss_wms_auth.py
  ├── log
  │   └── mss_error.log
- ├── miniconda2
+ ├── miniconda3
  │   ├── bin
  │   ├── conda-bld
  │   ├── conda-meta

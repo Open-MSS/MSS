@@ -64,7 +64,7 @@ We suggest to create a mss user.
 * get `miniconda <http://conda.pydata.org/miniconda.html>`_ for Python 3
 * set execute bit on install script
 * execute script, enable environment in .bashrc
-* login again or export PATH="/home/mss/miniconda2/bin:$PATH"
+* login again or export PATH="/home/mss/miniconda3/bin:$PATH"
 * python --version should tell Python 3.X.X
 * conda install -c conda-forge mss
 
