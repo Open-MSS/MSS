@@ -30,7 +30,7 @@ import sys
 import mock
 import os
 from mslib.msui.mss_qt import QtWidgets, QtTest
-from mslib._tests.utils import ROOT_DIR
+from mslib._tests.constants import ROOT_DIR
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.plugins.io.text import load_from_txt, save_to_txt
 from mslib.plugins.io.flitestar import load_from_flitestar
