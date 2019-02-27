@@ -32,7 +32,7 @@ import sys
 import pytest
 
 from mslib.mswms.demodata import DataFiles
-import mslib._tests.utils as utils
+import mslib._tests.constants as constants
 
 
 try:
@@ -42,17 +42,17 @@ try:
 except ImportError:
     Display = None
 
-if not utils.SERVER_CONFIG_FS.exists(utils.SERVER_CONFIG_FILE):
+if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
     print('\n configure testdata')
     # ToDo check pytest tmpdir_factory
-    examples = DataFiles(data_fs=utils.DATA_FS,
-                         server_config_fs=utils.SERVER_CONFIG_FS)
+    examples = DataFiles(data_fs=constants.DATA_FS,
+                         server_config_fs=constants.SERVER_CONFIG_FS)
     examples.create_server_config(detailed_information=True)
     examples.create_data()
 
-imp.load_source('mss_wms_settings', utils.SERVER_CONFIG_FILE_PATH)
+imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
 
-sys.path.insert(0, utils.SERVER_CONFIG_FS.root_path)
+sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -71,5 +71,5 @@ def configure_testsetup(request):
 
 @pytest.fixture(scope="class")
 def testdata_exists():
-    if not utils.ROOT_FS.exists(u'mss'):
+    if not constants.ROOT_FS.exists(u'mss'):
         pytest.skip("testdata not existing")

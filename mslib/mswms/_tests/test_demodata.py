@@ -30,7 +30,7 @@ from past.builtins import basestring
 
 import imp
 import numpy as np
-from mslib._tests.utils import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE, SERVER_CONFIG_FILE_PATH
+from mslib._tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE, SERVER_CONFIG_FILE_PATH
 import mslib.mswms.demodata as demodata
 
 

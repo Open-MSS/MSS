@@ -29,7 +29,7 @@
 import os
 from datetime import datetime
 from mslib.mswms.dataaccess import DefaultDataAccess
-from mslib._tests.utils import DATA_DIR
+from mslib._tests.constants import DATA_DIR
 
 
 class Test_DefaultDataAccess(object):
