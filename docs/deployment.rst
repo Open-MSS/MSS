@@ -248,7 +248,7 @@ Our examples are based on the following directories located in the home director
  |   └── mss_wms_auth.py
  ├── log
  │   └── mss_error.log
- ├── miniconda2
+ ├── miniconda3
  │   ├── bin
  │   ├── conda-bld
  │   ├── conda-meta
@@ -276,7 +276,7 @@ Configuration of apache mod_wsgi.conf
 One posibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternativly you
 could add it also to mss_wms_settings.py.
 
-  WSGIPythonPath /home/mss/config:/home/mss/miniconda2/lib/python3.6/site-packages
+  WSGIPythonPath /home/mss/config:/home/mss/miniconda3/lib/python3.X/site-packages
 
 
 By this setting you override the PYTHONPATH environment variable. So you have also to add

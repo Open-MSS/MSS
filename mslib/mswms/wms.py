@@ -53,6 +53,8 @@ import paste.request
 import paste.util.multidict
 import traceback
 import urllib.parse
+import warnings
+import platform
 from chameleon import PageTemplateLoader
 
 try:
@@ -467,6 +469,13 @@ app = WMSServer()
 
 
 def application(environ, start_response):
+    pyversion = platform.python_version()
+    warnings.simplefilter("always")
+    if pyversion.startswith('2'):
+        warnings.warn(
+            'You are using Python {}, which will no longer be supported in mss 1.8.0'.format(pyversion),
+            DeprecationWarning
+        )
     try:
         # Request info
         query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))

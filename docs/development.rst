@@ -46,7 +46,7 @@ On top level dir::
 
   $ git clone https://bitbucket.org/yourfork/mss.git
   $ cd mss
-  $ conda create -n mssdev python=2
+  $ conda create -n mssdev python=3
   $ source activate mssdev
   $ conda build .
   $ conda install --use-local mss

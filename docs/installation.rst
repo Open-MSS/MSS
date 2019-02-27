@@ -1,11 +1,15 @@
 Installation
 =================
 
-Current Releases of mss are based on *python 2* and *python 3*
+Current Releases of mss are based on *python 2* and *python 3*.
 
 .. image:: https://anaconda.org/conda-forge/mss/badges/installer/conda.svg
 
-Python 2.7 `will not be maintained past 2020 <https://www.python.org/dev/peps/pep-0373/>`_.
+
+**Python 2 will no longer be supported in mss-1.8.0.**
+
+mss-1.7.5 is the last version with python2* support.
+
 
 Install distributed version by conda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,8 +71,8 @@ We suggest to create a mss user.
 * get `miniconda <http://conda.pydata.org/miniconda.html>`_ for Python 3
 * set execute bit on install script
 * execute script, enable environment in .bashrc
-* login again or export PATH="/home/mss/miniconda2/bin:$PATH"
-* python --version should tell Python 3.6.X
+* login again or export PATH="/home/mss/miniconda3/bin:$PATH"
+* python --version should tell Python 3.X.X
 * conda install -c conda-forge mss
 
 For a simple test you could start the builtin standalone server by *mswms*.
