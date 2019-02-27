@@ -29,7 +29,7 @@
 import importlib
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib._tests.utils import SERVER_CONFIG_FILE
+from mslib._tests.constants import SERVER_CONFIG_FILE
 
 
 class TestMPLBasemapHorizontalSectionStyle(object):
