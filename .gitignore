@@ -6,11 +6,11 @@
 *~
 mslib/mss_config.py
 mslib/performance/data/
-msui/mss.sideview.cfg
-msui/mss.topview.cfg
-msui/mss_settings.py
-msui/wms_cache/
-mswms/mss_wms_settings.py
+mslib/msui/mss.sideview.cfg
+mslib/msui/mss.topview.cfg
+mslib/msui/mss_settings.py
+mslib/msui/wms_cache/
+mslib/mswms/mss_wms_settings.py
 docs/_build
 build/
 mss.egg-info/
