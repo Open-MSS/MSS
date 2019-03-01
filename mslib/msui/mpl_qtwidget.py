@@ -244,7 +244,6 @@ class NavigationToolbar(NavigationToolbar2QT):
         """Activate the pan/zoom tool. pan with left button, zoom with right"""
         # set the pointer icon and button press funcs to the
         # appropriate callbacks
-
         if self._active == 'INSERT_WP':
             self._active = None
         else:
@@ -381,7 +380,10 @@ class NavigationToolbar(NavigationToolbar2QT):
                                        'Customize', self.edit_parameters)
                     a.setToolTip('Edit axis, curve and image parameters')
         if self.sideview:
-            wp_tools = [('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp')]
+            wp_tools = [
+                ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
+                ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
+            ]
         else:
             wp_tools = [
                 ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
