@@ -33,8 +33,6 @@ from __future__ import absolute_import
 # Hack to fix missing PROJ4 env var in root environment
 import os
 import setuptools
-import warnings
-import platform
 
 
 if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
@@ -62,13 +60,6 @@ from mslib.utils import setup_logging
 
 
 def main():
-    pyversion = platform.python_version()
-    warnings.simplefilter("always")
-    if pyversion.startswith('2'):
-        warnings.warn(
-            'You are using Python {}, which will no longer be supported in mss 1.8.0'.format(pyversion),
-            DeprecationWarning
-        )
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--host", help="hostname",
