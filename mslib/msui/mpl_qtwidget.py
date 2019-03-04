@@ -236,6 +236,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 _x[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save') or _x[0] is None]
 
         self.sideview = sideview
+        logging.debug(sideview)
         super(NavigationToolbar, self).__init__(canvas, parent, coordinates)
         self.canvas = canvas
         self._idMotion = None
@@ -244,6 +245,21 @@ class NavigationToolbar(NavigationToolbar2QT):
         """Activate the pan/zoom tool. pan with left button, zoom with right"""
         # set the pointer icon and button press funcs to the
         # appropriate callbacks
+
+        if self.sideview:
+            logging.debug('Sideview mode')
+            fetched_latlng = False
+            # get latitude
+            lat, okPressed = QtWidgets.QInputDialog.getDouble(self, "Latitude","Value:", 10.05, -90, 90, 10)
+            if okPressed:
+                # get longitude
+                lng, okPressed1 = QtWidgets.QInputDialog.getDouble(self, "Longitude","Value:", 10.05, 0, 180, 10)
+                if okPressed1:
+                    fetched_latlng = True
+            if not fetched_latlng:
+                logging.debug('Input latitude and longitude to proceed')
+            else:
+                logging.debug(u'Got lat lng %f %f', lat, lng)
         if self._active == 'INSERT_WP':
             self._active = None
         else:
@@ -806,11 +822,11 @@ class MplSideViewWidget(MplNavBarWidget):
             sideview=True, parent=parent, canvas=MplSideViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
-        #                    Customize, Save
+        #                    Customize, Save, Insert Waypoint
         actions = self.navbar.actions()
         for action in actions:
             if action.text() in ["Home", "Back", "Forward", "Pan", "Zoom",
-                                 "Subplots", "Customize", "Ins WP", "Del WP"]:
+                                 "Subplots", "Customize", "Del WP"]:
                 action.setEnabled(False)
 
 
