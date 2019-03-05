@@ -399,6 +399,7 @@ class NavigationToolbar(NavigationToolbar2QT):
             wp_tools = [
                 ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
                 ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
+                ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
             ]
         else:
             wp_tools = [
@@ -822,11 +823,11 @@ class MplSideViewWidget(MplNavBarWidget):
             sideview=True, parent=parent, canvas=MplSideViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
-        #                    Customize, Save, Insert Waypoint
+        #                    Customize, Save, Insert Waypoint, Delete Waypoint
         actions = self.navbar.actions()
         for action in actions:
             if action.text() in ["Home", "Back", "Forward", "Pan", "Zoom",
-                                 "Subplots", "Customize", "Del WP"]:
+                                 "Subplots", "Customize"]:
                 action.setEnabled(False)
 
 
