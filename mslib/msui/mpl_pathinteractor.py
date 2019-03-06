@@ -678,7 +678,7 @@ class VPathInteractor(PathInteractor):
         """Called whenever a mouse button is released.
 
         From the click event's coordinates, best_index is calculated as
-        the index of a vertex whose x coordinate > clicked x coordinate. 
+        the index of a vertex whose x coordinate > clicked x coordinate.
         This is the position where the waypoint is to be inserted.
 
         'lat' and 'lon' are calculated as an average of each of the first waypoint
