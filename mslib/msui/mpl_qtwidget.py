@@ -236,7 +236,6 @@ class NavigationToolbar(NavigationToolbar2QT):
                 _x[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save') or _x[0] is None]
 
         self.sideview = sideview
-        logging.debug(sideview)
         super(NavigationToolbar, self).__init__(canvas, parent, coordinates)
         self.canvas = canvas
         self._idMotion = None
@@ -245,21 +244,6 @@ class NavigationToolbar(NavigationToolbar2QT):
         """Activate the pan/zoom tool. pan with left button, zoom with right"""
         # set the pointer icon and button press funcs to the
         # appropriate callbacks
-
-        if self.sideview:
-            logging.debug('Sideview mode')
-            fetched_latlng = False
-            # get latitude
-            lat, okPressed = QtWidgets.QInputDialog.getDouble(self, "Latitude","Value:", 10.05, -90, 90, 10)
-            if okPressed:
-                # get longitude
-                lng, okPressed1 = QtWidgets.QInputDialog.getDouble(self, "Longitude","Value:", 10.05, 0, 180, 10)
-                if okPressed1:
-                    fetched_latlng = True
-            if not fetched_latlng:
-                logging.debug('Input latitude and longitude to proceed')
-            else:
-                logging.debug(u'Got lat lng %f %f', lat, lng)
         if self._active == 'INSERT_WP':
             self._active = None
         else:
@@ -395,18 +379,11 @@ class NavigationToolbar(NavigationToolbar2QT):
                     a = self.addAction(self._icon("qt4_editor_options.png"),
                                        'Customize', self.edit_parameters)
                     a.setToolTip('Edit axis, curve and image parameters')
-        if self.sideview:
-            wp_tools = [
-                ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
-                ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
-                ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
-            ]
-        else:
-            wp_tools = [
-                ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
-                ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
-                ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
-            ]
+        wp_tools = [
+            ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
+            ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
+            ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
+        ]
         self.addSeparator()
         for text, img, tooltip_text, callback in wp_tools:
             a = self.addAction(QtGui.QIcon(img), text, getattr(self, callback))
