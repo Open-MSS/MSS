@@ -55,6 +55,7 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.utils import get_distance, find_location
+from mslib.thermolib import pressure2flightlevel
 
 # local application imports
 from mslib.msui import flighttrack as ft
@@ -675,7 +676,41 @@ class VPathInteractor(PathInteractor):
 
     def button_release_insert_callback(self, event):
         """Called whenever a mouse button is released.
+
+        From the click event's coordinates, best_index is calculated as
+        the index of a vertex whose x coordinate > clicked x coordinate. 
+        This is the position where the waypoint is to be inserted.
+
+        'lat' and 'lon' are calculated as an average of each of the first waypoint
+        in left and right neighbourhood of inserted waypoint.
+
+        The coordinates are checked against "locations" defined in mss' config.
+
+        A new waypoint with the coordinates, and name is inserted into the waypoints_model.
         """
+        x, y = event.xdata, event.ydata
+        wpm = self.waypoints_model
+        flightlevel = pressure2flightlevel(y)
+        vertices = self.pathpatch.get_path().vertices
+        best_index = 1
+        for index, vertex in enumerate(vertices):
+            logging.debug(vertex)
+            if x >= vertex[0]:
+                best_index = index + 1
+        lat = (wpm.waypoint_data(best_index - 1).lat + wpm.waypoint_data(best_index).lat) / 2
+        lon = (wpm.waypoint_data(best_index - 1).lon + wpm.waypoint_data(best_index).lon) / 2
+        logging.debug(u"SideView insert point: clicked at (%f, %f), "
+                      u"best index: %d", lat, lon, best_index)
+        loc = find_location(lat, lon)  # skipped tolerance which uses appropriate_epsilon_km
+        if loc is not None:
+            (lat, lon), location = loc
+        else:
+            lat, lon = float(round(lat, 2)), float(round(lon, 2))
+            location = u""
+        new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
+        wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
+        self.redraw_path()
+
         self._ind = None
 
     def button_release_move_callback(self, event):
@@ -805,6 +840,15 @@ class HPathInteractor(PathInteractor):
 
     def button_release_insert_callback(self, event):
         """Called whenever a mouse button is released.
+
+        From the click event's coordinates, best_index is calculated if it can be optimally fit
+        as a prior waypoint in the path.
+
+        A vertex with same coordinates is inserted into the path in canvas.
+
+        The coordinates are checked against "locations" defined in mss' config.
+
+        A new waypoint with the coordinates, and name is inserted into the waypoints_model.
         """
         if not self.showverts or event.button != 1 or event.inaxes is None:
             return
