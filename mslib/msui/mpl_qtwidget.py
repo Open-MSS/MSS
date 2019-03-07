@@ -244,7 +244,6 @@ class NavigationToolbar(NavigationToolbar2QT):
         """Activate the pan/zoom tool. pan with left button, zoom with right"""
         # set the pointer icon and button press funcs to the
         # appropriate callbacks
-
         if self._active == 'INSERT_WP':
             self._active = None
         else:
@@ -380,14 +379,11 @@ class NavigationToolbar(NavigationToolbar2QT):
                     a = self.addAction(self._icon("qt4_editor_options.png"),
                                        'Customize', self.edit_parameters)
                     a.setToolTip('Edit axis, curve and image parameters')
-        if self.sideview:
-            wp_tools = [('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp')]
-        else:
-            wp_tools = [
-                ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
-                ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
-                ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
-            ]
+        wp_tools = [
+            ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
+            ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
+            ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
+        ]
         self.addSeparator()
         for text, img, tooltip_text, callback in wp_tools:
             a = self.addAction(QtGui.QIcon(img), text, getattr(self, callback))
@@ -804,11 +800,11 @@ class MplSideViewWidget(MplNavBarWidget):
             sideview=True, parent=parent, canvas=MplSideViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
-        #                    Customize, Save
+        #                    Customize, Save, Insert Waypoint, Delete Waypoint
         actions = self.navbar.actions()
         for action in actions:
             if action.text() in ["Home", "Back", "Forward", "Pan", "Zoom",
-                                 "Subplots", "Customize", "Ins WP", "Del WP"]:
+                                 "Subplots", "Customize"]:
                 action.setEnabled(False)
 
 
