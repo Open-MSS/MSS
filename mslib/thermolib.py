@@ -858,7 +858,7 @@ def flightlevel2pressure_a(flightlevel):
     hydrostatic equation, according to the profile of the ICAO
     standard atmosphere.
 
-    Array version, the argument "p" must be a numpy array.
+    Array version, the argument "flightlevel" must be a numpy array.
 
     Reference:
         For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
