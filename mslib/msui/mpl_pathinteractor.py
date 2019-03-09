@@ -49,12 +49,12 @@ from __future__ import division
 import logging
 import math
 import numpy as np
-
+import datetime
 # related third party imports
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from mslib.msui.mss_qt import QtCore, QtWidgets
-from mslib.utils import get_distance, find_location
+from mslib.utils import get_distance, find_location, path_points, latlon_points
 from mslib.thermolib import pressure2flightlevel
 
 # local application imports
@@ -693,10 +693,16 @@ class VPathInteractor(PathInteractor):
         flightlevel = pressure2flightlevel(y)
         vertices = self.pathpatch.get_path().vertices
         best_index = 1
-        for index, vertex in enumerate(vertices):
-            logging.debug(vertex)
-            if x >= vertex[0]:
-                best_index = index + 1
+        # if x axis has increasing coordinates
+        if vertices[-1][0] > vertices[0][0]:
+            for index, vertex in enumerate(vertices):
+                if x >= vertex[0]:
+                    best_index = index + 1
+        # if x axis has decreasing coordinates
+        else:
+            for index, vertex in enumerate(vertices):
+                if x <= vertex[0]:
+                    best_index = index + 1
         lat = (wpm.waypoint_data(best_index - 1).lat + wpm.waypoint_data(best_index).lat) / 2
         lon = (wpm.waypoint_data(best_index - 1).lon + wpm.waypoint_data(best_index).lon) / 2
         logging.debug(u"SideView insert point: clicked at (%f, %f), "
@@ -712,6 +718,52 @@ class VPathInteractor(PathInteractor):
         self.redraw_path()
 
         self._ind = None
+
+    def get_lat_lon(self, event):
+        x = event.xdata
+        logging.debug(event)
+        wpm = self.waypoints_model
+        vertices = self.pathpatch.get_path().vertices
+        vertices = np.ndarray.tolist(vertices)
+        for index, vertex in enumerate(vertices):
+            vertices[index].append(datetime.datetime(2012, 7, 1, 10, 30))
+        best_index = 1
+        # if x axis has increasing coordinates
+        if vertices[-1][0] > vertices[0][0]:
+            for index, vertex in enumerate(vertices):
+                if x >= vertex[0]:
+                    best_index = index + 1
+        # if x axis has decreasing coordinates
+        else:
+            for index, vertex in enumerate(vertices):
+                if x <= vertex[0]:
+                    best_index = index + 1
+        # number of subcoordinates is determined by difference in x coordinates
+        number_of_intermediate_points = math.floor(vertices[best_index][0] - vertices[best_index - 1][0])
+        intermediate_vertices_list = path_points([vertices[best_index - 1], vertices[best_index]],
+                                                 number_of_intermediate_points)
+        wp1Array = [wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
+                    datetime.datetime(2012, 7, 1, 10, 30)]
+        wp2Array = [wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
+                    datetime.datetime(2012, 7, 1, 10, 30)]
+        intermediate_waypoints_list = latlon_points(wp1Array, wp2Array, number_of_intermediate_points)
+
+        # best_index1 is the best index among the intermediate coordinates to fit the hovered point
+        # if x axis has increasing coordinates
+        best_index1 = 1
+        if vertices[-1][0] > vertices[0][0]:
+            for index, vertex in enumerate(intermediate_vertices_list[0]):
+                if x >= vertex:
+                    best_index1 = index + 1
+        # if x axis has decreasing coordinates
+        else:
+            for index, vertex in enumerate(intermediate_vertices_list[0]):
+                if x <= vertex:
+                    best_index1 = index + 1
+
+        # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
+        return [round(intermediate_waypoints_list[0][best_index1 - 1], 2),
+                round(intermediate_waypoints_list[1][best_index1 - 1], 2)]
 
     def button_release_move_callback(self, event):
         """Called whenever a mouse button is released.
