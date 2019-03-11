@@ -688,6 +688,8 @@ class VPathInteractor(PathInteractor):
 
         A new waypoint with the coordinates, and name is inserted into the waypoints_model.
         """
+        if not self.showverts or event.button != 1 or event.inaxes is None:
+            return
         x, y = event.xdata, event.ydata
         wpm = self.waypoints_model
         flightlevel = pressure2flightlevel(y)
