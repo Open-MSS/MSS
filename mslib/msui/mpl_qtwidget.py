@@ -272,8 +272,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             self.canvas.widgetlock(self)
         else:
             self.canvas.widgetlock.release(self)
-        self.mode = self.mode
-        logging.debug(self.mode)
         self.set_message(self.mode)
         self._update_buttons_checked()
 
@@ -368,11 +366,8 @@ class NavigationToolbar(NavigationToolbar2QT):
 
     def mouse_move(self, event):
         if not self.sideview:
-            logging.debug(self.sideview)
             self._set_cursor(event)
-
             if event.inaxes and event.inaxes.get_navigate():
-
                 try:
                     s = event.inaxes.format_coord(event.xdata, event.ydata)
                 except (ValueError, OverflowError):
@@ -388,9 +383,8 @@ class NavigationToolbar(NavigationToolbar2QT):
                                 data_str = a.format_cursor_data(data)
                                 if data_str is not None:
                                     s = s + ' ' + data_str
-
                     if len(self.mode):
-                        self.set_message('%s, %s' % (self.mode, s))
+                        self.set_message("{}, {}".format(self.mode, s))
                     else:
                         self.set_message(s)
             else:
