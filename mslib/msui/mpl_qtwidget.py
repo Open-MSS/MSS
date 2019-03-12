@@ -395,7 +395,7 @@ class NavigationToolbar(NavigationToolbar2QT):
             else:
                 lat = 0.0
                 lon = 0.0
-                (lat, lon) = self.canvas.waypoints_interactor.get_lat_lon(event)
+                [lat, lon], best_index = self.canvas.waypoints_interactor.get_lat_lon(event)
                 height = pressure2flightlevel(event.ydata)
                 self.set_message(self.mode + ' x=' + str(lat) + ' y=' + str(lon) +
                                  ' height=' + str(round(height, 2)))

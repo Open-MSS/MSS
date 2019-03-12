@@ -690,25 +690,10 @@ class VPathInteractor(PathInteractor):
         """
         if not self.showverts or event.button != 1 or event.inaxes is None:
             return
-        x, y = event.xdata, event.ydata
+        y = event.ydata
         wpm = self.waypoints_model
         flightlevel = pressure2flightlevel(y)
-        vertices = self.pathpatch.get_path().vertices
-        best_index = 1
-        # if x axis has increasing coordinates
-        if vertices[-1][0] > vertices[0][0]:
-            for index, vertex in enumerate(vertices):
-                if x >= vertex[0]:
-                    best_index = index + 1
-        # if x axis has decreasing coordinates
-        else:
-            for index, vertex in enumerate(vertices):
-                if x <= vertex[0]:
-                    best_index = index + 1
-        lat = (wpm.waypoint_data(best_index - 1).lat + wpm.waypoint_data(best_index).lat) / 2
-        lon = (wpm.waypoint_data(best_index - 1).lon + wpm.waypoint_data(best_index).lon) / 2
-        logging.debug(u"SideView insert point: clicked at (%f, %f), "
-                      u"best index: %d", lat, lon, best_index)
+        [lat, lon], best_index = self.get_lat_lon(event)
         loc = find_location(lat, lon)  # skipped tolerance which uses appropriate_epsilon_km
         if loc is not None:
             (lat, lon), location = loc
@@ -765,7 +750,7 @@ class VPathInteractor(PathInteractor):
 
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
         return [round(intermediate_waypoints_list[0][best_index1 - 1], 2),
-                round(intermediate_waypoints_list[1][best_index1 - 1], 2)]
+                round(intermediate_waypoints_list[1][best_index1 - 1], 2)], best_index
 
     def button_release_move_callback(self, event):
         """Called whenever a mouse button is released.
