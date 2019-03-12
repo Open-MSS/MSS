@@ -41,7 +41,7 @@ requirements:
     - requests
     - scipy
     - sgp4
-    - skyfield
+    - skyfield >=1.10
     - six
     - tk
     - owslib
