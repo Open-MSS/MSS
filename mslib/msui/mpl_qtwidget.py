@@ -35,16 +35,14 @@ from datetime import datetime
 import os
 import six
 import logging
-
 # related third party imports
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
-
+from matplotlib import cbook
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
-
 # local application imports
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
@@ -55,7 +53,7 @@ from mslib.msui import mpl_map
 from mslib.msui import trajectory_item_tree as titree
 from mslib.msui.icons import icons
 from mslib.msui.mss_qt import QtCore, QtWidgets
-
+from mslib.thermolib import pressure2flightlevel
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
@@ -244,6 +242,11 @@ class NavigationToolbar(NavigationToolbar2QT):
         """Activate the pan/zoom tool. pan with left button, zoom with right"""
         # set the pointer icon and button press funcs to the
         # appropriate callbacks
+
+        # testing path_points
+        # x = [[10.1, 10.1, datetime(2012, 7, 1, 10, 30)], [13.0, 13.1, datetime(2012, 7, 1, 10, 30)]]
+        # y = path_points(x)
+        # logging.debug(y)
         if self._active == 'INSERT_WP':
             self._active = None
         else:
@@ -269,7 +272,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             self.canvas.widgetlock(self)
         else:
             self.canvas.widgetlock.release(self)
-
         self.set_message(self.mode)
         self._update_buttons_checked()
 
@@ -361,6 +363,42 @@ class NavigationToolbar(NavigationToolbar2QT):
 
     def press_wp(self, event):
         self.canvas.waypoints_interactor.button_press_callback(event)
+
+    def mouse_move(self, event):
+        if not self.sideview:
+            self._set_cursor(event)
+            if event.inaxes and event.inaxes.get_navigate():
+                try:
+                    s = event.inaxes.format_coord(event.xdata, event.ydata)
+                except (ValueError, OverflowError):
+                    pass
+                else:
+                    artists = [a for a in event.inaxes._mouseover_set
+                               if a.contains(event)[0] and a.get_visible()]
+                    if artists:
+                        a = cbook._topmost_artist(artists)
+                        if a is not event.inaxes.patch:
+                            data = a.get_cursor_data(event)
+                            if data is not None:
+                                data_str = a.format_cursor_data(data)
+                                if data_str is not None:
+                                    s = s + ' ' + data_str
+                    if len(self.mode):
+                        self.set_message("{}, {}".format(self.mode, s))
+                    else:
+                        self.set_message(s)
+            else:
+                self.set_message(self.mode)
+        else:
+            if not event.ydata or not event.xdata:
+                self.set_message(self.mode)
+            else:
+                lat = 0.0
+                lon = 0.0
+                (lat, lon) = self.canvas.waypoints_interactor.get_lat_lon(event)
+                height = pressure2flightlevel(event.ydata)
+                self.set_message(self.mode + ' x=' + str(lat) + ' y=' + str(lon) +
+                                 ' height=' + str(round(height, 2)))
 
     def _init_toolbar(self):
         self.basedir = os.path.join(matplotlib.rcParams['datapath'], 'images')

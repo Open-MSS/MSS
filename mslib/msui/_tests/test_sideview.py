@@ -117,6 +117,14 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_mouse_over(self, mockbox):
+        # Test mouse over
+        QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(20, 20), -1)
+        QtWidgets.QApplication.processEvents()
+
 
 class Test_SideViewWMS(object):
     def setup(self):
@@ -184,3 +192,23 @@ class Test_SideViewWMS(object):
         assert mockdlg.return_value.setModal.call_count == 1
         assert mockdlg.return_value.exec_.call_count == 1
         assert mockdlg.return_value.destroy.call_count == 1
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_insert_point(self, mockbox):
+        """
+        Test inserting a point inside and outside the canvas
+        """
+        self.window.mpl.navbar._actions['insert_wp'].trigger()
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 3
+        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(782, 266))
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 4
+        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(1, 1))
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 4
+        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
+        # click again on same position
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 5
+        assert mockbox.critical.call_count == 0
