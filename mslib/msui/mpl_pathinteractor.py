@@ -692,7 +692,7 @@ class VPathInteractor(PathInteractor):
             return
         y = event.ydata
         wpm = self.waypoints_model
-        flightlevel = pressure2flightlevel(y)
+        flightlevel = float(pressure2flightlevel(y))
         [lat, lon], best_index = self.get_lat_lon(event)
         loc = find_location(lat, lon)  # skipped tolerance which uses appropriate_epsilon_km
         if loc is not None:
@@ -708,7 +708,6 @@ class VPathInteractor(PathInteractor):
 
     def get_lat_lon(self, event):
         x = event.xdata
-        logging.debug(event)
         wpm = self.waypoints_model
         vertices = self.pathpatch.get_path().vertices
         vertices = np.ndarray.tolist(vertices)
@@ -733,7 +732,8 @@ class VPathInteractor(PathInteractor):
                     datetime.datetime(2012, 7, 1, 10, 30)]
         wp2Array = [wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
                     datetime.datetime(2012, 7, 1, 10, 30)]
-        intermediate_waypoints_list = latlon_points(wp1Array, wp2Array, number_of_intermediate_points)
+        intermediate_waypoints_list = latlon_points(wp1Array, wp2Array,
+                                                    number_of_intermediate_points, connection="greatcircle")
 
         # best_index1 is the best index among the intermediate coordinates to fit the hovered point
         # if x axis has increasing coordinates
@@ -747,7 +747,6 @@ class VPathInteractor(PathInteractor):
             for index, vertex in enumerate(intermediate_vertices_list[0]):
                 if x <= vertex:
                     best_index1 = index + 1
-
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
         return [round(intermediate_waypoints_list[0][best_index1 - 1], 2),
                 round(intermediate_waypoints_list[1][best_index1 - 1], 2)], best_index
