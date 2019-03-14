@@ -48,6 +48,7 @@ except ImportError:
     import pyproj
 
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
+from mslib.thermolib import pressure2flightlevel
 
 
 class FatalUserError(Exception):
@@ -499,6 +500,23 @@ def path_points(points, numpoints=100, connection='linear'):
         lats.extend(lats_[startidx:])
         times.extend(times_[startidx:])
     return [np.asarray(_x) for _x in (lats, lons, times)]
+
+
+def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
+    """
+    vertical_axis can take following values
+    - pressure altitude
+    - flight level
+    - pressure
+    """
+    if vertical_axis == "pressure":
+        return float(pressure / 100)
+    elif vertical_axis == "flight level":
+        return pressure2flightlevel(pressure)
+    elif vertical_axis == "pressure altitude":
+        return pressure2flightlevel(pressure) / 32.8
+    else:
+        return pressure
 
 
 class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):

@@ -53,7 +53,7 @@ from mslib.msui import mpl_map
 from mslib.msui import trajectory_item_tree as titree
 from mslib.msui.icons import icons
 from mslib.msui.mss_qt import QtCore, QtWidgets
-from mslib.thermolib import pressure2flightlevel
+from mslib.utils import convert_pressure_to_vertical_axis_measure
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
@@ -395,10 +395,11 @@ class NavigationToolbar(NavigationToolbar2QT):
             else:
                 lat = 0.0
                 lon = 0.0
-                (lat, lon) = self.canvas.waypoints_interactor.get_lat_lon(event)
-                height = pressure2flightlevel(event.ydata)
-                self.set_message(self.mode + ' x=' + str(lat) + ' y=' + str(lon) +
-                                 ' height=' + str(round(height, 2)))
+                [lat, lon], _ = self.canvas.waypoints_interactor.get_lat_lon(event)
+                y_value = convert_pressure_to_vertical_axis_measure(self.canvas.settings_dict["vertical_axis"],
+                                                                    event.ydata)
+                y_value = round(y_value, 2)
+                self.set_message("{} lat={} lon={} y={}".format(self.mode, lat, lon, y_value))
 
     def _init_toolbar(self):
         self.basedir = os.path.join(matplotlib.rcParams['datapath'], 'images')
