@@ -329,7 +329,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     flightlevel = variant_to_float(value)
-                    pressure = thermolib.flightlevel2pressure(flightlevel)
+                    pressure = float(thermolib.flightlevel2pressure(flightlevel))
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
@@ -349,8 +349,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pressure = variant_to_float(value) * 100  # convert hPa to Pa
                     if pressure > 200000:
                         raise ValueError
-                    flightlevel = round(thermolib.pressure2flightlevel(pressure))
-                    pressure = thermolib.flightlevel2pressure(flightlevel)
+                    flightlevel = float(round(thermolib.pressure2flightlevel(pressure)))
+                    pressure = float(thermolib.flightlevel2pressure(flightlevel))
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError:
