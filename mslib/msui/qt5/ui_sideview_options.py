@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/ui_sideview_options.ui'
+# Form implementation generated from reading ui file 'ui_sideview_options.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.12
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_SideViewOptionsDialog(object):
     def setupUi(self, SideViewOptionsDialog):
@@ -25,30 +26,29 @@ class Ui_SideViewOptionsDialog(object):
         self.label_2 = QtWidgets.QLabel(self.groupBox)
         self.label_2.setObjectName("label_2")
         self.horizontalLayout.addWidget(self.label_2)
-        self.sbPbot = QtWidgets.QSpinBox(self.groupBox)
+        self.sbPbot = QtWidgets.QDoubleSpinBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sbPbot.sizePolicy().hasHeightForWidth())
         self.sbPbot.setSizePolicy(sizePolicy)
-        self.sbPbot.setPrefix("")
-        self.sbPbot.setMinimum(30)
-        self.sbPbot.setMaximum(1100)
-        self.sbPbot.setProperty("value", 1050)
+        self.sbPbot.setMinimum(30.0)
+        self.sbPbot.setMaximum(1100.0)
+        self.sbPbot.setProperty("value", 1050.0)
         self.sbPbot.setObjectName("sbPbot")
         self.horizontalLayout.addWidget(self.sbPbot)
         self.label_3 = QtWidgets.QLabel(self.groupBox)
         self.label_3.setObjectName("label_3")
         self.horizontalLayout.addWidget(self.label_3)
-        self.sbPtop = QtWidgets.QSpinBox(self.groupBox)
+        self.sbPtop = QtWidgets.QDoubleSpinBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sbPtop.sizePolicy().hasHeightForWidth())
         self.sbPtop.setSizePolicy(sizePolicy)
-        self.sbPtop.setMinimum(20)
-        self.sbPtop.setMaximum(1050)
-        self.sbPtop.setProperty("value", 200)
+        self.sbPtop.setMinimum(1.0)
+        self.sbPtop.setMaximum(1050.0)
+        self.sbPtop.setProperty("value", 99.99)
         self.sbPtop.setObjectName("sbPtop")
         self.horizontalLayout.addWidget(self.sbPtop)
         self.verticalLayout_6.addLayout(self.horizontalLayout)
@@ -193,9 +193,10 @@ class Ui_SideViewOptionsDialog(object):
         SideViewOptionsDialog.setWindowTitle(_translate("SideViewOptionsDialog", "Side View Options"))
         self.groupBox.setTitle(_translate("SideViewOptionsDialog", "Vertical Extent"))
         self.label_2.setText(_translate("SideViewOptionsDialog", "Vertical extent:"))
-        self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hPa"))
+        self.sbPbot.setPrefix(_translate("SideViewOptionsDialog", " "))
+        self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
         self.label_3.setText(_translate("SideViewOptionsDialog", "to"))
-        self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hPa"))
+        self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
         self.label_4.setText(_translate("SideViewOptionsDialog", "Vertical axis units:"))
         self.cbVerticalAxis.setItemText(0, _translate("SideViewOptionsDialog", "pressure"))
         self.cbVerticalAxis.setItemText(1, _translate("SideViewOptionsDialog", "pressure altitude"))
@@ -214,3 +215,14 @@ class Ui_SideViewOptionsDialog(object):
         self.btFillColour.setText(_translate("SideViewOptionsDialog", "colour"))
         self.cbLabelFlightTrack.setText(_translate("SideViewOptionsDialog", "label flight track"))
 
+
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    SideViewOptionsDialog = QtWidgets.QDialog()
+    ui = Ui_SideViewOptionsDialog()
+    ui.setupUi(SideViewOptionsDialog)
+    SideViewOptionsDialog.show()
+    sys.exit(app.exec_())

@@ -538,8 +538,18 @@ class MplSideViewCanvas(MplCanvas):
                 major_ticks = np.resize(major_ticks,
                                         len_major_ticks + len(major_ticks2) - 1)
                 major_ticks[len_major_ticks:] = major_ticks2[1:]
+                if major_ticks[-1] != self.p_top:
+                    t = np.arange(self.p_top, 0, -100000)
+                    major_ticks = np.append(major_ticks, t)
+                # if self.p_top < 1000:
+                #     k = np.arange(900, 0, -100)
+                #     major_ticks = np.append(major_ticks, k)
+                #     if self.p_top < 100:
+                #         q = np.arange(90, 0, -10)
+                #         major_ticks = np.append(major_ticks, q)
+                
 
-            labels = ["{:d}".format(int(l / 100.)) for l in major_ticks]
+            labels = ["{}".format(float(l / 100.)) for l in major_ticks]
 
             # .. the same for the minor ticks ..
             p_top_minor = max(label_distance, self.p_top)
@@ -554,6 +564,9 @@ class MplSideViewCanvas(MplCanvas):
                 minor_ticks = np.resize(minor_ticks,
                                         len_minor_ticks + len(minor_ticks2) - 1)
                 minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
+                if self.p_top < 1000:
+                    h = np.arange(900, 0, -100)
+                    major_ticks = np.append(major_ticks, h)
             self.ax.set_ylabel("pressure (hPa)")
         elif vaxis == "pressure altitude":
             major_heights = np.arange(0, 30, 2)
@@ -570,7 +583,7 @@ class MplSideViewCanvas(MplCanvas):
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl
-            self.ax.set_ylabel("flight level (hft)")
+            self.ax.set_ylabel("flight level (hft)") 
         else:
             raise RuntimeError("Unsupported vertical axis type: '{}'".format(vaxis))
 
