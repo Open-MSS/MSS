@@ -539,15 +539,8 @@ class MplSideViewCanvas(MplCanvas):
                                         len_major_ticks + len(major_ticks2) - 1)
                 major_ticks[len_major_ticks:] = major_ticks2[1:]
                 if major_ticks[-1] != self.p_top:
-                    t = np.arange(self.p_top, 0, -100000)
-                    major_ticks = np.append(major_ticks, t)
-                # if self.p_top < 1000:
-                #     k = np.arange(900, 0, -100)
-                #     major_ticks = np.append(major_ticks, k)
-                #     if self.p_top < 100:
-                #         q = np.arange(90, 0, -10)
-                #         major_ticks = np.append(major_ticks, q)
-                
+                    top = np.arange(self.p_top, 0, -100000)
+                    major_ticks = np.append(major_ticks, top)
 
             labels = ["{}".format(float(l / 100.)) for l in major_ticks]
 
