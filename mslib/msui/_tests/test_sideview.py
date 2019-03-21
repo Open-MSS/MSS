@@ -31,7 +31,7 @@ import shutil
 import sys
 import multiprocessing
 import tempfile
-from mslib.mswms.mswms import app
+from mslib.mswms.mswms import application
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
@@ -132,7 +132,7 @@ class Test_SideViewWMS(object):
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
         self.thread = multiprocessing.Process(
-            target=app.run,
+            target=application.run,
             args=("127.0.0.1", 8082))
         self.thread.start()
 

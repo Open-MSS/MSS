@@ -32,7 +32,7 @@ import shutil
 import tempfile
 import pytest
 import multiprocessing
-from mslib.mswms.mswms import app
+from mslib.mswms.mswms import application
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
@@ -62,7 +62,7 @@ class WMSControlWidgetSetup(object):
             os.mkdir(self.tempdir)
         QtTest.QTest.qWait(3000)
         self.thread = multiprocessing.Process(
-            target=app.run,
+            target=application.run,
             args=("127.0.0.1", 8082))
         self.thread.start()
         if widget_type == "hsec":

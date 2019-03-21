@@ -56,7 +56,8 @@ import logging
 
 
 from mslib import __version__
-from mslib.mswms.wms import mss_wms_settings, app
+from mslib.mswms.wms import mss_wms_settings
+from mslib.mswms.wms import app as application
 from mslib.utils import setup_logging
 
 
@@ -88,7 +89,7 @@ def main():
 
     logging.info(u"Configuration File: '{}'".format(mss_wms_settings.__file__))
 
-    app.run(args.host, args.port)
+    application.run(args.host, args.port)
 
 
 if __name__ == '__main__':
