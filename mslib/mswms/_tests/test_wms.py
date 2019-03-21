@@ -26,7 +26,7 @@
     limitations under the License.
 """
 
-import mslib.mswms.wms as wms
+import mslib.mswms.mswms as mswms
 
 
 def callback_ok_image(status, response_headers):
@@ -51,21 +51,20 @@ class Test_WMS(object):
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
             'QUERY_STRING': 'request=GetCapabilities&version=1.1.1'}
 
-        result = wms.application(environ, callback_ok_xml)
-        assert len(result) == 1, result
-        assert result[0] is not None, result
-        assert isinstance(result[0], bytes), result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_xml(result.status, result.headers)
+        assert isinstance(result.data, bytes), result
 
     def test_get_capabilities_lowercase(self):
         environ = {
             'wsgi.url_scheme': 'http',
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
             'QUERY_STRING': 'request=getcapabilities&version=1.1.1'}
-
-        result = wms.application(environ, callback_ok_xml)
-        assert len(result) == 1, result
-        assert result[0] is not None, result
-        assert isinstance(result[0], bytes), result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_xml(result.status, result.headers)
+        assert isinstance(result.data, bytes), result
 
     def test_produce_hsec_plot(self):
         environ = {
@@ -75,11 +74,12 @@ class Test_WMS(object):
                 'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=200&srs=EPSG%3A4326&format=image%2Fpng&'
                 'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
-                'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
+                'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'
+        }
 
-        result = wms.application(environ, callback_ok_image)
-        assert len(result) == 1, result
-        assert result[0] is not None, result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_image(result.status, result.headers)
 
     def test_produce_hsec_service_exception(self):
         environ = {
@@ -91,11 +91,10 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
         query_string = environ["QUERY_STRING"]
-
-        result = wms.application(environ, callback_ok_image)
-        assert len(result) == 1, result
-        assert result[0] is not None, result
-        assert result[0].count(b"ServiceExceptionReport") == 0, result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(query_string))
+        callback_ok_image(result.status, result.headers)
+        assert result.data.count(b"ServiceExceptionReport") == 0, result
 
         for orig, fake in [
                 ("dim_init_time=2012-10-17T12%3A00%3A00Z", "dim_init_time=20121017T12%3A00%3A00Z"),
@@ -113,11 +112,9 @@ class Test_WMS(object):
                 ("bbox=-50.0%2C20.0%2C20.0%2C75.0", "bbox=-abcd%2C20.0%2C20.0%2C75.0")]:
             environ["QUERY_STRING"] = query_string.replace(orig, fake)
 
-            result = wms.application(environ, callback_ok_xml)
-
-            assert len(result) == 1, result
-            assert isinstance(result[0], bytes), result
-            assert result[0].count(b"ServiceExceptionReport") > 0, result
+            result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+            callback_ok_xml(result.status, result.headers)
+            assert result.data.count(b"ServiceExceptionReport") > 0, result
 
     def test_produce_vsec_plot(self):
         environ = {
@@ -129,9 +126,9 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=201%2C500.0%2C10%2C100.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C48.08%2C11.28&transparent=FALSE'}
 
-        result = wms.application(environ, callback_ok_image)
-        assert len(result) == 1, result
-        assert result[0] is not None, result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_image(result.status, result.headers)
 
     def test_produce_vsec_service_exception(self):
         environ = {
@@ -144,10 +141,10 @@ class Test_WMS(object):
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C48.08%2C11.28&transparent=FALSE'}
         query_string = environ["QUERY_STRING"]
 
-        result = wms.application(environ, callback_ok_image)
-        assert len(result) == 1, result
-        assert result[0] is not None, result
-        assert result[0].count(b"ServiceExceptionReport") == 0, result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(query_string))
+        callback_ok_image(result.status, result.headers)
+        assert result.data.count(b"ServiceExceptionReport") == 0, result
 
         for orig, fake in [
                 ("time=2012-10-17T12%3A00%3A00Z", "time=2012-01-17T12%3A00%3A00Z"),
@@ -161,10 +158,9 @@ class Test_WMS(object):
                 ("bbox=201%2C500.0%2C10%2C100.0", "bbox=aaa%2C500.0%2C10%2C100.0")]:
             environ["QUERY_STRING"] = query_string.replace(orig, fake)
 
-            result = wms.application(environ, callback_ok_xml)
-            assert len(result) == 1, result
-            assert isinstance(result[0], bytes), result
-            assert result[0].count(b"ServiceExceptionReport") > 0, result
+            result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+            callback_ok_xml(result.status, result.headers)
+            assert result.data.count(b"ServiceExceptionReport") > 0, result
 
     def test_application_request(self):
         environ = {
@@ -176,8 +172,9 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
 
-        result = wms.application(environ, callback_ok_image)
-        assert isinstance(result[0], bytes), result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        assert isinstance(result.data, bytes), result
 
     def test_application_request_lowercase(self):
         environ = {
@@ -189,8 +186,9 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
 
-        result = wms.application(environ, callback_ok_image)
-        assert isinstance(result[0], bytes), result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        assert isinstance(result.data, bytes), result
 
     def test_application_norequest(self):
         environ = {
@@ -199,9 +197,11 @@ class Test_WMS(object):
             'QUERY_STRING': '',
         }
 
-        result = wms.application(environ, callback_404_plain)
-        assert isinstance(result[0], bytes), result
-        assert result[0].count(b"RuntimeError") > 0, result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_404_plain(result.status, result.headers)
+        assert isinstance(result.data, bytes), result
+        assert result.data.count(b"RuntimeError") > 0, result
 
     def test_application_unkown_request(self):
         environ = {
@@ -209,7 +209,8 @@ class Test_WMS(object):
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
             'QUERY_STRING': 'request=abraham',
         }
-
-        result = wms.application(environ, callback_404_plain)
-        assert isinstance(result[0], bytes), result
-        assert result[0].count(b"RuntimeError") > 0, result
+        self.client = mswms.app.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_404_plain(result.status, result.headers)
+        assert isinstance(result.data, bytes), result
+        assert result.data.count(b"RuntimeError") > 0, result

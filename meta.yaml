@@ -52,6 +52,8 @@ requirements:
     - matplotlib >=3.0.2
     - proj4
     - future
+    - flask
+    - flask-basicauth
 
 test:
   imports:

@@ -463,3 +463,12 @@ def convert_to(value, fr_un, to_un, default=1.):
         "km": {"km": 1., "m": 0.001, "m**2 s**-2": 1. / 9810.},
     }
     return value * factors.get(to_un, {}).get(fr_un, default)
+
+
+def conditional_decorator(dec, condition):
+    def decorator(func):
+        if not condition:
+            # Return the function unchanged, not decorated.
+            return func
+        return dec(func)
+    return decorator

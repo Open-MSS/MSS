@@ -44,16 +44,26 @@
 from future import standard_library
 standard_library.install_aliases()
 
-
 import os
 import logging
 from datetime import datetime
-import paste
-import paste.request
-import paste.util.multidict
 import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
+
+
+from flask import Flask, request, make_response
+from flask_basicauth import BasicAuth
+from mslib.mswms.utils import conditional_decorator
+
+# Flask basic auth's documentation
+# https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
+
+app = Flask(__name__)
+basic_auth = BasicAuth(app)
+
+realm = 'Mission Support Web Map Service'
+app.config['realm'] = realm
 
 try:
     import mss_wms_settings
@@ -91,6 +101,18 @@ except ImportError as ex:
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
+
+
+if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
+    import hashlib
+
+    def authfunc(username, password):
+        for u, p in mss_wms_auth.allowed_users:
+            if (u == username) and (p == hashlib.md5(password).hexdigest()):
+                return True
+        return False
+    BasicAuth.check_credentials = authfunc
+
 
 from mslib.mswms import mss_plot_driver
 from mslib.utils import CaseInsensitiveMultiDict, get_projection_params
@@ -254,7 +276,7 @@ class WMSServer(object):
                                    "This service is intended for research purposes only."))
         return return_data.encode("utf-8"), "text/xml"
 
-    def produce_plot(self, environ, mode):
+    def produce_plot(self, query, mode):
         """
         Handler for a GetMap and GetVSec requests. Produces a plot with
         the parameters specified in the URL.
@@ -265,10 +287,9 @@ class WMSServer(object):
         """
         logging.debug("GetMap/GetVSec request. Interpreting parameters..")
 
-        # 1) Get the query parameters from the URL.
+        # 1) Make query parameters Case Insenstitive
         # =========================================
-        query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))
-
+        query = CaseInsensitiveMultiDict(query)
         # 2) Evaluate query parameters:
         # =============================
 
@@ -463,42 +484,46 @@ class WMSServer(object):
         return image, return_format
 
 
-app = WMSServer()
+server = WMSServer()
 
 
-def application(environ, start_response):
+@app.route('/')
+@conditional_decorator(basic_auth.required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
+def application():
     try:
         # Request info
-        query = CaseInsensitiveMultiDict(paste.request.parse_dict_querystring(environ))
-        logging.debug(u"ENVIRON: %s", environ)
+        query = request.args
 
         # Processing
-        request = query.get('request')
-        if request is None:  # request may *actually* be set to None
-            request = ''
-        request = request.lower()
+        request_type = query.get('request')
+        if request_type is None:  # request_type may *actually* be set to None
+            request_type = ''
+        request_type = request_type.lower()
 
-        url = paste.request.construct_url(environ)
+        url = request.url
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request == "getcapabilities":
-            return_data, return_format = app.get_capabilities(server_url)
-        elif request in ['getmap', 'getvsec']:
-            return_data, return_format = app.produce_plot(environ, request)
+        if request_type == "getcapabilities":
+            return_data, return_format = server.get_capabilities(server_url)
+        elif request_type in ['getmap', 'getvsec']:
+            return_data, return_format = server.produce_plot(query, request_type)
         else:
             raise RuntimeError(u"Request type '{}' is not valid.".format(request))
 
+        res = make_response(return_data, 200)
         response_headers = [('Content-type', return_format), ('Content-Length', str(len(return_data)))]
-        start_response('200 OK', response_headers)
+        for response_header in response_headers:
+            res.headers[response_header[0]] = response_header[1]
 
-        return [return_data]
+        return res
 
     except Exception as ex:
-        error_message = u"{}: {}\n {}".format(type(ex), ex, traceback.format_exc())
-        logging.error(error_message)
+        error_message = u"{}: {}\n".format(type(ex), ex)
         error_message = error_message.encode("utf-8")
 
         response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
-        start_response('404 NOT FOUND', response_headers)
+        res = make_response(error_message, 404)
+        for response_header in response_headers:
+            res.headers[response_header[0]] = response_header[1]
 
-        return [error_message]
+        return res

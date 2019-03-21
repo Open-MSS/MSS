@@ -28,13 +28,11 @@
 import os
 import sys
 import mock
-import paste
-import paste.httpserver
 import shutil
 import tempfile
 import pytest
 import multiprocessing
-import mslib.mswms.wms
+from mslib.mswms.mswms import app
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
@@ -62,12 +60,10 @@ class WMSControlWidgetSetup(object):
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
-        paste.httpserver.ServerExit()
         QtTest.QTest.qWait(3000)
         self.thread = multiprocessing.Process(
-            target=paste.httpserver.serve,
-            args=(mslib.mswms.wms.application,),
-            kwargs={"host": "127.0.0.1", "port": "8082", "use_threadpool": False})
+            target=app.run,
+            args=("127.0.0.1", 8082))
         self.thread.start()
         if widget_type == "hsec":
             self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)

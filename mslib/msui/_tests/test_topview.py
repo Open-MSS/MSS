@@ -31,11 +31,9 @@ import mock
 import os
 import shutil
 import sys
-import paste
-import paste.httpserver
 import multiprocessing
 import tempfile
-import mslib.mswms.wms
+from mslib.mswms.mswms import app
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
@@ -235,9 +233,8 @@ class Test_TopViewWMS(object):
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
         self.thread = multiprocessing.Process(
-            target=paste.httpserver.serve,
-            args=(mslib.mswms.wms.application,),
-            kwargs={"host": "127.0.0.1", "port": "8082", "use_threadpool": False})
+            target=app.run,
+            args=("127.0.0.1", 8082))
         self.thread.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
