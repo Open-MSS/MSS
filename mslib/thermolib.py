@@ -874,11 +874,11 @@ def flightlevel2pressure_a(flightlevel):
         raise ValueError("argument flightlevel must be a numpy array")
 
     # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
-    z = flightlevel * 100. / 3.28083989501
+    z = flightlevel * 0.3048
 
-    if (z > 32000.).any():
+    if (z > 51000.).any():
         raise ValueError("flight level to pressure conversion not "
-                         "implemented for z > 32km")
+                         "implemented for z > 51km")
 
     # g and R are used by all equations below.
     g = 9.80665
@@ -918,6 +918,27 @@ def flightlevel2pressure_a(flightlevel):
 
     # Hydrostatic equation with linear temperature gradient.
     p[indices] = p0 * (((T0 - gamma * z[indices]) / (T0 - gamma * z0))) ** (g / (gamma * R))
+
+    # ICAO standard atmosphere between 32 and 47 km: T(z=20km) = -44.5 degC,
+    # p(z=32km) = 54.75 hPa. Temperature gradient is -2.8 K/km.
+    indices = numpy.where((z > 32000.) & (z <= 47000.))
+    z0 = 32000.
+    T0 = 228.65
+    gamma = -2.8e-3
+    p0 = 868.00
+
+    # Hydrostatic equation with linear temperature gradient.
+    p[indices] = p0 * (((T0 - gamma * z[indices]) / (T0 - gamma * z0))) ** (g / (gamma * R))
+
+    # ICAO standard atmosphere between 47 and 51 km: T(z=11km) = -2.5 degC,
+    # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
+    indices = numpy.where((z > 47000.) & (z <= 51000.))
+    z0 = 47000.
+    T0 = 270.65
+    p0 = 110.906
+
+    # Hydrostatic equation with constant temperature profile.
+    p[indices] = p0 * numpy.exp(-g * (z[indices] - z0) / (R * T))
 
     return p
 

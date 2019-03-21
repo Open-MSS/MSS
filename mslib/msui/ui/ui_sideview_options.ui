@@ -82,7 +82,7 @@
            <string> hpa</string>
           </property>
           <property name="minimum">
-           <double>1.000000000000000</double>
+           <double>0.010000000000000</double>
           </property>
           <property name="maximum">
            <double>1050.000000000000000</double>
