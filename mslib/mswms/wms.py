@@ -108,7 +108,7 @@ if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
 
     def authfunc(username, password):
         for u, p in mss_wms_auth.allowed_users:
-            if (u == username) and (p == hashlib.md5(password).hexdigest()):
+            if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
                 return True
         return False
 
