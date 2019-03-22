@@ -53,14 +53,14 @@ from chameleon import PageTemplateLoader
 
 
 from flask import Flask, request, make_response
-from flask_basicauth import BasicAuth
+from flask_httpauth import HTTPBasicAuth
 from mslib.mswms.utils import conditional_decorator
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
 
 app = Flask(__name__)
-basic_auth = BasicAuth(app)
+auth = HTTPBasicAuth()
 
 realm = 'Mission Support Web Map Service'
 app.config['realm'] = realm
@@ -111,7 +111,10 @@ if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
             if (u == username) and (p == hashlib.md5(password).hexdigest()):
                 return True
         return False
-    BasicAuth.check_credentials = authfunc
+
+    @auth.verify_password
+    def verify_pw(username, password):
+        return authfunc(username, password)
 
 
 from mslib.mswms import mss_plot_driver
@@ -488,7 +491,7 @@ server = WMSServer()
 
 
 @app.route('/')
-@conditional_decorator(basic_auth.required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth.login_required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
 def application():
     try:
         # Request info
