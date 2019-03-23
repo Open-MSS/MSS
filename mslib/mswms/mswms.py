@@ -6,7 +6,7 @@
     ~~~~~~~~~~~~~~~~~
 
     The module can be run with the Python Flask framework and can be run as
-    python msswms.py.
+    python mswms.py.
 
     :copyright: Copyright 2016 Reimar Bauer
     :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
@@ -78,10 +78,6 @@ def main():
         sys.exit()
 
     setup_logging(args)
-
-    if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
-        logging.debug("Enabling basic HTTP authentication. Username and "
-                      "password required to access the service.")
 
     logging.info(u"Configuration File: '{}'".format(mss_wms_settings.__file__))
 

@@ -104,6 +104,8 @@ except ImportError as ex:
 
 
 if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
+    logging.debug("Enabling basic HTTP authentication. Username and "
+                  "password required to access the service.")
     import hashlib
 
     def authfunc(username, password):
