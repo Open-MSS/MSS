@@ -5,10 +5,8 @@
     mslib.mswms.mswms
     ~~~~~~~~~~~~~~~~~
 
-    The module can be run with the Python PASTE framework as a stand-alone
-    server (simply execute this file with Python).
-
-    This file is part of mss.
+    The module can be run with the Python Flask framework and can be run as
+    python mswms.py.
 
     :copyright: Copyright 2016 Reimar Bauer
     :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
@@ -30,13 +28,13 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-import paste.httpserver
 import argparse
 import logging
 import sys
 
 from mslib import __version__
-from mslib.mswms.wms import mss_wms_settings, mss_wms_auth
+from mslib.mswms.wms import mss_wms_settings
+from mslib.mswms.wms import app as application
 from mslib.utils import setup_logging
 
 
@@ -62,25 +60,9 @@ def main():
 
     setup_logging(args)
 
-    from mslib.mswms.wms import application
-    if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
-        logging.debug("Enabling basic HTTP authentication. Username and "
-                      "password required to access the service.")
-
-        from paste.auth.basic import AuthBasicHandler
-        import hashlib
-
-        realm = 'Mission Support Web Map Service'
-
-        def authfunc(environ, username, password):
-            for u, p in mss_wms_auth.allowed_users:
-                if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
-                    return True
-            return False
-
-        application = AuthBasicHandler(application, realm, authfunc)
     logging.info(u"Configuration File: '{}'".format(mss_wms_settings.__file__))
-    paste.httpserver.serve(application, host=args.host, port=args.port, use_threadpool=args.use_threadpool)
+
+    application.run(args.host, args.port)
 
 
 if __name__ == '__main__':
