@@ -1,6 +1,16 @@
 Changelog
 =========
 
+
+Version 1.7.6
+-------------
+
+Bug Fixes:
+  - http_auth for gui login broken for local builtin server, #392
+  - don't limit future, #391
+  - x/y move of waypoint in sideview clear Flightlevel, #390
+  - remotesensing_dockwidget: year 58668 is out of range, #383
+
 Version 1.7.5
 -------------
 
