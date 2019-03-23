@@ -33,7 +33,6 @@ requirements:
     - lxml
     - netcdf4
     - hdf4
-    - paste
     - pillow 5.*
     - python-dateutil
     - pytz
@@ -53,7 +52,7 @@ requirements:
     - proj4
     - future
     - flask
-    - flask-basicauth
+    - flask-httpauth
 
 test:
   imports:
