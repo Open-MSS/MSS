@@ -576,7 +576,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
                     if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
-                            "401 Unauthorized") >= 0:
+                            "Unauthorized") >= 0:
                         # Catch the "401 Unauthorized" error if one has been
                         # returned by the server and ask the user for username
                         # and password.
