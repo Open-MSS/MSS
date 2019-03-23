@@ -51,7 +51,7 @@ requirements:
     - cftime >=1.0.1
     - matplotlib >=3.0.2
     - proj4
-    - future # [py2k]
+    - future
 
 test:
   imports:
