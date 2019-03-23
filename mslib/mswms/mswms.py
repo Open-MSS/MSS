@@ -28,9 +28,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-<<<<<<< HEAD
-import paste.httpserver
-=======
 # Hack to fix missing PROJ4 env var in root environment
 import os
 import setuptools
@@ -50,7 +47,6 @@ if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
             with open(os.path.join(proj_lib, 'epsg'), 'w') as fid:
                 fid.write("# Placeholder for epsg data")
 
->>>>>>> Update mswms
 import argparse
 import logging
 
