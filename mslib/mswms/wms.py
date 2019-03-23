@@ -114,6 +114,10 @@ if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
 
     @auth.verify_password
     def verify_pw(username, password):
+        if request.authorization:
+            auth = request.authorization
+            username = auth.username
+            password = auth.password
         return authfunc(username, password)
 
 
