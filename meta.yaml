@@ -53,6 +53,7 @@ requirements:
     - future
     - flask
     - flask-httpauth
+    - werkzeug
 
 test:
   imports:
