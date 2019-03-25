@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016 Joern Ungermann
-    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -463,3 +463,12 @@ def convert_to(value, fr_un, to_un, default=1.):
         "km": {"km": 1., "m": 0.001, "m**2 s**-2": 1. / 9810.},
     }
     return value * factors.get(to_un, {}).get(fr_un, default)
+
+
+def conditional_decorator(dec, condition):
+    def decorator(func):
+        if not condition:
+            # Return the function unchanged, not decorated.
+            return func
+        return dec(func)
+    return decorator

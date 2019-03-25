@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,10 +37,10 @@ import logging
 import netCDF4 as nc
 import numpy as np
 import os
-import paste.util.multidict
 import pickle
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
+import werkzeug.datastructures
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -519,9 +519,9 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
         return pressure
 
 
-class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
-    """Extension to paste.util.multidict.MultiDict that makes the MultiDict
-       case-insensitive.
+class CaseInsensitiveMultiDict(werkzeug.datastructures.ImmutableMultiDict):
+    """Extension to werkzeug.datastructures.ImmutableMultiDict
+    that makes the MultiDict case-insensitive.
 
     The only overridden method is __getitem__(), which converts string keys
     to lower case before carrying out comparisons.
@@ -533,7 +533,7 @@ class CaseInsensitiveMultiDict(paste.util.multidict.MultiDict):
     def __getitem__(self, key):
         if hasattr(key, 'lower'):
             key = key.lower()
-        for k, v in self._items:
+        for k, v in self.items():
             if hasattr(k, 'lower'):
                 k = k.lower()
             if k == key:

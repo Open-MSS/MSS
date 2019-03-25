@@ -13,7 +13,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,25 +29,6 @@
     limitations under the License.
 """
 from __future__ import print_function
-
-# Hack to fix missing PROJ4 env var in root environment
-import os
-import setuptools
-
-
-if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
-    conda_file_dir = setuptools.__file__
-    conda_dir = conda_file_dir.split('lib')[0]
-    proj_lib = os.path.join(os.path.join(conda_dir, 'share'), 'proj')
-    os.environ["PROJ_LIB"] = proj_lib
-    # if proj4 is installed we have also in the base environment epsg data
-    if not os.path.exists(proj_lib):
-        os.makedirs(proj_lib)
-        epsg_file = os.path.join(proj_lib, 'epsg')
-        if not os.path.exists(epsg_file):
-            with open(os.path.join(proj_lib, 'epsg'), 'w') as fid:
-                fid.write("# Placeholder for epsg data")
-
 
 import argparse
 import copy
