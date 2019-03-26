@@ -918,7 +918,7 @@ def flightlevel2pressure_a(flightlevel):
         raise ValueError("argument flightlevel must be a numpy array")
 
     # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
-    z = flightlevel * 0.3048
+    z = flightlevel * 30.48
 
     if (z > 51000.).any():
         raise ValueError("flight level to pressure conversion not "
@@ -1096,7 +1096,7 @@ def isa_temperature(flightlevel):
         temperature (K)
     """
     # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
-    z = flightlevel * 100. / 3.28083989501
+    z = flightlevel * 30.48
 
     if z <= 11000.:
         # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
@@ -1135,4 +1135,4 @@ def isa_temperature(flightlevel):
 
     else:
         raise ValueError("ISA temperature from flight level not "
-                         "implemented for z > 32km")
+                         "implemented for z > 51km")
