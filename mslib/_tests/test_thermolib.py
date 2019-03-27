@@ -35,6 +35,7 @@ def test_flightlevel2pressure():
     assert (tl.flightlevel2pressure(182.8913020578899) - 50000) < 1e-6
     assert (tl.flightlevel2pressure(530.83319183138485) - 10000) < 1e-6
     assert (tl.flightlevel2pressure(1661.607398685263) - 70) < 1e-6
+    assert (tl.flightlevel2pressure(1191.9689755123777) - 550) < 1e-6
 
     ps = np.arange(100, 1000, 50)
     assert np.allclose([tl.flightlevel2pressure(_x) for _x in ps],
@@ -45,6 +46,7 @@ def test_pressure2flightlevel():
     assert (tl.pressure2flightlevel(50000) - 182.8913020578899) < 1e-6
     assert (tl.pressure2flightlevel(10000) - 530.83319183138485) < 1e-6
     assert (tl.pressure2flightlevel(70) - 1661.607398685263) < 1e-6
+    assert (tl.pressure2flightlevel(550) - 1191.9689755123777) < 1e-6
     with pytest.raises(ValueError):
         tl.pressure2flightlevel(10)
     fls = np.arange(5000, 100000, 5000)
