@@ -784,7 +784,7 @@ def flightlevel2pressure(flightlevel):
         p0 = 5474.88
 
         # Hydrostatic equation with linear temperature gradient.
-        p = p0 * ((T0  - gamma * (z - z0)) / T0) ** (-g / -gamma / R)
+        p = p0 * ((T0 - gamma * (z - z0)) / T0) ** (g / gamma / R)
         return p
 
     elif z <= 47000.:
@@ -796,9 +796,9 @@ def flightlevel2pressure(flightlevel):
         p0 = 868.019
 
         # Hydrostatic equation with linear temperature gradient.
-        p = p0 * ((T0  - gamma * (z - z0)) / T0) ** (-g / -gamma / R)
+        p = p0 * ((T0 - gamma * (z - z0)) / T0) ** (g / gamma / R)
         return p
-    
+
     elif z <= 51000.:
         # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
         # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
@@ -940,7 +940,7 @@ def flightlevel2pressure_a(flightlevel):
     p0 = 101325.
 
     # Hydrostatic equation with linear temperature gradient.
-    p[indices] = p0 * ((T0  - gamma * (z[indices] - z0)) / T0) ** (g / gamma / R)
+    p[indices] = p0 * ((T0 - gamma * (z[indices] - z0)) / T0) ** (g / gamma / R)
 
     # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
     # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
@@ -961,7 +961,7 @@ def flightlevel2pressure_a(flightlevel):
     p0 = 5474.88
 
     # Hydrostatic equation with linear temperature gradient.
-    p[indices] = p0 * ((T0  - gamma * (z[indices] - z0)) / T0) ** (g / gamma / R)
+    p[indices] = p0 * ((T0 - gamma * (z[indices] - z0)) / T0) ** (g / gamma / R)
 
     # ICAO standard atmosphere between 32 and 47 km: T(z=32km) = -44.5 degC,
     # p(z=32km) = 8.68019 hPa. Temperature gradient is -2.8 K/km.
@@ -972,7 +972,7 @@ def flightlevel2pressure_a(flightlevel):
     p0 = 868.019
 
     # Hydrostatic equation with linear temperature gradient.
-    p[indices] = p0 * ((T0  - gamma * (z[indices] - z0)) / T0) ** (g / gamma / R)
+    p[indices] = p0 * ((T0 - gamma * (z[indices] - z0)) / T0) ** (g / gamma / R)
 
     # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
     # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.

@@ -36,7 +36,6 @@ def test_flightlevel2pressure():
     assert (tl.flightlevel2pressure(530.83319183138485) - 10000) < 1e-6
     assert (tl.flightlevel2pressure(1661.607398685263) - 70) < 1e-6
     assert (tl.flightlevel2pressure(1191.9689755123777) - 550) < 1e-6
-
     ps = np.arange(100, 1000, 50)
     assert np.allclose([tl.flightlevel2pressure(_x) for _x in ps],
                        tl.flightlevel2pressure_a(ps))
