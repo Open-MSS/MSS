@@ -833,7 +833,7 @@ def pressure2flightlevel(p):
     g = 9.80665
     R = 287.058
 
-    if p < 1:
+    if p < 100:
         raise ValueError("pressure to flight level conversion not "
                          "implemented for z > 47.820070345213892438km (p ~ 1 hPa)")
 
@@ -920,7 +920,7 @@ def flightlevel2pressure_a(flightlevel):
     # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
     z = flightlevel * 30.48
 
-    if (z > 47820.070345213892438).any():
+    if (z >= 47820.070345213892438).any():
         raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 47.820070345213892438km")
 
