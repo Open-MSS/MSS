@@ -876,6 +876,9 @@ class HPathInteractor(PathInteractor):
         km_per_px = map_delta / diagonal
         return km_per_px * px
 
+    def get_lat_lon(self, event):
+        return self.map(event.xdata, event.ydata, inverse=True)[::-1]
+
     def button_release_insert_callback(self, event):
         """Called whenever a mouse button is released.
 
