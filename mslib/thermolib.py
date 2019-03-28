@@ -746,7 +746,7 @@ def flightlevel2pressure(flightlevel):
         static pressure (Pa)
     """
     # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
-    z = flightlevel * 100. / 3.28083989501
+    z = flightlevel * 30.48
 
     # g and R are used by all equations below.
     g = 9.80665
@@ -799,7 +799,7 @@ def flightlevel2pressure(flightlevel):
         p = p0 * ((T0 - gamma * (z - z0)) / T0) ** (g / gamma / R)
         return p
 
-    elif z <= 51000.:
+    elif z <= 47820.070345213892438:
         # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
         # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
         z0 = 47000.
@@ -812,7 +812,7 @@ def flightlevel2pressure(flightlevel):
 
     else:
         raise ValueError("flight level to pressure conversion not "
-                         "implemented for z > 51km")
+                         "implemented for z > 47.820070345213892438km")
 
 
 def pressure2flightlevel(p):
@@ -833,12 +833,12 @@ def pressure2flightlevel(p):
     g = 9.80665
     R = 287.058
 
-    if p < 66.9389:
+    if p < 1:
         raise ValueError("pressure to flight level conversion not "
-                         "implemented for z > 51km (p ~ 0.669389 hPa)")
+                         "implemented for z > 47.820070345213892438km (p ~ 1 hPa)")
 
     elif p < 110.906:
-        # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
+        # ICAO standard atmosphere between 47 and 47820.070345213892438 km: T(z=47km) = -2.5 degC,
         # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
         z0 = 47000.
         p0 = 110.906
@@ -920,9 +920,9 @@ def flightlevel2pressure_a(flightlevel):
     # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
     z = flightlevel * 30.48
 
-    if (z > 51000.).any():
+    if (z > 47820.070345213892438).any():
         raise ValueError("flight level to pressure conversion not "
-                         "implemented for z > 51km")
+                         "implemented for z > 47.820070345213892438km")
 
     # g and R are used by all equations below.
     g = 9.80665
@@ -974,7 +974,7 @@ def flightlevel2pressure_a(flightlevel):
     # Hydrostatic equation with linear temperature gradient.
     p[indices] = p0 * ((T0 - gamma * (z[indices] - z0)) / T0) ** (g / gamma / R)
 
-    # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
+    # ICAO standard atmosphere between 47 and 47820.070345213892438 km: T(z=47km) = -2.5 degC,
     # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
     indices = numpy.where((z > 47000.) & (z <= 51000.))
     z0 = 47000.
@@ -1016,14 +1016,14 @@ def pressure2flightlevel_a(p):
     g = 9.80665
     R = 287.058
 
-    if (p < 66.9389).any():
+    if (p < 1).any():
         raise ValueError("pressure to flight level conversion not "
-                         "implemented for z > 51km (p ~ 0.669839 hPa)")
+                         "implemented for z > 47.820070345213892438km (p ~ 1 hPa)")
 
     # Initialize the return array.
     z = numpy.zeros(p.shape)
 
-    # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
+    # ICAO standard atmosphere between 47 and 47820.070345213892438 km: T(z=47km) = -2.5 degC,
     # p(z=11km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
     indices = numpy.where(p < 110.906)
     z0 = 47000.
@@ -1127,12 +1127,12 @@ def isa_temperature(flightlevel):
         gamma = -2.8e-3
         return T0 - gamma * (z - z0)
 
-    elif z <= 51000.:
-        # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
+    elif z <= 47820.070345213892438:
+        # ICAO standard atmosphere between 47 and 47820.070345213892438 km: T(z=47km) = -2.5 degC,
         # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
         T = 270.65
         return T
 
     else:
         raise ValueError("ISA temperature from flight level not "
-                         "implemented for z > 51km")
+                         "implemented for z > 47.820070345213892438km")

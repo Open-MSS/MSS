@@ -2,12 +2,11 @@
 
 # Form implementation generated from reading ui file 'ui_sideview_options.ui'
 #
-# Created by: PyQt5 UI code generator 5.12
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_SideViewOptionsDialog(object):
     def setupUi(self, SideViewOptionsDialog):
@@ -32,6 +31,7 @@ class Ui_SideViewOptionsDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sbPbot.sizePolicy().hasHeightForWidth())
         self.sbPbot.setSizePolicy(sizePolicy)
+        self.sbPbot.setPrefix("")
         self.sbPbot.setMinimum(1.0)
         self.sbPbot.setMaximum(1100.0)
         self.sbPbot.setProperty("value", 1050.1)
@@ -46,7 +46,7 @@ class Ui_SideViewOptionsDialog(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sbPtop.sizePolicy().hasHeightForWidth())
         self.sbPtop.setSizePolicy(sizePolicy)
-        self.sbPtop.setMinimum(0.01)
+        self.sbPtop.setMinimum(1.0)
         self.sbPtop.setMaximum(1050.0)
         self.sbPtop.setProperty("value", 200.5)
         self.sbPtop.setObjectName("sbPtop")
@@ -193,7 +193,6 @@ class Ui_SideViewOptionsDialog(object):
         SideViewOptionsDialog.setWindowTitle(_translate("SideViewOptionsDialog", "Side View Options"))
         self.groupBox.setTitle(_translate("SideViewOptionsDialog", "Vertical Extent"))
         self.label_2.setText(_translate("SideViewOptionsDialog", "Vertical extent:"))
-        self.sbPbot.setPrefix(_translate("SideViewOptionsDialog", " "))
         self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
         self.label_3.setText(_translate("SideViewOptionsDialog", "to"))
         self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
@@ -216,8 +215,6 @@ class Ui_SideViewOptionsDialog(object):
         self.cbLabelFlightTrack.setText(_translate("SideViewOptionsDialog", "label flight track"))
 
 
-
-
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -226,3 +223,4 @@ if __name__ == "__main__":
     ui.setupUi(SideViewOptionsDialog)
     SideViewOptionsDialog.show()
     sys.exit(app.exec_())
+
