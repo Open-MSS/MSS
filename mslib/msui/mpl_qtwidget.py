@@ -568,9 +568,6 @@ class MplSideViewCanvas(MplCanvas):
             minor_fl = 10 * minor_heights / 0.3048
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
-            if major_heights[-1] != thermolib.pressure2flightlevel(self.p_top) * 0.03048:
-                    top_lab = np.arange(thermolib.pressure2flightlevel(self.p_top) * 0.03048, 0, -100000)
-                    major_heights = np.append(major_heights, top_lab)
             labels = major_heights
             self.ax.set_ylabel("pressure altitude (km)")
         elif vaxis == "flight level":
