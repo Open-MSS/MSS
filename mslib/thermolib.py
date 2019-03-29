@@ -976,7 +976,7 @@ def flightlevel2pressure_a(flightlevel):
 
     # ICAO standard atmosphere between 47 and 47820.070345213892438 km: T(z=47km) = -2.5 degC,
     # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
-    indices = numpy.where((z > 47000.) & (z <= 51000.))
+    indices = numpy.where((z > 47000.) & (z <= 47820.070345213892438))
     z0 = 47000.
     T = 270.65
     p0 = 110.906
