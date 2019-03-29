@@ -542,7 +542,7 @@ class MplSideViewCanvas(MplCanvas):
                     major_ticks3 = np.arange(major_ticks[-1], self.p_top - 1, -label_distance // 100)
                     len_major_ticks = len(major_ticks)
                     major_ticks = np.resize(major_ticks,
-                                        len_major_ticks + len(major_ticks3) - 1)
+                                            len_major_ticks + len(major_ticks3) - 1)
                     major_ticks[len_major_ticks:] = major_ticks3[1:]
                 if major_ticks[-1] != self.p_top:
                     top = np.arange(self.p_top, 0, -100000)
