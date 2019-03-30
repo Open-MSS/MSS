@@ -177,7 +177,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         """Return settings dictionary with values from the GUI elements.
         """
         settings_dict = {
-            "vertical_extent": (int(self.sbPbot.value()), int(self.sbPtop.value())),
+            "vertical_extent": (float(self.sbPbot.value()), float(self.sbPtop.value())),
             "vertical_axis": self.cbVerticalAxis.currentText(),
             "flightlevels": self.get_flight_levels(),
             "draw_flightlevels": self.cbDrawFlightLevels.isChecked(),

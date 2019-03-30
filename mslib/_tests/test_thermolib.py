@@ -34,7 +34,7 @@ import mslib.thermolib as tl
 def test_flightlevel2pressure():
     assert (tl.flightlevel2pressure(182.8913020578899) - 50000) < 1e-6
     assert (tl.flightlevel2pressure(530.83319183138485) - 10000) < 1e-6
-
+    assert (tl.flightlevel2pressure(1191.9689755123777) - 550) < 1e-6
     ps = np.arange(100, 1000, 50)
     assert np.allclose([tl.flightlevel2pressure(_x) for _x in ps],
                        tl.flightlevel2pressure_a(ps))
@@ -43,8 +43,9 @@ def test_flightlevel2pressure():
 def test_pressure2flightlevel():
     assert (tl.pressure2flightlevel(50000) - 182.8913020578899) < 1e-6
     assert (tl.pressure2flightlevel(10000) - 530.83319183138485) < 1e-6
+    assert (tl.pressure2flightlevel(550) - 1191.9689755123777) < 1e-6
     with pytest.raises(ValueError):
-        tl.pressure2flightlevel(10)
+        tl.pressure2flightlevel(99.99)
     fls = np.arange(5000, 100000, 5000)
     assert np.allclose([tl.pressure2flightlevel(_x) for _x in fls],
                        tl.pressure2flightlevel_a(fls))
@@ -60,7 +61,7 @@ def test_isa_temperature():
     assert (tl.isa_temperature(700) - 217.9860000000203) < 1e-6
     assert (tl.isa_temperature(800) - 221.0340000000232) < 1e-6
     with pytest.raises(ValueError):
-        tl.isa_temperature(1200)
+        tl.isa_temperature(1568.9002625)
 
 
 def test_geop_thickness():
