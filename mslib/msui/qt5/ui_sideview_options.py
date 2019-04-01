@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_sideview_options.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_sideview_options.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -15,7 +15,6 @@ class Ui_SideViewOptionsDialog(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(SideViewOptionsDialog)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.groupBox = QtWidgets.QGroupBox(SideViewOptionsDialog)
-        self.groupBox.setMinimumSize(QtCore.QSize(0, 100))
         self.groupBox.setObjectName("groupBox")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.groupBox)
         self.verticalLayout_6.setContentsMargins(-1, -1, -1, 7)
@@ -213,14 +212,4 @@ class Ui_SideViewOptionsDialog(object):
         self.cbFillFlightTrack.setText(_translate("SideViewOptionsDialog", "fill flight track"))
         self.btFillColour.setText(_translate("SideViewOptionsDialog", "colour"))
         self.cbLabelFlightTrack.setText(_translate("SideViewOptionsDialog", "label flight track"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    SideViewOptionsDialog = QtWidgets.QDialog()
-    ui = Ui_SideViewOptionsDialog()
-    ui.setupUi(SideViewOptionsDialog)
-    SideViewOptionsDialog.show()
-    sys.exit(app.exec_())
 
