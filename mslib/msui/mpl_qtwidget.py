@@ -587,7 +587,8 @@ class MplSideViewCanvas(MplCanvas):
                     top = np.arange(self.p_top, 0, -100000)
                     major_ticks = np.append(major_ticks, top)
 
-            labels = ["{}".format(int(l / 100.)) if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
+            labels = ["{}".format(int(l / 100.))
+                      if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
 
             # .. the same for the minor ticks ..
             p_top_minor = max(label_distance, self.p_top)
@@ -619,8 +620,8 @@ class MplSideViewCanvas(MplCanvas):
             labels = major_heights
             self.ax.set_ylabel("pressure altitude (km)")
         elif vaxis == "flight level":
-            major_fl = np.arange(0, 1000, 50)
-            minor_fl = np.arange(0, 1000, 10)
+            major_fl = np.arange(0, 1551, 50)
+            minor_fl = np.arange(0, 1551, 10)
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl
