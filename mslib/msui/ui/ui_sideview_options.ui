@@ -16,12 +16,6 @@
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
     <widget class="QGroupBox" name="groupBox">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>100</height>
-      </size>
-     </property>
      <property name="title">
       <string>Vertical Extent</string>
      </property>
@@ -53,13 +47,13 @@
            <string> hpa</string>
           </property>
           <property name="minimum">
-           <double>1.000000000000000</double>
+           <number>1</number>
           </property>
           <property name="maximum">
-           <double>1100.000000000000000</double>
+           <number>1100</number>
           </property>
           <property name="value">
-           <double>1050.099999999999909</double>
+           <number>1050</number>
           </property>
          </widget>
         </item>
@@ -71,7 +65,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="sbPtop">
+         <widget class="QSpinBox" name="sbPtop">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -82,13 +76,13 @@
            <string> hpa</string>
           </property>
           <property name="minimum">
-           <double>1.000000000000000</double>
+           <number>1</number>
           </property>
           <property name="maximum">
-           <double>1050.000000000000000</double>
+           <number>1050</number>
           </property>
           <property name="value">
-           <double>200.500000000000000</double>
+           <double>200</double>
           </property>
          </widget>
         </item>

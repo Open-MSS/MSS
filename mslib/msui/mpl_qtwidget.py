@@ -618,8 +618,8 @@ class MplSideViewCanvas(MplCanvas):
             labels = major_heights
             self.ax.set_ylabel("pressure altitude (km)")
         elif vaxis == "flight level":
-            major_fl = np.arange(0, 1000, 50)
-            minor_fl = np.arange(0, 1000, 10)
+            major_fl = np.arange(0, 1551, 50)
+            minor_fl = np.arange(0, 1551, 10)
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl
