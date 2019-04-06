@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_sideview_options.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_sideview_options.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -15,7 +15,6 @@ class Ui_SideViewOptionsDialog(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(SideViewOptionsDialog)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.groupBox = QtWidgets.QGroupBox(SideViewOptionsDialog)
-        self.groupBox.setMinimumSize(QtCore.QSize(0, 100))
         self.groupBox.setObjectName("groupBox")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.groupBox)
         self.verticalLayout_6.setContentsMargins(-1, -1, -1, 7)
@@ -32,23 +31,23 @@ class Ui_SideViewOptionsDialog(object):
         sizePolicy.setHeightForWidth(self.sbPbot.sizePolicy().hasHeightForWidth())
         self.sbPbot.setSizePolicy(sizePolicy)
         self.sbPbot.setPrefix("")
-        self.sbPbot.setMinimum(1.0)
-        self.sbPbot.setMaximum(1100.0)
-        self.sbPbot.setProperty("value", 1050.1)
+        self.sbPbot.setMinimum(1)
+        self.sbPbot.setMaximum(1100)
+        self.sbPbot.setProperty("value", 1050)
         self.sbPbot.setObjectName("sbPbot")
         self.horizontalLayout.addWidget(self.sbPbot)
         self.label_3 = QtWidgets.QLabel(self.groupBox)
         self.label_3.setObjectName("label_3")
         self.horizontalLayout.addWidget(self.label_3)
-        self.sbPtop = QtWidgets.QDoubleSpinBox(self.groupBox)
+        self.sbPtop = QtWidgets.QSpinBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sbPtop.sizePolicy().hasHeightForWidth())
         self.sbPtop.setSizePolicy(sizePolicy)
-        self.sbPtop.setMinimum(1.0)
-        self.sbPtop.setMaximum(1050.0)
-        self.sbPtop.setProperty("value", 200.5)
+        self.sbPtop.setMinimum(1)
+        self.sbPtop.setMaximum(1050)
+        self.sbPtop.setProperty("value", 200.0)
         self.sbPtop.setObjectName("sbPtop")
         self.horizontalLayout.addWidget(self.sbPtop)
         self.verticalLayout_6.addLayout(self.horizontalLayout)
@@ -213,14 +212,4 @@ class Ui_SideViewOptionsDialog(object):
         self.cbFillFlightTrack.setText(_translate("SideViewOptionsDialog", "fill flight track"))
         self.btFillColour.setText(_translate("SideViewOptionsDialog", "colour"))
         self.cbLabelFlightTrack.setText(_translate("SideViewOptionsDialog", "label flight track"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    SideViewOptionsDialog = QtWidgets.QDialog()
-    ui = Ui_SideViewOptionsDialog()
-    ui.setupUi(SideViewOptionsDialog)
-    SideViewOptionsDialog.show()
-    sys.exit(app.exec_())
 
