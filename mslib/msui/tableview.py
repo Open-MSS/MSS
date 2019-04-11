@@ -75,6 +75,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
 
         # Connect slots and signals.
         self.btAddWayPointToFlightTrack.clicked.connect(self.addWayPoint)
+        self.btCloneWaypoint.clicked.connect(self.cloneWaypoint)
         self.btDeleteWayPoint.clicked.connect(self.removeWayPoint)
         self.btInvertDirection.clicked.connect(self.invertDirection)
         self.btViewPerformance.clicked.connect(self.settingsDlg)
@@ -136,6 +137,34 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         tableView.setCurrentIndex(index)
         # tableView.edit(index)
         tableView.resizeRowsToContents()
+    def cloneWaypoint(self):
+        """Handler for button <btCloneWaypoint>. Adds a new waypoint
+           after the currently selected waypoint.
+        """
+        tableView = self.tableWayPoints
+        index = tableView.currentIndex()
+        lon, lat = 0, 0
+        if not index.isValid():
+            row = 0
+            flightlevel = 0
+        else:
+
+            row = index.row() + 1
+            wp = self.waypoints_model.waypoint_data(row - 1)
+            lon = wp.lon
+            lat = wp.lat
+            flightlevel = self.waypoints_model.waypoint_data(row - 1).flightlevel
+
+        self.waypoints_model.insertRows(
+            row, waypoints=[ft.Waypoint(lat=lat, lon=lon, flightlevel=flightlevel)])
+
+        index = self.waypoints_model.index(row, 0)
+        tableView = self.tableWayPoints
+        tableView.setFocus()
+        tableView.setCurrentIndex(index)
+        # tableView.edit(index)
+        tableView.resizeRowsToContents()
+
 
     def confirm_delete_waypoint(self, row):
         """Open a QMessageBox and ask the user if he really wants to
