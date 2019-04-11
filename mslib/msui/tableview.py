@@ -137,9 +137,10 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         tableView.setCurrentIndex(index)
         # tableView.edit(index)
         tableView.resizeRowsToContents()
+
     def cloneWaypoint(self):
         """Handler for button <btCloneWaypoint>. Adds a new waypoint
-           after the currently selected waypoint.
+           after the currently selected waypoint, with same data.
         """
         tableView = self.tableWayPoints
         index = tableView.currentIndex()
@@ -164,7 +165,6 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         tableView.setCurrentIndex(index)
         # tableView.edit(index)
         tableView.resizeRowsToContents()
-
 
     def confirm_delete_waypoint(self, row):
         """Open a QMessageBox and ask the user if he really wants to
