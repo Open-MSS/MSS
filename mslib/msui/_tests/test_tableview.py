@@ -125,6 +125,24 @@ class Test_TableView(object):
         assert all(_x == _y for _x, _y in zip(wps[:3], wps2[:3])), (wps, wps2)
         assert all(_x == _y for _x, _y in zip(wps[3:], wps2[4:])), (wps, wps2)
 
+    def test_clone_point(self):
+        """
+        Check cloning of points
+        """
+        item = self.window.tableWayPoints.visualRect(
+            self.window.waypoints_model.index(2, 0))
+        QtTest.QTest.mouseClick(
+            self.window.tableWayPoints.viewport(),
+            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item.center())
+        assert len(self.window.waypoints_model.waypoints) == 5
+        wps = list(self.window.waypoints_model.waypoints)
+        QtTest.QTest.mouseClick(self.window.btCloneWaypoint, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        wps2 = self.window.waypoints_model.waypoints
+        assert len(self.window.waypoints_model.waypoints) == 6
+        assert all(_x == _y for _x, _y in zip(wps[:3], wps2[:3])), (wps, wps2)
+        assert all(_x == _y for _x, _y in zip(wps[3:], wps2[4:])), (wps, wps2)
+
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
     def test_remove_point(self, mockbox):

@@ -126,6 +126,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="btCloneWaypoint">
+        <property name="text">
+         <string>clone</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="btDeleteWayPoint">
         <property name="text">
          <string>delete selected</string>
