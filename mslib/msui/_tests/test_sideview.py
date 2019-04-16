@@ -34,6 +34,7 @@ import paste.httpserver
 import multiprocessing
 import tempfile
 import mslib.mswms.wms
+import unittest
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
@@ -88,7 +89,6 @@ class Test_MSS_SV_OptionsDialog(object):
         QtTest.QTest.mouseClick(self.window.btFillColour, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert mockdlg.call_count == 1
-
 
 class Test_MSSSideViewWindow(object):
     def setup(self):

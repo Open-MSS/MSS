@@ -522,6 +522,13 @@ class MplSideViewCanvas(MplCanvas):
             )
 
     def redraw_yaxis(self):
+        if self.settings_dict["vertical_axis"] == "pressure altitude":
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * 32.80)
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1] * 32.80)
+        elif self.settings_dict["vertical_axis"] == "flight level":
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0])
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1])
+
         vaxis = self.settings_dict["vertical_axis"]
         if vaxis == "pressure":
             # Compute the position of major and minor ticks. Major ticks are labelled.
@@ -602,6 +609,13 @@ class MplSideViewCanvas(MplCanvas):
         Vertical cross section code (log-p axis etc.) taken from
         mss_batch_production/visualisation/mpl_vsec.py.
         """
+        if self.settings_dict["vertical_axis"] == "pressure altitude":
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * 32.80)
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1] * 32.80)
+        elif self.settings_dict["vertical_axis"] == "flight level":
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0])
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1])
+
         ax = self.ax
         self.fig.subplots_adjust(left=0.08, right=0.96,
                                  top=0.9, bottom=0.14)
@@ -655,6 +669,12 @@ class MplSideViewCanvas(MplCanvas):
         self.draw()
 
     def set_vertical_extent(self, pbot, ptop):
+        if self.settings_dict["vertical_axis"] == "pressure altitude":
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * 32.80)
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1] * 32.80)
+        elif self.settings_dict["vertical_axis"] == "flight level":
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0])
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1])
         """Set the vertical extent of the view to the specified pressure
            values (hPa) and redraw the plot.
         """
@@ -677,6 +697,13 @@ class MplSideViewCanvas(MplCanvas):
     def get_vertical_extent(self):
         """Returns the bottom and top pressure (hPa) of the plot.
         """
+        if self.settings_dict["vertical_axis"] == "pressure altitude":
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * 32.80)
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1] * 32.80)
+        elif self.settings_dict["vertical_axis"] == "flight level":
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0])
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1])
+
         return (self.p_bot // 100), (self.p_top // 100)
 
     def draw_flight_levels(self):

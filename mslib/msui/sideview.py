@@ -35,6 +35,7 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtWidgets
+from PyQt5 import QtCore
 
 # local application imports
 from mslib.msui.mss_qt import ui_sideview_window as ui
@@ -59,6 +60,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing sideview options.
         """
+        _translate = QtCore.QCoreApplication.translate
         super(MSS_SV_OptionsDialog, self).__init__(parent)
         self.setupUi(self)
 
@@ -72,6 +74,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
                                  "colour_ft_vertices": (0, 0, 0, 0),
                                  "colour_ft_waypoints": (0, 0, 0, 0),
                                  "colour_ft_fill": (0, 0, 0, 0)}
+        suffixes = [' hpa', ' km', ' hft']
         if settings_dict is not None:
             default_settings_dict.update(settings_dict)
         settings_dict = default_settings_dict
@@ -89,6 +92,8 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         for i in range(self.cbVerticalAxis.count()):
             if self.cbVerticalAxis.itemText(i) == settings_dict["vertical_axis"]:
                 self.cbVerticalAxis.setCurrentIndex(i)
+                self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", suffixes[i]))
+                self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", suffixes[i]))
 
         self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
@@ -105,6 +110,8 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             button.setPalette(palette)
 
         # Connect colour button signals.
+        self.cbVerticalAxis.view().pressed.connect(self.verticalunitsclicked)
+
         self.btFillColour.clicked.connect(functools.partial(self.setColour, "ft_fill"))
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))

@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from mslib import thermolib
 
 class Ui_SideViewOptionsDialog(object):
     def setupUi(self, SideViewOptionsDialog):
@@ -193,9 +194,7 @@ class Ui_SideViewOptionsDialog(object):
         SideViewOptionsDialog.setWindowTitle(_translate("SideViewOptionsDialog", "Side View Options"))
         self.groupBox.setTitle(_translate("SideViewOptionsDialog", "Vertical Extent"))
         self.label_2.setText(_translate("SideViewOptionsDialog", "Vertical extent:"))
-        self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
         self.label_3.setText(_translate("SideViewOptionsDialog", "to"))
-        self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
         self.label_4.setText(_translate("SideViewOptionsDialog", "Vertical axis units:"))
         self.cbVerticalAxis.setItemText(0, _translate("SideViewOptionsDialog", "pressure"))
         self.cbVerticalAxis.setItemText(1, _translate("SideViewOptionsDialog", "pressure altitude"))
@@ -213,6 +212,39 @@ class Ui_SideViewOptionsDialog(object):
         self.cbFillFlightTrack.setText(_translate("SideViewOptionsDialog", "fill flight track"))
         self.btFillColour.setText(_translate("SideViewOptionsDialog", "colour"))
         self.cbLabelFlightTrack.setText(_translate("SideViewOptionsDialog", "label flight track"))
+
+    def verticalunitsclicked(self, index):
+        _translate = QtCore.QCoreApplication.translate
+        unit = self.cbVerticalAxis.model().itemFromIndex(index)
+        currentunit = self.cbVerticalAxis.currentText()
+        if unit.text() == "pressure":
+            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
+            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
+            if currentunit == "pressure altitude":
+                self.sbPbot.setValue(thermolib.flightlevel2pressure(self.sbPbot.value() * 32.80) / 100)
+                self.sbPtop.setValue(thermolib.flightlevel2pressure(self.sbPtop.value() * 32.80) / 100)
+            elif currentunit == "flight level":
+                self.sbPbot.setValue(thermolib.flightlevel2pressure(self.sbPbot.value()) / 100)
+                self.sbPtop.setValue(thermolib.flightlevel2pressure(self.sbPtop.value()) / 100)
+        elif unit.text() == "pressure altitude":
+            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " km"))
+            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " km"))
+            if currentunit == "pressure":
+                self.sbPbot.setValue(thermolib.pressure2flightlevel(self.sbPbot.value() * 100) * 0.03048)
+                self.sbPtop.setValue(thermolib.pressure2flightlevel(self.sbPtop.value() * 100) * 0.03048)
+            elif currentunit == "flight level":
+                self.sbPbot.setValue(self.sbPbot.value() * 0.03048)
+                self.sbPtop.setValue(self.sbPtop.value() * 0.03048)
+        elif unit.text() == "flight level":
+            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hft"))
+            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hft"))
+            if currentunit == "pressure":
+                self.sbPbot.setValue(thermolib.pressure2flightlevel(self.sbPbot.value() * 100))
+                self.sbPtop.setValue(thermolib.pressure2flightlevel(self.sbPtop.value() * 100))
+            elif currentunit == "pressure altitude":
+                self.sbPbot.setValue(self.sbPbot.value() * 32.80)
+                self.sbPtop.setValue(self.sbPtop.value() * 32.80)
+                
 
 
 if __name__ == "__main__":
