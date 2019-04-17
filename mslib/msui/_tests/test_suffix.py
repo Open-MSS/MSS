@@ -7,7 +7,6 @@ import paste.httpserver
 import multiprocessing
 import tempfile
 import mslib.mswms.wms
-import unittest
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv

@@ -555,7 +555,8 @@ class MplSideViewCanvas(MplCanvas):
                     top = np.arange(self.p_top, 0, -100000)
                     major_ticks = np.append(major_ticks, top)
 
-            labels = ["{}".format(int(l / 100.)) if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
+            labels = ["{}".format(int(l / 100.)) if (l / 100.) - int(l / 100.) == 0
+                      else "{}".format(float(l / 100.)) for l in major_ticks]
 
             # .. the same for the minor ticks ..
             p_top_minor = max(label_distance, self.p_top)

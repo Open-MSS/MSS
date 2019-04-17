@@ -39,17 +39,17 @@ from PyQt5 import QtCore
 
 # local application imports
 from mslib.msui.mss_qt import ui_sideview_window as ui
-from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
+from mslib import suffix_module as sm
 
 
 # Dock window indices.
 WMS = 0
 
 
-class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
+class MSS_SV_OptionsDialog(QtWidgets.QDialog, sm.Suffix_Module):
     """Dialog to specify sideview options. User interface is specified
        in "ui_sideview_options.py".
     """
