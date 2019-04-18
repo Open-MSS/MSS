@@ -369,10 +369,11 @@ class NavigationToolbar(NavigationToolbar2QT):
             self._set_cursor(event)
             if event.inaxes and event.inaxes.get_navigate():
                 try:
-                    s = event.inaxes.format_coord(event.xdata, event.ydata)
+                    lat, lon = self.canvas.waypoints_interactor.get_lat_lon(event)
                 except (ValueError, OverflowError):
                     pass
                 else:
+                    s = "lat={:6.2f}, lon={:7.2f}".format(lat, lon)
                     artists = [a for a in event.inaxes._mouseover_set
                                if a.contains(event)[0] and a.get_visible()]
                     if artists:
@@ -382,24 +383,21 @@ class NavigationToolbar(NavigationToolbar2QT):
                             if data is not None:
                                 data_str = a.format_cursor_data(data)
                                 if data_str is not None:
-                                    s = s + ' ' + data_str
+                                    s += " " + data_str
                     if len(self.mode):
-                        self.set_message("{}, {}".format(self.mode, s))
-                    else:
-                        self.set_message(s)
+                        s = self.mode + ", " + s
+                    self.set_message(s)
             else:
                 self.set_message(self.mode)
         else:
             if not event.ydata or not event.xdata:
                 self.set_message(self.mode)
             else:
-                lat = 0.0
-                lon = 0.0
-                [lat, lon], _ = self.canvas.waypoints_interactor.get_lat_lon(event)
-                y_value = convert_pressure_to_vertical_axis_measure(self.canvas.settings_dict["vertical_axis"],
-                                                                    event.ydata)
-                y_value = round(y_value, 2)
-                self.set_message("{} lat={} lon={} y={}".format(self.mode, lat, lon, y_value))
+                (lat, lon), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
+                y_value = convert_pressure_to_vertical_axis_measure(
+                    self.canvas.settings_dict["vertical_axis"], event.ydata)
+                self.set_message("{} lat={:6.2f} lon={:7.2f} altitude={:.2f}".format(
+                    self.mode, lat, lon, y_value))
 
     def _init_toolbar(self):
         self.basedir = os.path.join(matplotlib.rcParams['datapath'], 'images')
@@ -587,7 +585,8 @@ class MplSideViewCanvas(MplCanvas):
                     top = np.arange(self.p_top, 0, -100000)
                     major_ticks = np.append(major_ticks, top)
 
-            labels = ["{}".format(int(l / 100.)) if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
+            labels = ["{}".format(int(l / 100.))
+                      if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
 
             # .. the same for the minor ticks ..
             p_top_minor = max(label_distance, self.p_top)
@@ -619,8 +618,8 @@ class MplSideViewCanvas(MplCanvas):
             labels = major_heights
             self.ax.set_ylabel("pressure altitude (km)")
         elif vaxis == "flight level":
-            major_fl = np.arange(0, 1000, 50)
-            minor_fl = np.arange(0, 1000, 10)
+            major_fl = np.arange(0, 1551, 50)
+            minor_fl = np.arange(0, 1551, 10)
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl
