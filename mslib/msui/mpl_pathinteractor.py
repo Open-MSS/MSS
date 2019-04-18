@@ -342,7 +342,7 @@ class PathH_GC(PathH):
 #
 
 
-class PathInteractor(object):
+class PathInteractor(QtCore.QObject):
     """An interactive matplotlib path editor. Allows vertices of a path patch
        to be interactively picked and moved around.
 
@@ -374,6 +374,7 @@ class PathInteractor(object):
                   matplotlib plot() or scatter() routines for more information.
         label_waypoints -- put labels with the waypoint numbers on the waypoints.
         """
+        QtCore.QObject.__init__(self)
         self.waypoints_model = None
         self.background = None
         self._ind = None  # the active vertex
@@ -627,6 +628,7 @@ class VPathInteractor(PathInteractor):
     """Subclass of PathInteractor that implements an interactively editable
        vertical profile of the flight track.
     """
+    signal_get_vsec = QtCore.Signal(name="get_vsec")
 
     def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
         """Constructor passes a PathV instance its parent.
@@ -656,6 +658,8 @@ class VPathInteractor(PathInteractor):
            Calls the callback function 'redrawXAxis()'.
         """
         self.redraw_path()
+        # emit signal to redraw map
+        self.signal_get_vsec.emit()
         if self.clear_figure() is not None:
             self.clear_figure()
         if self.redraw_xaxis is not None:
@@ -702,7 +706,7 @@ class VPathInteractor(PathInteractor):
             location = u""
         new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
         wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
-        self.redraw_path()
+        self.redraw_figure()
 
         self._ind = None
 
