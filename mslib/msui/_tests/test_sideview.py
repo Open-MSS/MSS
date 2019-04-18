@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,11 +29,9 @@ import mock
 import os
 import shutil
 import sys
-import paste
-import paste.httpserver
 import multiprocessing
 import tempfile
-import mslib.mswms.wms
+from mslib.mswms.mswms import application
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
@@ -122,6 +120,14 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_mouse_over(self, mockbox):
+        # Test mouse over
+        QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(20, 20), -1)
+        QtWidgets.QApplication.processEvents()
+
 
 class Test_SideViewWMS(object):
     def setup(self):
@@ -131,9 +137,8 @@ class Test_SideViewWMS(object):
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
         self.thread = multiprocessing.Process(
-            target=paste.httpserver.serve,
-            args=(mslib.mswms.wms.application,),
-            kwargs={"host": "127.0.0.1", "port": "8082", "use_threadpool": False})
+            target=application.run,
+            args=("127.0.0.1", 8082))
         self.thread.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
@@ -189,3 +194,23 @@ class Test_SideViewWMS(object):
         assert mockdlg.return_value.setModal.call_count == 1
         assert mockdlg.return_value.exec_.call_count == 1
         assert mockdlg.return_value.destroy.call_count == 1
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_insert_point(self, mockbox):
+        """
+        Test inserting a point inside and outside the canvas
+        """
+        self.window.mpl.navbar._actions['insert_wp'].trigger()
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 3
+        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(782, 266))
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 4
+        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(1, 1))
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 4
+        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
+        # click again on same position
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 5
+        assert mockbox.critical.call_count == 0

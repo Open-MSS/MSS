@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Marc Rautenhaus
-    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,23 +32,31 @@ import mslib.thermolib as tl
 
 
 def test_flightlevel2pressure():
-    assert (tl.flightlevel2pressure(182.8913020578899) - 50000) < 1e-6
-    assert (tl.flightlevel2pressure(530.83319183138485) - 10000) < 1e-6
-    assert (tl.flightlevel2pressure(1191.9689755123777) - 550) < 1e-6
-    ps = np.arange(100, 1000, 50)
-    assert np.allclose([tl.flightlevel2pressure(_x) for _x in ps],
-                       tl.flightlevel2pressure_a(ps))
+    assert tl.flightlevel2pressure(182.8913020844737) == pytest.approx(50000)
+    assert tl.flightlevel2pressure(530.8390754393636) == pytest.approx(10000)
+    assert tl.flightlevel2pressure(782.4486256345779) == pytest.approx(3000)
+    assert tl.flightlevel2pressure(1151.9849776810745) == pytest.approx(550)
+    assert tl.flightlevel2pressure(1626.9512858549855) == pytest.approx(80)
+    assert tl.flightlevel2pressure(1804.3261490037305) == pytest.approx(40)
+    with pytest.raises(ValueError):
+        tl.flightlevel2pressure(72000 / 30.48)
+    fls = np.arange(0, 71000, 1000) / 30.48
+    assert np.allclose([tl.flightlevel2pressure(_x) for _x in fls],
+                       tl.flightlevel2pressure_a(fls))
 
 
 def test_pressure2flightlevel():
-    assert (tl.pressure2flightlevel(50000) - 182.8913020578899) < 1e-6
-    assert (tl.pressure2flightlevel(10000) - 530.83319183138485) < 1e-6
-    assert (tl.pressure2flightlevel(550) - 1191.9689755123777) < 1e-6
+    assert tl.pressure2flightlevel(50000) == pytest.approx(182.89130205844737)
+    assert tl.pressure2flightlevel(10000) == pytest.approx(530.8390754393636)
+    assert tl.pressure2flightlevel(3000) == pytest.approx(782.4486256345779)
+    assert tl.pressure2flightlevel(550) == pytest.approx(1151.9849776810745)
+    assert tl.pressure2flightlevel(80) == pytest.approx(1626.9512858549855)
+    assert tl.pressure2flightlevel(40) == pytest.approx(1804.3261490037305)
     with pytest.raises(ValueError):
-        tl.pressure2flightlevel(99.99)
-    fls = np.arange(5000, 100000, 5000)
-    assert np.allclose([tl.pressure2flightlevel(_x) for _x in fls],
-                       tl.pressure2flightlevel_a(fls))
+        tl.pressure2flightlevel(3.9)
+    pss = np.arange(5., 100000., 100.)
+    assert np.allclose([tl.pressure2flightlevel(_x) for _x in pss],
+                       tl.pressure2flightlevel_a(pss))
 
 
 def test_isa_temperature():

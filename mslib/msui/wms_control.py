@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -570,7 +570,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
                     if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
-                            "401 Unauthorized") >= 0:
+                            "Unauthorized") >= 0:
                         # Catch the "401 Unauthorized" error if one has been
                         # returned by the server and ask the user for username
                         # and password.

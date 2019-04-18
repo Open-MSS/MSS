@@ -33,7 +33,6 @@ requirements:
     - lxml
     - netcdf4
     - hdf4
-    - paste
     - pillow 5.*
     - python-dateutil
     - pytz
@@ -42,7 +41,7 @@ requirements:
     - requests
     - scipy
     - sgp4
-    - skyfield
+    - skyfield >=1.10
     - six
     - tk
     - owslib
@@ -51,7 +50,10 @@ requirements:
     - cftime >=1.0.1
     - matplotlib >=3.0.2
     - proj4
-    - future # [py2k]
+    - future
+    - flask
+    - flask-httpauth
+    - werkzeug
 
 test:
   imports:

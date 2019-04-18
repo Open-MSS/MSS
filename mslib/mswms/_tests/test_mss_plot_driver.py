@@ -11,7 +11,7 @@
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Reimar Bauer, Joern Ungermann
-    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -161,7 +161,7 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs)
         assert img is not None
 
-    @pytest.mark.parametrize("crs", ["EPSG:3031", "EPSG:3857", "EPSG:3995"])
+    @pytest.mark.parametrize("crs", ["EPSG:3031", "EPSG:3857", "EPSG:3413", "EPSG:3995"])
     def test_meter_crs_codes(self, crs):
         bbox_meter = [-1e7, -1e7, 1e7, 1e7]
         img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs, bbox=bbox_meter)

@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,16 +35,14 @@ from datetime import datetime
 import os
 import six
 import logging
-
 # related third party imports
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
-
+from matplotlib import cbook
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
-
 # local application imports
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
@@ -55,7 +53,7 @@ from mslib.msui import mpl_map
 from mslib.msui import trajectory_item_tree as titree
 from mslib.msui.icons import icons
 from mslib.msui.mss_qt import QtCore, QtWidgets
-
+from mslib.utils import convert_pressure_to_vertical_axis_measure
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
@@ -244,6 +242,11 @@ class NavigationToolbar(NavigationToolbar2QT):
         """Activate the pan/zoom tool. pan with left button, zoom with right"""
         # set the pointer icon and button press funcs to the
         # appropriate callbacks
+
+        # testing path_points
+        # x = [[10.1, 10.1, datetime(2012, 7, 1, 10, 30)], [13.0, 13.1, datetime(2012, 7, 1, 10, 30)]]
+        # y = path_points(x)
+        # logging.debug(y)
         if self._active == 'INSERT_WP':
             self._active = None
         else:
@@ -269,7 +272,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             self.canvas.widgetlock(self)
         else:
             self.canvas.widgetlock.release(self)
-
         self.set_message(self.mode)
         self._update_buttons_checked()
 
@@ -361,6 +363,41 @@ class NavigationToolbar(NavigationToolbar2QT):
 
     def press_wp(self, event):
         self.canvas.waypoints_interactor.button_press_callback(event)
+
+    def mouse_move(self, event):
+        if not self.sideview:
+            self._set_cursor(event)
+            if event.inaxes and event.inaxes.get_navigate():
+                try:
+                    lat, lon = self.canvas.waypoints_interactor.get_lat_lon(event)
+                except (ValueError, OverflowError):
+                    pass
+                else:
+                    s = "lat={:6.2f}, lon={:7.2f}".format(lat, lon)
+                    artists = [a for a in event.inaxes._mouseover_set
+                               if a.contains(event)[0] and a.get_visible()]
+                    if artists:
+                        a = cbook._topmost_artist(artists)
+                        if a is not event.inaxes.patch:
+                            data = a.get_cursor_data(event)
+                            if data is not None:
+                                data_str = a.format_cursor_data(data)
+                                if data_str is not None:
+                                    s += " " + data_str
+                    if len(self.mode):
+                        s = self.mode + ", " + s
+                    self.set_message(s)
+            else:
+                self.set_message(self.mode)
+        else:
+            if not event.ydata or not event.xdata:
+                self.set_message(self.mode)
+            else:
+                (lat, lon), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
+                y_value = convert_pressure_to_vertical_axis_measure(
+                    self.canvas.settings_dict["vertical_axis"], event.ydata)
+                self.set_message("{} lat={:6.2f} lon={:7.2f} altitude={:.2f}".format(
+                    self.mode, lat, lon, y_value))
 
     def _init_toolbar(self):
         self.basedir = os.path.join(matplotlib.rcParams['datapath'], 'images')
@@ -555,8 +592,8 @@ class MplSideViewCanvas(MplCanvas):
                     top = np.arange(self.p_top, 0, -100000)
                     major_ticks = np.append(major_ticks, top)
 
-            labels = ["{}".format(int(l / 100.)) if (l / 100.) - int(l / 100.) == 0
-                      else "{}".format(float(l / 100.)) for l in major_ticks]
+            labels = ["{}".format(int(l / 100.))
+                      if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
 
             # .. the same for the minor ticks ..
             p_top_minor = max(label_distance, self.p_top)
@@ -588,8 +625,8 @@ class MplSideViewCanvas(MplCanvas):
             labels = major_heights
             self.ax.set_ylabel("pressure altitude (km)")
         elif vaxis == "flight level":
-            major_fl = np.arange(0, 1000, 50)
-            minor_fl = np.arange(0, 1000, 10)
+            major_fl = np.arange(0, 1551, 50)
+            minor_fl = np.arange(0, 1551, 10)
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl

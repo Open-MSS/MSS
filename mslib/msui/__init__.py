@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2018 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,7 +62,7 @@ class MissionSupportSystemDefaultConfig(object):
               "tableview": (1236, 424),
               "immutable": False}
 
-    # Predefined map regions to be listed in the corresponding topview combobox.
+    # Predefined map regions to be listed in the corresponding topview combobox
     predefined_map_sections = {
         "01 Europe (cyl)": {"CRS": "EPSG:4326",
                             "map": {"llcrnrlon": -15.0, "llcrnrlat": 35.0,
@@ -73,7 +73,7 @@ class MissionSupportSystemDefaultConfig(object):
         "03 Global (cyl)": {"CRS": "EPSG:4326",
                             "map": {"llcrnrlon": -180.0, "llcrnrlat": -90.0,
                                     "urcrnrlon": 180.0, "urcrnrlat": 90.0}},
-        "04 Northern Hemisphere (stereo)": {"CRS": "MSS:stere,90,0,90",
+        "04 Northern Hemisphere (stereo)": {"CRS": "MSS:stere,0,90,90",
                                             "map": {"llcrnrlon": -45.0, "llcrnrlat": 0.0,
                                                     "urcrnrlon": 135.0, "urcrnrlat": 0.0}}
     }
