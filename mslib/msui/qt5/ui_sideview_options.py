@@ -7,7 +7,6 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from mslib import thermolib
 
 class Ui_SideViewOptionsDialog(object):
     def setupUi(self, SideViewOptionsDialog):
