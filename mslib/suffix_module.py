@@ -30,7 +30,7 @@ from mslib import thermolib
 from mslib.msui.qt5.ui_sideview_options import Ui_SideViewOptionsDialog
 
 
-class Suffix_Module(Ui_SideViewOptionsDialog):
+class Ui_SuffixChange(Ui_SideViewOptionsDialog):
     def verticalunitsclicked(self, index):
         _translate = QtCore.QCoreApplication.translate
         unit = self.cbVerticalAxis.model().itemFromIndex(index)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.sideview
+    mslib.msui._tests.test_suffix
     ~~~~~~~~~~~~~~~~~~~
 
     Side view module of the msui
@@ -31,7 +31,7 @@ from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import mslib.msui.sideview as tv
 
 
-class Test_MSS_SV_OptionsDialog(object):
+class Test_SuffixChange(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = tv.MSS_SV_OptionsDialog()
@@ -47,12 +47,12 @@ class Test_MSS_SV_OptionsDialog(object):
         QtWidgets.QApplication.processEvents()
 
     def test_suffixchange(self):
-        k = self.window.cbVerticalAxis.view()
+        cbView = self.window.cbVerticalAxis.view()
         suffix = [' hpa', ' km', ' hft']
         for i in range(len(suffix)):
-            index = k.model().index(i, 0)
-            k.scrollTo(index)
-            item_react = k.visualRect(index)
-            QtTest.QTest.mouseClick(k.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item_react.center())
+            index = cbView.model().index(i, 0)
+            cbView.scrollTo(index)
+            item_react = cbView.visualRect(index)
+            QtTest.QTest.mouseClick(cbView.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item_react.center())
             QtWidgets.QApplication.processEvents()
             assert self.window.sbPtop.suffix() == suffix[i]

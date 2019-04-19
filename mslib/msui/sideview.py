@@ -49,7 +49,7 @@ from mslib import suffix_module as sm
 WMS = 0
 
 
-class MSS_SV_OptionsDialog(QtWidgets.QDialog, sm.Suffix_Module):
+class MSS_SV_OptionsDialog(QtWidgets.QDialog, sm.Ui_SuffixChange):
     """Dialog to specify sideview options. User interface is specified
        in "ui_sideview_options.py".
     """
