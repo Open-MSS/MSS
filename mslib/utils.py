@@ -37,7 +37,6 @@ import logging
 import netCDF4 as nc
 import numpy as np
 import os
-import pickle
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import werkzeug.datastructures
@@ -49,6 +48,7 @@ except ImportError:
 
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
+from PyQt5 import QtCore
 
 
 class FatalUserError(Exception):
@@ -147,11 +147,10 @@ def save_settings_pickle(tag, settings):
     """
     assert isinstance(tag, basestring)
     assert isinstance(settings, dict)
-    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, u"mss.{}.cfg".format(tag))
-    logging.debug("storing settings for %s to %s", tag, settingsfile)
+    q_settings = QtCore.QSettings()
+    logging.debug("storing settings for %s", tag)
     try:
-        with open(settingsfile, "wb") as fileobj:
-            pickle.dump(settings, fileobj)
+        q_settings.setValue(tag, QtCore.QVariant(settings))
     except (OSError, IOError) as ex:
         logging.warning("Problems storing %s settings (%s: %s).", tag, type(ex), ex)
 
@@ -170,20 +169,14 @@ def load_settings_pickle(tag, default_settings=None):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
-    settingsfile = os.path.join(constants.MSS_CONFIG_PATH, u"mss.{}.cfg".format(tag))
-    _dirname, _name = os.path.split(settingsfile)
-    _fs = open_fs(_dirname)
     settings = {}
-    if not _fs.exists(_name):
-        logging.debug("settings file '%s' for %s not available", settingsfile, tag)
-    else:
-        logging.debug("loading settings file '%s' for %s", settingsfile, tag)
-        try:
-            with _fs.open(_name, "rb") as fileobj:
-                settings = pickle.load(fileobj)
-        except (pickle.UnpicklingError, ValueError, KeyError, OSError, IOError, ImportError, TypeError) as ex:
-            logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
-                          tag, type(ex), ex)
+    logging.debug(u"loading settings for %s", tag)
+    try:
+        q_settings = QtCore.QSettings()
+        settings = q_settings.value(tag)
+    except Exception as ex:
+        logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
+                      tag, type(ex), ex)
     if isinstance(settings, dict):
         default_settings.update(settings)
     return default_settings
