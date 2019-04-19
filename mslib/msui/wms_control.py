@@ -1563,7 +1563,7 @@ class VSecWMSControlWidget(WMSControlWidget):
 
     @QtCore.Slot()
     def call_get_vsec(self):
-        if self.btGetMap.isEnabled() and not self.layerChangeInProgress:
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.btGetMap.click()
 
     def get_vsec(self):
