@@ -111,8 +111,6 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, sm.Suffix_Module):
 
         # Connect colour button signals.
         self.cbVerticalAxis.view().pressed.connect(self.verticalunitsclicked)
-        
-        
 
         self.btFillColour.clicked.connect(functools.partial(self.setColour, "ft_fill"))
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
