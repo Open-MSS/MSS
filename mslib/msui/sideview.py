@@ -246,6 +246,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
                                                   view=self.mpl.canvas,
                                                   wms_cache=config_loader(dataset="wms_cache",
                                                                           default=mss_default.wms_cache))
+                self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.

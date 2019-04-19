@@ -1561,6 +1561,11 @@ class VSecWMSControlWidget(WMSControlWidget):
         """
         self.waypoints_model = model
 
+    @QtCore.Slot()
+    def call_get_vsec(self):
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+            self.btGetMap.click()
+
     def get_vsec(self):
         """Slot that retrieves the vertical section and passes the image
            to the view.
