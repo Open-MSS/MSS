@@ -87,11 +87,6 @@ class Test_MSS_SV_OptionsDialog(object):
         QtWidgets.QApplication.processEvents()
         assert mockdlg.call_count == 1
 
-    def test_suffixchange(self):
-        self.window.verticalunitsclicked(1)
-        QtWidgets.QApplication.processEvents()
-        assert self.window.sbPtop.suffix() == " hpa"
-
 
 class Test_MSSSideViewWindow(object):
     def setup(self):

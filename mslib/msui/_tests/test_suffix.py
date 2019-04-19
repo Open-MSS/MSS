@@ -1,15 +1,7 @@
-import mock
-import os
-import shutil
 import sys
-import paste
-import paste.httpserver
-import multiprocessing
-import tempfile
-import mslib.mswms.wms
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore, QtGui
-from mslib.msui import flighttrack as ft
+from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import mslib.msui.sideview as tv
+
 
 class Test_MSS_SV_OptionsDialog(object):
     def setup(self):
@@ -27,7 +19,12 @@ class Test_MSS_SV_OptionsDialog(object):
         QtWidgets.QApplication.processEvents()
 
     def test_suffixchange(self):
-        
-        self.window.verticalunitsclicked(1)
-        QtWidgets.QApplication.processEvents()
-        assert self.window.sbPtop.suffix() == " hpa"
+        k = self.window.cbVerticalAxis.view()
+        suffix = [' hpa', ' km', ' hft']
+        for i in range(len(suffix)):
+            index = k.model().index(i, 0)
+            k.scrollTo(index)
+            item_react = k.visualRect(index)
+            QtTest.QTest.mouseClick(k.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item_react.center())
+            QtWidgets.QApplication.processEvents()
+            assert self.window.sbPtop.suffix() == suffix[i]
