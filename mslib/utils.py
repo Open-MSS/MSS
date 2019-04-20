@@ -147,8 +147,9 @@ def save_settings_pickle(tag, settings):
     """
     assert isinstance(tag, basestring)
     assert isinstance(settings, dict)
-    q_settings = QtCore.QSettings()
-    logging.debug("storing settings for %s", tag)
+    q_settings = QtCore.QSettings("mss", "mss-core")
+    file_path = q_settings.fileName()
+    logging.debug("storing settings for %s to %s", tag, file_path)
     try:
         q_settings.setValue(tag, QtCore.QVariant(settings))
     except (OSError, IOError) as ex:
@@ -170,9 +171,10 @@ def load_settings_pickle(tag, default_settings=None):
         default_settings = {}
     assert isinstance(default_settings, dict)
     settings = {}
-    logging.debug(u"loading settings for %s", tag)
+    q_settings = QtCore.QSettings("mss", "mss-core")
+    file_path = q_settings.fileName()
+    logging.debug(u"loading settings for %s from %s", tag, file_path)
     try:
-        q_settings = QtCore.QSettings()
         settings = q_settings.value(tag)
     except Exception as ex:
         logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
