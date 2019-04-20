@@ -156,6 +156,9 @@ for mod in [
         "ui_wms_password_dialog"]:
     globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 
+# to store config by QSettings
+QtCore.QCoreApplication.setOrganizationName("mss")
+
 
 # PyQt5 silently aborts on a Python Exception
 def excepthook(type_, value, traceback_):
