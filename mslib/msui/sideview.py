@@ -39,17 +39,17 @@ from PyQt5 import QtCore
 
 # local application imports
 from mslib.msui.mss_qt import ui_sideview_window as ui
+from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
-from mslib import suffix_module as sm
-
-
+from mslib import thermolib
+ 
 # Dock window indices.
 WMS = 0
 
 
-class MSS_SV_OptionsDialog(QtWidgets.QDialog, sm.Ui_SuffixChange):
+class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     """Dialog to specify sideview options. User interface is specified
        in "ui_sideview_options.py".
     """
@@ -63,6 +63,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, sm.Ui_SuffixChange):
         _translate = QtCore.QCoreApplication.translate
         super(MSS_SV_OptionsDialog, self).__init__(parent)
         self.setupUi(self)
+        self.tb = thermolib
 
         default_settings_dict = {"vertical_extent": (1050, 180),
                                  "vertical_axis": "pressure",
@@ -199,6 +200,38 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, sm.Ui_SuffixChange):
                 QtGui.QPalette(self.btFillColour.palette()).color(QtGui.QPalette.Button).getRgbF()
         }
         return settings_dict
+
+    def verticalunitsclicked(self, index):
+        _translate = QtCore.QCoreApplication.translate
+        unit = self.cbVerticalAxis.model().itemFromIndex(index)
+        currentunit = self.cbVerticalAxis.currentText()
+        if unit.text() == "pressure":
+            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
+            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
+            if currentunit == "pressure altitude":
+                self.sbPbot.setValue(self.tb.flightlevel2pressure(self.sbPbot.value() * 32.80) / 100)
+                self.sbPtop.setValue(self.tb.flightlevel2pressure(self.sbPtop.value() * 32.80) / 100)
+            elif currentunit == "flight level":
+                self.sbPbot.setValue(self.tb.flightlevel2pressure(self.sbPbot.value()) / 100)
+                self.sbPtop.setValue(self.tb.flightlevel2pressure(self.sbPtop.value()) / 100)
+        elif unit.text() == "pressure altitude":
+            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " km"))
+            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " km"))
+            if currentunit == "pressure":
+                self.sbPbot.setValue(self.tb.pressure2flightlevel(self.sbPbot.value() * 100) * 0.03048)
+                self.sbPtop.setValue(self.tb.pressure2flightlevel(self.sbPtop.value() * 100) * 0.03048)
+            elif currentunit == "flight level":
+                self.sbPbot.setValue(self.sbPbot.value() * 0.03048)
+                self.sbPtop.setValue(self.sbPtop.value() * 0.03048)
+        elif unit.text() == "flight level":
+            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hft"))
+            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hft"))
+            if currentunit == "pressure":
+                self.sbPbot.setValue(self.tb.pressure2flightlevel(self.sbPbot.value() * 100))
+                self.sbPtop.setValue(self.tb.pressure2flightlevel(self.sbPtop.value() * 100))
+            elif currentunit == "pressure altitude":
+                self.sbPbot.setValue(self.sbPbot.value() * 32.80)
+                self.sbPtop.setValue(self.sbPtop.value() * 32.80)
 
 
 class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
