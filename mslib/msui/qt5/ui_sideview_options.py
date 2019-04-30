@@ -192,9 +192,7 @@ class Ui_SideViewOptionsDialog(object):
         SideViewOptionsDialog.setWindowTitle(_translate("SideViewOptionsDialog", "Side View Options"))
         self.groupBox.setTitle(_translate("SideViewOptionsDialog", "Vertical Extent"))
         self.label_2.setText(_translate("SideViewOptionsDialog", "Vertical extent:"))
-        self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
         self.label_3.setText(_translate("SideViewOptionsDialog", "to"))
-        self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
         self.label_4.setText(_translate("SideViewOptionsDialog", "Vertical axis units:"))
         self.cbVerticalAxis.setItemText(0, _translate("SideViewOptionsDialog", "pressure"))
         self.cbVerticalAxis.setItemText(1, _translate("SideViewOptionsDialog", "pressure altitude"))
@@ -212,4 +210,14 @@ class Ui_SideViewOptionsDialog(object):
         self.cbFillFlightTrack.setText(_translate("SideViewOptionsDialog", "fill flight track"))
         self.btFillColour.setText(_translate("SideViewOptionsDialog", "colour"))
         self.cbLabelFlightTrack.setText(_translate("SideViewOptionsDialog", "label flight track"))
+
+    
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    SideViewOptionsDialog = QtWidgets.QDialog()
+    ui = Ui_SideViewOptionsDialog()
+    ui.setupUi(SideViewOptionsDialog)
+    SideViewOptionsDialog.show()
+    sys.exit(app.exec_())
 
