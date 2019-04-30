@@ -4,7 +4,8 @@
     mslib.msui._tests.test_suffix
     ~~~~~~~~~~~~~~~~~~~
 
-    Side view module of the msui
+    This module provides pytest function to test msui.sideview method
+    'verticalunitsclicked' for change of suffix
 
     This file is part of mss.
 
