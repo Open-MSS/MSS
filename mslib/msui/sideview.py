@@ -44,7 +44,7 @@ from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib import thermolib
- 
+
 # Dock window indices.
 WMS = 0
 

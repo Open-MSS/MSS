@@ -851,7 +851,8 @@ class MplSideViewCanvas(MplCanvas):
         logging.debug("done.")
 
     def checknconvert(self):
-        """ Checks for current units of axis and convert the upper and lower limit to pa(pascals) for the internal computation by code """
+        """ Checks for current units of axis and convert the upper and lower limit
+        to pa(pascals) for the internal computation by code """
 
         if self.settings_dict["vertical_axis"] == "pressure altitude":
             self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * 32.80)
