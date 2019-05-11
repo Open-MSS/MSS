@@ -30,7 +30,7 @@ from builtins import str
 
 import logging
 import functools
-from mslib.utils import config_loader, save_settings_pickle, load_settings_pickle
+from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 # related third party imports
@@ -313,13 +313,11 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         """Save the current settings (vertical extent, displayed flightlevels
            etc.) to the file self.settingsfile.
         """
-        # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
-        # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
         settings = self.getView().get_settings()
-        save_settings_pickle(self.settings_tag, settings)
+        save_settings_qsettings(self.settings_tag, settings)
 
     def load_settings(self):
         """Load settings from the file self.settingsfile.
         """
-        settings = load_settings_pickle(self.settings_tag)
+        settings = load_settings_qsettings(self.settings_tag)
         self.getView().set_settings(settings)

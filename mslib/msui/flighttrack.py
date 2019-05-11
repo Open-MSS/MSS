@@ -52,7 +52,7 @@ from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, varia
 # local application imports
 from mslib import utils, __version__
 from mslib import thermolib
-from mslib.utils import config_loader, find_location, save_settings_pickle, load_settings_pickle
+from mslib.utils import config_loader, find_location, save_settings_qsettings, load_settings_qsettings
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
@@ -169,15 +169,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def load_settings(self):
         """Load settings from the file self.settingsfile.
         """
-        self.performance_settings = load_settings_pickle(self.settings_tag, DEFAULT_PERFORMANCE)
+        self.performance_settings = load_settings_qsettings(self.settings_tag, DEFAULT_PERFORMANCE)
 
     def save_settings(self):
         """Save the current settings (map appearance) to the file
            self.settingsfile.
         """
-        # TODO: ConfigParser and a central configuration file might be the better solution than pickle.
-        # http://stackoverflow.com/questions/200599/whats-the-best-way-to-store-simple-user-settings-in-python
-        save_settings_pickle(self.settings_tag, self.performance_settings)
+        save_settings_qsettings(self.settings_tag, self.performance_settings)
 
     def flags(self, index):
         """Used to specify which table columns can be edited by the user;

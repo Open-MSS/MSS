@@ -137,7 +137,7 @@ def find_location(lat, lon, tolerance=5):
         return None
 
 
-def save_settings_pickle(tag, settings):
+def save_settings_qsettings(tag, settings):
     """
     Saves a dictionary settings to disk.
 
@@ -154,9 +154,10 @@ def save_settings_pickle(tag, settings):
         q_settings.setValue(tag, QtCore.QVariant(settings))
     except (OSError, IOError) as ex:
         logging.warning("Problems storing %s settings (%s: %s).", tag, type(ex), ex)
+    return settings
 
 
-def load_settings_pickle(tag, default_settings=None):
+def load_settings_qsettings(tag, default_settings=None):
     """
     Loads a dictionary of settings from disk. May supply a dictionary of default settings
     to return in case the settings file is not present or damaged. The default_settings one will
