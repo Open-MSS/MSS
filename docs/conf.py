@@ -54,7 +54,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'MSS - Mission Support System'
 copyright = \
-    u'2016-2017 see AUTHORS file, ' \
+    u'2016-2019 see AUTHORS file, ' \
     u'2011-2014 Marc Rautenhaus, ' \
     u'2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V., '
 
