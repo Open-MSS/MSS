@@ -1,6 +1,44 @@
 Changelog
 =========
 
+Version 1.8.0
+-------------
+
+New Features:
+  - developer docu has to be fixed, #395
+  - remove proj4 workarounds, #393
+  - x/y mouse over coordinates in TopView are not always in lat/lon notation, #389
+  - sideview mouse over, show data of position, #386
+  - insert/delete waypoints in sideview, #380
+  - support of vertical cross sections beyond 30km altitude, #379
+  - access rights in the cache directory, #375
+  - views cannot be closed without titlebar, #373
+  - mss and matplotlib 3.0, #368
+  - "colour of vertices" is misleading for the colour of the flight path, #347
+  - Simplify unit conversion, #343
+  - refactor: replace pickle files by QSettings, #325
+  - replace paste by flask, #324
+  - table view save dialog, #322
+  - rename _tests/utils.py, #319
+  - Add "clone" button to TableView, #254
+  - Avoid "catch-all" exception handlers, #42
+
+Bug Fixes:
+  - Image dissappears after insert/delete operation in sideview mode, #399
+  - sideview options dialog suffix always hPa, #394
+  - Msui crashes on selecting Northern Hemisphere (stereo) from drop down menu under Top View section, #388
+  - qt widget property issue, #387
+  - Updating only MSS in anaconda may result in an error, #336
+
+Other Changes:
+  - Change comments for function "flightlevel2pressure_a", #384
+  - Documentation about Reporting Issues, #112
+
+HINT:
+~~~~~
+
+We dropped Python2 support. You need for this release miniconda3 or anaconda3.
+
 
 Version 1.7.6
 -------------
