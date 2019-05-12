@@ -1,14 +1,13 @@
 Installation
 =================
 
-Current Releases of mss are based on *python 2* and *python 3*.
+Current Releases of mss is based on  *python 3*.
 
 .. image:: https://anaconda.org/conda-forge/mss/badges/installer/conda.svg
 
 
-**Python 2 will no longer be supported in mss-1.8.0.**
 
-mss-1.7.5 is the last version with python2* support.
+mss-1.7.6 was the last version with python2* support.
 
 
 Install distributed version by conda
@@ -17,12 +16,12 @@ Install distributed version by conda
 `Anaconda <https://www.continuum.io/why-anaconda>`_ provides an enterprise-ready data analytics
 platform that empowers companies to adopt a modern open data science analytics architecture.
 
-The Mission Support Web Map Service (mss) is available as anaconda package on a channel.
+The Mission Support Web Map Service (mss) is available as anaconda package on the channel.
 
- * `conda-forge <https://anaconda.org/conda-forge/mss>`_
+`conda-forge <https://anaconda.org/conda-forge/mss>`_
 
 The conda-forge packages are based on defaults and other conda-forge packages.
-This channel conda-forge has builds for osx-64, linux-64, win-64, win-32.
+This channel conda-forge has builds for osx-64, linux-64, win-64
 
 
 The conda-forge `github organization <https://conda-forge.github.io/>`_ uses various automated continuos integration
