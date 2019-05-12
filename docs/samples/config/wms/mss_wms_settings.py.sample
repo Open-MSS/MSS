@@ -209,18 +209,6 @@ register_vertical_layers = [
 # Server settings.                                ###
 #
 
-# Here you can define to which IP addresses and ports the Flask HTTP
-# server should bind on different machines. The WSGI program obtains
-# the hostname of the machine it is running on. For each hostname (key
-# in the following dictionary) you can specify its IP-address, port,
-# and alias. The alias will be used as the GetMap-URL in the
-# capabilities document. Note that this alias setting will be
-# overridden if the WMS is started with the "--ssh" option (see
-# docstring of mss_wms_wsgi.py).
-flask_ip_bind = {
-    "server-name": {"host": "insert-ip-number", "port": "8081", "alias": "mss.server.de"}
-}
-
 use_threadpool = False
 
 # xml_template directory is a sub directory of mswms
