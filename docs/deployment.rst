@@ -3,7 +3,7 @@ wms - Web Map Service
 
 Once installation and configuration are complete, you can start the
 Web Map Service application (provided you have forecast data to visualise).
-The file "mswms" is an executable Python script starting up a Paste HTTP server
+The file "mswms" is an executable Python script starting up a Flask HTTP server
 with the WMS WSGI module.
 A short description of how to start the program is given by the --help option.
 The file "wms.wsgi" is intended to be used with an Apache web server
@@ -21,21 +21,16 @@ table for EPSG mapping (*epsg_to_mpl_basemap_table*) and at all how to access th
 
 A few notes:
 
-- If you run the Paste WMS on a remote machine (e.g. on your office
-  computer which you access via ssh from a campaign site), consider
-  the ssh-tunnel option. Create the ssh connection with the "-L"
-  option and start the WMS with the tunneled port as option.
-
-- The Paste WMS currently cannot run multithreaded (Apache does
+- The Flask WMS currently cannot run multithreaded (Apache does
   support multiple processes). This is due to that a single instance
   of the WSGI application handler class MSS_WMSResponse can create
   only one plot at a time (otherwise you get messed up plots when
   simultaneous requests occur). In the current implementation, only a
-  single instance is passed to PASTE (to do all the initialisation
+  single instance is passed to Flask (to do all the initialisation
   work only once. To extend the software to handle simultaneous
   requests would probably involve creating a "factory" of
   MSS_WMSResponse instances.. If you want to do this, check if/how
-  PASTE handles "worker" factories.
+  Flask handles "worker" factories.
 
 - Creating the capabilities document can take very long (> 1 min) if
   the forecast data files have to be read for the first time (the WMS

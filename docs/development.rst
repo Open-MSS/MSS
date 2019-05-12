@@ -42,49 +42,87 @@ Or add the channel by an editor to the .condarc config file::
   - conda-forge
 
 
-On top level dir::
+using a local meta.yaml recipe::
 
   $ git clone https://bitbucket.org/yourfork/mss.git
   $ cd mss
   $ conda create -n mssdev python=3
-  $ source activate mssdev
+  $ conda activate mssdev
   $ conda build .
   $ conda install --use-local mss
   $ mkdir "$HOME/.config/mss"
   $ # cp mss_settings.json.sample to "$HOME/.config/mss/mss_settings.json"
+  $ conda remove mss
 
 
-To install some additional packages needed for running the tests, activate your virtual env and run::
+alternative get the whole package first::
+
+ $ conda create -n mssdev mss
+ $ conda activate mssdev
+ $ conda remove mss
+
+Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
+
+Add the path of your local cloned mss directory to $PYTHONPATH.
+
+Add developer packages for running tests, activate your env and run::
 
   $ conda install --file requirements.d/development.txt
 
+On linux install `xvfb` from your linux package manager. This is used to run tests on a virtual display.
 
 Running tests
 ~~~~~~~~~~~~~~~~~~~
 
-We have implemented demodata as data base for testing. On first call of py.test a set of demodata becomes stored
+We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
 in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
 
 ::
 
-   $ python -m pytest
+   $ pytest
 
 
 Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
 
-A pep8 only test is done by py.test --pep8 -m pep8
+A pep8 only test is done by `py.test --pep8 -m pep8`  or `pytest --pep8 -m pep8`
 
-Instead of running a ibrary module as a script by the -m option you may also use the py.test command.
+Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
 
 ::
 
-   $ py.test --cov
+   $ pytest --cov mslib
 
-This plugin produces a coverage report.
+This plugin produces a coverage report, example::
+
+    ----------- coverage: platform linux, python 3.7.3-final-0 -----------
+    Name                                     Stmts   Miss Branch BrPart  Cover
+    --------------------------------------------------------------------------
+    mslib/__init__.py                            2      0      0      0   100%
+    mslib/msui/__init__.py                      23      0      0      0   100%
+    mslib/msui/aircrafts.py                     52      1      8      1    97%
+    mslib/msui/constants.py                     12      2      4      2    75%
+    mslib/msui/flighttrack.py                  383    117    141     16    66%
+
 
 Profiling can be done by e.g.::
 
-   $ python -m cProfile  -s time ./demodata.py > profile.txt
+   $ python -m cProfile  -s time ./mslib/mswms/demodata.py > profile.txt
+
+example::
+
+    /!\ existing server config: "mss_wms_settings.py" for demodata not overwritten!
+
+
+    To use this setup you need the mss_wms_settings.py in your python path e.g.
+    export PYTHONPATH=~/mss
+             398119 function calls (389340 primitive calls) in 0.834 seconds
+
+       Ordered by: internal time
+
+       ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+           19    0.124    0.007    0.496    0.026 demodata.py:912(generate_file)
+           19    0.099    0.005    0.099    0.005 {method 'close' of 'netCDF4._netCDF4.Dataset' objects}
+
 
 
 Setup mss_settings.json
