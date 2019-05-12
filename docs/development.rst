@@ -74,7 +74,7 @@ On linux install `xvfb` from your linux package manager. This is used to run tes
 Running tests
 ~~~~~~~~~~~~~~~~~~~
 
-We have implemented demodata as data base for testing. On first call of py.test a set of demodata becomes stored
+We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
 in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
 
 ::
@@ -86,7 +86,7 @@ Use the -v option to get a verbose result. By the -k option you could select one
 
 A pep8 only test is done by `py.test --pep8 -m pep8`  or `pytest --pep8 -m pep8`
 
-Instead of running a ibrary module as a script by the -m option you may also use the py.test command.
+Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
 
 ::
 
