@@ -32,6 +32,7 @@ from mslib import utils
 class TestSettingsSave(object):
     """
     tests save_settings_qsettings and load_settings_qsettings from ./utils.py
+    # TODO make sure do a clean setup, not inside the 'mss' config file.
     """
     tag = "test_automated"
 
