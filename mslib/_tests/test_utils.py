@@ -29,6 +29,24 @@ import datetime
 from mslib import utils
 
 
+class TestSettingsSave(object):
+    """
+    tests save_settings_qsettings and load_settings_qsettings from ./utils.py
+    # TODO make sure do a clean setup, not inside the 'mss' config file.
+    """
+    tag = "test_automated"
+
+    def test_save_settings(self):
+        settings = {'foo': 'bar'}
+        utils.save_settings_qsettings(self.tag, settings)
+        pass
+
+    def test_load_settings(self):
+        settings = utils.load_settings_qsettings(self.tag)
+        assert isinstance(settings, dict)
+        assert settings["foo"] == "bar"
+
+
 class TestConfigLoader(object):
     """
     tests config file for client
