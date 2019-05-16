@@ -5,6 +5,7 @@ Version 1.8.0
 -------------
 
 New Features:
+  - rename/refactor where we now use QSettings, #402
   - developer docu has to be fixed, #395
   - remove proj4 workarounds, #393
   - x/y mouse over coordinates in TopView are not always in lat/lon notation, #389
@@ -24,6 +25,8 @@ New Features:
   - Avoid "catch-all" exception handlers, #42
 
 Bug Fixes:
+  - Top View Map Appeareance options not defined with web map services
+Create issue, #401
   - Image dissappears after insert/delete operation in sideview mode, #399
   - sideview options dialog suffix always hPa, #394
   - Msui crashes on selecting Northern Hemisphere (stereo) from drop down menu under Top View section, #388
