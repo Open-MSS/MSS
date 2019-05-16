@@ -25,8 +25,7 @@ New Features:
   - Avoid "catch-all" exception handlers, #42
 
 Bug Fixes:
-  - Top View Map Appeareance options not defined with web map services
-Create issue, #401
+  - Top View Map Appeareance options not defined with web map services, #401
   - Image dissappears after insert/delete operation in sideview mode, #399
   - sideview options dialog suffix always hPa, #394
   - Msui crashes on selecting Northern Hemisphere (stereo) from drop down menu under Top View section, #388
