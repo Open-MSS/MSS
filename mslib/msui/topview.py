@@ -32,7 +32,7 @@ import functools
 import logging
 from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtGui, QtWidgets
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow
@@ -54,7 +54,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
        defined in "ui_topview_mapappearance.py".
     """
 
-    def __init__(self, parent=None, settings_dict=None):
+    def __init__(self, parent=None, settings_dict=None, wms_connected=False):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
@@ -74,10 +74,23 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "colour_ft_vertices": (0, 0, 0, 0),
                              "colour_ft_waypoints": (0, 0, 0, 0)}
 
+        self.wms_connected = wms_connected
+        # check parent.wms_connected to disable cbFillWaterBodies and cbFillContinents
+        if self.wms_connected:
+            self.cbFillContinents.setChecked(False)
+            self.cbFillWaterBodies.setChecked(False)
+            self.cbFillContinents.setEnabled(False)
+            self.cbFillContinents.setStyleSheet("color: black")
+            self.cbFillWaterBodies.setStyleSheet("color: black")
+        else:
+            settings_dict["fill_waterbodies"] = True
+            settings_dict["fill_continents"] = True
+            self.cbFillWaterBodies.setChecked(settings_dict["fill_waterbodies"])
+            self.cbFillContinents.setChecked(settings_dict["fill_continents"])
+            self.cbFillContinents.setEnabled(True)
+
         self.cbDrawGraticule.setChecked(settings_dict["draw_graticule"])
         self.cbDrawCoastlines.setChecked(settings_dict["draw_coastlines"])
-        self.cbFillWaterBodies.setChecked(settings_dict["fill_waterbodies"])
-        self.cbFillContinents.setChecked(settings_dict["fill_continents"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
 
@@ -162,6 +175,9 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Initialise the GUI elements (map view, items of combo boxes etc.).
         self.setup_top_view()
 
+        # Boolean to store active wms connection
+        self.wms_connected = False
+
         # Connect slots and signals.
         # ==========================
 
@@ -217,6 +233,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
                     view=self.mpl.canvas,
                     parent=self,
                     wms_cache=config_loader(dataset="wms_cache", default=mss_default.wms_cache))
+                widget.signal_disable_cbs.connect(self.disable_cbs)
+                widget.signal_enable_cbs.connect(self.enable_cbs)
             elif index == SATELLITE:
                 title = "Satellite Track Prediction"
                 widget = sat.SatelliteControlWidget(view=self.mpl.canvas)
@@ -231,6 +249,14 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
 
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
+
+    @QtCore.Slot()
+    def disable_cbs(self):
+        self.wms_connected = True
+
+    @QtCore.Slot()
+    def enable_cbs(self):
+        self.wms_connected = False
 
     def changeMapSection(self, index=0, only_kwargs=False):
         """Change the current map section to one of the predefined regions.
@@ -264,7 +290,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         """
         settings = self.getView().get_map_appearance()
-        dlg = MSS_TV_MapAppearanceDialog(parent=self, settings_dict=settings)
+        dlg = MSS_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
