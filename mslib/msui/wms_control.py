@@ -390,6 +390,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     prefetch = QtCore.pyqtSignal([list], name="prefetch")
     fetch = QtCore.pyqtSignal([list], name="fetch")
+    signal_disable_cbs = QtCore.Signal(name="disable_cbs")
+    signal_enable_cbs = QtCore.Signal(name="enable_cbs")
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
@@ -640,6 +642,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def clear_map(self):
         logging.debug("clear figure")
         self.view.clear_figure()
+        logging.debug("enabling checkboxes in map-options if any")
+        self.signal_enable_cbs.emit()
 
     def get_capabilities(self):
         """Query the WMS server in the URL combobox for its capabilities. Fill
@@ -759,6 +763,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.cbLayer.currentIndexChanged.connect(self.layer_changed)
         if len(filtered_layers) > 0:
             self.btGetMap.setEnabled(True)
+
+        # logic to disable fill continents, fill oceans on connection to
+        self.signal_disable_cbs.emit()
 
     def view_capabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities
@@ -1457,6 +1464,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         complete_level = self.cbLevel.currentText()
         complete_level = complete_level if complete_level != "" else None
         self.display_retrieved_image(img, legend_img, layer, style, init_time, valid_time, complete_level)
+        # this is for cases where 'remove' button is clicked, then 'retrieve' is clicked
+        self.signal_disable_cbs.emit()
 
     def get_map(self):
         """Prototypical stub for getMap() function. Needs to be reimplemented
