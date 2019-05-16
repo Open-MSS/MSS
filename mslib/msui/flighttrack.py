@@ -46,10 +46,7 @@ import xml.dom.minidom
 import xml.parsers.expat
 from fs import open_fs
 
-# related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float
-
-# local application imports
 from mslib import utils, __version__
 from mslib import thermolib
 from mslib.utils import config_loader, find_location, save_settings_qsettings, load_settings_qsettings

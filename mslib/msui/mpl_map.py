@@ -37,8 +37,6 @@ from __future__ import division
 from builtins import str
 
 import logging
-
-# related third party imports
 import numpy as np
 import matplotlib
 import matplotlib.path as mpath

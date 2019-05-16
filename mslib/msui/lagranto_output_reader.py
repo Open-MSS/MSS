@@ -34,8 +34,6 @@ import copy
 import logging
 import os
 import pickle
-
-# related third party imports
 import numpy
 from fs import open_fs
 

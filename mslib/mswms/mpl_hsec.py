@@ -40,14 +40,12 @@ import logging
 from abc import abstractmethod
 import mss_wms_settings
 
-# related third party imports
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import mpl_toolkits.basemap as basemap
 import numpy as np
 import PIL.Image
 
-# local application imports
 from mslib.mswms import mss_2D_sections
 from mslib.utils import get_projection_params
 
