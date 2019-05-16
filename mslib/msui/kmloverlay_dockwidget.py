@@ -36,7 +36,7 @@ import os
 from mslib.msui.mss_qt import QtGui, QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch
-from mslib.utils import save_settings_pickle, load_settings_pickle
+from mslib.utils import save_settings_qsettings, load_settings_qsettings
 
 
 KMLPARSER = objectify.makeparser(strip_cdata=False)
@@ -68,7 +68,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.cbManualStyle.setChecked(False)
 
         self.settings_tag = "kmldock"
-        settings = load_settings_pickle(
+        settings = load_settings_qsettings(
             self.settings_tag, {"filename": "", "linewidth": 1, "colour": (0, 0, 0, 1)})
 
         self.leFile.setText(settings["filename"])
@@ -86,7 +86,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             "linewidth": self.dsbLineWidth.value(),
             "colour": self.get_color()
         }
-        save_settings_pickle(self.settings_tag, settings)
+        save_settings_qsettings(self.settings_tag, settings)
 
     def get_color(self):
         button = self.pbSelectColour

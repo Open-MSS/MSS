@@ -35,7 +35,7 @@ import numpy as np
 
 from mslib.msui.mss_qt import QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
-from mslib.utils import save_settings_pickle, load_settings_pickle
+from mslib.utils import save_settings_qsettings, load_settings_qsettings
 from fs import open_fs
 
 
@@ -127,7 +127,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         self.cbSatelliteOverpasses.currentIndexChanged.connect(self.plot_overpass_track)
 
         self.settings_tag = "satellitedock"
-        settings = load_settings_pickle(self.settings_tag, {"filename": ""})
+        settings = load_settings_qsettings(self.settings_tag, {"filename": ""})
         self.leFile.setText(settings["filename"])
 
     def select_file(self):
@@ -141,7 +141,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         if not filename:
             return
         self.leFile.setText(filename)
-        save_settings_pickle(self.settings_tag, {"filename": filename})
+        save_settings_qsettings(self.settings_tag, {"filename": filename})
 
     def load_file(self):
         """Load the file specified in leFile and fill the combobox with the
