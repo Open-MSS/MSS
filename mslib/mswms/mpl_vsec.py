@@ -41,12 +41,8 @@ import logging
 import numpy as np
 from abc import abstractmethod
 from xml.dom.minidom import getDOMImplementation
-
-# related third party imports
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-# local application imports
 from mslib.mswms import mss_2D_sections
 
 mpl.rcParams['xtick.direction'] = 'out'

@@ -60,8 +60,6 @@ from mslib.utils import config_loader, setup_logging
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-
-# related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, get_open_filename, get_save_filename
 
 try:

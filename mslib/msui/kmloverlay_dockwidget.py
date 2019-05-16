@@ -32,7 +32,6 @@ import logging
 from lxml import etree, objectify
 import os
 
-# local application imports
 from mslib.msui.mss_qt import QtGui, QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mpl_map import KMLPatch

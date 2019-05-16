@@ -35,7 +35,6 @@ from datetime import datetime
 import os
 import six
 import logging
-# related third party imports
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -43,7 +42,6 @@ from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
 from matplotlib import cbook
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
-# local application imports
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
