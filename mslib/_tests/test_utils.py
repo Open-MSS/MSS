@@ -39,7 +39,6 @@ class TestSettingsSave(object):
     def test_save_settings(self):
         settings = {'foo': 'bar'}
         utils.save_settings_qsettings(self.tag, settings)
-        pass
 
     def test_load_settings(self):
         settings = utils.load_settings_qsettings(self.tag)

@@ -802,7 +802,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     return d
             except ValueError as error:
                 logging.debug("ValueError Exception %s", error)
-                pass
         return None
 
     def get_layer_object(self, layername):

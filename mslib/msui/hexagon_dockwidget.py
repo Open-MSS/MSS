@@ -29,6 +29,7 @@ from __future__ import division
 from builtins import str
 
 import numpy as np
+import logging
 
 from mslib.msui.mss_qt import QtWidgets
 from mslib.msui.mss_qt import ui_hexagon_dockwidget as ui
@@ -38,7 +39,8 @@ from mslib.utils import config_loader, rotate_point
 
 
 class HexagonException(Exception):
-    pass
+    def __init__(self, error_string):
+        logging.error("{}".format(error_string))
 
 
 def create_hexagon(center_lat, center_lon, radius, angle=0.):

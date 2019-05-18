@@ -175,7 +175,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
-            pass
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None

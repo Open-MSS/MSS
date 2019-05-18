@@ -12,12 +12,13 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 import os
+import logging
 
 # readthedocs has no past.builtins
 try:
     from past.builtins import execfile
-except ImportError:
-    pass
+except ImportError as ex:
+    logging.error("{}".format(ex))
 execfile('../mslib/version.py')
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
