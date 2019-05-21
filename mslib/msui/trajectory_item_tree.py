@@ -54,7 +54,7 @@ class LagrantoTreeModelUnsupportedOperationError(Exception):
     """Exception class to handle wrong method arguments.
     """
     def __init__(self, error_string):
-        logging.error("{}".format(error_string))
+        logging.debug("{}".format(error_string))
 
 
 class AbstractLagrantoDataItem(object):
