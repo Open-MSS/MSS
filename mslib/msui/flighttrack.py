@@ -46,10 +46,7 @@ import xml.dom.minidom
 import xml.parsers.expat
 from fs import open_fs
 
-# related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float
-
-# local application imports
 from mslib import utils, __version__
 from mslib import thermolib
 from mslib.utils import config_loader, find_location, save_settings_qsettings, load_settings_qsettings
@@ -285,8 +282,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     value = variant_to_float(value)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
-                except ValueError:
-                    pass
+                except ValueError as ex:
+                    logging.error("{}".format(ex))
                 else:
                     waypoint.lat = value
                     waypoint.location = u""
@@ -310,8 +307,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     value = variant_to_float(value)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
-                except ValueError:
-                    pass
+                except ValueError as ex:
+                    logging.error("{}".format(ex))
                 else:
                     waypoint.lon = value
                     waypoint.location = u""
@@ -330,8 +327,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pressure = float(thermolib.flightlevel2pressure(flightlevel))
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
-                except ValueError:
-                    pass
+                except ValueError as ex:
+                    logging.error("{}".format(ex))
                 else:
                     waypoint.flightlevel = flightlevel
                     waypoint.pressure = pressure
@@ -351,8 +348,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pressure = float(thermolib.flightlevel2pressure(flightlevel))
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
-                except ValueError:
-                    pass
+                except ValueError as ex:
+                    logging.error("{}".format(ex))
                 else:
                     waypoint.pressure = pressure
                     waypoint.flightlevel = flightlevel

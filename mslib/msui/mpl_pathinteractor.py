@@ -50,14 +50,12 @@ import logging
 import math
 import numpy as np
 import datetime
-# related third party imports
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.utils import get_distance, find_location, path_points, latlon_points
 from mslib.thermolib import pressure2flightlevel
 
-# local application imports
 from mslib.msui import flighttrack as ft
 
 
@@ -458,13 +456,13 @@ class PathInteractor(QtCore.QObject):
         try:
             # TODO review
             self.ax.draw_artist(self.pathpatch)
-        except ValueError:
+        except ValueError as ex:
             # When using Matplotlib 1.2, "ValueError: Invalid codes array."
             # occurs. The error occurs in Matplotlib's backend_agg.py/draw_path()
             # function. However, when I print the codes array in that function,
             # it looks fine -- correct length and correct codes. I can't figure
             # out why that error occurs.. (mr, 2013Feb08).
-            pass
+            logging.error("{} {}".format(ex, type(ex)))
         self.ax.draw_artist(self.line)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
@@ -569,8 +567,7 @@ class PathInteractor(QtCore.QObject):
         try:
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
-            logging.debug("ValueError Exception %s", error)
-            pass  # silently ignore "ValueError: Invalid codes array."
+            logging.error("ValueError Exception %s", error)
         self.ax.draw_artist(self.line)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
@@ -1086,7 +1083,6 @@ class HPathInteractor(PathInteractor):
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-            pass  # silently ignore "ValueError: Invalid codes array."
         self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
 

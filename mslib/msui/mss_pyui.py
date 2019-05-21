@@ -60,8 +60,6 @@ from mslib.utils import config_loader, setup_logging
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-
-# related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, get_open_filename, get_save_filename
 
 try:
@@ -175,7 +173,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
-            pass
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None

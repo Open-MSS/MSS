@@ -32,12 +32,8 @@ import logging
 import functools
 from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-
-# related third party imports
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import QtCore
-
-# local application imports
 from mslib.msui.mss_qt import ui_sideview_window as ui
 from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow

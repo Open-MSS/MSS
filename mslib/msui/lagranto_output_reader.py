@@ -34,8 +34,6 @@ import copy
 import logging
 import os
 import pickle
-
-# related third party imports
 import numpy
 from fs import open_fs
 
@@ -376,8 +374,8 @@ Example:
             for i in range(len(name) - tflen):
                 try:
                     time = datetime.datetime.strptime(name[i:i + tflen], tf)
-                except ValueError:
-                    pass
+                except ValueError as er:
+                    logging.error("{} {}".format(er, type(er)))
                 else:
                     return time
         return None

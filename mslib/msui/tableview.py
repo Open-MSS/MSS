@@ -33,10 +33,7 @@
 """
 
 from mslib.msui import hexagon_dockwidget as hex
-# related third party imports
 from mslib.msui.mss_qt import QtWidgets, QtGui
-
-# local application imports
 from mslib.msui.mss_qt import ui_tableview_window as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSSViewWindow
