@@ -462,8 +462,8 @@ class MapCanvas(basemap.Basemap):
                 # newer Matplotlib versions: this causes an exception when
                 # the user zooms/pans..
                 self.map_boundary.remove()
-            except NotImplementedError:
-                pass
+            except NotImplementedError as ex:
+                logging.debug("{}".format(ex))
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
@@ -713,7 +713,6 @@ class MapCanvas(basemap.Basemap):
                             instance.remove()
                     except (KeyError, ValueError) as error:
                         logging.debug("KeyError, ValueError Exception %s", error)
-                        pass
                     # Plot new instances.
                     plot_instance = self.plot(x, y,
                                               color=item_properties["colour"],
@@ -735,7 +734,6 @@ class MapCanvas(basemap.Basemap):
                     old_scatter_instance.remove()
                 except (KeyError, ValueError) as error:
                     logging.debug("KeyError, ValueError Exception %s", error)
-                    pass
                 imarker = item.getTimeMarkerIndexes()
                 if imarker is not None:
                     scatter_instance = self.scatter(x[imarker], y[imarker],

@@ -33,13 +33,16 @@ from __future__ import division
 
 import numpy
 import scipy.integrate
+import logging
 
 
 class VapourPressureError(Exception):
     """Exception class to handle error arising during the computation of vapour
        pressures.
     """
-    pass
+
+    def __init__(self, error_string):
+        logging.debug("{}".format(error_string))
 
 
 def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',

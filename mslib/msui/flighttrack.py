@@ -282,8 +282,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     value = variant_to_float(value)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
-                except ValueError:
-                    pass
+                except ValueError as ex:
+                    logging.error("{}".format(ex))
                 else:
                     waypoint.lat = value
                     waypoint.location = u""
@@ -307,8 +307,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     value = variant_to_float(value)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
-                except ValueError:
-                    pass
+                except ValueError as ex:
+                    logging.error("{}".format(ex))
                 else:
                     waypoint.lon = value
                     waypoint.location = u""
@@ -327,8 +327,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pressure = float(thermolib.flightlevel2pressure(flightlevel))
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
-                except ValueError:
-                    pass
+                except ValueError as ex:
+                    logging.error("{}".format(ex))
                 else:
                     waypoint.flightlevel = flightlevel
                     waypoint.pressure = pressure
@@ -348,8 +348,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pressure = float(thermolib.flightlevel2pressure(flightlevel))
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
-                except ValueError:
-                    pass
+                except ValueError as ex:
+                    logging.error("{}".format(ex))
                 else:
                     waypoint.pressure = pressure
                     waypoint.flightlevel = flightlevel

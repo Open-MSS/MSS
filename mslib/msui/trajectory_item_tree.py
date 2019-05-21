@@ -52,7 +52,8 @@ from mslib.msui import lagranto_output_reader
 class LagrantoTreeModelUnsupportedOperationError(Exception):
     """Exception class to handle wrong method arguments.
     """
-    pass
+    def __init__(self, error_string):
+        logging.debug("{}".format(error_string))
 
 
 class AbstractLagrantoDataItem(object):
@@ -274,8 +275,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
             try:
                 self.timeSeriesPlotter.update()
             except Exception as ex:
-                logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
-                pass
+                logging.error("Wildecard Exception %s - %s.", type(ex), ex)
 
     def __computeTimeMarkerIndexes(self, requestedInterval):
         """Computes the indexes for the variable arrays at which time markers
@@ -299,8 +299,7 @@ class LagrantoMapItem(AbstractLagrantoDataItem):
         try:
             requestedInterval = requestedInterval.hour * 3600 + requestedInterval.minute * 60
         except Exception as ex:
-            logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
-            pass
+            logging.error("Wildecard Exception %s - %s.", type(ex), ex)
 
         #
         # If the requested time interval is zero or a None-tpye is passed,

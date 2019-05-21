@@ -52,7 +52,8 @@ from PyQt5 import QtCore
 
 
 class FatalUserError(Exception):
-    pass
+    def __init__(self, error_string):
+        logging.debug("{}".format(error_string))
 
 
 def config_loader(config_file=None, dataset=None, default=None):

@@ -456,13 +456,13 @@ class PathInteractor(QtCore.QObject):
         try:
             # TODO review
             self.ax.draw_artist(self.pathpatch)
-        except ValueError:
+        except ValueError as ex:
             # When using Matplotlib 1.2, "ValueError: Invalid codes array."
             # occurs. The error occurs in Matplotlib's backend_agg.py/draw_path()
             # function. However, when I print the codes array in that function,
             # it looks fine -- correct length and correct codes. I can't figure
             # out why that error occurs.. (mr, 2013Feb08).
-            pass
+            logging.error("{} {}".format(ex, type(ex)))
         self.ax.draw_artist(self.line)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
@@ -567,8 +567,7 @@ class PathInteractor(QtCore.QObject):
         try:
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
-            logging.debug("ValueError Exception %s", error)
-            pass  # silently ignore "ValueError: Invalid codes array."
+            logging.error("ValueError Exception %s", error)
         self.ax.draw_artist(self.line)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
@@ -1084,7 +1083,6 @@ class HPathInteractor(PathInteractor):
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-            pass  # silently ignore "ValueError: Invalid codes array."
         self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
 

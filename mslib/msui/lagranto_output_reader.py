@@ -374,8 +374,8 @@ Example:
             for i in range(len(name) - tflen):
                 try:
                     time = datetime.datetime.strptime(name[i:i + tflen], tf)
-                except ValueError:
-                    pass
+                except ValueError as er:
+                    logging.error("{} {}".format(er, type(er)))
                 else:
                     return time
         return None
