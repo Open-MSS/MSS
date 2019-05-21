@@ -33,6 +33,8 @@ Bug Fixes:
   - Updating only MSS in anaconda may result in an error, #336
 
 Other Changes:
+  - clean up comments, #406
+  - remove superflous pass statements, #405
   - Change comments for function "flightlevel2pressure_a", #384
   - Documentation about Reporting Issues, #112
 
