@@ -40,6 +40,7 @@ import os
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import werkzeug.datastructures
+import cartopy.geodesic as gd
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -117,8 +118,8 @@ def get_distance(coord0, coord1):
     Returns:
         length of distance in km
     """
-    pr = pyproj.Geod(ellps='WGS84')
-    return (pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.)
+    pr = gd.Geodesic()
+    return (pr.inverse(coord0, coord1).base[0,0] / 1000.)
 
 
 def find_location(lat, lon, tolerance=5):
