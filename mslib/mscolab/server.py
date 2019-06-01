@@ -26,19 +26,28 @@ def user_register():
     password = request.args['password']
     screenname = request.args['screenname']
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO MyUsers(emailid, password, screenname) VALUES (%s, %s)", (email, password, screenname))
+    cur.execute("INSERT INTO users(emailid, password, screenname) VALUES (%s, %s, %s)", (email, password, screenname))
     result = cur.fetchone()
     print(result)
     mysql.connection.commit()
     cur.close()
+    return('done')
+
+@app.route("/testlogin", methods=["post"])
+def test_check_login():
+    email = request.args['email']
+    password = request.args['password']
+    return check_login(email, password)
 
 def check_login(emailid, password):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT FROM MyUsers WHERE emailid=%s and password=%s".format(emailid, password))
+    cur.execute("SELECT * FROM users WHERE emailid=%s and password=%s;", (emailid, password))
     result = cur.fetchone()
+    mysql.connection.commit()
+    cur.close()
     if result:
-        return True
-    return False
+        return("True")
+    return("False")
 
 # # app.run('127.0.0.1', 5000)
 # socketio.run(app)
