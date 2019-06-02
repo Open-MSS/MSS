@@ -15,6 +15,7 @@ app.config['MYSQL_DB'] = 'mscolab'
 
 mysql = MySQL(app)
 
+sockets = []
 
 @app.route("/")
 def hello():
@@ -57,15 +58,30 @@ def check_login(emailid, password):
 # socketio.on_event('my event', func_handler)
 
 
-
-@socketio.on('my event')
-def handle_my_custom_event(json):
-    print('received json: ' + str(json))
-
 @socketio.on('connect')
 def handle_connect():
     print("connected")
-    # send a small key to user to identify with, for now use usernames
+    print(request.sid)
+
+@socketio.on('start_event')
+def handle_my_custom_event(json):
+    print('received json: ' + str(json))
+    socket_storage = {
+        'id': request.sid,
+        'emailid': json['emailid']
+    }
+    sockets.append(socket_storage)
+    print(sockets)
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print("disconnected")
+    print(request.sid)
+    # remove socket from socket_storage
+    sockets[:] = [d for d in sockets if d['id'] != request.sid]
+    print(sockets, request.sid)
+
 if __name__ == '__main__':
     socketio.run(app)
 
