@@ -5,8 +5,7 @@ sio = socketio.Client()
 @sio.on('connect')
 def on_connect():
     print('connection established')
-    sio.emit('my event', {'sf':'dummy event my event called'})
-    print("wtf really")
+    sio.emit('start_event', {'emailid':'ppo@gmail.com'})
 
 @sio.on('my message')
 def on_message(data):
