@@ -515,7 +515,7 @@ def application():
 
         if request_type == "getcapabilities" and request_service == 'wms' and request_version == '1.1.1':
             return_data, return_format = server.get_capabilities(server_url)
-        elif request_type in ['getmap', 'getvsec']:
+        elif request_type in ['getmap', 'getvsec'] and request_version == '1.1.1':
             return_data, return_format = server.produce_plot(query, request_type)
         else:
             raise RuntimeError(u"Request type '{}' is not valid.".format(request))
