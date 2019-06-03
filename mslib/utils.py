@@ -617,4 +617,4 @@ def npts_cartopy(coord1, coord2, numpoints):
         longitude.append(lon)
     points = list(zip(longitude, latitude))
     del points[0]
-    return
+    return points
