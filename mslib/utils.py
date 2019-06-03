@@ -42,11 +42,7 @@ from scipy.ndimage import map_coordinates
 import werkzeug.datastructures
 import cartopy.geodesic as gd
 
-try:
-    import mpl_toolkits.basemap.pyproj as pyproj
-except ImportError:
-    import pyproj
-
+#Local Imports:
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore
@@ -118,6 +114,8 @@ def get_distance(coord0, coord1):
     Returns:
         length of distance in km
     """
+    coord0 = np.flip(coord0) # function is provided coordinates in lat/lon
+    coord1 = np.flip(coord1) # but cartopy takes input in lon/lat format
     pr = gd.Geodesic()
     return (pr.inverse(coord0, coord1).base[0,0] / 1000.)
 
@@ -416,8 +414,7 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
         lons = np.linspace(p1[LON], p2[LON], numpoints)
     elif connection == 'greatcircle':
         if numpoints > 2:
-            gc = pyproj.Geod(ellps="WGS84")
-            pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints - 2)
+            pts = npts_cartopy((p1[LON], p1[LAT]), (p2[LON], p2[LAT]), numpoints - 2)
             lats = np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]])
             lons = np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]])
         else:
@@ -606,3 +603,18 @@ def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
         writer.write(u"</%s>%s" % (self.tagName, newl))
     else:
         writer.write(u"/>%s" % (newl))
+
+def npts_cartopy(coord1, coord2, numpoints):
+    distance = get_distance(coord1, coord2)/(numpoints + 1)
+    new_geo = gd.Geodesic()
+    latitude = [coord1[1]]
+    longitude = [coord1[0]]
+    for i in range(numpoints):
+        azimuth_fwd = new_geo.inverse((longitude[i],latitude[i]), coord2).base[0 , 1]
+        lat = new_geo.direct((longitude[i],latitude[i]), azimuth_fwd, distance*1000).base[0 ,1]
+        lon = new_geo.direct((longitude[i],latitude[i]), azimuth_fwd, distance*1000).base[0 ,0]
+        latitude.append(lat)
+        longitude.append(lon)
+    points = list(zip(longitude, latitude))
+    del points[0]
+    return
