@@ -59,8 +59,9 @@ and the available valid times for a variable and a given initialisation time. As
 to open the NetCDF data files to determine the contained time values, a caching system is used to avoid
 re-opening already searched files.
 
+Replace the name INSTANCE in the following examples by your service name.
 
-The configuration file have to become added to the /home/mss/config directory
+The configuration file have to become added to the /home/mss/INSTANCE/config directory
 
 **/home/mss/config/mss_wms_settings.py**
 
@@ -78,7 +79,7 @@ Standalone server setup
 For the standalone server *mswms* you need the path of your mss_wms_settings.py and other configuration files
 added to the PYTHONPATH. E.g.::
 
- export PYTHONPATH=/home/mss/config
+ export PYTHONPATH=/home/mss/INSTANCE/config
 
 
 .. _meteo_data:
@@ -232,22 +233,59 @@ For setting authentication see *mss_wms_auth.py*
 Apache server setup
 -------------------
 
+Install mod_wsgi
+................
+
+On some distributions an old mod_wsgi is shipped and have to become replaced by a version compatible to the
+conda environment.
+
+At current state we have to use pip to install mod_wsgi into the INSTANCE environment::
+
+  # Instal `mod_wsgi`
+  $ pip install mod_wsgi
+
+  # Find the full path to installed `mod_wsgi`
+  $ which mod_wsgi-express
+
+  # Install and register the `mod_wsgi` module with Apache
+  $ sudo /full/path/to/installed/mod_wsgi-express install-module
+
+
+Setup a /etc/apache2/mods-available/wsgi_express.conf::
+
+   WSGIPythonHome "/home/mss-demo/miniconda3/envs/demo/"
+
+
+Setup a /etc/apache2/mods-available/wsgi_express.load::
+
+  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py37.cpython-37m-x86_64-linux-gnu.so"
+
+Enable the new module by a2enmod and reload the apache2 server
+
+
+
 One Instance
 ............
 
-Our examples are based on the following directories located in the home directory of the mss user::
+Our examples are based on the following directories located in the home directory of the mss user.
+INSTANCE is a placeholder for your service name::
 
  .
- ├── config
- │   └── mss_wms_settings.py
- |   └── mss_wms_auth.py
- ├── log
- │   └── mss_error.log
+ ├── INSTANCE
+ |   ├── config
+ │   |   └── mss_wms_settings.py
+ |   |   └── mss_wms_auth.py
+ |   ├── log
+ │   |   └── mss_error.log
+ |   └── wsgi
+ |       ├── auth.wsgi
+ |       └── wms.wsgi
  ├── miniconda3
  │   ├── bin
  │   ├── conda-bld
  │   ├── conda-meta
  │   ├── envs
+ |   |   └── instance
  │   ├── etc
  │   ├── include
  │   ├── lib
@@ -256,22 +294,15 @@ Our examples are based on the following directories located in the home director
  │   ├── share
  │   ├── ssl
  │   └── var
- └── wsgi
-     ├── auth.wsgi
-     └── wms.wsgi
-
-
-Create that mss user first.
-
 
 
 Configuration of apache mod_wsgi.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One posibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternativly you
-could add it also to mss_wms_settings.py.
+could add it also to wms.wsgi.
 
-  WSGIPythonPath /home/mss/config:/home/mss/miniconda3/lib/python3.X/site-packages
+  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniconda3/envs/instance/lib/python3.X/site-packages
 
 
 By this setting you override the PYTHONPATH environment variable. So you have also to add
@@ -285,7 +316,7 @@ Configuration of wsgi for wms
 
 You can setup a vhost for this service.
 
-**/home/mss/wsgi/wms.wsgi**
+**/home/mss/INSTANCE/wsgi/wms.wsgi**
 
 
  .. literalinclude:: samples/wsgi/wms.wsgi
@@ -300,12 +331,12 @@ As long as you have only one instance of the server running you can use this met
 
 To restrict access to your data use this script.
 
-**/home/mss/wsgi/auth.wsgi**
+**/home/mss/INSTANCE/wsgi/auth.wsgi**
 
 
  .. literalinclude:: samples/wsgi/auth.wsgi
 
-This needs also a configuration **/home/mss/config/mss_wms_auth.py** script.
+This needs also a configuration **/home/mss/INSTANCE/config/mss_wms_auth.py** script.
 
  .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
 

@@ -10,7 +10,7 @@
 
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
-    :copyright: Copyright 2016-2017 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ import sys
 # stuff you see below, you don't need to do a1) and a2).
 
 # a1) Path of the directory where the mss code package is located.
-# sys.path.insert(0, '/home/mss/miniconda3/lib/python3.X/site-packages')
+# sys.path.insert(0, '/home/mss/INSTANCE/miniconda3/lib/python3.X/site-packages')
 
 # a2) Path of the directory where mss_wms_settings.py is located
 MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
