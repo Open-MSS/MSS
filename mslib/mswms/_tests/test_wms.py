@@ -45,11 +45,34 @@ def callback_404_plain(status, response_headers):
 
 
 class Test_WMS(object):
+    def test_get_query_string_missing_parameters(self):
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING': 'request=GetCapabilities'}
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_404_plain(result.status, result.headers)
+        assert isinstance(result.data, bytes), result
+
+    def test_get_query_string_wrong_values(self):
+        # version implemented is 1.1.1
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.3.0'}
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_404_plain(result.status, result.headers)
+        assert isinstance(result.data, bytes), result
+
     def test_get_capabilities(self):
         environ = {
             'wsgi.url_scheme': 'http',
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
-            'QUERY_STRING': 'request=GetCapabilities&version=1.1.1'}
+            'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.1.1'}
 
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
@@ -60,7 +83,7 @@ class Test_WMS(object):
         environ = {
             'wsgi.url_scheme': 'http',
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
-            'QUERY_STRING': 'request=getcapabilities&version=1.1.1'}
+            'QUERY_STRING': 'request=getcapabilities&service=wms&version=1.1.1'}
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_xml(result.status, result.headers)

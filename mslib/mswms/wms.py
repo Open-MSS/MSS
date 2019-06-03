@@ -504,15 +504,16 @@ def application():
         query = request.args
 
         # Processing
-        request_type = query.get('request')
-        if request_type is None:  # request_type may *actually* be set to None
-            request_type = ''
+        request_type = query.get('request', '')
         request_type = request_type.lower()
+        request_service = query.get('service', '')
+        request_service = request_service.lower()
+        request_version = query.get('version', '')
 
         url = request.url
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request_type == "getcapabilities":
+        if request_type == "getcapabilities" and request_service == 'wms' and request_version == '1.1.1':
             return_data, return_format = server.get_capabilities(server_url)
         elif request_type in ['getmap', 'getvsec']:
             return_data, return_format = server.produce_plot(query, request_type)
