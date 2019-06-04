@@ -1,19 +1,20 @@
 from flask import Flask, request
-app = Flask(__name__)
-
-from flask_mysqldb import MySQL
 from flask_socketio import SocketIO
+from models import User, Connection, db
 import sys
 
-app.config['SECRET_KEY'] = 'secret!'
+
+from conf import SQLALCHEMY_DB_URI
+
+app = Flask(__name__)
 socketio = SocketIO(app)
 
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'pop12345'
-app.config['MYSQL_DB'] = 'mscolab'
 
-mysql = MySQL(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
+
+app.config['SECRET_KEY'] = 'secret!'
+
+db.init_app(app)
 
 sockets = []
 
@@ -26,12 +27,9 @@ def user_register():
     email = request.args['email']
     password = request.args['password']
     screenname = request.args['screenname']
-    cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO users(emailid, password, screenname) VALUES (%s, %s, %s)", (email, password, screenname))
-    result = cur.fetchone()
-    print(result)
-    mysql.connection.commit()
-    cur.close()
+    user = User(email, screenname, password)
+    db.session.add(user)
+    db.session.commit()
     return('done')
 
 @app.route("/testlogin", methods=["post"])
@@ -41,12 +39,8 @@ def test_check_login():
     return check_login(email, password)
 
 def check_login(emailid, password):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM users WHERE emailid=%s and password=%s;", (emailid, password))
-    result = cur.fetchone()
-    mysql.connection.commit()
-    cur.close()
-    if result:
+    user = User.query.filter_by(emailid=emailid, password=password).first()
+    if user:
         return("True")
     return("False")
 
