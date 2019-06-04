@@ -1,7 +1,8 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
 from models import User, Connection, db
 import sys
+import json
 
 
 from conf import SQLALCHEMY_DB_URI
@@ -22,6 +23,35 @@ sockets = []
 def hello():
     return("Testing mscolab server")
 
+
+def check_login(emailid, password):
+    user = User.query.filter_by(emailid=str(emailid)).first()
+    if user:
+        if user.verify_password(password):
+            return(user)
+    return(False)
+
+@app.route('/token')
+def get_auth_token():
+    email = request.args['email']
+    password = request.args['password']
+    user = check_login(email, password)
+    if user:
+        token = user.generate_auth_token()
+        return(jsonify({ 'token': token.decode('ascii') }))
+    else:
+        return("False")
+
+@app.route('/test_authorized')
+def test_authorized():
+    token = request.args['token']
+    user = User.verify_auth_token(token)
+    if user:
+        return("True")
+    else:
+        return("False")
+
+
 @app.route("/register", methods=["POST"])
 def user_register():
     email = request.args['email']
@@ -32,18 +62,11 @@ def user_register():
     db.session.commit()
     return('done')
 
-@app.route("/testlogin", methods=["post"])
 def test_check_login():
     email = request.args['email']
     password = request.args['password']
     return check_login(email, password)
 
-def check_login(emailid, password):
-    user = User.query.filter_by(emailid=str(emailid)).first()
-    if user:
-        if user.verify_password(password):
-            return("True")
-    return("False")
 
 
 @socketio.on('connect')
