@@ -604,17 +604,11 @@ def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
     else:
         writer.write(u"/>%s" % (newl))
 
-def npts_cartopy(coord1, coord2, numpoints):
+def ntps_cartopy1(coord1, coord2, numpoints):
     distance = get_distance(coord1, coord2)/(numpoints + 1)
     new_geo = gd.Geodesic()
-    latitude = [coord1[1]]
-    longitude = [coord1[0]]
-    for i in range(numpoints):
-        azimuth_fwd = new_geo.inverse((longitude[i],latitude[i]), coord2).base[0 , 1]
-        lat = new_geo.direct((longitude[i],latitude[i]), azimuth_fwd, distance*1000).base[0 ,1]
-        lon = new_geo.direct((longitude[i],latitude[i]), azimuth_fwd, distance*1000).base[0 ,0]
-        latitude.append(lat)
-        longitude.append(lon)
-    points = list(zip(longitude, latitude))
-    del points[0]
+    all_distance = [distance*i*1000 for i in range(1, numpoints + 1)]
+    initial_azimuth = new_geo.inverse(coord1, coord2).base[0 , 1]
+    coords = new_geo.direct(coord1,initial_azimuth , all_distance)
+    points = list(zip(coords[:,0], coords[:,1]))
     return points
