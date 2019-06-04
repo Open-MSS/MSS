@@ -39,17 +39,11 @@ def test_check_login():
     return check_login(email, password)
 
 def check_login(emailid, password):
-    user = User.query.filter_by(emailid=emailid, password=password).first()
+    user = User.query.filter_by(emailid=str(emailid)).first()
     if user:
-        return("True")
+        if user.verify_password(password):
+            return("True")
     return("False")
-
-# # app.run('127.0.0.1', 5000)
-# socketio.run(app)
-
-# def func_handler(msg):
-#     print(msg)
-# socketio.on_event('my event', func_handler)
 
 
 @socketio.on('connect')
