@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from passlib.apps import custom_app_context as pwd_context
 
 db = SQLAlchemy()
 
@@ -12,10 +13,17 @@ class User(db.Model):
 	def __init__(self, emailid, screenname, password):
 		self.screenname = screenname
 		self.emailid = emailid
-		self.password = password
+		self.hash_password(password)
 
 	def __repr__(self):
 		return('<User %r>' % self.screenname)
+
+	def hash_password(self, password):
+		self.password = pwd_context.encrypt(password)
+
+	def verify_password(self, password_):
+		print(password_, self.password)
+		return pwd_context.verify(password_, self.password)
 
 
 class Connection(db.Model):
