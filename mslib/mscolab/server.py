@@ -50,15 +50,22 @@ def test_authorized():
         return("False")
 
 
+def register_user(email, password, screenname):
+    user = User(email, screenname, password)
+    user_exists = User.query.filter_by(emailid=str(email)).first()
+    if user_exists:
+        return('False')
+    db.session.add(user)
+    db.session.commit()
+    return('True')
+
+
 @app.route("/register", methods=["POST"])
-def user_register():
+def user_register_handler():
     email = request.args['email']
     password = request.args['password']
     screenname = request.args['screenname']
-    user = User(email, screenname, password)
-    db.session.add(user)
-    db.session.commit()
-    return('done')
+    return(register_user(email, password, screenname))
 
 
 def test_check_login():
