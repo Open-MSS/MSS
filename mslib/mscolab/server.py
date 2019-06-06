@@ -69,7 +69,7 @@ def get_auth_token():
 
 
 @app.route('/test_authorized')
-def test_authorized():
+def authorized():
     token = request.args['token']
     user = User.verify_auth_token(token)
     if user:
@@ -96,7 +96,7 @@ def user_register_handler():
     return(register_user(email, password, username))
 
 
-def test_check_login():
+def check_login_test():
     email = request.args['email']
     password = request.args['password']
     return check_login(email, password)
@@ -104,28 +104,25 @@ def test_check_login():
 
 @socketio.on('connect')
 def handle_connect():
-    print("connected")
-    print(request.sid)
+    logging.info(request.sid)
 
 
 @socketio.on('start_event')
 def handle_my_custom_event(json):
-    print('received json: ' + str(json))
+    logging.info('received json: ' + str(json))
     socket_storage = {
         'id': request.sid,
         'emailid': json['emailid']
     }
     sockets.append(socket_storage)
-    print(sockets)
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print("disconnected")
-    print(request.sid)
+    logging.info("disconnected")
+    logging.info(request.sid)
     # remove socket from socket_storage
     sockets[:] = [d for d in sockets if d['id'] != request.sid]
-    print(sockets, request.sid)
 
 
 if __name__ == '__main__':
