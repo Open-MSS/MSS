@@ -16,6 +16,7 @@ Mission Support System's Documentation
    installation
    usage
    deployment
+   demodata
    development
    authors
 
