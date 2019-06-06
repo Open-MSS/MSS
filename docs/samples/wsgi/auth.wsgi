@@ -1,5 +1,5 @@
 import sys
-sys.path.extend(['/home/mss/config'])
+sys.path.extend(['/home/mss/INSTANCE/config'])
 
 import mss_wms_auth
 import hashlib
