@@ -65,9 +65,11 @@ class User(db.Model):
         s = Serializer(SECRET_KEY)
         try:
             data = s.loads(token)
-        except SignatureExpired:
+        except SignatureExpired as e:
+            logging.debug("Signature Expired")
             return None  # valid token, but expired
-        except BadSignature:
+        except BadSignature as e:
+            logging.debug("Bad Signature")
             return None  # invalid token
         user = User.query.filter_by(id=data['id']).first()
         return user
