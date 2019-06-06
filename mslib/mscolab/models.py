@@ -38,17 +38,17 @@ class User(db.Model):
 
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    screenname = db.Column(db.String(255))
+    username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255), unique=True)
 
-    def __init__(self, emailid, screenname, password):
-        self.screenname = screenname
+    def __init__(self, emailid, username, password):
+        self.username = username
         self.emailid = emailid
         self.hash_password(password)
 
     def __repr__(self):
-        return('<User %r>' % self.screenname)
+        return('<User %r>' % self.username)
 
     def hash_password(self, password):
         self.password = pwd_context.encrypt(password)
