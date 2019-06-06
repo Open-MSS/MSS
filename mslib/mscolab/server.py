@@ -78,8 +78,8 @@ def test_authorized():
         return("False")
 
 
-def register_user(email, password, screenname):
-    user = User(email, screenname, password)
+def register_user(email, password, username):
+    user = User(email, username, password)
     user_exists = User.query.filter_by(emailid=str(email)).first()
     if user_exists:
         return('False')
@@ -92,8 +92,8 @@ def register_user(email, password, screenname):
 def user_register_handler():
     email = request.args['email']
     password = request.args['password']
-    screenname = request.args['screenname']
-    return(register_user(email, password, screenname))
+    username = request.args['username']
+    return(register_user(email, password, username))
 
 
 def test_check_login():
