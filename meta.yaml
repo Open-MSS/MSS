@@ -54,6 +54,9 @@ requirements:
     - flask
     - flask-httpauth
     - werkzeug
+    - flask-socketio
+    - flask-sqlalchemy
+    - passlib
 
 test:
   imports:
