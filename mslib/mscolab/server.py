@@ -81,6 +81,9 @@ def register_user(email, password, username):
     user_exists = User.query.filter_by(emailid=str(email)).first()
     if user_exists:
         return('False')
+    user_exists = User.query.filter_by(username=str(username)).first()
+    if user_exists:
+        return('False')
     db.session.add(user)
     db.session.commit()
     return('True')
