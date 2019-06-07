@@ -30,6 +30,8 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from mslib.mscolab.conf import SECRET_KEY
 
+import logging
+
 db = SQLAlchemy()
 
 
