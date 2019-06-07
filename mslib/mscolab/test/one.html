@@ -1,0 +1,48 @@
+<!-- 
+# -*- coding: utf-8 -*-
+"""
+
+    mslib.mscolab.test
+    ~~~~~~~~~~~~~~~~~~~~
+
+   	preliminary test for sockets
+    This file is part of mss.
+
+    :copyright: Copyright 2019 Shivashis Padhi
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+
+-->
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io("http://localhost:5000");
+    socket.on('connect', function() {
+        setTimeout(() => {
+            var emailid = prompt("enter emailid");
+            socket.emit('start_event', {emailid});
+            console.log('emited')
+        }, 1000)
+    });
+</script>
+
+</body>
+</html>
