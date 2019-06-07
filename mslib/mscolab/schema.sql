@@ -52,7 +52,7 @@ CREATE TABLE `permissions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `u_id` int(11) DEFAULT NULL,
   `p_id` int(11) DEFAULT NULL,
-  `access_level` ENUM ('value1','value2','value3'),
+  `access_level` ENUM ('admin','collaborator','viewer'),
   PRIMARY KEY (`id`),
   FOREIGN KEY(u_id) REFERENCES users(id),
   FOREIGN KEY(p_id) REFERENCES projects(id)

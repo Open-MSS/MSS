@@ -34,14 +34,32 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 <script type="text/javascript" charset="utf-8">
-    var socket = io("http://localhost:5000");
-    socket.on('connect', function() {
-        setTimeout(() => {
-            var emailid = prompt("enter emailid");
-            socket.emit('start_event', {emailid});
-            console.log('emited')
-        }, 1000)
-    });
+    var form_data = new FormData();
+    var item = {
+            emailid: 'a',
+            password: 'a'
+        };
+    for ( var key in item ) {
+        form_data.append(key, item[key]);
+    }
+
+    fetch('http://localhost:5000/token', {
+        method: 'POST',
+        body: form_data, // body data type must match "Content-Type" header
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        var socket = io("http://localhost:5000");
+        socket.on('connect', function() {
+            setTimeout(() => {
+                var emailid = prompt("enter emailid");
+                socket.emit('start_event', data);
+                console.log('emited')
+            }, 1000)
+        });
+    })
+    
 </script>
 
 </body>
