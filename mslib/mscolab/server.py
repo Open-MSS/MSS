@@ -24,23 +24,19 @@
     limitations under the License.
 """
 
-from flask import Flask, request, jsonify
-from flask_socketio import SocketIO
+from flask import Flask, request, jsonify, send_from_directory
 
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
-from mslib.mscolab.sockets_manager import SocketsManager
+from mslib.mscolab.sockets_manager import socketio
 
-app = Flask(__name__)
-
-socketio = SocketIO(app)
-sm = SocketsManager()
+# set the project root directory as the static folder
+app = Flask(__name__, static_url_path='')
+socketio.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
 app.config['SECRET_KEY'] = 'secret!'
 db.init_app(app)
-
-sockets = []
 
 
 @app.route("/")
@@ -99,17 +95,15 @@ def user_register_handler():
     username = request.form['username']
     return(register_user(email, password, username))
 
+@app.route('/get_socket_testfile')
+def socket_testfile():
+    return send_from_directory('test', 'one.html')
 
 def check_login_test():
     email = request.args['email']
     password = request.args['password']
     return check_login(email, password)
 
-
-# sockets related handlers
-socketio.on_event('connect', sm.handle_connect)
-socketio.on_event('start_event', sm.handle_start_event)
-socketio.on_event('disconnect', sm.handle_disconnect)
 
 
 if __name__ == '__main__':

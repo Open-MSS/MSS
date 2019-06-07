@@ -104,3 +104,17 @@ class Permission(db.Model):
 
     def __repr__(self):
         return('<Permission user %s project %s access level %s>'.format(self.u_id, self.p_id, str(self.access_level)))
+
+class Project(db.Model):
+
+    __tablename__ = "projects"
+    id = db.Column(db.Integer, primary_key=True)
+    path = db.Column(db.String(255), unique=True)
+    description = db.Column(db.String(255))
+
+    def __init__(self, path, description):
+        self.path = path
+        self.description = description
+
+    def __repr__(self):
+        return('<Project path %s desc %s>'.format(self.path, self.description))
