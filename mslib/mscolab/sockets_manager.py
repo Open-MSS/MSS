@@ -1,6 +1,10 @@
 from flask_socketio import SocketIO
 from flask import request
 import logging
+
+from models import Permission, User
+
+
 class SocketsManager(object):
 	"""Class with handler functions for socket related"""
 
@@ -12,13 +16,26 @@ class SocketsManager(object):
 
 	def handle_connect(self):
 		logging.debug(request.sid)
-		# add to rooms
 
 	def handle_start_event(self, json):
 		logging.info('received json: ' + str(json))
+		# authenticate socket
+		token = json['token']
+		user = User.verify_auth_token(token)
+		if not user:
+			return
+
+		# fetch projects
+		permissions = Permission.query.filter_by(u_id=user.id).all()
+
+		# for all the p_id in permissions, there'd be chatrooms in self.rooms
+		# search and add user to respective rooms
+		for permission in permissions:
+			print(permission.p_id, permission.u_id)
+
 		socket_storage = {
 			'id': request.sid,
-			'emailid': json['emailid']
+			'emailid': user.emailid
 		}
 		self.sockets.append(socket_storage)
 

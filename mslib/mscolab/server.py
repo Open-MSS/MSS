@@ -56,11 +56,12 @@ def check_login(emailid, password):
     return(False)
 
 
-@app.route('/token')
+@app.route('/token', methods=["POST"])
 def get_auth_token():
-    email = request.args['email']
-    password = request.args['password']
-    user = check_login(email, password)
+    print(request.values)
+    emailid = request.values['emailid']
+    password = request.values['password']
+    user = check_login(emailid, password)
     if user:
         token = user.generate_auth_token()
         return(jsonify({'token': token.decode('ascii')}))
@@ -70,7 +71,7 @@ def get_auth_token():
 
 @app.route('/test_authorized')
 def authorized():
-    token = request.args['token']
+    token = request.values['token']
     user = User.verify_auth_token(token)
     if user:
         return("True")
@@ -93,9 +94,9 @@ def register_user(email, password, username):
 
 @app.route("/register", methods=["POST"])
 def user_register_handler():
-    email = request.args['email']
-    password = request.args['password']
-    username = request.args['username']
+    email = request.form['email']
+    password = request.form['password']
+    username = request.form['username']
     return(register_user(email, password, username))
 
 

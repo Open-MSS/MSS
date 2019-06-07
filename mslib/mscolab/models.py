@@ -87,3 +87,20 @@ class Connection(db.Model):
 
     def __repr__(self):
         return('<Connection %s %s>'.format(self.s_id, self.u_id))
+
+
+class Permission(db.Model):
+
+    __tablename__ = 'permissions'
+    id = db.Column(db.Integer, primary_key=True)
+    p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    access_level = db.Column(db.Enum("admin", "collaborator", "viewer"))
+
+    def __init__(self, u_id, p_id, access_level):
+        self.u_id = u_id
+        self.p_id = p_id
+        self.access_level = access_level
+
+    def __repr__(self):
+        return('<Permission user %s project %s access level %s>'.format(self.u_id, self.p_id, str(self.access_level)))
