@@ -28,7 +28,8 @@ from flask_sqlalchemy import SQLAlchemy
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
-from conf import SECRET_KEY
+from mslib.mscolab.conf import SECRET_KEY
+
 db = SQLAlchemy()
 
 

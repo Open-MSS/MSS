@@ -27,12 +27,14 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
 
-from models import User, db
-from conf import SQLALCHEMY_DB_URI
+from mslib.mscolab.models import User, db
+from mslib.mscolab.conf import SQLALCHEMY_DB_URI
+from mslib.mscolab.sockets_manager import SocketsManager
 
 app = Flask(__name__)
 
 socketio = SocketIO(app)
+sm = SocketsManager()
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
 app.config['SECRET_KEY'] = 'secret!'
@@ -103,27 +105,10 @@ def check_login_test():
     return check_login(email, password)
 
 
-@socketio.on('connect')
-def handle_connect():
-    logging.info(request.sid)
-
-
-@socketio.on('start_event')
-def handle_my_custom_event(json):
-    logging.info('received json: ' + str(json))
-    socket_storage = {
-        'id': request.sid,
-        'emailid': json['emailid']
-    }
-    sockets.append(socket_storage)
-
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    logging.info("disconnected")
-    logging.info(request.sid)
-    # remove socket from socket_storage
-    sockets[:] = [d for d in sockets if d['id'] != request.sid]
+# sockets related handlers
+socketio.on_event('connect', sm.handle_connect)
+socketio.on_event('start_event', sm.handle_start_event)
+socketio.on_event('disconnect', sm.handle_disconnect)
 
 
 if __name__ == '__main__':
