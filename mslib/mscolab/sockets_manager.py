@@ -1,5 +1,5 @@
 from flask_socketio import SocketIO, join_room, leave_room, rooms
-from flask import request
+from flask import request, jsonify
 import logging
 
 from models import Permission, User, Project
@@ -59,6 +59,11 @@ class SocketsManager(object):
 		# remove socket from socket_storage
 		self.sockets[:] = [d for d in self.sockets if d['s_id'] != request.sid]
 
+	def handle_message(self, json):
+		print(json)
+		p_id = json['p_id']
+		socketio.emit('chat message', 'some message', room=str(p_id))
+
 
 sm = SocketsManager()
 
@@ -66,3 +71,4 @@ sm = SocketsManager()
 socketio.on_event('connect', sm.handle_connect)
 socketio.on_event('start_event', sm.handle_start_event)
 socketio.on_event('disconnect', sm.handle_disconnect)
+socketio.on_event('emit-message', sm.handle_message)
