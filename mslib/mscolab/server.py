@@ -28,11 +28,11 @@ from flask import Flask, request, jsonify, send_from_directory
 
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
-from mslib.mscolab.sockets_manager import socketio
+from mslib.mscolab.sockets_manager import socketio as sockio
 
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
-socketio.init_app(app)
+sockio.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
 app.config['SECRET_KEY'] = 'secret!'
@@ -108,4 +108,4 @@ def check_login_test():
 
 
 if __name__ == '__main__':
-    socketio.run(app)
+    sockio.run(app)
