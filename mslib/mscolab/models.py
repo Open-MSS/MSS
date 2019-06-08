@@ -66,10 +66,10 @@ class User(db.Model):
         s = Serializer(SECRET_KEY)
         try:
             data = s.loads(token)
-        except SignatureExpired as e:
+        except SignatureExpired:
             logging.debug("Signature Expired")
             return None  # valid token, but expired
-        except BadSignature as e:
+        except BadSignature:
             logging.debug("Bad Signature")
             return None  # invalid token
         user = User.query.filter_by(id=data['id']).first()
@@ -106,6 +106,7 @@ class Permission(db.Model):
 
     def __repr__(self):
         return('<Permission user %s project %s access level %s>'.format(self.u_id, self.p_id, str(self.access_level)))
+
 
 class Project(db.Model):
 

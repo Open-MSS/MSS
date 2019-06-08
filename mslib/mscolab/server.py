@@ -95,15 +95,16 @@ def user_register_handler():
     username = request.form['username']
     return(register_user(email, password, username))
 
+
 @app.route('/get_socket_testfile')
 def socket_testfile():
     return send_from_directory('test', 'one.html')
+
 
 def check_login_test():
     email = request.args['email']
     password = request.args['password']
     return check_login(email, password)
-
 
 
 if __name__ == '__main__':
