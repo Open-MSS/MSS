@@ -45,7 +45,6 @@ class SocketsManager(object):
 			- so joining the actual socketio room would be enough
 			"""
 			join_room(str(permission.p_id))
-			print(rooms())
 		socket_storage = {
 			's_id': request.sid,
 			'u_id': user.id
@@ -62,7 +61,19 @@ class SocketsManager(object):
 	def handle_message(self, json):
 		print(json)
 		p_id = json['p_id']
-		socketio.emit('chat message', 'some message', room=str(p_id))
+		user = User.verify_auth_token(json['token'])
+		perm = self.permission_check_emit(user.id, int(p_id))
+		if perm:
+			socketio.emit('chat message', 'some message', room=str(p_id))
+
+	def permission_check_emit(self, u_id, p_id):
+		print(u_id, p_id)
+		permission = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+		if not permission:
+			return False
+		if permission.access_level == "viewer":
+			return False
+		return True
 
 
 sm = SocketsManager()
