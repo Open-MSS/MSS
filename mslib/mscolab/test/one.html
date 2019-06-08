@@ -62,7 +62,7 @@
         });
         setTimeout(()=>{
             socket.emit('emit-message', {
-                p_id: emailid === 'a' ? 1 : 3,
+                p_id: emailid === 'b' ? 1 : 3,
                 token: data['token']
             });
         }, 10000);
