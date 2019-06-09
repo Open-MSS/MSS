@@ -41,10 +41,10 @@ from abc import abstractmethod
 import mss_wms_settings
 
 import matplotlib as mpl
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import mpl_toolkits.basemap as basemap
 import numpy as np
 import PIL.Image
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
 
 from mslib.mswms import mss_2D_sections
 from mslib.utils import get_projection_params
@@ -209,22 +209,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                       valid_time=None, init_time=None, style=None,
                       resolution=-1, noframe=False, show=False,
                       transparent=False):
-        """
-        EPSG overrides proj_params!
-        """
-        if proj_params is None:
-            proj_params = {"projection": "cyl"}
-            bbox_units = "latlon"
-        # Projection parameters from EPSG code.
-        if crs is not None:
-            proj_params, bbox_units = [get_projection_params(crs)[_x] for _x in ("basemap", "bbox")]
-
         logging.debug("plotting data..")
-
-        # Check if required data is available.
-        for datatype, dataitem in self.required_datafields:
-            if dataitem not in data:
-                raise KeyError(u"required data field '{}' not found".format(dataitem))
 
         # Copy parameters to properties.
         self.data = data
@@ -247,116 +232,20 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         dpi = 80
         figsize = (figsize[0] / dpi), (figsize[1] / dpi)
         facecolor = "white"
-        fig = mpl.figure.Figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
+        fig = plt.figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
         logging.debug("\twith frame and legends" if not noframe else
                       "\twithout frame")
-        if noframe:
-            ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
-        else:
-            ax = fig.add_axes([0.05, 0.05, 0.9, 0.88])
 
-        # The basemap instance is created with a fixed aspect ratio for framed
-        # plots; the aspect ratio is not fixed for frameless plots (standard
-        # WMS). This means that for WMS plots, the map will always fill the
-        # entire image area, no matter of whether this stretches or shears the
-        # map. This is the behaviour specified by the WMS standard (WMS Spec
-        # 1.1.1, Section 7.2.3.8):
-        # "The returned picture, regardless of its return format, shall have
-        # exactly the specified width and height in pixels. In the case where
-        # the aspect ratio of the BBOX and the ratio width/height are different,
-        # the WMS shall stretch the returned map so that the resulting pixels
-        # could themselves be rendered in the aspect ratio of the BBOX.  In
-        # other words, it should be possible using this definition to request a
-        # map for a device whose output pixels are themselves non-square, or to
-        # stretch a map into an image area of a different aspect ratio."
-        # NOTE: While the MSUI always requests image sizes that match the aspect
-        # ratio, for instance the Metview 4 client does not (mr, 2011Dec16).
-
-        # Some additional code to store the last 20 coastlines in memory for quicker
-        # access.
-        key = repr((proj_params, bbox, bbox_units))
-        basemap_use_cache = getattr(mss_wms_settings, "basemap_use_cache", False)
-        basemap_request_size = getattr(mss_wms_settings, "basemap_request_size ", 200)
-        basemap_cache_size = getattr(mss_wms_settings, "basemap_cache_size", 20)
-        bm_params = {"area_thresh": 1000., "ax": ax, "fix_aspect": (not noframe)}
-        bm_params.update(proj_params)
-        if bbox_units == "degree":
-            bm_params.update({"llcrnrlon": bbox[0], "llcrnrlat": bbox[1],
-                              "urcrnrlon": bbox[2], "urcrnrlat": bbox[3]})
-        elif bbox_units.startswith("meter"):
-            # convert meters to degrees
-            try:
-                bm_p = basemap.Basemap(resolution=None, **bm_params)
-            except ValueError:  # projection requires some extent
-                bm_p = basemap.Basemap(resolution=None, width=1e7, height=1e7, **bm_params)
-            bm_center = [float(_x) for _x in bbox_units[6:-1].split(",")]
-            center_x, center_y = bm_p(*bm_center)
-            bbox_0, bbox_1 = bm_p(bbox[0] + center_x, bbox[1] + center_y, inverse=True)
-            bbox_2, bbox_3 = bm_p(bbox[2] + center_x, bbox[3] + center_y, inverse=True)
-            bm_params.update({"llcrnrlon": bbox_0, "llcrnrlat": bbox_1,
-                              "urcrnrlon": bbox_2, "urcrnrlat": bbox_3})
-        elif bbox_units == "no":
-            pass
-        else:
-            raise ValueError("bbox_units '{}' not known.".format(bbox_units))
-        if basemap_use_cache and key in BASEMAP_CACHE:
-            bm = basemap.Basemap(resolution=None, **bm_params)
-            (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,
-             bm.coastsegs, bm.landpolygons, bm.lakepolygons, bm.cntrysegs) = BASEMAP_CACHE[key]
-            logging.debug(u"Loaded '%s' from basemap cache", key)
-        else:
-            bm = basemap.Basemap(resolution='l', **bm_params)
-            # read in countries manually, as those are laoded only on demand
-            bm.cntrysegs, _ = bm._readboundarydata("countries")
-            if basemap_use_cache:
-                BASEMAP_CACHE[key] = (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,
-                                      bm.coastsegs, bm.landpolygons, bm.lakepolygons, bm.cntrysegs)
-        if basemap_use_cache:
-            BASEMAP_REQUESTS.append(key)
-            BASEMAP_REQUESTS[:] = BASEMAP_REQUESTS[-basemap_request_size:]
-
-            if len(BASEMAP_CACHE) > basemap_cache_size:
-                useful = {}
-                for idx, key in enumerate(BASEMAP_REQUESTS):
-                    useful[key] = useful.get(key, 0) + idx
-                least_useful = sorted([(value, key) for key, value in useful.items()])[:-basemap_cache_size]
-                for _, key in least_useful:
-                    del BASEMAP_CACHE[key]
-                    BASEMAP_REQUESTS[:] = [_x for _x in BASEMAP_REQUESTS if key != _x]
-
-        # Set up the map appearance.
-        bm.drawcoastlines(color='0.25')
-        bm.drawcountries(color='0.5')
-        bm.drawmapboundary(fill_color='white')
-
-        # zorder = 0 is necessary to paint over the filled continents with
-        # scatter() for drawing the flight tracks and trajectories.
-        # Curiously, plot() works fine without this setting, but scatter()
-        # doesn't.
-        bm.fillcontinents(color='0.98', lake_color='white', zorder=0)
-        self._draw_auto_graticule(bm)
-
-        if noframe:
-            ax.axis('off')
-
-        self.bm = bm  # !! BETTER PASS EVERYTHING AS PARAMETERS?
-        self.fig = fig
-        self.shift_data()
-        self.mask_data()
-        self._plot_style()
-
-        # Set transparency for the output image.
-        if transparent:
-            fig.patch.set_alpha(0.)
+        ax = plt.axes([0.0, 0.0, 1.0, 1.0], projection=ccrs.Robinson())
 
         # Return the image as png embedded in a StringIO stream.
-        canvas = FigureCanvas(fig)
+        # canvas = FigureCanvas(fig)
         output = io.BytesIO()
-        canvas.print_png(output, bbox_inches='tight')
+        plt.savefig(output, bbox_inches='tight')
 
         if show:
             logging.debug("saving figure to mpl_hsec.png ..")
-            canvas.print_png("mpl_hsec.png", bbox_inches='tight')
+            plt.savefig("mpl_hsec.png", bbox_inches='tight')
 
         # Convert the image to an 8bit palette image with a significantly
         # smaller file size (~factor 4, from RGBA to one 8bit value, plus the

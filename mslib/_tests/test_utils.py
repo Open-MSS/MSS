@@ -27,6 +27,8 @@
 
 import datetime
 from mslib import utils
+import pyproj
+import numpy
 
 
 class TestSettingsSave(object):
@@ -213,6 +215,16 @@ class TestLatLonPoints(object):
         assert len(times) == 3
         assert all(lons == [0, 5, 10])
         assert(times[1] - times[0] == times[2] - times[1])
+
+    def test_ntps_cartopy(self):
+        boston = [42. + (15. / 60.), -71. - (7. / 60.)]
+        portland = [45. + (31. / 60.), -123. - (41. / 60.)]
+        gc = pyproj.Geod(ellps="WGS84")
+        pts_pyproj = gc.npts(boston[0], boston[1], portland[0], portland[1], 10)
+        pts_cartopy = utils.npts_cartopy(boston, portland, 10)
+        pts_pyproj = numpy.around(pts_pyproj, 2)
+        pts_cartopy = numpy.around(pts_cartopy, 2)
+        assert pts_cartopy.all() == pts_pyproj.all()
 
 
 def test_pathpoints():

@@ -30,6 +30,7 @@ from __future__ import division
 
 from past.builtins import basestring
 
+
 import datetime
 from fs import open_fs, errors
 import json
@@ -42,7 +43,7 @@ from scipy.ndimage import map_coordinates
 import werkzeug.datastructures
 import cartopy.geodesic as gd
 
-#Local Imports:
+
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore
@@ -114,10 +115,8 @@ def get_distance(coord0, coord1):
     Returns:
         length of distance in km
     """
-    coord0 = np.flip(coord0) # function is provided coordinates in lat/lon
-    coord1 = np.flip(coord1) # but cartopy takes input in lon/lat format
     pr = gd.Geodesic()
-    return (pr.inverse(coord0, coord1).base[0,0] / 1000.)
+    return (pr.inverse([coord0[1], coord0[0]], [coord1[1], coord1[0]]).base[0, 0] / 1000.)
 
 
 def find_location(lat, lon, tolerance=5):
@@ -604,11 +603,12 @@ def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
     else:
         writer.write(u"/>%s" % (newl))
 
-def ntps_cartopy1(coord1, coord2, numpoints):
-    distance = get_distance(coord1, coord2)/(numpoints + 1)
+
+def npts_cartopy(coord1, coord2, numpoints):
+    distance = get_distance(coord1, coord2) / (numpoints + 1)
     new_geo = gd.Geodesic()
-    all_distance = [distance*i*1000 for i in range(1, numpoints + 1)]
-    initial_azimuth = new_geo.inverse(coord1, coord2).base[0 , 1]
-    coords = new_geo.direct(coord1,initial_azimuth , all_distance)
-    points = list(zip(coords[:,0], coords[:,1]))
+    all_distance = [distance * i * 1000 for i in range(1, numpoints + 1)]
+    initial_azimuth = new_geo.inverse(coord1, coord2).base[0, 1]
+    coords = new_geo.direct(coord1, initial_azimuth, all_distance)
+    points = list(zip(coords[:, 0], coords[:, 1]))
     return points
