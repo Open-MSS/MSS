@@ -23,106 +23,97 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask import Flask
 import socketio
-from socketIO_client import SocketIO
 from functools import partial
 import requests
-import threading
-import time
 import json
-
-from mslib.mscolab.server import db, check_login, register_user, sockio
-from conf import SQLALCHEMY_DB_URI
+import time
 
 
 class Test_Sockets(object):
     total = [0, 0, 0]
+
     def setup(self):
-        self.app = Flask(__name__)
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-        self.app.config['SECRET_KEY'] = 'secret!'
-        db.init_app(self.app)
-        # thread = threading.Thread(target=socketio.run, args=(self.app,))
-        # time.sleep(5)
+        self.sockets = []
 
+    def test_connect(self):
+        r = requests.post("http://localhost:5000/token", data={
+                          'emailid': 'a',
+                          'password': 'a'
+                          })
+        response = json.loads(r.text)
+        import socketio
 
-    # def test_connect(self):
-    #     # with self.app.app_context():
-    #     r = requests.post("http://localhost:5000/token", data={
-    #                       'emailid': 'a',
-    #                       'password': 'a'
-    #                      })
-    #     response = json.loads(r.text)
-    #     print(response)
-    #     with SocketIO('localhost', 5000) as socketIO:
-    #         socketIO.emit('start_event', response)
-    #         socketIO.wait(seconds=5)
-    #         print("Hi there, im connected")
-    
+        # standard Python
+        sio = socketio.Client()
+
+        sio.connect('http://localhost:5000')
+        sio.emit('start_event', response)
+        sio.sleep(2)
+        self.sockets.append(sio)
+
     def test_emit_permissions(self):
         r = requests.post("http://localhost:5000/token", data={
                           'emailid': 'a',
                           'password': 'a'
-                         })
+                          })
         response1 = json.loads(r.text)
         r = requests.post("http://localhost:5000/token", data={
                           'emailid': 'b',
                           'password': 'b'
-                         })
+                          })
         response2 = json.loads(r.text)
         r = requests.post("http://localhost:5000/token", data={
                           'emailid': 'c',
                           'password': 'c'
-                         })
+                          })
         response3 = json.loads(r.text)
-        
+
         def handle_chat_message(sno, message):
-            self.total[sno-1] += 1
-            print('chat', sno)
+            self.total[sno - 1] += 1
 
+        sio1 = socketio.Client()
+        sio2 = socketio.Client()
+        sio3 = socketio.Client()
 
-        socketIO1 = SocketIO('localhost', 5000)
-        socketIO2 = SocketIO('localhost', 5000)
-        socketIO3 = SocketIO('localhost', 5000)
-        
-        socketIO1.emit('start_event', response1)
-        socketIO2.emit('start_event', response2)
-        socketIO3.emit('start_event', response3)
+        sio1.on('chat message', handler=partial(handle_chat_message, 1))
+        sio2.on('chat message', handler=partial(handle_chat_message, 2))
+        sio3.on('chat message', handler=partial(handle_chat_message, 3))
+        sio1.connect('http://localhost:5000')
+        sio2.connect('http://localhost:5000')
+        sio3.connect('http://localhost:5000')
 
-        socketIO1.on('chat message', partial(handle_chat_message, 1))
-        socketIO2.on('chat message', partial(handle_chat_message, 2))
-        socketIO3.on('chat message', partial(handle_chat_message, 3))
-        print('emitting message now')
-        socketIO1.emit('emit-message', {
-                       "p_id": 1,
-                       "token": response1['token']
-                    })
-        socketIO1.wait(1)
-        socketIO2.wait(1)
-        socketIO3.wait(1)
-        socketIO3.emit('emit-message', {
-                       "p_id": 1,
-                       "token": response3['token']
-                    })
-        
-        socketIO1.wait(1)
-        socketIO2.wait(1)
-        socketIO3.wait(1)
-        socketIO3.emit('emit-message', {
-                       "p_id": 3,
-                       "token": response3['token']
-                    })
-        
-        socketIO1.wait(1)
-        socketIO2.wait(1)
-        socketIO3.wait(1)
+        sio1.emit('start_event', response1)
+        sio2.emit('start_event', response2)
+        sio3.emit('start_event', response3)
+        time.sleep(5)
+        sio1.emit('emit-message', {
+                  "p_id": 1,
+                  "token": response1['token']
+                  })
+
+        sio3.emit('emit-message', {
+                  "p_id": 1,
+                  "token": response3['token']
+                  })
+
+        sio3.emit('emit-message', {
+                  "p_id": 3,
+                  "token": response3['token']
+                  })
+
+        sio1.sleep(1)
+        sio2.sleep(1)
+        sio3.sleep(1)
 
         assert self.total[0] == 2
         assert self.total[1] == 1
         assert self.total[2] == 2
-
-    
+        self.sockets.append(sio1)
+        self.sockets.append(sio2)
+        self.sockets.append(sio3)
 
     def teardown(self):
+        for socket in self.sockets:
+            socket.disconnect()
         pass

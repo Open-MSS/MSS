@@ -31,7 +31,6 @@ class SocketsManager(object):
         # for all the p_id in permissions, there'd be chatrooms in self.rooms
         # search and add user to respective rooms
         for permission in permissions:
-            print(permission.p_id, permission.u_id)
             # for each project with p_id, search rooms
             # socketio.join_room(room, sid=None, namespace=None)
             """
@@ -57,7 +56,7 @@ class SocketsManager(object):
         self.sockets[:] = [d for d in self.sockets if d['s_id'] != request.sid]
 
     def handle_message(self, json):
-        print(json)
+        logging.debug(json)
         p_id = json['p_id']
         user = User.verify_auth_token(json['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
@@ -65,7 +64,6 @@ class SocketsManager(object):
             socketio.emit('chat message', 'some message', room=str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
-        print(u_id, p_id)
         permission = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if not permission:
             return False
