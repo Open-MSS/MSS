@@ -24,7 +24,7 @@
 """
 from mslib.mscolab.server import db, check_login, register_user
 from flask import Flask
-from conf import SQLALCHEMY_DB_URI
+from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 
 
 class Test_UserMethods(object):
