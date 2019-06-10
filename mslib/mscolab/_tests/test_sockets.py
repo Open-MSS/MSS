@@ -26,8 +26,10 @@
 import socketio
 from functools import partial
 import requests
+import subprocess
 import json
 import time
+import os
 
 
 class Test_Sockets(object):
@@ -35,6 +37,11 @@ class Test_Sockets(object):
 
     def setup(self):
         self.sockets = []
+        cwd = os.getcwd()
+        path_to_server = cwd + "/mslib/mscolab/server.py"
+        subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
+        time.sleep(4)
 
     def test_connect(self):
         r = requests.post("http://localhost:5000/token", data={
@@ -42,8 +49,6 @@ class Test_Sockets(object):
                           'password': 'a'
                           })
         response = json.loads(r.text)
-        import socketio
-
         # standard Python
         sio = socketio.Client()
 
@@ -116,4 +121,6 @@ class Test_Sockets(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
+        subprocess.run(["fuser", "-k", "5000/tcp"], stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
         pass
