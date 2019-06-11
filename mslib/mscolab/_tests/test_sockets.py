@@ -43,7 +43,7 @@ class Test_Sockets(object):
         path_to_server = cwd + "/mslib/mscolab/server.py"
         self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
                                      stderr=subprocess.DEVNULL)
-        time.sleep(4)
+        # time.sleep(4)
         try:
             outs, errs = self.proc.communicate(timeout=4)
             print(outs, errs)
