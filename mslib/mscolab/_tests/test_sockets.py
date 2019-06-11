@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_user.py
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.mscolab._tests.test_sockets.py
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for sockets module
 
@@ -29,22 +29,30 @@ import requests
 import subprocess
 import json
 import time
+import logging
 import os
 
 
 class Test_Sockets(object):
-    total = [0, 0, 0]
+    chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
+    chat_messages_counter_a = 0  # only for first test
 
     def setup(self):
         self.sockets = []
         cwd = os.getcwd()
         path_to_server = cwd + "/mslib/mscolab/server.py"
-        subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL)
+        self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
         time.sleep(4)
+        try:
+            outs, errs = self.proc.communicate(timeout=4)
+            print(outs, errs)
+        except Exception as e:
+            logging.debug("Server isn't running")
+            logging.debug(e)
 
     def test_connect(self):
-        r = requests.post("http://localhost:5000/token", data={
+        r = requests.post("http://localhost:8083/token", data={
                           'emailid': 'a',
                           'password': 'a'
                           })
@@ -52,30 +60,40 @@ class Test_Sockets(object):
         # standard Python
         sio = socketio.Client()
 
-        sio.connect('http://localhost:5000')
+        def handle_chat_message(message):
+            self.chat_messages_counter_a += 1
+
+        sio.on('chat message', handler=handle_chat_message)
+        sio.connect('http://localhost:8083')
         sio.emit('start_event', response)
         sio.sleep(2)
         self.sockets.append(sio)
+        sio.emit("emit-message", {
+                 "p_id": 1,
+                 "token": response['token']
+                 })
+        sio.sleep(2)
+        assert self.chat_messages_counter_a == 1
 
     def test_emit_permissions(self):
-        r = requests.post("http://localhost:5000/token", data={
+        r = requests.post("http://localhost:8083/token", data={
                           'emailid': 'a',
                           'password': 'a'
                           })
         response1 = json.loads(r.text)
-        r = requests.post("http://localhost:5000/token", data={
+        r = requests.post("http://localhost:8083/token", data={
                           'emailid': 'b',
                           'password': 'b'
                           })
         response2 = json.loads(r.text)
-        r = requests.post("http://localhost:5000/token", data={
+        r = requests.post("http://localhost:8083/token", data={
                           'emailid': 'c',
                           'password': 'c'
                           })
         response3 = json.loads(r.text)
 
         def handle_chat_message(sno, message):
-            self.total[sno - 1] += 1
+            self.chat_messages_counter[sno - 1] += 1
 
         sio1 = socketio.Client()
         sio2 = socketio.Client()
@@ -84,9 +102,9 @@ class Test_Sockets(object):
         sio1.on('chat message', handler=partial(handle_chat_message, 1))
         sio2.on('chat message', handler=partial(handle_chat_message, 2))
         sio3.on('chat message', handler=partial(handle_chat_message, 3))
-        sio1.connect('http://localhost:5000')
-        sio2.connect('http://localhost:5000')
-        sio3.connect('http://localhost:5000')
+        sio1.connect('http://localhost:8083')
+        sio2.connect('http://localhost:8083')
+        sio3.connect('http://localhost:8083')
 
         sio1.emit('start_event', response1)
         sio2.emit('start_event', response2)
@@ -111,9 +129,9 @@ class Test_Sockets(object):
         sio2.sleep(1)
         sio3.sleep(1)
 
-        assert self.total[0] == 2
-        assert self.total[1] == 1
-        assert self.total[2] == 2
+        assert self.chat_messages_counter[0] == 2
+        assert self.chat_messages_counter[1] == 1
+        assert self.chat_messages_counter[2] == 2
         self.sockets.append(sio1)
         self.sockets.append(sio2)
         self.sockets.append(sio3)
@@ -121,6 +139,5 @@ class Test_Sockets(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        subprocess.run(["fuser", "-k", "5000/tcp"], stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL)
+        self.proc.kill()
         pass

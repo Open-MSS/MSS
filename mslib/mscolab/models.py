@@ -63,6 +63,9 @@ class User(db.Model):
 
     @staticmethod
     def verify_auth_token(token):
+        """
+        token is the authentication string provided by client for each request
+        """
         s = Serializer(SECRET_KEY)
         try:
             data = s.loads(token)
@@ -100,6 +103,11 @@ class Permission(db.Model):
     access_level = db.Column(db.Enum("admin", "collaborator", "viewer"))
 
     def __init__(self, u_id, p_id, access_level):
+        """
+        u_id: user-id
+        p_id: process-id
+        access_level: the type of authorization to the project
+        """
         self.u_id = u_id
         self.p_id = p_id
         self.access_level = access_level
@@ -116,6 +124,10 @@ class Project(db.Model):
     description = db.Column(db.String(255))
 
     def __init__(self, path, description):
+        """
+        path: path to the project
+        description: small description of project
+        """
         self.path = path
         self.description = description
 
