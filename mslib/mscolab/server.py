@@ -25,6 +25,7 @@
 """
 
 from flask import Flask, request, jsonify, send_from_directory
+import logging
 
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
@@ -54,7 +55,6 @@ def check_login(emailid, password):
 
 @app.route('/token', methods=["POST"])
 def get_auth_token():
-    print(request.values)
     emailid = request.values['emailid']
     password = request.values['password']
     user = check_login(emailid, password)
@@ -62,6 +62,7 @@ def get_auth_token():
         token = user.generate_auth_token()
         return(jsonify({'token': token.decode('ascii')}))
     else:
+        logging.debug("Unauthorized user: %s".format(emailid))
         return("False")
 
 
@@ -101,11 +102,5 @@ def socket_testfile():
     return send_from_directory('test', 'one.html')
 
 
-def check_login_test():
-    email = request.args['email']
-    password = request.args['password']
-    return check_login(email, password)
-
-
 if __name__ == '__main__':
-    sockio.run(app)
+    sockio.run(app, port=8083)

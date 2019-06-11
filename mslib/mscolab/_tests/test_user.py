@@ -2,7 +2,7 @@
 """
 
     mslib.mscolab._tests.test_user.py
-    ~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for user related routes.
 
