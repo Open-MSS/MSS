@@ -63,14 +63,15 @@ class Test_Sockets(object):
         def handle_chat_message(message):
             self.chat_messages_counter_a += 1
 
-        sio.on('chat message', handler=handle_chat_message)
+        sio.on('chat-message-client', handler=handle_chat_message)
         sio.connect('http://localhost:8083')
-        sio.emit('start_event', response)
+        sio.emit('start', response)
         sio.sleep(2)
         self.sockets.append(sio)
-        sio.emit("emit-message", {
+        sio.emit("chat-message", {
                  "p_id": 1,
-                 "token": response['token']
+                 "token": response['token'],
+                 "message": "message from 1"
                  })
         sio.sleep(2)
         assert self.chat_messages_counter_a == 1
@@ -99,30 +100,33 @@ class Test_Sockets(object):
         sio2 = socketio.Client()
         sio3 = socketio.Client()
 
-        sio1.on('chat message', handler=partial(handle_chat_message, 1))
-        sio2.on('chat message', handler=partial(handle_chat_message, 2))
-        sio3.on('chat message', handler=partial(handle_chat_message, 3))
+        sio1.on('chat-message-client', handler=partial(handle_chat_message, 1))
+        sio2.on('chat-message-client', handler=partial(handle_chat_message, 2))
+        sio3.on('chat-message-client', handler=partial(handle_chat_message, 3))
         sio1.connect('http://localhost:8083')
         sio2.connect('http://localhost:8083')
         sio3.connect('http://localhost:8083')
 
-        sio1.emit('start_event', response1)
-        sio2.emit('start_event', response2)
-        sio3.emit('start_event', response3)
+        sio1.emit('start', response1)
+        sio2.emit('start', response2)
+        sio3.emit('start', response3)
         time.sleep(5)
-        sio1.emit('emit-message', {
+        sio1.emit('chat-message', {
                   "p_id": 1,
-                  "token": response1['token']
+                  "token": response1['token'],
+                  "message": "message from 1"
                   })
 
-        sio3.emit('emit-message', {
+        sio3.emit('chat-message', {
                   "p_id": 1,
-                  "token": response3['token']
+                  "token": response3['token'],
+                  "message": "message from 3 - 1"
                   })
 
-        sio3.emit('emit-message', {
+        sio3.emit('chat-message', {
                   "p_id": 3,
-                  "token": response3['token']
+                  "token": response3['token'],
+                  "message": "message from 3 - 2"
                   })
 
         sio1.sleep(1)

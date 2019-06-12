@@ -24,12 +24,12 @@
     limitations under the License.
 """
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 import logging
 
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
-from mslib.mscolab.sockets_manager import socketio as sockio
+from mslib.mscolab.sockets_manager import socketio as sockio, cm
 
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
@@ -42,8 +42,10 @@ db.init_app(app)
 
 @app.route("/")
 def hello():
-    return("Testing mscolab server")
+    return("Mscolab server")
 
+
+# User related routes
 
 def check_login(emailid, password):
     user = User.query.filter_by(emailid=str(emailid)).first()
@@ -96,10 +98,19 @@ def user_register_handler():
     username = request.form['username']
     return(register_user(email, password, username))
 
+# Char related routes
 
-@app.route('/get_socket_testfile')
-def socket_testfile():
-    return send_from_directory('test', 'one.html')
+
+@app.route("/messages", methods=['GET'])
+def messages():
+    token = request.values['token']
+    timestamp = request.values['timestamp']
+    p_id = request.values['p_id']
+    user = User.verify_auth_token(token)
+    messages = []
+    if user:
+        messages = cm.get_messages(p_id, last_timestamp=timestamp)
+    return(messages)
 
 
 if __name__ == '__main__':
