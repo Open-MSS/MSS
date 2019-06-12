@@ -57,6 +57,7 @@ requirements:
     - flask-socketio
     - flask-sqlalchemy
     - passlib
+    - python-socketio[client]
 
 test:
   imports:

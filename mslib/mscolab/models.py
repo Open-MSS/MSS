@@ -28,7 +28,10 @@ from flask_sqlalchemy import SQLAlchemy
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
-from conf import SECRET_KEY
+from mslib.mscolab.conf import SECRET_KEY
+
+import logging
+
 db = SQLAlchemy()
 
 
@@ -60,13 +63,16 @@ class User(db.Model):
 
     @staticmethod
     def verify_auth_token(token):
+        """
+        token is the authentication string provided by client for each request
+        """
         s = Serializer(SECRET_KEY)
         try:
             data = s.loads(token)
-        except SignatureExpired as e:
+        except SignatureExpired:
             logging.debug("Signature Expired")
             return None  # valid token, but expired
-        except BadSignature as e:
+        except BadSignature:
             logging.debug("Bad Signature")
             return None  # invalid token
         user = User.query.filter_by(id=data['id']).first()
@@ -86,3 +92,44 @@ class Connection(db.Model):
 
     def __repr__(self):
         return('<Connection %s %s>'.format(self.s_id, self.u_id))
+
+
+class Permission(db.Model):
+
+    __tablename__ = 'permissions'
+    id = db.Column(db.Integer, primary_key=True)
+    p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    access_level = db.Column(db.Enum("admin", "collaborator", "viewer"))
+
+    def __init__(self, u_id, p_id, access_level):
+        """
+        u_id: user-id
+        p_id: process-id
+        access_level: the type of authorization to the project
+        """
+        self.u_id = u_id
+        self.p_id = p_id
+        self.access_level = access_level
+
+    def __repr__(self):
+        return('<Permission user %s project %s access level %s>'.format(self.u_id, self.p_id, str(self.access_level)))
+
+
+class Project(db.Model):
+
+    __tablename__ = "projects"
+    id = db.Column(db.Integer, primary_key=True)
+    path = db.Column(db.String(255), unique=True)
+    description = db.Column(db.String(255))
+
+    def __init__(self, path, description):
+        """
+        path: path to the project
+        description: small description of project
+        """
+        self.path = path
+        self.description = description
+
+    def __repr__(self):
+        return('<Project path %s desc %s>'.format(self.path, self.description))

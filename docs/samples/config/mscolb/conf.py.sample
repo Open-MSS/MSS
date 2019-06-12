@@ -26,3 +26,8 @@
 
 SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 SECRET_KEY = 'secret_key'
+DB_HOST = '127.0.0.1'
+DB_USER = 'user'
+DB_PASSWORD = 'password'
+DB_NAME = 'mscolab'
+

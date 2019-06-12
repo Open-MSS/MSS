@@ -24,21 +24,20 @@
     limitations under the License.
 """
 
-from flask import Flask, request, jsonify
-from flask_socketio import SocketIO
+from flask import Flask, request, jsonify, send_from_directory
+import logging
 
-from models import User, db
-from conf import SQLALCHEMY_DB_URI
+from mslib.mscolab.models import User, db
+from mslib.mscolab.conf import SQLALCHEMY_DB_URI
+from mslib.mscolab.sockets_manager import socketio as sockio
 
-app = Flask(__name__)
-
-socketio = SocketIO(app)
+# set the project root directory as the static folder
+app = Flask(__name__, static_url_path='')
+sockio.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
 app.config['SECRET_KEY'] = 'secret!'
 db.init_app(app)
-
-sockets = []
 
 
 @app.route("/")
@@ -54,21 +53,22 @@ def check_login(emailid, password):
     return(False)
 
 
-@app.route('/token')
+@app.route('/token', methods=["POST"])
 def get_auth_token():
-    email = request.args['email']
-    password = request.args['password']
-    user = check_login(email, password)
+    emailid = request.values['emailid']
+    password = request.values['password']
+    user = check_login(emailid, password)
     if user:
         token = user.generate_auth_token()
         return(jsonify({'token': token.decode('ascii')}))
     else:
+        logging.debug("Unauthorized user: %s".format(emailid))
         return("False")
 
 
 @app.route('/test_authorized')
 def authorized():
-    token = request.args['token']
+    token = request.values['token']
     user = User.verify_auth_token(token)
     if user:
         return("True")
@@ -91,40 +91,16 @@ def register_user(email, password, username):
 
 @app.route("/register", methods=["POST"])
 def user_register_handler():
-    email = request.args['email']
-    password = request.args['password']
-    username = request.args['username']
+    email = request.form['email']
+    password = request.form['password']
+    username = request.form['username']
     return(register_user(email, password, username))
 
 
-def check_login_test():
-    email = request.args['email']
-    password = request.args['password']
-    return check_login(email, password)
-
-
-@socketio.on('connect')
-def handle_connect():
-    logging.info(request.sid)
-
-
-@socketio.on('start_event')
-def handle_my_custom_event(json):
-    logging.info('received json: ' + str(json))
-    socket_storage = {
-        'id': request.sid,
-        'emailid': json['emailid']
-    }
-    sockets.append(socket_storage)
-
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    logging.info("disconnected")
-    logging.info(request.sid)
-    # remove socket from socket_storage
-    sockets[:] = [d for d in sockets if d['id'] != request.sid]
+@app.route('/get_socket_testfile')
+def socket_testfile():
+    return send_from_directory('test', 'one.html')
 
 
 if __name__ == '__main__':
-    socketio.run(app)
+    sockio.run(app, port=8083)

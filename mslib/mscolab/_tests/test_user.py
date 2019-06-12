@@ -2,16 +2,13 @@
 """
 
     mslib.mscolab._tests.test_user.py
-    ~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for user related routes.
 
     This file is part of mss.
 
-    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
-    :license: APACHE-2.0, see LICENSE for details.
+    :copyright: Copyright 2019 Shivashis Padhi
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -27,7 +24,7 @@
 """
 from mslib.mscolab.server import db, check_login, register_user
 from flask import Flask
-from conf import SQLALCHEMY_DB_URI
+from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 
 
 class Test_UserMethods(object):
