@@ -26,8 +26,6 @@
 
 from flask import Flask, request, jsonify
 import logging
-import json
-
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.sockets_manager import socketio as sockio, cm

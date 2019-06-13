@@ -84,14 +84,45 @@ class Test_Sockets(object):
             assert message.p_id == 1
             assert message.u_id == 8
 
+            Message.query.filter_by(text="message from 1").delete()
+            db.session.commit()
+
     def test_get_messages(self):
+        r = requests.post("http://localhost:8083/token", data={
+                          'emailid': 'a',
+                          'password': 'a'
+                          })
+        response = json.loads(r.text)
+        # standard Python
+        sio = socketio.Client()
+
+        def handle_chat_message(message):
+            pass
+
+        sio.on('chat-message-client', handler=handle_chat_message)
+        sio.connect('http://localhost:8083')
+        sio.emit('start', response)
+        sio.sleep(2)
+        self.sockets.append(sio)
+        sio.emit("chat-message", {
+                 "p_id": 1,
+                 "token": response['token'],
+                 "message_text": "message from 1"
+                 })
+        sio.sleep(2)
+        sio.emit("chat-message", {
+                 "p_id": 1,
+                 "token": response['token'],
+                 "message_text": "message from 1"
+                 })
+        sio.sleep(2)
         with self.app.app_context():
             messages = cm.get_messages(1)
-            assert len(messages) == 1
+            assert len(messages) == 2
             assert messages[0].u_id == 8
 
             messages = cm.get_messages(1, last_timestamp=datetime.datetime(1970, 1, 1))
-            assert len(messages) == 1
+            assert len(messages) == 2
             assert messages[0].u_id == 8
 
             messages = cm.get_messages(1, last_timestamp=datetime.datetime.now())

@@ -62,8 +62,6 @@ if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
             continue
         cursor.execute(line)
 
-
-
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
     from mslib.mscolab.models import db
@@ -120,4 +118,3 @@ elif SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
 
 else:
     pass
-
