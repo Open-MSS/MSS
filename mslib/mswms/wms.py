@@ -504,7 +504,10 @@ def application():
         query = request.args
 
         # Processing
-        request_type = query.get('request', '')
+        # ToDo Refactor
+        request_type = query.get('request')
+        if request_type is None:  # request_type may *actually* be set to None
+            request_type = ''
         request_type = request_type.lower()
         request_service = query.get('service', '')
         request_service = request_service.lower()
