@@ -50,7 +50,7 @@ class Test_Sockets(object):
                                          stderr=subprocess.DEVNULL)
             try:
                 outs, errs = self.proc.communicate(timeout=4)
-                print(outs, errs)
+                logging.debug(outs, errs)
             except Exception as e:
                 logging.debug("Server isn't running")
                 logging.debug(e)

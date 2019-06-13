@@ -59,7 +59,6 @@ sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 dir_path = os.path.dirname(os.path.realpath(__file__))
 demodata_path = os.path.join(dir_path, 'mslib/mscolab/demodata.py')
 result = subprocess.run(["python", demodata_path])
-print(result)
 if result.check_returncode():
     sys.exit(0)
 
