@@ -38,7 +38,6 @@ class ChatManager(object):
         roomname: room-name(p_id) to which message is emitted
         """
         message = Message(roomname, user.id, text)
-        print(message)
         db.session.add(message)
         db.session.commit()
         return message
