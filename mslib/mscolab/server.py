@@ -26,6 +26,9 @@
 
 from flask import Flask, request, jsonify
 import logging
+import json
+import datetime
+
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.sockets_manager import socketio as sockio, cm
@@ -56,8 +59,8 @@ def check_login(emailid, password):
 
 @app.route('/token', methods=["POST"])
 def get_auth_token():
-    emailid = request.values['emailid']
-    password = request.values['password']
+    emailid = request.form['emailid']
+    password = request.form['password']
     user = check_login(emailid, password)
     if user:
         token = user.generate_auth_token()
@@ -103,17 +106,16 @@ def user_register_handler():
 @app.route("/messages", methods=['POST'])
 def messages():
     token = request.form['token']
-    # timestamp = request.values['timestamp']
-    timestamp = None
+    timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
     p_id = request.form['p_id']
     user = User.verify_auth_token(token)
-    messages = []
     if user:
         messages = cm.get_messages(p_id, last_timestamp=timestamp)
-    print(messages)
-    # print(json.dumps(messages))
-    # return(jsonify({'messages': json.dumps(messages)}))
-    return(jsonify({'messages': []}))
+    else:
+        return("False")
+    messages = list(map(lambda x:
+                    {'user': x.u_id, 'time': x.created_at.strftime("%m %d %Y, %H:%M:%S"), 'text': x.text}, messages))
+    return(jsonify({'messages': json.dumps(messages)}))
 
 
 if __name__ == '__main__':
