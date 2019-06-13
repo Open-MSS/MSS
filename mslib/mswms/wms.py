@@ -520,7 +520,8 @@ def application():
         elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:
-            raise RuntimeError(u"Request type '{}' is not valid.".format(request))
+            logging.debug(u'Request type "%s" is not valid.', request)
+            raise RuntimeError(u"Request type is not valid.")
 
         res = make_response(return_data, 200)
         response_headers = [('Content-type', return_format), ('Content-Length', str(len(return_data)))]
