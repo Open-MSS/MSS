@@ -69,15 +69,36 @@ class Test_WMS(object):
         assert isinstance(result.data, bytes), result
 
     def test_get_capabilities(self):
-        environ = {
-            'wsgi.url_scheme': 'http',
-            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
-            'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.1.1'}
+        cases = (
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.1.1'
+            },
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=capabilities&service=WMS&version=1.1.1'
+            },
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1',
+                'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=capabilities&service=WMS&version'
+            },
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1',
+                'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=capabilities&service=WMS'
+            },
+        )
 
-        self.client = mswms.application.test_client()
-        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_ok_xml(result.status, result.headers)
-        assert isinstance(result.data, bytes), result
+        for tst_case in cases:
+            self.client = mswms.application.test_client()
+            result = self.client.get('/?{}'.format(tst_case["QUERY_STRING"]))
+            callback_ok_xml(result.status, result.headers)
+            assert isinstance(result.data, bytes), result
 
     def test_get_capabilities_lowercase(self):
         environ = {

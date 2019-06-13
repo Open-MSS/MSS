@@ -42,6 +42,7 @@
 """
 
 from future import standard_library
+
 standard_library.install_aliases()
 
 import os
@@ -50,7 +51,6 @@ from datetime import datetime
 import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
-
 
 from flask import Flask, request, make_response
 from flask_httpauth import HTTPBasicAuth
@@ -102,7 +102,6 @@ except ImportError as ex:
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
-
 if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
@@ -121,7 +120,6 @@ if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
             username = auth.username
             password = auth.password
         return authfunc(username, password)
-
 
 from mslib.mswms import mss_plot_driver
 from mslib.utils import CaseInsensitiveMultiDict, get_projection_params
@@ -516,9 +514,10 @@ def application():
         url = request.url
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request_type == "getcapabilities" and request_service == 'wms' and request_version == '1.1.1':
+        if (request_type in ('getcapabilities', 'capabilities') and
+                request_service == 'wms' and request_version in ('1.1.1', '')):
             return_data, return_format = server.get_capabilities(server_url)
-        elif request_type in ['getmap', 'getvsec'] and request_version == '1.1.1':
+        elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:
             raise RuntimeError(u"Request type '{}' is not valid.".format(request))
