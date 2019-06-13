@@ -26,6 +26,7 @@
 
 from flask import Flask, request, jsonify
 import logging
+import json
 
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
@@ -101,16 +102,20 @@ def user_register_handler():
 # Char related routes
 
 
-@app.route("/messages", methods=['GET'])
+@app.route("/messages", methods=['POST'])
 def messages():
-    token = request.values['token']
-    timestamp = request.values['timestamp']
-    p_id = request.values['p_id']
+    token = request.form['token']
+    # timestamp = request.values['timestamp']
+    timestamp = None
+    p_id = request.form['p_id']
     user = User.verify_auth_token(token)
     messages = []
     if user:
         messages = cm.get_messages(p_id, last_timestamp=timestamp)
-    return(messages)
+    print(messages)
+    # print(json.dumps(messages))
+    # return(jsonify({'messages': json.dumps(messages)}))
+    return(jsonify({'messages': []}))
 
 
 if __name__ == '__main__':

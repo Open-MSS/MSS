@@ -38,15 +38,18 @@ class ChatManager(object):
         roomname: room-name(p_id) to which message is emitted
         """
         message = Message(roomname, user.id, text)
+        print(message)
         db.session.add(message)
         db.session.commit()
+        return message
 
     def get_messages(self, p_id, last_timestamp=None):
         """
         p_id: project id
         last_timestamp:  if provided, messages only after this time stamp is provided
         """
-        messages = Message.query.filter_by(p_id=p_id).all()
+        messages = Message.query.filter_by(p_id=p_id)
         if last_timestamp:
-            messages = messages.filter(lambda message: (message.created_at > last_timestamp), messages)
+            messages = messages.filter(Message.created_at > last_timestamp)
+        messages = messages.all()
         return(messages)

@@ -31,6 +31,10 @@ import json
 import time
 import logging
 import os
+from flask import Flask
+
+from mslib.mscolab.conf import START_SERVER_DURING_TEST, SQLALCHEMY_DB_URI
+from mslib.mscolab.models import db, Message
 
 
 class Test_Sockets(object):
@@ -41,15 +45,19 @@ class Test_Sockets(object):
         self.sockets = []
         cwd = os.getcwd()
         path_to_server = cwd + "/mslib/mscolab/server.py"
-        self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL)
-        # time.sleep(4)
-        try:
-            outs, errs = self.proc.communicate(timeout=4)
-            print(outs, errs)
-        except Exception as e:
-            logging.debug("Server isn't running")
-            logging.debug(e)
+        if START_SERVER_DURING_TEST:
+            self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
+                                         stderr=subprocess.DEVNULL)
+            try:
+                outs, errs = self.proc.communicate(timeout=4)
+                print(outs, errs)
+            except Exception as e:
+                logging.debug("Server isn't running")
+                logging.debug(e)
+        self.app = Flask(__name__)
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
+        self.app.config['SECRET_KEY'] = 'secret!'
+        db.init_app(self.app)
 
     def test_connect(self):
         r = requests.post("http://localhost:8083/token", data={
@@ -71,7 +79,7 @@ class Test_Sockets(object):
         sio.emit("chat-message", {
                  "p_id": 1,
                  "token": response['token'],
-                 "message": "message from 1"
+                 "message_text": "message from 1"
                  })
         sio.sleep(2)
         assert self.chat_messages_counter_a == 1
@@ -114,19 +122,19 @@ class Test_Sockets(object):
         sio1.emit('chat-message', {
                   "p_id": 1,
                   "token": response1['token'],
-                  "message": "message from 1"
+                  "message_text": "message from 1"
                   })
 
         sio3.emit('chat-message', {
                   "p_id": 1,
                   "token": response3['token'],
-                  "message": "message from 3 - 1"
+                  "message_text": "message from 3 - 1"
                   })
 
         sio3.emit('chat-message', {
                   "p_id": 3,
                   "token": response3['token'],
-                  "message": "message from 3 - 2"
+                  "message_text": "message from 3 - 2"
                   })
 
         sio1.sleep(1)
@@ -140,8 +148,14 @@ class Test_Sockets(object):
         self.sockets.append(sio2)
         self.sockets.append(sio3)
 
+        with self.app.app_context():
+            Message.query.filter_by(text="message from 1").delete()
+            Message.query.filter_by(text="message from 3 - 1").delete()
+            Message.query.filter_by(text="message from 3 - 2").delete()
+            db.session.commit()
+
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        self.proc.kill()
-        pass
+        if START_SERVER_DURING_TEST:
+            self.proc.kill()

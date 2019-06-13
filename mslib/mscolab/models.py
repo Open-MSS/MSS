@@ -142,7 +142,7 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    text = db.Column(db.Binary)
+    text = db.Column(db.TEXT)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def __init__(self, p_id, u_id, text):
