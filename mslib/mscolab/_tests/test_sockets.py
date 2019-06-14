@@ -33,8 +33,9 @@ import logging
 import os
 from flask import Flask
 
-from mslib.mscolab.conf import START_SERVER_DURING_TEST, SQLALCHEMY_DB_URI
+from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import db, Message
+from mslib._tests.constants import MSCOLAB_URL_TEST
 
 
 class Test_Sockets(object):
@@ -45,21 +46,20 @@ class Test_Sockets(object):
         self.sockets = []
         cwd = os.getcwd()
         path_to_server = cwd + "/mslib/mscolab/server.py"
-        if START_SERVER_DURING_TEST:
-            self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
-                                         stderr=subprocess.DEVNULL)
-            try:
-                outs, errs = self.proc.communicate(timeout=4)
-                logging.debug(outs, errs)
-            except Exception as e:
-                logging.debug("Server isn't running")
-                logging.debug(e)
+        self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
+        try:
+            outs, errs = self.proc.communicate(timeout=4)
+            logging.debug(outs, errs)
+        except Exception as e:
+            logging.debug("Server isn't running")
+            logging.debug(e)
         self.app = Flask(__name__)
         self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
         db.init_app(self.app)
 
     def test_connect(self):
-        r = requests.post("http://localhost:8083/token", data={
+        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
                           'emailid': 'a',
                           'password': 'a'
                           })
@@ -70,7 +70,7 @@ class Test_Sockets(object):
             self.chat_messages_counter_a += 1
 
         sio.on('chat-message-client', handler=handle_chat_message)
-        sio.connect('http://localhost:8083')
+        sio.connect(MSCOLAB_URL_TEST)
         sio.emit('start', response)
         sio.sleep(2)
         self.sockets.append(sio)
@@ -83,17 +83,17 @@ class Test_Sockets(object):
         assert self.chat_messages_counter_a == 1
 
     def test_emit_permissions(self):
-        r = requests.post("http://localhost:8083/token", data={
+        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
                           'emailid': 'a',
                           'password': 'a'
                           })
         response1 = json.loads(r.text)
-        r = requests.post("http://localhost:8083/token", data={
+        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
                           'emailid': 'b',
                           'password': 'b'
                           })
         response2 = json.loads(r.text)
-        r = requests.post("http://localhost:8083/token", data={
+        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
                           'emailid': 'c',
                           'password': 'c'
                           })
@@ -109,9 +109,9 @@ class Test_Sockets(object):
         sio1.on('chat-message-client', handler=partial(handle_chat_message, 1))
         sio2.on('chat-message-client', handler=partial(handle_chat_message, 2))
         sio3.on('chat-message-client', handler=partial(handle_chat_message, 3))
-        sio1.connect('http://localhost:8083')
-        sio2.connect('http://localhost:8083')
-        sio3.connect('http://localhost:8083')
+        sio1.connect(MSCOLAB_URL_TEST)
+        sio2.connect(MSCOLAB_URL_TEST)
+        sio3.connect(MSCOLAB_URL_TEST)
 
         sio1.emit('start', response1)
         sio2.emit('start', response2)
@@ -155,5 +155,4 @@ class Test_Sockets(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        if START_SERVER_DURING_TEST:
-            self.proc.kill()
+        self.proc.kill()
