@@ -43,8 +43,11 @@ import mss_wms_settings
 import matplotlib as mpl
 import numpy as np
 import PIL.Image
+import cartopy
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 from mslib.mswms import mss_2D_sections
 from mslib.utils import get_projection_params
@@ -106,69 +109,69 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             crs_list.add("EPSG:{:d}".format(code))
         return sorted(crs_list)
 
-    def _draw_auto_graticule(self, bm):
+    def _draw_auto_graticule(self, ax):
         """
         """
         # Compute some map coordinates that are required below for the automatic
         # determination of which meridians and parallels to draw.
-        axis = bm.ax.axis()
-        upperLeftCornerLon, upperLeftCornerLat = bm(axis[0], axis[3], inverse=True)
-        lowerRightCornerLon, lowerRightCornerLat = bm(axis[1], axis[2], inverse=True)
-        middleUpperBoundaryLon, middleUpperBoundaryLat = bm(np.mean([axis[0], axis[1]]), axis[3], inverse=True)
-        middleLowerBoundaryLon, middleLowerBoundaryLat = bm(np.mean([axis[0], axis[1]]), axis[2], inverse=True)
+        # axis = bm.ax.axis()
+        # upperLeftCornerLon, upperLeftCornerLat = bm(axis[0], axis[3], inverse=True)
+        # lowerRightCornerLon, lowerRightCornerLat = bm(axis[1], axis[2], inverse=True)
+        # middleUpperBoundaryLon, middleUpperBoundaryLat = bm(np.mean([axis[0], axis[1]]), axis[3], inverse=True)
+        # middleLowerBoundaryLon, middleLowerBoundaryLat = bm(np.mean([axis[0], axis[1]]), axis[2], inverse=True)
 
         # Determine which parallels and meridians should be drawn.
         #   a) determine which are the minimum and maximum visible
         #      longitudes and latitudes, respectively. These
         #      values depend on the map projection.
-        if bm.projection in ['npstere', 'spstere', 'stere', 'lcc']:
-            # For stereographic projections: Draw meridians from the minimum
-            # longitude contained in the map at one of the four corners to the
-            # maximum longitude at one of these corner points. If
-            # the map centre is contained in the map, draw all meridians
-            # around the globe.
-            # FIXME? This is only correct for polar stereographic projections.
-            # Draw parallels from the min latitude contained in the map at
-            # one of the four corners OR the middle top or bottom to the
-            # maximum latitude at one of these six points.
-            # If the map centre in contained in the map, replace either
-            # start or end latitude by the centre latitude (whichever is
-            # smaller/larger).
+        # if repr(ax.projection)[13:-26] in ['NorthPolarStereo', 'SouthPolarStereo', 'Stereographic', 'LambertConformal']:
+        #     # For stereographic projections: Draw meridians from the minimum
+        #     # longitude contained in the map at one of the four corners to the
+        #     # maximum longitude at one of these corner points. If
+        #     # the map centre is contained in the map, draw all meridians
+        #     # around the globe.
+        #     # FIXME? This is only correct for polar stereographic projections.
+        #     # Draw parallels from the min latitude contained in the map at
+        #     # one of the four corners OR the middle top or bottom to the
+        #     # maximum latitude at one of these six points.
+        #     # If the map centre in contained in the map, replace either
+        #     # start or end latitude by the centre latitude (whichever is
+        #     # smaller/larger).
 
-            # check if centre point of projection is contained in the map,
-            # use projection coordinates for this test
-            centre_x = bm.projparams["x_0"]
-            centre_y = bm.projparams["y_0"]
-            contains_centre = (centre_x < bm.urcrnrx) and (centre_y < bm.urcrnry)
-            # merdidians
-            if contains_centre:
-                mapLonStart = -180.
-                mapLonStop = 180.
-            else:
-                mapLonStart = min(upperLeftCornerLon, bm.llcrnrlon,
-                                  bm.urcrnrlon, lowerRightCornerLon)
-                mapLonStop = max(upperLeftCornerLon, bm.llcrnrlon,
-                                 bm.urcrnrlon, lowerRightCornerLon)
-            # parallels
-            mapLatStart = min(middleLowerBoundaryLat, lowerRightCornerLat,
-                              bm.llcrnrlat,
-                              middleUpperBoundaryLat, upperLeftCornerLat,
-                              bm.urcrnrlat)
-            mapLatStop = max(middleLowerBoundaryLat, lowerRightCornerLat,
-                             bm.llcrnrlat,
-                             middleUpperBoundaryLat, upperLeftCornerLat,
-                             bm.urcrnrlat)
-            if contains_centre:
-                centre_lat = bm.projparams["lat_0"]
-                mapLatStart = min(mapLatStart, centre_lat)
-                mapLatStop = max(mapLatStop, centre_lat)
-        else:
+        #     # check if centre point of projection is contained in the map,
+        #     # use projection coordinates for this test
+        #     centre_x = bm.projparams["x_0"]
+        #     centre_y = bm.projparams["y_0"]
+        #     contains_centre = (centre_x < ax.get_extent()[2]) and (centre_y < ax.get_extent()[3])
+        #     # merdidians
+        #     if contains_centre:
+        #         mapLonStart = -180.
+        #         mapLonStop = 180.
+        #     else:
+        #         mapLonStart = min(upperLeftCornerLon, ax.get_extent()[0],
+        #                           ax.get_extent()[2], lowerRightCornerLon)
+        #         mapLonStop = max(upperLeftCornerLon, ax.get_extent()[0],
+        #                          ax.get_extent()[2], lowerRightCornerLon)
+        #     # parallels
+        #     mapLatStart = min(middleLowerBoundaryLat, lowerRightCornerLat,
+        #                       ax.get_extent()[1],
+        #                       middleUpperBoundaryLat, upperLeftCornerLat,
+        #                       ax.get_extent()[3])
+        #     mapLatStop = max(middleLowerBoundaryLat, lowerRightCornerLat,
+        #                      ax.get_extent()[1],
+        #                      middleUpperBoundaryLat, upperLeftCornerLat,
+        #                      ax.get_extent()[3])
+        #     if contains_centre:
+        #         centre_lat = bm.projparams["lat_0"]
+        #         mapLatStart = min(mapLatStart, centre_lat)
+        #         mapLatStop = max(mapLatStop, centre_lat)
+        # else:
             # for other projections (preliminary): difference between the
             # lower left and the upper right corner.
-            mapLonStart = bm.llcrnrlon
-            mapLonStop = bm.urcrnrlon
-            mapLatStart = bm.llcrnrlat
-            mapLatStop = bm.urcrnrlat
+        mapLonStart = ax.get_extent()[0]
+        mapLonStop = ax.get_extent()[2]
+        mapLatStart = ax.get_extent()[1]
+        mapLatStop = ax.get_extent()[3]
 
         # b) parallels and meridians can be drawn with a spacing of
         #      >spacingValues< degrees. Determine the appropriate
@@ -194,14 +197,19 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         #   d) call the basemap methods to draw the lines in the determined
         #      range.
-        bm.map_parallels = bm.drawparallels(np.arange(latStart, latStop,
-                                                      spacingLat),
-                                            labels=[1, 1, 0, 0],
-                                            color='0.5', dashes=[5, 5])
-        bm.map_meridians = bm.drawmeridians(np.arange(lonStart, lonStop,
-                                                      spacingLon),
-                                            labels=[0, 0, 0, 1],
-                                            color='0.5', dashes=[5, 5])
+        
+
+        gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                  linewidth=2, color='black', alpha=0.5, linestyle='--')
+        gl.xlabels_top = False
+        gl.xlocator = mticker.FixedLocator([np.arange(latStart, latStop,
+                                                      spacingLat)])
+        gl.ylocator = mticker.FixedLocator([np.arange(lonStart, lonStop,
+                                                      spacingLon)])
+        gl.ylines = True
+        gl.xlines = True
+        gl.xlabel_style = {'size': 15, 'color': 'black'}
+        gl.xlabel_style = {'color': 'black'}
 
     def plot_hsection(self, data, lats, lons, bbox=(-180, -90, 180, 90),
                       level=None, figsize=(960, 640), crs=None,
@@ -209,7 +217,22 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                       valid_time=None, init_time=None, style=None,
                       resolution=-1, noframe=False, show=False,
                       transparent=False):
+        """
+        EPSG overrides proj_params!
+        """
+        if proj_params is None:
+            proj_params = {"projection": "cyl"}
+            bbox_units = "latlon"
+        # Projection parameters from EPSG code.
+        if crs is not None:
+            proj_params, bbox_units = [get_projection_params(crs)[_x] for _x in ("basemap", "bbox")]
+
         logging.debug("plotting data..")
+
+        # Check if required data is available.
+        for datatype, dataitem in self.required_datafields:
+            if dataitem not in data:
+                raise KeyError(u"required data field '{}' not found".format(dataitem))
 
         # Copy parameters to properties.
         self.data = data
@@ -235,8 +258,18 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         fig = plt.figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
         logging.debug("\twith frame and legends" if not noframe else
                       "\twithout frame")
+        
+        if noframe:
+            ax = plt.axes([0.0, 0.0, 1.0, 1.0], projection=ccrs.PlateCarree())
+        else:
+            ax = plt.axes([0.05, 0.05, 0.9, 0.88], projection=ccrs.PlateCarree())
 
-        ax = plt.axes([0.0, 0.0, 1.0, 1.0], projection=ccrs.Robinson())
+        ax.set_extent([bbox[0], bbox[2], bbox[1], bbox[3]], crs=ccrs.PlateCarree())
+        ax.coastlines(resolution='110m')
+        ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=1)
+        ax.outline_patch.set_edgecolor('white')
+        self._draw_auto_graticule(ax)
+        self.fig = fig
 
         # Return the image as png embedded in a StringIO stream.
         # canvas = FigureCanvas(fig)
@@ -301,7 +334,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Determine the leftmost longitude in the plot.
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)
-        left_longitude = min(self.bm.llcrnrlon, ulcrnrlon)
+        left_longitude = min(self.ax.get_extent()[0], ulcrnrlon)
         logging.debug(u"shifting data grid to leftmost longitude in map %2.f..", left_longitude)
 
         # Shift the longitude field such that the data is in the range
