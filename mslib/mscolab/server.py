@@ -119,4 +119,5 @@ def messages():
 
 
 if __name__ == '__main__':
+    # to be refactored during deployment
     sockio.run(app, port=8083)
