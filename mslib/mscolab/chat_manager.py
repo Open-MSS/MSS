@@ -34,8 +34,9 @@ class ChatManager(object):
 
     def add_message(self, user, text, roomname):
         """
-        message: message to be emitted to room and saved to db
-        roomname: room-name(p_id) to which message is emitted
+        text: message to be emitted to room and saved to db
+        roomname: room-name(p_id) to which message is emitted,
+        user: User object, one which emits the message
         """
         message = Message(roomname, user.id, text)
         db.session.add(message)

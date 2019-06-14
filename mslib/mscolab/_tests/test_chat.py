@@ -53,7 +53,6 @@ class Test_Sockets(object):
                 logging.debug(e)
         self.app = Flask(__name__)
         self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-        self.app.config['SECRET_KEY'] = 'secret!'
         db.init_app(self.app)
 
     def test_send_message(self):

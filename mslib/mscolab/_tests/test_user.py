@@ -32,13 +32,10 @@ class Test_UserMethods(object):
     def setup(self):
         self.app = Flask(__name__)
         self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-        self.app.config['SECRET_KEY'] = 'secret!'
         db.init_app(self.app)
 
     def test_registration(self):
         with self.app.app_context():
-            # db.create_all()
-            # self.populate_db()
             x = register_user('sdf@s.com', 'sdf', 'sdf')
             assert x == 'True'
             x = register_user('sdf@s.com', 'sdf', 'sdf')
@@ -46,8 +43,6 @@ class Test_UserMethods(object):
 
     def test_login(self):
         with self.app.app_context():
-            # db.create_all()
-            # self.populate_db()
             x = check_login('sdf@s.com', 'sdf')
             assert x is not None
             x = check_login('sdf@s.com', 'fd')
