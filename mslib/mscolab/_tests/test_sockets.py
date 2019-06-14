@@ -56,7 +56,6 @@ class Test_Sockets(object):
                 logging.debug(e)
         self.app = Flask(__name__)
         self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-        self.app.config['SECRET_KEY'] = 'secret!'
         db.init_app(self.app)
 
     def test_connect(self):
@@ -65,7 +64,6 @@ class Test_Sockets(object):
                           'password': 'a'
                           })
         response = json.loads(r.text)
-        # standard Python
         sio = socketio.Client()
 
         def handle_chat_message(message):

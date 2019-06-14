@@ -30,7 +30,7 @@ import json
 import datetime
 
 from mslib.mscolab.models import User, db
-from mslib.mscolab.conf import SQLALCHEMY_DB_URI
+from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY
 from mslib.mscolab.sockets_manager import socketio as sockio, cm
 
 # set the project root directory as the static folder
@@ -38,7 +38,7 @@ app = Flask(__name__, static_url_path='')
 sockio.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-app.config['SECRET_KEY'] = 'secret!'
+app.config['SECRET_KEY'] = SECRET_KEY
 db.init_app(app)
 
 
