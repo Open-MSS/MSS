@@ -24,10 +24,16 @@
     limitations under the License.
 """
 
-SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+# ToDo refactor
+# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+import os
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sqlite_file_path = os.path.join(dir_path, 'data', 'mscolab.db')
+
+SQLALCHEMY_DB_URI = 'sqlite:///' + sqlite_file_path
 SECRET_KEY = 'secret_key'
 DB_HOST = '127.0.0.1'
 DB_USER = 'user'
 DB_PASSWORD = 'password'
 DB_NAME = 'mscolab'
-
+START_SERVER_DURING_TEST = True

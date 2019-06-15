@@ -24,26 +24,30 @@
     limitations under the License.
 """
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 import logging
+import json
+import datetime
 
 from mslib.mscolab.models import User, db
-from mslib.mscolab.conf import SQLALCHEMY_DB_URI
-from mslib.mscolab.sockets_manager import socketio as sockio
+from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY
+from mslib.mscolab.sockets_manager import socketio as sockio, cm
 
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
 sockio.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-app.config['SECRET_KEY'] = 'secret!'
+app.config['SECRET_KEY'] = SECRET_KEY
 db.init_app(app)
 
 
 @app.route("/")
 def hello():
-    return("Testing mscolab server")
+    return("Mscolab server")
 
+
+# User related routes
 
 def check_login(emailid, password):
     user = User.query.filter_by(emailid=str(emailid)).first()
@@ -55,8 +59,8 @@ def check_login(emailid, password):
 
 @app.route('/token', methods=["POST"])
 def get_auth_token():
-    emailid = request.values['emailid']
-    password = request.values['password']
+    emailid = request.form['emailid']
+    password = request.form['password']
     user = check_login(emailid, password)
     if user:
         token = user.generate_auth_token()
@@ -96,11 +100,24 @@ def user_register_handler():
     username = request.form['username']
     return(register_user(email, password, username))
 
+# Char related routes
 
-@app.route('/get_socket_testfile')
-def socket_testfile():
-    return send_from_directory('test', 'one.html')
+
+@app.route("/messages", methods=['POST'])
+def messages():
+    token = request.form['token']
+    timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
+    p_id = request.form['p_id']
+    user = User.verify_auth_token(token)
+    if user:
+        messages = cm.get_messages(p_id, last_timestamp=timestamp)
+    else:
+        return("False")
+    messages = list(map(lambda x:
+                    {'user': x.u_id, 'time': x.created_at.strftime("%m %d %Y, %H:%M:%S"), 'text': x.text}, messages))
+    return(jsonify({'messages': json.dumps(messages)}))
 
 
 if __name__ == '__main__':
+    # to be refactored during deployment
     sockio.run(app, port=8083)

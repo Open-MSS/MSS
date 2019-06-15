@@ -28,9 +28,11 @@ from flask_socketio import SocketIO, join_room
 from flask import request
 import logging
 
-from models import Permission, User
+from mslib.mscolab.models import Permission, User
+from mslib.mscolab.chat_manager import ChatManager
 
 socketio = SocketIO()
+cm = ChatManager()
 
 
 class SocketsManager(object):
@@ -93,7 +95,8 @@ class SocketsManager(object):
         user = User.verify_auth_token(json['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         if perm:
-            socketio.emit('chat message', 'some message', room=str(p_id))
+            socketio.emit('chat-message-client', json['message_text'], room=str(p_id))
+            cm.add_message(user, json['message_text'], str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
         """
@@ -112,6 +115,6 @@ sm = SocketsManager()
 
 # sockets related handlers
 socketio.on_event('connect', sm.handle_connect)
-socketio.on_event('start_event', sm.handle_start_event)
+socketio.on_event('start', sm.handle_start_event)
 socketio.on_event('disconnect', sm.handle_disconnect)
-socketio.on_event('emit-message', sm.handle_message)
+socketio.on_event('chat-message', sm.handle_message)

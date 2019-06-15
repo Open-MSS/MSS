@@ -31,6 +31,7 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
 from mslib.mscolab.conf import SECRET_KEY
 
 import logging
+import datetime
 
 db = SQLAlchemy()
 
@@ -133,3 +134,21 @@ class Project(db.Model):
 
     def __repr__(self):
         return('<Project path %s desc %s>'.format(self.path, self.description))
+
+
+class Message(db.Model):
+
+    __tablename__ = "messages"
+    id = db.Column(db.Integer, primary_key=True)
+    p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    text = db.Column(db.TEXT)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def __init__(self, p_id, u_id, text):
+        self.p_id = p_id
+        self.u_id = u_id
+        self.text = text
+
+    def __repr__(self):
+        return('<Message %s user %s in %s>'.format(self.text, self.u_id, self.p_id))
