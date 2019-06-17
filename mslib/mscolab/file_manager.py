@@ -26,7 +26,7 @@
 import fs
 
 from mslib.mscolab.models import db, Project, Permission, User
-from mslib.mscolab.conf import MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
 
 
 class ChatManager(object):
@@ -50,7 +50,9 @@ class ChatManager(object):
         perm = Permission(user.id, project_id, "admin")
         db.session.add(perm)
         db.session.commit()
-        # create actual file inside ./data
+        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        with data.open(project.path) as project_file:
+            project_file.writetext(STUB_CODE)
         return(True)
 
     def add_permission(self, p_id, u_id, access_level, user):
