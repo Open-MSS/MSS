@@ -31,7 +31,7 @@ import datetime
 
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY
-from mslib.mscolab.sockets_manager import socketio as sockio, cm
+from mslib.mscolab.sockets_manager import socketio as sockio, cm, fm
 
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
@@ -46,6 +46,7 @@ db.init_app(app)
 def hello():
     return("Mscolab server")
 
+# ToDo setup codes in return statements
 
 # User related routes
 
@@ -100,7 +101,7 @@ def user_register_handler():
     username = request.form['username']
     return(register_user(email, password, username))
 
-# Char related routes
+# Chat related routes
 
 
 @app.route("/messages", methods=['POST'])
@@ -117,6 +118,98 @@ def messages():
                     {'user': x.u_id, 'time': x.created_at.strftime("%m %d %Y, %H:%M:%S"), 'text': x.text}, messages))
     return(jsonify({'messages': json.dumps(messages)}))
 
+
+# File related routes
+@app.route('/create_project', methods=["POST"])
+def create_project():
+    token = request.values['token']
+    path = request.values['path']
+    description = request.values['description']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    return(str(fm.create_project(path, description, user)))
+
+@app.route('/get_project', methods=['GET'])
+def get_project():
+    token = request.values['token']
+    p_id = request.values['p_id']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    result = fm.get_file(int(p_id))
+    if result == False:
+        return("False")
+    return(json.dumps({"content": result}))
+
+@app.route('/authorized_users', methods=['GET'])
+def authorized_users():
+    token = request.values['token']
+    p_id = request.values['p_id']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    return(json.dumps({"users": fm.get_authorized_users(int(p_id))}))
+
+@app.route('/projects', methods=['GET'])
+def get_projects():
+    token = request.values['token']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    return(json.dumps({"projects": fm.list_projects(user)}))
+
+@app.route('/delete_project', methods=["POST"])
+def delete_project():
+    token = request.form['token']
+    p_id = request.form['p_id']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    return(str(fm.delete_file(int(p_id), user)))
+
+@app.route('/add_permission', methods=['POST'])
+def add_permission():
+    token = request.form['token']
+    p_id = request.form['p_id']
+    u_id = request.form['u_id']
+    access_level = request.form['access_level']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    return(str(fm.add_permission(int(p_id), int(u_id), access_level, user)))
+
+@app.route('/revoke_permission', methods=['POST'])
+def revoke_permission():
+    token = request.form['token']
+    p_id = request.form['p_id']
+    u_id = request.form['u_id']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    return(str(fm.revoke_permission(int(p_id), int(u_id), user)))
+
+@app.route('/modify_permission', methods=['POST'])
+def modify_permission():
+    token = request.form['token']
+    p_id = request.form['p_id']
+    u_id = request.form['u_id']
+    access_level = request.form['access_level']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    return(str(fm.update_access_level(int(p_id), int(u_id), access_level, user)))
+
+@app.route('/update_project', methods=['POST'])
+def update_project():
+    token = request.form['token']
+    p_id = request.form['p_id']
+    attribute = request.form['attribute']
+    value = request.form['value']
+    user = User.verify_auth_token(token)
+    if not user:
+        return("False")
+    return(str(fm.update_project(int(p_id), attribute, value, user)))
 
 if __name__ == '__main__':
     # to be refactored during deployment

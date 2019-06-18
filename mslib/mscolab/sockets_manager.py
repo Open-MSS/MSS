@@ -27,12 +27,15 @@
 from flask_socketio import SocketIO, join_room
 from flask import request
 import logging
+import json
 
 from mslib.mscolab.models import Permission, User
 from mslib.mscolab.chat_manager import ChatManager
+from mslib.mscolab.file_manager import FileManager
 
 socketio = SocketIO()
 cm = ChatManager()
+fm = FileManager()
 
 
 class SocketsManager(object):
@@ -90,13 +93,12 @@ class SocketsManager(object):
         """
         json is a dictionary version of data sent to back-end
         """
-        logging.debug(json)
         p_id = json['p_id']
         user = User.verify_auth_token(json['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         if perm:
-            socketio.emit('chat-message-client', json['message_text'], room=str(p_id))
             cm.add_message(user, json['message_text'], str(p_id))
+            socketio.emit('chat-message-client', json['message_text'], room=str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
         """
@@ -110,6 +112,14 @@ class SocketsManager(object):
             return False
         return True
 
+    def handle_file_save(self, json):
+        p_id = json['p_id']
+        content = json['content']
+        user = User.verify_auth_token(json['token'])
+        perm = self.permission_check_emit(user.id, int(p_id))
+        # if permission is correct and file saved properly
+        if perm and fm.save_file(int(p_id), content):
+            socketio.emit('file-changed', json.dumps({"p_id":p_id}), room=str(p_id))
 
 sm = SocketsManager()
 
@@ -118,3 +128,4 @@ socketio.on_event('connect', sm.handle_connect)
 socketio.on_event('start', sm.handle_start_event)
 socketio.on_event('disconnect', sm.handle_disconnect)
 socketio.on_event('chat-message', sm.handle_message)
+socketio.on_event('file-save', sm.handle_file_save)
