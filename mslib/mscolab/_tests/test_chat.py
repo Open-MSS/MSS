@@ -38,7 +38,7 @@ from mslib.mscolab.sockets_manager import cm
 from mslib._tests.constants import MSCOLAB_URL_TEST
 
 
-class Test_Sockets(object):
+class Test_Chat(object):
 
     def setup(self):
         self.sockets = []

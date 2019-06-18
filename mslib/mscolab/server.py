@@ -137,7 +137,7 @@ def get_project():
     user = User.verify_auth_token(token)
     if not user:
         return("False")
-    result = fm.get_file(int(p_id))
+    result = fm.get_file(int(p_id), user)
     if result == False:
         return("False")
     return(json.dumps({"content": result}))
