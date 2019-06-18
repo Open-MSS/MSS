@@ -24,6 +24,7 @@
     limitations under the License.
 """
 import fs
+import os
 
 from mslib.mscolab.models import db, Project, Permission, User
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
@@ -148,7 +149,9 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return(False)
         Permission.query.filter_by(p_id=p_id).delete()
-        Project.query.filter_by(id=p_id).delete()
+        project = Project.query.filter_by(id=p_id).first()
+        os.remove(os.path.join(MSCOLAB_DATA_DIR, project.path))
+        project = Project.query.filter_by(id=p_id).delete()
         db.session.commit()
         return(True)
 
@@ -177,13 +180,17 @@ class FileManager(object):
         return(project_file.write(content))
         return(True)
 
-    def get_file(self, p_id):
+    def get_file(self, p_id, user):
         """
         p_id: project-id
         """
+        perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
+        if not perm:
+            return(False)
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return(False)
         data = fs.open_fs(MSCOLAB_DATA_DIR)
         project_file = data.open(project.path, 'r')
+        print(project_file)
         return(project_file.read())
