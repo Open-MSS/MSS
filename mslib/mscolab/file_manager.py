@@ -29,8 +29,8 @@ from mslib.mscolab.models import db, Project, Permission, User
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
 
 
-class ChatManager(object):
-    """Class with handler functions for chat related functionalities"""
+class FileManager(object):
+    """Class with handler functions for file related functionalities"""
 
     def __init__(self):
         pass
@@ -40,8 +40,9 @@ class ChatManager(object):
         path: path to the project
         description: description of the project
         """
-        proj_available = Project.query.filter_by(path=path)
+        proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
+            print("hello there", proj_available.path, proj_available.description)
             return(False)
         project = Project(path, description)
         db.session.add(project)
@@ -51,8 +52,8 @@ class ChatManager(object):
         db.session.add(perm)
         db.session.commit()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        with data.open(project.path) as project_file:
-            project_file.writetext(STUB_CODE)
+        project_file = data.open(project.path, 'w')
+        project_file.write(STUB_CODE)
         return(True)
 
     def add_permission(self, p_id, u_id, access_level, user):
@@ -121,7 +122,10 @@ class ChatManager(object):
         """
         if not self.is_admin(user.id, p_id):
             return(False)
-        project = Project.query.filter_by(p_id=p_id).first()
+        # this needs change of filename. ToDo
+        if attribute == "path":
+            return(False)
+        project = Project.query.filter_by(id=p_id).first()
         setattr(project, attribute, value)
         db.session.commit()
         return(True)
@@ -156,7 +160,7 @@ class ChatManager(object):
         users = []
         for permission in permissions:
             user = User.query.filter_by(id=permission.u_id).first()
-            users.push({"username": user.username, "access_level": permission.access_level})
+            users.append({"username": user.username, "access_level": permission.access_level})
         return(users)
 
     def save_file(self, p_id, content):
@@ -169,8 +173,8 @@ class ChatManager(object):
         if not project:
             return(False)
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        with data.open(project.path) as project_file:
-            project_file.writetext(content)
+        project_file = data.open(project.path, 'w')
+        return(project_file.write(content))
         return(True)
 
     def get_file(self, p_id):
@@ -181,5 +185,5 @@ class ChatManager(object):
         if not project:
             return(False)
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        project_file = data.open(project.path)
+        project_file = data.open(project.path, 'r')
         return(project_file.read())
