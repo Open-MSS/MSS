@@ -50,6 +50,7 @@ def hello():
 
 # User related routes
 
+
 def check_login(emailid, password):
     user = User.query.filter_by(emailid=str(emailid)).first()
     if user:
@@ -130,6 +131,7 @@ def create_project():
         return("False")
     return(str(fm.create_project(path, description, user)))
 
+
 @app.route('/get_project', methods=['GET'])
 def get_project():
     token = request.values['token']
@@ -138,9 +140,10 @@ def get_project():
     if not user:
         return("False")
     result = fm.get_file(int(p_id), user)
-    if result == False:
+    if result is False:
         return("False")
     return(json.dumps({"content": result}))
+
 
 @app.route('/authorized_users', methods=['GET'])
 def authorized_users():
@@ -151,6 +154,7 @@ def authorized_users():
         return("False")
     return(json.dumps({"users": fm.get_authorized_users(int(p_id))}))
 
+
 @app.route('/projects', methods=['GET'])
 def get_projects():
     token = request.values['token']
@@ -158,6 +162,7 @@ def get_projects():
     if not user:
         return("False")
     return(json.dumps({"projects": fm.list_projects(user)}))
+
 
 @app.route('/delete_project', methods=["POST"])
 def delete_project():
@@ -167,6 +172,7 @@ def delete_project():
     if not user:
         return("False")
     return(str(fm.delete_file(int(p_id), user)))
+
 
 @app.route('/add_permission', methods=['POST'])
 def add_permission():
@@ -179,6 +185,7 @@ def add_permission():
         return("False")
     return(str(fm.add_permission(int(p_id), int(u_id), access_level, user)))
 
+
 @app.route('/revoke_permission', methods=['POST'])
 def revoke_permission():
     token = request.form['token']
@@ -188,6 +195,7 @@ def revoke_permission():
     if not user:
         return("False")
     return(str(fm.revoke_permission(int(p_id), int(u_id), user)))
+
 
 @app.route('/modify_permission', methods=['POST'])
 def modify_permission():
@@ -200,6 +208,7 @@ def modify_permission():
         return("False")
     return(str(fm.update_access_level(int(p_id), int(u_id), access_level, user)))
 
+
 @app.route('/update_project', methods=['POST'])
 def update_project():
     token = request.form['token']
@@ -210,6 +219,7 @@ def update_project():
     if not user:
         return("False")
     return(str(fm.update_project(int(p_id), attribute, value, user)))
+
 
 if __name__ == '__main__':
     # to be refactored during deployment

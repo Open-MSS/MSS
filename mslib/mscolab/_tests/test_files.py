@@ -30,7 +30,8 @@ import json
 import logging
 import os
 from flask import Flask
-import datetime
+from functools import partial
+import time
 
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, MSCOLAB_DATA_DIR
 from mslib.mscolab.models import db, User, Project
@@ -41,6 +42,7 @@ from mslib._tests.constants import MSCOLAB_URL_TEST
 class Test_Files(object):
     def setup(self):
         self.sockets = []
+        self.file_message_counter = [0] * 2
         cwd = os.getcwd()
         path_to_server = cwd + "/mslib/mscolab/server.py"
         self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
@@ -55,15 +57,15 @@ class Test_Files(object):
         db.init_app(self.app)
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
-    
+
     def test_create_project(self):
         with self.app.app_context():
             fm.create_project('test_path', 'test message', self.user)
             # check file existence
-            assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'test_path')) == True
+            assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db
             p = Project.query.filter_by(path="test_path")
-            assert p != None
+            assert p is not None
 
     def test_projects(self):
         with self.app.app_context():
@@ -74,7 +76,7 @@ class Test_Files(object):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
-            assert fm.add_permission(p_id, 9, 'collaborator', self.user) == True
+            assert fm.add_permission(p_id, 9, 'collaborator', self.user) is True
             user2 = User.query.filter_by(id=9).first()
             projects = fm.list_projects(user2)
             assert len(projects) == 3
@@ -83,28 +85,72 @@ class Test_Files(object):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
-            assert fm.update_access_level(p_id, 9, 'viewer', self.user) == True
+            assert fm.update_access_level(p_id, 9, 'viewer', self.user) is True
             user2 = User.query.filter_by(id=9).first()
             projects = fm.list_projects(user2)
             assert projects[-1]["access_level"] == "viewer"
+
+    def test_file_save(self):
+        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+                          'emailid': 'a',
+                          'password': 'a'
+                          })
+        response1 = json.loads(r.text)
+        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+                          'emailid': 'b',
+                          'password': 'b'
+                          })
+        response2 = json.loads(r.text)
+
+        def handle_chat_message(sno, message):
+            self.file_message_counter[sno - 1] += 1
+
+        sio1 = socketio.Client()
+        sio2 = socketio.Client()
+
+        sio1.on('file-changed', handler=partial(handle_chat_message, 1))
+        sio2.on('file-changed', handler=partial(handle_chat_message, 2))
+        sio1.connect(MSCOLAB_URL_TEST)
+        sio2.connect(MSCOLAB_URL_TEST)
+        with self.app.app_context():
+            projects = fm.list_projects(self.user)
+            p_id = projects[-1]["p_id"]
+            user2 = User.query.filter_by(id=9).first()
+            sio1.emit('start', response1)
+            sio2.emit('start', response2)
+            time.sleep(5)
+            sio1.emit('file-save', {
+                      "p_id": p_id,
+                      "token": response1['token'],
+                      "content": "test"
+                      })
+
+            # sio1.sleep(1)
+            # sio2.sleep(1)
+            # sio3.sleep(1)
+            time.sleep(3)
+            assert self.file_message_counter[0] == 1
+            assert self.file_message_counter[1] == 1
+            assert fm.get_file(p_id, user2) == "test"
+            self.sockets.append(sio1)
+            self.sockets.append(sio2)
 
     def test_revoke_permission(self):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
-            assert fm.revoke_permission(p_id, 9, self.user) == True
+            assert fm.revoke_permission(p_id, 9, self.user) is True
             user2 = User.query.filter_by(id=9).first()
             projects = fm.list_projects(user2)
             assert len(projects) == 2
-
 
     def test_get_project(self):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
-            assert fm.get_file(p_id, self.user) != False
+            assert fm.get_file(p_id, self.user) is not False
             user2 = User.query.filter_by(id=9).first()
-            assert fm.get_file(p_id, user2) == False
+            assert fm.get_file(p_id, user2) is False
 
     def test_authorized_users(self):
         with self.app.app_context():
@@ -117,17 +163,17 @@ class Test_Files(object):
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
             # ToDo when moving files, it should be able to change paths as well
-            assert fm.update_project(p_id, 'path', 'dummy', self.user) == False
-            assert fm.update_project(p_id, 'description', 'dummy', self.user) == True
+            assert fm.update_project(p_id, 'path', 'dummy', self.user) is False
+            assert fm.update_project(p_id, 'description', 'dummy', self.user) is True
 
     def test_delete_project(self):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
-            assert fm.delete_file(p_id, self.user) == True
-            assert fm.delete_file(p_id, self.user) == False
+            assert fm.delete_file(p_id, self.user) is True
+            assert fm.delete_file(p_id, self.user) is False
 
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-            self.proc.kill()
+        self.proc.kill()
