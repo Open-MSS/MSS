@@ -123,10 +123,13 @@ class FileManager(object):
         """
         if not self.is_admin(user.id, p_id):
             return(False)
-        # this needs change of filename. ToDo
-        if attribute == "path":
-            return(False)
         project = Project.query.filter_by(id=p_id).first()
+        if attribute == "path":
+            oldpath = os.path.join(MSCOLAB_DATA_DIR, project.path)
+            newpath = os.path.join(MSCOLAB_DATA_DIR, value)
+            if os.path.exists(newpath):
+                return(False)
+            os.rename(oldpath, newpath)
         setattr(project, attribute, value)
         db.session.commit()
         return(True)
