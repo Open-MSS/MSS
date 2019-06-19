@@ -162,8 +162,8 @@ class Test_Files(object):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
-            # ToDo when moving files, it should be able to change paths as well
-            assert fm.update_project(p_id, 'path', 'dummy', self.user) is False
+            assert fm.update_project(p_id, 'path', 'dummy', self.user) is True
+            assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'dummy'))
             assert fm.update_project(p_id, 'description', 'dummy', self.user) is True
 
     def test_delete_project(self):
