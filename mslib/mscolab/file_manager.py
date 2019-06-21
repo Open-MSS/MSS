@@ -43,8 +43,7 @@ class FileManager(object):
         """
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
-            print("hello there", proj_available.path, proj_available.description)
-            return(False)
+            return False
         project = Project(path, description)
         db.session.add(project)
         db.session.flush()
@@ -55,7 +54,7 @@ class FileManager(object):
         data = fs.open_fs(MSCOLAB_DATA_DIR)
         project_file = data.open(project.path, 'w')
         project_file.write(STUB_CODE)
-        return(True)
+        return True
 
     def add_permission(self, p_id, u_id, access_level, user):
         """
@@ -65,14 +64,14 @@ class FileManager(object):
         user: authorized user, making this request
         """
         if not self.is_admin(user.id, p_id):
-            return(False)
+            return False
         perm_old = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if perm_old:
-            return(False)
+            return False
         perm_new = Permission(u_id, p_id, access_level)
         db.session.add(perm_new)
         db.session.commit()
-        return(True)
+        return True
 
     def revoke_permission(self, p_id, u_id, user):
         """
@@ -82,16 +81,16 @@ class FileManager(object):
         """
         deleted = None
         if user.id == u_id:
-            return(False)
+            return False
         if not self.is_admin(user.id, p_id):
-            return(False)
+            return False
         else:
             deleted = Permission.query.filter_by(u_id=u_id, p_id=p_id).delete()
             db.session.commit()
         if deleted:
-            return(True)
+            return True
         else:
-            return(False)
+            return False
 
     def list_projects(self, user):
         """
@@ -101,7 +100,7 @@ class FileManager(object):
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
             projects.append({"p_id": permission.p_id, "access_level": permission.access_level})
-        return(projects)
+        return projects
 
     def is_admin(self, u_id, p_id):
         """
@@ -110,10 +109,10 @@ class FileManager(object):
         """
         perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if not perm:
-            return(False)
+            return False
         elif perm.access_level != "admin":
-            return(False)
-        return(True)
+            return False
+        return True
 
     def update_project(self, p_id, attribute, value, user):
         """
@@ -122,27 +121,27 @@ class FileManager(object):
         user: logged in user
         """
         if not self.is_admin(user.id, p_id):
-            return(False)
+            return False
         project = Project.query.filter_by(id=p_id).first()
         if attribute == "path":
             oldpath = os.path.join(MSCOLAB_DATA_DIR, project.path)
             newpath = os.path.join(MSCOLAB_DATA_DIR, value)
             if os.path.exists(newpath):
-                return(False)
+                return False
             os.rename(oldpath, newpath)
         setattr(project, attribute, value)
         db.session.commit()
-        return(True)
+        return True
 
     def update_access_level(self, p_id, u_id, access_level, user):
         if not self.is_admin(user.id, p_id):
-            return(False)
+            return False
         perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if not perm:
-            return(False)
+            return False
         perm.access_level = access_level
         db.session.commit()
-        return(True)
+        return True
 
     def delete_file(self, p_id, user):
         """
@@ -150,13 +149,13 @@ class FileManager(object):
         user: logged in user
         """
         if not self.is_admin(user.id, p_id):
-            return(False)
+            return False
         Permission.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
         os.remove(os.path.join(MSCOLAB_DATA_DIR, project.path))
         project = Project.query.filter_by(id=p_id).delete()
         db.session.commit()
-        return(True)
+        return True
 
     def get_authorized_users(self, p_id):
         """
@@ -167,7 +166,7 @@ class FileManager(object):
         for permission in permissions:
             user = User.query.filter_by(id=permission.u_id).first()
             users.append({"username": user.username, "access_level": permission.access_level})
-        return(users)
+        return users
 
     def save_file(self, p_id, content):
         """
@@ -177,11 +176,10 @@ class FileManager(object):
         """
         project = Project.query.filter_by(id=p_id).first()
         if not project:
-            return(False)
+            return False
         data = fs.open_fs(MSCOLAB_DATA_DIR)
         project_file = data.open(project.path, 'w')
-        return(project_file.write(content))
-        return(True)
+        return project_file.write(content)
 
     def get_file(self, p_id, user):
         """
@@ -189,11 +187,10 @@ class FileManager(object):
         """
         perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
         if not perm:
-            return(False)
+            return False
         project = Project.query.filter_by(id=p_id).first()
         if not project:
-            return(False)
+            return False
         data = fs.open_fs(MSCOLAB_DATA_DIR)
         project_file = data.open(project.path, 'r')
-        print(project_file)
-        return(project_file.read())
+        return project_file.read()
