@@ -38,7 +38,7 @@ from mslib.mscolab.sockets_manager import cm
 from mslib._tests.constants import MSCOLAB_URL_TEST
 
 
-class Test_Sockets(object):
+class Test_Chat(object):
 
     def setup(self):
         self.sockets = []
@@ -77,13 +77,22 @@ class Test_Sockets(object):
                  "token": response['token'],
                  "message_text": "message from 1"
                  })
+        # testing non-ascii message
+        sio.emit("chat-message", {
+                 "p_id": 1,
+                 "token": response['token'],
+                 "message_text": "® non ascii"
+                 })
         sio.sleep(2)
         with self.app.app_context():
             message = Message.query.filter_by(text="message from 1").first()
             assert message.p_id == 1
             assert message.u_id == 8
 
+            message = Message.query.filter_by(text="® non ascii").first()
+            assert message is not None
             Message.query.filter_by(text="message from 1").delete()
+            Message.query.filter_by(text="® non ascii").delete()
             db.session.commit()
 
     def test_get_messages(self):

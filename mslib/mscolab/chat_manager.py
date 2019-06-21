@@ -52,4 +52,4 @@ class ChatManager(object):
         if last_timestamp:
             messages = messages.filter(Message.created_at > last_timestamp)
         messages = messages.all()
-        return(messages)
+        return messages
