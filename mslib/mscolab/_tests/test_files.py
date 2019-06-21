@@ -60,7 +60,8 @@ class Test_Files(object):
 
     def test_create_project(self):
         with self.app.app_context():
-            fm.create_project('test_path', 'test message', self.user)
+            assert fm.create_project('test_path', 'test message', self.user)
+            assert fm.create_project('test/path', 'sth', self.user) is False
             # check file existence
             assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db

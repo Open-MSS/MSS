@@ -24,7 +24,6 @@
     limitations under the License.
 """
 import fs
-import os
 
 from mslib.mscolab.models import db, Project, Permission, User
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
@@ -41,6 +40,9 @@ class FileManager(object):
         path: path to the project
         description: description of the project
         """
+        # set codes on these later
+        if path.find("/") != -1 or path.find("\\") != -1:
+            return False
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
             return False
@@ -124,11 +126,13 @@ class FileManager(object):
             return False
         project = Project.query.filter_by(id=p_id).first()
         if attribute == "path":
-            oldpath = os.path.join(MSCOLAB_DATA_DIR, project.path)
-            newpath = os.path.join(MSCOLAB_DATA_DIR, value)
-            if os.path.exists(newpath):
+            if value.find("/") != -1 or value.find("\\") != -1:
                 return False
-            os.rename(oldpath, newpath)
+            data = fs.open_fs(MSCOLAB_DATA_DIR)
+            if data.exists(value):
+                return False
+            # will be move_dir when projects are introduced
+            data.move(project.path, value)
         setattr(project, attribute, value)
         db.session.commit()
         return True
@@ -152,7 +156,8 @@ class FileManager(object):
             return False
         Permission.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
-        os.remove(os.path.join(MSCOLAB_DATA_DIR, project.path))
+        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        data.remove(project.path)
         project = Project.query.filter_by(id=p_id).delete()
         db.session.commit()
         return True
