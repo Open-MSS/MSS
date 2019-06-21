@@ -95,12 +95,6 @@ def register_user(email, password, username):
     db.session.commit()
     return 'True'
 
-# def verify_user(form):
-#     if User.verify_auth_token(form.get('token', False)):
-#         return False
-#     else:
-#         return True
-
 
 def verify_user(func):
     @functools.wraps(func)

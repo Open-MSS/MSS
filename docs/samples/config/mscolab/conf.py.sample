@@ -26,6 +26,7 @@
 
 # ToDo refactor
 # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+
 import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sqlite_file_path = os.path.join(dir_path, 'data', 'mscolab.db')
@@ -38,7 +39,7 @@ DB_PASSWORD = 'password'
 DB_NAME = 'mscolab'
 START_SERVER_DURING_TEST = True
 
-# mscolab data directory #ToDo merge this with $MSS directory
+# mscolab data directory # ToDo merge this with $MSS directory
 MSCOLAB_DATA_DIR = os.path.join(dir_path, 'data')
 STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
   <FlightTrack version="1.7.6">
