@@ -108,7 +108,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -203,7 +203,7 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -286,7 +286,7 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -365,7 +365,7 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
             # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
             lonmesh_ = lonmesh_ - ((self.lons[1] - self.lons[0]) / 2.)
             latmesh_ = latmesh_ - ((self.lats[1] - self.lats[0]) / 2.)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -429,7 +429,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -492,13 +492,13 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         #
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
         lonmesh = outmesh[:, :, 0]
         latmesh = outmesh[:, :, 1]
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -683,7 +683,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -778,7 +778,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -889,7 +889,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -978,7 +978,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1072,7 +1072,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1157,7 +1157,7 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1229,7 +1229,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
         lonmesh_ = lonmesh_ - ((self.lons[1] - self.lons[0]) / 2.)
         latmesh_ = latmesh_ - ((self.lats[1] - self.lats[0]) / 2.)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1242,7 +1242,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                        edgecolors='none')
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1310,7 +1310,7 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
         lonmesh_ -= ((self.lons[1] - self.lons[0]) / 2.)
         latmesh_ -= ((self.lats[1] - self.lats[0]) / 2.)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1324,7 +1324,7 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                        edgecolors='none')
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1395,7 +1395,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1505,7 +1505,7 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1597,7 +1597,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1668,7 +1668,7 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1750,7 +1750,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1822,7 +1822,7 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above
@@ -1889,7 +1889,7 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
     def _plot_style(self, ax):
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        outmesh = ccrs.PlateCarree().transform_points(ccrs.Geodetic(), lonmesh_, latmesh_)
+        outmesh = self.src_proj.transform_points(self.user_proj, lonmesh_, latmesh_)
         # outmesh.shape -> (5, 10, 3)
 
         # separate x_array, y_array from the result(x,y,z) above

@@ -119,6 +119,9 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         if crs is not None:
             proj_params, bbox_units = [get_projection_params(crs)[_x] for _x in ("basemap", "bbox")]
 
+        user_proj = proj_params.get('projection')
+        src_proj = ccrs.PlateCarree()
+
         logging.debug("plotting data..")
 
         # Check if required data is available.
@@ -138,6 +141,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.resolution = resolution
         self.noframe = noframe
         self.crs = crs
+        self.user_proj = user_proj
+        self.src_proj = src_proj
 
         # Derive additional data fields and make the plot.
         logging.debug("preparing additional data fields..")
@@ -150,7 +155,6 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         fig = plt.figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
         logging.debug("\twith frame and legends" if not noframe else
                       "\twithout frame")
-        user_proj = proj_params.get('projection')
 
         if noframe:
             ax = plt.axes([0.0, 0.0, 1.0, 1.0], projection=user_proj)
@@ -158,22 +162,21 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             ax = plt.axes([0.05, 0.05, 0.9, 0.88], projection=user_proj)
 
         if bbox_units == "degree":
-            ax.set_extent([bbox[0], bbox[2], bbox[1], bbox[3]], crs=ccrs.PlateCarree())
+            ax.set_extent([bbox[0], bbox[2], bbox[1], bbox[3]], src_proj)
         elif bbox_units.startswith("meter"):
             # convert meters to degrees
             ct_center = [float(_x) for _x in bbox_units[6:-1].split(",")]
-            center_x, center_y = user_proj.transform_point(ct_center[0], ct_center[1], src_crs=ccrs.PlateCarree())
-            bbox_0, bbox_2 = ccrs.PlateCarree().transform_point(
+            center_x, center_y = user_proj.transform_point(ct_center[0], ct_center[1], src_crs=src_proj)
+            bbox_0, bbox_2 = src_proj.transform_point(
                 bbox[0] + center_x, bbox[2] + center_y, src_crs=user_proj)
-            bbox_1, bbox_3 = ccrs.PlateCarree().transform_point(
+            bbox_1, bbox_3 = src_proj.transform_point(
                 bbox[1] + center_x, bbox[3] + center_y, src_crs=user_proj)
-            ax.set_extent([bbox_0, bbox_1, bbox_2, bbox_3], crs=ccrs.PlateCarree())
+            ax.set_extent([bbox_0, bbox_1, bbox_2, bbox_3], crs=src_proj)
         elif bbox_units == "no":
             pass
         else:
             raise ValueError("bbox_units '{}' not known.".format(bbox_units))
 
-        ax.set_extent([bbox[0], bbox[2], bbox[1], bbox[3]], crs=ccrs.PlateCarree())
         ax.coastlines(resolution='10m')
         ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=1)
         ax.outline_patch.set_edgecolor('white')
