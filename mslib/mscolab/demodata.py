@@ -92,11 +92,11 @@ if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         db.session.commit()
 
         data = [
-            (1, 8, 1, 'admin'),
+            (1, 8, 1, 'creator'),
             (2, 9, 1, 'collaborator'),
-            (3, 9, 2, 'admin'),
+            (3, 9, 2, 'creator'),
             (4, 10, 2, 'collaborator'),
-            (5, 10, 3, 'admin'),
+            (5, 10, 3, 'creator'),
             (6, 8, 3, 'collaborator'),
             (7, 10, 1, 'viewer'),
         ]

@@ -51,7 +51,7 @@ SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
 
 
-INSERT INTO `permissions` (`id`, `u_id`, `p_id`, `access_level`) VALUES (1, 8,  1,  'admin'),(2, 9,  1,  'collaborator'),(3, 9,  2,  'admin'),(4, 10, 2,  'collaborator'),(5, 10, 3,  'admin'),(6, 8,  3,  'collaborator'),(7, 10, 1,  'viewer');
+INSERT INTO `permissions` (`id`, `u_id`, `p_id`, `access_level`) VALUES (1, 8,  1,  'creator'),(2, 9,  1,  'collaborator'),(3, 9,  2,  'creator'),(4, 10, 2,  'collaborator'),(5, 10, 3,  'creator'),(6, 8,  3,  'collaborator'),(7, 10, 1,  'viewer');
 
 INSERT INTO `projects` (`id`, `path`, `description`) VALUES (1, 'one',  'a, b'),(2, 'two',  'b, c'),(3, 'three',  'a, c');
 

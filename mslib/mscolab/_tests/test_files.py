@@ -147,8 +147,10 @@ class Test_Files(object):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
-            assert fm.revoke_permission(p_id, 9, self.user) is True
+            assert fm.update_access_level(p_id, 9, 'admin', self.user) is True
             user2 = User.query.filter_by(id=9).first()
+            assert fm.revoke_permission(p_id, 8, user2) is False
+            assert fm.revoke_permission(p_id, 9, self.user) is True
             projects = fm.list_projects(user2)
             assert len(projects) == 2
 
@@ -178,6 +180,8 @@ class Test_Files(object):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
+            user2 = User.query.filter_by(id=9).first()
+            assert fm.delete_file(p_id, user2) is False
             assert fm.delete_file(p_id, self.user) is True
             assert fm.delete_file(p_id, self.user) is False
 
