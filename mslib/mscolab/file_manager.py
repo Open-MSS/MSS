@@ -25,7 +25,6 @@
 """
 import fs
 import difflib
-import logging
 
 from mslib.mscolab.models import db, Project, Permission, User, Change
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
@@ -52,7 +51,7 @@ class FileManager(object):
         db.session.add(project)
         db.session.flush()
         project_id = project.id
-        perm = Permission(user.id, project_id, "admin")
+        perm = Permission(user.id, project_id, "creator")
         db.session.add(perm)
         db.session.commit()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
@@ -89,6 +88,9 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         else:
+            perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+            if perm.access_level == "creator":
+                return False
             deleted = Permission.query.filter_by(u_id=u_id, p_id=p_id).delete()
             db.session.commit()
         if deleted:
@@ -114,9 +116,19 @@ class FileManager(object):
         perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if not perm:
             return False
-        elif perm.access_level != "admin":
+        elif perm.access_level != "admin" and perm.access_level != "creator":
             return False
         return True
+
+    def auth_type(self, u_id, p_id):
+        """
+        p_id: project id
+        u_id: user-id
+        """
+        perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+        if not perm:
+            return False
+        return perm.access_level
 
     def update_project(self, p_id, attribute, value, user):
         """
@@ -154,7 +166,7 @@ class FileManager(object):
         p_id: project id
         user: logged in user
         """
-        if not self.is_admin(user.id, p_id):
+        if self.auth_type(user.id, p_id) != "creator":
             return False
         Permission.query.filter_by(p_id=p_id).delete()
         Change.query.filter_by(p_id=p_id).delete()
