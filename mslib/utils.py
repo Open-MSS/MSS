@@ -30,6 +30,7 @@ from __future__ import division
 
 from past.builtins import basestring
 
+
 import datetime
 from fs import open_fs, errors
 import json
@@ -40,11 +41,8 @@ import os
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import werkzeug.datastructures
+import cartopy.geodesic as gd
 
-try:
-    import mpl_toolkits.basemap.pyproj as pyproj
-except ImportError:
-    import pyproj
 
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
@@ -117,8 +115,8 @@ def get_distance(coord0, coord1):
     Returns:
         length of distance in km
     """
-    pr = pyproj.Geod(ellps='WGS84')
-    return (pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.)
+    pr = gd.Geodesic()
+    return (pr.inverse([coord0[1], coord0[0]], [coord1[1], coord1[0]]).base[0, 0] / 1000.)
 
 
 def find_location(lat, lon, tolerance=5):
@@ -415,8 +413,7 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
         lons = np.linspace(p1[LON], p2[LON], numpoints)
     elif connection == 'greatcircle':
         if numpoints > 2:
-            gc = pyproj.Geod(ellps="WGS84")
-            pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints - 2)
+            pts = npts_cartopy((p1[LON], p1[LAT]), (p2[LON], p2[LAT]), numpoints - 2)
             lats = np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]])
             lons = np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]])
         else:
@@ -605,3 +602,13 @@ def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
         writer.write(u"</%s>%s" % (self.tagName, newl))
     else:
         writer.write(u"/>%s" % (newl))
+
+
+def npts_cartopy(coord1, coord2, numpoints):
+    distance = get_distance(coord1, coord2) / (numpoints + 1)
+    new_geo = gd.Geodesic()
+    all_distance = [distance * i * 1000 for i in range(1, numpoints + 1)]
+    initial_azimuth = new_geo.inverse(coord1, coord2).base[0, 1]
+    coords = new_geo.direct(coord1, initial_azimuth, all_distance)
+    points = list(zip(coords[:, 0], coords[:, 1]))
+    return points
