@@ -34,7 +34,7 @@ from functools import partial
 import time
 
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, MSCOLAB_DATA_DIR
-from mslib.mscolab.models import db, User, Project
+from mslib.mscolab.models import db, User, Project, Change
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
 
@@ -131,13 +131,15 @@ class Test_Files(object):
                       "token": response1['token'],
                       "content": "no ive changed the file now"
                       })
-            # sio1.sleep(1)
-            # sio2.sleep(1)
-            # sio3.sleep(1)
             time.sleep(3)
             assert self.file_message_counter[0] == 2
             assert self.file_message_counter[1] == 2
             assert fm.get_file(p_id, user2) == "no ive changed the file now"
+            changes = fm.get_changes(p_id, self.user)
+            assert len(changes) == 2
+            change = Change.query.first()
+            change_function_result = fm.get_change_by_id(change.id, self.user)
+            assert change.content == change_function_result['content']
             self.sockets.append(sio1)
             self.sockets.append(sio2)
 

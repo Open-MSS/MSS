@@ -160,7 +160,7 @@ class Change(db.Model):
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     content = db.Column(db.TEXT)
-    comment = db.Column(db.String(255), default="")
+    comment = db.Column(db.String(255), default=None)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def __init__(self, p_id, u_id, content, comment=""):
