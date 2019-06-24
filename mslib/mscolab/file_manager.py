@@ -24,8 +24,10 @@
     limitations under the License.
 """
 import fs
+import difflib
+import logging
 
-from mslib.mscolab.models import db, Project, Permission, User
+from mslib.mscolab.models import db, Project, Permission, User, Change
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
 
 
@@ -155,6 +157,7 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         Permission.query.filter_by(p_id=p_id).delete()
+        Change.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
         data.remove(project.path)
@@ -173,7 +176,7 @@ class FileManager(object):
             users.append({"username": user.username, "access_level": permission.access_level})
         return users
 
-    def save_file(self, p_id, content):
+    def save_file(self, p_id, content, user, comment=None):
         """
         p_id: project-id,
         content: content of the file to be saved
@@ -183,6 +186,16 @@ class FileManager(object):
         if not project:
             return False
         data = fs.open_fs(MSCOLAB_DATA_DIR)
+        project_file = data.open(project.path, 'r')
+        old_data = project_file.read()
+        project_file.close()
+        old_data_lines = old_data.splitlines()
+        content_lines = content.splitlines()
+        diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+        diff_content = '\n'.join(list(diff))
+        change = Change(p_id, user.id, diff_content, comment)
+        db.session.add(change)
+        db.session.commit()
         project_file = data.open(project.path, 'w')
         return project_file.write(content)
 

@@ -115,10 +115,11 @@ class SocketsManager(object):
     def handle_file_save(self, json_req):
         p_id = json_req['p_id']
         content = json_req['content']
+        comment = json_req.get('comment', "")
         user = User.verify_auth_token(json_req['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         # if permission is correct and file saved properly
-        if perm and fm.save_file(int(p_id), content):
+        if perm and fm.save_file(int(p_id), content, user, comment):
             socketio.emit('file-changed', json.dumps({"p_id": p_id}), room=str(p_id))
 
 

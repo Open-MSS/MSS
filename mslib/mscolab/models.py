@@ -152,3 +152,19 @@ class Message(db.Model):
 
     def __repr__(self):
         return('<Message %s user %s in %s>'.format(self.text, self.u_id, self.p_id))
+
+class Change(db.Model):
+
+    __tablename__ = "changes"
+    id = db.Column(db.Integer, primary_key=True)
+    p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    content = db.Column(db.TEXT)
+    comment = db.Column(db.String(255), default="")
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def __init__(self, p_id, u_id, content, comment=""):
+        self.p_id = p_id
+        self.u_id = u_id
+        self.content = content
+        self.comment = comment
