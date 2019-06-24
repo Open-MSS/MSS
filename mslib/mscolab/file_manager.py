@@ -202,6 +202,7 @@ class FileManager(object):
     def get_file(self, p_id, user):
         """
         p_id: project-id
+        user: user of this request
         """
         perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
         if not perm:
@@ -212,3 +213,27 @@ class FileManager(object):
         data = fs.open_fs(MSCOLAB_DATA_DIR)
         project_file = data.open(project.path, 'r')
         return project_file.read()
+
+    def get_changes(self, p_id, user):
+        """
+        p_id: project-id
+        user: user of this request
+        """
+        perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
+        if not perm:
+            return False
+        changes = Change.query.filter_by(p_id=p_id).all()
+        return list(map(lambda change: {'content': change.content,
+                                        'comment': change.comment,
+                                        'u_id': change.u_id}, changes))
+
+    def get_change_by_id(self, ch_id, user):
+        """
+        ch_id: change id
+        user: user of this request
+        """
+        change = Change.query.filter_by(id=ch_id).first()
+        perm = Permission.query.filter_by(u_id=user.id, p_id=change.p_id).first()
+        if not perm:
+            return False
+        return {'content': change.content, 'comment': change.comment, 'u_id': change.u_id}
