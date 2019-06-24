@@ -119,20 +119,25 @@ class Test_Files(object):
             user2 = User.query.filter_by(id=9).first()
             sio1.emit('start', response1)
             sio2.emit('start', response2)
-            time.sleep(5)
+            time.sleep(4)
             sio1.emit('file-save', {
                       "p_id": p_id,
                       "token": response1['token'],
                       "content": "test"
                       })
 
+            sio1.emit('file-save', {
+                      "p_id": p_id,
+                      "token": response1['token'],
+                      "content": "no ive changed the file now"
+                      })
             # sio1.sleep(1)
             # sio2.sleep(1)
             # sio3.sleep(1)
             time.sleep(3)
-            assert self.file_message_counter[0] == 1
-            assert self.file_message_counter[1] == 1
-            assert fm.get_file(p_id, user2) == "test"
+            assert self.file_message_counter[0] == 2
+            assert self.file_message_counter[1] == 2
+            assert fm.get_file(p_id, user2) == "no ive changed the file now"
             self.sockets.append(sio1)
             self.sockets.append(sio2)
 

@@ -39,7 +39,7 @@ CREATE TABLE `permissions` (`id` int(11) NOT NULL AUTO_INCREMENT,`u_id` int(11) 
 CREATE TABLE `messages` (`id` int(11) NOT NULL AUTO_INCREMENT,`u_id` int(11) DEFAULT NULL,`p_id` int(11) DEFAULT NULL,`text` BLOB NOT NULL,`created_at` timestamp default current_timestamp, PRIMARY KEY (`id`),FOREIGN KEY(u_id) REFERENCES users(id),FOREIGN KEY(p_id) REFERENCES projects(id));
 
 
-CREATE TABLE `changes` (`id` int(11) NOT NULL AUTO_INCREMENT,`u_id` int(11) DEFAULT NULL,`p_id` int(11) DEFAULT NULL,`content` BLOB NOT NULL,`created_at` timestamp default current_timestamp, PRIMARY KEY (`id`),FOREIGN KEY(u_id) REFERENCES users(id),FOREIGN KEY(p_id) REFERENCES projects(id));
+CREATE TABLE `changes` (`id` int(11) NOT NULL AUTO_INCREMENT,`u_id` int(11) DEFAULT NULL,`p_id` int(11) DEFAULT NULL,`content` BLOB NOT NULL,`comment` varchar(255) DEFAULT "",`created_at` timestamp default current_timestamp, PRIMARY KEY (`id`),FOREIGN KEY(u_id) REFERENCES users(id),FOREIGN KEY(p_id) REFERENCES projects(id));
 
 
 
