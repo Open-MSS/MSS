@@ -125,21 +125,25 @@ class Test_Files(object):
                       "token": response1['token'],
                       "content": "test"
                       })
-
+            # second file change
             sio1.emit('file-save', {
                       "p_id": p_id,
                       "token": response1['token'],
                       "content": "no ive changed the file now"
                       })
             time.sleep(3)
+            # check if there were events triggered related to file-save
             assert self.file_message_counter[0] == 2
             assert self.file_message_counter[1] == 2
+            # check if content is saved in file
             assert fm.get_file(p_id, user2) == "no ive changed the file now"
+            # check if change is saved properly
             changes = fm.get_changes(p_id, self.user)
             assert len(changes) == 2
             change = Change.query.first()
             change_function_result = fm.get_change_by_id(change.id, self.user)
             assert change.content == change_function_result['content']
+            # to disconnect sockets later
             self.sockets.append(sio1)
             self.sockets.append(sio2)
 

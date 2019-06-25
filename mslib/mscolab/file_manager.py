@@ -51,6 +51,7 @@ class FileManager(object):
         db.session.add(project)
         db.session.flush()
         project_id = project.id
+        # this is the only insertion with "creator" access_level
         perm = Permission(user.id, project_id, "creator")
         db.session.add(perm)
         db.session.commit()
@@ -69,7 +70,7 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         perm_old = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-        if perm_old:
+        if perm_old or (access_level == "creator"):
             return False
         perm_new = Permission(u_id, p_id, access_level)
         db.session.add(perm_new)
@@ -113,6 +114,7 @@ class FileManager(object):
         p_id: project id
         u_id: user-id
         """
+        # return true only if the user is admin or creator
         perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if not perm:
             return False
@@ -198,6 +200,10 @@ class FileManager(object):
         if not project:
             return False
         data = fs.open_fs(MSCOLAB_DATA_DIR)
+        """
+        old file is read, the diff between old and new is calculated and stored
+        as 'Change' in changes table. comment for each change is optional
+        """
         project_file = data.open(project.path, 'r')
         old_data = project_file.read()
         project_file.close()
@@ -230,6 +236,9 @@ class FileManager(object):
         """
         p_id: project-id
         user: user of this request
+
+        Get all changes, mostly to be used in the chat window, in the side panel
+        to render the recent changes.
         """
         perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
         if not perm:
@@ -243,6 +252,8 @@ class FileManager(object):
         """
         ch_id: change id
         user: user of this request
+
+        Get change related to id
         """
         change = Change.query.filter_by(id=ch_id).first()
         perm = Permission.query.filter_by(u_id=user.id, p_id=change.p_id).first()
