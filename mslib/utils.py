@@ -336,7 +336,8 @@ def get_projection_params(proj):
         if name == "stere":
             lon0, lat0, lat_ts = params[1:]
             proj_params = {
-                "basemap": {"projection": ccrs.Stereographic(central_longitude=lon0, central_latitude=lat0, true_scale_latitude=lat_ts)},
+                "basemap": {"projection": ccrs.Stereographic(
+                    central_longitude=lon0, central_latitude=lat0, true_scale_latitude=lat_ts)},
                 "bbox": "degree"}
         elif name == "lcc":
             lon0, lat0, lat1, lat2 = params[1:]
