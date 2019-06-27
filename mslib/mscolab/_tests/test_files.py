@@ -68,8 +68,9 @@ class Test_Files(object):
             p = Project.query.filter_by(path="test_path").first()
             assert p is not None
             # check permission for author
-            perm = Permission.query.filter_by(p_id=p.id, u_id=self.user.id).first()
-            assert perm.access_level == "creator"
+            perms = Permission.query.filter_by(p_id=p.id, access_level="creator").all()
+            assert len(perms) == 1
+            assert perms[0].u_id == self.user.id
 
     def test_projects(self):
         with self.app.app_context():
