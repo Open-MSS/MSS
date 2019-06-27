@@ -26,7 +26,7 @@
 import fs
 import difflib
 
-from mslib.mscolab.models import db, Project, Permission, User, Change
+from mslib.mscolab.models import db, Project, Permission, User, Change, Message
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
 
 
@@ -171,6 +171,8 @@ class FileManager(object):
         if self.auth_type(user.id, p_id) != "creator":
             return False
         Permission.query.filter_by(p_id=p_id).delete()
+        Change.query.filter_by(p_id=p_id).delete()
+        Message.query.filter_by(p_id=p_id).delete()
         Change.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
         data = fs.open_fs(MSCOLAB_DATA_DIR)

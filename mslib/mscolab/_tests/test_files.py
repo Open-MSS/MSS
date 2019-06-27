@@ -34,7 +34,7 @@ from functools import partial
 import time
 
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, MSCOLAB_DATA_DIR
-from mslib.mscolab.models import db, User, Project, Change
+from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
 
@@ -65,8 +65,11 @@ class Test_Files(object):
             # check file existence
             assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db
-            p = Project.query.filter_by(path="test_path")
+            p = Project.query.filter_by(path="test_path").first()
             assert p is not None
+            # check permission for author
+            perm = Permission.query.filter_by(p_id=p.id, u_id=self.user.id).first()
+            assert perm.access_level == "creator"
 
     def test_projects(self):
         with self.app.app_context():
@@ -188,6 +191,14 @@ class Test_Files(object):
             assert fm.delete_file(p_id, user2) is False
             assert fm.delete_file(p_id, self.user) is True
             assert fm.delete_file(p_id, self.user) is False
+            permissions = Permission.query.filter_by(p_id=p_id).all()
+            assert len(permissions) == 0
+            projects_db = Project.query.filter_by(id=p_id).all()
+            assert len(projects_db) == 0
+            changes = Change.query.filter_by(p_id=p_id).all()
+            assert len(changes) == 0
+            messages = Message.query.filter_by(p_id=p_id).all()
+            assert len(messages) == 0
 
     def teardown(self):
         for socket in self.sockets:
