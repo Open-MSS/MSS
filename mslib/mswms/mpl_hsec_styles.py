@@ -752,8 +752,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         elif self.style.lower() == "wind_15_55":
             wind_contours = np.arange(15, 60, 5)
         cs = ax.contourf(lonmesh, latmesh, wind,
-                         # wind_contours, cmap=plt.cm.hot_r, alpha=0.8)
-                         wind_contours, cmap=plt.cm.hot_r, tranform=ccrs.PlateCarree())
+                         wind_contours, cmap=plt.cm.hot_r, transform=ccrs.PlateCarree())
         if not self.noframe:
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Wind Speed (m/s)")
