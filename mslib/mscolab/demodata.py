@@ -24,18 +24,25 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import MySQLdb as ms
+
 import os
 import sys
 from flask import Flask
 import logging
 from shutil import copyfile
-
+try:
+    import MySQLdb as ms
+except ImportError:
+    ms = None
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
 from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
 
 if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
+    if ms is None:
+        logging.info("""can't complete demodata setup,
+                     use sqlite3 or configure mysql with proper modules""")
+        sys.exit(0)
     try:
         db = ms.connect(host=DB_HOST,    # your host, usually localhost
                         user=DB_USER,         # your username
