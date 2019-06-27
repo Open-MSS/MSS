@@ -26,17 +26,17 @@
 """
 
 import os
+import fs
 import sys
 from flask import Flask
 import logging
-from shutil import copyfile
 try:
     import MySQLdb as ms
 except ImportError:
     ms = None
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
-from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
+from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DATA_DIR
 
 if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
     if ms is None:
@@ -114,14 +114,15 @@ if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
 
     pass
 elif SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
-    path_prepend = os.path.dirname(os.path.abspath(__file__))
-    if os.path.exists(os.path.join(path_prepend, 'data/mscolab.db')):
+    # path_prepend = os.path.dirname(os.path.abspath(__file__))
+    fs_datadir = fs.open_fs(DATA_DIR)
+    mss_dir = fs.open_fs('../../')
+    if fs_datadir.exists('data/mscolab.db'):
         logging.info("Database exists")
     else:
-        if not os.path.exists(os.path.join(path_prepend, 'data')):
-            os.mkdir(os.path.join(path_prepend, 'data'))
-        copyfile(os.path.join(path_prepend, '../../docs/samples/config/mscolab/mscolab.db.sample'),
-                 os.path.join(path_prepend, 'data/mscolab.db'))
+        if not fs_datadir.exists('data'):
+            fs_datadir.makedir('data')
+        fs.copy.copy_file(mss_dir, 'docs/samples/config/mscolab/mscolab.db.sample', fs_datadir, 'data/mscolab.db')
 
 else:
     pass
