@@ -24,8 +24,9 @@
     limitations under the License.
 """
 import fs
+import difflib
 
-from mslib.mscolab.models import db, Project, Permission, User
+from mslib.mscolab.models import db, Project, Permission, User, Change, Message
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
 
 
@@ -50,7 +51,8 @@ class FileManager(object):
         db.session.add(project)
         db.session.flush()
         project_id = project.id
-        perm = Permission(user.id, project_id, "admin")
+        # this is the only insertion with "creator" access_level
+        perm = Permission(user.id, project_id, "creator")
         db.session.add(perm)
         db.session.commit()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
@@ -68,7 +70,7 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         perm_old = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-        if perm_old:
+        if perm_old or (access_level == "creator"):
             return False
         perm_new = Permission(u_id, p_id, access_level)
         db.session.add(perm_new)
@@ -87,6 +89,9 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         else:
+            perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+            if perm.access_level == "creator":
+                return False
             deleted = Permission.query.filter_by(u_id=u_id, p_id=p_id).delete()
             db.session.commit()
         if deleted:
@@ -109,12 +114,23 @@ class FileManager(object):
         p_id: project id
         u_id: user-id
         """
+        # return true only if the user is admin or creator
         perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if not perm:
             return False
-        elif perm.access_level != "admin":
+        elif perm.access_level != "admin" and perm.access_level != "creator":
             return False
         return True
+
+    def auth_type(self, u_id, p_id):
+        """
+        p_id: project id
+        u_id: user-id
+        """
+        perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+        if not perm:
+            return False
+        return perm.access_level
 
     def update_project(self, p_id, attribute, value, user):
         """
@@ -152,9 +168,12 @@ class FileManager(object):
         p_id: project id
         user: logged in user
         """
-        if not self.is_admin(user.id, p_id):
+        if self.auth_type(user.id, p_id) != "creator":
             return False
         Permission.query.filter_by(p_id=p_id).delete()
+        Change.query.filter_by(p_id=p_id).delete()
+        Message.query.filter_by(p_id=p_id).delete()
+        Change.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
         data.remove(project.path)
@@ -173,7 +192,7 @@ class FileManager(object):
             users.append({"username": user.username, "access_level": permission.access_level})
         return users
 
-    def save_file(self, p_id, content):
+    def save_file(self, p_id, content, user, comment=None):
         """
         p_id: project-id,
         content: content of the file to be saved
@@ -183,12 +202,27 @@ class FileManager(object):
         if not project:
             return False
         data = fs.open_fs(MSCOLAB_DATA_DIR)
+        """
+        old file is read, the diff between old and new is calculated and stored
+        as 'Change' in changes table. comment for each change is optional
+        """
+        project_file = data.open(project.path, 'r')
+        old_data = project_file.read()
+        project_file.close()
+        old_data_lines = old_data.splitlines()
+        content_lines = content.splitlines()
+        diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+        diff_content = '\n'.join(list(diff))
+        change = Change(p_id, user.id, diff_content, comment)
+        db.session.add(change)
+        db.session.commit()
         project_file = data.open(project.path, 'w')
         return project_file.write(content)
 
     def get_file(self, p_id, user):
         """
         p_id: project-id
+        user: user of this request
         """
         perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
         if not perm:
@@ -199,3 +233,32 @@ class FileManager(object):
         data = fs.open_fs(MSCOLAB_DATA_DIR)
         project_file = data.open(project.path, 'r')
         return project_file.read()
+
+    def get_changes(self, p_id, user):
+        """
+        p_id: project-id
+        user: user of this request
+
+        Get all changes, mostly to be used in the chat window, in the side panel
+        to render the recent changes.
+        """
+        perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
+        if not perm:
+            return False
+        changes = Change.query.filter_by(p_id=p_id).all()
+        return list(map(lambda change: {'content': change.content,
+                                        'comment': change.comment,
+                                        'u_id': change.u_id}, changes))
+
+    def get_change_by_id(self, ch_id, user):
+        """
+        ch_id: change id
+        user: user of this request
+
+        Get change related to id
+        """
+        change = Change.query.filter_by(id=ch_id).first()
+        perm = Permission.query.filter_by(u_id=user.id, p_id=change.p_id).first()
+        if not perm:
+            return False
+        return {'content': change.content, 'comment': change.comment, 'u_id': change.u_id}

@@ -151,6 +151,28 @@ def get_project():
     return json.dumps({"content": result})
 
 
+@app.route('/get_changes', methods=['GET'])
+@verify_user
+def get_changes():
+    p_id = request.values.get('p_id', None)
+    user = g.user
+    result = fm.get_changes(int(p_id), user)
+    if result is False:
+        return "False"
+    return json.dumps({"changes": result})
+
+
+@app.route('/get_change_id', methods=['GET'])
+@verify_user
+def get_change_by_id():
+    ch_id = request.values.get('ch_id', None)
+    user = g.user
+    result = fm.get_change_by_id(int(ch_id), user)
+    if result is False:
+        return "False"
+    return json.dumps({"change": result})
+
+
 @app.route('/authorized_users', methods=['GET'])
 @verify_user
 def authorized_users():

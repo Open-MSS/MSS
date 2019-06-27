@@ -34,7 +34,7 @@ from functools import partial
 import time
 
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, MSCOLAB_DATA_DIR
-from mslib.mscolab.models import db, User, Project
+from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
 
@@ -65,8 +65,12 @@ class Test_Files(object):
             # check file existence
             assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db
-            p = Project.query.filter_by(path="test_path")
+            p = Project.query.filter_by(path="test_path").first()
             assert p is not None
+            # check permission for author
+            perms = Permission.query.filter_by(p_id=p.id, access_level="creator").all()
+            assert len(perms) == 1
+            assert perms[0].u_id == self.user.id
 
     def test_projects(self):
         with self.app.app_context():
@@ -119,20 +123,31 @@ class Test_Files(object):
             user2 = User.query.filter_by(id=9).first()
             sio1.emit('start', response1)
             sio2.emit('start', response2)
-            time.sleep(5)
+            time.sleep(4)
             sio1.emit('file-save', {
                       "p_id": p_id,
                       "token": response1['token'],
                       "content": "test"
                       })
-
-            # sio1.sleep(1)
-            # sio2.sleep(1)
-            # sio3.sleep(1)
+            # second file change
+            sio1.emit('file-save', {
+                      "p_id": p_id,
+                      "token": response1['token'],
+                      "content": "no ive changed the file now"
+                      })
             time.sleep(3)
-            assert self.file_message_counter[0] == 1
-            assert self.file_message_counter[1] == 1
-            assert fm.get_file(p_id, user2) == "test"
+            # check if there were events triggered related to file-save
+            assert self.file_message_counter[0] == 2
+            assert self.file_message_counter[1] == 2
+            # check if content is saved in file
+            assert fm.get_file(p_id, user2) == "no ive changed the file now"
+            # check if change is saved properly
+            changes = fm.get_changes(p_id, self.user)
+            assert len(changes) == 2
+            change = Change.query.first()
+            change_function_result = fm.get_change_by_id(change.id, self.user)
+            assert change.content == change_function_result['content']
+            # to disconnect sockets later
             self.sockets.append(sio1)
             self.sockets.append(sio2)
 
@@ -140,8 +155,10 @@ class Test_Files(object):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
-            assert fm.revoke_permission(p_id, 9, self.user) is True
+            assert fm.update_access_level(p_id, 9, 'admin', self.user) is True
             user2 = User.query.filter_by(id=9).first()
+            assert fm.revoke_permission(p_id, 8, user2) is False
+            assert fm.revoke_permission(p_id, 9, self.user) is True
             projects = fm.list_projects(user2)
             assert len(projects) == 2
 
@@ -171,8 +188,18 @@ class Test_Files(object):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
+            user2 = User.query.filter_by(id=9).first()
+            assert fm.delete_file(p_id, user2) is False
             assert fm.delete_file(p_id, self.user) is True
             assert fm.delete_file(p_id, self.user) is False
+            permissions = Permission.query.filter_by(p_id=p_id).all()
+            assert len(permissions) == 0
+            projects_db = Project.query.filter_by(id=p_id).all()
+            assert len(projects_db) == 0
+            changes = Change.query.filter_by(p_id=p_id).all()
+            assert len(changes) == 0
+            messages = Message.query.filter_by(p_id=p_id).all()
+            assert len(messages) == 0
 
     def teardown(self):
         for socket in self.sockets:

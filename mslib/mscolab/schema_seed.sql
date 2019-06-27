@@ -39,7 +39,7 @@ CREATE TABLE `permissions` (`id` int(11) NOT NULL AUTO_INCREMENT,`u_id` int(11) 
 CREATE TABLE `messages` (`id` int(11) NOT NULL AUTO_INCREMENT,`u_id` int(11) DEFAULT NULL,`p_id` int(11) DEFAULT NULL,`text` BLOB NOT NULL,`created_at` timestamp default current_timestamp, PRIMARY KEY (`id`),FOREIGN KEY(u_id) REFERENCES users(id),FOREIGN KEY(p_id) REFERENCES projects(id));
 
 
-CREATE TABLE `changes` (`id` int(11) NOT NULL AUTO_INCREMENT,`u_id` int(11) DEFAULT NULL,`p_id` int(11) DEFAULT NULL,`content` BLOB NOT NULL,`created_at` timestamp default current_timestamp, PRIMARY KEY (`id`),FOREIGN KEY(u_id) REFERENCES users(id),FOREIGN KEY(p_id) REFERENCES projects(id));
+CREATE TABLE `changes` (`id` int(11) NOT NULL AUTO_INCREMENT,`u_id` int(11) DEFAULT NULL,`p_id` int(11) DEFAULT NULL,`content` BLOB NOT NULL,`comment` varchar(255) DEFAULT "",`created_at` timestamp default current_timestamp, PRIMARY KEY (`id`),FOREIGN KEY(u_id) REFERENCES users(id),FOREIGN KEY(p_id) REFERENCES projects(id));
 
 
 
@@ -51,7 +51,7 @@ SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
 
 
-INSERT INTO `permissions` (`id`, `u_id`, `p_id`, `access_level`) VALUES (1, 8,  1,  'admin'),(2, 9,  1,  'collaborator'),(3, 9,  2,  'admin'),(4, 10, 2,  'collaborator'),(5, 10, 3,  'admin'),(6, 8,  3,  'collaborator'),(7, 10, 1,  'viewer');
+INSERT INTO `permissions` (`id`, `u_id`, `p_id`, `access_level`) VALUES (1, 8,  1,  'creator'),(2, 9,  1,  'collaborator'),(3, 9,  2,  'creator'),(4, 10, 2,  'collaborator'),(5, 10, 3,  'creator'),(6, 8,  3,  'collaborator'),(7, 10, 1,  'viewer');
 
 INSERT INTO `projects` (`id`, `path`, `description`) VALUES (1, 'one',  'a, b'),(2, 'two',  'b, c'),(3, 'three',  'a, c');
 

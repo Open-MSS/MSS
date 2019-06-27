@@ -101,9 +101,9 @@ class Permission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    access_level = db.Column(db.Enum("admin", "collaborator", "viewer"))
+    access_level = db.Column(db.Enum("admin", "collaborator", "viewer", "creator"))
 
-    def __init__(self, u_id, p_id, access_level):
+    def __init__(self, u_id, p_id, access_level, creator=False):
         """
         u_id: user-id
         p_id: process-id
@@ -152,3 +152,20 @@ class Message(db.Model):
 
     def __repr__(self):
         return('<Message %s user %s in %s>'.format(self.text, self.u_id, self.p_id))
+
+
+class Change(db.Model):
+
+    __tablename__ = "changes"
+    id = db.Column(db.Integer, primary_key=True)
+    p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    content = db.Column(db.TEXT)
+    comment = db.Column(db.String(255), default=None)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def __init__(self, p_id, u_id, content, comment=""):
+        self.p_id = p_id
+        self.u_id = u_id
+        self.content = content
+        self.comment = comment
