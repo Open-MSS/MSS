@@ -103,7 +103,7 @@ class Permission(db.Model):
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     access_level = db.Column(db.Enum("admin", "collaborator", "viewer", "creator"))
 
-    def __init__(self, u_id, p_id, access_level, creator=False):
+    def __init__(self, u_id, p_id, access_level):
         """
         u_id: user-id
         p_id: process-id
