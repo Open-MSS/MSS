@@ -25,39 +25,33 @@
 """
 import socketio
 import requests
-import subprocess
 import json
-import logging
-import os
-from flask import Flask
+import multiprocessing
 import datetime
+import time
 
-from mslib.mscolab.conf import SQLALCHEMY_DB_URI
-from mslib.mscolab.models import db, Message
+from mslib.mscolab.models import Message
 from mslib.mscolab.sockets_manager import cm
 from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib.mscolab.server import db, sockio, app
 
 
 class Test_Chat(object):
 
     def setup(self):
         self.sockets = []
-        cwd = os.getcwd()
-        path_to_server = cwd + "/mslib/mscolab/server.py"
-        self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL)
-        try:
-            outs, errs = self.proc.communicate(timeout=4)
-        except Exception as e:
-            logging.debug("Server isn't running")
-            logging.debug(e)
-        self.app = Flask(__name__)
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
+        self.thread = multiprocessing.Process(
+            target=sockio.run,
+            args=(app,),
+            kwargs={'port': 8083})
+        self.thread.start()
+        self.app = app
         db.init_app(self.app)
+        time.sleep(1)
 
     def test_send_message(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'a',
+                          'email': 'a',
                           'password': 'a'
                           })
         response = json.loads(r.text)
@@ -97,7 +91,7 @@ class Test_Chat(object):
 
     def test_get_messages(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'a',
+                          'email': 'a',
                           'password': 'a'
                           })
         response = json.loads(r.text)
@@ -139,7 +133,27 @@ class Test_Chat(object):
             Message.query.filter_by(text="message from 1").delete()
             db.session.commit()
 
+    def test_get_messages_api(self):
+        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+                          'email': 'a',
+                          'password': 'a'
+                          })
+        response = json.loads(r.text)
+        token = response["token"]
+        data = {
+            "token": token,
+            "p_id": 1,
+            "timestamp": datetime.datetime(1970, 1, 1).strftime("%m %d %Y, %H:%M:%S")
+        }
+        r = requests.post(MSCOLAB_URL_TEST + "/messages", data=data)
+        response = json.loads(r.text)
+        assert len(response["messages"]) == 2
+
+        data["token"] = "dummy"
+        r = requests.post(MSCOLAB_URL_TEST + "/messages", data=data)
+        assert r.text == "False"
+
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-            self.proc.kill()
+        self.thread.terminate()

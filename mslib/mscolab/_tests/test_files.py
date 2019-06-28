@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_chat
+    mslib.mscolab._tests.test_files
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    tests for chat functionalities
+    tests for file based handlers
 
     This file is part of mss.
 
@@ -97,12 +97,12 @@ class Test_Files(object):
 
     def test_file_save(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'a',
+                          'email': 'a',
                           'password': 'a'
                           })
         response1 = json.loads(r.text)
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'b',
+                          'email': 'b',
                           'password': 'b'
                           })
         response2 = json.loads(r.text)
