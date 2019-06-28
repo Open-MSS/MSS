@@ -22,35 +22,52 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from mslib.mscolab.server import db, check_login, register_user
-from flask import Flask
-from mslib.mscolab.conf import SQLALCHEMY_DB_URI
+import requests
+import multiprocessing
+
+from mslib.mscolab.server import db, check_login, register_user, sockio, app
+from mslib.mscolab.models import User
 
 
 class Test_UserMethods(object):
 
     def setup(self):
-        self.app = Flask(__name__)
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-        db.init_app(self.app)
+        self._app = app
+        db.init_app(self._app)
+        self.thread = multiprocessing.Process(
+            target=sockio.run,
+            args=(app,),
+            kwargs={'port': 8083})
+        self.thread.start()
 
     def test_registration(self):
-        with self.app.app_context():
+        with self._app.app_context():
             x = register_user('sdf@s.com', 'sdf', 'sdf')
             assert x == 'True'
             x = register_user('sdf@s.com', 'sdf', 'sdf')
             assert x == 'False'
 
     def test_login(self):
-        with self.app.app_context():
+        with self._app.app_context():
             x = check_login('sdf@s.com', 'sdf')
             assert x is not None
             x = check_login('sdf@s.com', 'fd')
             assert x is not True
 
+    def test_registration_api(self):
+        data = {
+            "email": "sdf@s1.com",
+            "password": "sdf",
+            "username": "sdf1"
+        }
+        r = requests.post('http://localhost:8083/register', data=data)
+        assert r.text == "True"
+        r = requests.post('http://localhost:8083/register', data=data)
+        assert r.text == "False"
+
     def teardown(self):
-        with self.app.app_context():
-            user = check_login('sdf@s.com', 'sdf')
-            if user:
-                db.session.delete(user)
-                db.session.commit()
+        with self._app.app_context():
+            User.query.filter_by(emailid="sdf@s.com").delete()
+            User.query.filter_by(emailid="sdf@s1.com").delete()
+            db.session.commit()
+        self.thread.terminate()
