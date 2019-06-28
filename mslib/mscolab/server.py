@@ -62,7 +62,7 @@ def check_login(emailid, password):
 
 @app.route('/token', methods=["POST"])
 def get_auth_token():
-    emailid = request.form['emailid']
+    emailid = request.form['email']
     password = request.form['password']
     user = check_login(emailid, password)
     if user:

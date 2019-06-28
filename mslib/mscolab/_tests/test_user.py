@@ -24,6 +24,8 @@
 """
 import requests
 import multiprocessing
+import json
+import time
 
 from mslib.mscolab.server import db, check_login, register_user, sockio, app
 from mslib.mscolab.models import User
@@ -39,6 +41,7 @@ class Test_UserMethods(object):
             args=(app,),
             kwargs={'port': 8083})
         self.thread.start()
+        time.sleep(1)
 
     def test_registration(self):
         with self._app.app_context():
@@ -63,6 +66,20 @@ class Test_UserMethods(object):
         r = requests.post('http://localhost:8083/register', data=data)
         assert r.text == "True"
         r = requests.post('http://localhost:8083/register', data=data)
+        assert r.text == "False"
+
+    def test_token_api(self):
+        data = {
+            "email": "sdf@s1.com",
+            "password": "sdf",
+            "username": "sdf1"
+        }
+        r = requests.post('http://localhost:8083/register', data=data)
+        r = requests.post('http://localhost:8083/token', data=data)
+        json_ = json.loads(r.text)
+        assert json_.get("token", None) is not None
+        data["password"] = "asdf"
+        r = requests.post('http://localhost:8083/token', data=data)
         assert r.text == "False"
 
     def teardown(self):
