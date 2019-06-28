@@ -113,8 +113,9 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
         if self.style.lower() == "default":
             self.style = "TOT"
         if self.style in ["LOW", "TOT"]:
-            lcc = ax.contourf(lonmesh, latmesh, data['low_cloud_area_fraction'],
-                              np.arange(0.2, 1.1, 0.1), cmap=plt.cm.autumn_r, transform=ccrs.PlateCarree())
+            lcc = ax.contourf(
+                lonmesh, latmesh, data['low_cloud_area_fraction'],
+                np.arange(0.2, 1.1, 0.1), cmap=plt.cm.autumn_r, transform=ccrs.PlateCarree(), extend='both')
             if not self.noframe:
                 cbar = self.fig.colorbar(lcc, fraction=0.05, pad=-0.02, shrink=0.7)
                 cbar.set_label("Cloud cover fraction in grid box (0-1)")
@@ -125,8 +126,9 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 axins1.yaxis.set_ticks_position("left")
 
         if self.style in ["MED", "TOT"]:
-            mcc = ax.contourf(lonmesh, latmesh, data['medium_cloud_area_fraction'],
-                              np.arange(0.2, 1.1, 0.1), cmap=plt.cm.summer_r, transform=ccrs.PlateCarree())
+            mcc = ax.contourf(
+                lonmesh, latmesh, data['medium_cloud_area_fraction'],
+                np.arange(0.2, 1.1, 0.1), cmap=plt.cm.summer_r, transform=ccrs.PlateCarree(), extend='both')
             if not self.noframe:
                 self.fig.colorbar(mcc, fraction=0.05, pad=-0.02, shrink=0.7, format='')
             else:
@@ -138,7 +140,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
 
         if self.style in ["HIGH", "TOT"]:
             hcc = ax.contourf(lonmesh, latmesh, data['high_cloud_area_fraction'],
-                              np.arange(0.2, 1.1, 0.1), cmap=plt.cm.Blues, transform=ccrs.PlateCarree())
+                              np.arange(0.2, 1.1, 0.1), cmap=plt.cm.Blues, transform=ccrs.PlateCarree(), extend='both')
             ax.contour(lonmesh, latmesh, data['high_cloud_area_fraction'],
                        [0.2], colors="blue", linestyles="dotted", transform=ccrs.PlateCarree())
             if not self.noframe:
@@ -217,16 +219,11 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         u = data['surface_eastward_wind'] * 1.944
         v = data['surface_northward_wind'] * 1.944
 
-        # Transform wind vector field to fit map.
-        lons2 = ((self.lons + 180) % 360) - 180
-        lons2_ind = lons2.argsort()
-        # udat, vdat, xv, yv = bm.transform_vector(u, v, self.lons, self.lats,
-        #                                         16, 16, returnxy=True)
-
         # Plot wind barbs.
-        ax.barbs(self.lons, self.lats, u, v,
-               barbcolor='firebrick', flagcolor='firebrick', pivot='middle',
-             linewidths=1, transform=ccrs.PlateCarree())
+        ax.barbs(
+            self.lons, self.lats, u, v,
+            barbcolor='firebrick', flagcolor='firebrick', pivot='middle',
+            linewidths=1, transform=ccrs.PlateCarree())
 
         # Find local minima and maxima.
         #         min_indices, min_values = local_minima(mslp.ravel(), window=50)
@@ -285,7 +282,7 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Filled contour plot.
         scs = ax.contourf(lonmesh, latmesh, sea,
-                          np.arange(0, 91, 1), cmap=plt.cm.nipy_spectral, transform=ccrs.PlateCarree())
+                          np.arange(0, 91, 1), cmap=plt.cm.nipy_spectral, transform=ccrs.PlateCarree(), extend='both')
         if not self.noframe:
             cbar = self.fig.colorbar(scs, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Solar Elevation Angle (degrees)")
@@ -362,7 +359,7 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
                             edgecolors='none')
         else:
             scs = ax.contourf(lonmesh, latmesh, ice,
-                              np.arange(0.1, 1.1, .1), cmap=plt.cm.Blues, transform=ccrs.PlateCarree())
+                              np.arange(0.1, 1.1, .1), cmap=plt.cm.Blues, transform=ccrs.PlateCarree(), extend='both')
         if not self.noframe:
             cbar = self.fig.colorbar(scs, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Sea Ice Cover Fraction (0-1)")
@@ -416,8 +413,9 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         tempC = data['air_temperature'] - 273.15
 
-        tc = ax.contourf(lonmesh, latmesh, tempC,
-                         np.arange(cmin, cmax, 2), cmap=plt.cm.nipy_spectral, transform=ccrs.PlateCarree())
+        tc = ax.contourf(
+            lonmesh, latmesh, tempC,
+            np.arange(cmin, cmax, 2), cmap=plt.cm.nipy_spectral, transform=ccrs.PlateCarree(), extend='both')
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Temperature (degC)")
@@ -471,11 +469,14 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
             self.dataname, self.style, cmin, cmax, show_data)
 
-        tc = ax.contourf(lonmesh, latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm, transform=ccrs.PlateCarree())
+        tc = ax.contourf(
+            lonmesh, latmesh, show_data,
+            levels=clevs, cmap=cmap, extend="both", norm=norm, transform=ccrs.PlateCarree())
 
         for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
-            cs_pv = ax.contour(lonmesh, latmesh, self.data[cont_data], cont_levels,
-                               colors=cont_colour, linestyles=cont_style, linewidths=cont_lw, transform=ccrs.PlateCarree())
+            cs_pv = ax.contour(
+                lonmesh, latmesh, self.data[cont_data], cont_levels,
+                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw, transform=ccrs.PlateCarree())
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
                 plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2,
@@ -752,7 +753,8 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         elif self.style.lower() == "wind_15_55":
             wind_contours = np.arange(15, 60, 5)
         cs = ax.contourf(lonmesh, latmesh, wind,
-                         wind_contours, cmap=plt.cm.hot_r, transform=ccrs.PlateCarree())
+                         # wind_contours, cmap=plt.cm.hot_r, alpha=0.8)
+                         wind_contours, cmap=plt.cm.hot_r, tranform=ccrs.PlateCarree(), extend='both')
         if not self.noframe:
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Wind Speed (m/s)")
@@ -774,9 +776,10 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         #                                         16, 16, returnxy=True)
 
         # Plot wind barbs.
-        ax.barbs(lons2[lons2_ind], self.lats, u[:, lons2_ind], v[:, lons2_ind],
-                barbcolor='firebrick', flagcolor='firebrick', pivot='middle',
-                linewidths=0.5, length=6, transform=ccrs.PlateCarree())
+        ax.barbs(
+            lons2[lons2_ind], self.lats, u[:, lons2_ind], v[:, lons2_ind],
+            barbcolor='firebrick', flagcolor='firebrick', pivot='middle',
+            linewidths=0.5, length=6, transform=ccrs.PlateCarree())
 
         # Plot geopotential height contours.
         gpm = self.data["geopotential_height"]
@@ -844,8 +847,9 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         rh = data["relative_humidity"]
 
-        rhc = ax.contourf(lonmesh, latmesh, rh,
-                          filled_contours, cmap=plt.cm.winter_r, transform=ccrs.PlateCarree())
+        rhc = ax.contourf(
+            lonmesh, latmesh, rh,
+            filled_contours, cmap=plt.cm.winter_r, transform=ccrs.PlateCarree(), extend='both')
         if not self.noframe:
             cbar = self.fig.colorbar(rhc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Relative Humidity (%)")
@@ -929,7 +933,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         eqpt = data["equivalent_potential_temperature"] - 273.15
 
         eqptc = ax.contourf(lonmesh, latmesh, eqpt,
-                            filled_contours, cmap=plt.cm.gist_rainbow_r, transform=ccrs.PlateCarree())
+                            filled_contours, cmap=plt.cm.gist_rainbow_r, transform=ccrs.PlateCarree(), extend='both')
         if not self.noframe:
             cbar = self.fig.colorbar(eqptc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Equivalent Potential Temperature (degC)")
@@ -1016,7 +1020,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         w = data["upward_wind"] * 100.
 
         wc = ax.contourf(lonmesh, latmesh, w,
-                         upward_contours, cmap=plt.cm.bwr, transform=ccrs.PlateCarree())
+                         upward_contours, cmap=plt.cm.bwr, transform=ccrs.PlateCarree(), extend='both')
         if not self.noframe:
             cbar = self.fig.colorbar(wc, fraction=0.05, pad=0.08, shrink=0.7)
             cbar.set_label("Vertical velocity (cm/s)")
@@ -1436,14 +1440,17 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
 
         # Filled contour plot of pressure/geop./pot.temp. Extend the colourbar
         # to fill regions whose values exceed the colourbar range.
-        contours = ax.contourf(lonmesh, latmesh, vardata,
-                               filled_contours, cmap=fcmap, extend="both", transform=ccrs.PlateCarree())
+        contours = ax.contourf(
+            lonmesh, latmesh, vardata,
+            filled_contours, cmap=fcmap, extend="both", transform=ccrs.PlateCarree())
 
         data["secondary_tropopause_altitude"] = np.ma.masked_invalid(data["secondary_tropopause_altitude"])
 
         if self.style == "default":
             mask = ~data["secondary_tropopause_altitude"].mask
-        ax.contourf(lonmesh, latmesh, mask, [0, 0.5, 1.5], hatches=["", "xx"], alpha=0, transform=ccrs.PlateCarree())
+        ax.contourf(
+            lonmesh, latmesh, mask, [0, 0.5, 1.5], hatches=["", "xx"],
+            alpha=0, transform=ccrs.PlateCarree(), extend='both')
 
         if not self.noframe:
             cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
@@ -1511,7 +1518,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
 
         # Filled contours of p(WCB).
         contours = ax.contourf(lonmesh, latmesh, pwcb,
-                               np.arange(0, 101, 10), cmap=plt.cm.pink_r, transform=ccrs.PlateCarree())
+                               np.arange(0, 101, 10), cmap=plt.cm.pink_r, transform=ccrs.PlateCarree(), extend='both')
         if not self.noframe:
             self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
@@ -1773,11 +1780,14 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
         cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
             self.dataname, self.style, cmin, cmax, show_data)
 
-        tc = ax.contourf(lonmesh, latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm, transform=ccrs.PlateCarree())
+        tc = ax.contourf(
+            lonmesh, latmesh, show_data, levels=clevs, cmap=cmap,
+            extend="both", norm=norm, transform=ccrs.PlateCarree())
 
         for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
-            cs_pv = ax.contour(lonmesh, latmesh, self.data[cont_data], cont_levels,
-                               colors=cont_colour, linestyles=cont_style, linewidths=cont_lw, transform=ccrs.PlateCarree())
+            cs_pv = ax.contour(
+                lonmesh, latmesh, self.data[cont_data], cont_levels,
+                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw, transform=ccrs.PlateCarree())
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
                 plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2,
