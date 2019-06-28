@@ -162,7 +162,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             ax = plt.axes([0.05, 0.05, 0.9, 0.88], projection=user_proj)
 
         if bbox_units == "degree":
-            coords = user_proj.transform_points(                                                                
+            coords = user_proj.transform_points(
                 ccrs.PlateCarree(), np.asarray([bbox[0], bbox[2]]), np.asarray([bbox[1], bbox[3]]))
             ax.set_extent([coords[0, 0], coords[1, 0], coords[0, 1], coords[1, 1]], user_proj)
         elif bbox_units.startswith("meter"):
@@ -173,7 +173,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                 bbox[0] + center_x, bbox[1] + center_y, src_crs=user_proj)
             bbox_2, bbox_3 = src_proj.transform_point(
                 bbox[2] + center_x, bbox[3] + center_y, src_crs=user_proj)
-            coords = user_proj.transform_points(                                                                
+            coords = user_proj.transform_points(
                 ccrs.PlateCarree(), np.asarray([bbox_0, bbox_2]), np.asarray([bbox_1, bbox_3]))
             ax.set_extent([coords[0, 0], coords[1, 0], coords[0, 1], coords[1, 1]], user_proj)
         elif bbox_units == "no":
