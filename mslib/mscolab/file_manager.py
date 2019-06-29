@@ -248,7 +248,8 @@ class FileManager(object):
         changes = Change.query.filter_by(p_id=p_id).all()
         return list(map(lambda change: {'content': change.content,
                                         'comment': change.comment,
-                                        'u_id': change.u_id}, changes))
+                                        'u_id': change.u_id,
+                                        'id': change.id}, changes,))
 
     def get_change_by_id(self, ch_id, user):
         """
@@ -258,6 +259,8 @@ class FileManager(object):
         Get change related to id
         """
         change = Change.query.filter_by(id=ch_id).first()
+        if not change:
+            return False
         perm = Permission.query.filter_by(u_id=user.id, p_id=change.p_id).first()
         if not perm:
             return False
