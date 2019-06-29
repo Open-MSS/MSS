@@ -47,7 +47,7 @@ class Test_Chat(object):
         self.thread.start()
         self.app = app
         db.init_app(self.app)
-        time.sleep(1)
+        time.sleep(1.5)
 
     def test_send_message(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
@@ -111,7 +111,6 @@ class Test_Chat(object):
                  "token": response['token'],
                  "message_text": "message from 1"
                  })
-        sio.sleep(2)
         sio.emit("chat-message", {
                  "p_id": 1,
                  "token": response['token'],

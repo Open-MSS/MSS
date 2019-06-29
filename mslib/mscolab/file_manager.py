@@ -90,6 +90,8 @@ class FileManager(object):
             return False
         else:
             perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+            if perm is None:
+                return False
             if perm.access_level == "creator":
                 return False
             deleted = Permission.query.filter_by(u_id=u_id, p_id=p_id).delete()
