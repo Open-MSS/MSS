@@ -206,6 +206,7 @@ def add_permission():
 
 
 @app.route('/revoke_permission', methods=['POST'])
+@verify_user
 def revoke_permission():
     p_id = request.form.get('p_id', None)
     u_id = request.form.get('u_id', None)
@@ -214,15 +215,17 @@ def revoke_permission():
 
 
 @app.route('/modify_permission', methods=['POST'])
+@verify_user
 def modify_permission():
     p_id = request.form.get('p_id', None)
     u_id = request.form.get('u_id', None)
-    access_level = request.form['access_level']
+    access_level = request.form.get('access_level', None)
     user = g.user
     return str(fm.update_access_level(int(p_id), int(u_id), access_level, user))
 
 
 @app.route('/update_project', methods=['POST'])
+@verify_user
 def update_project():
     p_id = request.form.get('p_id', None)
     attribute = request.form['attribute']

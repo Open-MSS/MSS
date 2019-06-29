@@ -28,7 +28,7 @@ import multiprocessing
 import json
 import time
 
-from mslib.mscolab.models import User, Change
+from mslib.mscolab.models import User, Change, Project
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.server import db, sockio, app
@@ -88,6 +88,101 @@ class Test_Files(object):
             r = requests.get(MSCOLAB_URL_TEST + '/get_project', data=data)
             assert json.loads(r.text)["content"] == fm.get_file(int(p_id), self.user)
 
+    def test_authorized_users(self):
+        with self.app.app_context():
+            projects = fm.list_projects(self.user)
+            p_id = projects[-1]["p_id"]
+        data = {
+            "token": self.token,
+            "p_id": p_id
+        }
+        r = requests.get(MSCOLAB_URL_TEST + '/authorized_users', data=data)
+        users = json.loads(r.text)["users"]
+        assert len(users) == 1
+        # for any other random process which doesn't exist it will return empty array
+        data["p_id"] = 43
+        r = requests.get(MSCOLAB_URL_TEST + '/authorized_users', data=data)
+        users = json.loads(r.text)["users"]
+        assert len(users) == 0
+
+    def test_add_permission(self):
+        with self.app.app_context():
+            projects = fm.list_projects(self.user)
+            p_id = projects[-1]["p_id"]
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "u_id": 9,
+            "access_level": "collaborator"
+        }
+        r = requests.post(MSCOLAB_URL_TEST + '/add_permission', data=data)
+        assert r.text == "True"
+        r = requests.post(MSCOLAB_URL_TEST + '/add_permission', data=data)
+        assert r.text == "False"
+        data["p_id"] = 343
+        r = requests.post(MSCOLAB_URL_TEST + '/add_permission', data=data)
+        assert r.text == "False"
+
+    def test_modify_permission(self):
+        with self.app.app_context():
+            projects = fm.list_projects(self.user)
+            p_id = projects[-1]["p_id"]
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "u_id": 9,
+            "access_level": "viewer"
+        }
+        r = requests.post(MSCOLAB_URL_TEST + '/modify_permission', data=data)
+        assert r.text == "True"
+        data["p_id"] = 123
+        r = requests.post(MSCOLAB_URL_TEST + '/modify_permission', data=data)
+        assert r.text == "False"
+
+    def test_revoke_permission(self):
+        with self.app.app_context():
+            projects = fm.list_projects(self.user)
+            p_id = projects[-1]["p_id"]
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "u_id": 9
+        }
+        r = requests.post(MSCOLAB_URL_TEST + '/revoke_permission', data=data)
+        assert r.text == "True"
+        r = requests.post(MSCOLAB_URL_TEST + '/revoke_permission', data=data)
+        assert r.text == "False"
+
+    def test_update_project(self):
+        with self.app.app_context():
+            projects = fm.list_projects(self.user)
+            p_id = projects[-1]["p_id"]
+        # ToDo handle paths with space here
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "attribute": "path",
+            "value": "a_diff_path"
+        }
+        r = requests.post(MSCOLAB_URL_TEST + '/update_project', data=data)
+        assert r.text == "True"
+        # to make sure that path has changed, which is indirectly known by this request
+        # getting results properly
+        r = requests.get(MSCOLAB_URL_TEST + '/get_project', data=data)
+        assert r.text != "False"
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "attribute": "description",
+            "value": "a_diff description"
+        }
+        r = requests.post(MSCOLAB_URL_TEST + '/update_project', data=data)
+        assert r.text == "True"
+        with self.app.app_context():
+            project = Project.query.filter_by(id=p_id).first()
+            assert project.path == "a_diff_path"
+            assert project.description == "a_diff description"
+
     def test_delete_project(self):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
@@ -101,7 +196,7 @@ class Test_Files(object):
         r = requests.post(MSCOLAB_URL_TEST + '/delete_project', data=data)
         assert r.text == "False"
 
-    def test_change_api(self):
+    def test_change(self):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
@@ -137,10 +232,6 @@ class Test_Files(object):
 
     """
     todo tests:
-    - authorized users
-    - add permission
-    - remove permissin
-    - modify permission
     - update project
     """
     def teardown(self):
