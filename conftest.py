@@ -57,11 +57,8 @@ imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 
 # ToDo refactor
-dir_path = os.path.dirname(os.path.realpath(__file__))
-demodata_path = os.path.join(dir_path, 'mslib/mscolab/demodata.py')
-result = subprocess.run(["python", demodata_path])
-if result.check_returncode():
-    sys.exit(0)
+from mslib.mscolab.demodata import create_data
+create_data()
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):

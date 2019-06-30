@@ -42,7 +42,7 @@ class FileManager(object):
         description: description of the project
         """
         # set codes on these later
-        if path.find("/") != -1 or path.find("\\") != -1:
+        if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
             return False
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
@@ -144,7 +144,7 @@ class FileManager(object):
             return False
         project = Project.query.filter_by(id=p_id).first()
         if attribute == "path":
-            if value.find("/") != -1 or value.find("\\") != -1:
+            if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
                 return False
             data = fs.open_fs(MSCOLAB_DATA_DIR)
             if data.exists(value):
