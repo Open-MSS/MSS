@@ -30,8 +30,6 @@ from __future__ import print_function
 import imp
 import sys
 import pytest
-import subprocess
-import os
 
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
@@ -59,6 +57,7 @@ sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 # ToDo refactor
 from mslib.mscolab.demodata import create_data
 create_data()
+
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):
