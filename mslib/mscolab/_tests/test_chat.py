@@ -144,11 +144,13 @@ class Test_Chat(object):
             "p_id": 1,
             "timestamp": datetime.datetime(1970, 1, 1).strftime("%m %d %Y, %H:%M:%S")
         }
+        # returns an array of messages
         r = requests.post(MSCOLAB_URL_TEST + "/messages", data=data)
         response = json.loads(r.text)
         assert len(response["messages"]) == 2
 
         data["token"] = "dummy"
+        # returns False due to bad authorization
         r = requests.post(MSCOLAB_URL_TEST + "/messages", data=data)
         assert r.text == "False"
 

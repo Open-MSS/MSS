@@ -79,8 +79,7 @@ class Test_Files(object):
 
     def test_get_project(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = self.get_recent_pid()
             data = {
                 "token": self.token,
                 "p_id": p_id
@@ -90,8 +89,7 @@ class Test_Files(object):
 
     def test_authorized_users(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = self.get_recent_pid()
         data = {
             "token": self.token,
             "p_id": p_id
@@ -107,8 +105,7 @@ class Test_Files(object):
 
     def test_add_permission(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = self.get_recent_pid()
         data = {
             "token": self.token,
             "p_id": p_id,
@@ -120,13 +117,13 @@ class Test_Files(object):
         r = requests.post(MSCOLAB_URL_TEST + '/add_permission', data=data)
         assert r.text == "False"
         data["p_id"] = 343
+        # testing access of wrong pids
         r = requests.post(MSCOLAB_URL_TEST + '/add_permission', data=data)
         assert r.text == "False"
 
     def test_modify_permission(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = self.get_recent_pid()
         data = {
             "token": self.token,
             "p_id": p_id,
@@ -136,13 +133,13 @@ class Test_Files(object):
         r = requests.post(MSCOLAB_URL_TEST + '/modify_permission', data=data)
         assert r.text == "True"
         data["p_id"] = 123
+        # testing access of wrong pids
         r = requests.post(MSCOLAB_URL_TEST + '/modify_permission', data=data)
         assert r.text == "False"
 
     def test_revoke_permission(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = self.get_recent_pid()
         data = {
             "token": self.token,
             "p_id": p_id,
@@ -155,8 +152,7 @@ class Test_Files(object):
 
     def test_update_project(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = self.get_recent_pid()
         # ToDo handle paths with space here
         data = {
             "token": self.token,
@@ -185,8 +181,7 @@ class Test_Files(object):
 
     def test_delete_project(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = self.get_recent_pid()
         data = {
             "token": self.token,
             "p_id": p_id
@@ -197,9 +192,12 @@ class Test_Files(object):
         assert r.text == "False"
 
     def test_change(self):
+        """
+        since file needs to be saved to inflict changes, changes during integration
+        tests have to be manually inserted
+        """
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = self.get_recent_pid()
             ch = Change(int(p_id), 8, 'some content', 'some comment')
             db.session.add(ch)
             db.session.commit()
@@ -207,6 +205,7 @@ class Test_Files(object):
             "token": self.token,
             "p_id": p_id
         }
+        # test 'get all changes' request
         r = requests.get(MSCOLAB_URL_TEST + '/get_changes', data=data)
         changes = json.loads(r.text)["changes"]
         assert len(changes) == 1
@@ -216,12 +215,14 @@ class Test_Files(object):
             "token": self.token,
             "ch_id": changes[0]["id"]
         }
+        # test 'get single change' request
         r = requests.get(MSCOLAB_URL_TEST + '/get_change_id', data=data)
         change = json.loads(r.text)["change"]
         assert change["content"] == "some content"
 
         data["p_id"] = 123
         data["ch_id"] = 123
+        # test unauthorized requests
         r = requests.get(MSCOLAB_URL_TEST + '/get_changes', data=data)
         assert r.text == "False"
         r = requests.get(MSCOLAB_URL_TEST + '/get_change_id', data=data)
@@ -230,11 +231,12 @@ class Test_Files(object):
             Change.query.filter_by(content="some content").delete()
             db.session.commit()
 
-    """
-    todo tests:
-    - update project
-    """
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
         self.thread.terminate()
+
+    def get_recent_pid(self):
+        projects = fm.list_projects(self.user)
+        p_id = projects[-1]["p_id"]
+        return p_id
