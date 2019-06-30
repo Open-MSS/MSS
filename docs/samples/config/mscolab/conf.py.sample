@@ -23,33 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-# -*- coding: utf-8 -*-
-"""
-
-    mslib.mscolab.conf
-    ~~~~~~~~~~~~~~~~~~
-
-    config for mscolab
-
-    This file is part of mss.
-
-    :copyright: Copyright 2019 Shivashis Padhi
-    :license: APACHE-2.0, see LICENSE for details.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-"""
-
-# SQLALCHEMY_DB_URI = 'mysql://root:pop12345@127.0.0.1/mscolab'
+# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
 # dir where mss output files are stored
 DATA_DIR = os.path.expanduser("~/mssdata")
@@ -58,10 +32,6 @@ SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'data', 'mscolab.db')
 SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
 
 SECRET_KEY = 'secretkEyu'
-DB_HOST = '127.0.0.1'
-DB_USER = 'root'
-DB_PASSWORD = 'pop12345'
-DB_NAME = 'test_1'
 
 # mscolab data directory #ToDo merge this with $MSS directory
 MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'data')
