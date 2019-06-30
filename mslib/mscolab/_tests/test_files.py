@@ -60,7 +60,8 @@ class Test_Files(object):
 
     def test_create_project(self):
         with self.app.app_context():
-            assert fm.create_project('test_path', 'test message', self.user)
+            assert fm.create_project('test path', 'test desc.', self.user) is False
+            assert fm.create_project('test_path', 'test desc.', self.user) is True
             assert fm.create_project('test/path', 'sth', self.user) is False
             # check file existence
             assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'test_path')) is True
@@ -180,6 +181,8 @@ class Test_Files(object):
         with self.app.app_context():
             projects = fm.list_projects(self.user)
             p_id = projects[-1]["p_id"]
+            assert fm.update_project(p_id, 'path', 'dummy wrong', self.user) is False
+            assert fm.update_project(p_id, 'path', 'dummy/wrong', self.user) is False
             assert fm.update_project(p_id, 'path', 'dummy', self.user) is True
             assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'dummy'))
             assert fm.update_project(p_id, 'description', 'dummy', self.user) is True

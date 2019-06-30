@@ -47,7 +47,7 @@ class Test_Chat(object):
         self.thread.start()
         self.app = app
         db.init_app(self.app)
-        time.sleep(1.5)
+        time.sleep(2)
 
     def test_send_message(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
