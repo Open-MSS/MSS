@@ -25,9 +25,8 @@
 """
 import socketio
 import requests
-import subprocess
+import multiprocessing
 import json
-import logging
 import os
 from flask import Flask
 from functools import partial
@@ -37,21 +36,19 @@ from mslib.mscolab.conf import SQLALCHEMY_DB_URI, MSCOLAB_DATA_DIR
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib.mscolab.server import app, sockio
 
 
 class Test_Files(object):
     def setup(self):
         self.sockets = []
         self.file_message_counter = [0] * 2
-        cwd = os.getcwd()
-        path_to_server = cwd + "/mslib/mscolab/server.py"
-        self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL)
-        try:
-            outs, errs = self.proc.communicate(timeout=4)
-        except Exception as e:
-            logging.debug("Server isn't running")
-            logging.debug(e)
+        self.thread = multiprocessing.Process(
+            target=sockio.run,
+            args=(app,),
+            kwargs={'port': 8083})
+        self.thread.start()
+        time.sleep(1)
         self.app = Flask(__name__)
         self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
         db.init_app(self.app)
@@ -205,7 +202,7 @@ class Test_Files(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        self.proc.kill()
+        self.thread.terminate()
 
     def get_recent_pid(self):
         projects = fm.list_projects(self.user)
