@@ -87,7 +87,7 @@ def authorized():
 def register_user(email, password, username):
     user = User(email, username, password)
     user_exists = User.query.filter_by(emailid=str(email)).first()
-    is_valid = validate_email('example@example.com')
+    is_valid = validate_email(email)
     if not is_valid:
         return 'False'
     if user_exists:
