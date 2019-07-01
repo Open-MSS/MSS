@@ -36,7 +36,7 @@ except ImportError:
     ms = None
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
-from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DATA_DIR
+from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DATA_DIR, BASE_DIR
 
 
 def create_data():
@@ -117,15 +117,18 @@ def create_data():
         pass
     elif SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
+        fs_datadir = fs.open_fs(BASE_DIR)
+        if not fs_datadir.exists('colabdata'):
+            fs_datadir.makedir('colabdata')
         fs_datadir = fs.open_fs(DATA_DIR)
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
-        if fs_datadir.exists('data/mscolab.db'):
+        if fs_datadir.exists('mscolab.db'):
             logging.info("Database exists")
         else:
-            if not fs_datadir.exists('data'):
-                fs_datadir.makedir('data')
-            fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'data/mscolab.db')
+            if not fs_datadir.exists('filedata'):
+                fs_datadir.makedir('filedata')
+            fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
 
     else:
         pass

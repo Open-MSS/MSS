@@ -26,15 +26,17 @@
 # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
 # dir where mss output files are stored
-DATA_DIR = os.path.expanduser("~/mssdata")
-SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'data', 'mscolab.db')
+DATA_DIR = os.path.expanduser("~/mss/colabdata")
+BASE_DIR = os.path.expanduser("~/mss")
+SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
 
 SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
 
+# used to generate and parse tokens
 SECRET_KEY = 'secretkEyu'
 
 # mscolab data directory #ToDo merge this with $MSS directory
-MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'data')
+MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 STUB_CODE = """
 <?xml version="1.0" encoding="utf-8"?>
 <FlightTrack version="1.7.6">
