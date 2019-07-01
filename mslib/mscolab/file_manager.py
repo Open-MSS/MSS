@@ -25,6 +25,7 @@
 """
 import fs
 import difflib
+import logging
 
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
@@ -42,7 +43,8 @@ class FileManager(object):
         description: description of the project
         """
         # set codes on these later
-        if path.find("/") != -1 or path.find("\\") != -1:
+        if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
+            logging.debug("malicious request: %s".format(user))
             return False
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
@@ -90,6 +92,8 @@ class FileManager(object):
             return False
         else:
             perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+            if perm is None:
+                return False
             if perm.access_level == "creator":
                 return False
             deleted = Permission.query.filter_by(u_id=u_id, p_id=p_id).delete()
@@ -142,7 +146,8 @@ class FileManager(object):
             return False
         project = Project.query.filter_by(id=p_id).first()
         if attribute == "path":
-            if value.find("/") != -1 or value.find("\\") != -1:
+            if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
+                logging.debug("malicious request: %s".format(user))
                 return False
             data = fs.open_fs(MSCOLAB_DATA_DIR)
             if data.exists(value):
@@ -248,7 +253,8 @@ class FileManager(object):
         changes = Change.query.filter_by(p_id=p_id).all()
         return list(map(lambda change: {'content': change.content,
                                         'comment': change.comment,
-                                        'u_id': change.u_id}, changes))
+                                        'u_id': change.u_id,
+                                        'id': change.id}, changes,))
 
     def get_change_by_id(self, ch_id, user):
         """
@@ -258,6 +264,8 @@ class FileManager(object):
         Get change related to id
         """
         change = Change.query.filter_by(id=ch_id).first()
+        if not change:
+            return False
         perm = Permission.query.filter_by(u_id=user.id, p_id=change.p_id).first()
         if not perm:
             return False

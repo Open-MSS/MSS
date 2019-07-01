@@ -60,7 +60,7 @@ class Test_Sockets(object):
 
     def test_connect(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'a',
+                          'email': 'a',
                           'password': 'a'
                           })
         response = json.loads(r.text)
@@ -84,17 +84,17 @@ class Test_Sockets(object):
 
     def test_emit_permissions(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'a',
+                          'email': 'a',
                           'password': 'a'
                           })
         response1 = json.loads(r.text)
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'b',
+                          'email': 'b',
                           'password': 'b'
                           })
         response2 = json.loads(r.text)
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'c',
+                          'email': 'c',
                           'password': 'c'
                           })
         response3 = json.loads(r.text)

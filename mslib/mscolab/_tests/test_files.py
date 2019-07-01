@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_chat
+    mslib.mscolab._tests.test_files
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    tests for chat functionalities
+    tests for file based handlers
 
     This file is part of mss.
 
@@ -25,9 +25,8 @@
 """
 import socketio
 import requests
-import subprocess
+import multiprocessing
 import json
-import logging
 import os
 from flask import Flask
 from functools import partial
@@ -37,21 +36,20 @@ from mslib.mscolab.conf import SQLALCHEMY_DB_URI, MSCOLAB_DATA_DIR
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib.mscolab.server import app, sockio
+from mslib.mscolab.utils import get_recent_pid
 
 
 class Test_Files(object):
     def setup(self):
         self.sockets = []
         self.file_message_counter = [0] * 2
-        cwd = os.getcwd()
-        path_to_server = cwd + "/mslib/mscolab/server.py"
-        self.proc = subprocess.Popen(["python", path_to_server], stdout=subprocess.DEVNULL,
-                                     stderr=subprocess.DEVNULL)
-        try:
-            outs, errs = self.proc.communicate(timeout=4)
-        except Exception as e:
-            logging.debug("Server isn't running")
-            logging.debug(e)
+        self.p = multiprocessing.Process(
+            target=sockio.run,
+            args=(app,),
+            kwargs={'port': 8083})
+        self.p.start()
+        time.sleep(1)
         self.app = Flask(__name__)
         self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
         db.init_app(self.app)
@@ -60,7 +58,11 @@ class Test_Files(object):
 
     def test_create_project(self):
         with self.app.app_context():
-            assert fm.create_project('test_path', 'test message', self.user)
+            # test for blank character in path
+            assert fm.create_project('test path', 'test desc.', self.user) is False
+            # test for normal path
+            assert fm.create_project('test_path', 'test desc.', self.user) is True
+            # test for '/' in path
             assert fm.create_project('test/path', 'sth', self.user) is False
             # check file existence
             assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'test_path')) is True
@@ -79,8 +81,7 @@ class Test_Files(object):
 
     def test_add_permission(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = get_recent_pid(self.user)
             assert fm.add_permission(p_id, 9, 'collaborator', self.user) is True
             user2 = User.query.filter_by(id=9).first()
             projects = fm.list_projects(user2)
@@ -88,8 +89,8 @@ class Test_Files(object):
 
     def test_modify_permission(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = get_recent_pid(self.user)
+            # modifying permission to 'viewer'
             assert fm.update_access_level(p_id, 9, 'viewer', self.user) is True
             user2 = User.query.filter_by(id=9).first()
             projects = fm.list_projects(user2)
@@ -97,12 +98,12 @@ class Test_Files(object):
 
     def test_file_save(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'a',
+                          'email': 'a',
                           'password': 'a'
                           })
         response1 = json.loads(r.text)
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'emailid': 'b',
+                          'email': 'b',
                           'password': 'b'
                           })
         response2 = json.loads(r.text)
@@ -118,8 +119,7 @@ class Test_Files(object):
         sio1.connect(MSCOLAB_URL_TEST)
         sio2.connect(MSCOLAB_URL_TEST)
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = get_recent_pid(self.user)
             user2 = User.query.filter_by(id=9).first()
             sio1.emit('start', response1)
             sio2.emit('start', response2)
@@ -153,10 +153,10 @@ class Test_Files(object):
 
     def test_revoke_permission(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = get_recent_pid(self.user)
             assert fm.update_access_level(p_id, 9, 'admin', self.user) is True
             user2 = User.query.filter_by(id=9).first()
+            # returns false because non-creator can't revoke permission of creator
             assert fm.revoke_permission(p_id, 8, user2) is False
             assert fm.revoke_permission(p_id, 9, self.user) is True
             projects = fm.list_projects(user2)
@@ -164,30 +164,29 @@ class Test_Files(object):
 
     def test_get_project(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = get_recent_pid(self.user)
             assert fm.get_file(p_id, self.user) is not False
             user2 = User.query.filter_by(id=9).first()
             assert fm.get_file(p_id, user2) is False
 
     def test_authorized_users(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = get_recent_pid(self.user)
             assert len(fm.get_authorized_users(p_id)) == 1
 
     def test_modify_project(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = get_recent_pid(self.user)
+            # testing for wrong characters in path like ' ', '/'
+            assert fm.update_project(p_id, 'path', 'dummy wrong', self.user) is False
+            assert fm.update_project(p_id, 'path', 'dummy/wrong', self.user) is False
             assert fm.update_project(p_id, 'path', 'dummy', self.user) is True
             assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'dummy'))
             assert fm.update_project(p_id, 'description', 'dummy', self.user) is True
 
     def test_delete_project(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
-            p_id = projects[-1]["p_id"]
+            p_id = get_recent_pid(self.user)
             user2 = User.query.filter_by(id=9).first()
             assert fm.delete_file(p_id, user2) is False
             assert fm.delete_file(p_id, self.user) is True
@@ -204,4 +203,4 @@ class Test_Files(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        self.proc.kill()
+        self.p.terminate()
