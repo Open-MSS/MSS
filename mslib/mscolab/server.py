@@ -29,6 +29,7 @@ import logging
 import json
 import datetime
 import functools
+from validate_email import validate_email
 
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY
@@ -86,6 +87,9 @@ def authorized():
 def register_user(email, password, username):
     user = User(email, username, password)
     user_exists = User.query.filter_by(emailid=str(email)).first()
+    is_valid = validate_email('example@example.com')
+    if not is_valid:
+        return 'False'
     if user_exists:
         return 'False'
     user_exists = User.query.filter_by(username=str(username)).first()

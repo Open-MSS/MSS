@@ -40,14 +40,14 @@ class Test_Chat(object):
 
     def setup(self):
         self.sockets = []
-        self.thread = multiprocessing.Process(
+        self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
             kwargs={'port': 8083})
-        self.thread.start()
+        self.p.start()
         self.app = app
         db.init_app(self.app)
-        time.sleep(2)
+        time.sleep(3)
 
     def test_send_message(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
@@ -157,4 +157,4 @@ class Test_Chat(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        self.thread.terminate()
+        self.p.terminate()
