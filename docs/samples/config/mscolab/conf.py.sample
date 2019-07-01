@@ -34,6 +34,10 @@ SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
 
 # used to generate and parse tokens
 SECRET_KEY = 'secretkEyu'
+DB_HOST = '127.0.0.1'
+DB_USER = 'user'
+DB_PASSWORD = 'pass'
+DB_NAME = 'test_1'
 
 # mscolab data directory #ToDo merge this with $MSS directory
 MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
