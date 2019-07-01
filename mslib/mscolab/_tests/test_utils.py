@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_user.py
+    mslib.mscolab._tests.test_utils
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    tests for user related routes.
+    tests for mscolab/utils
 
     This file is part of mss.
 
