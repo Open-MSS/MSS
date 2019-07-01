@@ -24,6 +24,8 @@
 """
 
 from mslib.mscolab.sockets_manager import fm
+
+
 def get_recent_pid(user):
     projects = fm.list_projects(user)
     p_id = projects[-1]["p_id"]
