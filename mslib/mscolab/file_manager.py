@@ -25,6 +25,7 @@
 """
 import fs
 import difflib
+import logging
 
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
@@ -43,6 +44,7 @@ class FileManager(object):
         """
         # set codes on these later
         if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
+            logging.debug("malicious request: %s".format(user))
             return False
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
@@ -145,6 +147,7 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if attribute == "path":
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
+                logging.debug("malicious request: %s".format(user))
                 return False
             data = fs.open_fs(MSCOLAB_DATA_DIR)
             if data.exists(value):
