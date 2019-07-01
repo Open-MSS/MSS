@@ -36,11 +36,11 @@ class Test_UserMethods(object):
     def setup(self):
         self._app = app
         db.init_app(self._app)
-        self.thread = multiprocessing.Process(
+        self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
             kwargs={'port': 8083})
-        self.thread.start()
+        self.p.start()
         time.sleep(1)
 
     def test_registration(self):
@@ -48,6 +48,8 @@ class Test_UserMethods(object):
             x = register_user('sdf@s.com', 'sdf', 'sdf')
             assert x == 'True'
             x = register_user('sdf@s.com', 'sdf', 'sdf')
+            assert x == 'False'
+            x = register_user('sdf@ ssdf @s.com', 'sdf', 'sdf')
             assert x == 'False'
 
     def test_login(self):
@@ -87,4 +89,4 @@ class Test_UserMethods(object):
             User.query.filter_by(emailid="sdf@s.com").delete()
             User.query.filter_by(emailid="sdf@s1.com").delete()
             db.session.commit()
-        self.thread.terminate()
+        self.p.terminate()

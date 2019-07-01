@@ -32,17 +32,18 @@ from mslib.mscolab.models import User, Change, Project
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.server import db, sockio, app
+from mslib.mscolab.utils import get_recent_pid
 
 
 class Test_Files(object):
     def setup(self):
         self.sockets = []
         self.file_message_counter = [0] * 2
-        self.thread = multiprocessing.Process(
+        self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
             kwargs={'port': 8083})
-        self.thread.start()
+        self.p.start()
         self.app = app
         db.init_app(self.app)
         time.sleep(1)
@@ -79,7 +80,7 @@ class Test_Files(object):
 
     def test_get_project(self):
         with self.app.app_context():
-            p_id = self.get_recent_pid()
+            p_id = get_recent_pid(self.user)
             data = {
                 "token": self.token,
                 "p_id": p_id
@@ -89,7 +90,7 @@ class Test_Files(object):
 
     def test_authorized_users(self):
         with self.app.app_context():
-            p_id = self.get_recent_pid()
+            p_id = get_recent_pid(self.user)
         data = {
             "token": self.token,
             "p_id": p_id
@@ -105,7 +106,7 @@ class Test_Files(object):
 
     def test_add_permission(self):
         with self.app.app_context():
-            p_id = self.get_recent_pid()
+            p_id = get_recent_pid(self.user)
         data = {
             "token": self.token,
             "p_id": p_id,
@@ -123,7 +124,7 @@ class Test_Files(object):
 
     def test_modify_permission(self):
         with self.app.app_context():
-            p_id = self.get_recent_pid()
+            p_id = get_recent_pid(self.user)
         data = {
             "token": self.token,
             "p_id": p_id,
@@ -139,7 +140,7 @@ class Test_Files(object):
 
     def test_revoke_permission(self):
         with self.app.app_context():
-            p_id = self.get_recent_pid()
+            p_id = get_recent_pid(self.user)
         data = {
             "token": self.token,
             "p_id": p_id,
@@ -152,8 +153,8 @@ class Test_Files(object):
 
     def test_update_project(self):
         with self.app.app_context():
-            p_id = self.get_recent_pid()
-        # ToDo handle paths with space here
+            p_id = get_recent_pid(self.user)
+        # ToDo handle paths with blank characters here
         data = {
             "token": self.token,
             "p_id": p_id,
@@ -181,7 +182,7 @@ class Test_Files(object):
 
     def test_delete_project(self):
         with self.app.app_context():
-            p_id = self.get_recent_pid()
+            p_id = get_recent_pid(self.user)
         data = {
             "token": self.token,
             "p_id": p_id
@@ -197,7 +198,7 @@ class Test_Files(object):
         tests have to be manually inserted
         """
         with self.app.app_context():
-            p_id = self.get_recent_pid()
+            p_id = get_recent_pid(self.user)
             ch = Change(int(p_id), 8, 'some content', 'some comment')
             db.session.add(ch)
             db.session.commit()
@@ -234,9 +235,4 @@ class Test_Files(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        self.thread.terminate()
-
-    def get_recent_pid(self):
-        projects = fm.list_projects(self.user)
-        p_id = projects[-1]["p_id"]
-        return p_id
+        self.p.terminate()
