@@ -30,6 +30,7 @@ import fs
 import sys
 from flask import Flask
 import logging
+import argparse
 try:
     import MySQLdb as ms
 except ImportError:
@@ -135,4 +136,6 @@ def create_data():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Tool to setup data for usage of mscolab")
+    args = parser.parse_args()
     create_data()
