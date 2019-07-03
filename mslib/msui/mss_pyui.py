@@ -197,6 +197,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Tools menu.
         self.actionTrajectoryToolLagranto.triggered.connect(self.create_new_tool)
         self.actionTimeSeriesViewTrajectories.triggered.connect(self.create_new_tool)
+        self.actionMscolabProjects.triggered.connect(self.create_new_tool)
 
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
@@ -470,6 +471,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         elif self.sender() == self.actionTimeSeriesViewTrajectories:
             # Time series view.
             tool_window = timeseriesview.MSSTimeSeriesViewWindow()
+
+        elif self.sender() == self.actionMscolabProjects:
+            logging.debug("Open action mscolab window")
 
         if tool_window is not None:
             # Make sure view window will be deleted after being closed, not

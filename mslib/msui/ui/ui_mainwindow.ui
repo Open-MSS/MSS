@@ -94,7 +94,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>424</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -143,6 +143,7 @@ Save a flight track to name it.</string>
     <addaction name="actionTrajectoryToolLagranto"/>
     <addaction name="actionTimeSeriesViewTrajectories"/>
     <addaction name="separator"/>
+    <addaction name="actionMscolabProjects"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -256,6 +257,11 @@ Save a flight track to name it.</string>
    </property>
    <property name="shortcut">
     <string/>
+   </property>
+  </action>
+  <action name="actionMscolabProjects">
+   <property name="text">
+    <string>Mscolab projects</string>
    </property>
   </action>
  </widget>
