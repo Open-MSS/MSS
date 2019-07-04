@@ -45,8 +45,6 @@ class Ui_MSSMainWindow(object):
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.listTools = QtWidgets.QListWidget(self.groupBox_2)
         self.listTools.setObjectName("listTools")
-        self.mscolabContainer = QtWidgets.QListWidget()
-        self.mscolabContainer.setObjectName("mscolabContainer")
         self.verticalLayout_5.addWidget(self.listTools)
         self.verticalLayout.addWidget(self.groupBox_2)
         MSSMainWindow.setCentralWidget(self.centralwidget)
