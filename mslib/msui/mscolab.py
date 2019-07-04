@@ -35,19 +35,18 @@ from mslib.msui.icons import icons
 
 
 class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
-    """PyQt window implementing a time series view.
+    """PyQt window implementing mscolab window
     """
     name = "Mscolab"
     identifier = None
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
     def __init__(self, parent=None):
-        """Set up user interface, connect signal/slots.
+        """Set up user interface
         """
         super(MSSMscolabWindow, self).__init__(parent)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
     def setIdentifier(self, identifier):
-        # super(MSSMscolabWindow, self).setIdentifier(identifier)
         self.identifier = identifier

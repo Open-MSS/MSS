@@ -500,18 +500,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         item.window.activateWindow()
 
     def activate_mscolab_window(self):
-
-        # mscolab tool
-        logging.debug("sth")
-        tool_window = mscolab.MSSMscolabWindow()
-        tool_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        # Open as a non-modal window.
-        tool_window.show()
-        # hack used here
-        # ToDo refactor
-        listitem = QActiveViewsListWidgetItem(tool_window, self.mscolabContainer)
-        # tool_window.viewCloses.connect(listitem.view_destroyed)
-        self.viewsChanged.emit()
+        # initiate mscolab window
+        self.mscolab_window = mscolab.MSSMscolabWindow()
+        self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.mscolab_window.show()
 
     new_flight_track_counter = 0
 
