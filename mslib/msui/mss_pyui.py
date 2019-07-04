@@ -56,6 +56,7 @@ from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import constants
 from mslib.msui import wms_control
+from mslib.msui import mscolab
 from mslib.utils import config_loader, setup_logging
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
@@ -197,7 +198,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Tools menu.
         self.actionTrajectoryToolLagranto.triggered.connect(self.create_new_tool)
         self.actionTimeSeriesViewTrajectories.triggered.connect(self.create_new_tool)
-        self.actionMscolabProjects.triggered.connect(self.create_new_tool)
+
+        # mscolab menu
+        self.actionMscolabProjects.triggered.connect(self.activate_mscolab_window)
 
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
@@ -472,9 +475,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Time series view.
             tool_window = timeseriesview.MSSTimeSeriesViewWindow()
 
-        elif self.sender() == self.actionMscolabProjects:
-            logging.debug("Open action mscolab window")
-
         if tool_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -496,6 +496,20 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         item.window.showNormal()
         item.window.raise_()
         item.window.activateWindow()
+
+    def activate_mscolab_window(self):
+
+        # mscolab tool
+        logging.debug("sth")
+        tool_window = mscolab.MSSMscolabWindow()
+        tool_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        # Open as a non-modal window.
+        tool_window.show()
+        # hack used here
+        # ToDo refactor
+        listitem = QActiveViewsListWidgetItem(tool_window, self.mscolabContainer)
+        # tool_window.viewCloses.connect(listitem.view_destroyed)
+        self.viewsChanged.emit()
 
     new_flight_track_counter = 0
 
