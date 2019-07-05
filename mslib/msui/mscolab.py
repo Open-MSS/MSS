@@ -29,10 +29,13 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore  # Qt bindings
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore # Qt bindings
 from mslib.msui.mss_qt import ui_mscolab_window as ui
 from mslib.msui.icons import icons
 
+import logging
+import requests
+import json
 
 class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     """PyQt window implementing mscolab window
@@ -46,7 +49,34 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         """
         super(MSSMscolabWindow, self).__init__(parent)
         self.setupUi(self)
+        self.widget_2.hide()
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
+        # if token is None, not authorized, else authorized
+        self.token = None
+        self.loginButton.clicked.connect(self.authorize)
+
+    def authorize(self):
+        logging.debug("login button pressed")
+        emailid = self.emailid.text()
+        password = self.password.text()
+        data = {
+            "email": emailid,
+            "password": password
+        }
+        r = requests.post('http://localhost:8083/token', data=data)
+        if r.text == "False":
+            # popup that wrong credentials
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
+            pass
+        else:
+            # remove the login modal and put text there
+            json_ = json.loads(r.text)
+            logging.debug(json_["token"])
+            self.token = json_["token"]
+            self.label.setText("logged in as" + self.token)
+            self.widget_2.show()
+            self.widget.hide()
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
