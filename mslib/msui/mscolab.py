@@ -29,13 +29,15 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore # Qt bindings
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_mscolab_window as ui
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.icons import icons
 
 import logging
 import requests
 import json
+
 
 class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     """PyQt window implementing mscolab window
@@ -54,6 +56,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # if token is None, not authorized, else authorized
         self.token = None
         self.loginButton.clicked.connect(self.authorize)
+        self.logoutButton.clicked.connect(self.logout)
 
     def authorize(self):
         logging.debug("login button pressed")
@@ -63,7 +66,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "email": emailid,
             "password": password
         }
-        r = requests.post('http://localhost:8083/token', data=data)
+        r = requests.post(mss_default.mscolab_server_url + '/token', data=data)
         if r.text == "False":
             # popup that wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
@@ -74,9 +77,31 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             json_ = json.loads(r.text)
             logging.debug(json_["token"])
             self.token = json_["token"]
-            self.label.setText("logged in as" + self.token)
+            self.label.setText("logged in as: " + json_["user"]["username"])
             self.widget_2.show()
             self.widget.hide()
+
+            # add projects
+            data = {
+                "token": self.token
+            }
+            r = requests.get(mss_default.mscolab_server_url + '/projects', data=data)
+            json_ = json.loads(r.text)
+            projects = json_["projects"]
+            self.add_projects_to_ui(projects)
+
+    def add_projects_to_ui(self, projects):
+        for project in projects:
+            project_desc = project['path'] + " (" + project["access_level"] + ")"
+            widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
+            self.listProjects.addItem(widgetItem)
+
+    def logout(self):
+        # delete token and show login widget-items
+        self.token = None
+        # clear projects list here
+        self.widget_2.hide()
+        self.widget.show()
 
     def setIdentifier(self, identifier):
         self.identifier = identifier

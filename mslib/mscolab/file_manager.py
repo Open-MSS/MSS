@@ -110,7 +110,12 @@ class FileManager(object):
         projects = []
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
-            projects.append({"p_id": permission.p_id, "access_level": permission.access_level})
+            project = Project.query.filter_by(id=permission.p_id).first()
+            projects.append({
+                            "p_id": permission.p_id,
+                            "access_level": permission.access_level,
+                            "path": project.path,
+                            "description": project.description})
         return projects
 
     def is_admin(self, u_id, p_id):
