@@ -42,9 +42,9 @@ class Ui_MSSMscolabWindow(object):
         self.label = QtWidgets.QLabel(self.widget_2)
         self.label.setGeometry(QtCore.QRect(50, 10, 251, 16))
         self.label.setObjectName("label")
-        self.pushButton = QtWidgets.QPushButton(self.widget_2)
-        self.pushButton.setGeometry(QtCore.QRect(280, 10, 80, 23))
-        self.pushButton.setObjectName("pushButton")
+        self.logoutButton = QtWidgets.QPushButton(self.widget_2)
+        self.logoutButton.setGeometry(QtCore.QRect(280, 10, 80, 23))
+        self.logoutButton.setObjectName("logoutButton")
 
         self.retranslateUi(MSSMscolabWindow)
         QtCore.QMetaObject.connectSlotsByName(MSSMscolabWindow)
@@ -58,5 +58,5 @@ class Ui_MSSMscolabWindow(object):
         self.password.setPlaceholderText(_translate("MSSMscolabWindow", "password"))
         self.loginButton.setText(_translate("MSSMscolabWindow", "login"))
         self.label.setText(_translate("MSSMscolabWindow", "TextLabel"))
-        self.pushButton.setText(_translate("MSSMscolabWindow", "logout"))
+        self.logoutButton.setText(_translate("MSSMscolabWindow", "logout"))
 
