@@ -45,6 +45,15 @@ class Ui_MSSMscolabWindow(object):
         self.logoutButton = QtWidgets.QPushButton(self.widget_2)
         self.logoutButton.setGeometry(QtCore.QRect(280, 10, 80, 23))
         self.logoutButton.setObjectName("logoutButton")
+        self.topview = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.topview.setGeometry(QtCore.QRect(30, 250, 80, 23))
+        self.topview.setObjectName("topview")
+        self.sideview = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.sideview.setGeometry(QtCore.QRect(130, 250, 80, 23))
+        self.sideview.setObjectName("sideview")
+        self.tableview = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.tableview.setGeometry(QtCore.QRect(230, 250, 80, 23))
+        self.tableview.setObjectName("tableview")
 
         self.retranslateUi(MSSMscolabWindow)
         QtCore.QMetaObject.connectSlotsByName(MSSMscolabWindow)
@@ -59,4 +68,6 @@ class Ui_MSSMscolabWindow(object):
         self.loginButton.setText(_translate("MSSMscolabWindow", "login"))
         self.label.setText(_translate("MSSMscolabWindow", "TextLabel"))
         self.logoutButton.setText(_translate("MSSMscolabWindow", "logout"))
-
+        self.topview.setText(_translate("MSSMscolabWindow", "topview"))
+        self.sideview.setText(_translate("MSSMscolabWindow", "sideview"))
+        self.tableview.setText(_translate("MSSMscolabWindow", "tableview"))

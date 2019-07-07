@@ -132,6 +132,45 @@
     </property>
    </widget>
   </widget>
+  <widget class="QPushButton" name="topview">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>250</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>topview</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="sideview">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>250</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>sideview</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="tableview">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>250</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>tableview</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
