@@ -94,7 +94,7 @@ class MapCanvas():
                               "fill_continents": True,
                               "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
                               "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.))}
-        default_appearance._(param_appearance)
+        # default_appearance._(param_appearance)
         self.appearance = default_appearance
 
         # Identifier of this map canvas (used to query data structures that
@@ -110,7 +110,10 @@ class MapCanvas():
         # delete the attribute (mr, 08Feb2013).
         if hasattr(self, "epsg"):
             del self.epsg
-        ax = plt.axes(**kwargs)
+        fig = plt.figure(figsize=[8, 8])
+        ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+        ax.coastlines()
+        plt.draw()
         self.ax = ax
         self.kwargs = kwargs
 
@@ -131,7 +134,7 @@ class MapCanvas():
         # Curiously, plot() works fine without this setting, but scatter()
         # doesn't.
         if self.appearance["fill_continents"]:
-            self.map_continents = self.ax.add_feature(cartopy.feature.BORDERS, facecolor=self.appearance["colour_land"])
+            self.map_continents = self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"])
         else:
             self.map_continents = None
 
@@ -147,12 +150,13 @@ class MapCanvas():
         if self.appearance["draw_graticule"]:
             try:
                 self._draw_auto_graticule()
+                self.map_parallels = True
+                self.map_meridians = True
             except Exception as ex:
                 logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
         else:
             self.map_parallels = None
             self.map_meridians = None
-
         # self.warpimage() # disable fillcontinents when loading bluemarble
         plt.autoscale(True)
 
@@ -189,7 +193,8 @@ class MapCanvas():
     def _draw_auto_graticule(self):
         """Draw an automatically spaced graticule on the map.
         """
-        self.ax.gridlines(crs=ax.projetion, draw_labels=yes)
+        ax = self.ax
+        self.ax.gridlines(crs=ax.projection, draw_labels=True)
 
     def set_graticule_visible(self, visible=True):
         """Set the visibily of the graticule.
@@ -200,36 +205,38 @@ class MapCanvas():
 
         See http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/msg09349.html
         """
+        ax = self.ax
         self.appearance["draw_graticule"] = visible
         if visible and self.map_parallels is None and self.map_meridians is None:
             # Draw new graticule if visible is True and no current graticule
             # exists.
             self._draw_auto_graticule()
             # Update the figure canvas.
-            self.ax.draw()
+            plt.draw()
         elif not visible and self.map_parallels is not None and self.map_meridians is not None:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            for item in self.map_parallels.values():
-                for line in item[0]:
-                    line.remove()
-                for text in item[1]:
-                    text.remove()
-            for item in self.map_meridians.values():
-                for line in item[0]:
-                    line.remove()
-                for text in item[1]:
-                    text.remove()
-            self.map_parallels = None
-            self.map_meridians = None
-            # Update the figure canvas.
-            self.ax.draw()
+            # for item in self.map_parallels.values():
+            #     for line in item[0]:
+            #         line.remove()
+            #     for text in item[1]:
+            #         text.remove()
+            # for item in self.map_meridians.values():
+            #     for line in item[0]:
+            #         line.remove()
+            #     for text in item[1]:
+            #         text.remove()
+            # self.map_parallels = None
+            # self.map_meridians = None
+            # # Update the figure canvas.
+            plt.draw()
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
                                    lake_color=None):
         """Set the visibility of continent fillings.
         """
+        ax = self.ax
         if land_color is not None:
             self.appearance["colour_land"] = land_color
         if lake_color is not None:
@@ -241,32 +248,28 @@ class MapCanvas():
             # scatter() for drawing the flight tracks and trajectories.
             # Curiously, plot() works fine without this setting, but scatter()
             # doesn't.
-            self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
-                                                      lake_color=self.appearance["colour_water"],
-                                                      zorder=1)
-            self.ax.draw()
+            self.map_continents = self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"], zorder=1)
+            plt.draw()
         elif not visible and self.map_continents is not None:
             # Remove current fills. They are stored as a list of polygon patches
             # in self.map_continents.
-            for patch in self.map_continents:
-                patch.remove()
+            # for patch in self.map_continents:
+            #     patch.remove()
             self.map_continents = None
-            self.ax.draw()
+            plt.draw()
         elif visible and self.map_continents is not None:
             # Colours have changed: Remove the old fill and redraw.
-            for patch in self.map_continents:
-                patch.remove()
-            self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
-                                                      lake_color=self.appearance["colour_water"],
-                                                      zorder=1)
-            self.ax.draw()
+            # for patch in self.map_continents:
+            #     patch.remove()
+            self.map_continents = self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"], zorder=1)
+            plt.draw()
 
     def set_coastlines_visible(self, visible=True):
         """Set the visibility of coastlines and country borders.
         """
         self.appearance["draw_coastlines"] = visible
         if visible and self.map_coastlines is None and self.map_countries is None:
-            self.map_coastlines = self.drawcoastlines(zorder=3)
+            self.map_coastlines = self.ax.coastlines(zorder=3)
             self.map_countries = self.drawcountries(zorder=3)
             self.ax.draw()
         elif not visible and self.map_coastlines is not None and self.map_countries is not None:
@@ -309,7 +312,7 @@ class MapCanvas():
         the map is redrawn, 2) redrawing the map, 3) transforming the stored
         lat/lon coordinates to the new map coordinates.
         """
-        # Convert the current axis corners to lat/lon coordinates.
+        # Convert the current axis corners to lat/lon coordinates.kwargs.get('projection')kwargs.get('projection')
         axis = self.ax
         self.kwargs['llcrnrlon'], self.kwargs['llcrnrlat'] = self.ax.get_extent()[0], self.ax.get_extent()[2]
         self.kwargs['urcrnrlon'], self.kwargs['urcrnrlat'] = self.ax.get_extent()[1], self.ax.get_extent()[3]
@@ -345,21 +348,21 @@ class MapCanvas():
         # Refer to Basemap.drawcountries() on how to remove country borders.
         # In addition to the matplotlib lines, the loaded country segment data
         # needs to be loaded. THE SAME NEEDS TO BE DONE WITH RIVERS ETC.
-        if self.map_countries is not None:
-            self.map_countries.remove()
-            del self.cntrysegs
+        # if self.map_countries is not None:
+        #     self.map_countries.remove()
+        #     del self.cntrysegs
 
         # map_boundary is None for rectangular projections (basemap simply sets
         # the backgorund colour).
-        if self.map_boundary is not None:
-            try:
-                # TODO: review
-                # FIX (mr, 15Oct2012) -- something seems to have changed in
-                # newer Matplotlib versions: this causes an exception when
-                # the user zooms/pans..
-                self.map_boundary.remove()
-            except NotImplementedError as ex:
-                logging.debug("{}".format(ex))
+        # if self.map_boundary is not None:
+        #     try:
+        #         # TODO: review
+        #         # FIX (mr, 15Oct2012) -- something seems to have changed in
+        #         # newer Matplotlib versions: this causes an exception when
+        #         # the user zooms/pans..
+        #         self.map_boundary.remove()
+        #     except NotImplementedError as ex:
+        #         logging.debug("{}".format(ex))
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
@@ -374,7 +377,11 @@ class MapCanvas():
                 for key in (_x for _x in proj_keys if _x in self.kwargs):
                     del self.kwargs[key]
             self.kwargs.update(kwargs_update)
-        ax = plt.axes(**kwargs)
+        fig = plt.figure(figsize=[8, 8])
+        ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+        ax.coastlines()
+        plt.draw()
+        self.ax = ax
 
         self.update_trajectory_items()
 
@@ -649,7 +656,7 @@ class MapCanvas():
         """
         # use great circle formula for a perfect sphere.
         f = (self.rmajor - self.rminor)/self.rmajor
-        gc = pyproj.Geod(radius=self.rmajor, flattening=1/f)
+        gc = gd.Geodesic(radius=self.rmajor, flattening=1/f)
         dist = gc.inverse(lon1, lat1, lon2, lat2)[:,0]
         npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
         lonlats = npts_cartopy(lon1, lat1, lon2, lat2, npoints)
@@ -672,7 +679,7 @@ class MapCanvas():
         """
         # use great circle formula for a perfect sphere.
         f = (self.rmajor - self.rminor)/self.rmajor
-        gc = pyproj.Geod(radius=self.rmajor, flattening=1/f)
+        gc = gd.Geodesic(radius=self.rmajor, flattening=1/f)
         assert len(lons) == len(lats)
         assert len(lons) > 1
         gclons = [lons[0]]
