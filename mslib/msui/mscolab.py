@@ -57,9 +57,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.token = None
         self.loginButton.clicked.connect(self.authorize)
         self.logoutButton.clicked.connect(self.logout)
+        self.topview.clicked.connect(self.open_topview)
+        self.sideview.clicked.connect(self.open_sideview)
+        self.tableview.clicked.connect(self.open_tableview)
+
+        # bool to store active pid
+        self.active_pid = None
 
     def authorize(self):
-        logging.debug("login button pressed")
         emailid = self.emailid.text()
         password = self.password.text()
         data = {
@@ -94,7 +99,39 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for project in projects:
             project_desc = project['path'] + " (" + project["access_level"] + ")"
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
+            widgetItem.p_id = project["p_id"]
             self.listProjects.addItem(widgetItem)
+        self.listProjects.itemActivated.connect(self.set_active_pid)
+
+    def set_active_pid(self, item):
+        self.active_pid = item.p_id
+        logging.debug(self.active_pid)
+        font = QtGui.QFont()
+        for i in range(self.listProjects.count()):
+            self.listProjects.item(i).setFont(font)
+        font.setBold(True)
+        item.setFont(font)
+
+    def open_topview(self):
+        # showing dummy info dialog
+        if self.active_pid == None:
+            return
+        self.i_dialog = QtWidgets.QErrorMessage()
+        self.i_dialog.showMessage('Opening topview with p_id'+str(self.active_pid))
+
+    def open_sideview(self):
+        # showing dummy info dialog
+        if self.active_pid == None:
+            return
+        self.i_dialog = QtWidgets.QErrorMessage()
+        self.i_dialog.showMessage('Opening sideview with p_id'+str(self.active_pid))
+
+    def open_tableview(self):
+        # showing dummy info dialog
+        if self.active_pid == None:
+            return
+        self.i_dialog = QtWidgets.QErrorMessage()
+        self.i_dialog.showMessage('Opening tableview with p_id'+str(self.active_pid))
 
     def logout(self):
         # delete token and show login widget-items
