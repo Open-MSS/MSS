@@ -910,11 +910,14 @@ class MplTopViewCanvas(MplCanvas):
     def init_map(self, model=None, **kwargs):
         """Set up the map view.
         """
-        ax = self.ax
-        self.map = mpl_map.MapCanvas(appearance=self.get_map_appearance(),
+        self.fig.delaxes(self.ax)
+        self.map = mpl_map.MapCanvas(appearance=self.get_map_appearance(), fig=self.fig,
                                      **kwargs)
-        ax.set_autoscale_on(False)
-        ax.set_title("Top view", horizontalalignment="left", x=0)
+        self.ax = self.map.ax
+        print(self.fig.axes)
+        # self.ax.coastlines()
+        self.ax.set_autoscale_on(False)
+        self.ax.set_title("Top view", horizontalalignment="left", x=0)
         self.draw()  # necessary?
 
         if model:
@@ -970,6 +973,7 @@ class MplTopViewCanvas(MplCanvas):
 
         # 2) UPDATE MAP.
         self.map.update_with_coordinate_change(kwargs_update)
+        self.ax = self.map.ax
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
         # in waypoints_interactor()

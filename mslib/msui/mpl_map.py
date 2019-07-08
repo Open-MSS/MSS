@@ -55,7 +55,7 @@ except ImportError:
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import trajectory_item_tree as titree
-from mslib.utils import npts_cartopy
+from mslib.utils import npts_cartopy, get_projection_params
 
 
 class MapCanvas():
@@ -64,7 +64,7 @@ class MapCanvas():
     """
 
     def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None,
-                 traj_item_tree=None, appearance=None, **kwargs):
+                 traj_item_tree=None, appearance=None, fig=None, **kwargs):
         """New constructor automatically adds coastlines, continents, and
            a graticule to the map.
 
@@ -76,11 +76,15 @@ class MapCanvas():
 
         """
         # Coordinate reference system identifier and coordinate system units.
+        self.fig = fig
         self.crs = CRS if CRS is not None else self.crs if hasattr(self, "crs") else None
         if BBOX_UNITS is not None:
             self.bbox_units = BBOX_UNITS
         else:
             self.bbox_units = getattr(self, "bbox_units", None)
+
+        BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+        print(BBOX)
 
         # Dictionary containing map appearance settings.
         if appearance is not None:
@@ -94,7 +98,7 @@ class MapCanvas():
                               "fill_continents": True,
                               "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
                               "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.))}
-        # default_appearance._(param_appearance)
+        default_appearance.update(param_appearance)
         self.appearance = default_appearance
 
         # Identifier of this map canvas (used to query data structures that
@@ -110,10 +114,11 @@ class MapCanvas():
         # delete the attribute (mr, 08Feb2013).
         if hasattr(self, "epsg"):
             del self.epsg
-        fig = plt.figure(figsize=[8, 8])
-        ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-        ax.coastlines()
-        plt.draw()
+        print(self.crs)
+        user_proj = get_projection_params(self.crs)["basemap"]
+        ax = self.fig.add_subplot(1, 1, 1, projection=user_proj["projection"])
+        ax.set_extent(BBOX)
+        self.fig.canvas.draw()
         self.ax = ax
         self.kwargs = kwargs
 
@@ -212,8 +217,8 @@ class MapCanvas():
             # exists.
             self._draw_auto_graticule()
             # Update the figure canvas.
-            plt.draw()
-        elif not visible and self.map_parallels is not None and self.map_meridians is not None:
+            self.fig.canvas.draw()
+        # elif not visible and self.map_parallels is not None and self.map_meridians is not None:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
@@ -230,7 +235,7 @@ class MapCanvas():
             # self.map_parallels = None
             # self.map_meridians = None
             # # Update the figure canvas.
-            plt.draw()
+            #self.fig.canvas.draw()
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
                                    lake_color=None):
@@ -249,20 +254,20 @@ class MapCanvas():
             # Curiously, plot() works fine without this setting, but scatter()
             # doesn't.
             self.map_continents = self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"], zorder=1)
-            plt.draw()
+            self.fig.canvas.draw()
         elif not visible and self.map_continents is not None:
             # Remove current fills. They are stored as a list of polygon patches
             # in self.map_continents.
             # for patch in self.map_continents:
             #     patch.remove()
             self.map_continents = None
-            plt.draw()
+            self.fig.canvas.draw()
         elif visible and self.map_continents is not None:
             # Colours have changed: Remove the old fill and redraw.
             # for patch in self.map_continents:
             #     patch.remove()
             self.map_continents = self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"], zorder=1)
-            plt.draw()
+            self.fig.canvas.draw()
 
     def set_coastlines_visible(self, visible=True):
         """Set the visibility of coastlines and country borders.
@@ -271,14 +276,14 @@ class MapCanvas():
         if visible and self.map_coastlines is None and self.map_countries is None:
             self.map_coastlines = self.ax.coastlines(zorder=3)
             self.map_countries = self.drawcountries(zorder=3)
-            self.ax.draw()
+            self.fig.canvas.draw()
         elif not visible and self.map_coastlines is not None and self.map_countries is not None:
             self.map_coastlines.remove()
             self.map_countries.remove()
             del self.cntrysegs
             self.map_coastlines = None
             self.map_countries = None
-            self.ax.draw()
+            self.fig.canvas.draw()
 
     def set_mapboundary_visible(self, visible=True, bg_color='#99ffff'):
         """
@@ -292,10 +297,10 @@ class MapCanvas():
         if not visible and self.map_boundary is not None:
             self.map_boundary.remove()
             self.map_boundary = None
-            self.ax.draw()
+            self.fig.canvas.draw()
         elif visible:
-            self.map_boundary = self.drawmapboundary(fill_color=bg_color)
-            self.ax.draw()
+            # self.map_boundary = self.drawmapboundary(fill_color=bg_color)
+            self.fig.canvas.draw()
 
     def update_with_coordinate_change(self, kwargs_update=None):
         """Redraws the entire map. This is necessary after zoom/pan operations.
@@ -338,8 +343,8 @@ class MapCanvas():
         grat_vis = self.appearance["draw_graticule"]
         self.set_graticule_visible(False)
         self.appearance["draw_graticule"] = grat_vis
-        if self.map_coastlines is not None:
-            self.map_coastlines.remove()
+        # if self.map_coastlines is not None:
+        #     self.map_coastlines.remove()
 
         if self.image is not None:
             self.image.remove()
@@ -377,11 +382,9 @@ class MapCanvas():
                 for key in (_x for _x in proj_keys if _x in self.kwargs):
                     del self.kwargs[key]
             self.kwargs.update(kwargs_update)
-        fig = plt.figure(figsize=[8, 8])
-        ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-        ax.coastlines()
-        plt.draw()
-        self.ax = ax
+
+            ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
+            self.ax = ax
 
         self.update_trajectory_items()
 
@@ -416,7 +419,7 @@ class MapCanvas():
         if self.image is not None:
             self.image.remove()
         self.image = self.ax.imshow(X, zorder=2,transform=ax.projection, **kwargs)
-        self.ax.draw()
+        self.fig.canvas.draw()
         return self.image
 
     def set_trajectory_tree(self, tree):
@@ -647,7 +650,7 @@ class MapCanvas():
                                               scatter_instance)
 
         # Update the figure canvas.
-        self.ax.draw()
+        self.fig.canvas.draw()
 
     def gcpoints2(self, lon1, lat1, lon2, lat2, del_s=100., map_coords=True):
         """
