@@ -171,6 +171,19 @@
     <string>tableview</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="save_ft">
+   <property name="geometry">
+    <rect>
+     <x>340</x>
+     <y>250</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>save</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

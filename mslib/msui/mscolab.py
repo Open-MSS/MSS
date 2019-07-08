@@ -63,13 +63,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.clicked.connect(self.open_topview)
         self.sideview.clicked.connect(self.open_sideview)
         self.tableview.clicked.connect(self.open_tableview)
+        self.save_ft.clicked.connect(self.save_wp_mscolab)
 
         # int to store active pid
         self.active_pid = None
         # store active_flight_path here as object
-        self.active_flight_path = None
+        self.waypoints_model = None
         # store a reference of window in class
         self.open_windows_mscolab = []
+
     def authorize(self):
         emailid = self.emailid.text()
         password = self.password.text()
@@ -161,6 +163,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # clear projects list here
         self.widget_2.hide()
         self.widget.show()
+
+    def save_wp_mscolab(self):
+        if self.active_pid != None:
+            self.waypoints_model.save_to_mscolab()
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
