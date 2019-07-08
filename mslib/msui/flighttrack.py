@@ -142,12 +142,14 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     flight performance calculations.
     """
 
-    def __init__(self, name="", filename=None, waypoints=None):
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False):
         super(WaypointsTableModel, self).__init__()
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
         self.modified = False  # for "save on exit"
         self.waypoints = []  # user-defined waypoints
+        # file-save events are handled in a different manner
+        self.mscolab_mode = mscolab_mode
 
         # self.aircraft.setErrorHandling("permissive")
         self.settings_tag = "performance"
@@ -515,6 +517,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def replace_waypoints(self, new_waypoints):
         self.waypoints = []
         self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints)
+
+    def save_to_mscolab(self, token="", p_id=-1):
+        # note p_id can be a member of this class
+        logging.debug("saving to mscolab")
 
     def save_to_ftml(self, filename=None):
         """Save the flight track to an XML file.
