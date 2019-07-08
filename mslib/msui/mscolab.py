@@ -33,10 +33,13 @@ from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_mscolab_window as ui
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.icons import icons
+from mslib.msui import flighttrack as ft
+from mslib.msui import topview, sideview, tableview
 
 import logging
 import requests
 import json
+import fs
 
 
 class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
@@ -61,9 +64,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.sideview.clicked.connect(self.open_sideview)
         self.tableview.clicked.connect(self.open_tableview)
 
-        # bool to store active pid
+        # int to store active pid
         self.active_pid = None
-
+        # store active_flight_path here as object
+        self.active_flight_path = None
+        # store a reference of window in class
+        self.open_windows_mscolab = []
     def authorize(self):
         emailid = self.emailid.text()
         password = self.password.text()
@@ -80,7 +86,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         else:
             # remove the login modal and put text there
             json_ = json.loads(r.text)
-            logging.debug(json_["token"])
             self.token = json_["token"]
             self.label.setText("logged in as: " + json_["user"]["username"])
             self.widget_2.show()
@@ -104,8 +109,22 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def set_active_pid(self, item):
+        # set active_pid here
         self.active_pid = item.p_id
-        logging.debug(self.active_pid)
+
+        # set active flightpath here
+        data = {
+            "token": self.token,
+            "p_id": self.active_pid
+        }
+        r = requests.get(mss_default.mscolab_server_url + '/get_project', data=data)
+        ftml = json.loads(r.text)["content"]
+        data_dir = fs.open_fs(mss_default.data_dir)
+        data_dir.writetext('tempfile_mscolab.ftml', ftml)
+        fname_temp = fs.path.combine(mss_default.data_dir, 'tempfile_mscolab.ftml')
+        self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
+
+        # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
             self.listProjects.item(i).setFont(font)
@@ -116,22 +135,25 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # showing dummy info dialog
         if self.active_pid == None:
             return
-        self.i_dialog = QtWidgets.QErrorMessage()
-        self.i_dialog.showMessage('Opening topview with p_id'+str(self.active_pid))
+        view_window = topview.MSSTopViewWindow(model=self.waypoints_model, parent=self.listProjects)
+        view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        view_window.show()
 
     def open_sideview(self):
         # showing dummy info dialog
         if self.active_pid == None:
             return
-        self.i_dialog = QtWidgets.QErrorMessage()
-        self.i_dialog.showMessage('Opening sideview with p_id'+str(self.active_pid))
+        view_window = sideview.MSSSideViewWindow(model=self.waypoints_model, parent=self.listProjects)
+        view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        view_window.show()
 
     def open_tableview(self):
         # showing dummy info dialog
         if self.active_pid == None:
             return
-        self.i_dialog = QtWidgets.QErrorMessage()
-        self.i_dialog.showMessage('Opening tableview with p_id'+str(self.active_pid))
+        view_window = tableview.MSSTableViewWindow(model=self.waypoints_model, parent=self.listProjects)
+        view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        view_window.show()
 
     def logout(self):
         # delete token and show login widget-items
