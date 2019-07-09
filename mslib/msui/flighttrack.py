@@ -44,7 +44,7 @@ import logging
 import os
 import xml.dom.minidom
 import xml.parsers.expat
-from fs import open_fs
+from fs import open_fs, path
 
 # related third party imports
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float
@@ -521,9 +521,14 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.waypoints = []
         self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints)
 
-    def save_to_mscolab(self, token="", p_id=-1):
+    def save_to_mscolab(self):
         # note p_id can be a member of this class
         logging.debug("saving to mscolab")
+        fname_temp = path.combine(mss_default.data_dir, 'tempfile_mscolab.ftml')
+        self.save_to_ftml(filename=fname_temp)
+        _fs = open_fs(mss_default.data_dir)
+        content = _fs.readtext('tempfile_mscolab.ftml')
+        return content
 
     def save_to_ftml(self, filename=None):
         """Save the flight track to an XML file.
