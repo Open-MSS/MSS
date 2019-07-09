@@ -302,7 +302,7 @@ class MapCanvas():
             # self.map_boundary = self.drawmapboundary(fill_color=bg_color)
             self.fig.canvas.draw()
 
-    def update_with_coordinate_change(self, kwargs_update=None, fig=None):
+    def update_with_coordinate_change(self, kwargs_update=None, fig=None, ax=None):
         """Redraws the entire map. This is necessary after zoom/pan operations.
 
         Determines corner coordinates of the current axes, removes all items
@@ -318,7 +318,9 @@ class MapCanvas():
         lat/lon coordinates to the new map coordinates.
         """
         # Convert the current axis corners to lat/lon coordinates.kwargs.get('projection')kwargs.get('projection')
-        self.ax.cla()
+        self.fig = fig
+        self.ax = ax
+        self.fig.delaxes(self.ax)
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
@@ -334,34 +336,11 @@ class MapCanvas():
         self.kwargs.update(kwargs_update)
 
         ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
+        print(self.kwargs)
         self.fig.canvas.draw()
         self.ax = ax
 
         self.update_trajectory_items()
-
-        # TODO: HOW TO MAKE THIS MORE EFFICIENT.
-        # POSSIBILITY B): Only set the Basemap parameters that influence the
-        # plot (corner lat/lon, x/y, width/height, ..) and re-define the
-        # polygons that represent the coastlines etc. In Basemap, they are
-        # defined in __init__(), at the very bottom (the code that comes
-        # with the comments
-        #    >> read in coastline polygons, only keeping those that
-        #    >> intersect map boundary polygon.
-        # ). Basemap only loads the coastline data that is actually displayed.
-        # If we only change llcrnrlon etc. here and replot coastlines etc.,
-        # the polygons and the map extent will remain the same.
-        # However, it should be possible to make a map change WITHOUT changing
-        # coordinates.
-        #
-
-    # self.llcrnrlon = llcrnrlon
-    # self.llcrnrlat = llcrnrlat
-    # self.urcrnrlon = urcrnrlon
-    # self.urcrnrlat = urcrnrlat
-    # self.llcrnrx = axis[0]
-    # self.llcrnry = axis[2]
-    # self.urcrnrx = axis[1]
-    # self.urcrnry = axis[3]
 
     def imshow(self, X, **kwargs):
         """Overloads basemap.imshow(). Deletes any existing image and
