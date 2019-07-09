@@ -302,7 +302,7 @@ class MapCanvas():
             # self.map_boundary = self.drawmapboundary(fill_color=bg_color)
             self.fig.canvas.draw()
 
-    def update_with_coordinate_change(self, kwargs_update=None):
+    def update_with_coordinate_change(self, kwargs_update=None, fig=None):
         """Redraws the entire map. This is necessary after zoom/pan operations.
 
         Determines corner coordinates of the current axes, removes all items
@@ -318,56 +318,7 @@ class MapCanvas():
         lat/lon coordinates to the new map coordinates.
         """
         # Convert the current axis corners to lat/lon coordinates.kwargs.get('projection')kwargs.get('projection')
-        axis = self.ax
-        self.kwargs['llcrnrlon'], self.kwargs['llcrnrlat'] = self.ax.get_extent()[0], self.ax.get_extent()[2]
-        self.kwargs['urcrnrlon'], self.kwargs['urcrnrlat'] = self.ax.get_extent()[1], self.ax.get_extent()[3]
-
-        logging.debug("corner coordinates (lat/lon): ll(%.2f,%.2f), ur(%.2f,%.2f)",
-                      self.kwargs['llcrnrlat'], self.kwargs['llcrnrlon'],
-                      self.kwargs['urcrnrlat'], self.kwargs['urcrnrlon'])
-
-        if (self.kwargs.get("projection") in ["ccrs.PlateCarree()"] or
-                self.kwargs.get("epsg") in ["4326"]):
-            # Latitudes in cylindrical projection need to be within -90..90.
-            self.kwargs['llcrnrlat'] = max(self.kwargs['llcrnrlat'], -90)
-            self.kwargs['urcrnrlat'] = max(self.kwargs['urcrnrlat'], -89)
-            self.kwargs['llcrnrlat'] = min(self.kwargs['llcrnrlat'], 89)
-            self.kwargs['urcrnrlat'] = min(self.kwargs['urcrnrlat'], 90)
-            # Longitudes in cylindrical projection need to be within -360..540.
-            self.kwargs["llcrnrlon"] = max(self.kwargs["llcrnrlon"], -360)
-            self.kwargs["urcrnrlon"] = max(self.kwargs["urcrnrlon"], -359)
-            self.kwargs["llcrnrlon"] = min(self.kwargs["llcrnrlon"], 539)
-            self.kwargs["urcrnrlon"] = min(self.kwargs["urcrnrlon"], 540)
-
-        # Remove the current map artists.
-        grat_vis = self.appearance["draw_graticule"]
-        self.set_graticule_visible(False)
-        self.appearance["draw_graticule"] = grat_vis
-        # if self.map_coastlines is not None:
-        #     self.map_coastlines.remove()
-
-        if self.image is not None:
-            self.image.remove()
-            self.image = None
-
-        # Refer to Basemap.drawcountries() on how to remove country borders.
-        # In addition to the matplotlib lines, the loaded country segment data
-        # needs to be loaded. THE SAME NEEDS TO BE DONE WITH RIVERS ETC.
-        # if self.map_countries is not None:
-        #     self.map_countries.remove()
-        #     del self.cntrysegs
-
-        # map_boundary is None for rectangular projections (basemap simply sets
-        # the backgorund colour).
-        # if self.map_boundary is not None:
-        #     try:
-        #         # TODO: review
-        #         # FIX (mr, 15Oct2012) -- something seems to have changed in
-        #         # newer Matplotlib versions: this causes an exception when
-        #         # the user zooms/pans..
-        #         self.map_boundary.remove()
-        #     except NotImplementedError as ex:
-        #         logging.debug("{}".format(ex))
+        self.ax.cla()
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
@@ -376,15 +327,15 @@ class MapCanvas():
         # POSSIBILITY A): Call self.__init__ again with stored keywords.
         # Update kwargs if new parameters such as the map region have been
         # given.
-        if kwargs_update:
-            proj_keys = ["epsg", "projection"]
-            if any(_x in kwargs_update for _x in proj_keys):
-                for key in (_x for _x in proj_keys if _x in self.kwargs):
-                    del self.kwargs[key]
-            self.kwargs.update(kwargs_update)
+        proj_keys = ["epsg", "projection"]
+        if any(_x in kwargs_update for _x in proj_keys):
+            for key in (_x for _x in proj_keys if _x in self.kwargs):
+                del self.kwargs[key]
+        self.kwargs.update(kwargs_update)
 
-            ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
-            self.ax = ax
+        ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
+        self.fig.canvas.draw()
+        self.ax = ax
 
         self.update_trajectory_items()
 
