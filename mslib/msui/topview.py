@@ -209,7 +209,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # parameters from the tables in mss_settings.
         kwargs = self.changeMapSection(only_kwargs=True)
         self.mpl.canvas.init_map(**kwargs)
-        # self.setFlightTrackModel(self.waypoints_model)
+        self.setFlightTrackModel(self.waypoints_model)
 
     def update_predefined_maps(self, extra=None):
         self.cbChangeMapSection.clear()
@@ -274,8 +274,6 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         kwargs = current_map["map"]
         kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"]})
         kwargs.update(proj_params["basemap"])
-
-        logging.debug("kwargs are '%s'", current_map_key, kwargs)
 
         if only_kwargs:
             # Return kwargs dictionary and do NOT redraw the map.

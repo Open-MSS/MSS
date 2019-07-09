@@ -55,6 +55,7 @@ import matplotlib.patches as mpatches
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.utils import get_distance, find_location, path_points, latlon_points
 from mslib.thermolib import pressure2flightlevel
+import cartopy.crs as ccrs
 
 from mslib.msui import flighttrack as ft
 
@@ -254,12 +255,14 @@ class PathH(WaypointsPath):
            vertex cooredinates between lat/lon and projection coordinates.
         """
         self.map = kwargs.pop("map")
+        self.kwargs = kwargs
         super(PathH, self).__init__(*args, **kwargs)
 
     def transform_waypoint(self, wps_list, index):
         """Transform lon/lat to projection coordinates.
         """
-        return self.map(wps_list[index].lon, wps_list[index].lat)
+        user_proj = self.map.ax.projection
+        return user_proj.transform_point((wps_list[index].lon), (wps_list[index].lat), src_crs=ccrs.PlateCarree())
 
 
 class PathH_GC(PathH):
@@ -853,7 +856,7 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         width = int(round(ax_bounds[2]))
-        map_delta_x = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx)
+        map_delta_x = np.hypot(self.map.ax.get_extent()[2] - self.map.ax.get_extent()[3], self.map.ax.get_extent()[0] - self.map.ax.get_extent()[1])
         map_coords_per_px_x = map_delta_x / width
         return map_coords_per_px_x * px
 
@@ -871,14 +874,14 @@ class HPathInteractor(PathInteractor):
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
         if self.map.projection in ['stere', 'lcc']:
-            map_delta = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx) / 1000.
+            map_delta = np.hypot(self.map.ax.get_extent()[2] - self.map.ax.get_extent()[3], self.map.ax.get_extent()[0] - self.map.ax.get_extent()[1]) / 1000.
         else:
-            map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
+            map_delta = get_distance((self.map.ax.get_extent()[2], self.map.ax.get_extent()[0]), (self.map.ax.get_extent()[3], self.map.ax.get_extent()[1]))
         km_per_px = map_delta / diagonal
         return km_per_px * px
 
     def get_lat_lon(self, event):
-        return self.map(event.xdata, event.ydata, inverse=True)[::-1]
+        return ccrs.PlateCarree().transform_point(event.xdata, event.ydata, self.map.ax.projection)
 
     def button_release_insert_callback(self, event):
         """Called whenever a mouse button is released.

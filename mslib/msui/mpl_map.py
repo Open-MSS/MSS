@@ -84,8 +84,8 @@ class MapCanvas():
             self.bbox_units = getattr(self, "bbox_units", None)
 
         BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
-        print(BBOX)
-
+        print("hel")
+        print(kwargs)
         # Dictionary containing map appearance settings.
         if appearance is not None:
             param_appearance = appearance
@@ -302,7 +302,7 @@ class MapCanvas():
             # self.map_boundary = self.drawmapboundary(fill_color=bg_color)
             self.fig.canvas.draw()
 
-    def update_with_coordinate_change(self, kwargs_update=None, fig=None, ax=None):
+    def update_with_coordinate_change(self, kwargs_update=None):
         """Redraws the entire map. This is necessary after zoom/pan operations.
 
         Determines corner coordinates of the current axes, removes all items
@@ -317,9 +317,7 @@ class MapCanvas():
         the map is redrawn, 2) redrawing the map, 3) transforming the stored
         lat/lon coordinates to the new map coordinates.
         """
-        # Convert the current axis corners to lat/lon coordinates.kwargs.get('projection')kwargs.get('projection')
-        self.fig = fig
-
+        # Convert the current axis corners to lat/lon coordinates.kwargs.get('projection')
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
         self.appearance["fill_continents"] = cont_vis
@@ -327,30 +325,33 @@ class MapCanvas():
         # POSSIBILITY A): Call self.__init__ again with stored keywords.
         # Update kwargs if new parameters such as the map region have been
         # given.
-        proj_keys = ["epsg", "projection"]
-        if any(_x in kwargs_update for _x in proj_keys):
-            for key in (_x for _x in proj_keys if _x in self.kwargs):
-                del self.kwargs[key]
-        self.kwargs.update(kwargs_update)
+        require_new_axis = False
+        if kwargs_update:
+            proj_keys = ["epsg", "projection"]
+            if any(_x in kwargs_update for _x in proj_keys):
+                for key in (_x for _x in proj_keys if _x in self.kwargs):
+                    del self.kwargs[key]
+            require_new_axis = True
+            self.kwargs.update(kwargs_update)
 
         kwargs = self.kwargs
 
-        self.crs = kwargs['CRS'] if kwargs['CRS'] is not None else self.crs if hasattr(self, "crs") else None
-        if kwargs['BBOX_UNITS'] is not None:
-            self.bbox_units = kwargs['BBOX_UNITS']
-        else:
-            self.bbox_units = getattr(self, "bbox_units", None)
+        if require_new_axis:
+            self.crs = kwargs['CRS'] if kwargs.get('CRS') is not None else self.crs if hasattr(self, "crs") else None
+            if kwargs.get('BBOX_UNITS') is not None:
+                self.bbox_units = kwargs['BBOX_UNITS']
+            else:
+                self.bbox_units = getattr(self, "bbox_units", None)
 
-        BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
-        self.ax = ax
+            BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
-        user_proj = get_projection_params(self.crs)["basemap"]
-        ax = self.fig.add_subplot(1, 1, 1, projection=user_proj["projection"])
-        ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
-        print(self.kwargs)
-        ax.set_extent(BBOX)
+            user_proj = get_projection_params(self.crs)["basemap"]
+            self.fig.delaxes(self.ax)
+            ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
+            ax.set_extent(BBOX)
+            self.ax = ax
+            ax.coastlines()
         self.fig.canvas.draw()
-        self.ax = ax
 
         self.update_trajectory_items()
 
@@ -600,8 +601,7 @@ class MapCanvas():
         to space the points instead of a number of points.
         """
         # use great circle formula for a perfect sphere.
-        f = (self.rmajor - self.rminor)/self.rmajor
-        gc = gd.Geodesic(radius=self.rmajor, flattening=1/f)
+        gc = gd.Geodesic()
         dist = gc.inverse(lon1, lat1, lon2, lat2)[:,0]
         npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
         lonlats = npts_cartopy(lon1, lat1, lon2, lat2, npoints)
@@ -623,14 +623,13 @@ class MapCanvas():
            line segments. lons and lats are lists of waypoint coordinates.
         """
         # use great circle formula for a perfect sphere.
-        f = (self.rmajor - self.rminor)/self.rmajor
-        gc = gd.Geodesic(radius=self.rmajor, flattening=1/f)
+        gc = gd.Geodesic()
         assert len(lons) == len(lats)
         assert len(lons) > 1
         gclons = [lons[0]]
         gclats = [lats[0]]
         for i in range(len(lons) - 1):
-            az12, az21, dist = gc.inverse(lons[i], lats[i], lons[i + 1], lats[i + 1])[:,0]
+            dist = gc.inverse((lons[i], lats[i]), (lons[i + 1], lats[i + 1])).base[0, 0]
             npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
             # BUG -- weird path in cyl projection on waypoint move
             # On some system configurations, the path is wrongly plotted when one
@@ -641,7 +640,7 @@ class MapCanvas():
             # projection, gc.npts() returns lons that connect lon1 and lat2, not lon1 and
             # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
             # of pyproj?? (mr, 16Oct2012)
-            lonlats = npts_cartopy(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
+            lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), npoints)
             # The cylindrical projection of matplotlib is not periodic, that means that
             # -170 longitude and 190 longitude are not identical. The gc projection however
             # assumes identity and maps all longitudes to -180 to 180. This is no issue for
@@ -652,7 +651,7 @@ class MapCanvas():
             # longitude range defined by the locations. This breaks potentially down in case
             # that the locations are too far apart (>180 degree), but this is not the typical
             # use case and will thus hopefully not pose a problem.
-            if self.projection == "PlateCarree" and npoints > 0:
+            if str(self.ax.projection)[13:-26] == "PlateCarree" and npoints > 0:
                 lonlats = np.asarray(lonlats)
                 milon = min(lons[i], lons[i + 1])
                 malon = max(lons[i], lons[i + 1])
@@ -667,7 +666,8 @@ class MapCanvas():
             gclons.append(lons[i + 1])
             gclats.append(lats[i + 1])
         if map_coords:
-            x, y = self(gclons, gclats)
+            new_coords = self.ax.projection.transform_points(ccrs.PlateCarree(), np.array(gclons), np.array(gclats))
+            x, y = new_coords[:, 0], new_coords[:, 1]
         else:
             x, y = (gclons, gclats)
         return x, y
