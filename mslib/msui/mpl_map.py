@@ -319,8 +319,6 @@ class MapCanvas():
         """
         # Convert the current axis corners to lat/lon coordinates.kwargs.get('projection')kwargs.get('projection')
         self.fig = fig
-        self.ax = ax
-        self.fig.delaxes(self.ax)
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
@@ -335,8 +333,22 @@ class MapCanvas():
                 del self.kwargs[key]
         self.kwargs.update(kwargs_update)
 
+        kwargs = self.kwargs
+
+        self.crs = kwargs['CRS'] if kwargs['CRS'] is not None else self.crs if hasattr(self, "crs") else None
+        if kwargs['BBOX_UNITS'] is not None:
+            self.bbox_units = kwargs['BBOX_UNITS']
+        else:
+            self.bbox_units = getattr(self, "bbox_units", None)
+
+        BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+        self.ax = ax
+
+        user_proj = get_projection_params(self.crs)["basemap"]
+        ax = self.fig.add_subplot(1, 1, 1, projection=user_proj["projection"])
         ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
         print(self.kwargs)
+        ax.set_extent(BBOX)
         self.fig.canvas.draw()
         self.ax = ax
 
