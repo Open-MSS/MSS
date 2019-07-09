@@ -29,19 +29,28 @@ import json
 import time
 import logging
 
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
 
-class ConnectionManager(object):
+class ConnectionManager(QtCore.QObject):
 
-	def __init__(self, token):
+	signal_reload = QtCore.Signal(int, name="reload_wps")
+
+	def __init__(self, token, user):
+		super(ConnectionManager, self).__init__()
 		self.sio = socketio.Client()
 		self.sio.on('file-changed', handler=self.handle_file_change)
 		self.sio.connect("http://localhost:8083")
 		self.sio.emit('start', {'token': token})
 		self.token = token
+		self.user = user
 
-	@staticmethod
-	def handle_file_change(message):
-		logging.debug(message)
+	def handle_file_change(self, message):
+		message = json.loads(message)
+		if message["u_id"] == self.user["id"]:
+			logging.debug("self update not allowed")
+			return
+		# emit signal here
+		self.signal_reload.emit(message["p_id"])
 
 	def send_message(self, channel, message):
 		logging.debug("sending message")

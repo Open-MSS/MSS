@@ -92,9 +92,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             pass
         else:
             # remove the login modal and put text there
-            json_ = json.loads(r.text)
-            self.token = json_["token"]
-            self.label.setText("logged in as: " + json_["user"]["username"])
+            _json = json.loads(r.text)
+            self.token = _json["token"]
+            self.user = _json["user"]
+            self.label.setText("logged in as: " + _json["user"]["username"])
             self.widget_2.show()
             self.widget.hide()
 
@@ -103,12 +104,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 "token": self.token
             }
             r = requests.get(mss_default.mscolab_server_url + '/projects', data=data)
-            json_ = json.loads(r.text)
-            projects = json_["projects"]
+            _json = json.loads(r.text)
+            projects = _json["projects"]
             self.add_projects_to_ui(projects)
 
             # create socket connection here
-            self.conn = sc.ConnectionManager(self.token)
+            self.conn = sc.ConnectionManager(self.token, user=self.user)
+            self.conn.signal_reload.connect(self.reload_window)
 
     def add_projects_to_ui(self, projects):
         for project in projects:
@@ -187,6 +189,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             xml_text = self.waypoints_model.save_to_mscolab()
             # to emit to mscolab
             self.conn.save_file(self.token, self.active_pid, xml_text)
+
+    @QtCore.Slot(int)
+    def reload_window(self, value):
+        if self.active_pid == value:
+            logging.debug("reloading window")
 
     def setIdentifier(self, identifier):
         self.identifier = identifier

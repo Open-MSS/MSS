@@ -501,7 +501,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
     def activate_mscolab_window(self):
         # initiate mscolab window
-        self.mscolab_window = mscolab.MSSMscolabWindow()
+        self.mscolab_window = mscolab.MSSMscolabWindow(parent=self.menu_Mscolab)
         self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.mscolab_window.show()
 
