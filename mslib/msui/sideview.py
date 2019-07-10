@@ -239,10 +239,10 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
     """
     name = "Side View"
 
-    def __init__(self, parent=None, model=None):
+    def __init__(self, parent=None, model=None, _id=None):
         """Set up user interface, connect signal/slots.
         """
-        super(MSSSideViewWindow, self).__init__(parent)
+        super(MSSSideViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
