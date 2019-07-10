@@ -76,6 +76,7 @@ class MapCanvas():
 
         """
         # Coordinate reference system identifier and coordinate system units.
+        self.appearance = appearance
         self.fig = fig
         self.crs = CRS if CRS is not None else self.crs if hasattr(self, "crs") else None
         if BBOX_UNITS is not None:
@@ -84,22 +85,6 @@ class MapCanvas():
             self.bbox_units = getattr(self, "bbox_units", None)
 
         BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
-        print("hel")
-        print(kwargs)
-        # Dictionary containing map appearance settings.
-        if appearance is not None:
-            param_appearance = appearance
-        else:
-            param_appearance = getattr(self, "appearance", {})
-
-        default_appearance = {"draw_graticule": True,
-                              "draw_coastlines": True,
-                              "fill_waterbodies": True,
-                              "fill_continents": True,
-                              "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
-                              "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.))}
-        default_appearance.update(param_appearance)
-        self.appearance = default_appearance
 
         # Identifier of this map canvas (used to query data structures that
         # are observed by different views).
@@ -121,6 +106,40 @@ class MapCanvas():
         self.fig.canvas.draw()
         self.ax = ax
         self.kwargs = kwargs
+        self.init_features(appearance)
+
+        # Print CRS identifier into the figure.
+        if self.crs is not None:
+            if hasattr(self, "crs_text"):
+                self.crs_text.set_text(self.crs)
+            else:
+                self.crs_text = self.ax.projection
+
+        # Connect to the trajectory item tree, if defined.
+        self.traj_item_tree = traj_item_tree if traj_item_tree is not None else self.traj_item_tree if hasattr(
+            self, "traj_item_tree") else None
+        if traj_item_tree is not None:
+            self.set_trajectory_tree(traj_item_tree)
+
+        # The View may be destroyed and then this class is left dangling due to the connected
+        # trajectories unless we disconnect it.
+        self.ax.figure.canvas.destroyed.connect(self.disconnectTrajectories)
+
+    def init_features(self, appearance):
+        # Dictionary containing map appearance settings.
+        if appearance is not None:
+            param_appearance = appearance
+        else:
+            param_appearance = getattr(self, "appearance", {})
+
+        default_appearance = {"draw_graticule": True,
+                              "draw_coastlines": True,
+                              "fill_waterbodies": True,
+                              "fill_continents": True,
+                              "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
+                              "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.))}
+        default_appearance.update(param_appearance)
+        self.appearance = default_appearance
 
         # Set up the map appearance.
         if self.appearance["draw_coastlines"]:
@@ -139,18 +158,13 @@ class MapCanvas():
         # Curiously, plot() works fine without this setting, but scatter()
         # doesn't.
         if self.appearance["fill_continents"]:
-            self.map_continents = self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"])
+            self.map_continents = (self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"]), 
+                                self.ax.add_feature(cartopy.feature.OCEAN, facecolor=self.appearance["colour_water"]))
+
         else:
             self.map_continents = None
 
         self.image = None
-
-        # Print CRS identifier into the figure.
-        if self.crs is not None:
-            if hasattr(self, "crs_text"):
-                self.crs_text.set_text(self.crs)
-            else:
-                self.crs_text = self.ax.projection
 
         if self.appearance["draw_graticule"]:
             try:
@@ -163,17 +177,7 @@ class MapCanvas():
             self.map_parallels = None
             self.map_meridians = None
         # self.warpimage() # disable fillcontinents when loading bluemarble
-        plt.autoscale(True)
-
-        # Connect to the trajectory item tree, if defined.
-        self.traj_item_tree = traj_item_tree if traj_item_tree is not None else self.traj_item_tree if hasattr(
-            self, "traj_item_tree") else None
-        if traj_item_tree is not None:
-            self.set_trajectory_tree(traj_item_tree)
-
-        # The View may be destroyed and then this class is left dangling due to the connected
-        # trajectories unless we disconnect it.
-        self.ax.figure.canvas.destroyed.connect(self.disconnectTrajectories)
+        self.ax.set_autoscale_on(False)
 
     def set_identifier(self, identifier):
         self.identifier = identifier
@@ -199,7 +203,8 @@ class MapCanvas():
         """Draw an automatically spaced graticule on the map.
         """
         ax = self.ax
-        self.ax.gridlines(crs=ax.projection, draw_labels=True)
+        grid = self.ax.gridlines(crs=ax.projection, draw_labels=True)
+        grid.xlabels_top = False
 
     def set_graticule_visible(self, visible=True):
         """Set the visibily of the graticule.
@@ -352,6 +357,7 @@ class MapCanvas():
             self.ax = ax
             ax.coastlines()
         self.fig.canvas.draw()
+        self.init_features(self.appearance)
 
         self.update_trajectory_items()
 
@@ -550,8 +556,9 @@ class MapCanvas():
                 # and set the visibility flag. A handle on the plot is stored
                 # via the setplotInstance() method, this allows to later switch
                 # on/off the visibility.
-                x, y = ccrs.PlateCarree().transform_points(item.getLonVariable().getVariableData(),
+                xy = ccrs.PlateCarree().transform_points(item.getLonVariable().getVariableData(),
                                      item.getLatVariable().getVariableData(), src_crs=ax.projection)
+                x, y = xy[:,0], xy[:,1]
 
                 if mode != "MARKER_CHANGE":
                     # Remove old plot instances.
@@ -602,9 +609,9 @@ class MapCanvas():
         """
         # use great circle formula for a perfect sphere.
         gc = gd.Geodesic()
-        dist = gc.inverse(lon1, lat1, lon2, lat2)[:,0]
+        dist = gc.inverse((lon1, lat1), (lon2, lat2)).base[0, 0]
         npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
-        lonlats = npts_cartopy(lon1, lat1, lon2, lat2, npoints)
+        lonlats = npts_cartopy((lon1, lat1), (lon2, lat2), npoints)
         lons = [lon1]
         lats = [lat1]
         for lon, lat in lonlats:

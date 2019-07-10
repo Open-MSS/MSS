@@ -873,7 +873,7 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
-        if self.map.projection in ['stere', 'lcc']:
+        if str(self.map.ax.projection)[13:-27] in ['Stereographic', 'LambertConformal']:
             map_delta = np.hypot(self.map.ax.get_extent()[2] - self.map.ax.get_extent()[3], self.map.ax.get_extent()[0] - self.map.ax.get_extent()[1]) / 1000.
         else:
             map_delta = get_distance((self.map.ax.get_extent()[2], self.map.ax.get_extent()[0]), (self.map.ax.get_extent()[3], self.map.ax.get_extent()[1]))
@@ -906,7 +906,7 @@ class HPathInteractor(PathInteractor):
                       u"best index: %d", x, y, best_index)
         self.pathpatch.get_path().insert_vertex(best_index, [x, y], WaypointsPath.LINETO)
 
-        lon, lat = self.map(x, y, inverse=True)
+        lon, lat = ccrs.PlateCarree().transform_point(x, y, self.map.ax.projection)
         loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
         if loc is not None:
             (lat, lon), location = loc
@@ -936,8 +936,7 @@ class HPathInteractor(PathInteractor):
 
         # Submit the new position to the data model.
         vertices = self.pathpatch.get_path().wp_vertices
-        lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
-                            inverse=True)
+        lon, lat = ccrs.PlateCarree().transform_point(vertices[self._ind][0], vertices[self._ind][1], self.map.ax.projection)
         loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
         if loc is not None:
             lat, lon = loc[0]
@@ -1015,7 +1014,7 @@ class HPathInteractor(PathInteractor):
             # If waypoints have been provided, compute the intermediate
             # great circle points for the line instance.
             x, y = list(zip(*wp_vertices))
-            lons, lats = self.map(x, y, inverse=True)
+            lons, lats = ccrs.PlateCarree().transform_point(self.map.ax.projection, x, y)
             x, y = self.map.gcpoints_path(lons, lats)
             vertices = list(zip(x, y))
 
