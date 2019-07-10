@@ -46,10 +46,6 @@ class ConnectionManager(QtCore.QObject):
 
 	def handle_file_change(self, message):
 		message = json.loads(message)
-		if message["u_id"] == self.user["id"]:
-			logging.debug("self update not allowed")
-			return
-		# emit signal here
 		self.signal_reload.emit(message["p_id"])
 
 	def send_message(self, channel, message):

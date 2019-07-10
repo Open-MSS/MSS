@@ -76,6 +76,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.conn = None
         # to store tempfile name
         self.fname_temp = ""
+        # store window instances
+        self.active_windows = []
+        # assign ids to view-window
+        self.id_count = 0
 
     def authorize(self):
         emailid = self.emailid.text()
@@ -125,6 +129,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_pid = item.p_id
 
         # set active flightpath here
+        self.load_wps_from_server()
+        # change font style for selected
+        font = QtGui.QFont()
+        for i in range(self.listProjects.count()):
+            self.listProjects.item(i).setFont(font)
+        font.setBold(True)
+        item.setFont(font)
+
+    def load_wps_from_server(self):
         data = {
             "token": self.token,
             "p_id": self.active_pid
@@ -137,36 +150,39 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.fname_temp = fname_temp
         self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
 
-        # change font style for selected
-        font = QtGui.QFont()
-        for i in range(self.listProjects.count()):
-            self.listProjects.item(i).setFont(font)
-        font.setBold(True)
-        item.setFont(font)
-
     def open_topview(self):
         # showing dummy info dialog
         if self.active_pid == None:
             return
-        view_window = topview.MSSTopViewWindow(model=self.waypoints_model, parent=self.listProjects)
-        view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        view_window.show()
+        self.create_view_window("topview")
 
     def open_sideview(self):
         # showing dummy info dialog
         if self.active_pid == None:
             return
-        view_window = sideview.MSSSideViewWindow(model=self.waypoints_model, parent=self.listProjects)
-        view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        view_window.show()
+        self.create_view_window("sideview")
 
     def open_tableview(self):
         # showing dummy info dialog
         if self.active_pid == None:
             return
-        view_window = tableview.MSSTableViewWindow(model=self.waypoints_model, parent=self.listProjects)
+        self.create_view_window("tableview")
+
+    def create_view_window(self, _type):
+        view_window = None
+        if _type == "topview":
+           view_window = topview.MSSTopViewWindow(model=self.waypoints_model, parent=self.listProjects, _id=self.id_count)
+        elif _type == "sideview":
+           view_window = topview.MSSSideViewWindow(model=self.waypoints_model, parent=self.listProjects, _id=self.id_count)
+        else:
+           view_window = topview.MSSSideViewWindow(model=self.waypoints_model, parent=self.listProjects, _id=self.id_count)
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         view_window.show()
+        view_window.viewClosesId.connect(self.handle_view_close)
+        self.active_windows.append(view_window)
+
+        # increment id_count 
+        self.id_count += 1
 
     def logout(self):
         # delete token and show login widget-items
@@ -192,8 +208,23 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(int)
     def reload_window(self, value):
-        if self.active_pid == value:
-            logging.debug("reloading window")
+        if self.active_pid != value:
+            return
+        logging.debug("reloading window")
+        self.load_wps_from_server()
+        for window in self.active_windows:
+            # set active flight track
+            window.setFlightTrackModel(self.waypoints_model)
+            # redraw figure
+            window.mpl.canvas.waypoints_interactor.redraw_figure()
+
+    @QtCore.Slot(int)
+    def handle_view_close(self, value):
+        logging.debug("removing stale window")
+        for index, window in enumerate(self.active_windows):
+            if window._id == value:
+                del self.active_windows[index]
+
 
     def setIdentifier(self, identifier):
         self.identifier = identifier

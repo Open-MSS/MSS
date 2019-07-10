@@ -56,10 +56,10 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
 
     name = "Table View"
 
-    def __init__(self, parent=None, model=None):
+    def __init__(self, parent=None, model=None, _id=None):
         """
         """
-        super(MSSTableViewWindow, self).__init__(parent)
+        super(MSSTableViewWindow, self).__init__(parent, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
