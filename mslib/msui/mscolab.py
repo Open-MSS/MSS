@@ -176,36 +176,42 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def open_topview(self):
         # showing dummy info dialog
-        if self.active_pid == None:
+        if self.active_pid is None:
             return
         self.create_view_window("topview")
 
     def open_sideview(self):
         # showing dummy info dialog
-        if self.active_pid == None:
+        if self.active_pid is None:
             return
         self.create_view_window("sideview")
 
     def open_tableview(self):
         # showing dummy info dialog
-        if self.active_pid == None:
+        if self.active_pid is None:
             return
         self.create_view_window("tableview")
 
     def create_view_window(self, _type):
         view_window = None
         if _type == "topview":
-           view_window = topview.MSSTopViewWindow(model=self.waypoints_model, parent=self.listProjects, _id=self.id_count)
+            view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
+                                                   parent=self.listProjects,
+                                                   _id=self.id_count)
         elif _type == "sideview":
-           view_window = topview.MSSSideViewWindow(model=self.waypoints_model, parent=self.listProjects, _id=self.id_count)
+            view_window = sideview.MSSSideViewWindow(model=self.waypoints_model,
+                                                     parent=self.listProjects,
+                                                     _id=self.id_count)
         else:
-           view_window = topview.MSSSideViewWindow(model=self.waypoints_model, parent=self.listProjects, _id=self.id_count)
+            view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
+                                                       parent=self.listProjects,
+                                                       _id=self.id_count)
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         view_window.show()
         view_window.viewClosesId.connect(self.handle_view_close)
         self.active_windows.append(view_window)
 
-        # increment id_count 
+        # increment id_count
         self.id_count += 1
 
     def logout(self):
@@ -219,12 +225,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # clear project listing
         self.listProjects.clear()
         # disconnect socket
-        if self.conn != None:
+        if self.conn is not None:
             self.conn.disconnect()
             self.conn = None
 
     def save_wp_mscolab(self):
-        if self.active_pid != None:
+        if self.active_pid is not None:
             # to save to temp file
             xml_text = self.waypoints_model.save_to_mscolab()
             # to emit to mscolab
@@ -250,7 +256,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def handle_data_change(self, index1, index2):
         if self.autoSave.isChecked():
             self.save_wp_mscolab()
-
 
     def setIdentifier(self, identifier):
         self.identifier = identifier

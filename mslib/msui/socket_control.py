@@ -24,40 +24,38 @@
 """
 
 import socketio
-import requests
 import json
-import time
 import logging
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
+from mslib.msui.mss_qt import QtCore
+
 
 class ConnectionManager(QtCore.QObject):
 
-	signal_reload = QtCore.Signal(int, name="reload_wps")
+    signal_reload = QtCore.Signal(int, name="reload_wps")
 
-	def __init__(self, token, user):
-		super(ConnectionManager, self).__init__()
-		self.sio = socketio.Client()
-		self.sio.on('file-changed', handler=self.handle_file_change)
-		self.sio.connect("http://localhost:8083")
-		self.sio.emit('start', {'token': token})
-		self.token = token
-		self.user = user
+    def __init__(self, token, user):
+        super(ConnectionManager, self).__init__()
+        self.sio = socketio.Client()
+        self.sio.on('file-changed', handler=self.handle_file_change)
+        self.sio.connect("http://localhost:8083")
+        self.sio.emit('start', {'token': token})
+        self.token = token
+        self.user = user
 
-	def handle_file_change(self, message):
-		message = json.loads(message)
-		self.signal_reload.emit(message["p_id"])
+    def handle_file_change(self, message):
+        message = json.loads(message)
+        self.signal_reload.emit(message["p_id"])
 
-	def send_message(self, channel, message):
-		logging.debug("sending message")
+    def send_message(self, channel, message):
+        logging.debug("sending message")
 
-	def save_file(self, token, p_id, content):
-		logging.debug("saving file")
-		self.sio.emit('file-save', {
-	                 "p_id": p_id,
-	                 "token": self.token,
-	                 "content": content
-	                 })
+    def save_file(self, token, p_id, content):
+        logging.debug("saving file")
+        self.sio.emit('file-save', {
+                      "p_id": p_id,
+                      "token": self.token,
+                      "content": content})
 
-	def disconnect(self):
-		self.sio.disconnect()
+    def disconnect(self):
+        self.sio.disconnect()
