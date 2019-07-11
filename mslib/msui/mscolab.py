@@ -65,6 +65,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.sideview.clicked.connect(self.open_sideview)
         self.tableview.clicked.connect(self.open_tableview)
         self.save_ft.clicked.connect(self.save_wp_mscolab)
+        self.autoSave.stateChanged.connect(self.auto_save_toggle)
 
         # int to store active pid
         self.active_pid = None
@@ -80,6 +81,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_windows = []
         # assign ids to view-window
         self.id_count = 0
+
+    def auto_save_toggle(self):
+        if self.autoSave.isChecked():
+            # enable autosave
+            # connect change events viewwindow HERE to emit file-save
+            self.waypoints_model.dataChanged.connect(self.handle_data_change)
+        else:
+            # disable autosave
+            # connect change events viewwindow HERE to emit file-save
+            self.waypoints_model.dataChanged.disconnect()
 
     def authorize(self):
         emailid = self.emailid.text()
@@ -211,6 +222,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.active_pid != value:
             return
         logging.debug("reloading window")
+        # ask the user in dialog if he wants the change
+        # toDo preview of the change
         self.load_wps_from_server()
         for window in self.active_windows:
             # set active flight track
@@ -225,9 +238,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if window._id == value:
                 del self.active_windows[index]
 
+    @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex)
+    def handle_data_change(self, index1, index2):
+        if self.autoSave.isChecked():
+            self.save_wp_mscolab()
+
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
 
     def closeEvent(self, event):
-        self.conn.disconnect()
+        if self.conn:
+            self.conn.disconnect()
