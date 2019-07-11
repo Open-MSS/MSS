@@ -994,7 +994,9 @@ class MplTopViewCanvas(MplCanvas):
         self.draw_metadata("Top view")
 
         # Update in case of a projection change
-        # self.waypoints_interactor.update()
+        print("ABBBBBCCCCC")
+        self.waypoints_interactor.update()
+        print("XXXYYYYZZZZ")
 
         self.pdlg.setValue(10)
         QtWidgets.QApplication.processEvents()
