@@ -65,6 +65,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.sideview.clicked.connect(self.open_sideview)
         self.tableview.clicked.connect(self.open_tableview)
         self.save_ft.clicked.connect(self.save_wp_mscolab)
+        self.fetch_ft.clicked.connect(self.reload_wps_from_server)
         self.autoSave.stateChanged.connect(self.auto_save_toggle)
 
         # int to store active pid
@@ -84,11 +85,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def auto_save_toggle(self):
         if self.autoSave.isChecked():
-            # enable autosave
+            # enable autosave, disable save button
+            self.save_ft.setEnabled(False)
+            self.fetch_ft.setEnabled(False)
             # connect change events viewwindow HERE to emit file-save
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
         else:
-            # disable autosave
+            # disable autosave, enable save button
+            self.save_ft.setEnabled(True)
+            self.fetch_ft.setEnabled(True)
             # connect change events viewwindow HERE to emit file-save
             self.waypoints_model.dataChanged.disconnect()
 
@@ -147,6 +152,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.listProjects.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
+
+    def reload_wps_from_server(self):
+        self.load_wps_from_server()
+        for window in self.active_windows:
+            # set active flight track
+            window.setFlightTrackModel(self.waypoints_model)
+            # redraw figure
+            window.mpl.canvas.waypoints_interactor.redraw_figure()
 
     def load_wps_from_server(self):
         data = {
@@ -222,14 +235,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.active_pid != value:
             return
         logging.debug("reloading window")
-        # ask the user in dialog if he wants the change
+        # ask the user in dialog if he wants the change, only for autosave mode
         # toDo preview of the change
-        self.load_wps_from_server()
-        for window in self.active_windows:
-            # set active flight track
-            window.setFlightTrackModel(self.waypoints_model)
-            # redraw figure
-            window.mpl.canvas.waypoints_interactor.redraw_figure()
+        self.reload_wps_from_server()
 
     @QtCore.Slot(int)
     def handle_view_close(self, value):

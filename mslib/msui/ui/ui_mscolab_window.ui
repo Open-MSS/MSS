@@ -197,6 +197,19 @@
     <string>autosave</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="fetch_ft">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>300</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>fetch</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
