@@ -55,8 +55,11 @@ class Ui_MSSMscolabWindow(object):
         self.tableview.setGeometry(QtCore.QRect(230, 250, 80, 23))
         self.tableview.setObjectName("tableview")
         self.save_ft = QtWidgets.QPushButton(MSSMscolabWindow)
-        self.save_ft.setGeometry(QtCore.QRect(340, 250, 80, 23))
+        self.save_ft.setGeometry(QtCore.QRect(130, 300, 80, 23))
         self.save_ft.setObjectName("save_ft")
+        self.autoSave = QtWidgets.QCheckBox(MSSMscolabWindow)
+        self.autoSave.setGeometry(QtCore.QRect(40, 300, 85, 21))
+        self.autoSave.setObjectName("autoSave")
 
         self.retranslateUi(MSSMscolabWindow)
         QtCore.QMetaObject.connectSlotsByName(MSSMscolabWindow)
@@ -75,3 +78,4 @@ class Ui_MSSMscolabWindow(object):
         self.sideview.setText(_translate("MSSMscolabWindow", "sideview"))
         self.tableview.setText(_translate("MSSMscolabWindow", "tableview"))
         self.save_ft.setText(_translate("MSSMscolabWindow", "save"))
+        self.autoSave.setText(_translate("MSSMscolabWindow", "autosave"))

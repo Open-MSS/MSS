@@ -174,14 +174,27 @@
   <widget class="QPushButton" name="save_ft">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>250</y>
+     <x>130</x>
+     <y>300</y>
      <width>80</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
     <string>save</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="autoSave">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>300</y>
+     <width>85</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>autosave</string>
    </property>
   </widget>
  </widget>
