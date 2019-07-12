@@ -158,3 +158,7 @@ class MissionSupportSystemDefaultConfig(object):
     traj_nas_lon_identifier = ["GPS LON", "LONGITUDE"]
     traj_nas_lat_identifier = ["GPS LAT", "LATITUDE"]
     traj_nas_p_identifier = ["STATIC PRESSURE"]
+
+    # ToDo configurable later
+    # mscolab server
+    mscolab_server_url = "http://localhost:8083"

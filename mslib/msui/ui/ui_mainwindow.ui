@@ -94,7 +94,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>424</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -151,9 +151,16 @@ Save a flight track to name it.</string>
     <addaction name="actionOnlineHelp"/>
     <addaction name="actionAboutMSUI"/>
    </widget>
+   <widget class="QMenu" name="menu_Mscolab">
+    <property name="title">
+     <string>&amp;Mscolab</string>
+    </property>
+    <addaction name="actionMscolabProjects"/>
+   </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_View"/>
    <addaction name="menu_Tools"/>
+   <addaction name="menu_Mscolab"/>
    <addaction name="menu_Help"/>
   </widget>
   <action name="action_Quit">
@@ -256,6 +263,11 @@ Save a flight track to name it.</string>
    </property>
    <property name="shortcut">
     <string/>
+   </property>
+  </action>
+  <action name="actionMscolabProjects">
+   <property name="text">
+    <string>Mscolab projects</string>
    </property>
   </action>
  </widget>

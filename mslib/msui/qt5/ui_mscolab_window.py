@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'ui_mscolab_window.ui'
+#
+# Created by: PyQt5 UI code generator 5.9.2
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+class Ui_MSSMscolabWindow(object):
+    def setupUi(self, MSSMscolabWindow):
+        MSSMscolabWindow.setObjectName("MSSMscolabWindow")
+        MSSMscolabWindow.resize(480, 640)
+        self.groupBox = QtWidgets.QGroupBox(MSSMscolabWindow)
+        self.groupBox.setGeometry(QtCore.QRect(30, 70, 406, 163))
+        self.groupBox.setFlat(True)
+        self.groupBox.setObjectName("groupBox")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.groupBox)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.listProjects = QtWidgets.QListWidget(self.groupBox)
+        self.listProjects.setAlternatingRowColors(False)
+        self.listProjects.setTextElideMode(QtCore.Qt.ElideNone)
+        self.listProjects.setObjectName("listProjects")
+        self.verticalLayout.addWidget(self.listProjects)
+        self.widget = QtWidgets.QWidget(MSSMscolabWindow)
+        self.widget.setGeometry(QtCore.QRect(30, 20, 401, 41))
+        self.widget.setObjectName("widget")
+        self.emailid = QtWidgets.QLineEdit(self.widget)
+        self.emailid.setGeometry(QtCore.QRect(0, 10, 113, 23))
+        self.emailid.setObjectName("emailid")
+        self.password = QtWidgets.QLineEdit(self.widget)
+        self.password.setGeometry(QtCore.QRect(130, 10, 113, 23))
+        self.password.setObjectName("password")
+        self.loginButton = QtWidgets.QPushButton(self.widget)
+        self.loginButton.setGeometry(QtCore.QRect(270, 10, 80, 23))
+        self.loginButton.setObjectName("loginButton")
+        self.loggedInWidget = QtWidgets.QWidget(MSSMscolabWindow)
+        self.loggedInWidget.setEnabled(True)
+        self.loggedInWidget.setGeometry(QtCore.QRect(30, 10, 401, 41))
+        self.loggedInWidget.setObjectName("loggedInWidget")
+        self.label = QtWidgets.QLabel(self.loggedInWidget)
+        self.label.setGeometry(QtCore.QRect(50, 10, 251, 16))
+        self.label.setObjectName("label")
+        self.logoutButton = QtWidgets.QPushButton(self.loggedInWidget)
+        self.logoutButton.setGeometry(QtCore.QRect(280, 10, 80, 23))
+        self.logoutButton.setObjectName("logoutButton")
+        self.topview = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.topview.setGeometry(QtCore.QRect(30, 250, 80, 23))
+        self.topview.setObjectName("topview")
+        self.sideview = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.sideview.setGeometry(QtCore.QRect(130, 250, 80, 23))
+        self.sideview.setObjectName("sideview")
+        self.tableview = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.tableview.setGeometry(QtCore.QRect(230, 250, 80, 23))
+        self.tableview.setObjectName("tableview")
+        self.save_ft = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.save_ft.setGeometry(QtCore.QRect(130, 300, 80, 23))
+        self.save_ft.setObjectName("save_ft")
+        self.autoSave = QtWidgets.QCheckBox(MSSMscolabWindow)
+        self.autoSave.setGeometry(QtCore.QRect(40, 300, 85, 21))
+        self.autoSave.setObjectName("autoSave")
+        self.fetch_ft = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.fetch_ft.setGeometry(QtCore.QRect(230, 300, 80, 23))
+        self.fetch_ft.setObjectName("fetch_ft")
+
+        self.retranslateUi(MSSMscolabWindow)
+        QtCore.QMetaObject.connectSlotsByName(MSSMscolabWindow)
+
+    def retranslateUi(self, MSSMscolabWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MSSMscolabWindow.setWindowTitle(_translate("MSSMscolabWindow", "Form"))
+        self.groupBox.setTitle(_translate("MSSMscolabWindow", "Project listing"))
+        self.listProjects.setToolTip(_translate("MSSMscolabWindow", "List of mscolab projects."))
+        self.emailid.setPlaceholderText(_translate("MSSMscolabWindow", "emailid"))
+        self.password.setPlaceholderText(_translate("MSSMscolabWindow", "password"))
+        self.loginButton.setText(_translate("MSSMscolabWindow", "login"))
+        self.label.setText(_translate("MSSMscolabWindow", "TextLabel"))
+        self.logoutButton.setText(_translate("MSSMscolabWindow", "logout"))
+        self.topview.setText(_translate("MSSMscolabWindow", "topview"))
+        self.sideview.setText(_translate("MSSMscolabWindow", "sideview"))
+        self.tableview.setText(_translate("MSSMscolabWindow", "tableview"))
+        self.save_ft.setText(_translate("MSSMscolabWindow", "save"))
+        self.autoSave.setText(_translate("MSSMscolabWindow", "autosave"))
+        self.fetch_ft.setText(_translate("MSSMscolabWindow", "fetch"))

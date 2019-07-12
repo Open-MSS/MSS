@@ -159,10 +159,11 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
     """
     name = "Top View"
 
-    def __init__(self, parent=None, model=None):
+    def __init__(self, parent=None, model=None, _id=None):
         """Set up user interface, connect signal/slots.
         """
-        super(MSSTopViewWindow, self).__init__(parent, model)
+        super(MSSTopViewWindow, self).__init__(parent, model, _id)
+        logging.debug(_id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 

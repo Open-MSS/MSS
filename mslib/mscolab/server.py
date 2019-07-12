@@ -68,7 +68,9 @@ def get_auth_token():
     user = check_login(emailid, password)
     if user:
         token = user.generate_auth_token()
-        return json.dumps({'token': token.decode('ascii')})
+        return json.dumps({
+                          'token': token.decode('ascii'),
+                          'user': {'username': user.username, 'id': user.id}})
     else:
         logging.debug("Unauthorized user: %s".format(emailid))
         return "False"
