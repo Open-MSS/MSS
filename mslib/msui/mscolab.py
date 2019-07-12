@@ -55,7 +55,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         """
         super(MSSMscolabWindow, self).__init__(parent)
         self.setupUi(self)
-        self.widget_2.hide()
+        self.loggedInWidget.hide()
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
         # if token is None, not authorized, else authorized
         self.token = None
@@ -106,7 +106,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.post(mss_default.mscolab_server_url + '/token', data=data)
         if r.text == "False":
-            # popup that wrong credentials
+            # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
             pass
@@ -116,7 +116,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.token = _json["token"]
             self.user = _json["user"]
             self.label.setText("logged in as: " + _json["user"]["username"])
-            self.widget_2.show()
+            self.loggedInWidget.show()
             self.widget.hide()
 
             # add projects
@@ -134,7 +134,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def add_projects_to_ui(self, projects):
         for project in projects:
-            project_desc = project['path'] + " (" + project["access_level"] + ")"
+            project_desc = "%s (%s)".format(project['path'], project["access_level"])
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
             widgetItem.p_id = project["p_id"]
             self.listProjects.addItem(widgetItem)
@@ -148,8 +148,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.load_wps_from_server()
         # change font style for selected
         font = QtGui.QFont()
-        for i in range(self.listProjects.count()):
-            self.listProjects.item(i).setFont(font)
+        for item in self.listProjects:
+            item.setFont(font)
         font.setBold(True)
         item.setFont(font)
 
@@ -220,7 +220,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # delete active-project-id
         self.active_pid = None
         # clear projects list here
-        self.widget_2.hide()
+        self.loggedInWidget.hide()
         self.widget.show()
         # clear project listing
         self.listProjects.clear()

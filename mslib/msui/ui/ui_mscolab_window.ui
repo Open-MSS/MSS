@@ -93,7 +93,7 @@
     </property>
    </widget>
   </widget>
-  <widget class="QWidget" name="widget_2" native="true">
+  <widget class="QWidget" name="loggedInWidget" native="true">
    <property name="enabled">
     <bool>true</bool>
    </property>
