@@ -99,7 +99,6 @@ class MapCanvas():
         # delete the attribute (mr, 08Feb2013).
         if hasattr(self, "epsg"):
             del self.epsg
-        print(self.crs)
         user_proj = get_projection_params(self.crs)["basemap"]
         ax = self.fig.add_subplot(1, 1, 1, projection=user_proj["projection"])
         ax.set_extent(BBOX)
@@ -158,7 +157,7 @@ class MapCanvas():
         # Curiously, plot() works fine without this setting, but scatter()
         # doesn't.
         if self.appearance["fill_continents"]:
-            self.map_continents = (self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"]), 
+            self.map_continents = (self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"]),
                                 self.ax.add_feature(cartopy.feature.OCEAN, facecolor=self.appearance["colour_water"]))
 
         else:
@@ -358,7 +357,6 @@ class MapCanvas():
             ax.coastlines()
         self.fig.canvas.draw()
         self.init_features(self.appearance)
-
         self.update_trajectory_items()
 
     def imshow(self, X, **kwargs):
@@ -441,6 +439,7 @@ class MapCanvas():
                     colour). Perform a pylab.setp() call to change the property.
                 VISIBILITY_CHANGE -- same action as for GXPROPERTY_CHANGE
         """
+        print("ASDJNASKDJNASKDJNASd")
         # If no trajectory item tree is defined exit the method.
         if self.traj_item_tree is None:
             return
@@ -524,7 +523,10 @@ class MapCanvas():
             if not (isinstance(item, titree.FlightTrackItem) or isinstance(item, titree.TrajectoryItem)):
                 continue
 
+            print("PREEEEEEEETRAJJJJJJ")
+
             if mode in ["GXPROPERTY_CHANGE", "VISIBILITY_CHANGE"]:
+                print("TRAJJJJJJJJJJJ")
                 # Set the visibility of all graphics elements of the current item
                 # to 'itemVisible'.
                 # NOTE: We do not have to test if the item is of type
@@ -556,9 +558,13 @@ class MapCanvas():
                 # and set the visibility flag. A handle on the plot is stored
                 # via the setplotInstance() method, this allows to later switch
                 # on/off the visibility.
+                print("DAAAATAAAAAAAAAAAAA")
+                print(item.getLonVariable().getVariableData())
                 xy = ccrs.PlateCarree().transform_points(item.getLonVariable().getVariableData(),
-                                     item.getLatVariable().getVariableData(), src_crs=ax.projection)
+                                     item.getLatVariable().getVariableData(), src_crs=self.ax.projection)
                 x, y = xy[:,0], xy[:,1]
+                print("PRINTXXXXXXXXXXX")
+                print(x)
 
                 if mode != "MARKER_CHANGE":
                     # Remove old plot instances.
@@ -647,7 +653,17 @@ class MapCanvas():
             # projection, gc.npts() returns lons that connect lon1 and lat2, not lon1 and
             # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
             # of pyproj?? (mr, 16Oct2012)
-            lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), npoints)
+            print("POINTSSSSS"
+            )
+            print(lons, lats)
+            print("POIIINNNNNNNT")
+            print(lons[i], lats[i])
+            print("ENDDPOINTTTTT")
+            print(lons[i + 1], lats[i +1])
+            try:
+                lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), npoints)
+            except ValueError:
+                return
             # The cylindrical projection of matplotlib is not periodic, that means that
             # -170 longitude and 190 longitude are not identical. The gc projection however
             # assumes identity and maps all longitudes to -180 to 180. This is no issue for
@@ -684,6 +700,7 @@ class MapCanvas():
         """
         x, y = self.gcpoints_path(lons, lats, del_s=del_s)
         return self.ax.plot(x, y, **kwargs)
+        #return self.ax.plot(lons, lats, transform=ccrs.Geodetic(), **kwargs)
 
 
 class SatelliteOverpassPatch(object):
