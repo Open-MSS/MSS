@@ -112,6 +112,17 @@ class SocketsManager(object):
             return False
         return True
 
+    def permission_check_admin(self, u_id, p_id):
+        """
+        u_id: user-id
+        p_id: project-id
+        """
+        permission = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+        if permission.access_level == "creator" or permission.access_level == "admin":
+            return True
+        else:
+            return False
+
     def handle_file_save(self, json_req):
         p_id = json_req['p_id']
         content = json_req['content']
@@ -122,6 +133,19 @@ class SocketsManager(object):
         if perm and fm.save_file(int(p_id), content, user, comment):
             socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
 
+    def handle_autosave_enable(self, json_req):
+        p_id = json_req['p_id']
+        enable = json_req['enable']
+        user = User.verify_auth_token(json_req['token'])
+        # save to project database
+        if not self.permission_check_admin(user.id, p_id):
+            return
+        if enable:
+            fm.update_project(int(p_id), 'autosave', 1, user)
+            socketio.emit('autosave-client-en', json.dumps({"p_id": p_id}))
+        else:
+            fm.update_project(int(p_id), 'autosave', 0, user)
+            socketio.emit('autosave-client-db', json.dumps({"p_id": p_id}))
 
 sm = SocketsManager()
 
@@ -131,3 +155,4 @@ socketio.on_event('start', sm.handle_start_event)
 socketio.on_event('disconnect', sm.handle_disconnect)
 socketio.on_event('chat-message', sm.handle_message)
 socketio.on_event('file-save', sm.handle_file_save)
+socketio.on_event('autosave', sm.handle_autosave_enable)
