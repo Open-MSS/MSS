@@ -49,7 +49,7 @@ class FileManager(object):
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
             return False
-        project = Project(path, description)
+        project = Project(path, description, False)
         db.session.add(project)
         db.session.flush()
         project_id = project.id
@@ -61,6 +61,19 @@ class FileManager(object):
         project_file = data.open(project.path, 'w')
         project_file.write(STUB_CODE)
         return True
+
+    def get_project_details(self, p_id, user):
+        """
+        p_id: project id
+        user: authenticated user
+        """
+        project = Project.query.filter_by(id=p_id).first()
+        project = {"id": project.id,
+                   "path": project.path,
+                   "description": project.description,
+                   "autosave": project.autosave
+                   }
+        return project
 
     def add_permission(self, p_id, u_id, access_level, user):
         """
@@ -115,7 +128,8 @@ class FileManager(object):
                             "p_id": permission.p_id,
                             "access_level": permission.access_level,
                             "path": project.path,
-                            "description": project.description})
+                            "description": project.description,
+                            "autosave": project.autosave})
         return projects
 
     def is_admin(self, u_id, p_id):

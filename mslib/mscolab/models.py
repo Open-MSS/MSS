@@ -123,14 +123,16 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.String(255), unique=True)
     description = db.Column(db.String(255))
+    autosave = db.Column(db.Boolean)
 
-    def __init__(self, path, description):
+    def __init__(self, path, description, autosave):
         """
         path: path to the project
         description: small description of project
         """
         self.path = path
         self.description = description
+        self.autosave = autosave
 
     def __repr__(self):
         return('<Project path %s desc %s>'.format(self.path, self.description))
