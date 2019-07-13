@@ -89,6 +89,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             return
 
         # ToDo replace checkbox by text if normal user
+        # ToDo save file as backup before loading what's in admin
 
         logging.debug(self.autoSave.isChecked())
         if self.autoSave.isChecked():
@@ -278,6 +279,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.fetch_ft.setEnabled(False)
             # for cases where its value is fetched from server
             self.set_checked_without_signals(True)
+            # reload window
+            self.reload_wps_from_server()
             # connect change events viewwindow HERE to emit file-save
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
         else:
