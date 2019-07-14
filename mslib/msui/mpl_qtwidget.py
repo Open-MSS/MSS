@@ -914,8 +914,6 @@ class MplTopViewCanvas(MplCanvas):
         self.map = mpl_map.MapCanvas(appearance=self.get_map_appearance(), fig=self.fig,
                                      **kwargs)
         self.ax = self.map.ax
-        print(self.fig.axes)
-        # self.ax.coastlines()
         self.ax.set_autoscale_on(False)
         self.ax.set_title("Top view", horizontalalignment="left", x=0)
         self.draw()  # necessary?
@@ -994,9 +992,7 @@ class MplTopViewCanvas(MplCanvas):
         self.draw_metadata("Top view")
 
         # Update in case of a projection change
-        print("ABBBBBCCCCC")
         self.waypoints_interactor.update()
-        print("XXXYYYYZZZZ")
 
         self.pdlg.setValue(10)
         QtWidgets.QApplication.processEvents()

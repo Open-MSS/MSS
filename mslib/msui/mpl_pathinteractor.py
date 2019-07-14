@@ -300,8 +300,6 @@ class PathH_GC(PathH):
 
         # Coordinates of intermediate great circle points.
         lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
-        print("LONS AND LATS")
-        print(lons, lats)
         x, y = self.map.gcpoints_path(lons, lats)
 
         if len(x) > 0:
@@ -580,7 +578,6 @@ class PathInteractor(QtCore.QObject):
         for t in self.wp_labels:
             self.ax.draw_artist(t)
         self.canvas.blit(self.ax.bbox)
-        self.fig.canvas.draw()
 
     redraw_figure = redraw_path
 
@@ -842,6 +839,8 @@ class HPathInteractor(PathInteractor):
         self.solar_lines = None
         self.show_solar_angle = None
         self.remote_sensing = None
+        if self.map.ax is not None:
+            self.ax = self.map.ax
         super(HPathInteractor, self).__init__(
             ax=mplmap.ax, waypoints=waypoints,
             mplpath=PathH_GC([[0, 0]], map=mplmap),
@@ -1019,24 +1018,38 @@ class HPathInteractor(PathInteractor):
 
         if wp_vertices is None:
             wp_vertices = self.pathpatch.get_path().wp_vertices
-            vertices = self.pathpatch.get_path().vertices
-        else:
-            # If waypoints have been provided, compute the intermediate
-            # great circle points for the line instance.
             x, y = list(zip(*wp_vertices))
-            print(x, y)
+            # print(x, y)
             x, y = np.asarray(x), np.asarray(y)
             result = ccrs.PlateCarree().transform_points(
                 self.map.ax.projection, x, y)
             lons, lats = result[:, 0], result[:, 1]
-            print("res", result)
-            print("lons", lons)
-            print("lats", lats)
+            # print("res", result)
+            # print("lons", lons)
+            # print("lats", lats)
             x, y = self.map.gcpoints_path(lons, lats)
-            print(x, y)
+            # print(x, y)
             result = ccrs.PlateCarree().transform_points(
                 self.map.ax.projection, x, y)
-            print("res", result)
+            # print("res", result)
+            vertices = np.asarray(list(zip(x, y)))
+        else:
+            # If waypoints have been provided, compute the intermediate
+            # great circle points for the line instance.
+            x, y = list(zip(*wp_vertices))
+            # print(x, y)
+            x, y = np.asarray(x), np.asarray(y)
+            result = ccrs.PlateCarree().transform_points(
+                self.map.ax.projection, x, y)
+            lons, lats = result[:, 0], result[:, 1]
+            # print("res", result)
+            # print("lons", lons)
+            # print("lats", lats)
+            x, y = self.map.gcpoints_path(lons, lats)
+            # print(x, y)
+            result = ccrs.PlateCarree().transform_points(
+                self.map.ax.projection, x, y)
+            # print("res", result)
             vertices = np.asarray(list(zip(x, y)))
 
         # Set the line to disply great circle points, remove existing
@@ -1074,6 +1087,11 @@ class HPathInteractor(PathInteractor):
         self.wp_scatter = self.ax.scatter(x, y, color=self.markerfacecolor,
                                           s=20, zorder=3, animated=True,
                                           visible=self.showverts)
+        self.line, = self.ax.plot(x, y, color='blue',
+                                  marker='o', linewidth=2,
+                                  markerfacecolor='red',
+                                  animated=True)
+                                  
         # Draw waypoint labels.
         label_offset = self.appropriate_epsilon(px=5)
         for wp_label in self.wp_labels:
@@ -1101,13 +1119,12 @@ class HPathInteractor(PathInteractor):
         # Redraw the artists.
         if self.background:
             self.canvas.restore_region(self.background)
-            print("restored")
         try:
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-        self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
+        self.ax.draw_artist(self.line)
 
         for t in self.wp_labels:
             self.ax.draw_artist(t)
@@ -1116,7 +1133,6 @@ class HPathInteractor(PathInteractor):
         if self.show_solar_angle is not None:
             self.ax.draw_artist(self.solar_lines)
         self.canvas.blit(self.ax.bbox)
-        print("redraw_path done")
 
     # Link redraw_figure() to redraw_path().
     redraw_figure = redraw_path
