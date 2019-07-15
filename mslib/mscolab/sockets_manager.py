@@ -147,6 +147,7 @@ class SocketsManager(object):
             fm.update_project(int(p_id), 'autosave', 0, user)
             socketio.emit('autosave-client-db', json.dumps({"p_id": p_id}))
 
+
 sm = SocketsManager()
 
 # sockets related handlers

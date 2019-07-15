@@ -136,6 +136,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.signal_autosave.connect(self.autosave_toggle)
 
     def add_projects_to_ui(self, projects):
+        logging.debug("adding projects to ui")
         for project in projects:
             project_desc = '{} - {}'.format(project['path'], project["access_level"])
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
@@ -232,7 +233,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_pid = None
         # clear projects list here
         self.loggedInWidget.hide()
-        self.loginWidget.show() 
+        self.loginWidget.show()
         # clear project listing
         self.listProjects.clear()
         # disconnect socket
@@ -293,7 +294,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # ToDo - remove hack to disconnect this handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
             self.waypoints_model.dataChanged.disconnect()
-    
+
     def set_checked_without_signals(self, value):
         self.autoSave.blockSignals(True)
         self.autoSave.setChecked(value)
