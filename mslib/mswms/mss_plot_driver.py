@@ -129,23 +129,15 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         # Determine the input files from the required variables and the
         # requested time:
 
-        # Get a list of the available data files. The path to the data files
-        # is provided by the NWPDataAccess object in self.data_access.
-        available_files = self.data_access.get_all_datafiles()
-
         # Create the names of the files containing the required parameters.
         filenames = []
         for vartype, var in self.plot_object.required_datafields:
-            filename = self.data_access.get_filename(var, vartype,
-                                                     init_time, fc_time,
-                                                     fullpath=True)
-            short_filename = os.path.basename(filename)
+            filename = self.data_access.get_filename(
+                var, vartype, init_time, fc_time, fullpath=True)
             if filename not in filenames:
                 filenames.append(filename)
-            logging.debug(u"\tvariable '%s' requires input file '%s'", var, short_filename)
-            if short_filename not in available_files:
-                logging.error(u"ERROR: file '%s' does not exist", short_filename)
-                raise IOError(u"file '%s' does not exist", short_filename)
+            logging.debug(u"\tvariable '%s' requires input file '%s'",
+                          var, os.path.basename(filename))
 
         if len(filenames) == 0:
             raise ValueError("no files found that correspond to the specified "
