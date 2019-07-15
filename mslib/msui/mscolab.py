@@ -119,7 +119,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.user = _json["user"]
             self.label.setText("logged in as: " + _json["user"]["username"])
             self.loggedInWidget.show()
-            self.widget.hide()
+            self.loginWidget.hide()
 
             # add projects
             data = {
@@ -232,7 +232,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_pid = None
         # clear projects list here
         self.loggedInWidget.hide()
-        self.widget.show()
+        self.loginWidget.show() 
         # clear project listing
         self.listProjects.clear()
         # disconnect socket
