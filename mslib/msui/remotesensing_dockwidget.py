@@ -154,7 +154,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         Returns: LineCollection of dotted lines at tangent point locations
         """
         x, y = list(zip(*wp_vertices))
-        wp_xy = ccrs.PlateCarree().transform_points(bmap.ax.projection, x, y)
+        wp_xy = ccrs.PlateCarree().transform_points(bmap.ax.projection, np.asarray(x), np.asarray(y))
         wp_lons, wp_lats = wp_xy[:,0], wp_xy[:,1]
         fine_lines = [bmap.gcpoints2(
                       wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], del_s=10., map_coords=False)
@@ -196,7 +196,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
         x, y = list(zip(*wp_vertices))
-        wp_xy = ccrs.PlateCarree().transform_points(bmap.ax.projection, x, y)
+        wp_xy = ccrs.PlateCarree().transform_points(bmap.ax.projection, np.asarray(x), np.asarray(y))
         wp_lons, wp_lats = wp_xy[:,0], wp_xy[:,1]
 
         fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], map_coords=False) for i in

@@ -148,7 +148,7 @@ class MapCanvas():
             self.map_coastlines = None
             self.map_countries = None
         if self.appearance["fill_waterbodies"]:
-            self.map_boundary = self.ax.outline_patch.set_edgecolor(color=self.appearance["colour_water"])
+            self.map_boundary = self.ax.add_feature(cartopy.feature.OCEAN, facecolor=self.appearance["colour_water"])
         else:
             self.map_boundary = None
 
@@ -303,7 +303,7 @@ class MapCanvas():
             self.map_boundary = None
             self.fig.canvas.draw()
         elif visible:
-            # self.map_boundary = self.drawmapboundary(fill_color=bg_color)
+            #self.map_boundary = self.drawmapboundary(fill_color=bg_color)
             self.fig.canvas.draw()
 
     def update_with_coordinate_change(self, kwargs_update=None):
@@ -350,7 +350,7 @@ class MapCanvas():
             BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
             user_proj = get_projection_params(self.crs)["basemap"]
-            self.fig.delaxes(self.ax)
+            self.fig.clf()
             ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
             ax.set_extent(BBOX)
             self.ax = ax
@@ -363,6 +363,7 @@ class MapCanvas():
         """Overloads basemap.imshow(). Deletes any existing image and
            redraws the figure after the new image has been plotted.
         """
+        ax = self.ax
         if self.image is not None:
             self.image.remove()
         self.image = self.ax.imshow(X, zorder=2,transform=ax.projection, **kwargs)
@@ -439,7 +440,6 @@ class MapCanvas():
                     colour). Perform a pylab.setp() call to change the property.
                 VISIBILITY_CHANGE -- same action as for GXPROPERTY_CHANGE
         """
-        print("ASDJNASKDJNASKDJNASd")
         # If no trajectory item tree is defined exit the method.
         if self.traj_item_tree is None:
             return
@@ -523,8 +523,6 @@ class MapCanvas():
             if not (isinstance(item, titree.FlightTrackItem) or isinstance(item, titree.TrajectoryItem)):
                 continue
 
-            print("PREEEEEEEETRAJJJJJJ")
-
             if mode in ["GXPROPERTY_CHANGE", "VISIBILITY_CHANGE"]:
                 print("TRAJJJJJJJJJJJ")
                 # Set the visibility of all graphics elements of the current item
@@ -558,14 +556,10 @@ class MapCanvas():
                 # and set the visibility flag. A handle on the plot is stored
                 # via the setplotInstance() method, this allows to later switch
                 # on/off the visibility.
-                print("DAAAATAAAAAAAAAAAAA")
                 print(item.getLonVariable().getVariableData())
                 xy = ccrs.PlateCarree().transform_points(item.getLonVariable().getVariableData(),
                                      item.getLatVariable().getVariableData(), src_crs=self.ax.projection)
                 x, y = xy[:,0], xy[:,1]
-                print("PRINTXXXXXXXXXXX")
-                print(x)
-
                 if mode != "MARKER_CHANGE":
                     # Remove old plot instances.
                     try:
@@ -726,19 +720,19 @@ class SatelliteOverpassPatch(object):
         """
         # Plot satellite track.
         sat = np.copy(self.sat)
-        sat[:, 0], sat[:, 1] = self.map(sat[:, 0], sat[:, 1])
-        self.trackline = self.map.plot(sat[:, 0], sat[:, 1], zorder=10,
+        sat[:, 0], sat[:, 1] = self.map.ax.projection.transform_points(ccrs.PlateCarree(), sat[:, 0], sat[:, 1])
+        self.trackline = self.map.ax.plot(sat[:, 0], sat[:, 1], zorder=10,
                                        marker='+', markerfacecolor='g')
 
         # Plot polygon patch that represents the swath of the sensor.
         sw_l = self.sw_l
         sw_r = self.sw_r
         Path = mpath.Path
-        pathdata = [(Path.MOVETO, self.map(sw_l[0, 0], sw_l[0, 1]))]
+        pathdata = [(Path.MOVETO, self.map.ax.projection.transform_point(sw_l[0, 0], sw_l[0, 1], ccrs.PlateCarree()))]
         for point in sw_l[1:]:
-            pathdata.append((Path.LINETO, self.map(point[0], point[1])))
+            pathdata.append((Path.LINETO, self.map.ax.projection.transform_point(point[0], point[1], ccrs.PlateCarree())))
         for point in sw_r[::-1]:
-            pathdata.append((Path.LINETO, self.map(point[0], point[1])))
+            pathdata.append((Path.LINETO, self.map.ax.projection.transform_point(point[0], point[1], ccrs.PlateCarree())))
         codes, verts = list(zip(*pathdata))
         path = mpl_pi.PathH(verts, codes, map=self.map)
         patch = mpatches.PathPatch(path, facecolor='yellow',
@@ -796,7 +790,8 @@ class KMLPatch(object):
     KML overlay implementation is currently very crude and basic and most features are not supported.
     """
 
-    def __init__(self, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
+    def __init__(self, canvas, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
+        self.canvas = canvas
         self.map = mapcanvas
         self.kml = kml
         self.patches = []
@@ -808,7 +803,8 @@ class KMLPatch(object):
     def compute_xy(self, coordinates):
         coords = str(coordinates).split()
         lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
-        return self.map(lons, lats)
+        return self.map.ax.projection.transform_points(
+            ccrs.PlateCarree(), np.asarray(lons), np.asarray(lats))
 
     def add_polygon(self, polygon, style, _):
         """
@@ -820,7 +816,7 @@ class KMLPatch(object):
         for boundary in ["outerBoundaryIs", "innerBoundaryIs"]:
             if hasattr(polygon, boundary):
                 x, y = self.compute_xy(getattr(polygon, boundary).LinearRing.coordinates)
-                self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+                self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
     def add_point(self, point, style, name):
         """
@@ -830,7 +826,7 @@ class KMLPatch(object):
         :param name: name of placemark for annotation
         """
         x, y = self.compute_xy(point.coordinates)
-        self.patches.append(self.map.plot(x[0], y[0], "o", zorder=10, color=self.color))
+        self.patches.append(self.map.ax.plot(x[0], y[0], "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x[0], y[0]), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
@@ -843,8 +839,9 @@ class KMLPatch(object):
         :param line: pykml LineString object
         """
         kwargs = self.styles.get(style, {}).get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
-        x, y = self.compute_xy(line.coordinates)
-        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+        result = self.compute_xy(line.coordinates)
+        x, y = result[:, 0], result[:, 1]
+        self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
     def parse_geometries(self, placemark, style=None, name=None):
         if style.startswith("#"):
@@ -904,8 +901,7 @@ class KMLPatch(object):
         if not self.overwrite:
             self.parse_styles(self.kml.Document)
         self.parse_placemarks(self.kml.Document)
-
-        self.map.ax.draw()
+        self.canvas.draw()
 
     def update(self, overwrite=None, color=None, linewidth=None):
         """Removes the current plot of the patch and redraws the patch.
@@ -928,4 +924,4 @@ class KMLPatch(object):
             for element in patch:
                 element.remove()
         self.patches = []
-        self.map.ax.draw()
+        self.canvas.draw()
