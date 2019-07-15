@@ -34,6 +34,7 @@ requirements:
     - netcdf4
     - hdf4
     - pillow 5.*
+    - pint
     - python-dateutil
     - pytz
     - pyqt 5.*
