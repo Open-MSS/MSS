@@ -128,7 +128,9 @@ class Project(db.Model):
     def __init__(self, path, description, autosave):
         """
         path: path to the project
-        description: small description of project
+        description: small description of project,
+        autosave: a boolean to show if autosave is enabled or disabled
+            for the project
         """
         self.path = path
         self.description = description

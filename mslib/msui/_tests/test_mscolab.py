@@ -8,9 +8,7 @@
 
     This file is part of mss.
 
-    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019 Shivashis Padhi
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -133,29 +131,37 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.fetch_ft, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         wpdata2 = self.window.waypoints_model.waypoint_data(0)
-        assert wpdata2.lat == wpdata1.lat
+        assert wpdata2.lat != wpdata1.lat
         # save, fetch
         self.window.waypoints_model.invert_direction()
+        wpdata1 = self.window.waypoints_model.waypoint_data(0)
         QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(2)  # for change to take place
         QtTest.QTest.mouseClick(self.window.fetch_ft, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         wpdata2 = self.window.waypoints_model.waypoint_data(0)
-        assert wpdata2.lat != wpdata1.lat
+        assert wpdata2.lat == wpdata1.lat
         # to undo changes
         self.window.waypoints_model.invert_direction()
         QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        # to let server process
+        time.sleep(2)
 
     def test_autosave(self):
         self._login()
         self._activate_project_at_index(0)
-        self.window.autoSave.setChecked(True)
+        QtTest.QTest.mouseClick(self.window.autoSave, QtCore.Qt.LeftButton,
+                                pos=QtCore.QPoint(2, self.window.autoSave.height() / 2))
         QtWidgets.QApplication.processEvents()
         # sleeping to let server do the change
         time.sleep(3)
         with self._app.app_context():
             project = Project.query.filter_by(id=self.window.active_pid).first()
         assert project.autosave is self.window.autoSave.isChecked()
-        QtTest.QTest.mouseClick(self.window.autoSave, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.autoSave, QtCore.Qt.LeftButton,
+                                pos=QtCore.QPoint(2, self.window.autoSave.height() / 2))
         QtWidgets.QApplication.processEvents()
-        time.sleep(3)
+        # top let server process
+        time.sleep(2)

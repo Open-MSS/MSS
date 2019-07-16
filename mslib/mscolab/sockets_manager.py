@@ -124,6 +124,13 @@ class SocketsManager(object):
             return False
 
     def handle_file_save(self, json_req):
+        """
+        json_req: {
+            "p_id": process id
+            "content": content of the file
+            "comment": comment for file-save, defaults to None
+        }
+        """
         p_id = json_req['p_id']
         content = json_req['content']
         comment = json_req.get('comment', "")
@@ -134,6 +141,12 @@ class SocketsManager(object):
             socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
 
     def handle_autosave_enable(self, json_req):
+        """
+        json_req: {
+            "p_id": process id
+            "enable": boolean to enable or disable autosave
+        }
+        """
         p_id = json_req['p_id']
         enable = json_req['enable']
         user = User.verify_auth_token(json_req['token'])
