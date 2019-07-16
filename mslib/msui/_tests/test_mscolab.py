@@ -158,3 +158,4 @@ class Test_Mscolab(object):
         assert project.autosave is self.window.autoSave.isChecked()
         QtTest.QTest.mouseClick(self.window.autoSave, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        time.sleep(3)
