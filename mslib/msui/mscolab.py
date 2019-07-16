@@ -93,10 +93,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         logging.debug(self.autoSave.isChecked())
         if self.autoSave.isChecked():
-            self.set_checked_without_signals(False)
             self.conn.emit_autosave(self.token, self.active_pid, 1)
         else:
-            self.set_checked_without_signals(True)
             self.conn.emit_autosave(self.token, self.active_pid, 0)
 
     def authorize(self):
@@ -278,8 +276,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # enable autosave, disable save button
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
-            # for cases where its value is fetched from server
-            self.set_checked_without_signals(True)
             # reload window
             self.reload_wps_from_server()
             # connect change events viewwindow HERE to emit file-save
@@ -288,17 +284,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # disable autosave, enable save button
             self.save_ft.setEnabled(True)
             self.fetch_ft.setEnabled(True)
-            # for cases where its value is fetched from server
-            self.set_checked_without_signals(False)
             # connect change events viewwindow HERE to emit file-save
             # ToDo - remove hack to disconnect this handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
             self.waypoints_model.dataChanged.disconnect()
-
-    def set_checked_without_signals(self, value):
-        self.autoSave.blockSignals(True)
-        self.autoSave.setChecked(value)
-        self.autoSave.blockSignals(False)
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
