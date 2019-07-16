@@ -78,6 +78,8 @@ class MapCanvas():
         # Coordinate reference system identifier and coordinate system units.
         self.appearance = appearance
         self.fig = fig
+        self.map_parallels = False
+        self.map_meridians = False
         self.crs = CRS if CRS is not None else self.crs if hasattr(self, "crs") else None
         if BBOX_UNITS is not None:
             self.bbox_units = BBOX_UNITS
@@ -168,8 +170,6 @@ class MapCanvas():
         if self.appearance["draw_graticule"]:
             try:
                 self._draw_auto_graticule()
-                self.map_parallels = True
-                self.map_meridians = True
             except Exception as ex:
                 logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
         else:
@@ -204,6 +204,8 @@ class MapCanvas():
         ax = self.ax
         grid = self.ax.gridlines(crs=ax.projection, draw_labels=True)
         grid.xlabels_top = False
+        self.map_parallels = True
+        self.map_meridians = True
 
     def set_graticule_visible(self, visible=True):
         """Set the visibily of the graticule.
