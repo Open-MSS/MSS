@@ -41,8 +41,7 @@ DB_NAME = 'test_1'
 
 # mscolab data directory #ToDo merge this with $MSS directory
 MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
-STUB_CODE = """
-<?xml version="1.0" encoding="utf-8"?>
+STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 <FlightTrack version="1.7.6">
   <ListOfWaypoints>
     <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
