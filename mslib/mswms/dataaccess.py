@@ -148,7 +148,10 @@ class DefaultDataAccess(NWPDataAccess):
         """
         assert self._filetree is not None, "filetree is None. Forgot to call setup()?"
         try:
-            return self._filetree[vartype][init_time][variable][valid_time]
+            filename = self._filetree[vartype][init_time][variable][valid_time]
+            if not os.path.exists(filename):
+                raise KeyError
+            return filename
         except KeyError:
             self.setup()
             try:
