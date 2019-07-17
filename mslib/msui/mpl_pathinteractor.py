@@ -55,6 +55,7 @@ import matplotlib.patches as mpatches
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.utils import get_distance, find_location, path_points, latlon_points
 from mslib.thermolib import pressure2flightlevel
+import cartopy.crs as ccrs
 
 from mslib.msui import flighttrack as ft
 
@@ -172,6 +173,7 @@ class WaypointsPath(mpath.Path):
         codes, vertices = list(zip(*pathdata))
         self.codes = np.array(codes, dtype=np.uint8)
         self.vertices = np.array(vertices)
+        
 
 
 #
@@ -254,12 +256,14 @@ class PathH(WaypointsPath):
            vertex cooredinates between lat/lon and projection coordinates.
         """
         self.map = kwargs.pop("map")
+        self.kwargs = kwargs
         super(PathH, self).__init__(*args, **kwargs)
 
     def transform_waypoint(self, wps_list, index):
         """Transform lon/lat to projection coordinates.
         """
-        return self.map(wps_list[index].lon, wps_list[index].lat)
+        user_proj = self.map.ax.projection
+        return user_proj.transform_point((wps_list[index].lon), (wps_list[index].lat), src_crs=ccrs.PlateCarree())
 
 
 class PathH_GC(PathH):
@@ -292,6 +296,7 @@ class PathH_GC(PathH):
         wp_codes, wp_vertices = list(zip(*pathdata))
         self.wp_codes = np.array(wp_codes, dtype=np.uint8)
         self.wp_vertices = np.array(wp_vertices)
+
 
         # Coordinates of intermediate great circle points.
         lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
@@ -393,6 +398,7 @@ class PathInteractor(QtCore.QObject):
         # vertices handling for the line needs to be ensured in subclasses).
         x, y = list(zip(*self.pathpatch.get_path().vertices))
         self.line, = self.ax.plot(x, y, color=linecolor,
+                                  #transform=ccrs.Geodetic(),
                                   marker=marker, linewidth=2,
                                   markerfacecolor=markerfacecolor,
                                   animated=True)
@@ -833,6 +839,8 @@ class HPathInteractor(PathInteractor):
         self.solar_lines = None
         self.show_solar_angle = None
         self.remote_sensing = None
+        if self.map.ax is not None:
+            self.ax = self.map.ax
         super(HPathInteractor, self).__init__(
             ax=mplmap.ax, waypoints=waypoints,
             mplpath=PathH_GC([[0, 0]], map=mplmap),
@@ -853,7 +861,7 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         width = int(round(ax_bounds[2]))
-        map_delta_x = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx)
+        map_delta_x = np.hypot(self.map.ax.get_extent()[2] - self.map.ax.get_extent()[3], self.map.ax.get_extent()[0] - self.map.ax.get_extent()[1])
         map_coords_per_px_x = map_delta_x / width
         return map_coords_per_px_x * px
 
@@ -870,15 +878,15 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
-        if self.map.projection in ['stere', 'lcc']:
-            map_delta = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx) / 1000.
+        if str(self.map.ax.projection)[13:-27] in ['Stereographic', 'LambertConformal']:
+            map_delta = np.hypot(self.map.ax.get_extent()[2] - self.map.ax.get_extent()[3], self.map.ax.get_extent()[0] - self.map.ax.get_extent()[1]) / 1000.
         else:
-            map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
+            map_delta = get_distance((self.map.ax.get_extent()[2], self.map.ax.get_extent()[0]), (self.map.ax.get_extent()[3], self.map.ax.get_extent()[1]))
         km_per_px = map_delta / diagonal
         return km_per_px * px
 
     def get_lat_lon(self, event):
-        return self.map(event.xdata, event.ydata, inverse=True)[::-1]
+        return ccrs.PlateCarree().transform_point(event.xdata, event.ydata, self.map.ax.projection)
 
     def button_release_insert_callback(self, event):
         """Called whenever a mouse button is released.
@@ -903,7 +911,7 @@ class HPathInteractor(PathInteractor):
                       u"best index: %d", x, y, best_index)
         self.pathpatch.get_path().insert_vertex(best_index, [x, y], WaypointsPath.LINETO)
 
-        lon, lat = self.map(x, y, inverse=True)
+        lon, lat = ccrs.PlateCarree().transform_point(x, y, self.map.ax.projection)
         loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
         if loc is not None:
             (lat, lon), location = loc
@@ -932,9 +940,9 @@ class HPathInteractor(PathInteractor):
             return
 
         # Submit the new position to the data model.
+        print("MOVE WAYPOINT BUTTON!!!!!!!!!!!!!!")
         vertices = self.pathpatch.get_path().wp_vertices
-        lon, lat = self.map(vertices[self._ind][0], vertices[self._ind][1],
-                            inverse=True)
+        lon, lat = ccrs.PlateCarree().transform_point(vertices[self._ind][0], vertices[self._ind][1], self.map.ax.projection)
         loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
         if loc is not None:
             lat, lon = loc[0]
@@ -953,6 +961,7 @@ class HPathInteractor(PathInteractor):
     def button_release_delete_callback(self, event):
         """Called whenever a mouse button is released.
         """
+        print("WAYPOINT DELETE BUTTON!!!!!!!!!!!")
         if not self.showverts or event.button != 1:
             return
 
@@ -976,6 +985,7 @@ class HPathInteractor(PathInteractor):
             return
         wp_vertices = self.pathpatch.get_path().wp_vertices
         wp_vertices[self._ind] = event.xdata, event.ydata
+        print(event, event.xdata, event.ydata)
         self.redraw_path(wp_vertices)
 
     def qt_data_changed_listener(self, index1, index2):
@@ -995,6 +1005,7 @@ class HPathInteractor(PathInteractor):
         self.pathpatch.get_path().update_from_WaypointsTableModel(
             self.waypoints_model)
         self.redraw_path()
+        
 
     def redraw_path(self, wp_vertices=None):
         """Redraw the matplotlib artists that represent the flight track
@@ -1004,17 +1015,44 @@ class HPathInteractor(PathInteractor):
         graphics output. Otherwise the vertex array obtained from the path
         patch will be used.
         """
+        if self.map.ax is not None:
+            self.ax = self.map.ax
 
         if wp_vertices is None:
             wp_vertices = self.pathpatch.get_path().wp_vertices
-            vertices = self.pathpatch.get_path().vertices
+            x, y = list(zip(*wp_vertices))
+            # print(x, y)
+            x, y = np.asarray(x), np.asarray(y)
+            result = ccrs.PlateCarree().transform_points(
+                self.map.ax.projection, x, y)
+            lons, lats = result[:, 0], result[:, 1]
+            # print("res", result)
+            # print("lons", lons)
+            # print("lats", lats)
+            x, y = self.map.gcpoints_path(lons, lats)
+            # print(x, y)
+            result = ccrs.PlateCarree().transform_points(
+                self.map.ax.projection, x, y)
+            # print("res", result)
+            vertices = np.asarray(list(zip(x, y)))
         else:
             # If waypoints have been provided, compute the intermediate
             # great circle points for the line instance.
             x, y = list(zip(*wp_vertices))
-            lons, lats = self.map(x, y, inverse=True)
+            # print(x, y)
+            x, y = np.asarray(x), np.asarray(y)
+            result = ccrs.PlateCarree().transform_points(
+                self.map.ax.projection, x, y)
+            lons, lats = result[:, 0], result[:, 1]
+            # print("res", result)
+            # print("lons", lons)
+            # print("lats", lats)
             x, y = self.map.gcpoints_path(lons, lats)
-            vertices = list(zip(x, y))
+            # print(x, y)
+            result = ccrs.PlateCarree().transform_points(
+                self.map.ax.projection, x, y)
+            # print("res", result)
+            vertices = np.asarray(list(zip(x, y)))
 
         # Set the line to disply great circle points, remove existing
         # waypoints scatter instance and draw a new one. This is
@@ -1051,7 +1089,11 @@ class HPathInteractor(PathInteractor):
         self.wp_scatter = self.ax.scatter(x, y, color=self.markerfacecolor,
                                           s=20, zorder=3, animated=True,
                                           visible=self.showverts)
-
+        self.line, = self.ax.plot(x, y, color='blue',
+                                  marker='o', linewidth=2,
+                                  markerfacecolor='red',
+                                  animated=True)
+                                  
         # Draw waypoint labels.
         label_offset = self.appropriate_epsilon(px=5)
         for wp_label in self.wp_labels:
@@ -1083,8 +1125,8 @@ class HPathInteractor(PathInteractor):
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-        self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
+        self.ax.draw_artist(self.line)
 
         for t in self.wp_labels:
             self.ax.draw_artist(t)

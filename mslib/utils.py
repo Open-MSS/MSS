@@ -111,7 +111,7 @@ def get_distance(coord0, coord1):
     Computes the distance between two points on the Earth surface
     Args:
         coord0: coordinate(lat/lon) of first point
-        coord1: coordinate(lat/lon) of second point
+        coord1: coordinate(lat/lon) of second pointet
 
     Returns:
         length of distance in km
@@ -604,9 +604,11 @@ def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
 
 
 def npts_cartopy(coord1, coord2, numpoints):
-    distance = get_distance(coord1, coord2) / (numpoints + 1)
+    assert -90 <= coord1[1] <= 90
+    assert -90 <= coord2[1] <= 90
+    distance = get_distance((coord1[1], coord1[0]), (coord2[1], coord2[0])) / (numpoints - 1)
     new_geo = gd.Geodesic()
-    all_distance = [distance * i * 1000 for i in range(1, numpoints + 1)]
+    all_distance = [distance * i * 1000 for i in range(numpoints)]
     initial_azimuth = new_geo.inverse(coord1, coord2).base[0, 1]
     coords = new_geo.direct(coord1, initial_azimuth, all_distance)
     points = list(zip(coords[:, 0], coords[:, 1]))
