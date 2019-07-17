@@ -37,7 +37,7 @@ except ImportError:
     ms = None
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
-from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DATA_DIR, BASE_DIR
+from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DATA_DIR, BASE_DIR, STUB_CODE
 
 
 def create_data():
@@ -129,6 +129,13 @@ def create_data():
         else:
             if not fs_datadir.exists('filedata'):
                 fs_datadir.makedir('filedata')
+                # add files
+                file_dir = fs.open_fs(fs.path.combine(BASE_DIR, 'colabdata/filedata'))
+                file_dir.writetext('one', STUB_CODE)
+                file_dir.writetext('two', STUB_CODE)
+                file_dir.writetext('three', STUB_CODE)
+                file_dir.close()
+
             fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
 
     else:

@@ -240,6 +240,14 @@ def update_project():
     return str(fm.update_project(int(p_id), attribute, value, user))
 
 
+@app.route('/project_details', methods=["GET"])
+@verify_user
+def get_project_details():
+    p_id = request.form.get('p_id', None)
+    user = g.user
+    return json.dumps(fm.get_project_details(int(p_id), user))
+
+
 if __name__ == '__main__':
     # to be refactored during deployment
     sockio.run(app, port=8083)

@@ -53,7 +53,7 @@ SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
 INSERT INTO `permissions` (`id`, `u_id`, `p_id`, `access_level`) VALUES (1, 8,  1,  'creator'),(2, 9,  1,  'collaborator'),(3, 9,  2,  'creator'),(4, 10, 2,  'collaborator'),(5, 10, 3,  'creator'),(6, 8,  3,  'collaborator'),(7, 10, 1,  'viewer');
 
-INSERT INTO `projects` (`id`, `path`, `description`) VALUES (1, 'one',  'a, b'),(2, 'two',  'b, c'),(3, 'three',  'a, c');
+INSERT INTO `projects` (`id`, `path`, `description`, `autosave`) VALUES (1, 'one',  'a, b', False),(2, 'two',  'b, c', False),(3, 'three',  'a, c', False);
 
 INSERT INTO `users` (`username`, `id`, `password`, `emailid`) VALUES ('a', 8,  '$6$rounds=656000$cPQdxVHb1tlkDNil$Ohb.ZDN350IBuoVozgTg3cmdMKRaBQCJ1KvHPjKyGhnygd.T6x6cyYVddWp/Hc9JFjT5cY9JNw75eTsG0kDt11', 'a'),('b', 9,  '$6$rounds=656000$DqUls/5/BfWuTReI$dJvxnZrsgeo.sKyIYBGn3ShJ.Ccm98Q6gWcETruuWIgBWxL7RtRwmUAQ0I6b2cGITR5ksTDN2KK8xPJEm4v6c1', 'b'),('c', 10, '$6$rounds=656000$z5PgqRSetyiQh4FE$a/1R6JSPieTp32u4xnPY3OBremIQaHcBlmDeFqJ20WyDrd9f.EP.i4yIB/nykv9hmKfGakLJcCaGJ/mb.2uDe1', 'c');
 

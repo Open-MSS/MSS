@@ -33,11 +33,14 @@ from mslib.msui.mss_qt import QtCore
 class ConnectionManager(QtCore.QObject):
 
     signal_reload = QtCore.Signal(int, name="reload_wps")
+    signal_autosave = QtCore.Signal(int, int, name="autosave en/db")
 
     def __init__(self, token, user):
         super(ConnectionManager, self).__init__()
         self.sio = socketio.Client()
         self.sio.on('file-changed', handler=self.handle_file_change)
+        self.sio.on('autosave-client-en', handler=self.handle_autosave_enable)
+        self.sio.on('autosave-client-db', handler=self.handle_autosave_disable)
         self.sio.connect("http://localhost:8083")
         self.sio.emit('start', {'token': token})
         self.token = token
@@ -56,6 +59,23 @@ class ConnectionManager(QtCore.QObject):
                       "p_id": p_id,
                       "token": self.token,
                       "content": content})
+
+    def emit_autosave(self, token, p_id, enable):
+        logging.debug("emitting autosave")
+        self.sio.emit('autosave', {
+                      "p_id": p_id,
+                      "token": token,
+                      "enable": enable})
+
+    # ToDo directly call self.signal_autosave
+
+    def handle_autosave_enable(self, message):
+        message = json.loads(message)
+        self.signal_autosave.emit(1, message["p_id"])
+
+    def handle_autosave_disable(self, message):
+        message = json.loads(message)
+        self.signal_autosave.emit(0, message["p_id"])
 
     def disconnect(self):
         self.sio.disconnect()

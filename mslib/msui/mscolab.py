@@ -66,7 +66,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.tableview.clicked.connect(self.open_tableview)
         self.save_ft.clicked.connect(self.save_wp_mscolab)
         self.fetch_ft.clicked.connect(self.reload_wps_from_server)
-        self.autoSave.stateChanged.connect(self.auto_save_toggle)
+        self.autoSave.stateChanged.connect(self.autosave_emit)
 
         # int to store active pid
         self.active_pid = None
@@ -83,19 +83,19 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # assign ids to view-window
         self.id_count = 0
 
-    def auto_save_toggle(self):
+    def autosave_emit(self):
+        # emit signal to server to enable or disable
+        if self.active_pid is None:
+            return
+
+        # ToDo replace checkbox by text if normal user
+        # ToDo save file as backup before loading what's in admin
+
+        logging.debug(self.autoSave.isChecked())
         if self.autoSave.isChecked():
-            # enable autosave, disable save button
-            self.save_ft.setEnabled(False)
-            self.fetch_ft.setEnabled(False)
-            # connect change events viewwindow HERE to emit file-save
-            self.waypoints_model.dataChanged.connect(self.handle_data_change)
+            self.conn.emit_autosave(self.token, self.active_pid, 1)
         else:
-            # disable autosave, enable save button
-            self.save_ft.setEnabled(True)
-            self.fetch_ft.setEnabled(True)
-            # connect change events viewwindow HERE to emit file-save
-            self.waypoints_model.dataChanged.disconnect()
+            self.conn.emit_autosave(self.token, self.active_pid, 0)
 
     def authorize(self):
         emailid = self.emailid.text()
@@ -117,7 +117,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.user = _json["user"]
             self.label.setText("logged in as: " + _json["user"]["username"])
             self.loggedInWidget.show()
-            self.widget.hide()
+            self.loginWidget.hide()
 
             # add projects
             data = {
@@ -131,10 +131,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # create socket connection here
             self.conn = sc.ConnectionManager(self.token, user=self.user)
             self.conn.signal_reload.connect(self.reload_window)
+            self.conn.signal_autosave.connect(self.autosave_toggle)
 
     def add_projects_to_ui(self, projects):
+        logging.debug("adding projects to ui")
         for project in projects:
-            project_desc = "%s (%s)".format(project['path'], project["access_level"])
+            project_desc = '{} - {}'.format(project['path'], project["access_level"])
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
             widgetItem.p_id = project["p_id"]
             self.listProjects.addItem(widgetItem)
@@ -146,10 +148,18 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         # set active flightpath here
         self.load_wps_from_server()
+        # configuring autosave button
+        data = {
+            "token": self.token,
+            "p_id": self.active_pid
+        }
+        r = requests.get(mss_default.mscolab_server_url + '/project_details', data=data)
+        _json = json.loads(r.text)
+        self.autosave_toggle(_json["autosave"], self.active_pid)
         # change font style for selected
         font = QtGui.QFont()
-        for item in self.listProjects:
-            item.setFont(font)
+        for i in range(self.listProjects.count()):
+            self.listProjects.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
 
@@ -168,9 +178,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.get(mss_default.mscolab_server_url + '/get_project', data=data)
         ftml = json.loads(r.text)["content"]
-        data_dir = fs.open_fs(mss_default.data_dir)
+        data_dir = fs.open_fs(mss_default.mss_dir)
         data_dir.writetext('tempfile_mscolab.ftml', ftml)
-        fname_temp = fs.path.combine(mss_default.data_dir, 'tempfile_mscolab.ftml')
+        fname_temp = fs.path.combine(mss_default.mss_dir, 'tempfile_mscolab.ftml')
         self.fname_temp = fname_temp
         self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
 
@@ -221,7 +231,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_pid = None
         # clear projects list here
         self.loggedInWidget.hide()
-        self.widget.show()
+        self.loginWidget.show()
         # clear project listing
         self.listProjects.clear()
         # disconnect socket
@@ -256,6 +266,28 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def handle_data_change(self, index1, index2):
         if self.autoSave.isChecked():
             self.save_wp_mscolab()
+
+    @QtCore.Slot(int, int)
+    def autosave_toggle(self, enable, p_id):
+        # return if it's for a different process
+        if p_id != self.active_pid:
+            return
+        if enable:
+            # enable autosave, disable save button
+            self.save_ft.setEnabled(False)
+            self.fetch_ft.setEnabled(False)
+            # reload window
+            self.reload_wps_from_server()
+            # connect change events viewwindow HERE to emit file-save
+            self.waypoints_model.dataChanged.connect(self.handle_data_change)
+        else:
+            # disable autosave, enable save button
+            self.save_ft.setEnabled(True)
+            self.fetch_ft.setEnabled(True)
+            # connect change events viewwindow HERE to emit file-save
+            # ToDo - remove hack to disconnect this handler
+            self.waypoints_model.dataChanged.connect(self.handle_data_change)
+            self.waypoints_model.dataChanged.disconnect()
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
