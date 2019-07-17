@@ -521,9 +521,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def save_to_mscolab(self):
         # note p_id can be a member of this class
         logging.debug("saving to mscolab")
-        fname_temp = path.combine(mss_default.data_dir, 'tempfile_mscolab.ftml')
+        fname_temp = path.combine(mss_default.mss_dir, 'tempfile_mscolab.ftml')
         self.save_to_ftml(filename=fname_temp)
-        _fs = open_fs(mss_default.data_dir)
+        _fs = open_fs(mss_default.mss_dir)
         content = _fs.readtext('tempfile_mscolab.ftml')
         return content
 
