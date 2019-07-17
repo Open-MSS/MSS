@@ -619,8 +619,8 @@ class MplSideViewCanvas(MplCanvas):
             labels = major_heights
             self.ax.set_ylabel("pressure altitude (km)")
         elif vaxis == "flight level":
-            major_fl = np.arange(0, 1551, 50)
-            minor_fl = np.arange(0, 1551, 10)
+            major_fl = np.arange(0, 2132, 50)
+            minor_fl = np.arange(0, 2132, 10)
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl
@@ -803,8 +803,8 @@ class MplSideViewCanvas(MplCanvas):
 
         # Return a tuple (num_interpolation_points, p_bot[hPa],
         #                 num_labels, p_top[hPa]) as BBOX.
-        bbox = (num_interpolation_points, (axis[2] // 100),
-                num_labels, (axis[3] // 100))
+        bbox = (num_interpolation_points, (axis[2] / 100),
+                num_labels, (axis[3] / 100))
         return bbox
 
     def draw_legend(self, img):
