@@ -162,5 +162,6 @@ class MissionSupportSystemDefaultConfig(object):
     # ToDo configurable later
     # mscolab server
     mscolab_server_url = "http://localhost:8083"
+    # ToDo refactor to rename this to data_dir/mss_data_dir
     # mss dir
     mss_dir = "~/mss"
