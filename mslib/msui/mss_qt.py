@@ -154,7 +154,8 @@ for mod in [
         "ui_wms_capabilities",
         "ui_wms_dockwidget",
         "ui_wms_password_dialog",
-        "ui_mscolab_window"]:
+        "ui_mscolab_window",
+        "ui_mscolab_project_window"]:
     globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 
 # to store config by QSettings
