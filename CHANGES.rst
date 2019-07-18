@@ -1,6 +1,23 @@
 Changelog
 =========
 
+
+Version 1.8.1
+-------------
+
+Bug Fixes:
+  - SideView options allow for illegal vertical range, #430
+  - mss server raises error once, when asked for available, but previously unknown data, #425
+  - epsg code support warnings too annoying in practice, #421
+  - GetCapabilities&version= version string ignores, #411
+  - Runtime Error for Url without parameters, #410
+  - Improve wsgi documentation, #409
+  - fixate matplotlib 3.0.2, #408
+
+Other Changes:
+  - improve documentation for demodata, #413
+
+
 Version 1.8.0
 -------------
 
