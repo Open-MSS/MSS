@@ -525,6 +525,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.prefetcher = None
         self.fetcher = None
         self.expected_img = None
+        self.check_for_allowed_crs = True
 
         if self.cbWMS_URL.count() > 0:
             self.cbWMS_URL.setCurrentIndex(0)
@@ -1343,14 +1344,17 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 return crs.split(",")[0]
             return crs
 
-        if normalize_crs(crs) not in self.allowed_crs:
+        if self.check_for_allowed_crs and normalize_crs(crs) not in self.allowed_crs:
             ret = QtWidgets.QMessageBox.warning(
                 self, self.tr("Web Map Service"),
                 self.tr("WARNING: Selected CRS '{}' not contained in allowed list of supported CRS for this WMS\n"
                         "({})\n"
                         "Continue ?".format(crs, self.allowed_crs)),
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-            if ret != QtWidgets.QMessageBox.Yes:
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Ignore | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.Ignore:
+                self.check_for_allowed_crs = False
+            elif ret == QtWidgets.QMessageBox.No:
                 return
 
         # get...Time() will return None if the corresponding checkboxes are

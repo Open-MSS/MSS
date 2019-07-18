@@ -49,7 +49,7 @@ requirements:
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
-    - matplotlib >=3.0.2
+    - matplotlib ==3.0.2
     - proj4
     - future
     - flask

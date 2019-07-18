@@ -71,6 +71,21 @@ Add developer packages for running tests, activate your env and run::
 
 On linux install `xvfb` from your linux package manager. This is used to run tests on a virtual display.
 
+
+Setup demodata
+~~~~~~~~~~~~~~
+
+:ref:`demodata` is provided by executing::
+
+   $(mssdev) python mslib/mswms/demodata.py
+
+To use this data add the mss_wms_settings.py in your python path::
+
+   $(mssdev) :~/PycharmProjects/mss
+   $(mssdev) export PYTHONPATH="`pwd`:~/mss"
+   $(mssdev) python mslib/mswms/mswms.py
+
+
 Running tests
 ~~~~~~~~~~~~~~~~~~~
 

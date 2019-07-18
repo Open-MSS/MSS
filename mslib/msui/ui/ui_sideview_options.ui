@@ -47,10 +47,10 @@
            <string> hpa</string>
           </property>
           <property name="minimum">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="maximum">
-           <number>1100</number>
+           <number>2132</number>
           </property>
           <property name="value">
            <number>1050</number>
@@ -65,7 +65,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QSpinBox" name="sbPtop">
+         <widget class="QDoubleSpinBox" name="sbPtop">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -76,10 +76,10 @@
            <string> hpa</string>
           </property>
           <property name="minimum">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="maximum">
-           <number>1050</number>
+           <number>2132</number>
           </property>
           <property name="value">
            <double>200</double>
