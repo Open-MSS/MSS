@@ -8,7 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_Form(object):
+class Ui_MscolabProject(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(907, 601)
