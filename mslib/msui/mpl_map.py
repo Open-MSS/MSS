@@ -224,24 +224,14 @@ class MapCanvas():
             self._draw_auto_graticule()
             # Update the figure canvas.
             self.fig.canvas.draw()
-        # elif not visible and self.map_parallels is not None and self.map_meridians is not None:
+        elif not visible and self.map_parallels is not None and self.map_meridians is not None:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            # for item in self.map_parallels.values():
-            #     for line in item[0]:
-            #         line.remove()
-            #     for text in item[1]:
-            #         text.remove()
-            # for item in self.map_meridians.values():
-            #     for line in item[0]:
-            #         line.remove()
-            #     for text in item[1]:
-            #         text.remove()
-            # self.map_parallels = None
-            # self.map_meridians = None
-            # # Update the figure canvas.
-            #self.fig.canvas.draw()
+            self.map_parallels = None
+            self.map_meridians = None
+            # Update the figure canvas.
+            self.fig.canvas.draw()
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
                                    lake_color=None):
@@ -281,12 +271,11 @@ class MapCanvas():
         self.appearance["draw_coastlines"] = visible
         if visible and self.map_coastlines is None and self.map_countries is None:
             self.map_coastlines = self.ax.coastlines(zorder=3)
-            self.map_countries = self.drawcountries(zorder=3)
+            # self.map_countries = self.drawcountries(zorder=3)
             self.fig.canvas.draw()
         elif not visible and self.map_coastlines is not None and self.map_countries is not None:
             self.map_coastlines.remove()
             self.map_countries.remove()
-            del self.cntrysegs
             self.map_coastlines = None
             self.map_countries = None
             self.fig.canvas.draw()
@@ -368,7 +357,8 @@ class MapCanvas():
         ax = self.ax
         if self.image is not None:
             self.image.remove()
-        self.image = self.ax.imshow(X, zorder=2,transform=ax.projection, **kwargs)
+        self.image = self.ax.imshow(X, transform=ccrs.PlateCarree(), extent=ax.get_extent(), zorder=2, **kwargs)
+        print(f"SEEEEEEEEEE {ax.get_extent()}")
         self.fig.canvas.draw()
         return self.image
 
@@ -558,7 +548,6 @@ class MapCanvas():
                 # and set the visibility flag. A handle on the plot is stored
                 # via the setplotInstance() method, this allows to later switch
                 # on/off the visibility.
-                print(item.getLonVariable().getVariableData())
                 xy = ccrs.PlateCarree().transform_points(item.getLonVariable().getVariableData(),
                                      item.getLatVariable().getVariableData(), src_crs=self.ax.projection)
                 x, y = xy[:,0], xy[:,1]

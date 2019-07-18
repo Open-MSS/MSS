@@ -181,7 +181,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         else:
             raise ValueError("bbox_units '{}' not known.".format(bbox_units))
 
-        ax.coastlines(resolution='10m')
+        ax.coastlines()
         ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=1)
         ax.outline_patch.set_edgecolor('white')
         self.fig = fig
