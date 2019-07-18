@@ -418,12 +418,12 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
         self.lons = ((self.lons - left_longitude) % 360) + left_longitude
-        lon_indices = self.lons.argsort()
-        self.lons = self.lons[lon_indices]
+        self.lon_indices = self.lons.argsort()
+        self.lons = self.lons[self.lon_indices]
 
         # Shift data fields correspondingly.
         for key in self.data:
-            self.data[key] = self.data[key][:, lon_indices]
+            self.data[key] = self.data[key][:, self.lon_indices]
 
     def mask_data(self):
         """Mask data arrays so that all values outside the map domain
