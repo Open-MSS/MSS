@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_SideViewOptionsDialog(object):
     def setupUi(self, SideViewOptionsDialog):
         SideViewOptionsDialog.setObjectName("SideViewOptionsDialog")
@@ -31,23 +32,23 @@ class Ui_SideViewOptionsDialog(object):
         sizePolicy.setHeightForWidth(self.sbPbot.sizePolicy().hasHeightForWidth())
         self.sbPbot.setSizePolicy(sizePolicy)
         self.sbPbot.setPrefix("")
-        self.sbPbot.setMinimum(1)
-        self.sbPbot.setMaximum(1100)
+        self.sbPbot.setMinimum(0)
+        self.sbPbot.setMaximum(2132)
         self.sbPbot.setProperty("value", 1050)
         self.sbPbot.setObjectName("sbPbot")
         self.horizontalLayout.addWidget(self.sbPbot)
         self.label_3 = QtWidgets.QLabel(self.groupBox)
         self.label_3.setObjectName("label_3")
         self.horizontalLayout.addWidget(self.label_3)
-        self.sbPtop = QtWidgets.QSpinBox(self.groupBox)
+        self.sbPtop = QtWidgets.QDoubleSpinBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sbPtop.sizePolicy().hasHeightForWidth())
         self.sbPtop.setSizePolicy(sizePolicy)
-        self.sbPtop.setMinimum(1)
-        self.sbPtop.setMaximum(1050)
-        self.sbPtop.setProperty("value", 200.0)
+        self.sbPtop.setMinimum(0)
+        self.sbPtop.setMaximum(2132)
+        self.sbPtop.setProperty("value", 200)
         self.sbPtop.setObjectName("sbPtop")
         self.horizontalLayout.addWidget(self.sbPtop)
         self.verticalLayout_6.addLayout(self.horizontalLayout)
@@ -178,7 +179,7 @@ class Ui_SideViewOptionsDialog(object):
         self.verticalLayout_4.addWidget(self.groupBox_3)
         self.buttonBox = QtWidgets.QDialogButtonBox(SideViewOptionsDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout_4.addWidget(self.buttonBox)
 
@@ -211,7 +212,7 @@ class Ui_SideViewOptionsDialog(object):
         self.btFillColour.setText(_translate("SideViewOptionsDialog", "colour"))
         self.cbLabelFlightTrack.setText(_translate("SideViewOptionsDialog", "label flight track"))
 
-    
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -220,4 +221,3 @@ if __name__ == "__main__":
     ui.setupUi(SideViewOptionsDialog)
     SideViewOptionsDialog.show()
     sys.exit(app.exec_())
-
