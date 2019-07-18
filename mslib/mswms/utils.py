@@ -26,10 +26,13 @@
 """
 
 from __future__ import division
+import logging
 
 import numpy as np
 import matplotlib
+import pint
 
+UR = pint.UnitRegistry()
 N_LEVELS = 16
 
 
@@ -455,14 +458,24 @@ def get_cbar_label_format(style, maxvalue):
     return format
 
 
-def convert_to(value, fr_un, to_un, default=1.):
-    factors = {
-        "hPa": {"hPa": 1., "Pa": 0.01},
-        "Pa": {"Pa": 1., "hPa": 100.},
-        "m": {"m": 1., "km": 1000., "m**2 s**-2": 1. / 9.81},
-        "km": {"km": 1., "m": 0.001, "m**2 s**-2": 1. / 9810.},
-    }
-    return value * factors.get(to_un, {}).get(fr_un, default)
+def convert_to(value, from_unit, to_unit, default=1.):
+    try:
+        value_unit = UR.Quantity(value, UR(from_unit))
+        result = value_unit.to(to_unit).magnitude
+    except pint.UndefinedUnitError as ex:
+        logging.error("Error in unit conversion (undefined) %s/%s", from_unit, to_unit)
+        result = value * default
+    except pint.DimensionalityError:
+        if UR(to_unit).to_base_units().units == UR.m:
+            try:
+                result = (value_unit / UR.Quantity(9.81, "m s^-2")).to(to_unit).magnitude
+            except pint.DimensionalityError:
+                logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
+                result = value * default
+        else:
+            logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
+            result = value * default
+    return result
 
 
 def conditional_decorator(dec, condition):
