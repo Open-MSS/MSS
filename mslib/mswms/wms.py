@@ -532,6 +532,7 @@ def application():
 
     except Exception as ex:
         error_message = u"{}: {}\n".format(type(ex), ex)
+        logging.error("Unexpected error: %s", error_message)
         error_message = error_message.encode("utf-8")
 
         response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
