@@ -26,10 +26,14 @@
 
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.msui.mss_qt import ui_mscolab_project_window as ui
+from mslib._tests.constants import MSCOLAB_URL
+
 import logging
+import requests
+import json
 
 
-class MSColabProjectWindow(QtWidgets.QWidget, ui.Ui_MscolabProject):
+class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     """Derives QMainWindow to provide some common functionality to all
        MSUI view windows.
     """
@@ -38,39 +42,102 @@ class MSColabProjectWindow(QtWidgets.QWidget, ui.Ui_MscolabProject):
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
-    def __init__(self, token, p_id, conn):
+    def __init__(self, token, p_id, conn, parent=None):
         """
         token: access_token
         p_id: project id
         conn: to send messages, recv messages, if a direct slot-signal can't be setup
             to be connected at parents'
         """
+        super(MSColabProjectWindow, self).__init__(parent)
+        self.setupUi(self)
+
         self.token = token
         self.p_id = p_id
         self.conn = conn
-
+        logging.debug(ui.Ui_MscolabProject)
         # establish button press handlers
         self.add.clicked.connect(self.add_handler)
         self.modify.clicked.connect(self.modify_handler)
         self.delete_1.clicked.connect(self.delete_handler)
+        # load users
+        self.load_users()
 
     def add_handler(self):
         # get username, p_id
         username = self.username.text()
-        p_id = self.p_id
+        access_level = str(self.accessLevel.currentText())
         # send request to add
-        pass
+        data = {
+            "token": self.token,
+            "p_id": self.p_id,
+            "username": username,
+            "access_level": access_level
+        }
+        r = requests.post(MSCOLAB_URL + '/add_permission', data=data)
+        if r.text == "True":
+            self.load_users()
+        else:
+            # show a QMessageBox with errors
+            pass
 
     def modify_handler(self):
         # get username, p_id
         username = self.username.text()
-        p_id = self.p_id
+        access_level = str(self.accessLevel.currentText())
         # send request to modify
-        pass
+        data = {
+            "token": self.token,
+            "p_id": self.p_id,
+            "username": username,
+            "access_level": access_level
+        }
+        r = requests.post(MSCOLAB_URL + '/modify_permission', data=data)
+        if r.text == "True":
+            self.load_users()
+        else:
+            # show a QMessageBox with errors
+            pass
 
     def delete_handler(self):
         # get username, p_id
         username = self.username.text()
         p_id = self.p_id
         # send request to delete
-        pass
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "username": username
+        }
+        r = requests.post(MSCOLAB_URL + '/revoke_permission', data=data)
+        if r.text == "True":
+            self.load_users()
+        else:
+            # show a QMessageBox with errors
+            pass
+
+    def load_users(self):
+        # load users to side-tab here
+
+        # make request to get users
+        data = {
+            "token": self.token,
+            "p_id": self.p_id
+        }
+        r = requests.get(MSCOLAB_URL + '/authorized_users', data=data)
+        if r.text == "False":
+            # show QMessageBox errors here
+            pass
+        else:
+            self.collaboratorsList.clear()
+            users = json.loads(r.text)["users"]
+            for user in users:
+                item = QtWidgets.QListWidgetItem("{} - {}".format(user["username"],
+                                                 user["access_level"]),
+                                                 parent=self.collaboratorsList)
+                item.username = user["username"]
+                self.collaboratorsList.addItem(item)
+            self.collaboratorsList.itemActivated.connect(self.update_username_wrt_item)
+
+    def update_username_wrt_item(self, item):
+        self.username.setText(item.username)

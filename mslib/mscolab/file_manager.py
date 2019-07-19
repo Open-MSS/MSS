@@ -75,7 +75,7 @@ class FileManager(object):
                    }
         return project
 
-    def add_permission(self, p_id, u_id, access_level, user):
+    def add_permission(self, p_id, u_id, username, access_level, user):
         """
         p_id: project id
         u_id: user-id who is being given permission
@@ -84,6 +84,11 @@ class FileManager(object):
         """
         if not self.is_admin(user.id, p_id):
             return False
+        if username:
+            user_victim = User.query.filter_by(username=username).first()
+            if not user_victim:
+                return False
+            u_id = user_victim.id
         perm_old = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if perm_old or (access_level == "creator"):
             return False
@@ -92,10 +97,11 @@ class FileManager(object):
         db.session.commit()
         return True
 
-    def revoke_permission(self, p_id, u_id, user):
+    def revoke_permission(self, p_id, u_id, username, user):
         """
         p_id: project id
         u_id: user-id
+        username: to identify victim user
         user: logged in user
         """
         deleted = None
@@ -104,6 +110,11 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         else:
+            if username:
+                user_victim = User.query.filter_by(username=username).first()
+                if not user_victim:
+                    return False
+                u_id = user_victim.id
             perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
             if perm is None:
                 return False
@@ -177,9 +188,14 @@ class FileManager(object):
         db.session.commit()
         return True
 
-    def update_access_level(self, p_id, u_id, access_level, user):
+    def update_access_level(self, p_id, u_id, username, access_level, user):
         if not self.is_admin(user.id, p_id):
             return False
+        if username:
+            user_victim = User.query.filter_by(username=username).first()
+            if not user_victim:
+                return False
+            u_id = user_victim.id
         perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if not perm:
             return False
