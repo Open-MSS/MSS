@@ -37,6 +37,7 @@ import logging
 import netCDF4 as nc
 import numpy as np
 import os
+import pint
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import werkzeug.datastructures
@@ -49,6 +50,8 @@ except ImportError:
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore
+
+UR = pint.UnitRegistry()
 
 
 class FatalUserError(Exception):
@@ -514,6 +517,26 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
         return pressure2flightlevel(pressure) / 32.8
     else:
         return pressure
+
+
+def convert_to(value, from_unit, to_unit, default=1.):
+    try:
+        value_unit = UR.Quantity(value, UR(from_unit))
+        result = value_unit.to(to_unit).magnitude
+    except pint.UndefinedUnitError as ex:
+        logging.error("Error in unit conversion (undefined) %s/%s", from_unit, to_unit)
+        result = value * default
+    except pint.DimensionalityError:
+        if UR(to_unit).to_base_units().units == UR.m:
+            try:
+                result = (value_unit / UR.Quantity(9.81, "m s^-2")).to(to_unit).magnitude
+            except pint.DimensionalityError:
+                logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
+                result = value * default
+        else:
+            logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
+            result = value * default
+    return result
 
 
 class CaseInsensitiveMultiDict(werkzeug.datastructures.ImmutableMultiDict):

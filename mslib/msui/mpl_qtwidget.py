@@ -495,6 +495,8 @@ class MplSideViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws a side view (vertical section) of a
        flight track / list of waypoints.
     """
+    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
+    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
     def __init__(self, model=None, settings=None, numlabels=None):
         """
@@ -563,64 +565,39 @@ class MplSideViewCanvas(MplCanvas):
         vaxis = self.settings_dict["vertical_axis"]
         if vaxis == "pressure":
             # Compute the position of major and minor ticks. Major ticks are labelled.
-            # By default, major ticks are drawn every 100hPa. If p_top < 100hPa,
-            # the distance is reduced to every 10hPa above 100hPa.
-            label_distance = 10000
-            label_bot = self.p_bot - (self.p_bot % label_distance)
-            major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
-
-            # .. check step reduction to 10 hPa ..
-            if self.p_top < 10000:
-                major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1, -label_distance // 10)
-                len_major_ticks = len(major_ticks)
-                major_ticks = np.resize(major_ticks,
-                                        len_major_ticks + len(major_ticks2) - 1)
-                major_ticks[len_major_ticks:] = major_ticks2[1:]
-                if self.p_top < 1000:
-                    major_ticks3 = np.arange(major_ticks[-1], self.p_top - 1, -label_distance // 100)
-                    len_major_ticks = len(major_ticks)
-                    major_ticks = np.resize(major_ticks,
-                                            len_major_ticks + len(major_ticks3) - 1)
-                    major_ticks[len_major_ticks:] = major_ticks3[1:]
-                if major_ticks[-1] != self.p_top:
-                    top = np.arange(self.p_top, 0, -100000)
-                    major_ticks = np.append(major_ticks, top)
-
+            major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
+            minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
+            if len(major_ticks) > 20:
+                major_ticks = [x for x in major_ticks if not str(x)[0] in "975"]
+            elif len(major_ticks) > 10:
+                major_ticks = [x for x in major_ticks if not str(x)[0] in "9"]
             labels = ["{}".format(int(l / 100.))
                       if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
-
-            # .. the same for the minor ticks ..
-            p_top_minor = max(label_distance, self.p_top)
-            label_distance_minor = 1000
-            label_bot_minor = self.p_bot - (self.p_bot % label_distance_minor)
-            minor_ticks = np.arange(label_bot_minor, p_top_minor - 1,
-                                    -label_distance_minor)
-
-            if self.p_top < 10000:
-                minor_ticks2 = np.arange(minor_ticks[-1], self.p_top - 1, -label_distance_minor // 10)
-                len_minor_ticks = len(minor_ticks)
-                minor_ticks = np.resize(minor_ticks,
-                                        len_minor_ticks + len(minor_ticks2) - 1)
-                minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
-                if self.p_top < 10000:
-                    minor_ticks3 = np.arange(1000, self.p_top - 1, -label_distance_minor // 100)
-                    len_minor_ticks = len(minor_ticks)
-                    minor_ticks = np.resize(minor_ticks,
-                                            len_minor_ticks + len(minor_ticks3) - 1)
-                    minor_ticks[len_minor_ticks:] = minor_ticks3[1:]
             self.ax.set_ylabel("pressure (hPa)")
         elif vaxis == "pressure altitude":
-            major_heights = np.arange(0, thermolib.pressure2flightlevel(self.p_top) * 0.03048, 2)
-            minor_heights = np.arange(0, thermolib.pressure2flightlevel(self.p_top) * 0.03048, 0.5)
-            major_fl = 10 * major_heights / 0.3048
-            minor_fl = 10 * minor_heights / 0.3048
-            major_ticks = thermolib.flightlevel2pressure_a(major_fl)
-            minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
+            bot_km = thermolib.pressure2flightlevel(self.p_bot) * 0.03048
+            top_km = thermolib.pressure2flightlevel(self.p_top) * 0.03048
+            ma_dist, mi_dist = 4, 1.0
+            if (top_km - bot_km) <= 20:
+                ma_dist, mi_dist = 1, 0.5
+            elif (top_km - bot_km) <= 40:
+                ma_dist, mi_dist = 2, 0.5
+            major_heights = np.arange(0, top_km + 1, ma_dist)
+            minor_heights = np.arange(0, top_km + 1, mi_dist)
+            major_ticks = thermolib.flightlevel2pressure_a(major_heights / 0.03048)
+            minor_ticks = thermolib.flightlevel2pressure_a(minor_heights / 0.03048)
             labels = major_heights
             self.ax.set_ylabel("pressure altitude (km)")
         elif vaxis == "flight level":
-            major_fl = np.arange(0, 2132, 50)
-            minor_fl = np.arange(0, 2132, 10)
+            bot_km = thermolib.pressure2flightlevel(self.p_bot) * 0.03048
+            top_km = thermolib.pressure2flightlevel(self.p_top) * 0.03048
+            ma_dist, mi_dist = 50, 10
+            if (top_km - bot_km) <= 10:
+                ma_dist, mi_dist = 20, 10
+            elif (top_km - bot_km) <= 40:
+                ma_dist, mi_dist = 40, 10
+            major_fl = np.arange(0, 2132, ma_dist)
+            minor_fl = np.arange(0, 2132, mi_dist)
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl

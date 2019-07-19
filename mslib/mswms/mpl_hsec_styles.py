@@ -75,9 +75,10 @@ import mpl_toolkits.basemap
 from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, convert_to
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib.mswms.msschem import MSSChemTargets
 from mslib import thermolib
+from mslib.utils import convert_to
 
 
 class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):

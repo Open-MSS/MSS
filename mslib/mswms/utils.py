@@ -458,26 +458,6 @@ def get_cbar_label_format(style, maxvalue):
     return format
 
 
-def convert_to(value, from_unit, to_unit, default=1.):
-    try:
-        value_unit = UR.Quantity(value, UR(from_unit))
-        result = value_unit.to(to_unit).magnitude
-    except pint.UndefinedUnitError as ex:
-        logging.error("Error in unit conversion (undefined) %s/%s", from_unit, to_unit)
-        result = value * default
-    except pint.DimensionalityError:
-        if UR(to_unit).to_base_units().units == UR.m:
-            try:
-                result = (value_unit / UR.Quantity(9.81, "m s^-2")).to(to_unit).magnitude
-            except pint.DimensionalityError:
-                logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
-                result = value * default
-        else:
-            logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
-            result = value * default
-    return result
-
-
 def conditional_decorator(dec, condition):
     def decorator(func):
         if not condition:
