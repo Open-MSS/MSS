@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MscolabProject(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(907, 601)
+        Form.resize(905, 601)
         self.username = QtWidgets.QLineEdit(Form)
         self.username.setGeometry(QtCore.QRect(10, 20, 113, 23))
         self.username.setObjectName("username")
@@ -39,6 +39,12 @@ class Ui_MscolabProject(object):
         self.delete_1 = QtWidgets.QPushButton(Form)
         self.delete_1.setGeometry(QtCore.QRect(350, 20, 51, 23))
         self.delete_1.setObjectName("delete_1")
+        self.messageText = QtWidgets.QPlainTextEdit(Form)
+        self.messageText.setGeometry(QtCore.QRect(240, 450, 281, 71))
+        self.messageText.setObjectName("messageText")
+        self.sendMessage = QtWidgets.QPushButton(Form)
+        self.sendMessage.setGeometry(QtCore.QRect(550, 480, 80, 23))
+        self.sendMessage.setObjectName("sendMessage")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -52,4 +58,6 @@ class Ui_MscolabProject(object):
         self.add.setText(_translate("Form", "add"))
         self.modify.setText(_translate("Form", "modify"))
         self.delete_1.setText(_translate("Form", "delete"))
+        self.messageText.setPlaceholderText(_translate("Form", "Enter message here"))
+        self.sendMessage.setText(_translate("Form", "send"))
 

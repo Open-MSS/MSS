@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Mscolab Project</class>
+ <widget class="QWidget" name="MscolabProject">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>907</width>
+    <width>905</width>
     <height>601</height>
    </rect>
   </property>
@@ -100,6 +100,32 @@
    </property>
    <property name="text">
     <string>delete</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="messageText">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>450</y>
+     <width>281</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>Enter message here</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="sendMessage">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>480</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>send</string>
    </property>
   </widget>
  </widget>
