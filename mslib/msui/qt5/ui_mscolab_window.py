@@ -63,6 +63,9 @@ class Ui_MSSMscolabWindow(object):
         self.fetch_ft = QtWidgets.QPushButton(MSSMscolabWindow)
         self.fetch_ft.setGeometry(QtCore.QRect(230, 300, 80, 23))
         self.fetch_ft.setObjectName("fetch_ft")
+        self.projWindow = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.projWindow.setGeometry(QtCore.QRect(330, 250, 91, 23))
+        self.projWindow.setObjectName("projWindow")
 
         self.retranslateUi(MSSMscolabWindow)
         QtCore.QMetaObject.connectSlotsByName(MSSMscolabWindow)
@@ -83,3 +86,5 @@ class Ui_MSSMscolabWindow(object):
         self.save_ft.setText(_translate("MSSMscolabWindow", "save"))
         self.autoSave.setText(_translate("MSSMscolabWindow", "autosave"))
         self.fetch_ft.setText(_translate("MSSMscolabWindow", "fetch"))
+        self.projWindow.setText(_translate("MSSMscolabWindow", "chat window"))
+

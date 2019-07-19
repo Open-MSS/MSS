@@ -36,6 +36,7 @@ from mslib.msui.icons import icons
 from mslib.msui import flighttrack as ft
 from mslib.msui import topview, sideview, tableview
 from mslib.msui import socket_control as sc
+from mslib.msui import mscolab_project as mp
 
 import logging
 import requests
@@ -67,6 +68,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.save_ft.clicked.connect(self.save_wp_mscolab)
         self.fetch_ft.clicked.connect(self.reload_wps_from_server)
         self.autoSave.stateChanged.connect(self.autosave_emit)
+        self.projWindow.clicked.connect(self.open_project_window)
 
         # int to store active pid
         self.active_pid = None
@@ -82,6 +84,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_windows = []
         # assign ids to view-window
         self.id_count = 0
+
+    def open_project_window(self):
+        if self.active_pid is None:
+            return
+        view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn, parent=self.projWindow)
+        view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.project_window = view_window
+        self.project_window.show()
 
     def autosave_emit(self):
         # emit signal to server to enable or disable

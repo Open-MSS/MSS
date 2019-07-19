@@ -33,7 +33,7 @@ class Ui_MscolabProject(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.collaboratorsList = QtWidgets.QListView(self.verticalLayoutWidget)
+        self.collaboratorsList = QtWidgets.QListWidget(self.verticalLayoutWidget)
         self.collaboratorsList.setObjectName("collaboratorsList")
         self.verticalLayout_4.addWidget(self.collaboratorsList)
         self.delete_1 = QtWidgets.QPushButton(Form)
