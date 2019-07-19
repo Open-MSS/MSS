@@ -60,8 +60,17 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.add.clicked.connect(self.add_handler)
         self.modify.clicked.connect(self.modify_handler)
         self.delete_1.clicked.connect(self.delete_handler)
+        # send message handler
+        self.sendMessage.clicked.connect(self.send_message)
         # load users
         self.load_users()
+
+    def send_message(self):
+        """
+        send message through connection
+        """
+        message_text = self.messageText.toPlainText()
+        self.conn.send_message(message_text, self.p_id)
 
     def add_handler(self):
         # get username, p_id

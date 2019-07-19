@@ -39,19 +39,30 @@ class ConnectionManager(QtCore.QObject):
         super(ConnectionManager, self).__init__()
         self.sio = socketio.Client()
         self.sio.on('file-changed', handler=self.handle_file_change)
+        # ToDo merge them into one 'autosave-client' event
         self.sio.on('autosave-client-en', handler=self.handle_autosave_enable)
         self.sio.on('autosave-client-db', handler=self.handle_autosave_disable)
+        # on chat message recive
+        self.sio.on('chat-message-client', handler=self.handle_incoming_message)
         self.sio.connect("http://localhost:8083")
         self.sio.emit('start', {'token': token})
         self.token = token
         self.user = user
 
+    def handle_incoming_message(self, message):
+        message = json.loads(message)
+        logging.debug(message)
+
     def handle_file_change(self, message):
         message = json.loads(message)
         self.signal_reload.emit(message["p_id"])
 
-    def send_message(self, channel, message):
+    def send_message(self, message_text, p_id):
         logging.debug("sending message")
+        self.sio.emit('chat-message', {
+                      "p_id": p_id,
+                      "token": self.token,
+                      "message_text": message_text})
 
     def save_file(self, token, p_id, content):
         logging.debug("saving file")
