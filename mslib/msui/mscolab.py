@@ -172,7 +172,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         r = requests.get(mss_default.mscolab_server_url + '/project_details', data=data)
         _json = json.loads(r.text)
         if _json["autosave"] == True:
+            # one time activate 
+            self.autoSave.blockSignals(True)
             self.autoSave.setChecked(True)
+            self.autoSave.blockSignals(False)
+            self.save_ft.setEnabled(False)
+            self.fetch_ft.setEnabled(False)
         # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
