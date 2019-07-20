@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Mscolab Project</class>
+ <class>MscolabProject</class>
  <widget class="QWidget" name="MscolabProject">
   <property name="geometry">
    <rect>
@@ -105,7 +105,7 @@
   <widget class="QPlainTextEdit" name="messageText">
    <property name="geometry">
     <rect>
-     <x>240</x>
+     <x>220</x>
      <y>450</y>
      <width>281</width>
      <height>71</height>
@@ -118,7 +118,7 @@
   <widget class="QPushButton" name="sendMessage">
    <property name="geometry">
     <rect>
-     <x>550</x>
+     <x>540</x>
      <y>480</y>
      <width>80</width>
      <height>23</height>
@@ -127,6 +127,21 @@
    <property name="text">
     <string>send</string>
    </property>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget_3">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>70</y>
+     <width>391</width>
+     <height>371</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_6">
+    <item>
+     <widget class="QListWidget" name="messages"/>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
