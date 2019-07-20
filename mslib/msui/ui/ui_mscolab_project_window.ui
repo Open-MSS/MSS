@@ -80,7 +80,7 @@
      <x>10</x>
      <y>70</y>
      <width>191</width>
-     <height>114</height>
+     <height>441</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -106,7 +106,7 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>450</y>
+     <y>520</y>
      <width>281</width>
      <height>71</height>
     </rect>
@@ -119,7 +119,7 @@
    <property name="geometry">
     <rect>
      <x>540</x>
-     <y>480</y>
+     <y>540</y>
      <width>80</width>
      <height>23</height>
     </rect>
@@ -134,12 +134,27 @@
      <x>220</x>
      <y>70</y>
      <width>391</width>
-     <height>371</height>
+     <height>441</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_6">
     <item>
      <widget class="QListWidget" name="messages"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget_4">
+   <property name="geometry">
+    <rect>
+     <x>630</x>
+     <y>70</y>
+     <width>271</width>
+     <height>521</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_7">
+    <item>
+     <widget class="QListWidget" name="changes"/>
     </item>
    </layout>
   </widget>

@@ -289,7 +289,11 @@ class FileManager(object):
         return list(map(lambda change: {'content': change.content,
                                         'comment': change.comment,
                                         'u_id': change.u_id,
+                                        'username': self.get_user_from_id(change.u_id).username,
                                         'id': change.id}, changes,))
+
+    def get_user_from_id(self, id):
+        return User.query.filter_by(id=id).first()
 
     def get_change_by_id(self, ch_id, user):
         """

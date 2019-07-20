@@ -84,14 +84,20 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_windows = []
         # assign ids to view-window
         self.id_count = 0
+        # project window
+        self.project_window = None
 
     def open_project_window(self):
         if self.active_pid is None:
             return
         view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn, parent=self.projWindow)
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        view_window.viewCloses.connect(self.close_project_window)
         self.project_window = view_window
         self.project_window.show()
+
+    def close_project_window(self):
+        self.project_window = None
 
     def autosave_emit(self):
         # emit signal to server to enable or disable
@@ -165,7 +171,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.get(mss_default.mscolab_server_url + '/project_details', data=data)
         _json = json.loads(r.text)
-        self.autosave_toggle(_json["autosave"], self.active_pid)
+        if _json["autosave"] == True:
+            self.autoSave.setChecked(True)
         # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
@@ -178,8 +185,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for window in self.active_windows:
             # set active flight track
             window.setFlightTrackModel(self.waypoints_model)
-            # redraw figure
-            window.mpl.canvas.waypoints_interactor.redraw_figure()
+            # redraw figure *only for canvas based window, not tableview*
+            if hasattr(window, 'mpl'):
+                window.mpl.canvas.waypoints_interactor.redraw_figure()
 
     def load_wps_from_server(self):
         data = {
@@ -264,6 +272,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # ask the user in dialog if he wants the change, only for autosave mode
         # toDo preview of the change
         self.reload_wps_from_server()
+        # reload changes in project window if it exists
+        if self.project_window is not None:
+            self.project_window.load_all_changes()
 
     @QtCore.Slot(int)
     def handle_view_close(self, value):
@@ -298,6 +309,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # ToDo - remove hack to disconnect this handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
             self.waypoints_model.dataChanged.disconnect()
+
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
