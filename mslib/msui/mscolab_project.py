@@ -167,6 +167,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     def render_new_message(self, username, message):
         item = QtWidgets.QListWidgetItem("{}: {}\n".format(username, message), parent=self.messages)
         self.messages.addItem(item)
+        self.messages.scrollToBottom()
 
     def load_all_changes(self):
         """
@@ -183,6 +184,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         for change in changes:
             item = QtWidgets.QListWidgetItem("{}: {}\n".format(change["username"], change["content"]), parent=self.changes)
             self.changes.addItem(item)
+        self.changes.scrollToBottom()
         
 
     def load_all_messages(self):
@@ -207,6 +209,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             message_text = message["text"]
             item = QtWidgets.QListWidgetItem("{}: {}\n".format(username, message_text), parent=self.messages)
             self.messages.addItem(item)
+        self.messages.scrollToBottom()
 
     def closeEvent(self, event):
         self.viewCloses.emit()
