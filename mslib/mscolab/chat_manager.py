@@ -23,7 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from mslib.mscolab.models import db, Message
+from mslib.mscolab.models import db, Message, User
 
 
 class ChatManager(object):
@@ -52,4 +52,14 @@ class ChatManager(object):
         if last_timestamp:
             messages = messages.filter(Message.created_at > last_timestamp)
         messages = messages.all()
+
+        messages = list(map(lambda x:
+                        {'user': x.u_id,
+                         'time': x.created_at.strftime("%m %d %Y, %H:%M:%S"),
+                         'text': x.text,
+                         'username': self.get_user_from_id(x.u_id).username}, messages))
         return messages
+
+    # refactor to utils
+    def get_user_from_id(self, id):
+        return User.query.filter_by(id=id).first()

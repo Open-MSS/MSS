@@ -31,6 +31,7 @@ from mslib._tests.constants import MSCOLAB_URL
 import logging
 import requests
 import json
+import datetime
 
 
 class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
@@ -72,6 +73,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.load_users()
         # load changes
         self.load_all_changes()
+        # load messages
+        self.load_all_messages()
 
     def send_message(self):
         """
@@ -176,14 +179,34 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         # 'get all changes' request
         r = requests.get(MSCOLAB_URL + '/get_changes', data=data)
         changes = json.loads(r.text)["changes"]
+        self.changes.clear()
         for change in changes:
             item = QtWidgets.QListWidgetItem("{}: {}\n".format(change["username"], change["content"]), parent=self.changes)
-            self.messages.addItem(item)
+            self.changes.addItem(item)
         
 
     def load_all_messages(self):
         # empty messages and reload from server
-        pass
+        data = {
+            "token": self.token,
+            "p_id": self.p_id,
+            "timestamp": datetime.datetime(1970, 1, 1).strftime("%m %d %Y, %H:%M:%S")
+        }
+        # returns an array of messages
+        r = requests.post(MSCOLAB_URL + "/messages", data=data)
+        response = json.loads(r.text)
+        
+        messages = response["messages"]
+        logging.debug(messages)
+        logging.debug(type(messages))
+        # clear message box
+        self.messages.clear()
+        for message in messages:
+            logging.debug(message)
+            username = message["username"]
+            message_text = message["text"]
+            item = QtWidgets.QListWidgetItem("{}: {}\n".format(username, message_text), parent=self.messages)
+            self.messages.addItem(item)
 
     def closeEvent(self, event):
         self.viewCloses.emit()
