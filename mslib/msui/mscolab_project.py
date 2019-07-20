@@ -51,11 +51,16 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         """
         super(MSColabProjectWindow, self).__init__(parent)
         self.setupUi(self)
+
         # constrain vertical layout
         self.verticalLayout_6.setSizeConstraint(self.verticalLayout_6.SetMinimumSize)
+        self.messages.setWordWrap(True)
+
         self.token = token
         self.p_id = p_id
         self.conn = conn
+        # add receive message handler
+        self.conn.signal_message_receive.connect(self.render_new_message)
         logging.debug(ui.Ui_MscolabProject)
         # establish button press handlers
         self.add.clicked.connect(self.add_handler)
@@ -65,11 +70,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.sendMessage.clicked.connect(self.send_message)
         # load users
         self.load_users()
-        # test widget add
-        for i in range(50):
-            item = QtWidgets.QListWidgetItem("dummy str" * 20 + "\n\n", parent=self.messages)
-            self.messages.addItem(item)
-        self.messages.setWordWrap(True)
 
     def send_message(self):
         """
@@ -77,6 +77,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         """
         message_text = self.messageText.toPlainText()
         self.conn.send_message(message_text, self.p_id)
+        self.messageText.clear()
 
     def add_handler(self):
         # get username, p_id
@@ -156,3 +157,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
 
     def update_username_wrt_item(self, item):
         self.username.setText(item.username)
+
+    @QtCore.Slot(str, str)
+    def render_new_message(self, username, message):
+        item = QtWidgets.QListWidgetItem("{}: {}\n".format(username, message), parent=self.messages)
+        self.messages.addItem(item)
