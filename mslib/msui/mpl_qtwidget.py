@@ -226,6 +226,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         if sideview:
             self.toolitems = [
                 _x for _x in NavigationToolbar2QT.toolitems if _x[0] in ('Save',)]
+            self.set_history_buttons = lambda: None
         else:
             self.toolitems = [
                 _x for _x in NavigationToolbar2QT.toolitems if
@@ -426,8 +427,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             a.setCheckable(True)
             a.setToolTip(tooltip_text)
 
-        self.buttons = {}
-
         # Add the x,y location widget at the right side of the toolbar
         # The stretch factor is 1 which means any resizing of the toolbar
         # will resize this label instead of the buttons.
@@ -440,9 +439,6 @@ class NavigationToolbar(NavigationToolbar2QT):
                                       QtWidgets.QSizePolicy.Ignored))
             labelAction = self.addWidget(self.locLabel)
             labelAction.setVisible(True)
-
-        # reference holder for subplots_adjust window
-        self.adj_window = None
 
         # Esthetic adjustments - we need to set these explicitly in PyQt5
         # otherwise the layout looks different - but we don't want to set it if
