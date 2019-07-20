@@ -24,7 +24,7 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_mscolab_project_window as ui
 from mslib._tests.constants import MSCOLAB_URL
 
@@ -51,7 +51,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         """
         super(MSColabProjectWindow, self).__init__(parent)
         self.setupUi(self)
-
+        # constrain vertical layout
+        self.verticalLayout_6.setSizeConstraint(self.verticalLayout_6.SetMinimumSize)
         self.token = token
         self.p_id = p_id
         self.conn = conn
@@ -64,6 +65,11 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.sendMessage.clicked.connect(self.send_message)
         # load users
         self.load_users()
+        # test widget add
+        for i in range(50):
+            item = QtWidgets.QListWidgetItem("dummy str" * 20 + "\n\n", parent=self.messages)
+            self.messages.addItem(item)
+        self.messages.setWordWrap(True)
 
     def send_message(self):
         """
