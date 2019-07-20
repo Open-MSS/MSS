@@ -34,6 +34,7 @@ class ConnectionManager(QtCore.QObject):
 
     signal_reload = QtCore.Signal(int, name="reload_wps")
     signal_autosave = QtCore.Signal(int, int, name="autosave en/db")
+    signal_message_receive = QtCore.Signal(str, str, name="message rcv")
 
     def __init__(self, token, user):
         super(ConnectionManager, self).__init__()
@@ -50,8 +51,11 @@ class ConnectionManager(QtCore.QObject):
         self.user = user
 
     def handle_incoming_message(self, message):
+        # raise signal to render to view
         message = json.loads(message)
         logging.debug(message)
+        # emit signal
+        self.signal_message_receive.emit(message["user"], message["message_text"])
 
     def handle_file_change(self, message):
         message = json.loads(message)
