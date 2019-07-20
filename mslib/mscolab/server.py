@@ -131,9 +131,7 @@ def messages():
     timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
     p_id = request.form.get('p_id', None)
     messages = cm.get_messages(p_id, last_timestamp=timestamp)
-    messages = list(map(lambda x:
-                    {'user': x.u_id, 'time': x.created_at.strftime("%m %d %Y, %H:%M:%S"), 'text': x.text}, messages))
-    return json.dumps({'messages': json.dumps(messages)})
+    return json.dumps({'messages': messages})
 
 
 # File related routes
