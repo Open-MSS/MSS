@@ -70,6 +70,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.sendMessage.clicked.connect(self.send_message)
         # load users
         self.load_users()
+        # load changes
+        self.load_all_changes()
 
     def send_message(self):
         """
@@ -162,3 +164,26 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     def render_new_message(self, username, message):
         item = QtWidgets.QListWidgetItem("{}: {}\n".format(username, message), parent=self.messages)
         self.messages.addItem(item)
+
+    def load_all_changes(self):
+        """
+        get changes from api, clear listwidget, render them to ui
+        """
+        data = {
+            "token": self.token,
+            "p_id": self.p_id
+        }
+        # 'get all changes' request
+        r = requests.get(MSCOLAB_URL + '/get_changes', data=data)
+        changes = json.loads(r.text)["changes"]
+        for change in changes:
+            item = QtWidgets.QListWidgetItem("{}: {}\n".format(change["username"], change["content"]), parent=self.changes)
+            self.messages.addItem(item)
+        
+
+    def load_all_messages(self):
+        # empty messages and reload from server
+        pass
+
+    def closeEvent(self, event):
+        self.viewCloses.emit()
