@@ -417,7 +417,6 @@ class MapCanvas(basemap.Basemap):
             self.__call__(axis[0], axis[2], inverse=True)
         self.kwargs['urcrnrlon'], self.kwargs['urcrnrlat'] = \
             self.__call__(axis[1], axis[3], inverse=True)
-
         logging.debug("corner coordinates (lat/lon): ll(%.2f,%.2f), ur(%.2f,%.2f)",
                       self.kwargs['llcrnrlat'], self.kwargs['llcrnrlon'],
                       self.kwargs['urcrnrlat'], self.kwargs['urcrnrlon'])

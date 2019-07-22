@@ -356,6 +356,14 @@ class NavigationToolbar(NavigationToolbar2QT):
             self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
         NavigationToolbar2QT.zoom(self, *args)
 
+    def release_zoom(self, event):
+        NavigationToolbar2QT.release_zoom(self, event)
+        self.canvas.redraw_map()
+
+    def release_pan(self, event):
+        NavigationToolbar2QT.release_pan(self, event)
+        self.canvas.redraw_map()
+
     def motion_wp(self, event):
         self.canvas.waypoints_interactor.motion_notify_callback(event)
 
@@ -952,7 +960,6 @@ class MplTopViewCanvas(MplCanvas):
         See MapCanvas.update_with_coordinate_change(). After the map redraw,
         coordinates of all objects overlain on the map have to be updated.
         """
-
         # remove legend
         self.draw_legend(None)
 
@@ -1188,15 +1195,6 @@ class MplTopViewWidget(MplNavBarWidget):
                 action.setEnabled(False)
             elif action.text() in ["Home", "Back", "Forward"]:
                 action.triggered.connect(self.historyEvent)
-        # Identify zoom events to redraw the map, if necessary.
-        self.canvas.mpl_connect('button_release_event', self.zoomEvent)
-
-    def zoomEvent(self, event):
-        """Slot to react to zoom events. Called on button release events.
-           Redraws the map after the user has zoomed or panned the image.
-        """
-        if self.navbar.mode in ["zoom rect", "pan/zoom"]:
-            self.canvas.redraw_map()
 
     def historyEvent(self):
         """Slot to react to clicks on one of the history buttons in the
