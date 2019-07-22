@@ -128,7 +128,6 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         steps.
         """
         logging.debug(u"checking vertical dimensions for layer '%s'.", self.name)
-        successful = False
         if self.driver is not None and not all(_x[0] in ["sfc"] for _x in self.required_datafields):
             # Get the latest init time.
             init_times = self.driver.get_init_times()
@@ -145,56 +144,29 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
             # all init times. The try..except block takes care of this
             # problem and tries to find a time at which all required
             # files are available.
-            for time in init_times:
-                try:
-                    valid_time = time
-                    if valid_time not in valid_times:
-                        logging.error("init_time is not contained in valid_times")
-                        valid_time = valid_times[0]
-                    self.driver.set_plot_parameters(self, init_time=time, valid_time=valid_time)
-                except (IOError, ValueError) as ex:
-                    logging.debug(u"WARNING: unsuccessfully examined data for "
-                                  u"init time '%s'.. trying next time.", time)
-                    logging.debug(u"(Error message: %s %s)", type(ex), ex)
-                else:
+            successful = False
+            for init_time in init_times:
+                valid_time = init_time
+                if valid_time not in valid_times:
+                    logging.warn("init_time is not contained in valid_times")
+                    valid_time = valid_times[0]
+                if self.driver.have_data(self, init_time, valid_time):
                     successful = True
                     break
+                else:
+                    logging.debug("WARNING: unsuccessfully examined data for "
+                                  "init time %s, valid time %s.. trying next "
+                                  "time.", init_time, valid_time)
 
-            # If the analysis time is not available try to extract the available
-            # valid times for the datafield required by this style.
-            if not successful:
-                vartype, varname = "", ""
-                if len(self.required_datafields) > 0:
-                    vartype, varname = self.required_datafields[0]
-                for it in init_times:
-                    valid_times = self.driver.get_valid_times(varname, vartype, it)
-                    for vt in valid_times:
-                        try:
-                            self.driver.set_plot_parameters(self, init_time=it, valid_time=vt)
-                        except (IOError, ValueError) as ex:
-                            logging.debug("WARNING: unsuccessfully examined data for "
-                                          "init time %s, valid time %s.. trying next "
-                                          "time.", it, vt)
-                            logging.debug(u"(Error message: %s %S )", type(ex), ex)
-                        else:
-                            successful = True
-                            break
-
-            # If we're still not successful..
-            if not successful:
-                logging.error("ERROR: cannot determine whether there's a "
-                              "vertical coordinate.. something is wrong with "
-                              "this dataset!!")
-                return []
-
-            # Get a list of the available levels.
-            if self.driver.vert_data is not None:
-                return [u"{:}".format(lvl) for lvl in sorted({float(_x) for _x in self.driver.vert_data})]
-            else:
-                return []
+            if successful:
+                self.driver.set_plot_parameters(self, init_time=init_time, valid_time=valid_time)
+                if self.driver.vert_data is not None:
+                    return [u"{:}".format(lvl) for lvl in sorted({float(_x) for _x in self.driver.vert_data})]
+            logging.error("Cannot determine whether there's a vertical coordinate... "
+                          "Something is wrong with this dataset!!")
         else:
             logging.debug("Only surface layers or no driver")
-            return []
+        return []
 
     def get_elevation_units(self):
         """Returns the units of the elevation values.

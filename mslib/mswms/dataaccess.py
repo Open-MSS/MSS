@@ -65,16 +65,32 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
         """
         pass
 
+    def have_data(self, variable, vartype, init_time, valid_time):
+        """Checks whether a file with data for the specified variable,
+           type and times is known. This does not trigger a search for
+           updated data files on disk.
+        """
+        try:
+            self._determine_filename(
+                variable, vartype, init_time, valid_time, reload=False)
+        except ValueError:
+            return False
+        else:
+            return True
+
     def get_filename(self, variable, vartype, init_time, valid_time,
                      fullpath=False):
         """Get the filename of the file in which a given variable at
            a given time can be found.
 
+           In case no file is available, the disk is searched for updated
+           data before failing.
+
         Arguments:
         variable -- string with CF name of variable
         vartype -- string specifying the type of the variable (model specific).
                    For example, can be ml (model level), pl (pressure level),
-                   or sfc (surface) for ECMWF data.
+                   or sfc (surface) for, e.g., ECMWF data.
         init_time -- datetime object with initialisation time of forecast run
         valid_time -- datetime object with valid time of forecast
         fullpath -- if True, the complete path to the file will be returned.
@@ -141,10 +157,10 @@ class DefaultDataAccess(NWPDataAccess):
         self._available_files = None
         self._filetree = None
 
-    def _determine_filename(self, variable, vartype, init_time, valid_time):
-        """Determines the name of the ECMWF data file the contains
-           the variable <variable> of the forecast specified by
-           init_time and valid_time.
+    def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
+        """Determines the name of the data file that contains
+           the variable <variable> with type <vartype> of the forecast specified
+           by <init_time> and <valid_time>.
         """
         assert self._filetree is not None, "filetree is None. Forgot to call setup()?"
         try:
@@ -153,7 +169,8 @@ class DefaultDataAccess(NWPDataAccess):
                 raise KeyError
             return filename
         except KeyError:
-            self.setup()
+            if reload:
+                self.setup()
             try:
                 return self._filetree[vartype][init_time][variable][valid_time]
             except KeyError as ex:
@@ -165,7 +182,7 @@ class DefaultDataAccess(NWPDataAccess):
     def setup(self):
         # Get a list of the available data files.
         self._available_files = [
-            _filename for _filename in os.listdir(self._root_path) if self._domain_id in _filename]
+            _filename for _filename in sorted(os.listdir(self._root_path)) if self._domain_id in _filename]
         logging.info("Files identified for domain '%s': %s",
                      self._domain_id, self._available_files)
 
