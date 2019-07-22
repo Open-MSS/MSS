@@ -43,16 +43,9 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib import patheffects
-import mpl_toolkits.basemap as basemap
 import cartopy
 import cartopy.crs as ccrs
 import cartopy.geodesic as gd
-import matplotlib.pyplot as plt
-try:
-    import mpl_toolkits.basemap.pyproj as pyproj
-except ImportError:
-    import pyproj
-
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import trajectory_item_tree as titree
 from mslib.utils import npts_cartopy, get_projection_params
@@ -143,12 +136,14 @@ class MapCanvas():
         self.appearance = default_appearance
 
         # Set up the map appearance.
+        self.map_coastlines = self.ax.coastlines(zorder=3)
+        self.map_countries = self.ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=0.5)
         if self.appearance["draw_coastlines"]:
-            self.map_coastlines = self.ax.coastlines(zorder=3)
-            self.map_countries = self.ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=1)
+            self.map_coastlines.set_visible(True)
+            self.map_countries.set_visible(True)
         else:
-            self.map_coastlines = None
-            self.map_countries = None
+            self.map_coastlines.set_visible(False)
+            self.map_countries.set_visible(False)
         if self.appearance["fill_waterbodies"]:
             self.map_boundary = self.ax.add_feature(cartopy.feature.OCEAN, facecolor=self.appearance["colour_water"])
         else:
@@ -169,7 +164,10 @@ class MapCanvas():
 
         if self.appearance["draw_graticule"]:
             try:
-                self._draw_auto_graticule()
+                grid = self.ax.gridlines(crs=ax.projection, draw_labels=True)
+                grid.xlabels_top = False
+                self.map_parallels = True
+                self.map_meridians = True
             except Exception as ex:
                 logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
         else:
@@ -198,15 +196,6 @@ class MapCanvas():
         super(MapCanvas, self).set_axes_limits(ax=ax)
         matplotlib.interactive(intact)
 
-    def _draw_auto_graticule(self):
-        """Draw an automatically spaced graticule on the map.
-        """
-        ax = self.ax
-        grid = self.ax.gridlines(crs=ax.projection, draw_labels=True)
-        grid.xlabels_top = False
-        self.map_parallels = True
-        self.map_meridians = True
-
     def set_graticule_visible(self, visible=True):
         """Set the visibily of the graticule.
 
@@ -218,16 +207,20 @@ class MapCanvas():
         """
         ax = self.ax
         self.appearance["draw_graticule"] = visible
-        if visible and self.map_parallels is None and self.map_meridians is None:
+        if visible:
             # Draw new graticule if visible is True and no current graticule
             # exists.
-            self._draw_auto_graticule()
-            # Update the figure canvas.
+            grid = self.ax.gridlines(crs=ax.projection, draw_labels=True)
+            grid.xlabels_top = False
+            self.map_parallels = True
+            self.map_meridians = True
             self.fig.canvas.draw()
-        elif not visible and self.map_parallels is not None and self.map_meridians is not None:
+        elif not visible:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
+            grid.xlines = False
+            grid.ylines = False
             self.map_parallels = None
             self.map_meridians = None
             # Update the figure canvas.
@@ -249,7 +242,8 @@ class MapCanvas():
             # scatter() for drawing the flight tracks and trajectories.
             # Curiously, plot() works fine without this setting, but scatter()
             # doesn't.
-            self.map_continents = self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"], zorder=1)
+            self.map_continents = (self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"]),
+                                self.ax.add_feature(cartopy.feature.OCEAN, facecolor=self.appearance["colour_water"]))
             self.fig.canvas.draw()
         elif not visible and self.map_continents is not None:
             # Remove current fills. They are stored as a list of polygon patches
@@ -262,22 +256,23 @@ class MapCanvas():
             # Colours have changed: Remove the old fill and redraw.
             # for patch in self.map_continents:
             #     patch.remove()
-            self.map_continents = self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"], zorder=1)
+            self.map_continents = (self.ax.add_feature(cartopy.feature.LAND, facecolor=self.appearance["colour_land"]),
+                                self.ax.add_feature(cartopy.feature.OCEAN, facecolor=self.appearance["colour_water"]))
             self.fig.canvas.draw()
 
     def set_coastlines_visible(self, visible=True):
         """Set the visibility of coastlines and country borders.
         """
         self.appearance["draw_coastlines"] = visible
-        if visible and self.map_coastlines is None and self.map_countries is None:
-            self.map_coastlines = self.ax.coastlines(zorder=3)
-            # self.map_countries = self.drawcountries(zorder=3)
+        if visible:
+            self.map_coastlines.set_visible(True)
+            self.map_countries.set_visible(True)
+            self.map_countries = self.ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=0.5)
             self.fig.canvas.draw()
-        elif not visible and self.map_coastlines is not None and self.map_countries is not None:
-            self.map_coastlines.remove()
-            self.map_countries.remove()
-            self.map_coastlines = None
-            self.map_countries = None
+        elif not visible:
+            self.map_coastlines.set_visible(False)
+            self.map_countries.set_visible(False)
+            self.map_countries = self.ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=0)
             self.fig.canvas.draw()
 
     def set_mapboundary_visible(self, visible=True, bg_color='#99ffff'):
@@ -358,7 +353,6 @@ class MapCanvas():
         if self.image is not None:
             self.image.remove()
         self.image = self.ax.imshow(X, transform=ccrs.PlateCarree(), extent=ax.get_extent(), zorder=2, **kwargs)
-        print(f"SEEEEEEEEEE {ax.get_extent()}")
         self.fig.canvas.draw()
         return self.image
 
@@ -516,7 +510,6 @@ class MapCanvas():
                 continue
 
             if mode in ["GXPROPERTY_CHANGE", "VISIBILITY_CHANGE"]:
-                print("TRAJJJJJJJJJJJ")
                 # Set the visibility of all graphics elements of the current item
                 # to 'itemVisible'.
                 # NOTE: We do not have to test if the item is of type
@@ -711,19 +704,23 @@ class SatelliteOverpassPatch(object):
         """
         # Plot satellite track.
         sat = np.copy(self.sat)
-        sat[:, 0], sat[:, 1] = self.map.ax.projection.transform_points(ccrs.PlateCarree(), sat[:, 0], sat[:, 1])
-        self.trackline = self.map.ax.plot(sat[:, 0], sat[:, 1], zorder=10,
-                                       marker='+', markerfacecolor='g')
+        sat[:, 0], sat[:, 1] = self.map.ax.projection.transform_points(
+                                    ccrs.PlateCarree(), sat[:, 0], sat[:, 1])
+        self.trackline = self.map.ax.plot(
+                            sat[:, 0], sat[:, 1], zorder=10, marker='+', markerfacecolor='g')
 
         # Plot polygon patch that represents the swath of the sensor.
         sw_l = self.sw_l
         sw_r = self.sw_r
         Path = mpath.Path
-        pathdata = [(Path.MOVETO, self.map.ax.projection.transform_point(sw_l[0, 0], sw_l[0, 1], ccrs.PlateCarree()))]
+        pathdata = [(Path.MOVETO, self.map.ax.projection.transform_point(
+                sw_l[0, 0], sw_l[0, 1], ccrs.PlateCarree()))]
         for point in sw_l[1:]:
-            pathdata.append((Path.LINETO, self.map.ax.projection.transform_point(point[0], point[1], ccrs.PlateCarree())))
+            pathdata.append((Path.LINETO, self.map.ax.projection.transform_point(
+                point[0], point[1], ccrs.PlateCarree())))
         for point in sw_r[::-1]:
-            pathdata.append((Path.LINETO, self.map.ax.projection.transform_point(point[0], point[1], ccrs.PlateCarree())))
+            pathdata.append((Path.LINETO, self.map.ax.projection.transform_point(
+                point[0], point[1], ccrs.PlateCarree())))
         codes, verts = list(zip(*pathdata))
         path = mpl_pi.PathH(verts, codes, map=self.map)
         patch = mpatches.PathPatch(path, facecolor='yellow',
