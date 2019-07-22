@@ -337,7 +337,7 @@ class WMSMapFetcher(QtCore.QObject):
             else:
                 img.save(md5_filename)
             logging.debug("MapPrefetcher %s - saved filed: %s.", self, md5_filename)
-        return img
+        return img.convert("RGBA")
 
     def fetch_legend(self, urlstr=None, use_cache=True, md5_filename=None):
         """
@@ -376,7 +376,7 @@ class WMSMapFetcher(QtCore.QObject):
             except Exception as ex:
                 logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
                 legend_img.save(md5_filename)
-        return legend_img
+        return legend_img.convert("RGBA")
 
 
 class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):

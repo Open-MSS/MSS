@@ -226,6 +226,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         if sideview:
             self.toolitems = [
                 _x for _x in NavigationToolbar2QT.toolitems if _x[0] in ('Save',)]
+            self.set_history_buttons = lambda: None
         else:
             self.toolitems = [
                 _x for _x in NavigationToolbar2QT.toolitems if
@@ -426,8 +427,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             a.setCheckable(True)
             a.setToolTip(tooltip_text)
 
-        self.buttons = {}
-
         # Add the x,y location widget at the right side of the toolbar
         # The stretch factor is 1 which means any resizing of the toolbar
         # will resize this label instead of the buttons.
@@ -440,9 +439,6 @@ class NavigationToolbar(NavigationToolbar2QT):
                                       QtWidgets.QSizePolicy.Ignored))
             labelAction = self.addWidget(self.locLabel)
             labelAction.setVisible(True)
-
-        # reference holder for subplots_adjust window
-        self.adj_window = None
 
         # Esthetic adjustments - we need to set these explicitly in PyQt5
         # otherwise the layout looks different - but we don't want to set it if
@@ -818,8 +814,8 @@ class MplSideViewCanvas(MplCanvas):
             self.image.remove()
 
         # Plot the new image in the image axes and adjust the axes limits.
-        self.image = self.imgax.imshow(img, interpolation="nearest", aspect="auto",
-                                       origin=PIL_IMAGE_ORIGIN)
+        self.image = self.imgax.imshow(
+            img, interpolation="nearest", aspect="auto", origin=PIL_IMAGE_ORIGIN)
         self.imgax.set_xlim(0, ix - 1)
         self.imgax.set_ylim(iy - 1, 0)
         self.draw()
@@ -1020,8 +1016,7 @@ class MplTopViewCanvas(MplCanvas):
         """Draw the image img on the current plot.
         """
         logging.debug("plotting image..")
-        self.wms_image = self.map.imshow(img, interpolation="nearest", alpha=1.,
-                                         origin=PIL_IMAGE_ORIGIN)
+        self.wms_image = self.map.imshow(img, interpolation="nearest", origin=PIL_IMAGE_ORIGIN)
         # NOTE: imshow always draws the images to the lowest z-level of the
         # plot.
         # See these mailing list entries:
@@ -1069,8 +1064,7 @@ class MplTopViewCanvas(MplCanvas):
                 self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
 
             # Plot the new legimg in the legax axes.
-            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal",
-                                            interpolation="nearest")
+            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal", interpolation="nearest")
         self.draw()
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()
