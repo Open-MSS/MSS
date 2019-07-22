@@ -164,10 +164,11 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.username.setText(item.username)
 
     @QtCore.Slot(str, str)
-    def render_new_message(self, username, message):
+    def render_new_message(self, username, message, scroll=True):
         item = QtWidgets.QListWidgetItem("{}: {}\n".format(username, message), parent=self.messages)
         self.messages.addItem(item)
-        self.messages.scrollToBottom()
+        if scroll:
+            self.messages.scrollToBottom()
 
     def load_all_changes(self):
         """
@@ -204,11 +205,9 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         # clear message box
         self.messages.clear()
         for message in messages:
-            logging.debug(message)
             username = message["username"]
             message_text = message["text"]
-            item = QtWidgets.QListWidgetItem("{}: {}\n".format(username, message_text), parent=self.messages)
-            self.messages.addItem(item)
+            self.render_new_message(username, message_text, scroll=False)
         self.messages.scrollToBottom()
 
     def closeEvent(self, event):
