@@ -814,8 +814,8 @@ class MplSideViewCanvas(MplCanvas):
             self.image.remove()
 
         # Plot the new image in the image axes and adjust the axes limits.
-        self.image = self.imgax.imshow(img, interpolation="nearest", aspect="auto",
-                                       origin=PIL_IMAGE_ORIGIN)
+        self.image = self.imgax.imshow(
+            img, interpolation="nearest", aspect="auto", origin=PIL_IMAGE_ORIGIN)
         self.imgax.set_xlim(0, ix - 1)
         self.imgax.set_ylim(iy - 1, 0)
         self.draw()
@@ -1016,8 +1016,7 @@ class MplTopViewCanvas(MplCanvas):
         """Draw the image img on the current plot.
         """
         logging.debug("plotting image..")
-        self.wms_image = self.map.imshow(img, interpolation="nearest", alpha=1.,
-                                         origin=PIL_IMAGE_ORIGIN)
+        self.wms_image = self.map.imshow(img, interpolation="nearest", origin=PIL_IMAGE_ORIGIN)
         # NOTE: imshow always draws the images to the lowest z-level of the
         # plot.
         # See these mailing list entries:
@@ -1065,8 +1064,7 @@ class MplTopViewCanvas(MplCanvas):
                 self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
 
             # Plot the new legimg in the legax axes.
-            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal",
-                                            interpolation="nearest")
+            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal", interpolation="nearest")
         self.draw()
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()
