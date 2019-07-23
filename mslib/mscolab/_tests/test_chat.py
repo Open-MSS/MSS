@@ -120,17 +120,14 @@ class Test_Chat(object):
         with self.app.app_context():
             messages = cm.get_messages(1)
             assert len(messages) == 2
-            assert messages[0].u_id == 8
+            assert messages[0]["user"] == 8
 
             messages = cm.get_messages(1, last_timestamp=datetime.datetime(1970, 1, 1))
             assert len(messages) == 2
-            assert messages[0].u_id == 8
+            assert messages[0]["user"] == 8
 
             messages = cm.get_messages(1, last_timestamp=datetime.datetime.now())
             assert len(messages) == 0
-
-            Message.query.filter_by(text="message from 1").delete()
-            db.session.commit()
 
     def test_get_messages_api(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
@@ -153,6 +150,9 @@ class Test_Chat(object):
         # returns False due to bad authorization
         r = requests.post(MSCOLAB_URL_TEST + "/messages", data=data)
         assert r.text == "False"
+        with self.app.app_context():
+            Message.query.filter_by(text="message from 1").delete()
+            db.session.commit()
 
     def teardown(self):
         for socket in self.sockets:

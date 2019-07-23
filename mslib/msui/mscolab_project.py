@@ -24,7 +24,7 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
+from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.msui.mss_qt import ui_mscolab_project_window as ui
 from mslib._tests.constants import MSCOLAB_URL
 
@@ -183,10 +183,10 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         changes = json.loads(r.text)["changes"]
         self.changes.clear()
         for change in changes:
-            item = QtWidgets.QListWidgetItem("{}: {}\n".format(change["username"], change["content"]), parent=self.changes)
+            item = QtWidgets.QListWidgetItem("{}: {}\n".format(change["username"],
+                                             change["content"]), parent=self.changes)
             self.changes.addItem(item)
         self.changes.scrollToBottom()
-        
 
     def load_all_messages(self):
         # empty messages and reload from server
@@ -198,7 +198,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         # returns an array of messages
         r = requests.post(MSCOLAB_URL + "/messages", data=data)
         response = json.loads(r.text)
-        
+
         messages = response["messages"]
         logging.debug(messages)
         logging.debug(type(messages))

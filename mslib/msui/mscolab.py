@@ -171,8 +171,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.get(mss_default.mscolab_server_url + '/project_details', data=data)
         _json = json.loads(r.text)
-        if _json["autosave"] == True:
-            # one time activate 
+        if _json["autosave"] is True:
+            # one time activate
             self.autoSave.blockSignals(True)
             self.autoSave.setChecked(True)
             self.autoSave.blockSignals(False)
@@ -262,12 +262,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.disconnect()
             self.conn = None
 
-    def save_wp_mscolab(self):
+    def save_wp_mscolab(self, comment=None):
         if self.active_pid is not None:
             # to save to temp file
             xml_text = self.waypoints_model.save_to_mscolab()
             # to emit to mscolab
-            self.conn.save_file(self.token, self.active_pid, xml_text)
+            self.conn.save_file(self.token, self.active_pid, xml_text, comment=comment)
 
     @QtCore.Slot(int)
     def reload_window(self, value):
@@ -280,6 +280,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # reload changes in project window if it exists
         if self.project_window is not None:
             self.project_window.load_all_changes()
+            self.project_window.load_all_messages()
 
     @QtCore.Slot(int)
     def handle_view_close(self, value):
@@ -314,7 +315,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # ToDo - remove hack to disconnect this handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
             self.waypoints_model.dataChanged.disconnect()
-
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
