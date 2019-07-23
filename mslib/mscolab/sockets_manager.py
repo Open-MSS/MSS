@@ -98,9 +98,9 @@ class SocketsManager(object):
         perm = self.permission_check_emit(user.id, int(p_id))
         if perm:
             cm.add_message(user, _json['message_text'], str(p_id))
-            socketio.emit('chat-message-client',json.dumps({'user': user.username,
-                                                           'message_text': _json['message_text']}),
-                                                room=str(p_id))
+            socketio.emit('chat-message-client', json.dumps({'user': user.username,
+                                                            'message_text': _json['message_text']}),
+                          room=str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
         """

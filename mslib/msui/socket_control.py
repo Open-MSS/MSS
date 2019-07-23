@@ -68,12 +68,13 @@ class ConnectionManager(QtCore.QObject):
                       "token": self.token,
                       "message_text": message_text})
 
-    def save_file(self, token, p_id, content):
+    def save_file(self, token, p_id, content, comment=None):
         logging.debug("saving file")
         self.sio.emit('file-save', {
                       "p_id": p_id,
                       "token": self.token,
-                      "content": content})
+                      "content": content,
+                      "comment": comment})
 
     def emit_autosave(self, token, p_id, enable):
         logging.debug("emitting autosave")

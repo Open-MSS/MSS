@@ -129,13 +129,14 @@ class Test_Files(object):
                       "token": response1['token'],
                       "content": "test"
                       })
+            time.sleep(4)
             # second file change
             sio1.emit('file-save', {
                       "p_id": p_id,
                       "token": response1['token'],
                       "content": "no ive changed the file now"
                       })
-            time.sleep(3)
+            time.sleep(4)
             # check if there were events triggered related to file-save
             assert self.file_message_counter[0] == 2
             assert self.file_message_counter[1] == 2
