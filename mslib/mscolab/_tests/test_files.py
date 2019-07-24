@@ -82,7 +82,7 @@ class Test_Files(object):
     def test_add_permission(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.user)
-            assert fm.add_permission(p_id, 9, 'collaborator', self.user) is True
+            assert fm.add_permission(p_id, 9, None, 'collaborator', self.user) is True
             user2 = User.query.filter_by(id=9).first()
             projects = fm.list_projects(user2)
             assert len(projects) == 3
@@ -91,7 +91,7 @@ class Test_Files(object):
         with self.app.app_context():
             p_id = get_recent_pid(self.user)
             # modifying permission to 'viewer'
-            assert fm.update_access_level(p_id, 9, 'viewer', self.user) is True
+            assert fm.update_access_level(p_id, 9, None, 'viewer', self.user) is True
             user2 = User.query.filter_by(id=9).first()
             projects = fm.list_projects(user2)
             assert projects[-1]["access_level"] == "viewer"
@@ -129,13 +129,14 @@ class Test_Files(object):
                       "token": response1['token'],
                       "content": "test"
                       })
+            time.sleep(4)
             # second file change
             sio1.emit('file-save', {
                       "p_id": p_id,
                       "token": response1['token'],
                       "content": "no ive changed the file now"
                       })
-            time.sleep(3)
+            time.sleep(4)
             # check if there were events triggered related to file-save
             assert self.file_message_counter[0] == 2
             assert self.file_message_counter[1] == 2
@@ -154,11 +155,11 @@ class Test_Files(object):
     def test_revoke_permission(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.user)
-            assert fm.update_access_level(p_id, 9, 'admin', self.user) is True
+            assert fm.update_access_level(p_id, 9, None, 'admin', self.user) is True
             user2 = User.query.filter_by(id=9).first()
             # returns false because non-creator can't revoke permission of creator
-            assert fm.revoke_permission(p_id, 8, user2) is False
-            assert fm.revoke_permission(p_id, 9, self.user) is True
+            assert fm.revoke_permission(p_id, 8, None, user2) is False
+            assert fm.revoke_permission(p_id, 9, None, self.user) is True
             projects = fm.list_projects(user2)
             assert len(projects) == 2
 

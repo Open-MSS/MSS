@@ -63,13 +63,16 @@ class Ui_MSSMscolabWindow(object):
         self.fetch_ft = QtWidgets.QPushButton(MSSMscolabWindow)
         self.fetch_ft.setGeometry(QtCore.QRect(230, 300, 80, 23))
         self.fetch_ft.setObjectName("fetch_ft")
+        self.projWindow = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.projWindow.setGeometry(QtCore.QRect(330, 250, 91, 23))
+        self.projWindow.setObjectName("projWindow")
 
         self.retranslateUi(MSSMscolabWindow)
         QtCore.QMetaObject.connectSlotsByName(MSSMscolabWindow)
 
     def retranslateUi(self, MSSMscolabWindow):
         _translate = QtCore.QCoreApplication.translate
-        MSSMscolabWindow.setWindowTitle(_translate("MSSMscolabWindow", "Form"))
+        MSSMscolabWindow.setWindowTitle(_translate("MSSMscolabWindow", "Mscolab Projects"))
         self.groupBox.setTitle(_translate("MSSMscolabWindow", "Project listing"))
         self.listProjects.setToolTip(_translate("MSSMscolabWindow", "List of mscolab projects."))
         self.emailid.setPlaceholderText(_translate("MSSMscolabWindow", "emailid"))
@@ -83,3 +86,5 @@ class Ui_MSSMscolabWindow(object):
         self.save_ft.setText(_translate("MSSMscolabWindow", "save"))
         self.autoSave.setText(_translate("MSSMscolabWindow", "autosave"))
         self.fetch_ft.setText(_translate("MSSMscolabWindow", "fetch"))
+        self.projWindow.setText(_translate("MSSMscolabWindow", "chat window"))
+

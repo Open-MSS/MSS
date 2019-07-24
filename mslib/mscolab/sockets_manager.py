@@ -89,16 +89,18 @@ class SocketsManager(object):
         # remove socket from socket_storage
         self.sockets[:] = [d for d in self.sockets if d['s_id'] != request.sid]
 
-    def handle_message(self, json):
+    def handle_message(self, _json):
         """
         json is a dictionary version of data sent to back-end
         """
-        p_id = json['p_id']
-        user = User.verify_auth_token(json['token'])
+        p_id = _json['p_id']
+        user = User.verify_auth_token(_json['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         if perm:
-            cm.add_message(user, json['message_text'], str(p_id))
-            socketio.emit('chat-message-client', json['message_text'], room=str(p_id))
+            cm.add_message(user, _json['message_text'], str(p_id))
+            socketio.emit('chat-message-client', json.dumps({'user': user.username,
+                                                            'message_text': _json['message_text']}),
+                          room=str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
         """

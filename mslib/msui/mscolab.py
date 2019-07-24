@@ -36,6 +36,7 @@ from mslib.msui.icons import icons
 from mslib.msui import flighttrack as ft
 from mslib.msui import topview, sideview, tableview
 from mslib.msui import socket_control as sc
+from mslib.msui import mscolab_project as mp
 
 import logging
 import requests
@@ -67,6 +68,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.save_ft.clicked.connect(self.save_wp_mscolab)
         self.fetch_ft.clicked.connect(self.reload_wps_from_server)
         self.autoSave.stateChanged.connect(self.autosave_emit)
+        self.projWindow.clicked.connect(self.open_project_window)
 
         # int to store active pid
         self.active_pid = None
@@ -82,6 +84,20 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_windows = []
         # assign ids to view-window
         self.id_count = 0
+        # project window
+        self.project_window = None
+
+    def open_project_window(self):
+        if self.active_pid is None:
+            return
+        view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn, parent=self.projWindow)
+        view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        view_window.viewCloses.connect(self.close_project_window)
+        self.project_window = view_window
+        self.project_window.show()
+
+    def close_project_window(self):
+        self.project_window = None
 
     def autosave_emit(self):
         # emit signal to server to enable or disable
@@ -155,7 +171,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.get(mss_default.mscolab_server_url + '/project_details', data=data)
         _json = json.loads(r.text)
-        self.autosave_toggle(_json["autosave"], self.active_pid)
+        if _json["autosave"] is True:
+            # one time activate
+            self.autoSave.blockSignals(True)
+            self.autoSave.setChecked(True)
+            self.autoSave.blockSignals(False)
+            self.save_ft.setEnabled(False)
+            self.fetch_ft.setEnabled(False)
         # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
@@ -168,8 +190,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for window in self.active_windows:
             # set active flight track
             window.setFlightTrackModel(self.waypoints_model)
-            # redraw figure
-            window.mpl.canvas.waypoints_interactor.redraw_figure()
+            # redraw figure *only for canvas based window, not tableview*
+            if hasattr(window, 'mpl'):
+                window.mpl.canvas.waypoints_interactor.redraw_figure()
 
     def load_wps_from_server(self):
         data = {
@@ -239,12 +262,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.disconnect()
             self.conn = None
 
-    def save_wp_mscolab(self):
+    def save_wp_mscolab(self, comment=None):
         if self.active_pid is not None:
             # to save to temp file
             xml_text = self.waypoints_model.save_to_mscolab()
             # to emit to mscolab
-            self.conn.save_file(self.token, self.active_pid, xml_text)
+            self.conn.save_file(self.token, self.active_pid, xml_text, comment=comment)
 
     @QtCore.Slot(int)
     def reload_window(self, value):
@@ -254,6 +277,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # ask the user in dialog if he wants the change, only for autosave mode
         # toDo preview of the change
         self.reload_wps_from_server()
+        # reload changes in project window if it exists
+        if self.project_window is not None:
+            self.project_window.load_all_changes()
+            self.project_window.load_all_messages()
 
     @QtCore.Slot(int)
     def handle_view_close(self, value):

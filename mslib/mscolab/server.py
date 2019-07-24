@@ -131,9 +131,7 @@ def messages():
     timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
     p_id = request.form.get('p_id', None)
     messages = cm.get_messages(p_id, last_timestamp=timestamp)
-    messages = list(map(lambda x:
-                    {'user': x.u_id, 'time': x.created_at.strftime("%m %d %Y, %H:%M:%S"), 'text': x.text}, messages))
-    return json.dumps({'messages': json.dumps(messages)})
+    return json.dumps({'messages': messages})
 
 
 # File related routes
@@ -204,30 +202,33 @@ def delete_project():
 @app.route('/add_permission', methods=['POST'])
 @verify_user
 def add_permission():
-    p_id = request.form.get('p_id', None)
-    u_id = request.form.get('u_id', None)
+    p_id = request.form.get('p_id', 0)
+    u_id = request.form.get('u_id', 0)
+    username = request.form.get('username', None)
     access_level = request.form.get('access_level', None)
     user = g.user
-    return str(fm.add_permission(int(p_id), int(u_id), access_level, user))
+    return str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
 
 
 @app.route('/revoke_permission', methods=['POST'])
 @verify_user
 def revoke_permission():
-    p_id = request.form.get('p_id', None)
-    u_id = request.form.get('u_id', None)
+    p_id = request.form.get('p_id', 0)
+    u_id = request.form.get('u_id', 0)
+    username = request.form.get('username', None)
     user = g.user
-    return str(fm.revoke_permission(int(p_id), int(u_id), user))
+    return str(fm.revoke_permission(int(p_id), int(u_id), username, user))
 
 
 @app.route('/modify_permission', methods=['POST'])
 @verify_user
 def modify_permission():
-    p_id = request.form.get('p_id', None)
-    u_id = request.form.get('u_id', None)
+    p_id = request.form.get('p_id', 0)
+    u_id = request.form.get('u_id', 0)
+    username = request.form.get('username', None)
     access_level = request.form.get('access_level', None)
     user = g.user
-    return str(fm.update_access_level(int(p_id), int(u_id), access_level, user))
+    return str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
 
 
 @app.route('/update_project', methods=['POST'])

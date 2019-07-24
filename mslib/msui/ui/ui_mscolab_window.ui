@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Mscolab Projects</string>
   </property>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
@@ -44,7 +44,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="widget" native="true">
+  <widget class="QWidget" name="loginWidget" native="true">
    <property name="geometry">
     <rect>
      <x>30</x>
@@ -208,6 +208,19 @@
    </property>
    <property name="text">
     <string>fetch</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="projWindow">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>250</y>
+     <width>91</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>chat window</string>
    </property>
   </widget>
  </widget>
