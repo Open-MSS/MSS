@@ -72,7 +72,7 @@ class Ui_MSSMscolabWindow(object):
 
     def retranslateUi(self, MSSMscolabWindow):
         _translate = QtCore.QCoreApplication.translate
-        MSSMscolabWindow.setWindowTitle(_translate("MSSMscolabWindow", "Form"))
+        MSSMscolabWindow.setWindowTitle(_translate("MSSMscolabWindow", "Mscolab Projects"))
         self.groupBox.setTitle(_translate("MSSMscolabWindow", "Project listing"))
         self.listProjects.setToolTip(_translate("MSSMscolabWindow", "List of mscolab projects."))
         self.emailid.setPlaceholderText(_translate("MSSMscolabWindow", "emailid"))

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Mscolab Project</string>
   </property>
   <widget class="QLineEdit" name="username">
    <property name="geometry">
