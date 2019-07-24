@@ -69,7 +69,7 @@ class Ui_MscolabProject(object):
 
     def retranslateUi(self, MscolabProject):
         _translate = QtCore.QCoreApplication.translate
-        MscolabProject.setWindowTitle(_translate("MscolabProject", "Form"))
+        MscolabProject.setWindowTitle(_translate("MscolabProject", "Mscolab Project"))
         self.accessLevel.setItemText(0, _translate("MscolabProject", "collaborator"))
         self.accessLevel.setItemText(1, _translate("MscolabProject", "admin"))
         self.accessLevel.setItemText(2, _translate("MscolabProject", "viewer"))
