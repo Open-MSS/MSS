@@ -71,8 +71,7 @@ class MapCanvas():
         # Coordinate reference system identifier and coordinate system units.
         self.appearance = appearance
         self.fig = fig
-        self.map_parallels = False
-        self.map_meridians = False
+        self.map_grid = False
         self.crs = CRS if CRS is not None else self.crs if hasattr(self, "crs") else None
         if BBOX_UNITS is not None:
             self.bbox_units = BBOX_UNITS
@@ -163,15 +162,13 @@ class MapCanvas():
 
         if self.appearance["draw_graticule"]:
             try:
-                grid = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
-                grid.xlabels_top = False
-                self.map_parallels = True
-                self.map_meridians = True
+                self.grid = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
+                self.grid.xlabels_top = False
+                self.map_grid = True
             except Exception as ex:
                 logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
         else:
-            self.map_parallels = None
-            self.map_meridians = None
+            self.map_grid = False
         # self.warpimage() # disable fillcontinents when loading bluemarble
         self.ax.set_autoscale_on(False)
 
@@ -204,24 +201,22 @@ class MapCanvas():
 
         See http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/msg09349.html
         """
-        ax = self.ax
         self.appearance["draw_graticule"] = visible
-        if visible:
+        if visible and self.map_grid is False:
             # Draw new graticule if visible is True and no current graticule
             # exists.
-            grid = self.ax.gridlines(crs=ax.projection, draw_labels=True)
-            grid.xlabels_top = False
-            self.map_parallels = True
-            self.map_meridians = True
+            self.grid.xlines = True
+            self.grid.ylines = True
+            self.map_grid = True
             self.fig.canvas.draw()
-        elif not visible:
+        elif not visible and self.map_grid is True:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            grid.xlines = False
-            grid.ylines = False
-            self.map_parallels = None
-            self.map_meridians = None
+            print(self.map_grid)
+            self.grid.xlines = False
+            self.grid.ylines = False
+            self.map_grid = False
             # Update the figure canvas.
             self.fig.canvas.draw()
 
@@ -265,12 +260,11 @@ class MapCanvas():
         if visible:
             self.map_coastlines.set_visible(True)
             self.map_countries.set_visible(True)
-            self.map_countries = self.ax.add_feature(cfeature.BORDERS, linestyle='-', alpha=0.5)
+            self.map_countries = self.ax.add_feature(cfeature.BORDERS, linestyle='--', alpha=0.5)
             self.fig.canvas.draw()
         elif not visible:
             self.map_coastlines.set_visible(False)
             self.map_countries.set_visible(False)
-            self.map_countries = self.ax.add_feature(cfeature.BORDERS, linestyle='-', alpha=0)
             self.fig.canvas.draw()
 
     def set_mapboundary_visible(self, visible=True, bg_color='#99ffff'):
@@ -701,9 +695,9 @@ class SatelliteOverpassPatch(object):
         """
         # Plot satellite track.
         sat = np.copy(self.sat)
-        sat[:, 0], sat[:, 1] = self.map.ax.projection.transform_points(ccrs.PlateCarree(),
-                                                                       sat[:, 0], sat[:, 1])
-        self.trackline = self.map.ax.plot(sat[:, 0], sat[:, 1],
+        sat_xy = self.map.ax.projection.transform_points(ccrs.PlateCarree(),
+                                                         sat[:, 0], sat[:, 1])
+        self.trackline = self.map.ax.plot(sat_xy[:, 0], sat_xy[:, 1],
                                           zorder=10, marker='+', markerfacecolor='g')
 
         # Plot polygon patch that represents the swath of the sensor.
@@ -739,7 +733,7 @@ class SatelliteOverpassPatch(object):
                                                      alpha=0.5,
                                                      edgecolor='none')))
 
-        self.map.ax.draw()
+        self.map.ax.figure.canvas.draw()
 
     def update(self):
         """Removes the current plot of the patch and redraws the patch.
@@ -800,7 +794,8 @@ class KMLPatch(object):
         kwargs = self.styles.get(style, {}).get("PolyStyle", {"linewidth": self.linewidth, "color": self.color})
         for boundary in ["outerBoundaryIs", "innerBoundaryIs"]:
             if hasattr(polygon, boundary):
-                x, y = self.compute_xy(getattr(polygon, boundary).LinearRing.coordinates)
+                result = self.compute_xy(getattr(polygon, boundary).LinearRing.coordinates)
+                x, y = result[:, 0], result[:, 1]
                 self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
     def add_point(self, point, style, name):
@@ -810,7 +805,8 @@ class KMLPatch(object):
         :param point: pykml object specifying point
         :param name: name of placemark for annotation
         """
-        x, y = self.compute_xy(point.coordinates)
+        result = self.compute_xy(point.coordinates)
+        x, y = result[:, 0], result[:, 1]
         self.patches.append(self.map.ax.plot(x[0], y[0], "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
