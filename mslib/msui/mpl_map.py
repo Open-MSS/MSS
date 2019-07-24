@@ -260,7 +260,7 @@ class MapCanvas():
         if visible:
             self.map_coastlines.set_visible(True)
             self.map_countries.set_visible(True)
-            self.map_countries = self.ax.add_feature(cfeature.BORDERS, linestyle='--', alpha=0.5)
+            # self.map_countries = self.ax.add_feature(cfeature.BORDERS, linestyle='--', alpha=0.5)
             self.fig.canvas.draw()
         elif not visible:
             self.map_coastlines.set_visible(False)
@@ -330,7 +330,6 @@ class MapCanvas():
             ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
             ax.set_extent(BBOX)
             self.ax = ax
-            ax.coastlines()
         self.fig.canvas.draw()
         self.init_features(self.appearance)
         self.update_trajectory_items()
@@ -342,7 +341,7 @@ class MapCanvas():
         ax = self.ax
         if self.image is not None:
             self.image.remove()
-        self.image = self.ax.imshow(X, transform=ccrs.PlateCarree(), extent=ax.get_extent(), zorder=2, **kwargs)
+        self.image = self.ax.imshow(X, transform=ax.projection, extent=ax.get_extent(), zorder=2, **kwargs)
         self.fig.canvas.draw()
         return self.image
 
