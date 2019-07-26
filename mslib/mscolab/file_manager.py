@@ -239,7 +239,7 @@ class FileManager(object):
             users.append({"username": user.username, "access_level": permission.access_level})
         return users
 
-    def save_file(self, p_id, content, user, comment=None):
+    def save_file(self, p_id, content, user, comment=""):
         """
         p_id: project-id,
         content: content of the file to be saved
@@ -264,7 +264,17 @@ class FileManager(object):
         db.session.add(change)
         db.session.commit()
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
-        return project_file.write(content)
+        project_file.write(content)
+        # commit changes if comment is not None
+        if diff_content is not "":
+            repo = git.Repo.init(fs.path.combine(MSCOLAB_DATA_DIR, project.path))
+            repo.index.add(['main.ftml'])
+            print(comment)
+            # hack used, ToDo fix it
+            if comment == "" or comment == False:
+                comment = "committing change"
+            repo.index.commit(comment)
+
 
     def get_file(self, p_id, user):
         """
