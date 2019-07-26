@@ -58,7 +58,8 @@ class FileManager(object):
         db.session.add(perm)
         db.session.commit()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        project_file = data.open(project.path, 'w')
+        data.makedir(project.path)
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
         project_file.write(STUB_CODE)
         return True
 
@@ -182,8 +183,10 @@ class FileManager(object):
             data = fs.open_fs(MSCOLAB_DATA_DIR)
             if data.exists(value):
                 return False
-            # will be move_dir when projects are introduced
-            data.move(project.path, value)
+            # will be move when projects are introduced
+            # make a directory, else movedir fails
+            data.makedir(value)
+            data.movedir(project.path, value)
         setattr(project, attribute, value)
         db.session.commit()
         return True
@@ -216,7 +219,7 @@ class FileManager(object):
         Change.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        data.remove(project.path)
+        data.removetree(project.path)
         project = Project.query.filter_by(id=p_id).delete()
         db.session.commit()
         return True
@@ -246,7 +249,7 @@ class FileManager(object):
         old file is read, the diff between old and new is calculated and stored
         as 'Change' in changes table. comment for each change is optional
         """
-        project_file = data.open(project.path, 'r')
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
         old_data = project_file.read()
         project_file.close()
         old_data_lines = old_data.splitlines()
@@ -256,7 +259,7 @@ class FileManager(object):
         change = Change(p_id, user.id, diff_content, comment)
         db.session.add(change)
         db.session.commit()
-        project_file = data.open(project.path, 'w')
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
         return project_file.write(content)
 
     def get_file(self, p_id, user):
@@ -271,7 +274,7 @@ class FileManager(object):
         if not project:
             return False
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        project_file = data.open(project.path, 'r')
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
         return project_file.read()
 
     def get_changes(self, p_id, user):

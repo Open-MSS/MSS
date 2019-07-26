@@ -131,9 +131,14 @@ def create_data():
                 fs_datadir.makedir('filedata')
                 # add files
                 file_dir = fs.open_fs(fs.path.combine(BASE_DIR, 'colabdata/filedata'))
-                file_dir.writetext('one', STUB_CODE)
-                file_dir.writetext('two', STUB_CODE)
-                file_dir.writetext('three', STUB_CODE)
+                # make directories
+                file_dir.makedir('one')
+                file_dir.makedir('two')
+                file_dir.makedir('three')
+                # write to files
+                file_dir.writetext('one/main.ftml', STUB_CODE)
+                file_dir.writetext('two/main.ftml', STUB_CODE)
+                file_dir.writetext('three/main.ftml', STUB_CODE)
                 file_dir.close()
 
             fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
