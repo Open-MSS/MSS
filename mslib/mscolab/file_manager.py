@@ -26,6 +26,7 @@
 import fs
 import difflib
 import logging
+import git
 
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
@@ -61,6 +62,9 @@ class FileManager(object):
         data.makedir(project.path)
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
         project_file.write(STUB_CODE)
+        r = git.Repo.init(fs.path.combine(MSCOLAB_DATA_DIR, project.path))
+        r.index.add(['main.ftml'])
+        r.index.commit("initial commit")
         return True
 
     def get_project_details(self, p_id, user):
