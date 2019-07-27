@@ -329,3 +329,32 @@ class FileManager(object):
         if not perm:
             return False
         return {'content': change.content, 'comment': change.comment, 'u_id': change.u_id}
+
+    def undo(self, ch_id, user):
+        """
+        ch_id: change-id
+        user: user of this request
+
+        Undo a change
+        # ToDo a revert option, which removes only that commit's change
+        """
+        ch = Change.query.filter_by(id=ch_id).first()
+        project = Project.query.filter_by(id=ch.p_id).first()
+        if not ch or not project:
+            return False
+        project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+        repo = git.Repo(project_path)
+        try:
+            g = repo.git
+            file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))
+            proj_fs = fs.open_fs(project_path)
+            proj_fs.writetext('main.ftml', file_content)
+            proj_fs.close()
+            g.add(['main.ftml'])
+            g.commit('-m', "checkout to {}".format(ch.commit_hash))
+            return True
+        except Exception as ex:
+            logging.debug(ex)
+            return False
+
+

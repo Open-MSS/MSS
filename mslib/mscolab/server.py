@@ -248,6 +248,14 @@ def get_project_details():
     user = g.user
     return json.dumps(fm.get_project_details(int(p_id), user))
 
+@app.route('/undo', methods=["POST"])
+@verify_user
+def undo_ftml():
+    ch_id = request.form.get('ch_id', -1)
+    user = g.user
+    print("processing undo")
+    return str(fm.undo(ch_id, user))
+
 
 if __name__ == '__main__':
     # to be refactored during deployment
