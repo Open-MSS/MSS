@@ -166,10 +166,12 @@ class Change(db.Model):
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     content = db.Column(db.TEXT)
     comment = db.Column(db.String(255), default=None)
+    commit_hash = db.Column(db.String(255), default=None)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    def __init__(self, p_id, u_id, content, comment=""):
+    def __init__(self, p_id, u_id, content, commit_hash, comment=""):
         self.p_id = p_id
         self.u_id = u_id
         self.content = content
+        self.commit_hash = commit_hash
         self.comment = comment
