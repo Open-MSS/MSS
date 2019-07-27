@@ -328,7 +328,9 @@ class MapCanvas():
 
             self.fig.clf()
             ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
+            print(f"BBOX to set extent for ax: {BBOX}")
             ax.set_extent(BBOX)
+            print(f"Extent of BBOX retrieved from ax in degrees: {ax.get_extent(ccrs.PlateCarree())}")
             self.ax = ax
         self.fig.canvas.draw()
         self.init_features(self.appearance)

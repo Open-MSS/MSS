@@ -135,8 +135,8 @@ class MplCanvas(FigureCanvasQTAgg):
         """
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
-        width = int(round(ax_bounds[2]))
-        height = int(round(ax_bounds[3]))
+        width = int(round(ax_bounds[2], 2))
+        height = int(round(ax_bounds[3], 2))
         return width, height
 
 
@@ -918,7 +918,7 @@ class MplTopViewCanvas(MplCanvas):
         self.ax.set_autoscale_on(False)
         self.ax.set_title("Top view", horizontalalignment="left", x=0)
         self.draw()  # necessary?
-
+        self.kwargs = kwargs
         if model:
             self.set_waypoints_model(model)
 
@@ -976,6 +976,12 @@ class MplTopViewCanvas(MplCanvas):
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
         # in waypoints_interactor()
+        proj_keys = ["epsg", "projection"]
+        if any(_x in kwargs_update for _x in proj_keys):
+            for key in (_x for _x in proj_keys if _x in self.kwargs):
+                del self.kwargs[key]
+        require_new_axis = True
+        self.kwargs.update(kwargs_update)
 
         self.pdlg.setValue(5)
         QtWidgets.QApplication.processEvents()
@@ -1000,7 +1006,6 @@ class MplTopViewCanvas(MplCanvas):
 
         logging.debug("finished redrawing map")
         self.pdlg.close()
-
         # Emit signal so other parts of the module can react to a redraw event.
         self.redrawn.emit()
 
@@ -1017,22 +1022,13 @@ class MplTopViewCanvas(MplCanvas):
 
         self.ax = self.map.ax
 
-        if self.map.bbox_units == "degree":
-            # Convert the current axis corners to lat/lon coordinates.
-            bbox = self.ax.get_extent(crs=ccrs.PlateCarree())
-            bbox = bbox[0], bbox[2], bbox[1], bbox[3]
+        kwargs = self.kwargs
 
-        elif self.map.bbox_units.startswith("meter"):
-            ct_center = (float(_x) for _x in self.map.bbox_units[6:-1].split(","))
-            center_x, center_y = self.ax.projection.transform_point(
-                ct_center[0], ct_center[1], ccrs.PlateCarree())
-            axis = self.ax.get_extent()
-            bbox = (axis[0] - center_x, axis[2] - center_y, axis[1] - center_x, axis[3] - center_y)
+        bbox= [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
-        else:
-            bbox = self.ax.get_extent()
-            bbox = bbox[0], bbox[2], bbox[1], bbox[3]
+        print(f"AB SAHI DEKH{bbox}")
 
+        print(self.ax.bbox.bounds)
         return bbox
 
     def clear_figure(self):
