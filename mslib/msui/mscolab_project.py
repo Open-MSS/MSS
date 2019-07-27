@@ -185,8 +185,28 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         for change in changes:
             item = QtWidgets.QListWidgetItem("{}: {}\n".format(change["username"],
                                              change["content"]), parent=self.changes)
+            item._id = change['id']
             self.changes.addItem(item)
+        self.changes.itemActivated.connect(self.handle_change_activate)
         self.changes.scrollToBottom()
+
+    def handle_change_activate(self, item):
+        qm = QtWidgets.QMessageBox
+        ret = qm.question(self, '', "Do you want to checkout to this change?", qm.Yes, qm.No)
+        if ret == qm.Yes:
+            # undo change from server
+            data = {
+                "token": self.token,
+                "ch_id": item._id
+            }
+            # 'undo' request
+            r = requests.post(MSCOLAB_URL + '/undo', data=data)
+            if r.text == "True":
+                # prompt success
+                pass
+            else:
+                # prompt failure
+                pass
 
     def load_all_messages(self):
         # empty messages and reload from server
