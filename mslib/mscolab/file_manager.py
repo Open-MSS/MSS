@@ -62,7 +62,8 @@ class FileManager(object):
         data.makedir(project.path)
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
         project_file.write(STUB_CODE)
-        r = git.Repo.init(fs.path.combine(MSCOLAB_DATA_DIR, project.path))
+        project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+        r = git.Repo.init(project_path)
         r.index.add(['main.ftml'])
         r.index.commit("initial commit")
         return True
@@ -260,21 +261,23 @@ class FileManager(object):
         content_lines = content.splitlines()
         diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
         diff_content = '\n'.join(list(diff))
-        change = Change(p_id, user.id, diff_content, comment)
-        db.session.add(change)
-        db.session.commit()
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
         project_file.write(content)
+        project_file.close()
         # commit changes if comment is not None
         if diff_content is not "":
-            repo = git.Repo.init(fs.path.combine(MSCOLAB_DATA_DIR, project.path))
+            # commit to git repository
+            project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+            repo = git.Repo(project_path)
             repo.index.add(['main.ftml'])
-            print(comment)
             # hack used, ToDo fix it
-            if comment == "" or comment == False:
+            if comment == "" or comment == False or comment is None:
                 comment = "committing change"
-            repo.index.commit(comment)
-
+            cm = repo.index.commit(comment)
+            # change db table
+            change = Change(p_id, user.id, diff_content, cm.hexsha, comment)
+            db.session.add(change)
+            db.session.commit()
 
     def get_file(self, p_id, user):
         """
