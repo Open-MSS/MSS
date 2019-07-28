@@ -178,6 +178,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.autoSave.blockSignals(False)
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
+            # connect data change to handler
+            self.waypoints_model.dataChanged.connect(self.handle_data_change)
         # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
@@ -206,6 +208,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         fname_temp = fs.path.combine(mss_default.mss_dir, 'tempfile_mscolab.ftml')
         self.fname_temp = fname_temp
         self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
+
+        # connect change events viewwindow HERE to emit file-save
+        self.waypoints_model.dataChanged.connect(self.handle_data_change)
 
     def open_topview(self):
         # showing dummy info dialog
@@ -291,6 +296,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex)
     def handle_data_change(self, index1, index2):
+        # if autosave isn't checked, don't save. (in future, this might be hidden #ToDo)
         if self.autoSave.isChecked():
             self.save_wp_mscolab()
 
@@ -305,8 +311,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.fetch_ft.setEnabled(False)
             # reload window
             self.reload_wps_from_server()
-            # connect change events viewwindow HERE to emit file-save
-            self.waypoints_model.dataChanged.connect(self.handle_data_change)
         else:
             # disable autosave, enable save button
             self.save_ft.setEnabled(True)
@@ -314,7 +318,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # connect change events viewwindow HERE to emit file-save
             # ToDo - remove hack to disconnect this handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
-            self.waypoints_model.dataChanged.disconnect()
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
