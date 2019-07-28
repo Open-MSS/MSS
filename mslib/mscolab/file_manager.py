@@ -343,16 +343,34 @@ class FileManager(object):
         project = Project.query.filter_by(id=ch.p_id).first()
         if not ch or not project:
             return False
+
+        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
+        old_data = project_file.read()
+        project_file.close()
+        old_data_lines = old_data.splitlines()
+
         project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
         repo = git.Repo(project_path)
         try:
             g = repo.git
             file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))
+
+            content_lines = file_content.splitlines()
+            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+            diff_content = '\n'.join(list(diff))
+
             proj_fs = fs.open_fs(project_path)
             proj_fs.writetext('main.ftml', file_content)
             proj_fs.close()
-            g.add(['main.ftml'])
-            g.commit('-m', "checkout to {}".format(ch.commit_hash))
+            repo.index.add(['main.ftml'])
+            cm = repo.index.commit("checkout to {}".format(ch.commit_hash))
+
+            change = Change(ch.p_id, user.id, diff_content, cm.hexsha,
+                            "checkout to {}".format(ch.commit_hash))
+            db.session.add(change)
+            db.session.commit()
+
             return True
         except Exception as ex:
             logging.debug(ex)
