@@ -37,49 +37,49 @@ import fs
 
 _SURFACE_TEXT = """\
 surface_geopotential
-m2.s-2
+m^2.s^-2
   2.12e+03   4.74e+03
 air_pressure_at_sea_level
 Pa
   9.89e+04   5.30e+02
 total_cloud_cover
-(0.-.1)
+dimensionless
   6.32e-01   3.93e-01
 land_binary_mask
-(0.-.1)
+dimensionless
   4.20e-01   4.94e-01
 low_cloud_area_fraction
-(0.-.1)
+dimensionless
   3.67e-01   3.91e-01
 medium_cloud_area_fraction
-(0.-.1)
+dimensionless
   2.95e-01   3.77e-01
 high_cloud_area_fraction
-(0.-.1)
+dimensionless
   4.07e-01   4.41e-01
 surface_eastward_wind
-m.s-1
+m.s^-1
   0 50
 surface_northward_wind
-m.s-1
+m.s^-1
   0 50
 solar_elevation_angle
 degree
   45 20
 sea_ice_area_fraction
-(0.-.1)
+dimensionless
   0.5 0.3
 msg_brightness_temperature_108
-nW.cm.m-2.sr-1
+nW.cm.m^-2.sr^-1
   100 20
 atmosphere_boundary_layer_thickness
 m
   1000 400
 emac_column_density
-(0.-.1)
+dimensionless
  0.25 0.2
 vertically_integrated_probability_of_wcb_occurrence
-(0.-.1)
+dimensionless
  0.25 0.2"""
 
 _PROFILES_TEXT = """\
@@ -184,7 +184,7 @@ K
   288.351954158 7.97
   288.192732138 7.93
 eastward_wind
-m.s-1
+m.s^-1
   5.36e+00   7.99e+00
   3.69e+00   5.80e+00
   3.83e+00   4.66e+00
@@ -204,7 +204,7 @@ m.s-1
   1.27e+00   6.65e+00
   7.67e-01   6.35e+00
 northward_wind
-m.s-1
+m.s^-1
  -1.19e+00   5.11e+00
  -9.02e-01   4.34e+00
  -1.01e+00   4.56e+00
@@ -224,7 +224,7 @@ m.s-1
   8.61e-01   8.81e+00
   7.32e-01   8.64e+00
 specific_humidity
-kg.kg-1
+kg.kg^-1
   2.94e-06   1.20e-07
   2.86e-06   1.10e-07
   2.68e-06   5.65e-08
@@ -244,7 +244,7 @@ kg.kg-1
   5.64e-03   2.44e-03
   6.07e-03   2.55e-03
 lagrangian_tendency_of_air_pressure
-Pa.s-1
+Pa.s^-1
  -2.45e-04   5.71e-03
  -4.91e-04   7.48e-03
  -9.50e-04   1.13e-02
@@ -264,7 +264,7 @@ Pa.s-1
   1.57e-02   3.60e-01
   1.85e-02   3.18e-01
 divergence_of_wind
-s-1
+s^-1
   2.19e-07   1.75e-05
   2.29e-07   1.73e-05
   2.93e-07   2.00e-05
@@ -284,7 +284,7 @@ s-1
   4.93e-08   5.71e-05
   8.47e-08   5.94e-05
 mole_fraction_of_ozone_in_air
-kg.kg-1
+kg.kg^-1
   8.09e-06   1.21e-06
   5.70e-06   5.69e-07
   3.46e-06   4.69e-07
@@ -304,7 +304,7 @@ kg.kg-1
   6.12e-08   4.64e-09
   6.09e-08   4.65e-09
 mass_fraction_of_ozone_in_air
-kg.kg-1
+kg.kg^-1
   8.09e-06   1.21e-06
   5.70e-06   5.69e-07
   3.46e-06   4.69e-07
@@ -344,7 +344,7 @@ degree
   60.12   4.64
   60.09   4.65
 cloud_area_fraction_in_atmosphere_layer
-(0.-.1)
+dimensionless
   0.00e+00   0.00e+00
   0.00e+00   0.00e+00
   0.00e+00   0.00e+00
@@ -424,7 +424,7 @@ hybrid
   16 0
   17 0
 specific_cloud_ice_water_content
-???
+kg.kg^-1
   2.94e-05   1.20e-05
   2.86e-05   1.10e-05
   2.68e-05   5.65e-05
@@ -444,7 +444,7 @@ specific_cloud_ice_water_content
   5.64e-05   2.44e-05
   6.07e-05   2.55e-05
 specific_cloud_liquid_water_content
-???
+kg.kg^-1
   4.99e-05   3.43e-05
   1.78e-05   1.58e-05
   5.30e-05   4.71e-05
@@ -464,7 +464,7 @@ specific_cloud_liquid_water_content
   2.70e-05   6.27e-05
   2.90e-05   2.00e-05
 emac_R12
-(0.-.100)
+dimensionless
   25 20
   28 20
   31 20
@@ -484,7 +484,7 @@ emac_R12
   73 20
   76 20
 probability_of_wcb_occurrence
-(0.-.1)
+dimensionless
   0.4588 0.3
   0.2345 0.3
   0.5646 0.3
@@ -504,7 +504,7 @@ probability_of_wcb_occurrence
   0.3312 0.3
   0.9137 0.3
 number_of_wcb_trajectories
-???
+dimensionless
   9.83136620961e-06 3e-6
   8.10710322623e-06 3e-6
   5.03285054247e-06 3e-6
@@ -524,7 +524,7 @@ number_of_wcb_trajectories
   5.17596006307e-06 3e-6
   8.12412830459e-06 3e-6
 number_of_insitu_trajectories
-???
+dimensionless
   1.4159717441e-06 3e-6
   7.62262321518e-06 3e-6
   8.76448539884e-06 3e-6
@@ -544,7 +544,7 @@ number_of_insitu_trajectories
   6.0163792186e-06 3e-6
   3.866286373e-06 3e-6
 number_of_mix_trajectories
-???
+dimensionless
   3.06481460477e-06 3e-6
   2.22900351535e-06 3e-6
   9.55973892153e-06 3e-6

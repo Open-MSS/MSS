@@ -34,7 +34,6 @@ from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
 
-
 import PIL.Image
 import io
 import logging
@@ -43,7 +42,9 @@ from abc import abstractmethod
 from xml.dom.minidom import getDOMImplementation
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
 from mslib.mswms import mss_2D_sections
+from mslib.utils import convert_to
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
@@ -162,13 +163,19 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         """
         # Check if required data is available.
-        for datatype, dataitem in self.required_datafields:
+        self.data_units = self.driver.data_units.copy()
+        for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
                 raise KeyError(u"required data field '{}' not found".format(dataitem))
+            origunit = self.driver.data_units[dataitem]
+            if dataunit is not None:
+                data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
+                self.data_units[dataitem] = dataunit
+            else:
+                logging.debug("Please add units to plot variables")
 
         # Copy parameters to properties.
         self.data = data
-        self.data_units = self.driver.data_units.copy()
         self.lats = lats
         self.lat_inds = np.arange(len(lats))
         self.lons = lons

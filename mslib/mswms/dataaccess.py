@@ -29,14 +29,16 @@
 from __future__ import division
 
 from abc import ABCMeta, abstractmethod
+from future.utils import with_metaclass
 import itertools
 import os
 import logging
 import netCDF4
 import numpy as np
+import pint
 
 from mslib import netCDF4tools
-from future.utils import with_metaclass
+from mslib.utils import UR
 
 
 class NWPDataAccess(with_metaclass(ABCMeta, object)):
@@ -217,6 +219,17 @@ class DefaultDataAccess(NWPDataAccess):
                         logging.error("Skipping variable '%s' in file '%s': Incorrect order of dimensions",
                                       ncvarname, filename)
                         continue
+                    if not hasattr(ncvar, "units"):
+                        logging.error("Skipping variable '%s' in file '%s': No units attribute",
+                                      ncvarname, filename)
+                        continue
+                    if ncvar.standard_name != "time":
+                        try:
+                            UR(ncvar.units)
+                        except (ValueError, pint.UndefinedUnitError):
+                            logging.error("Skipping variable '%s' in file '%s': unparseable units attribute '%s'",
+                                          ncvarname, filename, ncvar.units)
+                            continue
                     if len(ncvar.shape) == 4 and vert_name in ncvar.dimensions:
                         standard_names.append(ncvar.standard_name)
                     elif len(ncvar.shape) == 3 and vert_type == "sfc":

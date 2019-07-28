@@ -129,9 +129,11 @@ to the standard_name of the variable to uniquely identify which data shall be us
 The data shall be organized with the dimensions in the order of "time", "vertical coordinate",
 "latitudes", and "longitudes" (This is important to reduce disk access when generating the plots).
 Data variables are identified by their standard_name, which is expected to be CF compliant.
-Data variables should contain a "units" attribute that may be used by the plotting routines
-for checking and/or conversion. Please bear in mind that the vertical axis of all vertical
-sections is pressure in 'Pa'.
+Data variables must contain a "units" attribute that is by the plotting routines
+for checking and conversion. The "pint" package is used for parsing the units. Some additional units such
+as PVU have been added to the package, but failure to parse the unit will cause the server to disregard the
+variable. Exemplary valid units are 'dimensionless', 'hPa', 'm**2', 'm.s^-1', 'millibar', 'knots', 'percent', or 'ppmv'.
+Please bear in mind that the vertical axis of all vertical sections is pressure in 'Pa'.
 
 It is assumed that forecast data is given from one initialisation time onward for several time steps
 into the future. For each file, the init time is determined by the units attribute of the "time"

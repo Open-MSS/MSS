@@ -52,6 +52,21 @@ from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore
 
 UR = pint.UnitRegistry()
+UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
+UR.define("degrees_north = degrees")
+UR.define("degrees_south = -degrees")
+UR.define("degrees_east = degrees")
+UR.define("degrees_west = -degrees")
+UR.define("sigma = dimensionless")
+UR.define("fraction = [] = frac")
+UR.define("percent = 1e-2 fraction")
+UR.define("permille = 1e-3 fraction")
+UR.define("ppm = 1e-6 fraction")
+UR.define("ppmv = 1e-6 fraction")
+UR.define("ppb = 1e-9 fraction")
+UR.define("ppbv = 1e-9 fraction")
+UR.define("ppt = 1e-12 fraction")
+UR.define("pptv = 1e-12 fraction")
 
 
 class FatalUserError(Exception):
@@ -523,7 +538,7 @@ def convert_to(value, from_unit, to_unit, default=1.):
     try:
         value_unit = UR.Quantity(value, UR(from_unit))
         result = value_unit.to(to_unit).magnitude
-    except pint.UndefinedUnitError as ex:
+    except pint.UndefinedUnitError:
         logging.error("Error in unit conversion (undefined) %s/%s", from_unit, to_unit)
         result = value * default
     except pint.DimensionalityError:
