@@ -42,6 +42,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     identifier = None
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
+    reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
     def __init__(self, token, p_id, conn, parent=None):
         """
@@ -202,11 +203,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             # 'undo' request
             r = requests.post(MSCOLAB_URL + '/undo', data=data)
             if r.text == "True":
-                # prompt success
-                pass
-            else:
-                # prompt failure
-                pass
+                # reload windows
+                self.reloadWindows.emit()
 
     def load_all_messages(self):
         # empty messages and reload from server
