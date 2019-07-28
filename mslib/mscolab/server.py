@@ -253,8 +253,8 @@ def get_project_details():
 def undo_ftml():
     ch_id = request.form.get('ch_id', -1)
     user = g.user
-    print("processing undo")
-    return str(fm.undo(ch_id, user))
+    result = fm.undo(ch_id, user)
+    return str(result)
 
 
 if __name__ == '__main__':
