@@ -93,6 +93,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn, parent=self.projWindow)
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         view_window.viewCloses.connect(self.close_project_window)
+        view_window.reloadWindows.connect(self.reload_windows_slot)
         self.project_window = view_window
         self.project_window.show()
 
@@ -273,6 +274,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             xml_text = self.waypoints_model.save_to_mscolab()
             # to emit to mscolab
             self.conn.save_file(self.token, self.active_pid, xml_text, comment=comment)
+
+    @QtCore.Slot()
+    def reload_windows_slot(self):
+        self.reload_window(self.active_pid)
 
     @QtCore.Slot(int)
     def reload_window(self, value):
