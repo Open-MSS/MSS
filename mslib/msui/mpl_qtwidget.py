@@ -953,7 +953,7 @@ class MplTopViewCanvas(MplCanvas):
         See MapCanvas.update_with_coordinate_change(). After the map redraw,
         coordinates of all objects overlain on the map have to be updated.
         """
-
+        self.kwargs_update = kwargs_update
         # remove legend
         self.draw_legend(None)
 
@@ -976,12 +976,6 @@ class MplTopViewCanvas(MplCanvas):
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
         # in waypoints_interactor()
-        proj_keys = ["epsg", "projection"]
-        if any(_x in kwargs_update for _x in proj_keys):
-            for key in (_x for _x in proj_keys if _x in self.kwargs):
-                del self.kwargs[key]
-        require_new_axis = True
-        self.kwargs.update(kwargs_update)
 
         self.pdlg.setValue(5)
         QtWidgets.QApplication.processEvents()
@@ -1019,16 +1013,10 @@ class MplTopViewCanvas(MplCanvas):
         Get the bounding box of the map
         (returns a 4-tuple llx, lly, urx, ury) in degree or meters.
         """
-
         self.ax = self.map.ax
+        kwargs = self.kwargs if self.kwargs_update is None else self.kwargs_update
+        bbox = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
-        kwargs = self.kwargs
-
-        bbox= [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
-
-        print(f"AB SAHI DEKH{bbox}")
-
-        print(self.ax.bbox.bounds)
         return bbox
 
     def clear_figure(self):

@@ -167,9 +167,10 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         ax.outline_patch.set_edgecolor('white')
         self.fig = fig
         self.ax = ax
+        self.grid = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
+        self.grid.xlabels_top = False
         self._plot_style()
         print(f"bbox to server{bbox}")
-        print(f"extent in cartopy style of server{ax.get_extent()}")
 
         # Return the image as png embedded in a StringIO stream.
         # canvas = FigureCanvas(fig)

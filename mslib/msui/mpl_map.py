@@ -160,10 +160,15 @@ class MapCanvas():
 
         self.image = None
 
+        self.gl = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
+        self.gl.xlabels_top = False
+        self.gl.xlines = False
+        self.gl.ylines = False
+
         if self.appearance["draw_graticule"]:
             try:
-                self.grid = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
-                self.grid.xlabels_top = False
+                self.gl.xlines = True
+                self.gl.ylines = True
                 self.map_grid = True
             except Exception as ex:
                 logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
@@ -202,22 +207,20 @@ class MapCanvas():
         See http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/msg09349.html
         """
         self.appearance["draw_graticule"] = visible
-        if visible and self.map_grid is False:
+        if visible:
             # Draw new graticule if visible is True and no current graticule
             # exists.
-            self.grid.xlines = True
-            self.grid.ylines = True
+            self.gl.xlines = True
+            self.gl.ylines = True
             self.map_grid = True
             self.fig.canvas.draw()
-        elif not visible and self.map_grid is True:
+        else:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            print(self.map_grid)
-            self.grid.xlines = False
-            self.grid.ylines = False
+            self.gl.xlines = False
+            self.gl.ylines = False
             self.map_grid = False
-            # Update the figure canvas.
             self.fig.canvas.draw()
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
@@ -328,9 +331,9 @@ class MapCanvas():
 
             self.fig.clf()
             ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
-            print(f"BBOX to set extent for ax: {BBOX}")
+            print(f"BBOX to set extent {BBOX}")
             ax.set_extent(BBOX)
-            print(f"Extent of BBOX retrieved from ax in degrees: {ax.get_extent(ccrs.PlateCarree())}")
+            print(f"BBOX retrieved from ax in degrees{ax.get_extent(ccrs.PlateCarree())}")
             self.ax = ax
         self.fig.canvas.draw()
         self.init_features(self.appearance)
