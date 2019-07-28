@@ -193,7 +193,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
 
     def handle_change_activate(self, item):
         qm = QtWidgets.QMessageBox
-        ret = qm.question(self, '', "Do you want to checkout to this change?", qm.Yes, qm.No)
+        ret = qm.question(self.changes, '', "Do you want to checkout to this change?", qm.Yes, qm.No)
         if ret == qm.Yes:
             # undo change from server
             data = {
