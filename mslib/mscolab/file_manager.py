@@ -278,6 +278,7 @@ class FileManager(object):
             change = Change(p_id, user.id, diff_content, cm.hexsha, comment)
             db.session.add(change)
             db.session.commit()
+        return True
 
     def get_file(self, p_id, user):
         """
