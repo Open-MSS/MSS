@@ -199,7 +199,7 @@ class Test_Files(object):
         """
         with self.app.app_context():
             p_id = get_recent_pid(self.user)
-            ch = Change(int(p_id), 8, 'some content', 'some comment')
+            ch = Change(int(p_id), 8, 'some content', "", 'some comment')
             db.session.add(ch)
             db.session.commit()
         data = {

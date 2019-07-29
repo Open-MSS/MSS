@@ -265,13 +265,13 @@ class FileManager(object):
         project_file.write(content)
         project_file.close()
         # commit changes if comment is not None
-        if diff_content is not "":
+        if diff_content != "":
             # commit to git repository
             project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
             repo = git.Repo(project_path)
             repo.index.add(['main.ftml'])
             # hack used, ToDo fix it
-            if comment == "" or comment == False or comment is None:
+            if comment == "" or comment is False or comment is None:
                 comment = "committing change"
             cm = repo.index.commit(comment)
             # change db table
@@ -353,7 +353,6 @@ class FileManager(object):
         project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
         repo = git.Repo(project_path)
         try:
-            g = repo.git
             file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))
 
             content_lines = file_content.splitlines()
@@ -375,5 +374,3 @@ class FileManager(object):
         except Exception as ex:
             logging.debug(ex)
             return False
-
-
