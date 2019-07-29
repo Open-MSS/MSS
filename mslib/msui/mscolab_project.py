@@ -24,7 +24,7 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_mscolab_project_window as ui
 from mslib._tests.constants import MSCOLAB_URL
 
@@ -68,6 +68,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.add.clicked.connect(self.add_handler)
         self.modify.clicked.connect(self.modify_handler)
         self.delete_1.clicked.connect(self.delete_handler)
+        self.checkout.clicked.connect(self.handle_undo)
         # send message handler
         self.sendMessage.clicked.connect(self.send_message)
         # load users
@@ -76,6 +77,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.load_all_changes()
         # load messages
         self.load_all_messages()
+        # active change
+        self.active_ch_id = None
 
     def send_message(self):
         """
@@ -183,28 +186,43 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         r = requests.get(MSCOLAB_URL + '/get_changes', data=data)
         changes = json.loads(r.text)["changes"]
         self.changes.clear()
+        self.active_ch_id = None
         for change in changes:
             item = QtWidgets.QListWidgetItem("{}: {}\n".format(change["username"],
                                              change["content"]), parent=self.changes)
             item._id = change['id']
             self.changes.addItem(item)
-        self.changes.itemActivated.connect(self.handle_change_activate)
         self.changes.scrollToBottom()
+        self.changes.itemActivated.connect(self.handle_change_activate)
 
     def handle_change_activate(self, item):
+        self.active_ch_id = item._id
+        # change font style for selected
+        font = QtGui.QFont()
+        for i in range(self.changes.count()):
+            self.changes.item(i).setFont(font)
+        font.setBold(True)
+        item.setFont(font)
+
+    def handle_undo(self):
+        if self.active_ch_id is None:
+            return
+
         qm = QtWidgets.QMessageBox
-        ret = qm.question(self.changes, '', "Do you want to checkout to this change?", qm.Yes, qm.No)
+        w = QtWidgets.QWidget()
+        ret = qm.question(w, 'Undo', "Do you want to checkout to this change?", qm.Yes, qm.No)
         if ret == qm.Yes:
             # undo change from server
             data = {
                 "token": self.token,
-                "ch_id": item._id
+                "ch_id": self.active_ch_id
             }
             # 'undo' request
             r = requests.post(MSCOLAB_URL + '/undo', data=data)
             if r.text == "True":
                 # reload windows
                 self.reloadWindows.emit()
+        return
 
     def load_all_messages(self):
         # empty messages and reload from server
