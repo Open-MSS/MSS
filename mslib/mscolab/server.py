@@ -248,6 +248,7 @@ def get_project_details():
     user = g.user
     return json.dumps(fm.get_project_details(int(p_id), user))
 
+
 @app.route('/undo', methods=["POST"])
 @verify_user
 def undo_ftml():
