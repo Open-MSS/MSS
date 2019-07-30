@@ -83,6 +83,8 @@ class Test_Mscolab(object):
         # save it with a comment
         self.window.save_wp_mscolab(comment="dummy save")
         QtWidgets.QApplication.processEvents()
+        # test doesn't work without the sleep, because of delay in adding change and commit
+        time.sleep(3)
         # change again for db consistency
         self.window.waypoints_model.invert_direction()
         self.window.save_wp_mscolab(comment="dummy save")
