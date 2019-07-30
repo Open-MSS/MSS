@@ -208,21 +208,24 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         if self.active_ch_id is None:
             return
 
-        qm = QtWidgets.QMessageBox
-        w = QtWidgets.QWidget()
-        ret = qm.question(w, 'Undo', "Do you want to checkout to this change?", qm.Yes, qm.No)
-        if ret == qm.Yes:
-            # undo change from server
-            data = {
-                "token": self.token,
-                "ch_id": self.active_ch_id
-            }
-            # 'undo' request
-            r = requests.post(MSCOLAB_URL + '/undo', data=data)
-            if r.text == "True":
-                # reload windows
-                self.reloadWindows.emit()
+        self.qm = QtWidgets.QMessageBox
+        self.w = QtWidgets.QWidget()
+        ret = self.qm.question(self.w, 'Undo', "Do you want to checkout to this change?", self.qm.Yes, self.qm.No)
+        if ret == self.qm.Yes:
+            self.request_undo_mscolab()
         return
+
+    def request_undo_mscolab(self):
+        # undo change from server
+        data = {
+            "token": self.token,
+            "ch_id": self.active_ch_id
+        }
+        # 'undo' request
+        r = requests.post(MSCOLAB_URL + '/undo', data=data)
+        if r.text == "True":
+            # reload windows
+            self.reloadWindows.emit()
 
     def load_all_messages(self):
         # empty messages and reload from server
