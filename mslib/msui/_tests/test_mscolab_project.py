@@ -95,7 +95,16 @@ class Test_Mscolab(object):
         len_after = self.proj_window.changes.count()
         # test change render
         assert len_prev == (len_after - 2)
-        # delete the change
+
+    def test_undo(self):
+        old_count = self.proj_window.changes.count()
+        self._activate_change_at_index(0)
+        QtWidgets.QApplication.processEvents()
+        self.proj_window.request_undo_mscolab()
+        # wait till server emits event to reload
+        time.sleep(3)
+        assert self.proj_window.changes.count() == old_count + 1
+        # delete the changes
         with self._app.app_context():
             Change.query.filter_by(comment="dummy save").delete()
             db.session.commit()
@@ -138,4 +147,12 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClick(self.window.listProjects.viewport(), QtCore.Qt.Key_Return)
+        QtWidgets.QApplication.processEvents()
+
+    def _activate_change_at_index(self, index):
+        item = self.proj_window.changes.item(index)
+        point = self.proj_window.changes.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.proj_window.changes.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.keyClick(self.proj_window.changes.viewport(), QtCore.Qt.Key_Return)
         QtWidgets.QApplication.processEvents()
