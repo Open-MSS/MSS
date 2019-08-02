@@ -223,6 +223,32 @@
     <string>chat window</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="addProject">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>370</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>add project</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="addUser">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>370</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>add user</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

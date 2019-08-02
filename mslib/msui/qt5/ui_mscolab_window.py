@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_mscolab_window.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -25,7 +25,7 @@ class Ui_MSSMscolabWindow(object):
         self.verticalLayout.addWidget(self.listProjects)
         self.loginWidget = QtWidgets.QWidget(MSSMscolabWindow)
         self.loginWidget.setGeometry(QtCore.QRect(30, 20, 401, 41))
-        self.loginWidget.setObjectName("widget")
+        self.loginWidget.setObjectName("loginWidget")
         self.emailid = QtWidgets.QLineEdit(self.loginWidget)
         self.emailid.setGeometry(QtCore.QRect(0, 10, 113, 23))
         self.emailid.setObjectName("emailid")
@@ -66,6 +66,12 @@ class Ui_MSSMscolabWindow(object):
         self.projWindow = QtWidgets.QPushButton(MSSMscolabWindow)
         self.projWindow.setGeometry(QtCore.QRect(330, 250, 91, 23))
         self.projWindow.setObjectName("projWindow")
+        self.addProject = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.addProject.setGeometry(QtCore.QRect(30, 370, 80, 23))
+        self.addProject.setObjectName("addProject")
+        self.addUser = QtWidgets.QPushButton(MSSMscolabWindow)
+        self.addUser.setGeometry(QtCore.QRect(130, 370, 80, 23))
+        self.addUser.setObjectName("addUser")
 
         self.retranslateUi(MSSMscolabWindow)
         QtCore.QMetaObject.connectSlotsByName(MSSMscolabWindow)
@@ -87,4 +93,6 @@ class Ui_MSSMscolabWindow(object):
         self.autoSave.setText(_translate("MSSMscolabWindow", "autosave"))
         self.fetch_ft.setText(_translate("MSSMscolabWindow", "fetch"))
         self.projWindow.setText(_translate("MSSMscolabWindow", "chat window"))
+        self.addProject.setText(_translate("MSSMscolabWindow", "add project"))
+        self.addUser.setText(_translate("MSSMscolabWindow", "add user"))
 
