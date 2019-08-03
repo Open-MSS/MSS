@@ -206,6 +206,16 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
             self.data_vars[df_name] = var
             self.data_units[df_name] = getattr(var, "units", None)
 
+    def have_data(self, plot_object, init_time, valid_time):
+        """Checks if this driver has the required data to do the plot
+
+        This inquires the contained data access class if data is available for
+        all required data fields for the specified times.
+        """
+        return all(
+            self.data_access.have_data(var, vartype, init_time, valid_time)
+            for vartype, var in plot_object.required_datafields)
+
     @abstractmethod
     def set_plot_parameters(self, plot_object, init_time=None, valid_time=None,
                             style=None, bbox=None, figsize=(800, 600),
