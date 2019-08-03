@@ -160,13 +160,18 @@ class MapCanvas():
 
         self.image = None
 
-        self.gl = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
+        if self.ax.projection == ccrs.PlateCarree() or self.ax.projection == ccrs.Mercator():
+            self.gl = self.ax.gridlines(crs=self.ax.projection)
+        else:
+            self.gl = self.ax.gridlines(crs=self.ax.projection)
         self.gl.xlabels_top = False
         self.gl.xlines = False
         self.gl.ylines = False
 
         if self.appearance["draw_graticule"]:
             try:
+                self.gl.xlabels_bottom = True
+                self.gl.ylabels_left = True
                 self.gl.xlines = True
                 self.gl.ylines = True
                 self.map_grid = True
@@ -207,20 +212,24 @@ class MapCanvas():
         See http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/msg09349.html
         """
         self.appearance["draw_graticule"] = visible
-        if visible:
+        print(f"kwargs of grat {self.kwargs}")
+        if visible and self.map_grid is False:
             # Draw new graticule if visible is True and no current graticule
             # exists.
+            self.gl = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
             self.gl.xlines = True
             self.gl.ylines = True
             self.map_grid = True
             self.fig.canvas.draw()
-        else:
+        elif not visible and self.map_grid is True:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
+            self.gl = self.ax.gridlines(crs=self.ax.projection, draw_labels=False)
             self.gl.xlines = False
             self.gl.ylines = False
             self.map_grid = False
+            self.update_with_coordinate_change(self.kwargs, True)
             self.fig.canvas.draw()
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
@@ -286,7 +295,7 @@ class MapCanvas():
         elif visible:
             self.fig.canvas.draw()
 
-    def update_with_coordinate_change(self, kwargs_update=None):
+    def update_with_coordinate_change(self, kwargs_update=None, unchanged=False):
         """Redraws the entire map. This is necessary after zoom/pan operations.
 
         Determines corner coordinates of the current axes, removes all items
@@ -309,6 +318,7 @@ class MapCanvas():
         # POSSIBILITY A): Call self.__init__ again with stored keywords.
         # Update kwargs if new parameters such as the map region have been
         # given.
+        user_proj = self.ax.projection
         require_new_axis = False
         if kwargs_update:
             proj_keys = ["epsg", "projection"]
@@ -330,7 +340,11 @@ class MapCanvas():
             BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
             self.fig.clf()
-            ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs["projection"])
+            print(f"kwargs_update just before {kwargs_update}")
+            if unchanged:
+                ax = self.fig.add_subplot(1, 1, 1, projection=user_proj)
+            else:
+                ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
             print(f"BBOX to set extent {BBOX}")
             ax.set_extent(BBOX)
             print(f"BBOX retrieved from ax in degrees{ax.get_extent(ccrs.PlateCarree())}")
