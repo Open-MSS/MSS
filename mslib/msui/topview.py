@@ -267,13 +267,21 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             dataset="predefined_map_sections", default=mss_default.predefined_map_sections)
         current_map = predefined_map_sections.get(
             current_map_key, {"CRS": current_map_key, "map": {}})
+        print(f"current map key {current_map_key}, current map {current_map}")
         proj_params = get_projection_params(current_map["CRS"])
 
         # Create a keyword arguments dictionary for basemap that contains
         # the projection parameters.
-        kwargs = current_map["map"]
-        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"]})
+        kwargs = {"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"]}
         kwargs.update(proj_params["basemap"])
+        print(current_map["CRS"].lower())
+        if current_map["CRS"].lower().startswith("epsg:"):
+            print(proj_params["fixed"])
+            if proj_params["fixed"] is True:
+                kwargs.update({"fixed": True})
+            else:
+                kwargs.update(current_map["map"])
+                kwargs.update({"fixed": False})
 
         if only_kwargs:
             # Return kwargs dictionary and do NOT redraw the map.

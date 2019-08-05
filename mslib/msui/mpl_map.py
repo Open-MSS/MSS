@@ -78,7 +78,7 @@ class MapCanvas():
         else:
             self.bbox_units = getattr(self, "bbox_units", None)
 
-        BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+        # BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
         # Identifier of this map canvas (used to query data structures that
         # are observed by different views).
@@ -94,8 +94,12 @@ class MapCanvas():
         if hasattr(self, "epsg"):
             del self.epsg
         user_proj = get_projection_params(self.crs)["basemap"]
-        ax = self.fig.add_subplot(1, 1, 1, projection=user_proj["projection"])
-        ax.set_extent(BBOX)
+        if kwargs["fixed"] is True:
+            ax = self.fig.add_subplot(1, 1, 1, projection=user_proj['projection'])
+        else:
+            BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+            ax = self.fig.add_subplot(1, 1, 1, projection=user_proj['projection'])
+            ax.set_extent(BBOX)
         self.fig.canvas.draw()
         self.ax = ax
         self.kwargs = kwargs
@@ -172,6 +176,7 @@ class MapCanvas():
             try:
                 self.gl.xlabels_bottom = True
                 self.gl.ylabels_left = True
+                self.gl.ylabels_right = True
                 self.gl.xlines = True
                 self.gl.ylines = True
                 self.map_grid = True
@@ -216,7 +221,10 @@ class MapCanvas():
         if visible and self.map_grid is False:
             # Draw new graticule if visible is True and no current graticule
             # exists.
-            self.gl = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
+            self.gl = self.ax.gridlines(crs=self.ax.projection)
+            self.gl.xlabels_bottom = True
+            self.gl.ylabels_left = True
+            self.gl.ylabels_right = True
             self.gl.xlines = True
             self.gl.ylines = True
             self.map_grid = True
@@ -225,10 +233,11 @@ class MapCanvas():
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            self.gl = self.ax.gridlines(crs=self.ax.projection, draw_labels=False)
+            self.gl = self.ax.gridlines(crs=self.ax.projection)
             self.gl.xlines = False
             self.gl.ylines = False
             self.map_grid = False
+            print(f"extent before disabling{self.ax.get_extent(ccrs.PlateCarree())}")
             self.update_with_coordinate_change(self.kwargs, True)
             self.fig.canvas.draw()
 
@@ -319,6 +328,7 @@ class MapCanvas():
         # Update kwargs if new parameters such as the map region have been
         # given.
         user_proj = self.ax.projection
+        curr_extent = self.ax.get_extent(ccrs.PlateCarree())
         require_new_axis = False
         if kwargs_update:
             proj_keys = ["epsg", "projection"]
@@ -337,17 +347,17 @@ class MapCanvas():
             else:
                 self.bbox_units = getattr(self, "bbox_units", None)
 
-            BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
-
             self.fig.clf()
-            print(f"kwargs_update just before {kwargs_update}")
             if unchanged:
                 ax = self.fig.add_subplot(1, 1, 1, projection=user_proj)
+                ax.set_extent(curr_extent)
             else:
-                ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
-            print(f"BBOX to set extent {BBOX}")
-            ax.set_extent(BBOX)
-            print(f"BBOX retrieved from ax in degrees{ax.get_extent(ccrs.PlateCarree())}")
+                if kwargs["fixed"] is True:
+                    ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
+                else:
+                    BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+                    ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
+                    ax.set_extent(BBOX)
             self.ax = ax
         self.fig.canvas.draw()
         self.init_features(self.appearance)

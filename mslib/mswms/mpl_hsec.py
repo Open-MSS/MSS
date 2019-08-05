@@ -161,16 +161,25 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         else:
             ax = plt.axes([0.05, 0.05, 0.9, 0.88], projection=user_proj)
 
-        ax.set_extent(bbox)
+        if bbox_units == "degree":
+            ax.set_extent(bbox)
+        elif bbox_units.startswith("meter"):
+            # convert meters to degrees
+            ct_center = [float(_x) for _x in bbox_units[6:-1].split(",")]
+            ax.set_extent(bbox[0] + ct_center[0], bbox[1], ct_center[0], bbox[2] + ct_center[1], bbox[3] + ct_center[1])
+        elif bbox_units == "no":
+            pass
+        else:
+            raise ValueError("bbox_units '{}' not known.".format(bbox_units))
+
         ax.coastlines()
         ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=1)
         ax.outline_patch.set_edgecolor('white')
         self.fig = fig
         self.ax = ax
-        self.grid = self.ax.gridlines(crs=self.ax.projection, draw_labels=True)
+        self.grid = self.ax.gridlines()
         self.grid.xlabels_top = False
         self._plot_style()
-        print(f"bbox to server{bbox}")
 
         # Return the image as png embedded in a StringIO stream.
         # canvas = FigureCanvas(fig)

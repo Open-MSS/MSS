@@ -972,6 +972,7 @@ class MplTopViewCanvas(MplCanvas):
 
         # 2) UPDATE MAP.
         self.map.update_with_coordinate_change(kwargs_update)
+        self.kwargs = kwargs_update
         self.ax = self.map.ax
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
@@ -1014,7 +1015,8 @@ class MplTopViewCanvas(MplCanvas):
         (returns a 4-tuple llx, lly, urx, ury) in degree or meters.
         """
         self.ax = self.map.ax
-        kwargs = self.kwargs if self.kwargs_update is None else self.kwargs_update
+        kwargs = self.kwargs
+        print(f"bbox of keyerror{kwargs}")
         bbox = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
         return bbox
