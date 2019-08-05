@@ -26,6 +26,7 @@
 import fs
 import difflib
 import logging
+import git
 
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
 from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
@@ -58,8 +59,13 @@ class FileManager(object):
         db.session.add(perm)
         db.session.commit()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        project_file = data.open(project.path, 'w')
+        data.makedir(project.path)
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
         project_file.write(STUB_CODE)
+        project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+        r = git.Repo.init(project_path)
+        r.index.add(['main.ftml'])
+        r.index.commit("initial commit")
         return True
 
     def get_project_details(self, p_id, user):
@@ -182,8 +188,10 @@ class FileManager(object):
             data = fs.open_fs(MSCOLAB_DATA_DIR)
             if data.exists(value):
                 return False
-            # will be move_dir when projects are introduced
-            data.move(project.path, value)
+            # will be move when projects are introduced
+            # make a directory, else movedir fails
+            data.makedir(value)
+            data.movedir(project.path, value)
         setattr(project, attribute, value)
         db.session.commit()
         return True
@@ -216,7 +224,7 @@ class FileManager(object):
         Change.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        data.remove(project.path)
+        data.removetree(project.path)
         project = Project.query.filter_by(id=p_id).delete()
         db.session.commit()
         return True
@@ -232,7 +240,7 @@ class FileManager(object):
             users.append({"username": user.username, "access_level": permission.access_level})
         return users
 
-    def save_file(self, p_id, content, user, comment=None):
+    def save_file(self, p_id, content, user, comment=""):
         """
         p_id: project-id,
         content: content of the file to be saved
@@ -246,18 +254,31 @@ class FileManager(object):
         old file is read, the diff between old and new is calculated and stored
         as 'Change' in changes table. comment for each change is optional
         """
-        project_file = data.open(project.path, 'r')
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
         old_data = project_file.read()
         project_file.close()
         old_data_lines = old_data.splitlines()
         content_lines = content.splitlines()
         diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
         diff_content = '\n'.join(list(diff))
-        change = Change(p_id, user.id, diff_content, comment)
-        db.session.add(change)
-        db.session.commit()
-        project_file = data.open(project.path, 'w')
-        return project_file.write(content)
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
+        project_file.write(content)
+        project_file.close()
+        # commit changes if comment is not None
+        if diff_content != "":
+            # commit to git repository
+            project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+            repo = git.Repo(project_path)
+            repo.index.add(['main.ftml'])
+            # hack used, ToDo fix it
+            if comment == "" or comment is False or comment is None:
+                comment = "committing change"
+            cm = repo.index.commit(comment)
+            # change db table
+            change = Change(p_id, user.id, diff_content, cm.hexsha, comment)
+            db.session.add(change)
+            db.session.commit()
+        return True
 
     def get_file(self, p_id, user):
         """
@@ -271,7 +292,7 @@ class FileManager(object):
         if not project:
             return False
         data = fs.open_fs(MSCOLAB_DATA_DIR)
-        project_file = data.open(project.path, 'r')
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
         return project_file.read()
 
     def get_changes(self, p_id, user):
@@ -309,3 +330,49 @@ class FileManager(object):
         if not perm:
             return False
         return {'content': change.content, 'comment': change.comment, 'u_id': change.u_id}
+
+    def undo(self, ch_id, user):
+        """
+        ch_id: change-id
+        user: user of this request
+
+        Undo a change
+        # ToDo a revert option, which removes only that commit's change
+        """
+        ch = Change.query.filter_by(id=ch_id).first()
+        if ch is None:
+            return False
+        project = Project.query.filter_by(id=ch.p_id).first()
+        if not ch or not project:
+            return False
+
+        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
+        old_data = project_file.read()
+        project_file.close()
+        old_data_lines = old_data.splitlines()
+
+        project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+        repo = git.Repo(project_path)
+        try:
+            file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))
+
+            content_lines = file_content.splitlines()
+            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+            diff_content = '\n'.join(list(diff))
+
+            proj_fs = fs.open_fs(project_path)
+            proj_fs.writetext('main.ftml', file_content)
+            proj_fs.close()
+            repo.index.add(['main.ftml'])
+            cm = repo.index.commit("checkout to {}".format(ch.commit_hash))
+
+            change = Change(ch.p_id, user.id, diff_content, cm.hexsha,
+                            "checkout to {}".format(ch.commit_hash))
+            db.session.add(change)
+            db.session.commit()
+
+            return True
+        except Exception as ex:
+            logging.debug(ex)
+            return False

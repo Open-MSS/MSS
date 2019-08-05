@@ -31,6 +31,8 @@ import sys
 from flask import Flask
 import logging
 import argparse
+import git
+
 try:
     import MySQLdb as ms
 except ImportError:
@@ -131,9 +133,15 @@ def create_data():
                 fs_datadir.makedir('filedata')
                 # add files
                 file_dir = fs.open_fs(fs.path.combine(BASE_DIR, 'colabdata/filedata'))
-                file_dir.writetext('one', STUB_CODE)
-                file_dir.writetext('two', STUB_CODE)
-                file_dir.writetext('three', STUB_CODE)
+                # make directories
+                file_paths = ['one', 'two', 'three']
+                for file_path in file_paths:
+                    file_dir.makedir(file_path)
+                    file_dir.writetext('{}/main.ftml'.format(file_path), STUB_CODE)
+                    # initiate git
+                    r = git.Repo.init(fs.path.combine(BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
+                    r.index.add(['main.ftml'])
+                    r.index.commit("initial commit")
                 file_dir.close()
 
             fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')

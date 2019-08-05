@@ -152,6 +152,14 @@ class Test_Files(object):
             self.sockets.append(sio1)
             self.sockets.append(sio2)
 
+    def test_undo(self):
+        with self.app.app_context():
+            p_id = get_recent_pid(self.user)
+            changes = Change.query.filter_by(p_id=p_id).all()
+            assert fm.undo(changes[0].id, self.user) is True
+            assert len(fm.get_changes(p_id, self.user)) == 3
+            assert fm.get_file(p_id, self.user) == "test"
+
     def test_revoke_permission(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.user)

@@ -249,6 +249,15 @@ def get_project_details():
     return json.dumps(fm.get_project_details(int(p_id), user))
 
 
+@app.route('/undo', methods=["POST"])
+@verify_user
+def undo_ftml():
+    ch_id = request.form.get('ch_id', -1)
+    user = g.user
+    result = fm.undo(ch_id, user)
+    return str(result)
+
+
 if __name__ == '__main__':
     # to be refactored during deployment
     sockio.run(app, port=8083)

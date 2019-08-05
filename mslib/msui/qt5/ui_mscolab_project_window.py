@@ -43,7 +43,7 @@ class Ui_MscolabProject(object):
         self.messageText.setGeometry(QtCore.QRect(220, 520, 281, 71))
         self.messageText.setObjectName("messageText")
         self.sendMessage = QtWidgets.QPushButton(MscolabProject)
-        self.sendMessage.setGeometry(QtCore.QRect(540, 540, 80, 23))
+        self.sendMessage.setGeometry(QtCore.QRect(530, 540, 80, 23))
         self.sendMessage.setObjectName("sendMessage")
         self.verticalLayoutWidget_3 = QtWidgets.QWidget(MscolabProject)
         self.verticalLayoutWidget_3.setGeometry(QtCore.QRect(220, 70, 391, 441))
@@ -55,7 +55,7 @@ class Ui_MscolabProject(object):
         self.messages.setObjectName("messages")
         self.verticalLayout_6.addWidget(self.messages)
         self.verticalLayoutWidget_4 = QtWidgets.QWidget(MscolabProject)
-        self.verticalLayoutWidget_4.setGeometry(QtCore.QRect(630, 70, 271, 521))
+        self.verticalLayoutWidget_4.setGeometry(QtCore.QRect(620, 70, 281, 521))
         self.verticalLayoutWidget_4.setObjectName("verticalLayoutWidget_4")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_4)
         self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
@@ -63,6 +63,9 @@ class Ui_MscolabProject(object):
         self.changes = QtWidgets.QListWidget(self.verticalLayoutWidget_4)
         self.changes.setObjectName("changes")
         self.verticalLayout_7.addWidget(self.changes)
+        self.checkout = QtWidgets.QPushButton(MscolabProject)
+        self.checkout.setGeometry(QtCore.QRect(620, 30, 80, 23))
+        self.checkout.setObjectName("checkout")
 
         self.retranslateUi(MscolabProject)
         QtCore.QMetaObject.connectSlotsByName(MscolabProject)
@@ -78,4 +81,5 @@ class Ui_MscolabProject(object):
         self.delete_1.setText(_translate("MscolabProject", "delete"))
         self.messageText.setPlaceholderText(_translate("MscolabProject", "Enter message here"))
         self.sendMessage.setText(_translate("MscolabProject", "send"))
+        self.checkout.setText(_translate("MscolabProject", "checkout"))
 

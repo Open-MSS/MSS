@@ -118,7 +118,7 @@
   <widget class="QPushButton" name="sendMessage">
    <property name="geometry">
     <rect>
-     <x>540</x>
+     <x>530</x>
      <y>540</y>
      <width>80</width>
      <height>23</height>
@@ -146,9 +146,9 @@
   <widget class="QWidget" name="verticalLayoutWidget_4">
    <property name="geometry">
     <rect>
-     <x>630</x>
+     <x>620</x>
      <y>70</y>
-     <width>271</width>
+     <width>281</width>
      <height>521</height>
     </rect>
    </property>
@@ -157,6 +157,19 @@
      <widget class="QListWidget" name="changes"/>
     </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="checkout">
+   <property name="geometry">
+    <rect>
+     <x>620</x>
+     <y>30</y>
+     <width>80</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>checkout</string>
+   </property>
   </widget>
  </widget>
  <resources/>
