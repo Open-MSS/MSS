@@ -123,8 +123,13 @@ def user_register_handler():
     return register_user(email, password, username)
 
 
-# Chat related routes
+@app.route('/user', methods=["GET"])
+@verify_user
+def get_user():
+    return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
+
+# Chat related routes
 @app.route("/messages", methods=['POST'])
 @verify_user
 def messages():

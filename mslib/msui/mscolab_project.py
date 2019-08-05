@@ -79,6 +79,34 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.load_all_messages()
         # active change
         self.active_ch_id = None
+        user_d = self.get_user_details(self.token)
+        proj_d = self.get_project_details(self.p_id)
+        self.user_info.setText("logged in as: {}".format(user_d["username"]))
+        print(user_d, proj_d)
+        self.proj_info.setText("Project name: {}".format(proj_d["path"]))
+
+    def get_user_details(self, token):
+        """
+        token: auth token of the user to be fetched from mscolab server
+        """
+        data = {
+            'token': token
+        }
+        r = requests.get(MSCOLAB_URL + '/user', data=data)
+        json_ = json.loads(r.text)
+        return json_['user']
+
+    def get_project_details(self, p_id):
+        """
+        p_id: active project id details of which are fetched from mscolab server
+        """
+        data = {
+            'token': self.token,
+            'p_id': p_id
+        }
+        r = requests.get(MSCOLAB_URL + '/project_details', data=data)
+        json_ = json.loads(r.text)
+        return json_
 
     def send_message(self):
         """
