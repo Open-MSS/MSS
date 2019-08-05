@@ -58,6 +58,7 @@ requirements:
     - flask-sqlalchemy
     - passlib
     - python-socketio[client]
+    - gitpython
 
 test:
   imports:
