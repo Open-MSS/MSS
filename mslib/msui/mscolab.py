@@ -121,7 +121,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
 
-
     def add_user_handler(self):
         self.user_diag = QtWidgets.QDialog()
         self.add_user_dialog = add_user_ui.Ui_addUserDialog()
@@ -181,6 +180,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def authorize(self):
         emailid = self.emailid.text()
         password = self.password.text()
+        # to prevent someone nearby from seeing the id, password
+        self.emailid.setText('')
+        self.password.setText('')
         data = {
             "email": emailid,
             "password": password
@@ -201,7 +203,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.loginWidget.hide()
 
             self.add_projects()
-            
+
             # create socket connection here
             self.conn = sc.ConnectionManager(self.token, user=self.user)
             self.conn.signal_reload.connect(self.reload_window)
@@ -216,7 +218,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         _json = json.loads(r.text)
         projects = _json["projects"]
         self.add_projects_to_ui(projects)
-
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
@@ -258,6 +259,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         item.setFont(font)
 
     def reload_wps_from_server(self):
+        if self.active_pid is None:
+            return
         self.load_wps_from_server()
         for window in self.active_windows:
             # set active flight track
@@ -336,6 +339,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.conn is not None:
             self.conn.disconnect()
             self.conn = None
+        # close all hanging window
+        for window in self.active_windows:
+            window.hide()
 
     def save_wp_mscolab(self, comment=None):
         if self.active_pid is not None:
