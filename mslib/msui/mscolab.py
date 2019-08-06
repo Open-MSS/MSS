@@ -330,10 +330,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # ToDo for non-admins who will get autosave hidden
         self.w = QtWidgets.QWidget()
         if (not self.autoSave.isChecked()) and (self.active_pid is not None):
-            reply = QtWidgets.QMessageBox.question(self.w, 'Continue?', 
-                'Autosave is disabled, save your changes locally before continuing!',
-                QtWidgets.QMessageBox.Yes,
-                QtWidgets.QMessageBox.No)
+            qm = QtWidgets.QMessageBox
+            reply = qm.question(self.w, 'Continue?',
+                                'Autosave is disabled, save your changes locally before continuing!',
+                                qm.Yes,
+                                qm.No)
             if reply == QtWidgets.QMessageBox.No:
                 return
         # delete token and show login widget-items

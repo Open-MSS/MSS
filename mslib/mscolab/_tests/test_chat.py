@@ -33,6 +33,7 @@ import time
 from mslib.mscolab.models import Message
 from mslib.mscolab.sockets_manager import cm
 from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.server import db, sockio, app
 
 
@@ -40,6 +41,7 @@ class Test_Chat(object):
 
     def setup(self):
         self.sockets = []
+        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),

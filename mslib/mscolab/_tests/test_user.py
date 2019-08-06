@@ -28,6 +28,7 @@ import json
 import time
 
 from mslib.mscolab.server import db, check_login, register_user, sockio, app
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User
 
 
@@ -36,6 +37,7 @@ class Test_UserMethods(object):
     def setup(self):
         self._app = app
         db.init_app(self._app)
+        self._app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
