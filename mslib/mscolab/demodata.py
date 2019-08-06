@@ -39,10 +39,10 @@ except ImportError:
     ms = None
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
-from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DATA_DIR, BASE_DIR, STUB_CODE
+from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, TEST_DATA_DIR, TEST_BASE_DIR, STUB_CODE
 
 
-def create_data():
+def create_test_data():
     if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
             logging.info("""can't complete demodata setup,
@@ -120,10 +120,10 @@ def create_data():
         pass
     elif SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
-        fs_datadir = fs.open_fs(BASE_DIR)
+        fs_datadir = fs.open_fs(TEST_BASE_DIR)
         if not fs_datadir.exists('colabdata'):
             fs_datadir.makedir('colabdata')
-        fs_datadir = fs.open_fs(DATA_DIR)
+        fs_datadir = fs.open_fs(TEST_DATA_DIR)
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
         if fs_datadir.exists('mscolab.db'):
@@ -132,14 +132,14 @@ def create_data():
             if not fs_datadir.exists('filedata'):
                 fs_datadir.makedir('filedata')
                 # add files
-                file_dir = fs.open_fs(fs.path.combine(BASE_DIR, 'colabdata/filedata'))
+                file_dir = fs.open_fs(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata'))
                 # make directories
                 file_paths = ['one', 'two', 'three']
                 for file_path in file_paths:
                     file_dir.makedir(file_path)
                     file_dir.writetext('{}/main.ftml'.format(file_path), STUB_CODE)
                     # initiate git
-                    r = git.Repo.init(fs.path.combine(BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
+                    r = git.Repo.init(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
                     r.index.add(['main.ftml'])
                     r.index.commit("initial commit")
                 file_dir.close()
@@ -150,7 +150,15 @@ def create_data():
         pass
 
 
+def create_data():
+    return
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Tool to setup data for usage of mscolab")
+    parser.add_argument("--test", "Make test demodata")
     args = parser.parse_args()
-    create_data()
+    if args.test:
+        create_test_data()
+    else:
+        create_data()

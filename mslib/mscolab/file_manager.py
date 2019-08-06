@@ -27,16 +27,22 @@ import fs
 import difflib
 import logging
 import git
-
+import sys
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
-from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
+from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE, TEST_MSCOLAB_DATA_DIR
 
 
 class FileManager(object):
     """Class with handler functions for file related functionalities"""
 
     def __init__(self):
-        pass
+        # please refer to
+        # https://stackoverflow.com/questions/25188119/test-if-code-is-executed-from-within-a-py-test-session
+
+        if hasattr(sys, '_called_from_test'):
+            self.data_dir = TEST_MSCOLAB_DATA_DIR
+        else:
+            self.data_dir = MSCOLAB_DATA_DIR
 
     def create_project(self, path, description, user):
         """
@@ -58,11 +64,11 @@ class FileManager(object):
         perm = Permission(user.id, project_id, "creator")
         db.session.add(perm)
         db.session.commit()
-        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        data = fs.open_fs(self.data_dir)
         data.makedir(project.path)
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
         project_file.write(STUB_CODE)
-        project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+        project_path = fs.path.combine(self.data_dir, project.path)
         r = git.Repo.init(project_path)
         r.index.add(['main.ftml'])
         r.index.commit("initial commit")
@@ -185,7 +191,7 @@ class FileManager(object):
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
                 logging.debug("malicious request: %s".format(user))
                 return False
-            data = fs.open_fs(MSCOLAB_DATA_DIR)
+            data = fs.open_fs(self.data_dir)
             if data.exists(value):
                 return False
             # will be move when projects are introduced
@@ -223,7 +229,7 @@ class FileManager(object):
         Message.query.filter_by(p_id=p_id).delete()
         Change.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
-        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        data = fs.open_fs(self.data_dir)
         data.removetree(project.path)
         project = Project.query.filter_by(id=p_id).delete()
         db.session.commit()
@@ -249,7 +255,7 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False
-        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        data = fs.open_fs(self.data_dir)
         """
         old file is read, the diff between old and new is calculated and stored
         as 'Change' in changes table. comment for each change is optional
@@ -267,7 +273,7 @@ class FileManager(object):
         # commit changes if comment is not None
         if diff_content != "":
             # commit to git repository
-            project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+            project_path = fs.path.combine(self.data_dir, project.path)
             repo = git.Repo(project_path)
             repo.index.add(['main.ftml'])
             # hack used, ToDo fix it
@@ -291,7 +297,7 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False
-        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        data = fs.open_fs(self.data_dir)
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
         return project_file.read()
 
@@ -346,13 +352,13 @@ class FileManager(object):
         if not ch or not project:
             return False
 
-        data = fs.open_fs(MSCOLAB_DATA_DIR)
+        data = fs.open_fs(self.data_dir)
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
         old_data = project_file.read()
         project_file.close()
         old_data_lines = old_data.splitlines()
 
-        project_path = fs.path.combine(MSCOLAB_DATA_DIR, project.path)
+        project_path = fs.path.combine(self.data_dir, project.path)
         repo = git.Repo(project_path)
         try:
             file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))

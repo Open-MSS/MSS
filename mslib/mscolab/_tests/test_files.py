@@ -32,7 +32,7 @@ from flask import Flask
 from functools import partial
 import time
 
-from mslib.mscolab.conf import SQLALCHEMY_DB_URI, MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI, TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
@@ -44,6 +44,7 @@ class Test_Files(object):
     def setup(self):
         self.sockets = []
         self.file_message_counter = [0] * 2
+        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
@@ -51,7 +52,7 @@ class Test_Files(object):
         self.p.start()
         time.sleep(1)
         self.app = Flask(__name__)
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         db.init_app(self.app)
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
@@ -65,7 +66,7 @@ class Test_Files(object):
             # test for '/' in path
             assert fm.create_project('test/path', 'sth', self.user) is False
             # check file existence
-            assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'test_path')) is True
+            assert os.path.exists(os.path.join(TEST_MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db
             p = Project.query.filter_by(path="test_path").first()
             assert p is not None
@@ -190,7 +191,7 @@ class Test_Files(object):
             assert fm.update_project(p_id, 'path', 'dummy wrong', self.user) is False
             assert fm.update_project(p_id, 'path', 'dummy/wrong', self.user) is False
             assert fm.update_project(p_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(MSCOLAB_DATA_DIR, 'dummy'))
+            assert os.path.exists(os.path.join(TEST_MSCOLAB_DATA_DIR, 'dummy'))
             assert fm.update_project(p_id, 'description', 'dummy', self.user) is True
 
     def test_delete_project(self):

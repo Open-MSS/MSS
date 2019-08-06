@@ -31,6 +31,7 @@ import time
 from mslib.mscolab.models import User, Change, Project
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.server import db, sockio, app
 from mslib.mscolab.utils import get_recent_pid
 
@@ -39,6 +40,7 @@ class Test_Files(object):
     def setup(self):
         self.sockets = []
         self.file_message_counter = [0] * 2
+        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
