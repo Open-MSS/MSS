@@ -34,7 +34,9 @@ from validate_email import validate_email
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY
 from mslib.mscolab.sockets_manager import socketio as sockio, cm, fm
-
+from mslib.mscolab.demodata import create_data
+# create data if not created
+create_data()
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
 sockio.init_app(app)
