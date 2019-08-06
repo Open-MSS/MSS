@@ -140,6 +140,13 @@ class SocketsManager(object):
         perm = self.permission_check_emit(user.id, int(p_id))
         # if permission is correct and file saved properly
         if perm and fm.save_file(int(p_id), content, user, comment):
+            # send service message
+            message_ = "[service message] saved changes"
+            cm.add_message(user, message_, str(p_id))
+            socketio.emit('chat-message-client', json.dumps({'user': user.username,
+                                                            'message_text': message_}),
+                          room=str(p_id))
+            # emit file-changed event to trigger reload of flight track
             socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
 
     def handle_autosave_enable(self, json_req):
