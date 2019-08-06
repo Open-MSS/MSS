@@ -164,19 +164,17 @@ class MapCanvas():
 
         self.image = None
 
-        if self.ax.projection == ccrs.PlateCarree() or self.ax.projection == ccrs.Mercator():
-            self.gl = self.ax.gridlines(crs=self.ax.projection)
-        else:
-            self.gl = self.ax.gridlines(crs=self.ax.projection)
+        self.gl = self.ax.gridlines(crs=self.ax.projection)
         self.gl.xlabels_top = False
         self.gl.xlines = False
         self.gl.ylines = False
 
         if self.appearance["draw_graticule"]:
             try:
-                self.gl.xlabels_bottom = True
-                self.gl.ylabels_left = True
-                self.gl.ylabels_right = True
+                if self.ax.projection == ccrs.PlateCarree():
+                    self.gl.xlabels_bottom = True
+                    self.gl.ylabels_left = True
+                    self.gl.ylabels_right = True
                 self.gl.xlines = True
                 self.gl.ylines = True
                 self.map_grid = True
@@ -217,14 +215,14 @@ class MapCanvas():
         See http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/msg09349.html
         """
         self.appearance["draw_graticule"] = visible
-        print(f"kwargs of grat {self.kwargs}")
         if visible and self.map_grid is False:
             # Draw new graticule if visible is True and no current graticule
             # exists.
             self.gl = self.ax.gridlines(crs=self.ax.projection)
-            self.gl.xlabels_bottom = True
-            self.gl.ylabels_left = True
-            self.gl.ylabels_right = True
+            if self.ax.projection == ccrs.PlateCarree():
+                self.gl.xlabels_bottom = True
+                self.gl.ylabels_left = True
+                self.gl.ylabels_right = True
             self.gl.xlines = True
             self.gl.ylines = True
             self.map_grid = True
@@ -237,7 +235,6 @@ class MapCanvas():
             self.gl.xlines = False
             self.gl.ylines = False
             self.map_grid = False
-            print(f"extent before disabling{self.ax.get_extent(ccrs.PlateCarree())}")
             self.update_with_coordinate_change(self.kwargs, True)
             self.fig.canvas.draw()
 

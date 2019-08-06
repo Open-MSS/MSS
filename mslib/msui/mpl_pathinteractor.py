@@ -941,7 +941,6 @@ class HPathInteractor(PathInteractor):
             return
 
         # Submit the new position to the data model.
-        print("MOVE WAYPOINT BUTTON!!!!!!!!!!!!!!")
         vertices = self.pathpatch.get_path().wp_vertices
         lon, lat = ccrs.PlateCarree().transform_point(vertices[self._ind][0],
                                                       vertices[self._ind][1], self.map.ax.projection)
@@ -963,7 +962,6 @@ class HPathInteractor(PathInteractor):
     def button_release_delete_callback(self, event):
         """Called whenever a mouse button is released.
         """
-        print("WAYPOINT DELETE BUTTON!!!!!!!!!!!")
         if not self.showverts or event.button != 1:
             return
 

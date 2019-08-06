@@ -1016,7 +1016,6 @@ class MplTopViewCanvas(MplCanvas):
         """
         self.ax = self.map.ax
         kwargs = self.kwargs
-        print(f"bbox of keyerror{kwargs}")
         bbox = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
         return bbox
