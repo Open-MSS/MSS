@@ -39,7 +39,8 @@ except ImportError:
     ms = None
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
-from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, TEST_DATA_DIR, TEST_BASE_DIR, STUB_CODE, TEST_SQLALCHEMY_DB_URI, DATA_DIR, BASE_DIR
+from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, TEST_DATA_DIR
+from mslib.mscolab.conf import STUB_CODE, TEST_SQLALCHEMY_DB_URI, DATA_DIR, BASE_DIR, TEST_BASE_DIR
 
 
 def create_test_data():
