@@ -122,8 +122,9 @@ def create_test_data():
     elif TEST_SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
         fs_datadir = fs.open_fs(TEST_BASE_DIR)
-        if not fs_datadir.exists('colabdata'):
-            fs_datadir.makedir('colabdata')
+        if fs_datadir.exists('colabdata'):
+            fs_datadir.removetree('colabdata')
+        fs_datadir.makedir('colabdata')
         fs_datadir = fs.open_fs(TEST_DATA_DIR)
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
