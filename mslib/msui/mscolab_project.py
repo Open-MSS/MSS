@@ -55,8 +55,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.setupUi(self)
 
         # constrain vertical layout
-        self.verticalLayout_6.setSizeConstraint(self.verticalLayout_6.SetMinimumSize)
-        self.messages.setWordWrap(True)
+        # self.verticalLayout.setSizeConstraint(self.verticalLayout_6.SetMinimumSize)
+        # self.messages.setWordWrap(True)
 
         self.token = token
         self.p_id = p_id
