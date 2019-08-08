@@ -39,8 +39,9 @@ except ImportError:
     ms = None
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
-from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, TEST_DATA_DIR
-from mslib.mscolab.conf import STUB_CODE, TEST_SQLALCHEMY_DB_URI, DATA_DIR, BASE_DIR, TEST_BASE_DIR
+from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
+from mslib.mscolab.conf import STUB_CODE, DATA_DIR, BASE_DIR
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI, TEST_BASE_DIR, TEST_DATA_DIR
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 

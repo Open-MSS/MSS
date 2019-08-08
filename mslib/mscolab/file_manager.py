@@ -29,7 +29,8 @@ import logging
 import git
 import sys
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
-from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE, TEST_MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
+from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
 
 
 class FileManager(object):

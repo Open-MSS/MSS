@@ -31,7 +31,7 @@ import time
 from mslib.mscolab.models import User, Change, Project
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.server import db, sockio, app
 from mslib.mscolab.utils import get_recent_pid
 
