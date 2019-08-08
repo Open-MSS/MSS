@@ -34,7 +34,6 @@ from validate_email import validate_email
 from mslib.mscolab.models import User, db
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY
 from mslib.mscolab.sockets_manager import socketio as sockio, cm, fm
-
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
 sockio.init_app(app)
@@ -42,6 +41,9 @@ sockio.init_app(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
 app.config['SECRET_KEY'] = SECRET_KEY
 db.init_app(app)
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 
 @app.route("/")
@@ -123,8 +125,13 @@ def user_register_handler():
     return register_user(email, password, username)
 
 
-# Chat related routes
+@app.route('/user', methods=["GET"])
+@verify_user
+def get_user():
+    return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
+
+# Chat related routes
 @app.route("/messages", methods=['POST'])
 @verify_user
 def messages():
@@ -261,3 +268,6 @@ def undo_ftml():
 if __name__ == '__main__':
     # to be refactored during deployment
     sockio.run(app, port=8083)
+    from mslib.mscolab.demodata import create_data
+    # create data if not created
+    create_data()

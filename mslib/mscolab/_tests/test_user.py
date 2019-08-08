@@ -28,6 +28,8 @@ import json
 import time
 
 from mslib.mscolab.server import db, check_login, register_user, sockio, app
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
+from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.models import User
 
 
@@ -36,10 +38,11 @@ class Test_UserMethods(object):
     def setup(self):
         self._app = app
         db.init_app(self._app)
+        self._app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
-            kwargs={'port': 8083})
+            kwargs={'port': 8084})
         self.p.start()
         time.sleep(1)
 
@@ -65,9 +68,9 @@ class Test_UserMethods(object):
             "password": "sdf",
             "username": "sdf1"
         }
-        r = requests.post('http://localhost:8083/register', data=data)
+        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
         assert r.text == "True"
-        r = requests.post('http://localhost:8083/register', data=data)
+        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
         assert r.text == "False"
 
     def test_token_api(self):
@@ -76,12 +79,12 @@ class Test_UserMethods(object):
             "password": "sdf",
             "username": "sdf1"
         }
-        r = requests.post('http://localhost:8083/register', data=data)
-        r = requests.post('http://localhost:8083/token', data=data)
+        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
+        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
         json_ = json.loads(r.text)
         assert json_.get("token", None) is not None
         data["password"] = "asdf"
-        r = requests.post('http://localhost:8083/token', data=data)
+        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
         assert r.text == "False"
 
     def teardown(self):

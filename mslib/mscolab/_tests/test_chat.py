@@ -33,6 +33,7 @@ import time
 from mslib.mscolab.models import Message
 from mslib.mscolab.sockets_manager import cm
 from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.server import db, sockio, app
 
 
@@ -40,10 +41,11 @@ class Test_Chat(object):
 
     def setup(self):
         self.sockets = []
+        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
-            kwargs={'port': 8083})
+            kwargs={'port': 8084})
         self.p.start()
         self.app = app
         db.init_app(self.app)
@@ -116,7 +118,7 @@ class Test_Chat(object):
                  "token": response['token'],
                  "message_text": "message from 1"
                  })
-        sio.sleep(2)
+        sio.sleep(4)
         with self.app.app_context():
             messages = cm.get_messages(1)
             assert len(messages) == 2

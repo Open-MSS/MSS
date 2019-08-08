@@ -6,170 +6,210 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>905</width>
-    <height>601</height>
+    <width>990</width>
+    <height>826</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>990</width>
+    <height>802</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Mscolab Project</string>
   </property>
-  <widget class="QLineEdit" name="username">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>20</y>
-     <width>113</width>
-     <height>23</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="accessLevel">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>20</y>
-     <width>101</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <item>
-    <property name="text">
-     <string>collaborator</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>admin</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>viewer</string>
-    </property>
-   </item>
-  </widget>
-  <widget class="QPushButton" name="add">
-   <property name="geometry">
-    <rect>
-     <x>240</x>
-     <y>20</y>
-     <width>41</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>add</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="modify">
-   <property name="geometry">
-    <rect>
-     <x>290</x>
-     <y>20</y>
-     <width>51</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>modify</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="verticalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>70</y>
-     <width>191</width>
-     <height>441</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_4">
-    <item>
-     <widget class="QListWidget" name="collaboratorsList"/>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QPushButton" name="delete_1">
-   <property name="geometry">
-    <rect>
-     <x>350</x>
-     <y>20</y>
-     <width>51</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>delete</string>
-   </property>
-  </widget>
-  <widget class="QPlainTextEdit" name="messageText">
-   <property name="geometry">
-    <rect>
-     <x>220</x>
-     <y>520</y>
-     <width>281</width>
-     <height>71</height>
-    </rect>
-   </property>
-   <property name="placeholderText">
-    <string>Enter message here</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="sendMessage">
-   <property name="geometry">
-    <rect>
-     <x>530</x>
-     <y>540</y>
-     <width>80</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>send</string>
-   </property>
-  </widget>
   <widget class="QWidget" name="verticalLayoutWidget_3">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>70</y>
-     <width>391</width>
-     <height>441</height>
+     <x>0</x>
+     <y>0</y>
+     <width>991</width>
+     <height>828</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_6">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
     <item>
-     <widget class="QListWidget" name="messages"/>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QLineEdit" name="username">
+              <property name="minimumSize">
+               <size>
+                <width>408</width>
+                <height>0</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="accessLevel">
+              <item>
+               <property name="text">
+                <string>collaborator</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>admin</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>viewer</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="add">
+              <property name="text">
+               <string>add</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="modify">
+              <property name="text">
+               <string>modify</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="delete_1">
+              <property name="text">
+               <string>delete</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="proj_info">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="user_info">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QListWidget" name="collaboratorsList">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>200</width>
+              <height>300</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="messages">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>256</width>
+              <height>300</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QPlainTextEdit" name="messageText">
+            <property name="minimumSize">
+             <size>
+              <width>700</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="placeholderText">
+             <string>Enter message here</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="sendMessage">
+            <property name="text">
+             <string>send</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QListWidget" name="changes">
+        <property name="minimumSize">
+         <size>
+          <width>521</width>
+          <height>300</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="checkout">
+          <property name="text">
+           <string>checkout</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </item>
    </layout>
-  </widget>
-  <widget class="QWidget" name="verticalLayoutWidget_4">
-   <property name="geometry">
-    <rect>
-     <x>620</x>
-     <y>70</y>
-     <width>281</width>
-     <height>521</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_7">
-    <item>
-     <widget class="QListWidget" name="changes"/>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QPushButton" name="checkout">
-   <property name="geometry">
-    <rect>
-     <x>620</x>
-     <y>30</y>
-     <width>80</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>checkout</string>
-   </property>
   </widget>
  </widget>
  <resources/>

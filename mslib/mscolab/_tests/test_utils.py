@@ -26,11 +26,13 @@
 from mslib.mscolab.server import db, app
 from mslib.mscolab.models import User
 from mslib.mscolab.utils import get_recent_pid
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
 
 
 class Test_Utils(object):
     def setup(self):
         self._app = app
+        self._app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         db.init_app(self._app)
         with self._app.app_context():
             self.user = User.query.filter_by(id=8).first()

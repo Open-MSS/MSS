@@ -39,11 +39,15 @@ except ImportError:
     ms = None
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
-from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DATA_DIR, BASE_DIR, STUB_CODE
+from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
+from mslib.mscolab.conf import STUB_CODE, DATA_DIR, BASE_DIR
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI, TEST_BASE_DIR, TEST_DATA_DIR
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
-def create_data():
-    if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
+def create_test_data():
+    create_mssdir()
+    if TEST_SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
             logging.info("""can't complete demodata setup,
                          use sqlite3 or configure mysql with proper modules""")
@@ -118,7 +122,42 @@ def create_data():
             db.session.commit()
 
         pass
-    elif SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
+    elif TEST_SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
+        # path_prepend = os.path.dirname(os.path.abspath(__file__))
+        fs_datadir = fs.open_fs(TEST_BASE_DIR)
+        if fs_datadir.exists('colabdata'):
+            fs_datadir.removetree('colabdata')
+        fs_datadir.makedir('colabdata')
+        fs_datadir = fs.open_fs(TEST_DATA_DIR)
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
+        if fs_datadir.exists('mscolab.db'):
+            logging.info("Database exists")
+        else:
+            if not fs_datadir.exists('filedata'):
+                fs_datadir.makedir('filedata')
+                # add files
+                file_dir = fs.open_fs(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata'))
+                # make directories
+                file_paths = ['one', 'two', 'three']
+                for file_path in file_paths:
+                    file_dir.makedir(file_path)
+                    file_dir.writetext('{}/main.ftml'.format(file_path), STUB_CODE)
+                    # initiate git
+                    r = git.Repo.init(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
+                    r.index.add(['main.ftml'])
+                    r.index.commit("initial commit")
+                file_dir.close()
+
+            fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
+
+    else:
+        pass
+
+
+def create_data():
+    create_mssdir()
+    if SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
         fs_datadir = fs.open_fs(BASE_DIR)
         if not fs_datadir.exists('colabdata'):
@@ -131,26 +170,21 @@ def create_data():
         else:
             if not fs_datadir.exists('filedata'):
                 fs_datadir.makedir('filedata')
-                # add files
-                file_dir = fs.open_fs(fs.path.combine(BASE_DIR, 'colabdata/filedata'))
-                # make directories
-                file_paths = ['one', 'two', 'three']
-                for file_path in file_paths:
-                    file_dir.makedir(file_path)
-                    file_dir.writetext('{}/main.ftml'.format(file_path), STUB_CODE)
-                    # initiate git
-                    r = git.Repo.init(fs.path.combine(BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
-                    r.index.add(['main.ftml'])
-                    r.index.commit("initial commit")
-                file_dir.close()
+            fs.copy.copy_file(mss_dir, 'mscolab_deploy.db.sample', fs_datadir, 'mscolab.db')
 
-            fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
 
-    else:
-        pass
+def create_mssdir():
+    fs_datadir = fs.open_fs('~')
+    basename = fs.path.basename(mss_default.mss_dir)
+    if not fs_datadir.exists(basename):
+        fs_datadir.makedir(basename)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Tool to setup data for usage of mscolab")
+    parser.add_argument("--test", "Make test demodata")
     args = parser.parse_args()
-    create_data()
+    if args.test:
+        create_test_data()
+    else:
+        create_data()

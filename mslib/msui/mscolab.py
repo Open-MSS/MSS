@@ -31,6 +31,8 @@
 
 from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_mscolab_window as ui
+from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
+from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.icons import icons
 from mslib.msui import flighttrack as ft
@@ -69,6 +71,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.fetch_ft.clicked.connect(self.reload_wps_from_server)
         self.autoSave.stateChanged.connect(self.autosave_emit)
         self.projWindow.clicked.connect(self.open_project_window)
+        self.addProject.clicked.connect(self.add_project_handler)
+        self.addUser.clicked.connect(self.add_user_handler)
 
         # int to store active pid
         self.active_pid = None
@@ -86,6 +90,65 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.id_count = 0
         # project window
         self.project_window = None
+
+    def add_project_handler(self):
+        if self.token is None:
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Please login to use this feature')
+            return
+        else:
+            logging.debug(self.token)
+        self.proj_diag = QtWidgets.QDialog()
+        self.add_proj_dialog = add_project_ui.Ui_addProjectDialog()
+        self.add_proj_dialog.setupUi(self.proj_diag)
+        self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
+        self.proj_diag.show()
+
+    def add_project(self):
+        path = self.add_proj_dialog.path.text()
+        description = self.add_proj_dialog.description.toPlainText()
+        data = {
+            "token": self.token,
+            "path": path,
+            "description": description
+        }
+        r = requests.post('{}/create_project'.format(mss_default.mscolab_server_url), data=data)
+        if r.text == "True":
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Your project was created successfully')
+            self.add_projects()
+        else:
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('The path already exists')
+
+    def add_user_handler(self):
+        self.user_diag = QtWidgets.QDialog()
+        self.add_user_dialog = add_user_ui.Ui_addUserDialog()
+        self.add_user_dialog.setupUi(self.user_diag)
+        self.add_user_dialog.buttonBox.accepted.connect(self.add_user)
+        self.user_diag.show()
+
+    def add_user(self):
+        emailid = self.add_user_dialog.emailid.text()
+        password = self.add_user_dialog.password.text()
+        re_password = self.add_user_dialog.rePassword.text()
+        username = self.add_user_dialog.username.text()
+        if password == re_password:
+            data = {
+                "email": emailid,
+                "password": password,
+                "username": username
+            }
+            r = requests.post('{}/register'.format(mss_default.mscolab_server_url), data=data)
+            if r.text == "True":
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage('You are registered, you can now log in.')
+            else:
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage('Oh no, your emailid is either invalid or taken')
+        else:
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Oh no, your passwords don\'t match')
 
     def open_project_window(self):
         if self.active_pid is None:
@@ -117,6 +180,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def authorize(self):
         emailid = self.emailid.text()
         password = self.password.text()
+        # to prevent someone nearby from seeing the id, password
+        self.emailid.setText('')
+        self.password.setText('')
         data = {
             "email": emailid,
             "password": password
@@ -136,22 +202,26 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.loggedInWidget.show()
             self.loginWidget.hide()
 
-            # add projects
-            data = {
-                "token": self.token
-            }
-            r = requests.get(mss_default.mscolab_server_url + '/projects', data=data)
-            _json = json.loads(r.text)
-            projects = _json["projects"]
-            self.add_projects_to_ui(projects)
+            self.add_projects()
 
             # create socket connection here
             self.conn = sc.ConnectionManager(self.token, user=self.user)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_autosave.connect(self.autosave_toggle)
 
+    def add_projects(self):
+        # add projects
+        data = {
+            "token": self.token
+        }
+        r = requests.get(mss_default.mscolab_server_url + '/projects', data=data)
+        _json = json.loads(r.text)
+        projects = _json["projects"]
+        self.add_projects_to_ui(projects)
+
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
+        self.listProjects.clear()
         for project in projects:
             project_desc = '{} - {}'.format(project['path'], project["access_level"])
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
@@ -189,6 +259,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         item.setFont(font)
 
     def reload_wps_from_server(self):
+        if self.active_pid is None:
+            return
         self.load_wps_from_server()
         for window in self.active_windows:
             # set active flight track
@@ -254,6 +326,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.id_count += 1
 
     def logout(self):
+        # check if autosave is enabled
+        # ToDo for non-admins who will get autosave hidden
+        self.w = QtWidgets.QWidget()
+        if (not self.autoSave.isChecked()) and (self.active_pid is not None):
+            qm = QtWidgets.QMessageBox
+            reply = qm.question(self.w, 'Continue?',
+                                'Autosave is disabled, save your changes locally before continuing!',
+                                qm.Yes,
+                                qm.No)
+            if reply == QtWidgets.QMessageBox.No:
+                return
         # delete token and show login widget-items
         self.token = None
         # delete active-project-id
@@ -267,6 +350,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.conn is not None:
             self.conn.disconnect()
             self.conn = None
+        # close all hanging window
+        for window in self.active_windows:
+            window.hide()
 
     def save_wp_mscolab(self, comment=None):
         if self.active_pid is not None:
