@@ -41,9 +41,11 @@ from mslib.mscolab.conf import SQLALCHEMY_DB_URI
 from mslib.mscolab.models import User, Project, Permission
 from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, TEST_DATA_DIR
 from mslib.mscolab.conf import STUB_CODE, TEST_SQLALCHEMY_DB_URI, DATA_DIR, BASE_DIR, TEST_BASE_DIR
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
 def create_test_data():
+    create_mssdir()
     if TEST_SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
             logging.info("""can't complete demodata setup,
@@ -153,6 +155,7 @@ def create_test_data():
 
 
 def create_data():
+    create_mssdir()
     if SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
         fs_datadir = fs.open_fs(BASE_DIR)
@@ -167,6 +170,13 @@ def create_data():
             if not fs_datadir.exists('filedata'):
                 fs_datadir.makedir('filedata')
             fs.copy.copy_file(mss_dir, 'mscolab_deploy.db.sample', fs_datadir, 'mscolab.db')
+
+
+def create_mssdir():
+    fs_datadir = fs.open_fs('~')
+    basename = fs.path.basename(mss_default.mss_dir)
+    if not fs_datadir.exists(basename):
+        fs_datadir.makedir(basename)
 
 
 if __name__ == '__main__':

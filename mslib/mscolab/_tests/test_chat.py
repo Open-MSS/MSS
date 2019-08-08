@@ -118,7 +118,7 @@ class Test_Chat(object):
                  "token": response['token'],
                  "message_text": "message from 1"
                  })
-        sio.sleep(2)
+        sio.sleep(4)
         with self.app.app_context():
             messages = cm.get_messages(1)
             assert len(messages) == 2
