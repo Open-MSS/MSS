@@ -32,7 +32,7 @@ import time
 import logging
 from flask import Flask
 
-from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.models import db, Message
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.server import app, sockio

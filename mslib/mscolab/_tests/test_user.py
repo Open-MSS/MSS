@@ -28,7 +28,7 @@ import json
 import time
 
 from mslib.mscolab.server import db, check_login, register_user, sockio, app
-from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.models import User
 

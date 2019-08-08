@@ -45,6 +45,7 @@ db.init_app(app)
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
+
 @app.route("/")
 def hello():
     return "Mscolab server"

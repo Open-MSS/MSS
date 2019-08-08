@@ -26,7 +26,7 @@
 from mslib.mscolab.server import db, app
 from mslib.mscolab.models import User
 from mslib.mscolab.utils import get_recent_pid
-from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
 
 
 class Test_Utils(object):

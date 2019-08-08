@@ -56,3 +56,13 @@ DATA_DIR = DATA_FS.root_path
 MSCOLAB_URL = 'http://localhost:8083'
 # mscolab test server's url
 MSCOLAB_URL_TEST = 'http://localhost:8084'
+
+
+# dir where mss output files are stored
+TEST_DATA_DIR = os.path.expanduser("/tmp/colabdata")
+TEST_BASE_DIR = os.path.expanduser("/tmp")
+TEST_SQLITE_FILE_PATH = os.path.join(TEST_DATA_DIR, 'mscolab.db')
+
+TEST_SQLALCHEMY_DB_URI = 'sqlite:///' + TEST_SQLITE_FILE_PATH
+# test data dir mscolab
+TEST_MSCOLAB_DATA_DIR = os.path.join(TEST_DATA_DIR, 'filedata')

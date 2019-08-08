@@ -32,7 +32,7 @@ from flask import Flask
 from functools import partial
 import time
 
-from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI, TEST_MSCOLAB_DATA_DIR
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI, TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
