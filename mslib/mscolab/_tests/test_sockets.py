@@ -48,7 +48,7 @@ class Test_Sockets(object):
         self.proc = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
-            kwargs={'port': 8083})
+            kwargs={'port': 8084})
         self.proc.start()
         try:
             outs, errs = self.proc.communicate(timeout=4)
