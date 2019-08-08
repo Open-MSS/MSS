@@ -42,6 +42,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
 app.config['SECRET_KEY'] = SECRET_KEY
 db.init_app(app)
 
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 @app.route("/")
 def hello():

@@ -48,7 +48,7 @@ class Test_Files(object):
         self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
-            kwargs={'port': 8083})
+            kwargs={'port': 8084})
         self.p.start()
         time.sleep(1)
         self.app = Flask(__name__)

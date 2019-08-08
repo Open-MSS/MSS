@@ -45,7 +45,7 @@ class Test_Chat(object):
         self.p = multiprocessing.Process(
             target=sockio.run,
             args=(app,),
-            kwargs={'port': 8083})
+            kwargs={'port': 8084})
         self.p.start()
         self.app = app
         db.init_app(self.app)

@@ -55,4 +55,4 @@ DATA_DIR = DATA_FS.root_path
 # deployed mscolab url
 MSCOLAB_URL = 'http://localhost:8083'
 # mscolab test server's url
-MSCOLAB_URL_TEST = 'http://localhost:8083'
+MSCOLAB_URL_TEST = 'http://localhost:8084'
