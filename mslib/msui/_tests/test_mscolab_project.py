@@ -31,6 +31,7 @@ import multiprocessing
 import time
 
 from mslib.mscolab.server import db, sockio, app
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.models import Message, Change
 import mslib.msui.mscolab as mc
 
@@ -39,6 +40,7 @@ class Test_Mscolab(object):
     def setup(self):
 
         # start mscolab server
+        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         self._app = app
         db.init_app(self._app)
         self.p = multiprocessing.Process(

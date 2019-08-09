@@ -372,7 +372,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window.btDeleteWayPoint.setEnabled(False)
             view_window.btInvertDirection.setEnabled(False)
 
-
     def logout(self):
         # check if autosave is enabled
         # ToDo for non-admins who will get autosave hidden

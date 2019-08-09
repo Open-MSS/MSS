@@ -31,6 +31,7 @@ import multiprocessing
 import time
 
 from mslib.mscolab.server import db, sockio, app
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.models import Project
 import mslib.msui.mscolab as mc
 
@@ -46,6 +47,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
 
         # start mscolab server
+        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         self._app = app
         db.init_app(self._app)
         self.p = multiprocessing.Process(
@@ -122,6 +124,7 @@ class Test_Mscolab(object):
         assert len(self.window.active_windows) == 3
 
     def test_save_fetch(self):
+
         self._login()
         self._activate_project_at_index(0)
         # change waypoint
