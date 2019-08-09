@@ -76,6 +76,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         # int to store active pid
         self.active_pid = None
+        # storing access_level to save network call
+        self.access_level = None
         # store active_flight_path here as object
         self.waypoints_model = None
         # store a reference of window in class
@@ -240,13 +242,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             project_desc = '{} - {}'.format(project['path'], project["access_level"])
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
             widgetItem.p_id = project["p_id"]
+            widgetItem.access_level = project["access_level"]
             self.listProjects.addItem(widgetItem)
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def set_active_pid(self, item):
         # set active_pid here
         self.active_pid = item.p_id
-
+        self.access_level = item.access_level
         # set active flightpath here
         self.load_wps_from_server()
 
@@ -341,6 +344,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
                                                        parent=self.listProjects,
                                                        _id=self.id_count)
+        if self.access_level == "viewer":
+            self.disable_navbar_action_buttons(_type, view_window)
+
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         view_window.show()
         view_window.viewClosesId.connect(self.handle_view_close)
@@ -348,6 +354,24 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         # increment id_count
         self.id_count += 1
+
+    def disable_navbar_action_buttons(self, _type, view_window):
+        """
+        _type: view type (topview, sideview, tableview)
+        """
+        if _type == "topview" or _type == "sideview":
+            actions = view_window.mpl.navbar.actions()
+            for action in actions:
+                action_text = action.text()
+                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
+                    action.setEnabled(False)
+        else:
+            # _type == tableview
+            view_window.btAddWayPointToFlightTrack.setEnabled(False)
+            view_window.btCloneWaypoint.setEnabled(False)
+            view_window.btDeleteWayPoint.setEnabled(False)
+            view_window.btInvertDirection.setEnabled(False)
+
 
     def logout(self):
         # check if autosave is enabled
