@@ -91,6 +91,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # project window
         self.project_window = None
 
+        # disable some buttons to be activated after successful login or project activate
+        self.addProject.setEnabled(False)
+        self.save_ft.setEnabled(False)
+        self.fetch_ft.setEnabled(False)
+        self.topview.setEnabled(False)
+        self.sideview.setEnabled(False)
+        self.tableview.setEnabled(False)
+        self.projWindow.setEnabled(False)
+        self.autoSave.setEnabled(False)
+
     def add_project_handler(self):
         if self.token is None:
             self.error_dialog = QtWidgets.QErrorMessage()
@@ -208,6 +218,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn = sc.ConnectionManager(self.token, user=self.user)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_autosave.connect(self.autosave_toggle)
+            # activate add project button here
+            self.addProject.setEnabled(True)
 
     def add_projects(self):
         # add projects
@@ -235,6 +247,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         # set active flightpath here
         self.load_wps_from_server()
+
+        # enable project specific buttons
+        self.save_ft.setEnabled(True)
+        self.fetch_ft.setEnabled(True)
+        self.topview.setEnabled(True)
+        self.sideview.setEnabled(True)
+        self.tableview.setEnabled(True)
+        self.projWindow.setEnabled(True)
+        self.autoSave.setEnabled(True)
+
         # configuring autosave button
         data = {
             "token": self.token,
