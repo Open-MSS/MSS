@@ -90,7 +90,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.id_count = 0
         # project window
         self.project_window = None
+        self.disable_action_buttons()
 
+    def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
         self.addProject.setEnabled(False)
         self.save_ft.setEnabled(False)
@@ -376,6 +378,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for window in self.active_windows:
             window.hide()
 
+        self.disable_action_buttons()
+
     def save_wp_mscolab(self, comment=None):
         if self.active_pid is not None:
             # to save to temp file
@@ -406,6 +410,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for index, window in enumerate(self.active_windows):
             if window._id == value:
                 del self.active_windows[index]
+                print("deleting window")
 
     @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex)
     def handle_data_change(self, index1, index2):
