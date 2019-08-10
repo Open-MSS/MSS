@@ -167,7 +167,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def open_project_window(self):
         if self.active_pid is None:
             return
-        view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn, parent=self.projWindow)
+        view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn,
+                                              self.access_level, parent=self.projWindow)
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         view_window.viewCloses.connect(self.close_project_window)
         view_window.reloadWindows.connect(self.reload_windows_slot)

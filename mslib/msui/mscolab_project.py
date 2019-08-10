@@ -44,7 +44,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
-    def __init__(self, token, p_id, conn, parent=None):
+    def __init__(self, token, p_id, conn, access_level, parent=None):
         """
         token: access_token
         p_id: project id
@@ -61,6 +61,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.token = token
         self.p_id = p_id
         self.conn = conn
+        self.access_level = access_level
         # add receive message handler
         self.conn.signal_message_receive.connect(self.render_new_message)
         logging.debug(ui.Ui_MscolabProject)
@@ -84,6 +85,14 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.user_info.setText("logged in as: {}".format(user_d["username"]))
         print(user_d, proj_d)
         self.proj_info.setText("Project name: {}".format(proj_d["path"]))
+        # disable admin actions if viewer or collaborator
+        if self.access_level == "collaborator" or self.access_level == "viewer":
+            self.add.setEnabled(False)
+            self.modify.setEnabled(False)
+            self.delete_1.setEnabled(False)
+        if self.access_level == "viewer":
+            self.checkout.setEnabled(False)
+            self.sendMessage.setEnabled(False)
 
     def get_user_details(self, token):
         """
