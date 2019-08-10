@@ -147,8 +147,9 @@ def messages():
 def create_project():
     path = request.values['path']
     description = request.values['description']
+    content = request.values.get('content', None)
     user = g.user
-    return str(fm.create_project(path, description, user))
+    return str(fm.create_project(path, description, user, content=content))
 
 
 @app.route('/get_project', methods=['GET'])
