@@ -45,7 +45,7 @@ class FileManager(object):
         else:
             self.data_dir = MSCOLAB_DATA_DIR
 
-    def create_project(self, path, description, user):
+    def create_project(self, path, description, user, content=None):
         """
         path: path to the project
         description: description of the project
@@ -68,7 +68,10 @@ class FileManager(object):
         data = fs.open_fs(self.data_dir)
         data.makedir(project.path)
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
-        project_file.write(STUB_CODE)
+        if content is not None:
+            project_file.write(content)
+        else:
+            project_file.write(STUB_CODE)
         project_path = fs.path.combine(self.data_dir, project.path)
         r = git.Repo.init(project_path)
         r.index.add(['main.ftml'])

@@ -222,6 +222,13 @@
                 </widget>
                </item>
                <item>
+                <widget class="QPushButton" name="export_2">
+                 <property name="text">
+                  <string>export</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QCheckBox" name="autoSave">
                  <property name="text">
                   <string>autosave</string>

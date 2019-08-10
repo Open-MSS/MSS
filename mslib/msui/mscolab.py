@@ -73,6 +73,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.projWindow.clicked.connect(self.open_project_window)
         self.addProject.clicked.connect(self.add_project_handler)
         self.addUser.clicked.connect(self.add_user_handler)
+        self.export_2.clicked.connect(self.handle_export)
 
         # int to store active pid
         self.active_pid = None
@@ -94,6 +95,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.project_window = None
         self.disable_action_buttons()
 
+    def handle_export(self):
+        # ToDo when autosave mode gets upgraded, have to fetch from remote
+        file_path = QtWidgets.QFileDialog.getSaveFileName()[0]
+        f_name = fs.path.basename(file_path)
+        f_dir = fs.open_fs(fs.path.dirname(file_path))
+        temp_name = 'tempfile_mscolab.ftml'
+        temp_dir = fs.open_fs(mss_default.mss_dir)
+        fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
+
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
         self.addProject.setEnabled(False)
@@ -104,6 +114,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.tableview.setEnabled(False)
         self.projWindow.setEnabled(False)
         self.autoSave.setEnabled(False)
+        self.export_2.setEnabled(False)
 
     def add_project_handler(self):
         if self.token is None:
@@ -115,8 +126,18 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.proj_diag = QtWidgets.QDialog()
         self.add_proj_dialog = add_project_ui.Ui_addProjectDialog()
         self.add_proj_dialog.setupUi(self.proj_diag)
+        self.add_proj_dialog.f_content = None
         self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
+        self.add_proj_dialog.browse.clicked.connect(self.set_exported_file)
         self.proj_diag.show()
+
+    def set_exported_file(self):
+        file_path = QtWidgets.QFileDialog.getOpenFileName()[0]
+        f_name = fs.path.basename(file_path)
+        f_dir = fs.open_fs(fs.path.dirname(file_path))
+        f_content = f_dir.readtext(f_name)
+        self.add_proj_dialog.f_content = f_content
+        self.add_proj_dialog.selectedFile.setText(f_name)
 
     def add_project(self):
         path = self.add_proj_dialog.path.text()
@@ -126,6 +147,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "path": path,
             "description": description
         }
+        if self.add_proj_dialog.f_content is not None:
+            data["content"] = self.add_proj_dialog.f_content
         r = requests.post('{}/create_project'.format(mss_default.mscolab_server_url), data=data)
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
@@ -262,6 +285,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.tableview.setEnabled(True)
         self.projWindow.setEnabled(True)
         self.autoSave.setEnabled(True)
+        self.export_2.setEnabled(True)
 
         # configuring autosave button
         data = {
