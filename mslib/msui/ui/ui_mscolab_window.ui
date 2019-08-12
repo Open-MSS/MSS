@@ -249,6 +249,13 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QLabel" name="autosaveStatus">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
             </layout>
