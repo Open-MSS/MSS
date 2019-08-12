@@ -493,7 +493,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # reload window
             self.reload_wps_from_server()
             self.autosaveStatus.setText("Autosave is enabled")
-            
+
         else:
             # disable autosave, enable save button
             self.save_ft.setEnabled(True)
