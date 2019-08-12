@@ -286,7 +286,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.projWindow.setEnabled(True)
         self.autoSave.setEnabled(True)
         self.export_2.setEnabled(True)
-
         # configuring autosave button
         data = {
             "token": self.token,
@@ -303,6 +302,19 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.fetch_ft.setEnabled(False)
             # connect data change to handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
+
+        # hide autosave button if access_level is non-admin
+        if self.access_level == "viewer" or self.access_level == "collaborator":
+            self.autoSave.setVisible(False)
+            # set autosave status
+            if _json["autosave"]:
+                self.autosaveStatus.setText("Autosave is enabled")
+            else:
+                self.autosaveStatus.setText("Autosave is disabled")
+        else:
+            self.autosaveStatus.setText("")
+            self.autoSave.setVisible(True)
+
         # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
@@ -425,6 +437,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # close all hanging window
         for window in self.active_windows:
             window.hide()
+        # show autosave button, and empty autosaveStatus
+        self.autoSave.setVisible(True)
+        self.autosaveStatus.setText("")
 
         self.disable_action_buttons()
 
@@ -477,6 +492,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.fetch_ft.setEnabled(False)
             # reload window
             self.reload_wps_from_server()
+            self.autosaveStatus.setText("Autosave is enabled")
+            
         else:
             # disable autosave, enable save button
             self.save_ft.setEnabled(True)
@@ -484,6 +501,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # connect change events viewwindow HERE to emit file-save
             # ToDo - remove hack to disconnect this handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
+            self.autosaveStatus.setText("Autosave is disabled")
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
