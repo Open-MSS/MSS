@@ -39,6 +39,8 @@ DB_USER = 'user'
 DB_PASSWORD = 'pass'
 DB_NAME = 'test_1'
 
+# SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
+
 # mscolab data directory #ToDo merge this with $MSS directory
 MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
