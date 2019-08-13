@@ -50,8 +50,16 @@ from mslib.mscolab.seed import seed_data, create_tables
 
 
 def create_test_data():
+    # for tempfile_mscolab.ftml
     create_mssdir()
-    if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
+    # creating test directory
+    fs_datadir = fs.open_fs(TEST_BASE_DIR)
+    if fs_datadir.exists('colabdata'):
+        fs_datadir.removetree('colabdata')
+    fs_datadir.makedir('colabdata')
+    fs_datadir = fs.open_fs(TEST_DATA_DIR)
+
+    if TEST_SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
             logging.info("""can't complete demodata setup,
                          use sqlite3 or configure mysql with proper modules""")
@@ -126,47 +134,47 @@ def create_test_data():
             db.session.commit()
 
         pass
-    elif SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
+    elif TEST_SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
-        fs_datadir = fs.open_fs(TEST_BASE_DIR)
-        if fs_datadir.exists('colabdata'):
-            fs_datadir.removetree('colabdata')
-        fs_datadir.makedir('colabdata')
-        fs_datadir = fs.open_fs(TEST_DATA_DIR)
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
         if fs_datadir.exists('mscolab.db'):
             logging.info("Database exists")
         else:
-            if not fs_datadir.exists('filedata'):
-                fs_datadir.makedir('filedata')
-                # add files
-                file_dir = fs.open_fs(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata'))
-                # make directories
-                file_paths = ['one', 'two', 'three']
-                for file_path in file_paths:
-                    file_dir.makedir(file_path)
-                    file_dir.writetext('{}/main.ftml'.format(file_path), STUB_CODE)
-                    # initiate git
-                    r = git.Repo.init(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
-                    r.index.add(['main.ftml'])
-                    r.index.commit("initial commit")
-                file_dir.close()
-
+            create_test_files()
             fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
 
-    elif SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
-        create_postgres()
-        seed_data()
+    elif TEST_SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
+        create_test_files()
+        create_postgres(seed=True)
 
 
-def create_postgres():
+def create_test_files():
+    fs_datadir = fs.open_fs(TEST_DATA_DIR)
+    if not fs_datadir.exists('filedata'):
+        fs_datadir.makedir('filedata')
+        # add files
+        file_dir = fs.open_fs(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata'))
+        # make directories
+        file_paths = ['one', 'two', 'three']
+        for file_path in file_paths:
+            file_dir.makedir(file_path)
+            file_dir.writetext('{}/main.ftml'.format(file_path), STUB_CODE)
+            # initiate git
+            r = git.Repo.init(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
+            r.index.add(['main.ftml'])
+            r.index.commit("initial commit")
+        file_dir.close()
+
+
+def create_postgres(seed=False):
     try:
         # if database exists it'll create tables
         create_tables()
     except Exception as e:
         logging.debug("database doesn't exist, creating one")
-        con = psycopg2.connect(dbname="template1", # ToDo change this to a default postgres db
+        logging.debug(e)
+        con = psycopg2.connect(dbname="template1",
                                user=DB_USER,
                                host=DB_HOST,
                                password=DB_PASSWORD)
@@ -174,8 +182,14 @@ def create_postgres():
         con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
         cur = con.cursor()
+        cur.execute("DROP DATABASE {};".format(DB_NAME))
         cur.execute("CREATE DATABASE {};".format(DB_NAME))
         create_tables()
+        if(seed is True):
+            try:
+                seed_data()
+            except Exception as e:
+                logging.debug(e)
 
 
 def create_data():

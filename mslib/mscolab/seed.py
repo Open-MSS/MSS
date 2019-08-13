@@ -23,24 +23,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-from flask import Flask, request, g
-import logging
-import json
-import datetime
-import functools
-from validate_email import validate_email
+from flask import Flask
 
 from mslib.mscolab.models import User, db, Permission, Project
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY
-from mslib.mscolab.sockets_manager import socketio as sockio, cm, fm
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
-# sockio.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
 app.config['SECRET_KEY'] = SECRET_KEY
 db.init_app(app)
+
 
 def seed_data():
     with app.app_context():
@@ -48,17 +41,21 @@ def seed_data():
         users = [{
             'username': 'a',
             'id': 8,
-            'password': '$6$rounds=656000$cPQdxVHb1tlkDNil$Ohb.ZDN350IBuoVozgTg3cmdMKRaBQCJ1KvHPjKyGhnygd.T6x6cyYVddWp/Hc9JFjT5cY9JNw75eTsG0kDt11',
+            'password': ("$6$rounds=656000$cPQdxVHb1tlkDNil$Ohb.",
+                         "ZDN350IBuoVozgTg3cmdMKRaBQCJ1KvHPjKyGhnygd.",
+                         "T6x6cyYVddWp/Hc9JFjT5cY9JNw75eTsG0kDt11"),
             'emailid': 'a'
-        },{
+        }, {
             'username': 'b',
             'id': 9,
-            'password': '$6$rounds=656000$DqUls/5/BfWuTReI$dJvxnZrsgeo.sKyIYBGn3ShJ.Ccm98Q6gWcETruuWIgBWxL7RtRwmUAQ0I6b2cGITR5ksTDN2KK8xPJEm4v6c1',
+            'password': ("$6$rounds=656000$DqUls/5/BfWuTReI$dJvxnZrsgeo.sKyIYBGn3ShJ.",
+                         "Ccm98Q6gWcETruuWIgBWxL7RtRwmUAQ0I6b2cGITR5ksTDN2KK8xPJEm4v6c1"),
             'emailid': 'b'
-        },{
+        }, {
             'username': 'c',
             'id': 10,
-            'password': '$6$rounds=656000$z5PgqRSetyiQh4FE$a/1R6JSPieTp32u4xnPY3OBremIQaHcBlmDeFqJ20WyDrd9f.EP.i4yIB/nykv9hmKfGakLJcCaGJ/mb.2uDe1',
+            'password': ('$6$rounds=656000$z5PgqRSetyiQh4FE$a/1R6JSPieTp32u4xnPY3O',
+                         'BremIQaHcBlmDeFqJ20WyDrd9f.EP.i4yIB/nykv9hmKfGakLJcCaGJ/mb.2uDe1'),
             'emailid': 'c'
         }]
         for user in users:
@@ -73,12 +70,12 @@ def seed_data():
             'path': 'one',
             'description': 'a, b',
             'autosave': False
-        },{
+        }, {
             'id': 2,
             'path': 'two',
             'description': 'b, c',
             'autosave': False
-        },{
+        }, {
             'id': 3,
             'path': 'three`',
             'description': 'a, c',
@@ -95,27 +92,27 @@ def seed_data():
             'u_id': 8,
             'p_id': 1,
             'access_level': "creator"
-        },{
+        }, {
             'u_id': 9,
             'p_id': 1,
             'access_level': "collaborator"
-        },{
+        }, {
             'u_id': 9,
             'p_id': 2,
             'access_level': "creator"
-        },{
+        }, {
             'u_id': 10,
             'p_id': 2,
             'access_level': "collaborator"
-        },{
+        }, {
             'u_id': 10,
             'p_id': 3,
             'access_level': "creator"
-        },{
+        }, {
             'u_id': 8,
             'p_id': 3,
             'access_level': "collaborator"
-        },{
+        }, {
             'u_id': 10,
             'p_id': 1,
             'access_level': "viewer"
@@ -128,4 +125,4 @@ def seed_data():
 
 def create_tables():
     with app.app_context():
-        db.create_all()    
+        db.create_all()

@@ -53,7 +53,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     identifier = None
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, data_dir=mss_default.mss_dir, mscolab_server_url=mss_default.mscolab_server_url):
         """Set up user interface
         """
         super(MSSMscolabWindow, self).__init__(parent)
@@ -94,6 +94,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # project window
         self.project_window = None
         self.disable_action_buttons()
+        # set data dir, uri
+        self.data_dir = data_dir
+        self.mscolab_server_url = mscolab_server_url
 
     def handle_export(self):
         # ToDo when autosave mode gets upgraded, have to fetch from remote
@@ -101,7 +104,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         f_name = fs.path.basename(file_path)
         f_dir = fs.open_fs(fs.path.dirname(file_path))
         temp_name = 'tempfile_mscolab.ftml'
-        temp_dir = fs.open_fs(mss_default.mss_dir)
+        temp_dir = fs.open_fs(self.data_dir)
         fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
 
     def disable_action_buttons(self):
@@ -149,7 +152,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        r = requests.post('{}/create_project'.format(mss_default.mscolab_server_url), data=data)
+        r = requests.post('{}/create_project'.format(self.mscolab_server_url), data=data)
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your project was created successfully')
@@ -176,7 +179,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 "password": password,
                 "username": username
             }
-            r = requests.post('{}/register'.format(mss_default.mscolab_server_url), data=data)
+            r = requests.post('{}/register'.format(self.mscolab_server_url), data=data)
             if r.text == "True":
                 self.error_dialog = QtWidgets.QErrorMessage()
                 self.error_dialog.showMessage('You are registered, you can now log in.')
@@ -191,7 +194,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.active_pid is None:
             return
         view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn,
-                                              self.access_level, parent=self.projWindow)
+                                              self.access_level, parent=self.projWindow,
+                                              mscolab_server_url=self.mscolab_server_url)
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         view_window.viewCloses.connect(self.close_project_window)
         view_window.reloadWindows.connect(self.reload_windows_slot)
@@ -225,7 +229,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "email": emailid,
             "password": password
         }
-        r = requests.post(mss_default.mscolab_server_url + '/token', data=data)
+        r = requests.post(self.mscolab_server_url + '/token', data=data)
         if r.text == "False":
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
@@ -243,7 +247,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.add_projects()
 
             # create socket connection here
-            self.conn = sc.ConnectionManager(self.token, user=self.user)
+            self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_autosave.connect(self.autosave_toggle)
             # activate add project button here
@@ -254,7 +258,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         data = {
             "token": self.token
         }
-        r = requests.get(mss_default.mscolab_server_url + '/projects', data=data)
+        r = requests.get(self.mscolab_server_url + '/projects', data=data)
         _json = json.loads(r.text)
         projects = _json["projects"]
         self.add_projects_to_ui(projects)
@@ -291,7 +295,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "token": self.token,
             "p_id": self.active_pid
         }
-        r = requests.get(mss_default.mscolab_server_url + '/project_details', data=data)
+        r = requests.get(self.mscolab_server_url + '/project_details', data=data)
         _json = json.loads(r.text)
         if _json["autosave"] is True:
             # one time activate
@@ -338,11 +342,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "token": self.token,
             "p_id": self.active_pid
         }
-        r = requests.get(mss_default.mscolab_server_url + '/get_project', data=data)
+        r = requests.get(self.mscolab_server_url + '/get_project', data=data)
         ftml = json.loads(r.text)["content"]
-        data_dir = fs.open_fs(mss_default.mss_dir)
+        data_dir = fs.open_fs(self.data_dir)
         data_dir.writetext('tempfile_mscolab.ftml', ftml)
-        fname_temp = fs.path.combine(mss_default.mss_dir, 'tempfile_mscolab.ftml')
+        fname_temp = fs.path.combine(self.data_dir, 'tempfile_mscolab.ftml')
         self.fname_temp = fname_temp
         self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
 

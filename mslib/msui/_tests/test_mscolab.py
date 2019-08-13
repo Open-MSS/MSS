@@ -30,8 +30,8 @@ import logging
 import multiprocessing
 import time
 
-from mslib.mscolab.server import db, sockio, app
-from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
+from mslib.mscolab.server import db, app, initialize_managers, start_server
+from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI, TEST_MSCOLAB_DATA_DIR, MSCOLAB_URL_TEST
 from mslib.mscolab.models import Project
 import mslib.msui.mscolab as mc
 
@@ -40,21 +40,24 @@ class Test_Mscolab(object):
     def setup(self):
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mc.MSSMscolabWindow()
+        self.window = mc.MSSMscolabWindow(data_dir=TEST_MSCOLAB_DATA_DIR, mscolab_server_url=MSCOLAB_URL_TEST)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-        # start mscolab server
-        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
-        self._app = app
-        db.init_app(self._app)
+        self.app = app
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.fm = fm
+        self.cm = cm
         self.p = multiprocessing.Process(
-            target=sockio.run,
-            args=(app,),
-            kwargs={'port': 8083})
+            target=start_server,
+            args=(self.app, sockio, cm, fm,),
+            kwargs={'port': 8084})
         self.p.start()
+        db.init_app(self.app)
         time.sleep(1)
 
     def teardown(self):
@@ -160,7 +163,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         # sleeping to let server do the change
         time.sleep(3)
-        with self._app.app_context():
+        with self.app.app_context():
             project = Project.query.filter_by(id=self.window.active_pid).first()
         assert project.autosave is self.window.autoSave.isChecked()
         QtTest.QTest.mouseClick(self.window.autoSave, QtCore.Qt.LeftButton,
