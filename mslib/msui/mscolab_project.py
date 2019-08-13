@@ -44,7 +44,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
-    def __init__(self, token, p_id, conn, access_level, parent=None):
+    def __init__(self, token, p_id, conn, access_level, parent=None, mscolab_server_url=MSCOLAB_URL):
         """
         token: access_token
         p_id: project id
@@ -53,6 +53,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         """
         super(MSColabProjectWindow, self).__init__(parent)
         self.setupUi(self)
+        # set url
+        self.mscolab_server_url = mscolab_server_url
 
         # constrain vertical layout
         # self.verticalLayout.setSizeConstraint(self.verticalLayout_6.SetMinimumSize)
@@ -101,7 +103,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         data = {
             'token': token
         }
-        r = requests.get(MSCOLAB_URL + '/user', data=data)
+        r = requests.get(self.mscolab_server_url + '/user', data=data)
         json_ = json.loads(r.text)
         return json_['user']
 
@@ -113,7 +115,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             'token': self.token,
             'p_id': p_id
         }
-        r = requests.get(MSCOLAB_URL + '/project_details', data=data)
+        r = requests.get(self.mscolab_server_url + '/project_details', data=data)
         json_ = json.loads(r.text)
         return json_
 
@@ -136,7 +138,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "username": username,
             "access_level": access_level
         }
-        r = requests.post(MSCOLAB_URL + '/add_permission', data=data)
+        r = requests.post(self.mscolab_server_url + '/add_permission', data=data)
         if r.text == "True":
             self.load_users()
         else:
@@ -154,7 +156,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "username": username,
             "access_level": access_level
         }
-        r = requests.post(MSCOLAB_URL + '/modify_permission', data=data)
+        r = requests.post(self.mscolab_server_url + '/modify_permission', data=data)
         if r.text == "True":
             self.load_users()
         else:
@@ -171,7 +173,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "p_id": p_id,
             "username": username
         }
-        r = requests.post(MSCOLAB_URL + '/revoke_permission', data=data)
+        r = requests.post(self.mscolab_server_url + '/revoke_permission', data=data)
         if r.text == "True":
             self.load_users()
         else:
@@ -186,7 +188,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "token": self.token,
             "p_id": self.p_id
         }
-        r = requests.get(MSCOLAB_URL + '/authorized_users', data=data)
+        r = requests.get(self.mscolab_server_url + '/authorized_users', data=data)
         if r.text == "False":
             # show QMessageBox errors here
             pass
@@ -220,7 +222,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "p_id": self.p_id
         }
         # 'get all changes' request
-        r = requests.get(MSCOLAB_URL + '/get_changes', data=data)
+        r = requests.get(self.mscolab_server_url + '/get_changes', data=data)
         changes = json.loads(r.text)["changes"]
         self.changes.clear()
         self.active_ch_id = None
@@ -259,7 +261,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "ch_id": self.active_ch_id
         }
         # 'undo' request
-        r = requests.post(MSCOLAB_URL + '/undo', data=data)
+        r = requests.post(self.mscolab_server_url + '/undo', data=data)
         if r.text == "True":
             # reload windows
             self.reloadWindows.emit()
@@ -272,7 +274,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "timestamp": datetime.datetime(1970, 1, 1).strftime("%m %d %Y, %H:%M:%S")
         }
         # returns an array of messages
-        r = requests.post(MSCOLAB_URL + "/messages", data=data)
+        r = requests.post(self.mscolab_server_url + "/messages", data=data)
         response = json.loads(r.text)
 
         messages = response["messages"]

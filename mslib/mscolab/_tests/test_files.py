@@ -28,15 +28,13 @@ import requests
 import multiprocessing
 import json
 import os
-from flask import Flask
 from functools import partial
 import time
 
 from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI, TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
-from mslib.mscolab.sockets_manager import fm
 from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib.mscolab.server import app, sockio
+from mslib.mscolab.server import app, initialize_managers, start_server
 from mslib.mscolab.utils import get_recent_pid
 
 
@@ -44,27 +42,30 @@ class Test_Files(object):
     def setup(self):
         self.sockets = []
         self.file_message_counter = [0] * 2
-        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app = app
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.fm = fm
+        self.cm = cm
         self.p = multiprocessing.Process(
-            target=sockio.run,
-            args=(app,),
+            target=start_server,
+            args=(self.app, sockio, cm, fm,),
             kwargs={'port': 8084})
         self.p.start()
-        time.sleep(1)
-        self.app = Flask(__name__)
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
         db.init_app(self.app)
+        time.sleep(1)
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
 
     def test_create_project(self):
         with self.app.app_context():
             # test for blank character in path
-            assert fm.create_project('test path', 'test desc.', self.user) is False
+            assert self.fm.create_project('test path', 'test desc.', self.user) is False
             # test for normal path
-            assert fm.create_project('test_path', 'test desc.', self.user) is True
+            assert self.fm.create_project('test_path', 'test desc.', self.user) is True
             # test for '/' in path
-            assert fm.create_project('test/path', 'sth', self.user) is False
+            assert self.fm.create_project('test/path', 'sth', self.user) is False
             # check file existence
             assert os.path.exists(os.path.join(TEST_MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db
@@ -77,24 +78,24 @@ class Test_Files(object):
 
     def test_projects(self):
         with self.app.app_context():
-            projects = fm.list_projects(self.user)
+            projects = self.fm.list_projects(self.user)
             assert len(projects) == 3
 
     def test_add_permission(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
-            assert fm.add_permission(p_id, 9, None, 'collaborator', self.user) is True
+            p_id = get_recent_pid(self.fm, self.user)
+            assert self.fm.add_permission(p_id, 9, None, 'collaborator', self.user) is True
             user2 = User.query.filter_by(id=9).first()
-            projects = fm.list_projects(user2)
+            projects = self.fm.list_projects(user2)
             assert len(projects) == 3
 
     def test_modify_permission(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
+            p_id = get_recent_pid(self.fm, self.user)
             # modifying permission to 'viewer'
-            assert fm.update_access_level(p_id, 9, None, 'viewer', self.user) is True
+            assert self.fm.update_access_level(p_id, 9, None, 'viewer', self.user) is True
             user2 = User.query.filter_by(id=9).first()
-            projects = fm.list_projects(user2)
+            projects = self.fm.list_projects(user2)
             assert projects[-1]["access_level"] == "viewer"
 
     def test_file_save(self):
@@ -120,7 +121,7 @@ class Test_Files(object):
         sio1.connect(MSCOLAB_URL_TEST)
         sio2.connect(MSCOLAB_URL_TEST)
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
+            p_id = get_recent_pid(self.fm, self.user)
             user2 = User.query.filter_by(id=9).first()
             sio1.emit('start', response1)
             sio2.emit('start', response2)
@@ -142,12 +143,12 @@ class Test_Files(object):
             assert self.file_message_counter[0] == 2
             assert self.file_message_counter[1] == 2
             # check if content is saved in file
-            assert fm.get_file(p_id, user2) == "no ive changed the file now"
+            assert self.fm.get_file(p_id, user2) == "no ive changed the file now"
             # check if change is saved properly
-            changes = fm.get_changes(p_id, self.user)
+            changes = self.fm.get_changes(p_id, self.user)
             assert len(changes) == 2
             change = Change.query.first()
-            change_function_result = fm.get_change_by_id(change.id, self.user)
+            change_function_result = self.fm.get_change_by_id(change.id, self.user)
             assert change.content == change_function_result['content']
             # to disconnect sockets later
             self.sockets.append(sio1)
@@ -155,52 +156,52 @@ class Test_Files(object):
 
     def test_undo(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
+            p_id = get_recent_pid(self.fm, self.user)
             changes = Change.query.filter_by(p_id=p_id).all()
-            assert fm.undo(changes[0].id, self.user) is True
-            assert len(fm.get_changes(p_id, self.user)) == 3
-            assert fm.get_file(p_id, self.user) == "test"
+            assert self.fm.undo(changes[0].id, self.user) is True
+            assert len(self.fm.get_changes(p_id, self.user)) == 3
+            assert self.fm.get_file(p_id, self.user) == "test"
 
     def test_revoke_permission(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
-            assert fm.update_access_level(p_id, 9, None, 'admin', self.user) is True
+            p_id = get_recent_pid(self.fm, self.user)
+            assert self.fm.update_access_level(p_id, 9, None, 'admin', self.user) is True
             user2 = User.query.filter_by(id=9).first()
             # returns false because non-creator can't revoke permission of creator
-            assert fm.revoke_permission(p_id, 8, None, user2) is False
-            assert fm.revoke_permission(p_id, 9, None, self.user) is True
-            projects = fm.list_projects(user2)
+            assert self.fm.revoke_permission(p_id, 8, None, user2) is False
+            assert self.fm.revoke_permission(p_id, 9, None, self.user) is True
+            projects = self.fm.list_projects(user2)
             assert len(projects) == 2
 
     def test_get_project(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
-            assert fm.get_file(p_id, self.user) is not False
+            p_id = get_recent_pid(self.fm, self.user)
+            assert self.fm.get_file(p_id, self.user) is not False
             user2 = User.query.filter_by(id=9).first()
-            assert fm.get_file(p_id, user2) is False
+            assert self.fm.get_file(p_id, user2) is False
 
     def test_authorized_users(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
-            assert len(fm.get_authorized_users(p_id)) == 1
+            p_id = get_recent_pid(self.fm, self.user)
+            assert len(self.fm.get_authorized_users(p_id)) == 1
 
     def test_modify_project(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
+            p_id = get_recent_pid(self.fm, self.user)
             # testing for wrong characters in path like ' ', '/'
-            assert fm.update_project(p_id, 'path', 'dummy wrong', self.user) is False
-            assert fm.update_project(p_id, 'path', 'dummy/wrong', self.user) is False
-            assert fm.update_project(p_id, 'path', 'dummy', self.user) is True
+            assert self.fm.update_project(p_id, 'path', 'dummy wrong', self.user) is False
+            assert self.fm.update_project(p_id, 'path', 'dummy/wrong', self.user) is False
+            assert self.fm.update_project(p_id, 'path', 'dummy', self.user) is True
             assert os.path.exists(os.path.join(TEST_MSCOLAB_DATA_DIR, 'dummy'))
-            assert fm.update_project(p_id, 'description', 'dummy', self.user) is True
+            assert self.fm.update_project(p_id, 'description', 'dummy', self.user) is True
 
     def test_delete_project(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.user)
+            p_id = get_recent_pid(self.fm, self.user)
             user2 = User.query.filter_by(id=9).first()
-            assert fm.delete_file(p_id, user2) is False
-            assert fm.delete_file(p_id, self.user) is True
-            assert fm.delete_file(p_id, self.user) is False
+            assert self.fm.delete_file(p_id, user2) is False
+            assert self.fm.delete_file(p_id, self.user) is True
+            assert self.fm.delete_file(p_id, self.user) is False
             permissions = Permission.query.filter_by(p_id=p_id).all()
             assert len(permissions) == 0
             projects_db = Project.query.filter_by(id=p_id).all()

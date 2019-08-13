@@ -27,27 +27,30 @@ import multiprocessing
 import json
 import time
 
-from mslib.mscolab.server import db, check_login, register_user, sockio, app
+from mslib.mscolab.server import db, check_login, register_user, app, initialize_managers, start_server
 from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
-from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib._tests.constants import MSCOLAB_URL_TEST, TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.models import User
 
 
 class Test_UserMethods(object):
 
     def setup(self):
-        self._app = app
-        db.init_app(self._app)
-        self._app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app = app
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.cm = cm
         self.p = multiprocessing.Process(
-            target=sockio.run,
-            args=(app,),
+            target=start_server,
+            args=(self.app, sockio, cm, fm,),
             kwargs={'port': 8084})
         self.p.start()
-        time.sleep(1)
+        db.init_app(self.app)
+        time.sleep(3)
 
     def test_registration(self):
-        with self._app.app_context():
+        with self.app.app_context():
             x = register_user('sdf@s.com', 'sdf', 'sdf')
             assert x == 'True'
             x = register_user('sdf@s.com', 'sdf', 'sdf')
@@ -56,7 +59,7 @@ class Test_UserMethods(object):
             assert x == 'False'
 
     def test_login(self):
-        with self._app.app_context():
+        with self.app.app_context():
             x = check_login('sdf@s.com', 'sdf')
             assert x is not None
             x = check_login('sdf@s.com', 'fd')
@@ -88,7 +91,7 @@ class Test_UserMethods(object):
         assert r.text == "False"
 
     def teardown(self):
-        with self._app.app_context():
+        with self.app.app_context():
             User.query.filter_by(emailid="sdf@s.com").delete()
             User.query.filter_by(emailid="sdf@s1.com").delete()
             db.session.commit()

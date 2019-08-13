@@ -34,16 +34,20 @@ from mslib.mscolab.chat_manager import ChatManager
 from mslib.mscolab.file_manager import FileManager
 
 socketio = SocketIO()
-cm = ChatManager()
-fm = FileManager()
 
 
 class SocketsManager(object):
     """Class with handler functions for socket related"""
 
-    def __init__(self):
+    def __init__(self, chat_manager, file_manager):
+        """
+        chat_manager: Instance of ChatManager
+        file_manager: Instance of FileManager
+        """
         super(SocketsManager, self).__init__()
         self.sockets = []
+        self.cm = chat_manager
+        self.fm = file_manager
 
     def handle_connect(self):
         logging.debug(request.sid)
@@ -97,7 +101,7 @@ class SocketsManager(object):
         user = User.verify_auth_token(_json['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         if perm:
-            cm.add_message(user, _json['message_text'], str(p_id))
+            self.cm.add_message(user, _json['message_text'], str(p_id))
             socketio.emit('chat-message-client', json.dumps({'user': user.username,
                                                             'message_text': _json['message_text']}),
                           room=str(p_id))
@@ -139,10 +143,10 @@ class SocketsManager(object):
         user = User.verify_auth_token(json_req['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         # if permission is correct and file saved properly
-        if perm and fm.save_file(int(p_id), content, user, comment):
+        if perm and self.fm.save_file(int(p_id), content, user, comment):
             # send service message
             message_ = "[service message] saved changes"
-            cm.add_message(user, message_, str(p_id))
+            self.cm.add_message(user, message_, str(p_id))
             socketio.emit('chat-message-client', json.dumps({'user': user.username,
                                                             'message_text': message_}),
                           room=str(p_id))
@@ -163,19 +167,23 @@ class SocketsManager(object):
         if not self.permission_check_admin(user.id, p_id):
             return
         if enable:
-            fm.update_project(int(p_id), 'autosave', 1, user)
+            self.fm.update_project(int(p_id), 'autosave', 1, user)
             socketio.emit('autosave-client-en', json.dumps({"p_id": p_id}))
         else:
-            fm.update_project(int(p_id), 'autosave', 0, user)
+            self.fm.update_project(int(p_id), 'autosave', 0, user)
             socketio.emit('autosave-client-db', json.dumps({"p_id": p_id}))
 
 
-sm = SocketsManager()
+def setup_managers(app):
 
-# sockets related handlers
-socketio.on_event('connect', sm.handle_connect)
-socketio.on_event('start', sm.handle_start_event)
-socketio.on_event('disconnect', sm.handle_disconnect)
-socketio.on_event('chat-message', sm.handle_message)
-socketio.on_event('file-save', sm.handle_file_save)
-socketio.on_event('autosave', sm.handle_autosave_enable)
+    cm = ChatManager()
+    fm = FileManager(app.config["MSCOLAB_DATA_DIR"])
+    sm = SocketsManager(cm, fm)
+    # sockets related handlers
+    socketio.on_event('connect', sm.handle_connect)
+    socketio.on_event('start', sm.handle_start_event)
+    socketio.on_event('disconnect', sm.handle_disconnect)
+    socketio.on_event('chat-message', sm.handle_message)
+    socketio.on_event('file-save', sm.handle_file_save)
+    socketio.on_event('autosave', sm.handle_autosave_enable)
+    return (socketio, cm, fm)
