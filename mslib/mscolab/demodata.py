@@ -32,6 +32,9 @@ from flask import Flask
 import logging
 import argparse
 import git
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+
 
 try:
     import MySQLdb as ms
@@ -43,11 +46,12 @@ from mslib.mscolab.conf import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
 from mslib.mscolab.conf import STUB_CODE, DATA_DIR, BASE_DIR
 from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI, TEST_BASE_DIR, TEST_DATA_DIR
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.mscolab.seed import seed_data, create_tables
 
 
 def create_test_data():
     create_mssdir()
-    if TEST_SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
+    if SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
             logging.info("""can't complete demodata setup,
                          use sqlite3 or configure mysql with proper modules""")
@@ -122,7 +126,7 @@ def create_test_data():
             db.session.commit()
 
         pass
-    elif TEST_SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
+    elif SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
         fs_datadir = fs.open_fs(TEST_BASE_DIR)
         if fs_datadir.exists('colabdata'):
@@ -151,8 +155,27 @@ def create_test_data():
 
             fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
 
-    else:
-        pass
+    elif SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
+        create_postgres()
+        seed_data()
+
+
+def create_postgres():
+    try:
+        # if database exists it'll create tables
+        create_tables()
+    except Exception as e:
+        logging.debug("database doesn't exist, creating one")
+        con = psycopg2.connect(dbname="template1", # ToDo change this to a default postgres db
+                               user=DB_USER,
+                               host=DB_HOST,
+                               password=DB_PASSWORD)
+
+        con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+
+        cur = con.cursor()
+        cur.execute("CREATE DATABASE {};".format(DB_NAME))
+        create_tables()
 
 
 def create_data():
@@ -171,6 +194,8 @@ def create_data():
             if not fs_datadir.exists('filedata'):
                 fs_datadir.makedir('filedata')
             fs.copy.copy_file(mss_dir, 'mscolab_deploy.db.sample', fs_datadir, 'mscolab.db')
+    elif SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
+        create_postgres()
 
 
 def create_mssdir():
@@ -182,7 +207,7 @@ def create_mssdir():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Tool to setup data for usage of mscolab")
-    parser.add_argument("--test", "Make test demodata")
+    parser.add_argument("--test", action="store_true")
     args = parser.parse_args()
     if args.test:
         create_test_data()
