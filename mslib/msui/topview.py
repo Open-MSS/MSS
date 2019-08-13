@@ -280,7 +280,10 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             if proj_params["fixed"] is True:
                 kwargs.update({"fixed": True})
             else:
-                kwargs.update(current_map["map"])
+                try:
+                    kwargs.update(current_map["map"])
+                except KeyError:
+                    pass
                 kwargs.update({"fixed": False})
 
         if only_kwargs:

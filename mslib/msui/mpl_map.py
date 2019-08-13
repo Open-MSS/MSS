@@ -333,6 +333,10 @@ class MapCanvas():
                 for key in (_x for _x in proj_keys if _x in self.kwargs):
                     del self.kwargs[key]
             require_new_axis = True
+            map_keys = ('llcrnrlon', 'llcrnrlat', 'urcrnrlon', 'urcrnrlat')
+            for key in map_keys:
+                if key in self.kwargs:
+                    del self.kwargs[key]
             self.kwargs.update(kwargs_update)
 
         kwargs = self.kwargs
@@ -352,9 +356,13 @@ class MapCanvas():
                 if kwargs["fixed"] is True:
                     ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
                 else:
-                    BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
-                    ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
-                    ax.set_extent(BBOX)
+                    try:
+                        BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+                        ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
+                        ax.set_extent(BBOX)
+                    except KeyError:
+                        ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
+                        pass
             self.ax = ax
         self.fig.canvas.draw()
         self.init_features(self.appearance)
