@@ -63,6 +63,12 @@ class ConnectionManager(QtCore.QObject):
         message = json.loads(message)
         self.signal_reload.emit(message["p_id"])
 
+    def handle_new_room(self, p_id):
+        logging.debug("adding user to new room")
+        self.sio.emit('add-user-to-room', {
+                      "p_id": p_id,
+                      "token": self.token})
+
     def send_message(self, message_text, p_id):
         logging.debug("sending message")
         self.sio.emit('chat-message', {

@@ -169,6 +169,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your project was created successfully')
             self.add_projects()
+            p_id = self.get_recent_pid()
+            self.conn.handle_new_room(p_id)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
@@ -274,6 +276,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         _json = json.loads(r.text)
         projects = _json["projects"]
         self.add_projects_to_ui(projects)
+
+    def get_recent_pid(self):
+        # add projects
+        data = {
+            "token": self.token
+        }
+        r = requests.get(self.mscolab_server_url + '/projects', data=data)
+        _json = json.loads(r.text)
+        projects = _json["projects"]
+        return projects[-1]["p_id"]
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
