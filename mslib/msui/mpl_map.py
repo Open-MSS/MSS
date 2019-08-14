@@ -164,7 +164,7 @@ class MapCanvas():
 
         self.image = None
 
-        self.gl = self.ax.gridlines(crs=self.ax.projection)
+        self.gl = self.ax.gridlines()
         self.gl.xlabels_top = False
         self.gl.xlines = False
         self.gl.ylines = False
