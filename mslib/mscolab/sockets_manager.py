@@ -52,6 +52,14 @@ class SocketsManager(object):
     def handle_connect(self):
         logging.debug(request.sid)
 
+    def join_user_to_room(self, json):
+        token = json['token']
+        user = User.verify_auth_token(token)
+        if not user:
+            return
+        p_id = json['p_id']
+        join_room(str(p_id))
+
     def handle_start_event(self, json):
         """
         json is a dictionary version of data sent to backend
@@ -186,4 +194,5 @@ def setup_managers(app):
     socketio.on_event('chat-message', sm.handle_message)
     socketio.on_event('file-save', sm.handle_file_save)
     socketio.on_event('autosave', sm.handle_autosave_enable)
+    socketio.on_event('add-user-to-room', sm.join_user_to_room)
     return (socketio, cm, fm)
