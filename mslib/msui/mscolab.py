@@ -136,6 +136,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def set_exported_file(self):
         file_path = QtWidgets.QFileDialog.getOpenFileName()[0]
+        if file_path == "":
+            return
         f_name = fs.path.basename(file_path)
         f_dir = fs.open_fs(fs.path.dirname(file_path))
         f_content = f_dir.readtext(f_name)
@@ -145,6 +147,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def add_project(self):
         path = self.add_proj_dialog.path.text()
         description = self.add_proj_dialog.description.toPlainText()
+        # ToDo if path and description is null alert user
+        if not path:
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Path can\'t be empty')
+            return
+        elif not description:
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Description can\'t be empty')
+            return
+
         data = {
             "token": self.token,
             "path": path,
