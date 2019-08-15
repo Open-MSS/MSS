@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 1.8.2
+-------------
+
+Bug Fixes:
+   - mss server requires long time to provide capabilities document, #432
+
+Other Changes:
+  - hint in docs for mod_wsgi, #415
+
 
 Version 1.8.1
 -------------
