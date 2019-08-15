@@ -30,7 +30,7 @@ from builtins import str
 
 import logging
 import functools
-from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import QtCore
@@ -208,38 +208,29 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         return settings_dict
 
     def verticalunitsclicked(self, index):
+        units = {"pressure": "hPa", "pressure altitude": "km", "flight level": "hft"}
         _translate = QtCore.QCoreApplication.translate
-        unit = self.cbVerticalAxis.model().itemFromIndex(index)
-        currentunit = self.cbVerticalAxis.currentText()
+        unit = units[self.cbVerticalAxis.model().itemFromIndex(index).text()]
+        currentunit = units[self.cbVerticalAxis.currentText()]
+        if unit == currentunit:
+            return
         self.setBotTopLimits("maximum")
-        if unit.text() == "pressure":
-            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
-            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
-            if currentunit == "pressure altitude":
-                self.sbPbot.setValue(thermolib.flightlevel2pressure(self.sbPbot.value() * 32.80) / 100)
-                self.sbPtop.setValue(thermolib.flightlevel2pressure(self.sbPtop.value() * 32.80) / 100)
-            elif currentunit == "flight level":
-                self.sbPbot.setValue(thermolib.flightlevel2pressure(self.sbPbot.value()) / 100)
-                self.sbPtop.setValue(thermolib.flightlevel2pressure(self.sbPtop.value()) / 100)
-        elif unit.text() == "pressure altitude":
-            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " km"))
-            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " km"))
-            if currentunit == "pressure":
-                self.sbPbot.setValue(thermolib.pressure2flightlevel(self.sbPbot.value() * 100) * 0.03048)
-                self.sbPtop.setValue(thermolib.pressure2flightlevel(self.sbPtop.value() * 100) * 0.03048)
-            elif currentunit == "flight level":
-                self.sbPbot.setValue(self.sbPbot.value() * 0.03048)
-                self.sbPtop.setValue(self.sbPtop.value() * 0.03048)
-        elif unit.text() == "flight level":
-            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hft"))
-            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hft"))
-            if currentunit == "pressure":
-                self.sbPbot.setValue(thermolib.pressure2flightlevel(self.sbPbot.value() * 100))
-                self.sbPtop.setValue(thermolib.pressure2flightlevel(self.sbPtop.value() * 100))
-            elif currentunit == "pressure altitude":
-                self.sbPbot.setValue(self.sbPbot.value() * 32.80)
-                self.sbPtop.setValue(self.sbPtop.value() * 32.80)
-        self.setBotTopLimits(unit.text())
+        self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " " + unit))
+        self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " " + unit))
+        if unit == "hPa":
+            self.sbPtop.setValue(thermolib.flightlevel2pressure(
+                convert_to(self.sbPtop.value(), currentunit, "hft", 1)) / 100)
+            self.sbPbot.setValue(thermolib.flightlevel2pressure(
+                convert_to(self.sbPbot.value(), currentunit, "hft", 1)) / 100)
+        elif currentunit == "hPa":
+            self.sbPtop.setValue(convert_to(
+                thermolib.pressure2flightlevel(self.sbPtop.value() * 100), "hft", unit))
+            self.sbPbot.setValue(convert_to(
+                thermolib.pressure2flightlevel(self.sbPbot.value() * 100), "hft", unit))
+        else:
+            self.sbPtop.setValue(convert_to(self.sbPtop.value(), currentunit, unit, 1))
+            self.sbPbot.setValue(convert_to(self.sbPbot.value(), currentunit, unit, 1))
+        self.setBotTopLimits(self.cbVerticalAxis.model().itemFromIndex(index).text())
 
 
 class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
