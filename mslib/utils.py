@@ -303,31 +303,31 @@ def get_projection_params(proj):
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
                 "basemap": {"projection": ccrs.Stereographic(central_latitude=lat_0, central_longitude=lon_0)},
-                "bbox": "degree"}
+                "bbox": "degree", "fixed": True}
         elif epsg.startswith("778") and len(epsg) == 8:  # user defined MSS code. deprecated.
             logging.warning("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
                 "basemap": {"projection": ccrs.Stereographic(central_latitude=-lat_0, central_longitude=lon_0)},
-                "bbox": "degree"}
+                "bbox": "degree", "fixed": True}
         elif epsg in ("4326"):
-            proj_params = {"basemap": {"projection": ccrs.PlateCarree()}, "bbox": "degree"}
+            proj_params = {"basemap": {"projection": ccrs.PlateCarree()}, "bbox": "degree", "fixed": False}
         elif epsg in ("4258"):
-            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "degree"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "degree", "fixed": True}
         elif epsg in ("3031", "3412"):
-            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter(0,-90)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         elif epsg in ("3411", "3413", "3575", "3995"):
-            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter(0,90)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         elif epsg in ("3395", "3857"):
-            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter(0,0)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": False}
         elif epsg in ("4839"):
-            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter(10.5,51)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         elif epsg in ("31467"):
-            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter(-20.9631343,0.0037502)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         elif epsg in ("31468"):
-            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter(-25.4097892,0.0037466)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         else:
-            raise ValueError("EPSG code not supported by basemap module: '%s'", proj)
+            raise ValueError("EPSG code not supported by cartopy module: '%s'", proj)
 
     elif proj.startswith("mss:"):
         # some MSS-specific codes

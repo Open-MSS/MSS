@@ -135,8 +135,8 @@ class MplCanvas(FigureCanvasQTAgg):
         """
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
-        width = int(round(ax_bounds[2]))
-        height = int(round(ax_bounds[3]))
+        width = int(round(ax_bounds[2], 2))
+        height = int(round(ax_bounds[3], 2))
         return width, height
 
 
@@ -918,7 +918,7 @@ class MplTopViewCanvas(MplCanvas):
         self.ax.set_autoscale_on(False)
         self.ax.set_title("Top view", horizontalalignment="left", x=0)
         self.draw()  # necessary?
-
+        self.kwargs = kwargs
         if model:
             self.set_waypoints_model(model)
 
@@ -953,7 +953,7 @@ class MplTopViewCanvas(MplCanvas):
         See MapCanvas.update_with_coordinate_change(). After the map redraw,
         coordinates of all objects overlain on the map have to be updated.
         """
-
+        self.kwargs_update = kwargs_update
         # remove legend
         self.draw_legend(None)
 
@@ -972,6 +972,7 @@ class MplTopViewCanvas(MplCanvas):
 
         # 2) UPDATE MAP.
         self.map.update_with_coordinate_change(kwargs_update)
+        self.kwargs = kwargs_update
         self.ax = self.map.ax
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
@@ -1000,7 +1001,6 @@ class MplTopViewCanvas(MplCanvas):
 
         logging.debug("finished redrawing map")
         self.pdlg.close()
-
         # Emit signal so other parts of the module can react to a redraw event.
         self.redrawn.emit()
 
@@ -1014,24 +1014,9 @@ class MplTopViewCanvas(MplCanvas):
         Get the bounding box of the map
         (returns a 4-tuple llx, lly, urx, ury) in degree or meters.
         """
-
         self.ax = self.map.ax
-
-        if self.map.bbox_units == "degree":
-            # Convert the current axis corners to lat/lon coordinates.
-            bbox = self.ax.get_extent(crs=ccrs.PlateCarree())
-            bbox = bbox[0], bbox[2], bbox[1], bbox[3]
-
-        elif self.map.bbox_units.startswith("meter"):
-            ct_center = (float(_x) for _x in self.map.bbox_units[6:-1].split(","))
-            center_x, center_y = self.ax.projection.transform_point(
-                ct_center[0], ct_center[1], ccrs.PlateCarree())
-            axis = self.ax.get_extent()
-            bbox = (axis[0] - center_x, axis[2] - center_y, axis[1] - center_x, axis[3] - center_y)
-
-        else:
-            bbox = self.ax.get_extent()
-            bbox = bbox[0], bbox[2], bbox[1], bbox[3]
+        kwargs = self.kwargs
+        bbox = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
 
         return bbox
 

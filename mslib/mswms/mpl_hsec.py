@@ -103,7 +103,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             crs_list.add("EPSG:{:d}".format(code))
         return sorted(crs_list)
 
-    def plot_hsection(self, data, lats, lons, bbox=(-180, -90, 180, 90),
+    def plot_hsection(self, data, lats, lons, bbox=(-180, 180, -90, 90),
                       level=None, figsize=(960, 640), crs=None,
                       proj_params=None,
                       valid_time=None, init_time=None, style=None,
@@ -162,32 +162,23 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             ax = plt.axes([0.05, 0.05, 0.9, 0.88], projection=user_proj)
 
         if bbox_units == "degree":
-            coords = user_proj.transform_points(
-                ccrs.PlateCarree(), np.asarray([bbox[0], bbox[2]]), np.asarray([bbox[1], bbox[3]]))
-            ax.set_extent([coords[0, 0], coords[1, 0], coords[0, 1], coords[1, 1]], user_proj)
+            ax.set_extent(bbox)
         elif bbox_units.startswith("meter"):
             # convert meters to degrees
             ct_center = [float(_x) for _x in bbox_units[6:-1].split(",")]
-            center_x, center_y = user_proj.transform_point(ct_center[0], ct_center[1], src_crs=src_proj)
-            bbox_0, bbox_1 = src_proj.transform_point(
-                bbox[0] + center_x, bbox[1] + center_y, src_crs=user_proj)
-            bbox_2, bbox_3 = src_proj.transform_point(
-                bbox[2] + center_x, bbox[3] + center_y, src_crs=user_proj)
-            coords = user_proj.transform_points(
-                ccrs.PlateCarree(), np.asarray([bbox_0, bbox_2]), np.asarray([bbox_1, bbox_3]))
-            ax.set_extent([coords[0, 0], coords[1, 0], coords[0, 1], coords[1, 1]], user_proj)
+            ax.set_extent(bbox[0] + ct_center[0], bbox[1], ct_center[0], bbox[2] + ct_center[1], bbox[3] + ct_center[1])
         elif bbox_units == "no":
             pass
         else:
             raise ValueError("bbox_units '{}' not known.".format(bbox_units))
 
-        ax.coastlines(resolution='10m')
+        ax.coastlines()
         ax.add_feature(cartopy.feature.BORDERS, linestyle='-', alpha=1)
         ax.outline_patch.set_edgecolor('white')
         self.fig = fig
         self.ax = ax
-        self.shift_data()
-        self.mask_data()
+        self.grid = self.ax.gridlines()
+        self.grid.xlabels_top = False
         self._plot_style()
 
         # Return the image as png embedded in a StringIO stream.
@@ -239,56 +230,3 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         logging.debug("returning figure..")
         return output.getvalue()
-
-    def shift_data(self):
-        """Shift the data fields such that the longitudes are in the range
-        left_longitude .. left_longitude+360, where left_longitude is the
-        leftmost longitude appearing in the plot.
-
-        Necessary to prevent data cut-offs in situations where the requested
-        map covers a domain that crosses the data longitude boundaries
-        (e.g. data is stored on a -180..180 grid, but a map in the range
-        -200..-100 is requested).
-        """
-        ax = self.ax
-        # Determine the leftmost longitude in the plot.
-        left_longitude = ax.get_extent(crs=self.src_proj)[0]
-        logging.debug(u"shifting data grid to leftmost longitude in map %2.f..", left_longitude)
-
-        # Shift the longitude field such that the data is in the range
-        # left_longitude .. left_longitude+360.
-        self.lons = ((self.lons - left_longitude) % 360) + left_longitude
-        lon_indices = self.lons.argsort()
-        self.lons = self.lons[lon_indices]
-
-        # Shift data fields correspondingly.
-        for key in self.data:
-            self.data[key] = self.data[key][:, lon_indices]
-
-    def mask_data(self):
-        """Mask data arrays so that all values outside the map domain
-           are masked. This is required for clabel to work correctly.
-
-        See:
-        http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/msg02892.html
-        (Re: [Matplotlib-users] clabel and basemap).
-
-        (mr, 2011-01-18)
-        """
-        ax = self.ax
-        # compute native map projection coordinates of lat/lon grid.
-        x, y = np.meshgrid(self.lons, self.lats)
-
-        # test which coordinates are outside the map domain.
-        add_x = ((ax.get_extent(crs=self.src_proj)[1] - ax.get_extent(crs=self.src_proj)[0]) / 10.)
-        add_y = ((ax.get_extent(crs=self.src_proj)[2] - ax.get_extent(crs=self.src_proj)[3]) / 10.)
-
-        mask1 = x < ax.get_extent(crs=self.src_proj)[0] - add_x
-        mask2 = x > ax.get_extent(crs=self.src_proj)[1] + add_x
-        mask3 = y > ax.get_extent(crs=self.src_proj)[3] + add_y
-        mask4 = y < ax.get_extent(crs=self.src_proj)[2] - add_y
-        mask = mask1 + mask2 + mask3 + mask4
-        # mask data arrays.
-        for key in self.data:
-            self.data[key] = np.ma.masked_array(
-                self.data[key], mask=mask, keep_mask=False)
