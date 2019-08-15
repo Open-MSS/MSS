@@ -54,11 +54,14 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
     implemented.
     """
 
-    def __init__(self, rootpath):
-        """Constructor takes the path of the data directory.
+    def __init__(self, rootpath, uses_init_time=True, uses_valid_time=True):
+        """Constructor takes the path of the data directory and determines whether
+           this class employs different init_times or valid_times.
         """
         self._root_path = rootpath
         self._modelname = ""
+        self._use_init_time = uses_init_time
+        self._use_valid_time = uses_valid_time
 
     @abstractmethod
     def setup(self):
@@ -118,6 +121,16 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
         """
         return self._root_path
 
+    def uses_inittime_dimension(self):
+        """ Return whether this data set supports multiple init times
+        """
+        return self._use_init_time
+
+    def uses_validtime_dimension(self):
+        """ Return whether this data set supports multiple valid times
+        """
+        return self._use_valid_time
+
     @abstractmethod
     def get_all_datafiles(self):
         """Return a list of all available data files.
@@ -127,6 +140,18 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
     @abstractmethod
     def get_init_times(self):
         """Return a list of available forecast init times (base times).
+        """
+        pass
+
+    @abstractmethod
+    def get_valid_times(self):
+        """Return a list of available forecast times.
+        """
+        pass
+
+    @abstractmethod
+    def get_elevations(self, vert_type):
+        """Return a list of available elevations for a vertical level type.
         """
         pass
 
@@ -153,8 +178,11 @@ class DefaultDataAccess(NWPDataAccess):
     # NetCDF files produced by netcdf-java 4.3..
     _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
 
-    def __init__(self, rootpath, domain_id):
-        NWPDataAccess.__init__(self, rootpath)
+    def __init__(self, rootpath, domain_id, **kwargs):
+        """Constructor takes the path of the data directory and determines whether
+           this class employs different init_times or valid_times.
+        """
+        NWPDataAccess.__init__(self, rootpath, **kwargs)
         self._domain_id = domain_id
         self._available_files = None
         self._filetree = None
@@ -181,12 +209,20 @@ class DefaultDataAccess(NWPDataAccess):
                 raise ValueError(u"variable type {} not available for variable {}"
                                  .format(vartype, variable))
 
-    def _parse_file(self, filename, elevations):
+    def _parse_file(self, filename):
+        elevations = []
         with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
 
             time_name, time_var = netCDF4tools.identify_CF_time(dataset)
             init_time = netCDF4tools.num2date(0, time_var.units)
+            if not self.uses_inittime_dimension():
+                init_time = None
             valid_times = netCDF4tools.num2date(time_var[:], time_var.units)
+            if not self.uses_validtime_dimension():
+                if len(valid_times) > 0:
+                    raise IOError("Skipping file '{}: no support for valid time, but multiple "
+                                  "time steps present".format(filename))
+                valid_times = [None]
             lat_name, lat_var, lon_name, lon_var = netCDF4tools.identify_CF_lonlat(dataset)
             vert_name, vert_var, _, _, vert_type = netCDF4tools.identify_vertical_axis(dataset)
 
@@ -198,16 +234,15 @@ class DefaultDataAccess(NWPDataAccess):
                 raise IOError("Problem with longitude coordinate variable")
 
             if vert_type != "sfc":
-                if vert_type in elevations:
-                    if len(vert_var[:]) != len(elevations[vert_type]["levels"]):
+                if vert_type in self._elevations:
+                    if len(vert_var[:]) != len(self._elevations[vert_type]["levels"]):
                         raise IOError("Number of vertical levels does not fit to levels of "
-                                      "previous file '{}'.".format(elevations[vert_type]["filename"]))
+                                      "previous file '{}'.".format(self._elevations[vert_type]["filename"]))
 
-                    if not np.allclose(vert_var[:], elevations[vert_type]["levels"]):
+                    if not np.allclose(vert_var[:], self._elevations[vert_type]["levels"]):
                         raise IOError("vertical levels do not fit to levels of previous "
-                                      "file '{}'.".format(elevations[vert_type]["filename"]))
-                else:
-                    elevations[vert_type] = {"filename": filename, "levels": vert_var[:]}
+                                      "file '{}'.".format(self._elevations[vert_type]["filename"]))
+                elevations = vert_var[:]
 
             standard_names = []
             for ncvarname, ncvar in dataset.variables.items():
@@ -236,6 +271,7 @@ class DefaultDataAccess(NWPDataAccess):
                         standard_names.append(ncvar.standard_name)
         return {
             "vert_type": vert_type,
+            "elevations": elevations,
             "init_time": init_time,
             "valid_times": valid_times,
             "standard_names": standard_names
@@ -274,13 +310,13 @@ class DefaultDataAccess(NWPDataAccess):
                      self._domain_id, self._available_files)
 
         self._filetree = {}
-        elevations = {}
+        self._elevations = {"sfc": {"filename": None, "levels": []}}
 
         # Build the tree structure.
         for filename in self._available_files:
             logging.info("Opening candidate '%s'", filename)
             try:
-                content = self._parse_file(filename, elevations)
+                content = self._parse_file(filename)
             except IOError as ex:
                 logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
                 continue
@@ -302,6 +338,11 @@ class DefaultDataAccess(NWPDataAccess):
         except KeyError as ex:
             logging.error("Could not find times! %s %s", type(ex), ex)
             return []
+
+    def get_elevations(self, vert_type):
+        """Return a list of available elevations for a vertical level type.
+        """
+        return self._elevations[vert_type]["levels"]
 
     def get_all_valid_times(self, variable, vartype):
         """Similar to get_valid_times(), but returns the combined valid times
@@ -330,8 +371,11 @@ class CachedDataAccess(DefaultDataAccess):
     content in a dictionary.
     """
 
-    def __init__(self, rootpath, domain_id):
-        DefaultDataAccess.__init__(self, rootpath, domain_id)
+    def __init__(self, rootpath, domain_id, **kwargs):
+        """Constructor takes the path of the data directory and determines whether
+           this class employs different init_times or valid_times.
+        """
+        DefaultDataAccess.__init__(self, rootpath, domain_id, **kwargs)
         self._file_cache = {}
 
     def setup(self):
@@ -346,7 +390,7 @@ class CachedDataAccess(DefaultDataAccess):
                 del self._file_cache[filename]
 
         self._filetree = {}
-        elevations = {}
+        self._elevations = {"sfc": {"filename": None, "levels": []}}
 
         # Build the tree structure.
         for filename in self._available_files:
@@ -354,12 +398,19 @@ class CachedDataAccess(DefaultDataAccess):
             if filename in self._file_cache and mtime == self._file_cache[filename][0]:
                 logging.info("Using cached candidate '%s'", filename)
                 content = self._file_cache[filename][1]
+                if content["vert_type"] != "sfc":
+                    if content["vert_type"] not in self._elevations:
+                        self._elevations[content["vert_type"]] = content["elevations"]
+                    elif not np.allclose(self._elevations[content["vert_type"]], content["elevations"]):
+                        logging.error("Skipping file '%s' due to elevation mismatch", filename)
+                        continue
+
             else:
                 if filename in self._file_cache:
                     del self._file_cache[filename]
                 logging.info("Opening candidate '%s'", filename)
                 try:
-                    content = self._parse_file(filename, elevations)
+                    content = self._parse_file(filename)
                 except IOError as ex:
                     logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
                     continue

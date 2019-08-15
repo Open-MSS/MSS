@@ -113,7 +113,7 @@ class Test_CachedDataAccess(Test_DefaultDataAccess):
             self.dut._file_cache[fn][0] + 1,
             self.dut._file_cache[fn][1])
         self.dut.setup()
-        self.dut._parse_file.assert_called_once_with(fn, {})
+        self.dut._parse_file.assert_called_once_with(fn)
         assert self.dut._add_to_filetree.call_count == n
 
     def test_cache_incomplete(self):
@@ -130,3 +130,13 @@ class Test_CachedDataAccess(Test_DefaultDataAccess):
         self.dut._file_cache["nothere"] = [0, {}]
         self.dut.setup()
         assert "nothere" not in self.dut._file_cache
+
+
+class Test_DefaultDataAccessNoInit(object):
+    def setup(self):
+        self.dut = DefaultDataAccess(DATA_DIR, "EUR_LL015", uses_init_time=False)
+        self.dut.setup()
+
+    def test_get_init_times(self):
+        all_init_times = self.dut.get_init_times()
+        assert all_init_times == [None]
