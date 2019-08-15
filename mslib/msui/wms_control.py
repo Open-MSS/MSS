@@ -33,7 +33,6 @@ from past.builtins import basestring
 from builtins import str
 
 import time
-import isodate
 from datetime import datetime
 
 import io
@@ -57,7 +56,7 @@ from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
-from mslib.utils import convertHPAToKM
+from mslib.utils import parse_iso_datetime, parse_iso_duration
 from mslib.ogcwms import openURL
 
 
@@ -84,9 +83,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
 
     def getmap(self, layers=None, styles=None, srs=None, bbox=None,
                format=None, size=None, time=None, init_time=None,
-               path_str=None, level=None, transparent=False,
-               bgcolor='#FFFFFF', time_format="%Y-%m-%dT%H:%M:%SZ",
-               init_time_format="%Y-%m-%dT%H:%M:%SZ",
+               path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
                time_name="time", init_time_name="init_time",
                exceptions='application/vnd.ogc.se_xml', method='Get',
                return_only_url=False):
@@ -169,17 +166,12 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # create formatted strings with the given formatter. If they are
         # given as strings, use these strings directly as WMS arguments.
         if isinstance(time, datetime):
-            if time_format is None:
-                raise ValueError("Could not determine date/time format. Please "
-                                 "check dimension tag in capabiltites document.")
-            request[time_name] = time.strftime(time_format)
+            request[time_name] = time.isoformat()
         elif isinstance(time, basestring):
             request[time_name] = time
+
         if isinstance(init_time, datetime):
-            if init_time_format is None:
-                raise ValueError("Could not determine date/time format. Please "
-                                 "check dimension tag in capabiltites document.")
-            request[init_time_name] = init_time.strftime(init_time_format)
+            request[init_time_name] = init_time.isoformat()
         elif isinstance(init_time, basestring):
             request[init_time_name] = init_time
 
@@ -417,8 +409,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Initially allowed WMS parameters and date/time formats.
         self.allowed_init_times = []
         self.allowed_valid_times = []
-        self.init_time_format = None
-        self.valid_time_format = None
         self.init_time_name = None
         self.valid_time_name = None
 
@@ -781,30 +771,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             wmsbrws.show()
 
-    @staticmethod
-    def interpret_timestring(timestring, return_format=False):
-        """Tries to interpret a given time string.
-
-        Returns a datetime objects if the method succeeds, otherwise None.
-        If return_format=True the method returns the format string for
-        datetime.str(f/p)time.
-        """
-        formats = ["%Y-%m-%dT%H:%M:%SZ",
-                   "%Y-%m-%dT%H:%M:%S",
-                   "%Y-%m-%dT%H:%M",
-                   "%Y-%m-%dT%H:%M:%S.000Z",
-                   "%Y-%m-%d"]
-        for format in formats:
-            try:
-                d = datetime.strptime(timestring, format)
-                if return_format:
-                    return format
-                else:
-                    return d
-            except ValueError as error:
-                logging.debug("ValueError Exception %s", error)
-        return None
-
     def get_layer_object(self, layername):
         """Returns the object from the layer tree that fits the given
            layer name.
@@ -824,38 +790,31 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return None
 
     def parse_time_extent(self, values):
-        format, times = None, []
+        times = []
         for time_item in [i.strip() for i in values]:
             try:
                 list_desc = time_item.split("/")
 
                 if len(list_desc) == 3:
-                    if format is None:
-                        format = self.interpret_timestring(list_desc[0], return_format=True)
-
-                    time_val = datetime.strptime(list_desc[0], format)
+                    time_val = parse_iso_datetime(list_desc[0])
                     if "current" in list_desc[1]:
                         end_time = datetime.utcnow()
                     else:
-                        end_time = datetime.strptime(list_desc[1], format)
-                    delta = isodate.parse_duration(list_desc[2])
-
+                        end_time = parse_iso_datetime(list_desc[1])
+                    delta = parse_iso_duration(list_desc[2])
                     while time_val <= end_time:
                         times.append(time_val)
                         time_val += delta
 
                 elif len(list_desc) == 1:
-                    if format is None:
-                        format = self.interpret_timestring(time_item, return_format=True)
-                    times.append(datetime.strptime(time_item, format))
-
+                    times.append(parse_iso_datetime(time_item))
                 else:
                     raise ValueError("value has incorrect number of entries.")
 
             except Exception as ex:
                 logging.debug(u"Wildecard Exception %s - %s.", type(ex), ex)
                 logging.error(u"Can't understand time string '%s'. Please check the implementation.", time_item)
-        return format, times
+        return times
 
     def layer_changed(self, index):
         """Slot that updates the <cbStyle> and <teLayerAbstract> GUI elements
@@ -938,11 +897,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Both time dimension and time extent tags were found. Try to determine the
         # format of the date/time strings.
         if enable_init_time:
-            self.init_time_format, self.allowed_init_times = self.parse_time_extent(
+            self.allowed_init_times = self.parse_time_extent(
                 extents[self.init_time_name]["values"])
-            self.cbInitTime.addItems(
-                [_time.strftime(self.init_time_format) for _time in self.allowed_init_times])
-            logging.debug(u"determined init time format: '%s'", self.valid_time_format)
+            self.cbInitTime.addItems([_time.isoformat() for _time in self.allowed_init_times])
             if len(self.allowed_init_times) == 0:
                 msg = "cannot determine init time format."
                 logging.error(msg)
@@ -967,12 +924,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Both time dimension and time extent tags were found. Try to determine the
         # format of the date/time strings.
         if enable_valid_time and not vtime_no_extent:
-            self.valid_time_format, self.allowed_valid_times = self.parse_time_extent(
+            self.allowed_valid_times = self.parse_time_extent(
                 extents[self.valid_time_name]["values"])
             self.cbValidTime.addItems(
-                [_time.strftime(self.valid_time_format) for _time in self.allowed_valid_times])
+                [_time.isoformat() for _time in self.allowed_valid_times])
 
-            logging.debug(u"determined valid time format: '%s'", self.valid_time_format)
             if len(self.allowed_valid_times) == 0:
                 msg = "cannot determine valid time format."
                 logging.error(msg)
@@ -1129,25 +1085,26 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         'strike through' to indicate an invalid time.
         """
         font = self.dteInitTime.font()
-        init_time_available = dt.toPyDateTime() in self.allowed_init_times
+        pydt = dt.toPyDateTime()
+        init_time_available = pydt in self.allowed_init_times
         font.setStrikeOut(not init_time_available)
         self.dteInitTime.setFont(font)
-        if init_time_available and self.init_time_format is not None:
-            iso8601_time = dt.toPyDateTime().strftime(self.init_time_format)
-            index = self.cbInitTime.findText(iso8601_time)
+        if init_time_available:
+            index = self.cbInitTime.findText(pydt.isoformat())
             self.cbInitTime.setCurrentIndex(index)
 
     def check_valid_time(self, dt):
         """Same as check_init_time, but for valid time.
         """
+        valid_time_available = True
+        pydt = dt.toPyDateTime()
         if self.allowed_valid_times:
-            valid_time_available = dt.toPyDateTime() in self.allowed_valid_times
-            iso8601_time = dt.toPyDateTime().strftime(self.valid_time_format)
-            index = self.cbValidTime.findText(iso8601_time)
-            # setCurrentIndex also sets the date/time edit via signal.
-            self.cbValidTime.setCurrentIndex(index)
-        else:
-            valid_time_available = True
+            if pydt in self.allowed_valid_times:
+                index = self.cbValidTime.findText(pydt.isoformat())
+                # setCurrentIndex also sets the date/time edit via signal.
+                self.cbValidTime.setCurrentIndex(index)
+            else:
+                valid_time_available = False
         font = self.dteValidTime.font()
         font.setStrikeOut(not valid_time_available)
         self.dteValidTime.setFont(font)
@@ -1159,7 +1116,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         init_time = self.cbInitTime.currentText()
         if init_time != "":
-            init_time = self.interpret_timestring(init_time)
+            init_time = parse_iso_datetime(init_time)
             if init_time is not None:
                 self.dteInitTime.setDateTime(init_time)
         self.auto_update()
@@ -1170,7 +1127,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         valid_time = self.cbValidTime.currentText()
         if valid_time != "":
-            valid_time = self.interpret_timestring(valid_time)
+            valid_time = parse_iso_datetime(valid_time)
             if valid_time is not None:
                 self.dteValidTime.setDateTime(valid_time)
         self.auto_update()
@@ -1401,8 +1358,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "time": valid_time,
                       "init_time": init_time,
                       "level": level,
-                      "time_format": self.valid_time_format,
-                      "init_time_format": self.init_time_format,
                       "time_name": self.valid_time_name,
                       "init_time_name": self.init_time_name,
                       "size": (width, height),
@@ -1639,9 +1594,6 @@ class HSecWMSControlWidget(WMSControlWidget):
             s = self.cbLevel.currentText()
             if s == "":
                 return
-            lvl = float(s.split(" (")[0])
-            if s.endswith("(hPa)"):
-                lvl = convertHPAToKM(lvl)
             if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
                 self.btGetMap.click()
             else:

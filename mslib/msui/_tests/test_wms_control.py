@@ -354,9 +354,9 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-17T18:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
         assert self.window.cbLevel.isEnabled()
@@ -372,9 +372,9 @@ class TestWMSControlWidgetSetupSimple(object):
         QtWidgets.QApplication.processEvents()
         print([self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())])
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())][:4] == \
-            ['2014-10-17T12:00:00Z', '2015-10-17T12:00:00Z', '2016-10-17T12:00:00Z', '2017-10-17T12:00:00Z']
+            ['2014-10-17T12:00:00', '2015-10-17T12:00:00', '2016-10-17T12:00:00', '2017-10-17T12:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
         assert self.window.cbLevel.isEnabled()
@@ -389,7 +389,7 @@ class TestWMSControlWidgetSetupSimple(object):
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
         assert self.window.cbLevel.isEnabled()
@@ -405,7 +405,7 @@ class TestWMSControlWidgetSetupSimple(object):
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
         assert not self.window.cbValidTime.isEnabled()
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
 
@@ -418,9 +418,9 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-17T18:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
 
@@ -430,9 +430,9 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-17T18:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
 
     def test_xml_time_forecast(self):
         dimext_time_forecast = """
@@ -443,9 +443,9 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2013-10-17T12:00:00Z', '2013-10-17T18:00:00Z', '2013-10-18T00:00:00Z']
+            ['2013-10-17T12:00:00', '2013-10-17T18:00:00', '2013-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
 
@@ -458,9 +458,9 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-17T18:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2013-10-16T12:00:00Z', '2013-10-17T12:00:00Z']
+            ['2013-10-16T12:00:00', '2013-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
 
@@ -469,9 +469,9 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-17T18:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == []
         assert not self.window.cbLevel.isEnabled()
 
@@ -482,7 +482,7 @@ class TestWMSControlWidgetSetupSimple(object):
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
         assert not self.window.cbValidTime.isEnabled()
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
 
@@ -492,7 +492,7 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-17T18:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == []
         assert not self.window.cbInitTime.isEnabled()
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
@@ -507,9 +507,9 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-17T18:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
 
     def test_xml_time_multiperiod(self):
         dimext_time_period = '<Dimension name="TIME" units="ISO8610"> </Dimension> ' \
@@ -520,11 +520,11 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2010-10-17T12:00:00Z', '2010-11-17T12:00:00Z',
-             '2012-10-01T12:00:00Z',
-             '2012-10-17T12:00:00Z', '2012-10-18T00:00:00Z']
+            ['2010-10-17T12:00:00', '2010-11-17T12:00:00',
+             '2012-10-01T12:00:00',
+             '2012-10-17T12:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
 
     def test_xml_time_init_period(self):
         dimext_inittime_period = """
@@ -535,9 +535,9 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-17T18:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-17T18:00:00', '2012-10-18T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-17T12:00:00Z', '2012-10-24T12:00:00Z']
+            ['2012-10-17T12:00:00', '2012-10-24T12:00:00']
         assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
             ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
 
@@ -550,15 +550,15 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17', '2012-10-18', '2012-10-19']
+            ['2012-10-17T00:00:00', '2012-10-18T00:00:00', '2012-10-19T00:00:00']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_xml_time_error(self, mockbox):
         dimext_time_error = """
             <Dimension name="TIME" units="ISO8610"> </Dimension>
-            <Extent name="TIME"> 2012-10-17aT12:00:00Z/2012-10-18T00:00:00Z/PT6H </Extent>"""
+            <Extent name="TIME"> a2012-10-17T12:00:00Z/2012-10-18T00:00:00Z/PT6H </Extent>"""
         testxml = self.xml.format(
             "", self.srs_base, dimext_time_error + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
@@ -566,4 +566,4 @@ class TestWMSControlWidgetSetupSimple(object):
         assert mockbox.critical.call_count == 1
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+            ['2012-10-16T12:00:00', '2012-10-17T12:00:00']
