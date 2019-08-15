@@ -59,6 +59,7 @@ requirements:
     - passlib
     - python-socketio[client]
     - gitpython
+    - psycopg2
 
 test:
   imports:

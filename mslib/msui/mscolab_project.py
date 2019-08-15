@@ -85,7 +85,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         user_d = self.get_user_details(self.token)
         proj_d = self.get_project_details(self.p_id)
         self.user_info.setText("logged in as: {}".format(user_d["username"]))
-        print(user_d, proj_d)
         self.proj_info.setText("Project name: {}".format(proj_d["path"]))
         # disable admin actions if viewer or collaborator
         if self.access_level == "collaborator" or self.access_level == "viewer":
