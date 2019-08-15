@@ -5,7 +5,8 @@ Version 1.8.2
 -------------
 
 Bug Fixes:
-   - mss server requires long time to provide capabilities document, #432
+  - Rework ylabels to remove crash for low pressures, #439
+  - mss server requires long time to provide capabilities document, #432
 
 Other Changes:
   - hint in docs for mod_wsgi, #415
