@@ -26,7 +26,8 @@
 from mslib.mscolab.server import db, app, initialize_managers, start_server
 from mslib.mscolab.models import User
 from mslib.mscolab.utils import get_recent_pid
-from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI, TEST_MSCOLAB_DATA_DIR
+from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
 
 import multiprocessing
 import time

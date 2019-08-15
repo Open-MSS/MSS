@@ -26,40 +26,37 @@
 from flask import Flask
 
 from mslib.mscolab.models import User, db, Permission, Project
-from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY
+from mslib.mscolab.conf import SECRET_KEY
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-app.config['SECRET_KEY'] = SECRET_KEY
-db.init_app(app)
 
+def seed_data(db_uri):
 
-def seed_data():
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+    app.config['SECRET_KEY'] = SECRET_KEY
+    db.init_app(app)
+
     with app.app_context():
         # create users
         users = [{
             'username': 'a',
             'id': 8,
-            'password': ("$6$rounds=656000$cPQdxVHb1tlkDNil$Ohb.",
-                         "ZDN350IBuoVozgTg3cmdMKRaBQCJ1KvHPjKyGhnygd.",
-                         "T6x6cyYVddWp/Hc9JFjT5cY9JNw75eTsG0kDt11"),
+            'password': 'a',
             'emailid': 'a'
         }, {
             'username': 'b',
             'id': 9,
-            'password': ("$6$rounds=656000$DqUls/5/BfWuTReI$dJvxnZrsgeo.sKyIYBGn3ShJ.",
-                         "Ccm98Q6gWcETruuWIgBWxL7RtRwmUAQ0I6b2cGITR5ksTDN2KK8xPJEm4v6c1"),
+            'password': 'b',
             'emailid': 'b'
         }, {
             'username': 'c',
             'id': 10,
-            'password': ('$6$rounds=656000$z5PgqRSetyiQh4FE$a/1R6JSPieTp32u4xnPY3O',
-                         'BremIQaHcBlmDeFqJ20WyDrd9f.EP.i4yIB/nykv9hmKfGakLJcCaGJ/mb.2uDe1'),
+            'password': 'c',
             'emailid': 'c'
         }]
         for user in users:
-            db_user = User(user['username'], user['password'], user['emailid'])
+            db_user = User(user['emailid'], user['username'], user['password'])
             db_user.id = user['id']
             db.session.add(db_user)
         db.session.commit()
@@ -121,8 +118,12 @@ def seed_data():
             db_perm = Permission(perm['u_id'], perm['p_id'], perm['access_level'])
             db.session.add(db_perm)
         db.session.commit()
+        db.session.close()
 
 
-def create_tables():
+def create_tables(db_uri):
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+    app.config['SECRET_KEY'] = SECRET_KEY
+    db.init_app(app)
     with app.app_context():
         db.create_all()

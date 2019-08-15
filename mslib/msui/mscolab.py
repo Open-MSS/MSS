@@ -131,8 +131,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.add_proj_dialog.setupUi(self.proj_diag)
         self.add_proj_dialog.f_content = None
         self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
+        # enable accepted only if path and description are not none
+        self.add_proj_dialog.buttonBox.setEnabled(False)
+        self.add_proj_dialog.path.textChanged.connect(self.check_and_enable_project_accept)
+        self.add_proj_dialog.description.textChanged.connect(self.check_and_enable_project_accept)
         self.add_proj_dialog.browse.clicked.connect(self.set_exported_file)
         self.proj_diag.show()
+
+    def check_and_enable_project_accept(self):
+        if(self.add_proj_dialog.path.text() != "" and self.add_proj_dialog.description.toPlainText() != ""):
+            self.add_proj_dialog.buttonBox.setEnabled(True)
 
     def set_exported_file(self):
         file_path = QtWidgets.QFileDialog.getOpenFileName()[0]
@@ -501,7 +509,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for index, window in enumerate(self.active_windows):
             if window._id == value:
                 del self.active_windows[index]
-                print("deleting window")
 
     @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex)
     def handle_data_change(self, index1, index2):

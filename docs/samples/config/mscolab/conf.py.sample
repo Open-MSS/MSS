@@ -41,7 +41,8 @@ DB_NAME = 'test_1'
 
 # SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
 
-# mscolab data directory #ToDo merge this with $MSS directory
+#ToDo merge this with $MSS directory
+# mscolab data directory
 MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 <FlightTrack version="1.7.6">

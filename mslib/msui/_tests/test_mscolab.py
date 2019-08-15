@@ -31,7 +31,8 @@ import multiprocessing
 import time
 
 from mslib.mscolab.server import db, app, initialize_managers, start_server
-from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI, TEST_MSCOLAB_DATA_DIR, MSCOLAB_URL_TEST
+from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR, MSCOLAB_URL_TEST
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.models import Project
 import mslib.msui.mscolab as mc
 

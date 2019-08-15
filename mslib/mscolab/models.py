@@ -39,7 +39,7 @@ db = SQLAlchemy()
 class User(db.Model):
 
     __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255), unique=True)
@@ -83,7 +83,7 @@ class User(db.Model):
 class Connection(db.Model):
 
     __tablename__ = 'connections'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     s_id = db.Column(db.String(255), unique=True)
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
@@ -98,7 +98,7 @@ class Connection(db.Model):
 class Permission(db.Model):
 
     __tablename__ = 'permissions'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     access_level = db.Column(db.Enum("admin", "collaborator", "viewer", "creator", name="access_level"))
@@ -120,7 +120,7 @@ class Permission(db.Model):
 class Project(db.Model):
 
     __tablename__ = "projects"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     path = db.Column(db.String(255), unique=True)
     description = db.Column(db.String(255))
     autosave = db.Column(db.Boolean)
@@ -143,7 +143,7 @@ class Project(db.Model):
 class Message(db.Model):
 
     __tablename__ = "messages"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
@@ -161,7 +161,7 @@ class Message(db.Model):
 class Change(db.Model):
 
     __tablename__ = "changes"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     content = db.Column(db.TEXT)
