@@ -27,25 +27,17 @@ import fs
 import difflib
 import logging
 import git
-import sys
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
-from mslib.mscolab.conf import MSCOLAB_DATA_DIR, STUB_CODE
-from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import STUB_CODE
 
 
 class FileManager(object):
     """Class with handler functions for file related functionalities"""
 
-    def __init__(self):
-        # please refer to
-        # https://stackoverflow.com/questions/25188119/test-if-code-is-executed-from-within-a-py-test-session
+    def __init__(self, data_dir):
+        self.data_dir = data_dir
 
-        if hasattr(sys, '_called_from_test'):
-            self.data_dir = TEST_MSCOLAB_DATA_DIR
-        else:
-            self.data_dir = MSCOLAB_DATA_DIR
-
-    def create_project(self, path, description, user):
+    def create_project(self, path, description, user, content=None):
         """
         path: path to the project
         description: description of the project
@@ -68,7 +60,10 @@ class FileManager(object):
         data = fs.open_fs(self.data_dir)
         data.makedir(project.path)
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
-        project_file.write(STUB_CODE)
+        if content is not None:
+            project_file.write(content)
+        else:
+            project_file.write(STUB_CODE)
         project_path = fs.path.combine(self.data_dir, project.path)
         r = git.Repo.init(project_path)
         r.index.add(['main.ftml'])

@@ -29,13 +29,11 @@ import requests
 import multiprocessing
 import json
 import time
-import logging
-from flask import Flask
 
-from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
-from mslib.mscolab.models import db, Message
-from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib.mscolab.server import app, sockio
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+from mslib.mscolab.models import Message
+from mslib._tests.constants import MSCOLAB_URL_TEST, TEST_MSCOLAB_DATA_DIR
+from mslib.mscolab.server import db, app, initialize_managers, start_server
 
 
 class Test_Sockets(object):
@@ -44,21 +42,18 @@ class Test_Sockets(object):
 
     def setup(self):
         self.sockets = []
-        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
-        self.proc = multiprocessing.Process(
-            target=sockio.run,
-            args=(app,),
-            kwargs={'port': 8084})
-        self.proc.start()
-        try:
-            outs, errs = self.proc.communicate(timeout=4)
-            logging.debug(outs, errs)
-        except Exception as e:
-            logging.debug("Server isn't running")
-            logging.debug(e)
-        self.app = Flask(__name__)
+        self.app = app
         self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.cm = cm
+        self.p = multiprocessing.Process(
+            target=start_server,
+            args=(self.app, sockio, cm, fm,),
+            kwargs={'port': 8084})
+        self.p.start()
         db.init_app(self.app)
+        time.sleep(3)
 
     def test_connect(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
@@ -157,4 +152,4 @@ class Test_Sockets(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        self.proc.terminate()
+        self.p.terminate()

@@ -23,24 +23,39 @@
     limitations under the License.
 """
 
-from mslib.mscolab.server import db, app
+from mslib.mscolab.server import db, app, initialize_managers, start_server
 from mslib.mscolab.models import User
 from mslib.mscolab.utils import get_recent_pid
-from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
+from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+
+import multiprocessing
+import time
 
 
 class Test_Utils(object):
     def setup(self):
-        self._app = app
-        self._app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
-        db.init_app(self._app)
-        with self._app.app_context():
+        self.app = app
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.fm = fm
+        self.cm = cm
+        self.p = multiprocessing.Process(
+            target=start_server,
+            args=(self.app, sockio, cm, fm,),
+            kwargs={'port': 8084})
+        self.p.start()
+        db.init_app(self.app)
+        time.sleep(1)
+        with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
 
     def test_get_recent_pid(self):
-        with self._app.app_context():
-            p_id = get_recent_pid(self.user)
+        with self.app.app_context():
+            p_id = get_recent_pid(self.fm, self.user)
         assert p_id == 3
 
     def teardown(self):
+        self.p.terminate()
         pass

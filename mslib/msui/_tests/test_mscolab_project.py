@@ -30,27 +30,34 @@ import logging
 import multiprocessing
 import time
 
-from mslib.mscolab.server import db, sockio, app
+from mslib.mscolab.server import db, app, initialize_managers, start_server
+from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR, MSCOLAB_URL_TEST
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
 from mslib.mscolab.models import Message, Change
 import mslib.msui.mscolab as mc
 
 
-class Test_Mscolab(object):
+class Test_MscolabProject(object):
     def setup(self):
 
         # start mscolab server
-        self._app = app
-        db.init_app(self._app)
+        self.app = app
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.fm = fm
+        self.cm = cm
         self.p = multiprocessing.Process(
-            target=sockio.run,
-            args=(app,),
-            kwargs={'port': 8083})
+            target=start_server,
+            args=(self.app, sockio, cm, fm,),
+            kwargs={'port': 8084})
         self.p.start()
+        db.init_app(self.app)
         time.sleep(1)
 
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mc.MSSMscolabWindow()
+        self.window = mc.MSSMscolabWindow(data_dir=TEST_MSCOLAB_DATA_DIR, mscolab_server_url=MSCOLAB_URL_TEST)
         self._login()
         self._activate_project_at_index(0)
         # activate project window here by clicking button
@@ -62,7 +69,8 @@ class Test_Mscolab(object):
 
     def teardown(self):
         # to disconnect connections, and clear token
-        self.window.logout()
+        # Not logging out since it pops up a dialog
+        # self.window.logout()
         for window in self.window.active_windows:
             window.hide()
         if self.window.project_window:
@@ -89,6 +97,7 @@ class Test_Mscolab(object):
         self.window.waypoints_model.invert_direction()
         self.window.save_wp_mscolab(comment="dummy save")
         QtWidgets.QApplication.processEvents()
+        time.sleep(3)
         # fetch wp/chats/project
         self.window.reload_window(self.window.active_pid)
         QtWidgets.QApplication.processEvents()
@@ -105,7 +114,7 @@ class Test_Mscolab(object):
         time.sleep(3)
         assert self.proj_window.changes.count() == old_count + 1
         # delete the changes
-        with self._app.app_context():
+        with self.app.app_context():
             Change.query.filter_by(comment="dummy save").delete()
             db.session.commit()
 
@@ -116,7 +125,7 @@ class Test_Mscolab(object):
         # delete message from db here
         # wait till server processes the change
         time.sleep(3)
-        with self._app.app_context():
+        with self.app.app_context():
             assert Message.query.filter_by(text='some - message').count() == 1
             Message.query.filter_by(text='some - message').delete()
             db.session.commit()

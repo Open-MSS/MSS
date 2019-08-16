@@ -31,23 +31,26 @@ import datetime
 import time
 
 from mslib.mscolab.models import Message
-from mslib.mscolab.sockets_manager import cm
 from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib._tests.constants import TEST_SQLALCHEMY_DB_URI
-from mslib.mscolab.server import db, sockio, app
+from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+from mslib.mscolab.server import db, app, initialize_managers, start_server
 
 
 class Test_Chat(object):
 
     def setup(self):
         self.sockets = []
-        app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app = app
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.cm = cm
         self.p = multiprocessing.Process(
-            target=sockio.run,
-            args=(app,),
+            target=start_server,
+            args=(self.app, sockio, cm, fm,),
             kwargs={'port': 8084})
         self.p.start()
-        self.app = app
         db.init_app(self.app)
         time.sleep(3)
 
@@ -120,15 +123,15 @@ class Test_Chat(object):
                  })
         sio.sleep(4)
         with self.app.app_context():
-            messages = cm.get_messages(1)
+            messages = self.cm.get_messages(1)
             assert len(messages) == 2
             assert messages[0]["user"] == 8
 
-            messages = cm.get_messages(1, last_timestamp=datetime.datetime(1970, 1, 1))
+            messages = self.cm.get_messages(1, last_timestamp=datetime.datetime(1970, 1, 1))
             assert len(messages) == 2
             assert messages[0]["user"] == 8
 
-            messages = cm.get_messages(1, last_timestamp=datetime.datetime.now())
+            messages = self.cm.get_messages(1, last_timestamp=datetime.datetime.now())
             assert len(messages) == 0
 
     def test_get_messages_api(self):

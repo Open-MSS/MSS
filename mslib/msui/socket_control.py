@@ -28,6 +28,7 @@ import json
 import logging
 
 from mslib.msui.mss_qt import QtCore
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
 class ConnectionManager(QtCore.QObject):
@@ -36,7 +37,7 @@ class ConnectionManager(QtCore.QObject):
     signal_autosave = QtCore.Signal(int, int, name="autosave en/db")
     signal_message_receive = QtCore.Signal(str, str, name="message rcv")
 
-    def __init__(self, token, user):
+    def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
         self.sio = socketio.Client()
         self.sio.on('file-changed', handler=self.handle_file_change)
@@ -45,7 +46,8 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('autosave-client-db', handler=self.handle_autosave_disable)
         # on chat message recive
         self.sio.on('chat-message-client', handler=self.handle_incoming_message)
-        self.sio.connect("http://localhost:8083")
+        self.mscolab_server_url = mscolab_server_url
+        self.sio.connect(self.mscolab_server_url)
         self.sio.emit('start', {'token': token})
         self.token = token
         self.user = user
@@ -60,6 +62,12 @@ class ConnectionManager(QtCore.QObject):
     def handle_file_change(self, message):
         message = json.loads(message)
         self.signal_reload.emit(message["p_id"])
+
+    def handle_new_room(self, p_id):
+        logging.debug("adding user to new room")
+        self.sio.emit('add-user-to-room', {
+                      "p_id": p_id,
+                      "token": self.token})
 
     def send_message(self, message_text, p_id):
         logging.debug("sending message")

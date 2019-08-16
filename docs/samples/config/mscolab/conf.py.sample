@@ -39,7 +39,19 @@ DB_USER = 'user'
 DB_PASSWORD = 'pass'
 DB_NAME = 'test_1'
 
-# mscolab data directory #ToDo merge this with $MSS directory
+# SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
+
+TEST_DB_HOST = 'localhost'
+TEST_DB_USER = 'username'
+TEST_DB_PASSWORD = 'password'
+TEST_DB_NAME = 'test_db'
+# for sqlalchemy
+# TEST_SQLITE_FILE_PATH = os.path.join(TEST_DATA_DIR, 'mscolab.db')
+# TEST_SQLALCHEMY_DB_URI = 'sqlite:///' + TEST_SQLITE_FILE_PATH
+# for postgres
+TEST_SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(TEST_DB_USER, TEST_DB_PASSWORD, TEST_DB_HOST, TEST_DB_NAME)
+
+# mscolab data directory
 MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 <FlightTrack version="1.7.6">
