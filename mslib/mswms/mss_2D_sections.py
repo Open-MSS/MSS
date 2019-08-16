@@ -102,7 +102,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         """
         valid_times = set()
         if self.driver is not None:
-            for vartype, varname in self.required_datafields:
+            for vartype, varname, _ in self.required_datafields:
                 vtimes = self.driver.get_all_valid_times(varname, vartype)
                 if len(valid_times) == 0:
                     valid_times.update(vtimes)

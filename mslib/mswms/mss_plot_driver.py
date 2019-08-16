@@ -131,7 +131,7 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
 
         # Create the names of the files containing the required parameters.
         filenames = []
-        for vartype, var in self.plot_object.required_datafields:
+        for vartype, var, _ in self.plot_object.required_datafields:
             filename = self.data_access.get_filename(
                 var, vartype, init_time, fc_time, fullpath=True)
             if filename not in filenames:
@@ -200,7 +200,7 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """
         self.data_vars = {}
         self.data_units = {}
-        for df_type, df_name in self.plot_object.required_datafields:
+        for df_type, df_name, _ in self.plot_object.required_datafields:
             varname, var = netCDF4tools.identify_variable(self.dataset, df_name, check=True)
             logging.debug("\tidentified variable <%s> for field <%s>", varname, df_name)
             self.data_vars[df_name] = var

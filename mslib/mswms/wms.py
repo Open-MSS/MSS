@@ -539,5 +539,4 @@ def application():
         res = make_response(error_message, 404)
         for response_header in response_headers:
             res.headers[response_header[0]] = response_header[1]
-
         return res
