@@ -36,7 +36,9 @@ A few notes:
   the forecast data files have to be read for the first time (the WMS
   program opens all files and tries to determine the available data
   and elevation ranges). A GetCapabilities request
-  should return a document within a few seconds.
+  should return a document within a few seconds as long as all files
+  are in the disk cache. The "CachedDataAccess" class offers an
+  in-memory cache to prevent costly file-accesses beyond the first.
 
 - A typical bottleneck for plot generation is when the forecast data
   files are located on a different computer than the WMS server. In
