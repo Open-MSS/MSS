@@ -57,7 +57,7 @@ class Test_DefaultDataAccess(object):
 
     def test_get_all_datafiles(self):
         all_files = self.dut.get_all_datafiles()
-        assert all_files == os.listdir(DATA_DIR)
+        assert sorted(all_files) == sorted(os.listdir(DATA_DIR))
 
     def test_get_init_times(self):
         all_init_times = self.dut.get_init_times()

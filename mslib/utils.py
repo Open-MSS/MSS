@@ -31,6 +31,7 @@ from __future__ import division
 from past.builtins import basestring
 
 import datetime
+import isodate
 from fs import open_fs, errors
 import json
 import logging
@@ -67,6 +68,21 @@ UR.define("ppb = 1e-9 fraction")
 UR.define("ppbv = 1e-9 fraction")
 UR.define("ppt = 1e-12 fraction")
 UR.define("pptv = 1e-12 fraction")
+
+
+def parse_iso_datetime(string):
+    try:
+        result = isodate.parse_datetime(string)
+    except isodate.ISO8601Error:
+        result = isodate.parse_date(string)
+        result = datetime.datetime.fromordinal(result.toordinal())
+    if result.tzinfo is not None:
+        result = result.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    return result
+
+
+def parse_iso_duration(string):
+    return isodate.parse_duration(string)
 
 
 class FatalUserError(Exception):

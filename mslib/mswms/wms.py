@@ -47,7 +47,6 @@ standard_library.install_aliases()
 
 import os
 import logging
-from datetime import datetime
 import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
@@ -55,6 +54,7 @@ from chameleon import PageTemplateLoader
 from flask import Flask, request, make_response
 from flask_httpauth import HTTPBasicAuth
 from mslib.mswms.utils import conditional_decorator
+from mslib.utils import parse_iso_datetime
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
@@ -322,7 +322,7 @@ class WMSServer(object):
         init_time = query.get('DIM_INIT_TIME')
         if init_time is not None:
             try:
-                init_time = datetime.strptime(init_time, "%Y-%m-%dT%H:%M:%SZ")
+                init_time = parse_iso_datetime(init_time)
             except ValueError:
                 return self.create_service_exception(
                     code="InvalidDimensionValue",
@@ -333,7 +333,7 @@ class WMSServer(object):
         valid_time = query.get('TIME')
         if valid_time is not None:
             try:
-                valid_time = datetime.strptime(valid_time, "%Y-%m-%dT%H:%M:%SZ")
+                valid_time = parse_iso_datetime(valid_time)
             except ValueError:
                 return self.create_service_exception(
                     code="InvalidDimensionValue",

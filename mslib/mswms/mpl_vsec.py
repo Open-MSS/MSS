@@ -103,7 +103,6 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         label_distance = 10000
         label_bot = self.p_bot - (self.p_bot % label_distance)
         major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
-
         # .. check step reduction to 10 hPa ..
         if self.p_top < 10000:
             major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1,
