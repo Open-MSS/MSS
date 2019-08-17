@@ -165,7 +165,6 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             ax.set_extent([bbox[0], bbox[2], bbox[1], bbox[3]])
         elif bbox_units.startswith("meter"):
             # convert meters to degrees
-            print(f"THIS PROBLEM{bbox}")
             ax.set_extent([bbox[0], bbox[2], bbox[1], bbox[3]])
         elif bbox_units == "no":
             pass
