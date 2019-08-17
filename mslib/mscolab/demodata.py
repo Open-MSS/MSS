@@ -211,9 +211,9 @@ def create_postgres_test():
     con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
     cur = con.cursor()
-    cur.execute("ALTER SEQUENCE users_id_seq RESTART WITH 200;")
-    cur.execute("ALTER SEQUENCE projects_id_seq RESTART WITH 200;")
-    cur.execute("ALTER SEQUENCE permissions_id_seq RESTART WITH 200;")
+    cur.execute("ALTER SEQUENCE users_id_seq RESTART WITH 4;")
+    cur.execute("ALTER SEQUENCE projects_id_seq RESTART WITH 4;")
+    cur.execute("ALTER SEQUENCE permissions_id_seq RESTART WITH 11;")
     seed_data(TEST_SQLALCHEMY_DB_URI)
 
 

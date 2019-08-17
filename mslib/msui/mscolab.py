@@ -272,6 +272,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_autosave.connect(self.autosave_toggle)
+            self.conn.signal_new_permission.connect(self.render_new_permission)
             # activate add project button here
             self.addProject.setEnabled(True)
 
@@ -286,7 +287,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.add_projects_to_ui(projects)
 
     def get_recent_pid(self):
-        # add projects
         data = {
             "token": self.token
         }
@@ -294,6 +294,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         _json = json.loads(r.text)
         projects = _json["projects"]
         return projects[-1]["p_id"]
+
+    def get_recent_project(self):
+        data = {
+            "token": self.token
+        }
+        r = requests.get(self.mscolab_server_url + '/projects', data=data)
+        _json = json.loads(r.text)
+        projects = _json["projects"]
+        return projects[-1]
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
@@ -489,6 +498,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     @QtCore.Slot()
     def reload_windows_slot(self):
         self.reload_window(self.active_pid)
+
+    @QtCore.Slot(int)
+    def render_new_permission(self, value):
+        project = self.get_recent_project()
+        project_desc = '{} - {}'.format(project['path'], project["access_level"])
+        widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
+        widgetItem.p_id = project["p_id"]
+        widgetItem.access_level = project["access_level"]
+        self.listProjects.addItem(widgetItem)
 
     @QtCore.Slot(int)
     def reload_window(self, value):
