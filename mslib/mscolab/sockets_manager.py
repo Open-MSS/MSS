@@ -181,6 +181,19 @@ class SocketsManager(object):
             self.fm.update_project(int(p_id), 'autosave', 0, user)
             socketio.emit('autosave-client-db', json.dumps({"p_id": p_id}))
 
+    def emit_new_permission(self, u_id, p_id):
+        """
+        to refresh project list of u_id
+        """
+        _index = None
+        for counter, ss in enumerate(self.sockets):
+            if ss["u_id"] == u_id:
+                _index = counter
+        if _index is None:
+            return
+        s_id = self.sockets[_index]["s_id"]
+        socketio.emit('new-permission', json.dumps({"p_id": p_id}), room=str(s_id))
+
 
 def setup_managers(app):
 
@@ -195,4 +208,5 @@ def setup_managers(app):
     socketio.on_event('file-save', sm.handle_file_save)
     socketio.on_event('autosave', sm.handle_autosave_enable)
     socketio.on_event('add-user-to-room', sm.join_user_to_room)
+    socketio.sm = sm
     return (socketio, cm, fm)
