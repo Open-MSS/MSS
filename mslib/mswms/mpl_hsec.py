@@ -103,7 +103,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             crs_list.add("EPSG:{:d}".format(code))
         return sorted(crs_list)
 
-    def plot_hsection(self, data, lats, lons, bbox=(-180, 180, -90, 90),
+    def plot_hsection(self, data, lats, lons, bbox=(-180, -90, 180, 90),
                       level=None, figsize=(960, 640), crs=None,
                       proj_params=None,
                       valid_time=None, init_time=None, style=None,
@@ -149,7 +149,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self._prepare_datafields()
 
         logging.debug("creating figure..")
-        dpi = 80
+        dpi = 55
         figsize = (figsize[0] / dpi), (figsize[1] / dpi)
         facecolor = "white"
         fig = plt.figure(figsize=figsize, dpi=dpi, facecolor=facecolor)
@@ -162,11 +162,11 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             ax = plt.axes([0.05, 0.05, 0.9, 0.88], projection=user_proj)
 
         if bbox_units == "degree":
-            ax.set_extent(bbox)
+            ax.set_extent([bbox[0], bbox[2], bbox[1], bbox[3]])
         elif bbox_units.startswith("meter"):
             # convert meters to degrees
-            ct_center = [float(_x) for _x in bbox_units[6:-1].split(",")]
-            ax.set_extent(bbox[0] + ct_center[0], bbox[1], ct_center[0], bbox[2] + ct_center[1], bbox[3] + ct_center[1])
+            print(f"THIS PROBLEM{bbox}")
+            ax.set_extent([bbox[0], bbox[2], bbox[1], bbox[3]])
         elif bbox_units == "no":
             pass
         else:

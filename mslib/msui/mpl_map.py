@@ -218,7 +218,7 @@ class MapCanvas():
         if visible and self.map_grid is False:
             # Draw new graticule if visible is True and no current graticule
             # exists.
-            self.gl = self.ax.gridlines(crs=self.ax.projection)
+            self.gl = self.ax.gridlines()
             if self.ax.projection == ccrs.PlateCarree():
                 self.gl.xlabels_bottom = True
                 self.gl.ylabels_left = True
@@ -231,7 +231,7 @@ class MapCanvas():
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            self.gl = self.ax.gridlines(crs=self.ax.projection)
+            self.gl = self.ax.gridlines()
             self.gl.xlines = False
             self.gl.ylines = False
             self.map_grid = False

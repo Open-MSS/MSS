@@ -303,13 +303,13 @@ def get_projection_params(proj):
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
                 "basemap": {"projection": ccrs.Stereographic(central_latitude=lat_0, central_longitude=lon_0)},
-                "bbox": "degree", "fixed": True}
+                "bbox": "degree", "fixed": False}
         elif epsg.startswith("778") and len(epsg) == 8:  # user defined MSS code. deprecated.
             logging.warning("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
                 "basemap": {"projection": ccrs.Stereographic(central_latitude=-lat_0, central_longitude=lon_0)},
-                "bbox": "degree", "fixed": True}
+                "bbox": "degree", "fixed": False}
         elif epsg in ("4326"):
             proj_params = {"basemap": {"projection": ccrs.PlateCarree()}, "bbox": "degree", "fixed": False}
         elif epsg in ("4258"):
