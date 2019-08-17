@@ -52,13 +52,21 @@ class SocketsManager(object):
     def handle_connect(self):
         logging.debug(request.sid)
 
-    def join_user_to_room(self, json):
+    def join_creator_to_room(self, json):
         token = json['token']
         user = User.verify_auth_token(token)
         if not user:
             return
         p_id = json['p_id']
         join_room(str(p_id))
+
+    def join_collaborator_to_room(self, u_id, p_id):
+        s_id = None
+        for ss in self.sockets:
+            if ss["u_id"] == u_id:
+                s_id = ss["s_id"]
+        if s_id is not None:
+            join_room(str(p_id), sid=s_id, namespace='/')
 
     def handle_start_event(self, json):
         """
@@ -145,6 +153,7 @@ class SocketsManager(object):
             "comment": comment for file-save, defaults to None
         }
         """
+
         p_id = json_req['p_id']
         content = json_req['content']
         comment = json_req.get('comment', "")
@@ -207,6 +216,6 @@ def setup_managers(app):
     socketio.on_event('chat-message', sm.handle_message)
     socketio.on_event('file-save', sm.handle_file_save)
     socketio.on_event('autosave', sm.handle_autosave_enable)
-    socketio.on_event('add-user-to-room', sm.join_user_to_room)
+    socketio.on_event('add-user-to-room', sm.join_creator_to_room)
     socketio.sm = sm
     return (socketio, cm, fm)

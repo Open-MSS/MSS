@@ -211,9 +211,10 @@ def start_server(app, sockio, cm, fm, port=8083):
         access_level = request.form.get('access_level', None)
         user = g.user
         if u_id == 0:
-            u_id = User.query.filter_by(username=username).first().identifier
+            u_id = User.query.filter_by(username=username).first().id
         success = str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
         if success:
+            sockio.sm.join_collaborator_to_room(int(u_id), int(p_id))
             sockio.sm.emit_new_permission(int(u_id), int(p_id))
         return str(success)
 
