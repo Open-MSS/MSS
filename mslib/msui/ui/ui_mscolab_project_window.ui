@@ -6,32 +6,32 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>990</width>
-    <height>826</height>
+    <width>810</width>
+    <height>740</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
-    <width>990</width>
-    <height>802</height>
+    <width>810</width>
+    <height>740</height>
    </size>
   </property>
   <property name="windowTitle">
-   <string>Mscolab Project</string>
+   <string>Mscolab Project Chat</string>
   </property>
   <widget class="QWidget" name="verticalLayoutWidget_3">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>991</width>
-     <height>828</height>
+     <width>809</width>
+     <height>739</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -45,6 +45,12 @@
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
              <widget class="QLineEdit" name="username">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="minimumSize">
                <size>
                 <width>408</width>
@@ -55,6 +61,12 @@
             </item>
             <item>
              <widget class="QComboBox" name="accessLevel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <item>
                <property name="text">
                 <string>collaborator</string>
@@ -74,6 +86,12 @@
             </item>
             <item>
              <widget class="QPushButton" name="add">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>add</string>
               </property>
@@ -81,6 +99,12 @@
             </item>
             <item>
              <widget class="QPushButton" name="modify">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>modify</string>
               </property>
@@ -88,6 +112,12 @@
             </item>
             <item>
              <widget class="QPushButton" name="delete_1">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>delete</string>
               </property>
@@ -99,6 +129,12 @@
         </item>
         <item>
          <widget class="QLabel" name="proj_info">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string/>
           </property>
@@ -106,6 +142,12 @@
         </item>
         <item>
          <widget class="QLabel" name="user_info">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string/>
           </property>
@@ -116,14 +158,14 @@
           <item>
            <widget class="QListWidget" name="collaboratorsList">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="minimumSize">
              <size>
-              <width>200</width>
+              <width>256</width>
               <height>300</height>
              </size>
             </property>
@@ -139,7 +181,7 @@
             </property>
             <property name="minimumSize">
              <size>
-              <width>256</width>
+              <width>539</width>
               <height>300</height>
              </size>
             </property>
@@ -151,10 +193,16 @@
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QPlainTextEdit" name="messageText">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
-              <width>700</width>
-              <height>100</height>
+              <width>710</width>
+              <height>50</height>
              </size>
             </property>
             <property name="placeholderText">
@@ -167,6 +215,9 @@
             <property name="text">
              <string>send</string>
             </property>
+            <property name="default">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
          </layout>
@@ -174,34 +225,33 @@
        </layout>
       </item>
       <item>
-       <widget class="QListWidget" name="changes">
-        <property name="minimumSize">
-         <size>
-          <width>521</width>
-          <height>300</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+         <widget class="QListWidget" name="changes">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-          <property name="sizeHint" stdset="0">
+          <property name="minimumSize">
            <size>
-            <width>40</width>
-            <height>20</height>
+            <width>710</width>
+            <height>280</height>
            </size>
           </property>
-         </spacer>
+         </widget>
         </item>
-        <item>
+        <item alignment="Qt::AlignTop">
          <widget class="QPushButton" name="checkout">
           <property name="text">
            <string>checkout</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+          <property name="default">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
