@@ -328,6 +328,7 @@ class MapCanvas():
         curr_extent = self.ax.get_extent(ccrs.PlateCarree())
         require_new_axis = False
         if kwargs_update:
+            print(f"kwargs update {kwargs_update}")
             proj_keys = ["epsg", "projection"]
             if any(_x in kwargs_update for _x in proj_keys):
                 for key in (_x for _x in proj_keys if _x in self.kwargs):
@@ -659,7 +660,6 @@ class MapCanvas():
                 lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), npoints)
             except ValueError:
                 lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), 2)
-            print(f"LONSLATS {lonlats}")
             # The cylindrical projection of matplotlib is not periodic, that means that
             # -170 longitude and 190 longitude are not identical. The gc projection however
             # assumes identity and maps all longitudes to -180 to 180. This is no issue for
