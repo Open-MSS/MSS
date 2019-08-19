@@ -235,7 +235,10 @@ def start_server(app, sockio, cm, fm, port=8083):
         username = request.form.get('username', None)
         access_level = request.form.get('access_level', None)
         user = g.user
-        return str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
+        success = str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
+        if success == "True":
+            sockio.sm.emit_update_permission(u_id, p_id)
+        return success
 
     @app.route('/update_project', methods=['POST'])
     @verify_user

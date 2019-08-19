@@ -197,6 +197,15 @@ class SocketsManager(object):
         """
         socketio.emit('new-permission', json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
 
+    def emit_update_permission(self, u_id, p_id):
+        """
+        to refresh permissions in msui
+        """
+        perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+        socketio.emit('update-permission', json.dumps({"p_id": p_id,
+                                                       "u_id": u_id,
+                                                       "access_level": perm.access_level}), room=str(p_id))
+
 
 def setup_managers(app):
 
