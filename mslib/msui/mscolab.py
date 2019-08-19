@@ -275,6 +275,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_autosave.connect(self.autosave_toggle)
             self.conn.signal_new_permission.connect(self.render_new_permission)
+            self.conn.signal_update_permission.connect(self.handle_update_permission)
             # activate add project button here
             self.addProject.setEnabled(True)
 
@@ -514,6 +515,23 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             xml_text = self.waypoints_model.save_to_mscolab()
             # to emit to mscolab
             self.conn.save_file(self.token, self.active_pid, xml_text, comment=comment)
+
+    @QtCore.Slot(int, int, str)
+    def handle_update_permission(self, p_id, u_id, access_level):
+        if p_id != self.active_pid:
+            return
+        if u_id == self.user["id"]:
+            # update table of projects
+            # update project window's control if open
+            # update view window nav elements if open
+            # update autosave stats
+            pass
+
+        # update project window if open
+        if self.project_window is not None:
+            self.project_window.load_users()
+
+
 
     @QtCore.Slot()
     def reload_windows_slot(self):

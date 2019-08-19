@@ -37,6 +37,7 @@ class ConnectionManager(QtCore.QObject):
     signal_autosave = QtCore.Signal(int, int, name="autosave en/db")
     signal_message_receive = QtCore.Signal(str, str, name="message rcv")
     signal_new_permission = QtCore.Signal(int, int, name="new permission")
+    signal_update_permission = QtCore.Signal(int, int, str, name="update permission")
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -49,11 +50,21 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('chat-message-client', handler=self.handle_incoming_message)
         # on new permission
         self.sio.on('new-permission', handler=self.handle_new_permission)
+        # on update of permission
+        self.sio.on('update-permission', handler=self.handle_update_permission)
         self.mscolab_server_url = mscolab_server_url
         self.sio.connect(self.mscolab_server_url)
         self.sio.emit('start', {'token': token})
         self.token = token
         self.user = user
+
+    def handle_update_permission(self, message):
+        message = json.loads(message)
+        p_id = int(message["p_id"])
+        u_id = int(message["u_id"])
+        access_level = message["access_level"]
+        self.signal_update_permission.emit(p_id, u_id, access_level)
+
 
     def handle_new_permission(self, message): 
         message = json.loads(message)
