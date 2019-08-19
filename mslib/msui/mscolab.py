@@ -318,6 +318,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def set_active_pid(self, item):
+        # remove all windows if the current active_pid is not selected p_id
+        if item.p_id != self.active_pid:
+            # close all hanging window
+            for window in self.active_windows:
+                window.close()
+            # show autosave button, and empty autosaveStatus
+            self.autoSave.setVisible(True)
+            self.autosaveStatus.setText("")
         # set active_pid here
         self.active_pid = item.p_id
         self.access_level = item.access_level
@@ -353,6 +361,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # enable autosave
             self.autosave_status = True
         else:
+            self.autoSave.blockSignals(True)
+            self.autoSave.setChecked(False)
+            self.autoSave.blockSignals(False)
             self.autosave_status = False
 
         # hide autosave button if access_level is non-admin
@@ -477,6 +488,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.token = None
         # delete active-project-id
         self.active_pid = None
+        # delete active access_level
+        self.access_level = None
         # clear projects list here
         self.loggedInWidget.hide()
         self.loginWidget.show()
@@ -488,7 +501,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn = None
         # close all hanging window
         for window in self.active_windows:
-            window.hide()
+            window.close()
         # show autosave button, and empty autosaveStatus
         self.autoSave.setVisible(True)
         self.autosaveStatus.setText("")
