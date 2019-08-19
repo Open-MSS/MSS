@@ -97,6 +97,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # set data dir, uri
         self.data_dir = data_dir
         self.mscolab_server_url = mscolab_server_url
+        # autosave status
+        self.autosave_status = None
 
     def handle_export(self):
         # ToDo when autosave mode gets upgraded, have to fetch from remote
@@ -338,6 +340,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.get(self.mscolab_server_url + '/project_details', data=data)
         _json = json.loads(r.text)
+
         if _json["autosave"] is True:
             # one time activate
             self.autoSave.blockSignals(True)
@@ -347,6 +350,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.fetch_ft.setEnabled(False)
             # connect data change to handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
+            # enable autosave
+            self.autosave_status = True
+        else:
+            self.autosave_status = False
 
         # hide autosave button if access_level is non-admin
         if self.access_level == "viewer" or self.access_level == "collaborator":
@@ -510,7 +517,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(int)
     def reload_window(self, value):
-        if self.active_pid != value:
+        if self.active_pid != value or self.autosave_status is False:
             return
         logging.debug("reloading window")
         # ask the user in dialog if he wants the change, only for autosave mode
@@ -541,19 +548,22 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             return
         if enable:
             # enable autosave, disable save button
+            self.autosave_status = True
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
             # reload window
             self.reload_wps_from_server()
+            self.waypoints_model.dataChanged.connect(self.handle_data_change)
             self.autosaveStatus.setText("Autosave is enabled")
 
         else:
+            self.autosave_status = False
             # disable autosave, enable save button
             self.save_ft.setEnabled(True)
             self.fetch_ft.setEnabled(True)
             # connect change events viewwindow HERE to emit file-save
             # ToDo - remove hack to disconnect this handler
-            self.waypoints_model.dataChanged.connect(self.handle_data_change)
+            self.waypoints_model.dataChanged.disconnect(self.handle_data_change)
             self.autosaveStatus.setText("Autosave is disabled")
 
     def setIdentifier(self, identifier):
