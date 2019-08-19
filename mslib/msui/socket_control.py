@@ -36,7 +36,7 @@ class ConnectionManager(QtCore.QObject):
     signal_reload = QtCore.Signal(int, name="reload_wps")
     signal_autosave = QtCore.Signal(int, int, name="autosave en/db")
     signal_message_receive = QtCore.Signal(str, str, name="message rcv")
-    signal_new_permission = QtCore.Signal(int, name="new permission")
+    signal_new_permission = QtCore.Signal(int, int, name="new permission")
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -55,10 +55,11 @@ class ConnectionManager(QtCore.QObject):
         self.token = token
         self.user = user
 
-    def handle_new_permission(self, message):
+    def handle_new_permission(self, message): 
         message = json.loads(message)
         p_id = int(message["p_id"])
-        self.signal_new_permission.emit(p_id)
+        u_id = int(message["u_id"])
+        self.signal_new_permission.emit(p_id, u_id)
 
     def handle_incoming_message(self, message):
         # raise signal to render to view

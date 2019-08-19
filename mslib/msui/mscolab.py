@@ -506,14 +506,22 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def reload_windows_slot(self):
         self.reload_window(self.active_pid)
 
-    @QtCore.Slot(int)
-    def render_new_permission(self, value):
-        project = self.get_recent_project()
-        project_desc = '{} - {}'.format(project['path'], project["access_level"])
-        widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
-        widgetItem.p_id = project["p_id"]
-        widgetItem.access_level = project["access_level"]
-        self.listProjects.addItem(widgetItem)
+    @QtCore.Slot(int, int)
+    def render_new_permission(self, p_id, u_id):
+        data = {
+            'token': self.token
+        }
+        r = requests.get(self.mscolab_server_url + '/user', data=data)
+        _json = json.loads(r.text)
+        if _json['user']['id'] == u_id:
+            project = self.get_recent_project()
+            project_desc = '{} - {}'.format(project['path'], project["access_level"])
+            widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
+            widgetItem.p_id = project["p_id"]
+            widgetItem.access_level = project["access_level"]
+            self.listProjects.addItem(widgetItem)
+        if self.project_window is not None:
+            self.project_window.load_users()
 
     @QtCore.Slot(int)
     def reload_window(self, value):

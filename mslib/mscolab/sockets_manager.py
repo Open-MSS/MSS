@@ -193,15 +193,9 @@ class SocketsManager(object):
     def emit_new_permission(self, u_id, p_id):
         """
         to refresh project list of u_id
+        and to refresh collaborators' list
         """
-        _index = None
-        for counter, ss in enumerate(self.sockets):
-            if ss["u_id"] == u_id:
-                _index = counter
-        if _index is None:
-            return
-        s_id = self.sockets[_index]["s_id"]
-        socketio.emit('new-permission', json.dumps({"p_id": p_id}), room=str(s_id))
+        socketio.emit('new-permission', json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
 
 
 def setup_managers(app):
