@@ -87,13 +87,24 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.user_info.setText("logged in as: {}".format(user_d["username"]))
         self.proj_info.setText("Project name: {}".format(proj_d["path"]))
         # disable admin actions if viewer or collaborator
-        if self.access_level == "collaborator" or self.access_level == "viewer":
+        self.check_permission_and_render_control(self.access_level)
+
+    def check_permission_and_render_control(self, access_level):
+        if access_level == "collaborator" or access_level == "viewer":
             self.add.setEnabled(False)
             self.modify.setEnabled(False)
             self.delete_1.setEnabled(False)
-        if self.access_level == "viewer":
+        else:
+            self.add.setEnabled(True)
+            self.modify.setEnabled(True)
+            self.delete_1.setEnabled(True)
+
+        if access_level == "viewer":
             self.checkout.setEnabled(False)
             self.sendMessage.setEnabled(False)
+        else:
+            self.checkout.setEnabled(True)
+            self.sendMessage.setEnabled(True)
 
     def get_user_details(self, token):
         """
