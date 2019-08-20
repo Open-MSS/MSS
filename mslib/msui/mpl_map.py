@@ -325,7 +325,7 @@ class MapCanvas():
         # Update kwargs if new parameters such as the map region have been
         # given.
         user_proj = self.ax.projection
-        curr_extent = self.ax.get_extent(ccrs.PlateCarree())
+        curr_extent = self.ax.get_extent()
         require_new_axis = False
         if kwargs_update:
             print(f"kwargs update {kwargs_update}")
@@ -352,7 +352,7 @@ class MapCanvas():
             self.fig.clf()
             if unchanged:
                 ax = self.fig.add_subplot(1, 1, 1, projection=user_proj)
-                ax.set_extent(curr_extent)
+                ax.set_extent(curr_extent, user_proj)
             else:
                 if kwargs["fixed"] is True:
                     ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
