@@ -78,9 +78,11 @@ def testdata_exists():
     if not constants.ROOT_FS.exists(u'mss'):
         pytest.skip("testdata not existing")
 
+
 # content of conftest.py
 def pytest_configure(config):
     sys._called_from_test = True
+
 
 def pytest_unconfigure(config):
     del sys._called_from_test
