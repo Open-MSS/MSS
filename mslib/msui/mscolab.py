@@ -217,6 +217,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def open_project_window(self):
         if self.active_pid is None:
             return
+        if self.project_window is not None:
+            return
         view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn,
                                               self.access_level, parent=self.projWindow,
                                               mscolab_server_url=self.mscolab_server_url)
@@ -437,14 +439,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
                                                    parent=self.listProjects,
                                                    _id=self.id_count)
+            view_window.view_type = "topview"
         elif _type == "sideview":
             view_window = sideview.MSSSideViewWindow(model=self.waypoints_model,
                                                      parent=self.listProjects,
                                                      _id=self.id_count)
+            view_window.view_type = "sideview"
         else:
             view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
                                                        parent=self.listProjects,
                                                        _id=self.id_count)
+            view_window.view_type = "tableview"
         if self.access_level == "viewer":
             self.disable_navbar_action_buttons(_type, view_window)
 
@@ -472,6 +477,23 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window.btCloneWaypoint.setEnabled(False)
             view_window.btDeleteWayPoint.setEnabled(False)
             view_window.btInvertDirection.setEnabled(False)
+
+    def enable_navbar_action_buttons(self, _type, view_window):
+        """
+        _type: view type (topview, sideview, tableview)
+        """
+        if _type == "topview" or _type == "sideview":
+            actions = view_window.mpl.navbar.actions()
+            for action in actions:
+                action_text = action.text()
+                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
+                    action.setEnabled(True)
+        else:
+            # _type == tableview
+            view_window.btAddWayPointToFlightTrack.setEnabled(True)
+            view_window.btCloneWaypoint.setEnabled(True)
+            view_window.btDeleteWayPoint.setEnabled(True)
+            view_window.btInvertDirection.setEnabled(True)
 
     def logout(self):
         # check if autosave is enabled
@@ -503,6 +525,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # close all hanging window
         for window in self.active_windows:
             window.close()
+        # close project window if active
+        if self.project_window is not None:
+            self.project_window.close()
         # show autosave button, and empty autosaveStatus
         self.autoSave.setVisible(True)
         self.autosaveStatus.setText("")
@@ -518,20 +543,54 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(int, int, str)
     def handle_update_permission(self, p_id, u_id, access_level):
-        if p_id != self.active_pid:
-            return
         if u_id == self.user["id"]:
             # update table of projects
+            for i in range(self.listProjects.count()):
+                item = self.listProjects.item(i)
+                if item.p_id == p_id:
+                    desc = item.text().split('-')
+                    desc[-1] = access_level
+                    desc = ''.join(desc)
+                    item.setText(desc)
+                    item.p_id = p_id
+                    item.access_level = access_level
+            if p_id != self.active_pid:
+                return
+            self.access_level = access_level
             # update project window's control if open
+            if self.project_window is not None:
+                self.project_window.check_permission_and_render_control(self.access_level)
             # update view window nav elements if open
+            for window in self.active_windows:
+                _type = window.view_type
+                if self.access_level == "viewer":
+                    self.disable_navbar_action_buttons(_type, window)
+                else:
+                    self.enable_navbar_action_buttons(_type, window)
             # update autosave stats
-            pass
+            if self.access_level == "admin" or self.access_level == "creator":
+                # enable autosave set it to checked status
+                self.autoSave.setVisible(True)
+                if self.autosave_status is True:
+                    self.autoSave.blockSignals(True)
+                    self.autoSave.setChecked(True)
+                    self.autoSave.blockSignals(False)
+                else:
+                    self.autoSave.blockSignals(True)
+                    self.autoSave.setChecked(False)
+                    self.autoSave.blockSignals(False)
+                self.autosaveStatus.setText("")
+            else:
+                # disable autosave, set status text
+                self.autoSave.setVisible(False)
+                if self.autosave_status is True:
+                    self.autosaveStatus.setText("Autosave is enabled!")
+                else:
+                    self.autosaveStatus.setText("Autosave is enabled!")
 
         # update project window if open
         if self.project_window is not None:
             self.project_window.load_users()
-
-
 
     @QtCore.Slot()
     def reload_windows_slot(self):

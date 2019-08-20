@@ -92,14 +92,16 @@ class Test_MscolabProject(object):
         self.window.save_wp_mscolab(comment="dummy save")
         QtWidgets.QApplication.processEvents()
         # test doesn't work without the sleep, because of delay in adding change and commit
-        time.sleep(3)
+        time.sleep(2)
         # change again for db consistency
         self.window.waypoints_model.invert_direction()
         self.window.save_wp_mscolab(comment="dummy save")
         QtWidgets.QApplication.processEvents()
-        time.sleep(3)
+        time.sleep(2)
         # fetch wp/chats/project
         self.window.reload_window(self.window.active_pid)
+        QtWidgets.QApplication.processEvents()
+        self.proj_window.load_all_changes()
         QtWidgets.QApplication.processEvents()
         len_after = self.proj_window.changes.count()
         # test change render
@@ -112,6 +114,8 @@ class Test_MscolabProject(object):
         self.proj_window.request_undo_mscolab()
         # wait till server emits event to reload
         time.sleep(3)
+        self.proj_window.load_all_changes()
+        QtWidgets.QApplication.processEvents()
         assert self.proj_window.changes.count() == old_count + 1
         # delete the changes
         with self.app.app_context():

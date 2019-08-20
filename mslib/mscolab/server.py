@@ -235,6 +235,8 @@ def start_server(app, sockio, cm, fm, port=8083):
         username = request.form.get('username', None)
         access_level = request.form.get('access_level', None)
         user = g.user
+        if username is not None:
+            u_id = User.query.filter_by(username=username).first().id
         success = str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
         if success == "True":
             sockio.sm.emit_update_permission(u_id, p_id)
