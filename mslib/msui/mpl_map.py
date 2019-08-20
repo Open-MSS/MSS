@@ -157,8 +157,7 @@ class MapCanvas():
         # Curiously, plot() works fine without this setting, but scatter()
         # doesn't.
         if self.appearance["fill_continents"]:
-            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]),
-                                   self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"]))
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
         else:
             self.map_continents = None
 
@@ -253,8 +252,7 @@ class MapCanvas():
             # scatter() for drawing the flight tracks and trajectories.
             # Curiously, plot() works fine without this setting, but scatter()
             # doesn't.
-            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]),
-                                   self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"]))
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
             self.fig.canvas.draw()
         elif not visible and self.map_continents is not None:
             # Remove current fills. They are stored as a list of polygon patches
@@ -267,8 +265,7 @@ class MapCanvas():
             # Colours have changed: Remove the old fill and redraw.
             # for patch in self.map_continents:
             #     patch.remove()
-            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]),
-                                   self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"]))
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
             self.fig.canvas.draw()
 
     def set_coastlines_visible(self, visible=True):
@@ -299,6 +296,7 @@ class MapCanvas():
             self.map_boundary = None
             self.fig.canvas.draw()
         elif visible:
+            self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"])
             self.fig.canvas.draw()
 
     def update_with_coordinate_change(self, kwargs_update=None, unchanged=False):
