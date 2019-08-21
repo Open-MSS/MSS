@@ -140,12 +140,13 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax.grid(b=True)
 
         # Plot title (either in image axes or above).
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
-        titlestring = u"{} [{:.0f}..{:.0f} hPa]\nValid: {} (step {:d} hrs from {})".format(
+        titlestring = u"{} [{:.0f}..{:.0f} hPa]\nValid: {}".format(
             titlestring, self.p_bot / 100., self.p_top / 100.,
-            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"),
-            time_step_hrs, self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+        if self.uses_inittime_dimension():
+            titlestring += u" (step {:.0f} hrs from {})".format(
+                (self.valid_time - self.init_time).total_seconds() / 3600,
+                self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
     @abstractmethod
     def _plot_style(self):

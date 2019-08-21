@@ -242,10 +242,10 @@ class WMSServer(object):
         hsec_layers = []
         for dataset in self.hsec_layer_registry:
             for layer in self.hsec_layer_registry[dataset].values():
-                if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
+                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
                     logging.error(u"layer %s/%s has no init times!", layer, dataset)
                     continue
-                if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
+                if layer.uses_validtime_dimensions() and len(layer.get_all_valid_times()) == 0:
                     logging.error(u"layer %s/%s has no valid times!", layer, dataset)
                     continue
                 hsec_layers.append((dataset, layer))
@@ -254,10 +254,10 @@ class WMSServer(object):
         vsec_layers = []
         for dataset in self.vsec_layer_registry:
             for layer in self.vsec_layer_registry[dataset].values():
-                if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
+                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
                     logging.error(u"layer %s/%s has no init times!", layer, dataset)
                     continue
-                if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
+                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
                     logging.error(u"layer %s/%s has no valid times!", layer, dataset)
                     continue
                 vsec_layers.append((dataset, layer))
@@ -382,13 +382,12 @@ class WMSServer(object):
                     text=u"Invalid LAYER '{}.{}' requested".format(dataset, layer))
 
             # Check if the layer requires time information and if they are given.
-            if self.hsec_layer_registry[dataset][layer].uses_time_dimensions():
-                if init_time is None:
-                    return self.create_service_exception(
-                        code="MissingDimensionValue",
-                        text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)")
-                if valid_time is None:
-                    return self.create_service_exception(code="MissingDimensionValue", text="TIME not specified")
+            if self.hsec_layer_registry[dataset][layer].uses_inittime_dimension() and init_time is None:
+                return self.create_service_exception(
+                    code="MissingDimensionValue",
+                    text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)")
+            if self.hsec_layer_registry[dataset][layer].uses_validtime_dimension() and valid_time is None:
+                return self.create_service_exception(code="MissingDimensionValue", text="TIME not specified")
 
             # Check if the requested coordinate system is supported.
             if not self.hsec_layer_registry[dataset][layer].support_epsg_code(crs):
