@@ -90,6 +90,9 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.check_permission_and_render_control(self.access_level)
 
     def check_permission_and_render_control(self, access_level):
+        """
+        block some control according to access_level
+        """
         if access_level == "collaborator" or access_level == "viewer":
             self.add.setEnabled(False)
             self.modify.setEnabled(False)
