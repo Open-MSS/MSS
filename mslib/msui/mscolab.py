@@ -292,6 +292,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.add_projects_to_ui(projects)
 
     def get_recent_pid(self):
+        """
+        get most recent project's p_id
+        #ToDo can be merged with get_recent_project
+        """
         data = {
             "token": self.token
         }
@@ -301,6 +305,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         return projects[-1]["p_id"]
 
     def get_recent_project(self):
+        """
+        get most recent project
+        """
         data = {
             "token": self.token
         }
@@ -464,6 +471,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def disable_navbar_action_buttons(self, _type, view_window):
         """
         _type: view type (topview, sideview, tableview)
+        view_window: PyQt view window
+
+        function disables some control, used if access_level is not appropriate
         """
         if _type == "topview" or _type == "sideview":
             actions = view_window.mpl.navbar.actions()
@@ -481,6 +491,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def enable_navbar_action_buttons(self, _type, view_window):
         """
         _type: view type (topview, sideview, tableview)
+        view_window: PyQt view window
+
+        function enables some control, used if access_level is appropriate
         """
         if _type == "topview" or _type == "sideview":
             actions = view_window.mpl.navbar.actions()
@@ -543,6 +556,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(int, int, str)
     def handle_update_permission(self, p_id, u_id, access_level):
+        """
+        p_id: project id
+        u_id: user id
+        access_level: updated access level
+
+        function updates existing permissions and related control availability
+        """
         if u_id == self.user["id"]:
             # update table of projects
             for i in range(self.listProjects.count()):
@@ -598,6 +618,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(int, int)
     def render_new_permission(self, p_id, u_id):
+        """
+        p_id: project id
+        u_id: user id
+
+        to render new permission if added
+        """
         data = {
             'token': self.token
         }

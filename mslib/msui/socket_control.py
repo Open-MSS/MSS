@@ -59,6 +59,9 @@ class ConnectionManager(QtCore.QObject):
         self.user = user
 
     def handle_update_permission(self, message):
+        """
+        signal update of permission affected
+        """
         message = json.loads(message)
         p_id = int(message["p_id"])
         u_id = int(message["u_id"])
@@ -66,6 +69,9 @@ class ConnectionManager(QtCore.QObject):
         self.signal_update_permission.emit(p_id, u_id, access_level)
 
     def handle_new_permission(self, message):
+        """
+        signal updating of newly added permission
+        """
         message = json.loads(message)
         p_id = int(message["p_id"])
         u_id = int(message["u_id"])

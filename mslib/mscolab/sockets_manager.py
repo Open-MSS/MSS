@@ -53,6 +53,11 @@ class SocketsManager(object):
         logging.debug(request.sid)
 
     def join_creator_to_room(self, json):
+        """
+        json has:
+            - token: authentication token
+            - p_id: project id
+        """
         token = json['token']
         user = User.verify_auth_token(token)
         if not user:
@@ -61,6 +66,11 @@ class SocketsManager(object):
         join_room(str(p_id))
 
     def join_collaborator_to_room(self, u_id, p_id):
+        """
+        json has:
+            - u_id: user id(collaborator's id)
+            - p_id: project id
+        """
         s_id = None
         for ss in self.sockets:
             if ss["u_id"] == u_id:
@@ -208,6 +218,12 @@ class SocketsManager(object):
 
 
 def setup_managers(app):
+    """
+    takes app as parameter to extract config data,
+    initializes ChatManager, FileManager, SocketManager and return them
+    #ToDo return socketio and integrate socketio.cm = ChatManager()
+    similarly for FileManager and SocketManager(already done for this)
+    """
 
     cm = ChatManager()
     fm = FileManager(app.config["MSCOLAB_DATA_DIR"])
