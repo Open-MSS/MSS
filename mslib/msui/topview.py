@@ -74,6 +74,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "colour_ft_vertices": (0, 0, 0, 0),
                              "colour_ft_waypoints": (0, 0, 0, 0)}
 
+        settings_dict["fill_waterbodies"] = True  # removing water bodies does not work properly
+
         self.wms_connected = wms_connected
         # check parent.wms_connected to disable cbFillWaterBodies and cbFillContinents
         if self.wms_connected:
@@ -83,9 +85,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             self.cbFillContinents.setStyleSheet("color: black")
             self.cbFillWaterBodies.setStyleSheet("color: black")
         else:
-            settings_dict["fill_waterbodies"] = True
-            settings_dict["fill_continents"] = True
             self.cbFillWaterBodies.setChecked(settings_dict["fill_waterbodies"])
+            self.cbFillWaterBodies.setEnabled(False)
             self.cbFillContinents.setChecked(settings_dict["fill_continents"])
             self.cbFillContinents.setEnabled(True)
 
