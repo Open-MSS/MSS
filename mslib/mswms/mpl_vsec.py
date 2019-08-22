@@ -55,6 +55,9 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     Superclass for all Matplotlib-based vertical section styles.
     """
 
+    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
+    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
+
     def __init__(self, driver=None):
         """Constructor.
         """
@@ -96,38 +99,15 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Set pressure axis scale to log.
         ax.set_yscale("log")
 
-        # Compute the position of major and minor ticks. Major ticks are labelled.
-        # By default, major ticks are drawn every 100hPa. If p_top < 100hPa,
-        # the distance is reduced to every 10hPa above 100hPa.
-        label_distance = 10000
-        label_bot = self.p_bot - (self.p_bot % label_distance)
-        major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
-
-        # .. check step reduction to 10 hPa ..
-        if self.p_top < 10000:
-            major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1,
-                                     -label_distance // 10)
-            len_major_ticks = len(major_ticks)
-            major_ticks = np.resize(major_ticks,
-                                    len_major_ticks + len(major_ticks2) - 1)
-            major_ticks[len_major_ticks:] = major_ticks2[1:]
-
-        labels = ["{:.0f}".format(l / 100.) for l in major_ticks]
-
-        # .. the same for the minor ticks ..
-        p_top_minor = max(label_distance, self.p_top)
-        label_distance_minor = 1000
-        label_bot_minor = self.p_bot - (self.p_bot % label_distance_minor)
-        minor_ticks = np.arange(label_bot_minor, p_top_minor - 1,
-                                -label_distance_minor)
-
-        if self.p_top < 10000:
-            minor_ticks2 = np.arange(minor_ticks[-1], self.p_top - 1,
-                                     -label_distance_minor // 10)
-            len_minor_ticks = len(minor_ticks)
-            minor_ticks = np.resize(minor_ticks,
-                                    len_minor_ticks + len(minor_ticks2) - 1)
-            minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
+        major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
+        minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
+        labels = ["{}".format(int(x / 100.)) if (x / 100.) - int(x / 100.) == 0
+                  else "{}".format(float(x / 100.))
+                  for x in major_ticks]
+        if len(labels) > 20:
+            labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
+        elif len(labels) > 10:
+            labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
 
         # Draw ticks and tick labels.
         ax.set_yticks(minor_ticks, minor=True)
