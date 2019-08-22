@@ -303,19 +303,23 @@ def get_projection_params(proj):
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
                 "basemap": {"projection": ccrs.Stereographic(central_latitude=lat_0, central_longitude=lon_0)},
-                "bbox": "degree", "fixed": True}
+                "bbox": "degree", "fixed": False}
         elif epsg.startswith("778") and len(epsg) == 8:  # user defined MSS code. deprecated.
             logging.warning("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
                 "basemap": {"projection": ccrs.Stereographic(central_latitude=-lat_0, central_longitude=lon_0)},
-                "bbox": "degree", "fixed": True}
+                "bbox": "degree", "fixed": False}
         elif epsg in ("4326"):
             proj_params = {"basemap": {"projection": ccrs.PlateCarree()}, "bbox": "degree", "fixed": False}
         elif epsg in ("4258"):
             proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "degree", "fixed": True}
         elif epsg in ("3031", "3412"):
-            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
+            proj4_params = ccrs.epsg(epsg).proj4_params
+            lat_0, lon_0, lat_ts = proj4_params['lat_0'], proj4_params['lon_0'], proj4_params['lat_ts']
+            proj_params = {"basemap": {"projection": ccrs.Stereographic(
+                                                        central_latitude=lat_0, central_longitude=lon_0, true_scale_latitude=lat_ts)},
+                                                        "bbox": "meter", "fixed": True}
         elif epsg in ("3411", "3413", "3575", "3995"):
             proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         elif epsg in ("3395", "3857"):

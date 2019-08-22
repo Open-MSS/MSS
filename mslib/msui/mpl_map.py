@@ -157,8 +157,7 @@ class MapCanvas():
         # Curiously, plot() works fine without this setting, but scatter()
         # doesn't.
         if self.appearance["fill_continents"]:
-            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]),
-                                   self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"]))
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
         else:
             self.map_continents = None
 
@@ -218,7 +217,7 @@ class MapCanvas():
         if visible and self.map_grid is False:
             # Draw new graticule if visible is True and no current graticule
             # exists.
-            self.gl = self.ax.gridlines(crs=self.ax.projection)
+            self.gl = self.ax.gridlines()
             if self.ax.projection == ccrs.PlateCarree():
                 self.gl.xlabels_bottom = True
                 self.gl.ylabels_left = True
@@ -231,7 +230,7 @@ class MapCanvas():
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            self.gl = self.ax.gridlines(crs=self.ax.projection)
+            self.gl = self.ax.gridlines()
             self.gl.xlines = False
             self.gl.ylines = False
             self.map_grid = False
@@ -253,8 +252,7 @@ class MapCanvas():
             # scatter() for drawing the flight tracks and trajectories.
             # Curiously, plot() works fine without this setting, but scatter()
             # doesn't.
-            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]),
-                                   self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"]))
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
             self.fig.canvas.draw()
         elif not visible and self.map_continents is not None:
             # Remove current fills. They are stored as a list of polygon patches
@@ -267,8 +265,7 @@ class MapCanvas():
             # Colours have changed: Remove the old fill and redraw.
             # for patch in self.map_continents:
             #     patch.remove()
-            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]),
-                                   self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"]))
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
             self.fig.canvas.draw()
 
     def set_coastlines_visible(self, visible=True):
@@ -299,6 +296,7 @@ class MapCanvas():
             self.map_boundary = None
             self.fig.canvas.draw()
         elif visible:
+            self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"])
             self.fig.canvas.draw()
 
     def update_with_coordinate_change(self, kwargs_update=None, unchanged=False):
@@ -325,9 +323,10 @@ class MapCanvas():
         # Update kwargs if new parameters such as the map region have been
         # given.
         user_proj = self.ax.projection
-        curr_extent = self.ax.get_extent(ccrs.PlateCarree())
+        curr_extent = self.ax.get_extent()
         require_new_axis = False
         if kwargs_update:
+            print(f"kwargs update {kwargs_update}")
             proj_keys = ["epsg", "projection"]
             if any(_x in kwargs_update for _x in proj_keys):
                 for key in (_x for _x in proj_keys if _x in self.kwargs):
@@ -351,10 +350,12 @@ class MapCanvas():
             self.fig.clf()
             if unchanged:
                 ax = self.fig.add_subplot(1, 1, 1, projection=user_proj)
-                ax.set_extent(curr_extent)
+                ax.set_extent(curr_extent, user_proj)
             else:
                 if kwargs["fixed"] is True:
                     ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
+                    if self.crs[5:] == "3031" or self.crs[5:] == "3412":
+                        ax.set_extent([-180, 180, -90, -60], ccrs.PlateCarree())
                 else:
                     try:
                         BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
@@ -655,7 +656,10 @@ class MapCanvas():
             # projection, gc.npts() returns lons that connect lon1 and lat2, not lon1 and
             # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
             # of pyproj?? (mr, 16Oct2012)
-            lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), npoints)
+            try:
+                lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), npoints)
+            except ValueError:
+                lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), 2)
             # The cylindrical projection of matplotlib is not periodic, that means that
             # -170 longitude and 190 longitude are not identical. The gc projection however
             # assumes identity and maps all longitudes to -180 to 180. This is no issue for

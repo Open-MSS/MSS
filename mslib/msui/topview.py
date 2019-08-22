@@ -274,16 +274,14 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # the projection parameters.
         kwargs = {"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"]}
         kwargs.update(proj_params["basemap"])
-        print(current_map["CRS"].lower())
+        try:
+            kwargs.update(current_map["map"])
+        except KeyError:
+            pass
         if current_map["CRS"].lower().startswith("epsg:"):
-            print(proj_params["fixed"])
             if proj_params["fixed"] is True:
                 kwargs.update({"fixed": True})
             else:
-                try:
-                    kwargs.update(current_map["map"])
-                except KeyError:
-                    pass
                 kwargs.update({"fixed": False})
 
         if only_kwargs:
