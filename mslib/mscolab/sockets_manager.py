@@ -52,13 +52,31 @@ class SocketsManager(object):
     def handle_connect(self):
         logging.debug(request.sid)
 
-    def join_user_to_room(self, json):
+    def join_creator_to_room(self, json):
+        """
+        json has:
+            - token: authentication token
+            - p_id: project id
+        """
         token = json['token']
         user = User.verify_auth_token(token)
         if not user:
             return
         p_id = json['p_id']
         join_room(str(p_id))
+
+    def join_collaborator_to_room(self, u_id, p_id):
+        """
+        json has:
+            - u_id: user id(collaborator's id)
+            - p_id: project id
+        """
+        s_id = None
+        for ss in self.sockets:
+            if ss["u_id"] == u_id:
+                s_id = ss["s_id"]
+        if s_id is not None:
+            join_room(str(p_id), sid=s_id, namespace='/')
 
     def handle_start_event(self, json):
         """
@@ -145,6 +163,7 @@ class SocketsManager(object):
             "comment": comment for file-save, defaults to None
         }
         """
+
         p_id = json_req['p_id']
         content = json_req['content']
         comment = json_req.get('comment', "")
@@ -160,6 +179,9 @@ class SocketsManager(object):
                           room=str(p_id))
             # emit file-changed event to trigger reload of flight track
             socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
+
+    def emit_file_change(self, p_id):
+        socketio.emit('file-changed', json.dumps({"p_id": p_id}), room=str(p_id))
 
     def handle_autosave_enable(self, json_req):
         """
@@ -181,8 +203,30 @@ class SocketsManager(object):
             self.fm.update_project(int(p_id), 'autosave', 0, user)
             socketio.emit('autosave-client-db', json.dumps({"p_id": p_id}))
 
+    def emit_new_permission(self, u_id, p_id):
+        """
+        to refresh project list of u_id
+        and to refresh collaborators' list
+        """
+        socketio.emit('new-permission', json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
+
+    def emit_update_permission(self, u_id, p_id):
+        """
+        to refresh permissions in msui
+        """
+        perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+        socketio.emit('update-permission', json.dumps({"p_id": p_id,
+                                                       "u_id": u_id,
+                                                       "access_level": perm.access_level}), room=str(p_id))
+
 
 def setup_managers(app):
+    """
+    takes app as parameter to extract config data,
+    initializes ChatManager, FileManager, SocketManager and return them
+    #ToDo return socketio and integrate socketio.cm = ChatManager()
+    similarly for FileManager and SocketManager(already done for this)
+    """
 
     cm = ChatManager()
     fm = FileManager(app.config["MSCOLAB_DATA_DIR"])
@@ -194,5 +238,6 @@ def setup_managers(app):
     socketio.on_event('chat-message', sm.handle_message)
     socketio.on_event('file-save', sm.handle_file_save)
     socketio.on_event('autosave', sm.handle_autosave_enable)
-    socketio.on_event('add-user-to-room', sm.join_user_to_room)
+    socketio.on_event('add-user-to-room', sm.join_creator_to_room)
+    socketio.sm = sm
     return (socketio, cm, fm)

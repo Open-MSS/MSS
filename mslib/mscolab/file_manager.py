@@ -206,8 +206,10 @@ class FileManager(object):
             if not user_victim:
                 return False
             u_id = user_victim.id
+        if u_id is None or u_id == user.id:
+            return
         perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-        if not perm:
+        if not perm or perm.access_level == "creator":
             return False
         perm.access_level = access_level
         db.session.commit()

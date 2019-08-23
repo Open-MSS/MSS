@@ -97,6 +97,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # set data dir, uri
         self.data_dir = data_dir
         self.mscolab_server_url = mscolab_server_url
+        # autosave status
+        self.autosave_status = None
 
     def handle_export(self):
         # ToDo when autosave mode gets upgraded, have to fetch from remote
@@ -215,6 +217,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def open_project_window(self):
         if self.active_pid is None:
             return
+        if self.project_window is not None:
+            return
         view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn,
                                               self.access_level, parent=self.projWindow,
                                               mscolab_server_url=self.mscolab_server_url)
@@ -272,6 +276,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_autosave.connect(self.autosave_toggle)
+            self.conn.signal_new_permission.connect(self.render_new_permission)
+            self.conn.signal_update_permission.connect(self.handle_update_permission)
             # activate add project button here
             self.addProject.setEnabled(True)
 
@@ -286,7 +292,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.add_projects_to_ui(projects)
 
     def get_recent_pid(self):
-        # add projects
+        """
+        get most recent project's p_id
+        # ToDo can be merged with get_recent_project
+        """
         data = {
             "token": self.token
         }
@@ -294,6 +303,18 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         _json = json.loads(r.text)
         projects = _json["projects"]
         return projects[-1]["p_id"]
+
+    def get_recent_project(self):
+        """
+        get most recent project
+        """
+        data = {
+            "token": self.token
+        }
+        r = requests.get(self.mscolab_server_url + '/projects', data=data)
+        _json = json.loads(r.text)
+        projects = _json["projects"]
+        return projects[-1]
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
@@ -307,6 +328,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def set_active_pid(self, item):
+        # remove all windows if the current active_pid is not selected p_id
+        if item.p_id != self.active_pid:
+            # close all hanging window
+            for window in self.active_windows:
+                window.close()
+            # show autosave button, and empty autosaveStatus
+            self.autoSave.setVisible(True)
+            self.autosaveStatus.setText("")
         # set active_pid here
         self.active_pid = item.p_id
         self.access_level = item.access_level
@@ -329,6 +358,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.get(self.mscolab_server_url + '/project_details', data=data)
         _json = json.loads(r.text)
+
         if _json["autosave"] is True:
             # one time activate
             self.autoSave.blockSignals(True)
@@ -338,6 +368,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.fetch_ft.setEnabled(False)
             # connect data change to handler
             self.waypoints_model.dataChanged.connect(self.handle_data_change)
+            # enable autosave
+            self.autosave_status = True
+        else:
+            self.autoSave.blockSignals(True)
+            self.autoSave.setChecked(False)
+            self.autoSave.blockSignals(False)
+            self.autosave_status = False
 
         # hide autosave button if access_level is non-admin
         if self.access_level == "viewer" or self.access_level == "collaborator":
@@ -409,14 +446,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
                                                    parent=self.listProjects,
                                                    _id=self.id_count)
+            view_window.view_type = "topview"
         elif _type == "sideview":
             view_window = sideview.MSSSideViewWindow(model=self.waypoints_model,
                                                      parent=self.listProjects,
                                                      _id=self.id_count)
+            view_window.view_type = "sideview"
         else:
             view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
                                                        parent=self.listProjects,
                                                        _id=self.id_count)
+            view_window.view_type = "tableview"
         if self.access_level == "viewer":
             self.disable_navbar_action_buttons(_type, view_window)
 
@@ -431,6 +471,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def disable_navbar_action_buttons(self, _type, view_window):
         """
         _type: view type (topview, sideview, tableview)
+        view_window: PyQt view window
+
+        function disables some control, used if access_level is not appropriate
         """
         if _type == "topview" or _type == "sideview":
             actions = view_window.mpl.navbar.actions()
@@ -444,6 +487,26 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window.btCloneWaypoint.setEnabled(False)
             view_window.btDeleteWayPoint.setEnabled(False)
             view_window.btInvertDirection.setEnabled(False)
+
+    def enable_navbar_action_buttons(self, _type, view_window):
+        """
+        _type: view type (topview, sideview, tableview)
+        view_window: PyQt view window
+
+        function enables some control, used if access_level is appropriate
+        """
+        if _type == "topview" or _type == "sideview":
+            actions = view_window.mpl.navbar.actions()
+            for action in actions:
+                action_text = action.text()
+                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
+                    action.setEnabled(True)
+        else:
+            # _type == tableview
+            view_window.btAddWayPointToFlightTrack.setEnabled(True)
+            view_window.btCloneWaypoint.setEnabled(True)
+            view_window.btDeleteWayPoint.setEnabled(True)
+            view_window.btInvertDirection.setEnabled(True)
 
     def logout(self):
         # check if autosave is enabled
@@ -461,6 +524,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.token = None
         # delete active-project-id
         self.active_pid = None
+        # delete active access_level
+        self.access_level = None
         # clear projects list here
         self.loggedInWidget.hide()
         self.loginWidget.show()
@@ -472,7 +537,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn = None
         # close all hanging window
         for window in self.active_windows:
-            window.hide()
+            window.close()
+        # close project window if active
+        if self.project_window is not None:
+            self.project_window.close()
         # show autosave button, and empty autosaveStatus
         self.autoSave.setVisible(True)
         self.autosaveStatus.setText("")
@@ -486,13 +554,94 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # to emit to mscolab
             self.conn.save_file(self.token, self.active_pid, xml_text, comment=comment)
 
+    @QtCore.Slot(int, int, str)
+    def handle_update_permission(self, p_id, u_id, access_level):
+        """
+        p_id: project id
+        u_id: user id
+        access_level: updated access level
+
+        function updates existing permissions and related control availability
+        """
+        if u_id == self.user["id"]:
+            # update table of projects
+            for i in range(self.listProjects.count()):
+                item = self.listProjects.item(i)
+                if item.p_id == p_id:
+                    desc = item.text().split('-')
+                    desc[-1] = access_level
+                    desc = ''.join(desc)
+                    item.setText(desc)
+                    item.p_id = p_id
+                    item.access_level = access_level
+            if p_id != self.active_pid:
+                return
+            self.access_level = access_level
+            # update project window's control if open
+            if self.project_window is not None:
+                self.project_window.check_permission_and_render_control(self.access_level)
+            # update view window nav elements if open
+            for window in self.active_windows:
+                _type = window.view_type
+                if self.access_level == "viewer":
+                    self.disable_navbar_action_buttons(_type, window)
+                else:
+                    self.enable_navbar_action_buttons(_type, window)
+            # update autosave stats
+            if self.access_level == "admin" or self.access_level == "creator":
+                # enable autosave set it to checked status
+                self.autoSave.setVisible(True)
+                if self.autosave_status is True:
+                    self.autoSave.blockSignals(True)
+                    self.autoSave.setChecked(True)
+                    self.autoSave.blockSignals(False)
+                else:
+                    self.autoSave.blockSignals(True)
+                    self.autoSave.setChecked(False)
+                    self.autoSave.blockSignals(False)
+                self.autosaveStatus.setText("")
+            else:
+                # disable autosave, set status text
+                self.autoSave.setVisible(False)
+                if self.autosave_status is True:
+                    self.autosaveStatus.setText("Autosave is enabled!")
+                else:
+                    self.autosaveStatus.setText("Autosave is enabled!")
+
+        # update project window if open
+        if self.project_window is not None:
+            self.project_window.load_users()
+
     @QtCore.Slot()
     def reload_windows_slot(self):
         self.reload_window(self.active_pid)
 
+    @QtCore.Slot(int, int)
+    def render_new_permission(self, p_id, u_id):
+        """
+        p_id: project id
+        u_id: user id
+
+        to render new permission if added
+        """
+        data = {
+            'token': self.token
+        }
+        r = requests.get(self.mscolab_server_url + '/user', data=data)
+        _json = json.loads(r.text)
+        if _json['user']['id'] == u_id:
+            project = self.get_recent_project()
+            project_desc = '{} - {}'.format(project['path'], project["access_level"])
+            widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
+            widgetItem.p_id = project["p_id"]
+            widgetItem.access_level = project["access_level"]
+            self.listProjects.addItem(widgetItem)
+        if self.project_window is not None:
+            self.project_window.load_users()
+
     @QtCore.Slot(int)
     def reload_window(self, value):
-        if self.active_pid != value:
+        if self.active_pid != value or self.autosave_status is False:
             return
         logging.debug("reloading window")
         # ask the user in dialog if he wants the change, only for autosave mode
@@ -512,7 +661,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex)
     def handle_data_change(self, index1, index2):
-        # if autosave isn't checked, don't save. (in future, this might be hidden #ToDo)
+        # if autosave isn't checked, don't save. (in future, this might be hidden # ToDo)
         if self.autoSave.isChecked():
             self.save_wp_mscolab()
 
@@ -523,19 +672,22 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             return
         if enable:
             # enable autosave, disable save button
+            self.autosave_status = True
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
             # reload window
             self.reload_wps_from_server()
+            self.waypoints_model.dataChanged.connect(self.handle_data_change)
             self.autosaveStatus.setText("Autosave is enabled")
 
         else:
+            self.autosave_status = False
             # disable autosave, enable save button
             self.save_ft.setEnabled(True)
             self.fetch_ft.setEnabled(True)
             # connect change events viewwindow HERE to emit file-save
             # ToDo - remove hack to disconnect this handler
-            self.waypoints_model.dataChanged.connect(self.handle_data_change)
+            self.waypoints_model.dataChanged.disconnect(self.handle_data_change)
             self.autosaveStatus.setText("Autosave is disabled")
 
     def setIdentifier(self, identifier):

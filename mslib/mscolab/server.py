@@ -31,7 +31,7 @@ import datetime
 import functools
 from validate_email import validate_email
 
-from mslib.mscolab.models import User, db
+from mslib.mscolab.models import User, db, Change
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY, MSCOLAB_DATA_DIR
 from mslib.mscolab.sockets_manager import setup_managers
 # set the project root directory as the static folder
@@ -210,7 +210,13 @@ def start_server(app, sockio, cm, fm, port=8083):
         username = request.form.get('username', None)
         access_level = request.form.get('access_level', None)
         user = g.user
-        return str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
+        if u_id == 0:
+            u_id = User.query.filter_by(username=username).first().id
+        success = str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
+        if success == "True":
+            sockio.sm.join_collaborator_to_room(int(u_id), int(p_id))
+            sockio.sm.emit_new_permission(int(u_id), int(p_id))
+        return success
 
     @app.route('/revoke_permission', methods=['POST'])
     @verify_user
@@ -229,7 +235,12 @@ def start_server(app, sockio, cm, fm, port=8083):
         username = request.form.get('username', None)
         access_level = request.form.get('access_level', None)
         user = g.user
-        return str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
+        if username is not None:
+            u_id = User.query.filter_by(username=username).first().id
+        success = str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
+        if success == "True":
+            sockio.sm.emit_update_permission(u_id, p_id)
+        return success
 
     @app.route('/update_project', methods=['POST'])
     @verify_user
@@ -251,8 +262,13 @@ def start_server(app, sockio, cm, fm, port=8083):
     @verify_user
     def undo_ftml():
         ch_id = request.form.get('ch_id', -1)
+        ch_id = int(ch_id)
         user = g.user
         result = fm.undo(ch_id, user)
+        # get p_id from change
+        ch = Change.query.filter_by(id=ch_id).first()
+        if result is True:
+            sockio.sm.emit_file_change(ch.p_id)
         return str(result)
 
     sockio.run(app, port=port)
