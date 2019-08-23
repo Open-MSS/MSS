@@ -294,7 +294,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def get_recent_pid(self):
         """
         get most recent project's p_id
-        #ToDo can be merged with get_recent_project
+        # ToDo can be merged with get_recent_project
         """
         data = {
             "token": self.token
@@ -661,7 +661,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex)
     def handle_data_change(self, index1, index2):
-        # if autosave isn't checked, don't save. (in future, this might be hidden #ToDo)
+        # if autosave isn't checked, don't save. (in future, this might be hidden # ToDo)
         if self.autoSave.isChecked():
             self.save_wp_mscolab()
 
