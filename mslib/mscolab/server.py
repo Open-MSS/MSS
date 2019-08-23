@@ -216,7 +216,7 @@ def start_server(app, sockio, cm, fm, port=8083):
         if success == "True":
             sockio.sm.join_collaborator_to_room(int(u_id), int(p_id))
             sockio.sm.emit_new_permission(int(u_id), int(p_id))
-        return str(success)
+        return success
 
     @app.route('/revoke_permission', methods=['POST'])
     @verify_user
