@@ -354,8 +354,10 @@ class MapCanvas():
             else:
                 if kwargs["fixed"] is True:
                     ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
-                    if self.crs[5:] == "3031" or self.crs[5:] == "3412":
+                    if self.crs[5:] in ["3031", "3412", "32761"]:
                         ax.set_extent([-180, 180, -90, -60], ccrs.PlateCarree())
+                    elif self.crs[5:] in ["3995", "3996", "32661"]:
+                        ax.set_extent([-180, 180, 60, 90], ccrs.PlateCarree())
                 else:
                     try:
                         BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
