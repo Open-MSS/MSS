@@ -31,7 +31,7 @@ import datetime
 import functools
 from validate_email import validate_email
 
-from mslib.mscolab.models import User, db
+from mslib.mscolab.models import User, db, Change
 from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY, MSCOLAB_DATA_DIR
 from mslib.mscolab.sockets_manager import setup_managers
 # set the project root directory as the static folder
@@ -262,8 +262,13 @@ def start_server(app, sockio, cm, fm, port=8083):
     @verify_user
     def undo_ftml():
         ch_id = request.form.get('ch_id', -1)
+        ch_id = int(ch_id)
         user = g.user
         result = fm.undo(ch_id, user)
+        # get p_id from change
+        ch = Change.query.filter_by(id=ch_id).first()
+        if result is True:
+            sockio.sm.emit_file_change(ch.p_id)
         return str(result)
 
     sockio.run(app, port=port)
