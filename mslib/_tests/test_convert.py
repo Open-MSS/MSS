@@ -27,7 +27,7 @@
 """
 
 import pytest
-from mslib.mswms.utils import convert_to
+from mslib.utils import convert_to
 
 
 def test_convert_to():
@@ -53,3 +53,11 @@ def test_convert_to():
     assert convert_to(1000, "whattheheck", "Pa", 999) == 999000
     assert convert_to(1000, "hPa", "whattheheck", 999) == 999000
     assert convert_to(1000, "whattheheck", "whatthehock", 999) == 999000
+
+    assert convert_to(10, "percent", "dimensionless", None) == 0.1
+    assert convert_to(10, "permille", "dimensionless", None) == 0.01
+    assert convert_to(10, "ppm", "dimensionless", None) == pytest.approx(10e-6)
+    assert convert_to(10, "ppb", "dimensionless", None) == pytest.approx(10e-9)
+    assert convert_to(10, "ppt", "dimensionless", None) == pytest.approx(10e-12)
+    assert convert_to(10, "ppm", "ppt", None) == pytest.approx(10e6)
+    assert convert_to(10, "ppb", "ppm", None) == pytest.approx(10e-3)

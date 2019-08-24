@@ -58,10 +58,15 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
            data fields requested by the style.
         """
         result = set([datafield[0] for datafield in self.required_datafields])
-        if len(result) > 2 and "sfc" not in result:
+        if len(result) > 1 and "sfc" not in result:
             msg = "A Plot may contain only 'sfc' and *one* 4-D type! ({}: {})".format(type(self), result)
             logging.fatal(msg)
             raise RuntimeError(msg)
+        elif len(result) == 2:
+            self._vert_type = [_x for _x in result if _x != "sfc"][0]
+        else:
+            assert len(result) == 1
+            self._vert_type = result[0]
         return result
 
     def _prepare_datafields(self):
@@ -91,7 +96,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
     def get_init_times(self):
         """Returns a list of available forecast init times (base times).
         """
-        if self.driver is not None:
+        if self.uses_inittime_dimensions() and self.driver is not None:
             return self.driver.get_init_times()
         else:
             return []
@@ -100,26 +105,42 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         """Returns a list containing the combined forecast valid times of
            all available init times.
         """
-        valid_times = set()
-        if self.driver is not None:
-            for vartype, varname in self.required_datafields:
+        if self.uses_validtime_dimensions() and self.driver is not None:
+            valid_times = set()
+            for vartype, varname, _ in self.required_datafields:
                 vtimes = self.driver.get_all_valid_times(varname, vartype)
                 if len(valid_times) == 0:
                     valid_times.update(vtimes)
                 else:
                     valid_times.intersection_update(vtimes)
-        valid_times = sorted(valid_times)
-        return valid_times
+            valid_times = sorted(valid_times)
+            return valid_times
+        else:
+            return []
 
-    def uses_time_dimensions(self):
+    def uses_elevation_dimension(self):
+        """Returns whether this layer uses the WMS elevation dimension. If False,
+           elevation does not have to be specified to plot_hsection().
+        """
+        return self._vert_type != "sfc"
+
+    def uses_inittime_dimension(self):
+        """Returns whether this layer uses the WMS inittime dimensions. If False,
+           init_time does not have to be specified to plot_hsection().
+
+        Currently redirected to check for valid_time.
+        """
+        return self.driver.uses_validtime_dimension() if self.driver is not None else False
+
+    def uses_validtime_dimension(self):
         """Returns whether this layer uses the WMS time dimensions. If False,
-           valid_time and init_time do not have to be specified to
+           valid_time does not have to be specified to
            plot_hsection().
 
         Currently implemented by testing whether the style requires data fields
         from the ECMWF forecast.
         """
-        return len(self.required_datafields) > 0
+        return self.driver.uses_inittime_dimension() if self.driver is not None else False
 
     def get_elevations(self):
         """Returns a list of available elevations for this layer.
@@ -128,45 +149,10 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         steps.
         """
         logging.debug(u"checking vertical dimensions for layer '%s'.", self.name)
-        if self.driver is not None and not all(_x[0] in ["sfc"] for _x in self.required_datafields):
-            # Get the latest init time.
-            init_times = self.driver.get_init_times()
-            valid_times = self.get_all_valid_times()
-
-            if len(init_times) == 0:
-                logging.error("ERROR: cannot determine initialisation time(s) "
-                              "of this dataset. Check that file structure is "
-                              "in accordance with the used access class in mss_wms_settings.py!")
-                return []
-
-            # Open the data files for the analysis (valid time = init time).
-            # It can happen that not all required files are available for
-            # all init times. The try..except block takes care of this
-            # problem and tries to find a time at which all required
-            # files are available.
-            successful = False
-            for init_time in init_times:
-                valid_time = init_time
-                if valid_time not in valid_times:
-                    logging.warn("init_time is not contained in valid_times")
-                    valid_time = valid_times[0]
-                if self.driver.have_data(self, init_time, valid_time):
-                    successful = True
-                    break
-                else:
-                    logging.debug("WARNING: unsuccessfully examined data for "
-                                  "init time %s, valid time %s.. trying next "
-                                  "time.", init_time, valid_time)
-
-            if successful:
-                self.driver.set_plot_parameters(self, init_time=init_time, valid_time=valid_time)
-                if self.driver.vert_data is not None:
-                    return [u"{:}".format(lvl) for lvl in sorted({float(_x) for _x in self.driver.vert_data})]
-            logging.error("Cannot determine whether there's a vertical coordinate... "
-                          "Something is wrong with this dataset!!")
+        if self.uses_elevation_dimension() and self.driver is not None:
+            return self.driver.get_elevations(self._vert_type)
         else:
-            logging.debug("Only surface layers or no driver")
-        return []
+            return []
 
     def get_elevation_units(self):
         """Returns the units of the elevation values.
