@@ -27,6 +27,8 @@
 
 import datetime
 from mslib import utils
+from mslib.utils import get_projection_params as get_proj
+import pytest
 import pyproj
 import numpy
 
@@ -221,7 +223,7 @@ class TestLatLonPoints(object):
         portland = [45. + (31. / 60.), -123. - (41. / 60.)]
         gc = pyproj.Geod(ellps="WGS84")
         pts_pyproj = gc.npts(boston[0], boston[1], portland[0], portland[1], 10)
-        pts_cartopy = utils.npts_cartopy(boston, portland, 10)
+        pts_cartopy = utils.npts_cartopy((boston[1], boston[0]), (portland[1], portland[0]), 10)
         pts_pyproj = numpy.around(pts_pyproj, 2)
         pts_cartopy = numpy.around(pts_cartopy, 2)
         assert pts_cartopy.all() == pts_pyproj.all()
@@ -261,3 +263,17 @@ def test_pathpoints():
     assert all(len(_x) == 100 for _x in result)
     assert all(result[i][0] == p1[i] for i in range(3))
     assert all(result[i][-1] == p3[i] for i in range(3))
+
+
+def test_get_projection_params():
+    epsg_stere = [2036, 2171, 2172, 2173, 2174, 2200, 2290, 2291, 2292,
+                  2953, 2954, 2985, 2986, 3031, 3032, 3120, 3275, 3276,
+                  3277, 3278, 3279, 3280, 3281, 3282, 3283, 3284, 3285,
+                  3286, 3287, 3288, 3289, 3290, 3291, 3292, 3293, 3328,
+                  3411, 3412, 3413, 3844, 3995, 3996, 7415, 22780, 28991,
+                  28992, 31600, 31700, 32661, 32761]
+    for epsg in epsg_stere:
+        if epsg in [2985, 2986, 7415]:
+            pytest.skip("EPSG not supported by Cartopy module")
+        else:
+            get_proj(f"EPSG:{epsg}")
