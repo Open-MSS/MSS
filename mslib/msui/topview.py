@@ -83,8 +83,6 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             self.cbFillContinents.setStyleSheet("color: black")
             self.cbFillWaterBodies.setStyleSheet("color: black")
         else:
-            settings_dict["fill_waterbodies"] = True
-            settings_dict["fill_continents"] = True
             self.cbFillWaterBodies.setChecked(settings_dict["fill_waterbodies"])
             self.cbFillContinents.setChecked(settings_dict["fill_continents"])
             self.cbFillContinents.setEnabled(True)

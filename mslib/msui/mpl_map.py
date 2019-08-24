@@ -259,7 +259,7 @@ class MapCanvas():
             # in self.map_continents.
             # for patch in self.map_continents:
             #     patch.remove()
-            self.map_continents = None
+            self.map_continents.remove()
             self.fig.canvas.draw()
         elif visible and self.map_continents is not None:
             # Colours have changed: Remove the old fill and redraw.
