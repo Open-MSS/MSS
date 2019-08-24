@@ -337,7 +337,11 @@ def get_projection_params(proj):
         elif epsg in ("31468"):
             proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         else:
-            raise ValueError("EPSG code not supported by cartopy module: '%s'", proj)
+            try:
+                proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
+            except Exception as e:
+                print("EPSG not supported by cartopy module!")
+                raise e
 
     elif proj.startswith("mss:"):
         # some MSS-specific codes
