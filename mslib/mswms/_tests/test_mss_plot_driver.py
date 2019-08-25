@@ -161,6 +161,12 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs)
         assert img is not None
 
+    @pytest.mark.parametrize("crs", ["EPSG:3031", "EPSG:3857", "EPSG:3413", "EPSG:3995"])
+    def test_meter_crs_codes(self, crs):
+        bbox_meter = [-1e7, -1e7, 1e7, 1e7]
+        img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs, bbox=bbox_meter)
+        assert img is not None
+
     @pytest.mark.parametrize("crs", ["EPSG:12345678", "FNORD", "MSS:lagranto"])
     def test_invalid_crs_codes(self, crs):
         with pytest.raises(ValueError):

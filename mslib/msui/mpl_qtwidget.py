@@ -1019,8 +1019,8 @@ class MplTopViewCanvas(MplCanvas):
         try:
             bbox = [kwargs['llcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlon'], kwargs['urcrnrlat']]
         except KeyError:
-             axis = self.ax.get_extent(ccrs.PlateCarree())
-             bbox = axis[0], axis[2], axis[1], axis[3]
+            axis = self.ax.get_extent(ccrs.PlateCarree())
+            bbox = axis[0], axis[2], axis[1], axis[3]
 
         return bbox
 
