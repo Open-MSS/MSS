@@ -52,6 +52,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
 
     def __init__(self, driver=None):
         self.set_driver(driver)
+        self.required_datatypes()
 
     def required_datatypes(self):
         """Returns a list containing the datatypes required by the
@@ -64,9 +65,10 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
             raise RuntimeError(msg)
         elif len(result) == 2:
             self._vert_type = [_x for _x in result if _x != "sfc"][0]
+        elif len(result) == 1:
+            self._vert_type = list(result)[0]
         else:
-            assert len(result) == 1
-            self._vert_type = result[0]
+            self._vert_type = None
         return result
 
     def _prepare_datafields(self):
@@ -96,7 +98,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
     def get_init_times(self):
         """Returns a list of available forecast init times (base times).
         """
-        if self.uses_inittime_dimensions() and self.driver is not None:
+        if self.uses_inittime_dimension() and self.driver is not None:
             return self.driver.get_init_times()
         else:
             return []
@@ -105,7 +107,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         """Returns a list containing the combined forecast valid times of
            all available init times.
         """
-        if self.uses_validtime_dimensions() and self.driver is not None:
+        if self.uses_validtime_dimension() and self.driver is not None:
             valid_times = set()
             for vartype, varname, _ in self.required_datafields:
                 vtimes = self.driver.get_all_valid_times(varname, vartype)
@@ -125,7 +127,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         return self._vert_type != "sfc"
 
     def uses_inittime_dimension(self):
-        """Returns whether this layer uses the WMS inittime dimensions. If False,
+        """Returns whether this layer uses the WMS inittime dimension. If False,
            init_time does not have to be specified to plot_hsection().
 
         Currently redirected to check for valid_time.
@@ -133,7 +135,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         return self.driver.uses_validtime_dimension() if self.driver is not None else False
 
     def uses_validtime_dimension(self):
-        """Returns whether this layer uses the WMS time dimensions. If False,
+        """Returns whether this layer uses the WMS time dimension. If False,
            valid_time does not have to be specified to
            plot_hsection().
 
@@ -150,7 +152,7 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         """
         logging.debug(u"checking vertical dimensions for layer '%s'.", self.name)
         if self.uses_elevation_dimension() and self.driver is not None:
-            return self.driver.get_elevations(self._vert_type)
+            return [str(x) for x in self.driver.get_elevations(self._vert_type)]
         else:
             return []
 
@@ -158,6 +160,6 @@ class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
         """Returns the units of the elevation values.
         """
         if self.driver is not None:
-            return self.driver.vert_units
+            return self.driver.get_elevation_units(self._vert_type)
         else:
             return ""

@@ -304,6 +304,16 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """
         return self.data_access.get_init_times()
 
+    def get_elevations(self, vert_type):
+        """See ECMWFDataAccess.get_elevations().
+        """
+        return self.data_access.get_elevations(vert_type)
+
+    def get_elevation_units(self, vert_type):
+        """See ECMWFDataAccess.get_elevation().
+        """
+        return self.data_access.get_elevation_units(vert_type)
+
     def get_all_valid_times(self, variable, vartype):
         """See ECMWFDataAccess.get_all_valid_times().
         """
@@ -313,6 +323,16 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """See ECMWFDataAccess.get_valid_times().
         """
         return self.data_access.get_valid_times(variable, vartype, init_time)
+
+    def uses_inittime_dimension(self):
+        """Returns whether this driver uses the WMS inittime dimensions.
+        """
+        return self.data_access.uses_inittime_dimension()
+
+    def uses_validtime_dimension(self):
+        """Returns whether this layer uses the WMS time dimensions.
+        """
+        return self.data_access.uses_validtime_dimension()
 
 
 class VerticalSectionDriver(MSSPlotDriver):

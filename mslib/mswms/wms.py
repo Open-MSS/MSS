@@ -245,7 +245,7 @@ class WMSServer(object):
                 if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
                     logging.error(u"layer %s/%s has no init times!", layer, dataset)
                     continue
-                if layer.uses_validtime_dimensions() and len(layer.get_all_valid_times()) == 0:
+                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
                     logging.error(u"layer %s/%s has no valid times!", layer, dataset)
                     continue
                 hsec_layers.append((dataset, layer))
@@ -448,7 +448,7 @@ class WMSServer(object):
                     text=u"Invalid LAYER '{}.{}' requested".format(dataset, layer))
 
             # Check if the layer requires time information and if they are given.
-            if self.vsec_layer_registry[dataset][layer].uses_time_dimensions():
+            if self.vsec_layer_registry[dataset][layer].uses_inittime_dimension():
                 if init_time is None:
                     return self.create_service_exception(
                         code="MissingDimensionValue",
