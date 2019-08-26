@@ -52,6 +52,7 @@ from mslib.msui import trajectory_item_tree as titree
 from mslib.msui.icons import icons
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.utils import convert_pressure_to_vertical_axis_measure
+import cartopy.crs as ccrs
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
@@ -134,8 +135,8 @@ class MplCanvas(FigureCanvasQTAgg):
         """
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
-        width = int(round(ax_bounds[2]))
-        height = int(round(ax_bounds[3]))
+        width = int(round(ax_bounds[2], 2))
+        height = int(round(ax_bounds[3], 2))
         return width, height
 
 
@@ -883,14 +884,14 @@ class MplTopViewCanvas(MplCanvas):
     def init_map(self, model=None, **kwargs):
         """Set up the map view.
         """
-        ax = self.ax
-        self.map = mpl_map.MapCanvas(appearance=self.get_map_appearance(),
-                                     resolution="l", area_thresh=1000., ax=ax,
+        self.fig.delaxes(self.ax)
+        self.map = mpl_map.MapCanvas(appearance=self.get_map_appearance(), fig=self.fig,
                                      **kwargs)
-        ax.set_autoscale_on(False)
-        ax.set_title("Top view", horizontalalignment="left", x=0)
+        self.ax = self.map.ax
+        self.ax.set_autoscale_on(False)
+        self.ax.set_title("Top view", horizontalalignment="left", x=0)
         self.draw()  # necessary?
-
+        self.kwargs = kwargs
         if model:
             self.set_waypoints_model(model)
 
@@ -925,7 +926,7 @@ class MplTopViewCanvas(MplCanvas):
         See MapCanvas.update_with_coordinate_change(). After the map redraw,
         coordinates of all objects overlain on the map have to be updated.
         """
-
+        self.kwargs_update = kwargs_update
         # remove legend
         self.draw_legend(None)
 
@@ -944,6 +945,8 @@ class MplTopViewCanvas(MplCanvas):
 
         # 2) UPDATE MAP.
         self.map.update_with_coordinate_change(kwargs_update)
+        self.kwargs = kwargs_update
+        self.ax = self.map.ax
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
         # in waypoints_interactor()
@@ -971,7 +974,6 @@ class MplTopViewCanvas(MplCanvas):
 
         logging.debug("finished redrawing map")
         self.pdlg.close()
-
         # Emit signal so other parts of the module can react to a redraw event.
         self.redrawn.emit()
 
@@ -985,21 +987,12 @@ class MplTopViewCanvas(MplCanvas):
         Get the bounding box of the map
         (returns a 4-tuple llx, lly, urx, ury) in degree or meters.
         """
-
-        axis = self.ax.axis()
-
-        if self.map.bbox_units == "degree":
-            # Convert the current axis corners to lat/lon coordinates.
-            axis0, axis2 = self.map(axis[0], axis[2], inverse=True)
-            axis1, axis3 = self.map(axis[1], axis[3], inverse=True)
-            bbox = (axis0, axis2, axis1, axis3)
-
-        elif self.map.bbox_units.startswith("meter"):
-            center_x, center_y = self.map(
-                *(float(_x) for _x in self.map.bbox_units[6:-1].split(",")))
-            bbox = (axis[0] - center_x, axis[2] - center_y, axis[1] - center_x, axis[3] - center_y)
-
-        else:
+        self.ax = self.map.ax
+        kwargs = self.kwargs
+        try:
+            bbox = [kwargs['llcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlon'], kwargs['urcrnrlat']]
+        except KeyError:
+            axis = self.ax.get_extent(ccrs.PlateCarree())
             bbox = axis[0], axis[2], axis[1], axis[3]
 
         return bbox

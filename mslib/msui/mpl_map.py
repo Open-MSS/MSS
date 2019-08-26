@@ -43,23 +43,21 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib import patheffects
-import mpl_toolkits.basemap as basemap
-try:
-    import mpl_toolkits.basemap.pyproj as pyproj
-except ImportError:
-    import pyproj
-
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import cartopy.geodesic as gd
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import trajectory_item_tree as titree
+from mslib.utils import npts_cartopy, get_projection_params
 
 
-class MapCanvas(basemap.Basemap):
+class MapCanvas():
     """Derivative of mpl_toolkits.basemap, providing additional methods to
        automatically draw a graticule and to redraw specific map elements.
     """
 
     def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None,
-                 traj_item_tree=None, appearance=None, **kwargs):
+                 traj_item_tree=None, appearance=None, fig=None, **kwargs):
         """New constructor automatically adds coastlines, continents, and
            a graticule to the map.
 
@@ -71,12 +69,60 @@ class MapCanvas(basemap.Basemap):
 
         """
         # Coordinate reference system identifier and coordinate system units.
+        self.appearance = appearance
+        self.fig = fig
+        self.map_grid = False
         self.crs = CRS if CRS is not None else self.crs if hasattr(self, "crs") else None
         if BBOX_UNITS is not None:
             self.bbox_units = BBOX_UNITS
         else:
             self.bbox_units = getattr(self, "bbox_units", None)
 
+        # BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+
+        # Identifier of this map canvas (used to query data structures that
+        # are observed by different views).
+        if identifier is not None:
+            self.identifier = identifier
+        else:
+            self.identifier = getattr(self, "identifier", None)
+
+        # Call the Basemap constructor. If a cylindrical projection was used
+        # before, Basemap stores an EPSG code that will not be changed if
+        # the Basemap constructor is called a second time. Hence, we have to
+        # delete the attribute (mr, 08Feb2013).
+        if hasattr(self, "epsg"):
+            del self.epsg
+        user_proj = get_projection_params(self.crs)["basemap"]
+        if kwargs["fixed"] is True:
+            ax = self.fig.add_subplot(1, 1, 1, projection=user_proj['projection'])
+        else:
+            BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+            ax = self.fig.add_subplot(1, 1, 1, projection=user_proj['projection'])
+            ax.set_extent(BBOX)
+        self.fig.canvas.draw()
+        self.ax = ax
+        self.kwargs = kwargs
+        self.init_features(appearance)
+
+        # Print CRS identifier into the figure.
+        if self.crs is not None:
+            if hasattr(self, "crs_text"):
+                self.crs_text.set_text(self.crs)
+            else:
+                self.crs_text = self.ax.projection
+
+        # Connect to the trajectory item tree, if defined.
+        self.traj_item_tree = traj_item_tree if traj_item_tree is not None else self.traj_item_tree if hasattr(
+            self, "traj_item_tree") else None
+        if traj_item_tree is not None:
+            self.set_trajectory_tree(traj_item_tree)
+
+        # The View may be destroyed and then this class is left dangling due to the connected
+        # trajectories unless we disconnect it.
+        self.ax.figure.canvas.destroyed.connect(self.disconnectTrajectories)
+
+    def init_features(self, appearance):
         # Dictionary containing map appearance settings.
         if appearance is not None:
             param_appearance = appearance
@@ -92,31 +138,17 @@ class MapCanvas(basemap.Basemap):
         default_appearance.update(param_appearance)
         self.appearance = default_appearance
 
-        # Identifier of this map canvas (used to query data structures that
-        # are observed by different views).
-        if identifier is not None:
-            self.identifier = identifier
-        else:
-            self.identifier = getattr(self, "identifier", None)
-
-        # Call the Basemap constructor. If a cylindrical projection was used
-        # before, Basemap stores an EPSG code that will not be changed if
-        # the Basemap constructor is called a second time. Hence, we have to
-        # delete the attribute (mr, 08Feb2013).
-        if hasattr(self, "epsg"):
-            del self.epsg
-        super(MapCanvas, self).__init__(**kwargs)
-        self.kwargs = kwargs
-
         # Set up the map appearance.
+        self.map_coastlines = self.ax.coastlines(zorder=3)
+        self.map_countries = self.ax.add_feature(cfeature.BORDERS, linestyle='-', alpha=0.5)
         if self.appearance["draw_coastlines"]:
-            self.map_coastlines = self.drawcoastlines(zorder=3)
-            self.map_countries = self.drawcountries(zorder=3)
+            self.map_coastlines.set_visible(True)
+            self.map_countries.set_visible(True)
         else:
-            self.map_coastlines = None
-            self.map_countries = None
+            self.map_coastlines.set_visible(False)
+            self.map_countries.set_visible(False)
         if self.appearance["fill_waterbodies"]:
-            self.map_boundary = self.drawmapboundary(fill_color=self.appearance["colour_water"])
+            self.map_boundary = self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"])
         else:
             self.map_boundary = None
 
@@ -125,41 +157,32 @@ class MapCanvas(basemap.Basemap):
         # Curiously, plot() works fine without this setting, but scatter()
         # doesn't.
         if self.appearance["fill_continents"]:
-            self.map_continents = self.fillcontinents(
-                color=self.appearance["colour_land"], lake_color=self.appearance["colour_water"], zorder=1)
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
         else:
             self.map_continents = None
 
         self.image = None
 
-        # Print CRS identifier into the figure.
-        if self.crs is not None:
-            if hasattr(self, "crs_text"):
-                self.crs_text.set_text(self.crs)
-            else:
-                self.crs_text = self.ax.figure.text(0, 0, self.crs)
+        self.gl = self.ax.gridlines()
+        self.gl.xlabels_top = False
+        self.gl.xlines = False
+        self.gl.ylines = False
 
         if self.appearance["draw_graticule"]:
             try:
-                self._draw_auto_graticule()
+                if self.ax.projection == ccrs.PlateCarree():
+                    self.gl.xlabels_bottom = True
+                    self.gl.ylabels_left = True
+                    self.gl.ylabels_right = True
+                self.gl.xlines = True
+                self.gl.ylines = True
+                self.map_grid = True
             except Exception as ex:
                 logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
         else:
-            self.map_parallels = None
-            self.map_meridians = None
-
+            self.map_grid = False
         # self.warpimage() # disable fillcontinents when loading bluemarble
         self.ax.set_autoscale_on(False)
-
-        # Connect to the trajectory item tree, if defined.
-        self.traj_item_tree = traj_item_tree if traj_item_tree is not None else self.traj_item_tree if hasattr(
-            self, "traj_item_tree") else None
-        if traj_item_tree is not None:
-            self.set_trajectory_tree(traj_item_tree)
-
-        # The View may be destroyed and then this class is left dangling due to the connected
-        # trajectories unless we disconnect it.
-        self.ax.figure.canvas.destroyed.connect(self.disconnectTrajectories)
 
     def set_identifier(self, identifier):
         self.identifier = identifier
@@ -181,118 +204,6 @@ class MapCanvas(basemap.Basemap):
         super(MapCanvas, self).set_axes_limits(ax=ax)
         matplotlib.interactive(intact)
 
-    def _draw_auto_graticule(self):
-        """Draw an automatically spaced graticule on the map.
-        """
-        # Compute some map coordinates that are required below for the automatic
-        # determination of which meridians and parallels to draw.
-        axis = self.ax.axis()
-        upperLeftCornerLon, upperLeftCornerLat = self.__call__(
-            axis[0], axis[3], inverse=True)
-        lowerRightCornerLon, lowerRightCornerLat = self.__call__(
-            axis[1], axis[2], inverse=True)
-        middleUpperBoundaryLon, middleUpperBoundaryLat = self.__call__(
-            np.mean([axis[0], axis[1]]), axis[3], inverse=True)
-        middleLowerBoundaryLon, middleLowerBoundaryLat = self.__call__(
-            np.mean([axis[0], axis[1]]), axis[2], inverse=True)
-
-        # Determine which parallels and meridians should be drawn.
-        #   a) determine which are the minimum and maximum visible
-        #      longitudes and latitudes, respectively. These
-        #      values depend on the map projection.
-        if self.projection in ['npstere', 'spstere', 'stere', 'lcc']:
-            # For stereographic projections: Draw meridians from the minimum
-            # longitude contained in the map at one of the four corners to the
-            # maximum longitude at one of these corner points. If
-            # the southern or norther pole  is contained in the map, draw all
-            # meridians around the globe.
-            # Draw parallels from the min latitude contained in the map at
-            # one of the four corners OR the middle top or bottom to the
-            # maximum latitude at one of these six points.
-            # If the map centre in contained in the map, replace either
-            # start or end latitude by the centre latitude (whichever is
-            # smaller/larger).
-
-            # check if centre point of projection is contained in the map,
-            # use projection coordinates for this test
-            centre_x = self.projparams["x_0"]
-            centre_y = self.projparams["y_0"]
-            centre_lon, centre_lat = self.__call__(centre_x, centre_y, inverse=True)
-            if centre_lat > 0:
-                pole_lon, pole_lat = 0, 90
-            else:
-                pole_lon, pole_lat = 0, -90
-            pole_x, pole_y = self.__call__(pole_lon, pole_lat)
-            if self.urcrnrx > self.llcrnrx:
-                contains_pole = (self.llcrnrx <= pole_x <= self.urcrnrx)
-            else:
-                contains_pole = (self.llcrnrx >= pole_x >= self.urcrnrx)
-            if self.urcrnry > self.llcrnry:
-                contains_pole = contains_pole and (self.llcrnry <= pole_y <= self.urcrnry)
-            else:
-                contains_pole = contains_pole and (self.llcrnry >= pole_y >= self.urcrnry)
-
-            # merdidians
-            if contains_pole:
-                mapLonStart = -180.
-                mapLonStop = 180.
-            else:
-                mapLonStart = min(upperLeftCornerLon, self.llcrnrlon,
-                                  self.urcrnrlon, lowerRightCornerLon)
-                mapLonStop = max(upperLeftCornerLon, self.llcrnrlon,
-                                 self.urcrnrlon, lowerRightCornerLon)
-            # parallels
-            mapLatStart = min(middleLowerBoundaryLat, lowerRightCornerLat,
-                              self.llcrnrlat,
-                              middleUpperBoundaryLat, upperLeftCornerLat,
-                              self.urcrnrlat)
-            mapLatStop = max(middleLowerBoundaryLat, lowerRightCornerLat,
-                             self.llcrnrlat,
-                             middleUpperBoundaryLat, upperLeftCornerLat,
-                             self.urcrnrlat)
-            if contains_pole:
-                centre_lat = self.projparams["lat_0"]
-                mapLatStart = min(mapLatStart, centre_lat)
-                mapLatStop = max(mapLatStop, centre_lat)
-        else:
-            # for other projections (preliminary): difference between the
-            # lower left and the upper right corner.
-            mapLonStart = self.llcrnrlon
-            mapLonStop = self.urcrnrlon
-            mapLatStart = self.llcrnrlat
-            mapLatStop = self.urcrnrlat
-
-        # b) parallels and meridians can be drawn with a spacing of
-        #      >spacingValues< degrees. Determine the appropriate
-        #      spacing for the lon/lat differences: about 10 lines
-        #      should be drawn in each direction. (The following lines
-        #      filter the spacingValues list for all spacing values
-        #      that are larger than lat/lon difference / 10, then
-        #      take the first value (first values that's larger)).
-        spacingValues = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 40]
-        deltaLon = mapLonStop - mapLonStart
-        deltaLat = mapLatStop - mapLatStart
-        spacingLon = [i for i in spacingValues if i > (deltaLon / 11.)][0]
-        spacingLat = [i for i in spacingValues if i > (deltaLat / 11.)][0]
-
-        #   c) parallels and meridians start at the first value in the
-        #      spacingLon/Lat grid that's smaller than the lon/lat of the
-        #      lower left corner; they stop at the first values in the
-        #      grid that's larger than the lon/lat of the upper right corner.
-        lonStart = np.floor((mapLonStart / spacingLon)) * spacingLon
-        lonStop = np.ceil((mapLonStop / spacingLon)) * spacingLon
-        latStart = np.floor((mapLatStart / spacingLat)) * spacingLat
-        latStop = np.ceil((mapLatStop / spacingLat)) * spacingLat
-
-        #   d) call the basemap methods to draw the lines in the determined
-        #      range.
-        self.map_parallels = self.drawparallels(np.arange(latStart, latStop,
-                                                          spacingLat),
-                                                labels=[1, 1, 0, 0], zorder=3)
-        self.map_meridians = self.drawmeridians(np.arange(lonStart, lonStop,
-                                                          spacingLon),
-                                                labels=[0, 0, 0, 1], zorder=3)
-
     def set_graticule_visible(self, visible=True):
         """Set the visibily of the graticule.
 
@@ -303,30 +214,28 @@ class MapCanvas(basemap.Basemap):
         See http://www.mail-archive.com/matplotlib-users@lists.sourceforge.net/msg09349.html
         """
         self.appearance["draw_graticule"] = visible
-        if visible and self.map_parallels is None and self.map_meridians is None:
+        if visible and self.map_grid is False:
             # Draw new graticule if visible is True and no current graticule
             # exists.
-            self._draw_auto_graticule()
-            # Update the figure canvas.
-            self.ax.figure.canvas.draw()
-        elif not visible and self.map_parallels is not None and self.map_meridians is not None:
+            self.gl = self.ax.gridlines()
+            if self.ax.projection == ccrs.PlateCarree():
+                self.gl.xlabels_bottom = True
+                self.gl.ylabels_left = True
+                self.gl.ylabels_right = True
+            self.gl.xlines = True
+            self.gl.ylines = True
+            self.map_grid = True
+            self.fig.canvas.draw()
+        elif not visible and self.map_grid is True:
             # If visible if False, remove current graticule if one exists.
             # Every item in self.map_parallels and self.map_meridians is
             # a tuple of a list of lines and a list of text labels.
-            for item in self.map_parallels.values():
-                for line in item[0]:
-                    line.remove()
-                for text in item[1]:
-                    text.remove()
-            for item in self.map_meridians.values():
-                for line in item[0]:
-                    line.remove()
-                for text in item[1]:
-                    text.remove()
-            self.map_parallels = None
-            self.map_meridians = None
-            # Update the figure canvas.
-            self.ax.figure.canvas.draw()
+            self.gl = self.ax.gridlines()
+            self.gl.xlines = False
+            self.gl.ylines = False
+            self.map_grid = False
+            self.update_with_coordinate_change(self.kwargs, True)
+            self.fig.canvas.draw()
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
                                    lake_color=None):
@@ -343,41 +252,35 @@ class MapCanvas(basemap.Basemap):
             # scatter() for drawing the flight tracks and trajectories.
             # Curiously, plot() works fine without this setting, but scatter()
             # doesn't.
-            self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
-                                                      lake_color=self.appearance["colour_water"],
-                                                      zorder=1)
-            self.ax.figure.canvas.draw()
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
+            self.fig.canvas.draw()
         elif not visible and self.map_continents is not None:
             # Remove current fills. They are stored as a list of polygon patches
             # in self.map_continents.
-            for patch in self.map_continents:
-                patch.remove()
-            self.map_continents = None
-            self.ax.figure.canvas.draw()
+            # for patch in self.map_continents:
+            #     patch.remove()
+            self.map_continents.remove()
+            self.fig.canvas.draw()
         elif visible and self.map_continents is not None:
             # Colours have changed: Remove the old fill and redraw.
-            for patch in self.map_continents:
-                patch.remove()
-            self.map_continents = self.fillcontinents(color=self.appearance["colour_land"],
-                                                      lake_color=self.appearance["colour_water"],
-                                                      zorder=1)
-            self.ax.figure.canvas.draw()
+            # for patch in self.map_continents:
+            #     patch.remove()
+            self.map_continents = (self.ax.add_feature(cfeature.LAND, facecolor=self.appearance["colour_land"]))
+            self.fig.canvas.draw()
 
     def set_coastlines_visible(self, visible=True):
         """Set the visibility of coastlines and country borders.
         """
         self.appearance["draw_coastlines"] = visible
-        if visible and self.map_coastlines is None and self.map_countries is None:
-            self.map_coastlines = self.drawcoastlines(zorder=3)
-            self.map_countries = self.drawcountries(zorder=3)
-            self.ax.figure.canvas.draw()
-        elif not visible and self.map_coastlines is not None and self.map_countries is not None:
-            self.map_coastlines.remove()
-            self.map_countries.remove()
-            del self.cntrysegs
-            self.map_coastlines = None
-            self.map_countries = None
-            self.ax.figure.canvas.draw()
+        if visible:
+            self.map_coastlines.set_visible(True)
+            self.map_countries.set_visible(True)
+            # self.map_countries = self.ax.add_feature(cfeature.BORDERS, linestyle='--', alpha=0.5)
+            self.fig.canvas.draw()
+        elif not visible:
+            self.map_coastlines.set_visible(False)
+            self.map_countries.set_visible(False)
+            self.fig.canvas.draw()
 
     def set_mapboundary_visible(self, visible=True, bg_color='#99ffff'):
         """
@@ -391,12 +294,12 @@ class MapCanvas(basemap.Basemap):
         if not visible and self.map_boundary is not None:
             self.map_boundary.remove()
             self.map_boundary = None
-            self.ax.figure.canvas.draw()
+            self.fig.canvas.draw()
         elif visible:
-            self.map_boundary = self.drawmapboundary(fill_color=bg_color)
-            self.ax.figure.canvas.draw()
+            self.ax.add_feature(cfeature.OCEAN, facecolor=self.appearance["colour_water"])
+            self.fig.canvas.draw()
 
-    def update_with_coordinate_change(self, kwargs_update=None):
+    def update_with_coordinate_change(self, kwargs_update=None, unchanged=False):
         """Redraws the entire map. This is necessary after zoom/pan operations.
 
         Determines corner coordinates of the current axes, removes all items
@@ -411,60 +314,7 @@ class MapCanvas(basemap.Basemap):
         the map is redrawn, 2) redrawing the map, 3) transforming the stored
         lat/lon coordinates to the new map coordinates.
         """
-        # Convert the current axis corners to lat/lon coordinates.
-        axis = self.ax.axis()
-        self.kwargs['llcrnrlon'], self.kwargs['llcrnrlat'] = \
-            self.__call__(axis[0], axis[2], inverse=True)
-        self.kwargs['urcrnrlon'], self.kwargs['urcrnrlat'] = \
-            self.__call__(axis[1], axis[3], inverse=True)
-
-        logging.debug("corner coordinates (lat/lon): ll(%.2f,%.2f), ur(%.2f,%.2f)",
-                      self.kwargs['llcrnrlat'], self.kwargs['llcrnrlon'],
-                      self.kwargs['urcrnrlat'], self.kwargs['urcrnrlon'])
-
-        if (self.kwargs.get("projection") in ["cyl"] or
-                self.kwargs.get("epsg") in ["4326"]):
-            # Latitudes in cylindrical projection need to be within -90..90.
-            self.kwargs['llcrnrlat'] = max(self.kwargs['llcrnrlat'], -90)
-            self.kwargs['urcrnrlat'] = max(self.kwargs['urcrnrlat'], -89)
-            self.kwargs['llcrnrlat'] = min(self.kwargs['llcrnrlat'], 89)
-            self.kwargs['urcrnrlat'] = min(self.kwargs['urcrnrlat'], 90)
-            # Longitudes in cylindrical projection need to be within -360..540.
-            self.kwargs["llcrnrlon"] = max(self.kwargs["llcrnrlon"], -360)
-            self.kwargs["urcrnrlon"] = max(self.kwargs["urcrnrlon"], -359)
-            self.kwargs["llcrnrlon"] = min(self.kwargs["llcrnrlon"], 539)
-            self.kwargs["urcrnrlon"] = min(self.kwargs["urcrnrlon"], 540)
-
-        # Remove the current map artists.
-        grat_vis = self.appearance["draw_graticule"]
-        self.set_graticule_visible(False)
-        self.appearance["draw_graticule"] = grat_vis
-        if self.map_coastlines is not None:
-            self.map_coastlines.remove()
-
-        if self.image is not None:
-            self.image.remove()
-            self.image = None
-
-        # Refer to Basemap.drawcountries() on how to remove country borders.
-        # In addition to the matplotlib lines, the loaded country segment data
-        # needs to be loaded. THE SAME NEEDS TO BE DONE WITH RIVERS ETC.
-        if self.map_countries is not None:
-            self.map_countries.remove()
-            del self.cntrysegs
-
-        # map_boundary is None for rectangular projections (basemap simply sets
-        # the backgorund colour).
-        if self.map_boundary is not None:
-            try:
-                # TODO: review
-                # FIX (mr, 15Oct2012) -- something seems to have changed in
-                # newer Matplotlib versions: this causes an exception when
-                # the user zooms/pans..
-                self.map_boundary.remove()
-            except NotImplementedError as ex:
-                logging.debug("{}".format(ex))
-
+        # Convert the current axis corners to lat/lon coordinates.kwargs.get('projection')
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)
         self.appearance["fill_continents"] = cont_vis
@@ -472,48 +322,64 @@ class MapCanvas(basemap.Basemap):
         # POSSIBILITY A): Call self.__init__ again with stored keywords.
         # Update kwargs if new parameters such as the map region have been
         # given.
+        user_proj = self.ax.projection
+        curr_extent = self.ax.get_extent()
+        require_new_axis = False
         if kwargs_update:
+            print(f"kwargs update {kwargs_update}")
             proj_keys = ["epsg", "projection"]
             if any(_x in kwargs_update for _x in proj_keys):
                 for key in (_x for _x in proj_keys if _x in self.kwargs):
                     del self.kwargs[key]
+            require_new_axis = True
+            map_keys = ('llcrnrlon', 'llcrnrlat', 'urcrnrlon', 'urcrnrlat')
+            for key in map_keys:
+                if key in self.kwargs:
+                    del self.kwargs[key]
             self.kwargs.update(kwargs_update)
-        self.__init__(**self.kwargs)
 
+        kwargs = self.kwargs
+
+        if require_new_axis:
+            self.crs = kwargs['CRS'] if kwargs.get('CRS') is not None else self.crs if hasattr(self, "crs") else None
+            if kwargs.get('BBOX_UNITS') is not None:
+                self.bbox_units = kwargs['BBOX_UNITS']
+            else:
+                self.bbox_units = getattr(self, "bbox_units", None)
+
+            self.fig.clf()
+            if unchanged:
+                ax = self.fig.add_subplot(1, 1, 1, projection=user_proj)
+                ax.set_extent(curr_extent, user_proj)
+            else:
+                if kwargs["fixed"] is True:
+                    ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
+                    if self.crs[5:] in ["3031", "3412", "32761"]:
+                        ax.set_extent([-180, 180, -90, -60], ccrs.PlateCarree())
+                    elif self.crs[5:] in ["3995", "3996", "32661"]:
+                        ax.set_extent([-180, 180, 60, 90], ccrs.PlateCarree())
+                else:
+                    try:
+                        BBOX = [kwargs['llcrnrlon'], kwargs['urcrnrlon'], kwargs['llcrnrlat'], kwargs['urcrnrlat']]
+                        ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
+                        ax.set_extent(BBOX)
+                    except KeyError:
+                        ax = self.fig.add_subplot(1, 1, 1, projection=self.kwargs['projection'])
+                        pass
+            self.ax = ax
+        self.fig.canvas.draw()
+        self.init_features(self.appearance)
         self.update_trajectory_items()
-
-        # TODO: HOW TO MAKE THIS MORE EFFICIENT.
-        # POSSIBILITY B): Only set the Basemap parameters that influence the
-        # plot (corner lat/lon, x/y, width/height, ..) and re-define the
-        # polygons that represent the coastlines etc. In Basemap, they are
-        # defined in __init__(), at the very bottom (the code that comes
-        # with the comments
-        #    >> read in coastline polygons, only keeping those that
-        #    >> intersect map boundary polygon.
-        # ). Basemap only loads the coastline data that is actually displayed.
-        # If we only change llcrnrlon etc. here and replot coastlines etc.,
-        # the polygons and the map extent will remain the same.
-        # However, it should be possible to make a map change WITHOUT changing
-        # coordinates.
-        #
-
-    # self.llcrnrlon = llcrnrlon
-    # self.llcrnrlat = llcrnrlat
-    # self.urcrnrlon = urcrnrlon
-    # self.urcrnrlat = urcrnrlat
-    # self.llcrnrx = axis[0]
-    # self.llcrnry = axis[2]
-    # self.urcrnrx = axis[1]
-    # self.urcrnry = axis[3]
 
     def imshow(self, X, **kwargs):
         """Overloads basemap.imshow(). Deletes any existing image and
            redraws the figure after the new image has been plotted.
         """
+        ax = self.ax
         if self.image is not None:
             self.image.remove()
-        self.image = super(MapCanvas, self).imshow(X, zorder=2, **kwargs)
-        self.ax.figure.canvas.draw()
+        self.image = self.ax.imshow(X, transform=ax.projection, extent=ax.get_extent(), zorder=2, **kwargs)
+        self.fig.canvas.draw()
         return self.image
 
     def set_trajectory_tree(self, tree):
@@ -701,9 +567,10 @@ class MapCanvas(basemap.Basemap):
                 # and set the visibility flag. A handle on the plot is stored
                 # via the setplotInstance() method, this allows to later switch
                 # on/off the visibility.
-                x, y = self.__call__(item.getLonVariable().getVariableData(),
-                                     item.getLatVariable().getVariableData())
-
+                xy = ccrs.PlateCarree().transform_points(item.getLonVariable().getVariableData(),
+                                                         item.getLatVariable().getVariableData(),
+                                                         src_crs=self.ax.projection)
+                x, y = xy[:, 0], xy[:, 1]
                 if mode != "MARKER_CHANGE":
                     # Remove old plot instances.
                     try:
@@ -744,7 +611,7 @@ class MapCanvas(basemap.Basemap):
                                               scatter_instance)
 
         # Update the figure canvas.
-        self.ax.figure.canvas.draw()
+        self.fig.canvas.draw()
 
     def gcpoints2(self, lon1, lat1, lon2, lat2, del_s=100., map_coords=True):
         """
@@ -752,10 +619,10 @@ class MapCanvas(basemap.Basemap):
         to space the points instead of a number of points.
         """
         # use great circle formula for a perfect sphere.
-        gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
-        az12, az21, dist = gc.inv(lon1, lat1, lon2, lat2)
+        gc = gd.Geodesic()
+        dist = gc.inverse((lon1, lat1), (lon2, lat2)).base[0, 0]
         npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
-        lonlats = gc.npts(lon1, lat1, lon2, lat2, npoints)
+        lonlats = npts_cartopy((lon1, lat1), (lon2, lat2), npoints)
         lons = [lon1]
         lats = [lat1]
         for lon, lat in lonlats:
@@ -774,13 +641,13 @@ class MapCanvas(basemap.Basemap):
            line segments. lons and lats are lists of waypoint coordinates.
         """
         # use great circle formula for a perfect sphere.
-        gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
+        gc = gd.Geodesic()
         assert len(lons) == len(lats)
         assert len(lons) > 1
         gclons = [lons[0]]
         gclats = [lats[0]]
         for i in range(len(lons) - 1):
-            az12, az21, dist = gc.inv(lons[i], lats[i], lons[i + 1], lats[i + 1])
+            dist = gc.inverse((lons[i], lats[i]), (lons[i + 1], lats[i + 1])).base[0, 0]
             npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
             # BUG -- weird path in cyl projection on waypoint move
             # On some system configurations, the path is wrongly plotted when one
@@ -791,7 +658,10 @@ class MapCanvas(basemap.Basemap):
             # projection, gc.npts() returns lons that connect lon1 and lat2, not lon1 and
             # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
             # of pyproj?? (mr, 16Oct2012)
-            lonlats = gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
+            try:
+                lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), npoints)
+            except ValueError:
+                lonlats = npts_cartopy((lons[i], lats[i]), (lons[i + 1], lats[i + 1]), 2)
             # The cylindrical projection of matplotlib is not periodic, that means that
             # -170 longitude and 190 longitude are not identical. The gc projection however
             # assumes identity and maps all longitudes to -180 to 180. This is no issue for
@@ -802,7 +672,7 @@ class MapCanvas(basemap.Basemap):
             # longitude range defined by the locations. This breaks potentially down in case
             # that the locations are too far apart (>180 degree), but this is not the typical
             # use case and will thus hopefully not pose a problem.
-            if self.projection == "cyl" and npoints > 0:
+            if str(self.ax.projection)[13:-26] == "PlateCarree" and npoints > 0:
                 lonlats = np.asarray(lonlats)
                 milon = min(lons[i], lons[i + 1])
                 malon = max(lons[i], lons[i + 1])
@@ -817,7 +687,8 @@ class MapCanvas(basemap.Basemap):
             gclons.append(lons[i + 1])
             gclats.append(lats[i + 1])
         if map_coords:
-            x, y = self(gclons, gclats)
+            new_coords = self.ax.projection.transform_points(ccrs.PlateCarree(), np.array(gclons), np.array(gclats))
+            x, y = new_coords[:, 0], new_coords[:, 1]
         else:
             x, y = (gclons, gclats)
         return x, y
@@ -826,7 +697,8 @@ class MapCanvas(basemap.Basemap):
         """
         """
         x, y = self.gcpoints_path(lons, lats, del_s=del_s)
-        return self.plot(x, y, **kwargs)
+        return self.ax.plot(x, y, **kwargs)
+        # return self.ax.plot(lons, lats, transform=ccrs.Geodetic(), **kwargs)
 
 
 class SatelliteOverpassPatch(object):
@@ -862,19 +734,23 @@ class SatelliteOverpassPatch(object):
         """
         # Plot satellite track.
         sat = np.copy(self.sat)
-        sat[:, 0], sat[:, 1] = self.map(sat[:, 0], sat[:, 1])
-        self.trackline = self.map.plot(sat[:, 0], sat[:, 1], zorder=10,
-                                       marker='+', markerfacecolor='g')
+        sat_xy = self.map.ax.projection.transform_points(ccrs.PlateCarree(),
+                                                         sat[:, 0], sat[:, 1])
+        self.trackline = self.map.ax.plot(sat_xy[:, 0], sat_xy[:, 1],
+                                          zorder=10, marker='+', markerfacecolor='g')
 
         # Plot polygon patch that represents the swath of the sensor.
         sw_l = self.sw_l
         sw_r = self.sw_r
         Path = mpath.Path
-        pathdata = [(Path.MOVETO, self.map(sw_l[0, 0], sw_l[0, 1]))]
+        pathdata = [(Path.MOVETO, self.map.ax.projection.transform_point(
+            sw_l[0, 0], sw_l[0, 1], ccrs.PlateCarree()))]
         for point in sw_l[1:]:
-            pathdata.append((Path.LINETO, self.map(point[0], point[1])))
+            pathdata.append((Path.LINETO, self.map.ax.projection.transform_point(
+                point[0], point[1], ccrs.PlateCarree())))
         for point in sw_r[::-1]:
-            pathdata.append((Path.LINETO, self.map(point[0], point[1])))
+            pathdata.append((Path.LINETO, self.map.ax.projection.transform_point(
+                point[0], point[1], ccrs.PlateCarree())))
         codes, verts = list(zip(*pathdata))
         path = mpl_pi.PathH(verts, codes, map=self.map)
         patch = mpatches.PathPatch(path, facecolor='yellow',
@@ -932,7 +808,8 @@ class KMLPatch(object):
     KML overlay implementation is currently very crude and basic and most features are not supported.
     """
 
-    def __init__(self, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
+    def __init__(self, canvas, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
+        self.canvas = canvas
         self.map = mapcanvas
         self.kml = kml
         self.patches = []
@@ -944,7 +821,8 @@ class KMLPatch(object):
     def compute_xy(self, coordinates):
         coords = str(coordinates).split()
         lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
-        return self.map(lons, lats)
+        return self.map.ax.projection.transform_points(
+            ccrs.PlateCarree(), np.asarray(lons), np.asarray(lats))
 
     def add_polygon(self, polygon, style, _):
         """
@@ -955,8 +833,9 @@ class KMLPatch(object):
         kwargs = self.styles.get(style, {}).get("PolyStyle", {"linewidth": self.linewidth, "color": self.color})
         for boundary in ["outerBoundaryIs", "innerBoundaryIs"]:
             if hasattr(polygon, boundary):
-                x, y = self.compute_xy(getattr(polygon, boundary).LinearRing.coordinates)
-                self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+                result = self.compute_xy(getattr(polygon, boundary).LinearRing.coordinates)
+                x, y = result[:, 0], result[:, 1]
+                self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
     def add_point(self, point, style, name):
         """
@@ -965,8 +844,9 @@ class KMLPatch(object):
         :param point: pykml object specifying point
         :param name: name of placemark for annotation
         """
-        x, y = self.compute_xy(point.coordinates)
-        self.patches.append(self.map.plot(x[0], y[0], "o", zorder=10, color=self.color))
+        result = self.compute_xy(point.coordinates)
+        x, y = result[:, 0], result[:, 1]
+        self.patches.append(self.map.ax.plot(x[0], y[0], "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x[0], y[0]), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
@@ -979,8 +859,9 @@ class KMLPatch(object):
         :param line: pykml LineString object
         """
         kwargs = self.styles.get(style, {}).get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
-        x, y = self.compute_xy(line.coordinates)
-        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+        result = self.compute_xy(line.coordinates)
+        x, y = result[:, 0], result[:, 1]
+        self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
     def parse_geometries(self, placemark, style=None, name=None):
         if style.startswith("#"):
@@ -1040,8 +921,7 @@ class KMLPatch(object):
         if not self.overwrite:
             self.parse_styles(self.kml.Document)
         self.parse_placemarks(self.kml.Document)
-
-        self.map.ax.figure.canvas.draw()
+        self.canvas.draw()
 
     def update(self, overwrite=None, color=None, linewidth=None):
         """Removes the current plot of the patch and redraws the patch.
@@ -1064,4 +944,4 @@ class KMLPatch(object):
             for element in patch:
                 element.remove()
         self.patches = []
-        self.map.ax.figure.canvas.draw()
+        self.canvas.draw()
