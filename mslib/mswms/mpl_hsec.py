@@ -48,7 +48,7 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 
 from mslib.mswms import mss_2D_sections
-from mslib.utils import get_projection_params
+from mslib.utils import get_projection_params, convert_to
 
 
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
@@ -125,13 +125,19 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         logging.debug("plotting data..")
 
         # Check if required data is available.
-        for datatype, dataitem in self.required_datafields:
+        self.data_units = self.driver.data_units.copy()
+        for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
                 raise KeyError(u"required data field '{}' not found".format(dataitem))
+            origunit = self.driver.data_units[dataitem]
+            if dataunit is not None:
+                data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
+                self.data_units[dataitem] = dataunit
+            else:
+                logging.debug("Please add units to plot variables")
 
         # Copy parameters to properties.
         self.data = data
-        self.data_units = self.driver.data_units.copy()
         self.lats = lats
         self.lons = lons
         self.level = level

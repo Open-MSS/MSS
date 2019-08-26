@@ -34,7 +34,7 @@ requirements:
     - netcdf4
     - hdf4
     - pillow 5.*
-    - python-dateutil
+    - pint
     - pytz
     - pyqt 5.*
     - qt 5.*
@@ -48,7 +48,7 @@ requirements:
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
-    - matplotlib >=3.0.2
+    - matplotlib
     - proj4
     - future
     - flask

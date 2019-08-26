@@ -34,7 +34,6 @@ from __future__ import division
 from future import standard_library
 standard_library.install_aliases()
 
-
 import PIL.Image
 import io
 import logging
@@ -43,7 +42,9 @@ from abc import abstractmethod
 from xml.dom.minidom import getDOMImplementation
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
 from mslib.mswms import mss_2D_sections
+from mslib.utils import convert_to
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
@@ -102,7 +103,6 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         label_distance = 10000
         label_bot = self.p_bot - (self.p_bot % label_distance)
         major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
-
         # .. check step reduction to 10 hPa ..
         if self.p_top < 10000:
             major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1,
@@ -140,12 +140,13 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax.grid(b=True)
 
         # Plot title (either in image axes or above).
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
-        titlestring = u"{} [{:.0f}..{:.0f} hPa]\nValid: {} (step {:d} hrs from {})".format(
+        titlestring = u"{} [{:.0f}..{:.0f} hPa]\nValid: {}".format(
             titlestring, self.p_bot / 100., self.p_top / 100.,
-            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"),
-            time_step_hrs, self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+        if self.uses_inittime_dimension():
+            titlestring += u" (step {:.0f} hrs from {})".format(
+                (self.valid_time - self.init_time).total_seconds() / 3600,
+                self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
     @abstractmethod
     def _plot_style(self):
@@ -162,13 +163,19 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         """
         # Check if required data is available.
-        for datatype, dataitem in self.required_datafields:
+        self.data_units = self.driver.data_units.copy()
+        for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
                 raise KeyError(u"required data field '{}' not found".format(dataitem))
+            origunit = self.driver.data_units[dataitem]
+            if dataunit is not None:
+                data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
+                self.data_units[dataitem] = dataunit
+            else:
+                logging.debug("Please add units to plot variables")
 
         # Copy parameters to properties.
         self.data = data
-        self.data_units = self.driver.data_units.copy()
         self.lats = lats
         self.lat_inds = np.arange(len(lats))
         self.lons = lons

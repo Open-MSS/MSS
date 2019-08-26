@@ -129,23 +129,15 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         # Determine the input files from the required variables and the
         # requested time:
 
-        # Get a list of the available data files. The path to the data files
-        # is provided by the NWPDataAccess object in self.data_access.
-        available_files = self.data_access.get_all_datafiles()
-
         # Create the names of the files containing the required parameters.
         filenames = []
-        for vartype, var in self.plot_object.required_datafields:
-            filename = self.data_access.get_filename(var, vartype,
-                                                     init_time, fc_time,
-                                                     fullpath=True)
-            short_filename = os.path.basename(filename)
+        for vartype, var, _ in self.plot_object.required_datafields:
+            filename = self.data_access.get_filename(
+                var, vartype, init_time, fc_time, fullpath=True)
             if filename not in filenames:
                 filenames.append(filename)
-            logging.debug(u"\tvariable '%s' requires input file '%s'", var, short_filename)
-            if short_filename not in available_files:
-                logging.error(u"ERROR: file '%s' does not exist", short_filename)
-                raise IOError(u"file '%s' does not exist", short_filename)
+            logging.debug(u"\tvariable '%s' requires input file '%s'",
+                          var, os.path.basename(filename))
 
         if len(filenames) == 0:
             raise ValueError("no files found that correspond to the specified "
@@ -208,11 +200,21 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """
         self.data_vars = {}
         self.data_units = {}
-        for df_type, df_name in self.plot_object.required_datafields:
+        for df_type, df_name, _ in self.plot_object.required_datafields:
             varname, var = netCDF4tools.identify_variable(self.dataset, df_name, check=True)
             logging.debug("\tidentified variable <%s> for field <%s>", varname, df_name)
             self.data_vars[df_name] = var
             self.data_units[df_name] = getattr(var, "units", None)
+
+    def have_data(self, plot_object, init_time, valid_time):
+        """Checks if this driver has the required data to do the plot
+
+        This inquires the contained data access class if data is available for
+        all required data fields for the specified times.
+        """
+        return all(
+            self.data_access.have_data(var, vartype, init_time, valid_time)
+            for vartype, var in plot_object.required_datafields)
 
     @abstractmethod
     def set_plot_parameters(self, plot_object, init_time=None, valid_time=None,
@@ -302,6 +304,16 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """
         return self.data_access.get_init_times()
 
+    def get_elevations(self, vert_type):
+        """See ECMWFDataAccess.get_elevations().
+        """
+        return self.data_access.get_elevations(vert_type)
+
+    def get_elevation_units(self, vert_type):
+        """See ECMWFDataAccess.get_elevation().
+        """
+        return self.data_access.get_elevation_units(vert_type)
+
     def get_all_valid_times(self, variable, vartype):
         """See ECMWFDataAccess.get_all_valid_times().
         """
@@ -311,6 +323,16 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """See ECMWFDataAccess.get_valid_times().
         """
         return self.data_access.get_valid_times(variable, vartype, init_time)
+
+    def uses_inittime_dimension(self):
+        """Returns whether this driver uses the WMS inittime dimensions.
+        """
+        return self.data_access.uses_inittime_dimension()
+
+    def uses_validtime_dimension(self):
+        """Returns whether this layer uses the WMS time dimensions.
+        """
+        return self.data_access.uses_validtime_dimension()
 
 
 class VerticalSectionDriver(MSSPlotDriver):

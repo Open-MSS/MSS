@@ -29,7 +29,9 @@ from __future__ import division
 
 import numpy as np
 import matplotlib
+import pint
 
+UR = pint.UnitRegistry()
 N_LEVELS = 16
 
 
@@ -453,16 +455,6 @@ def get_cbar_label_format(style, maxvalue):
     if style == 'log_ice_cloud':
         format = "%.0E"
     return format
-
-
-def convert_to(value, fr_un, to_un, default=1.):
-    factors = {
-        "hPa": {"hPa": 1., "Pa": 0.01},
-        "Pa": {"Pa": 1., "hPa": 100.},
-        "m": {"m": 1., "km": 1000., "m**2 s**-2": 1. / 9.81},
-        "km": {"km": 1., "m": 0.001, "m**2 s**-2": 1. / 9810.},
-    }
-    return value * factors.get(to_un, {}).get(fr_un, default)
 
 
 def conditional_decorator(dec, condition):

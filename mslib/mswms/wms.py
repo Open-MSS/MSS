@@ -42,19 +42,19 @@
 """
 
 from future import standard_library
+
 standard_library.install_aliases()
 
 import os
 import logging
-from datetime import datetime
 import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
 
-
 from flask import Flask, request, make_response
 from flask_httpauth import HTTPBasicAuth
 from mslib.mswms.utils import conditional_decorator
+from mslib.utils import parse_iso_datetime
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
@@ -102,7 +102,6 @@ except ImportError as ex:
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
-
 if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
@@ -121,7 +120,6 @@ if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
             username = auth.username
             password = auth.password
         return authfunc(username, password)
-
 
 from mslib.mswms import mss_plot_driver
 from mslib.utils import CaseInsensitiveMultiDict, get_projection_params
@@ -244,10 +242,10 @@ class WMSServer(object):
         hsec_layers = []
         for dataset in self.hsec_layer_registry:
             for layer in self.hsec_layer_registry[dataset].values():
-                if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
+                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
                     logging.error(u"layer %s/%s has no init times!", layer, dataset)
                     continue
-                if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
+                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
                     logging.error(u"layer %s/%s has no valid times!", layer, dataset)
                     continue
                 hsec_layers.append((dataset, layer))
@@ -256,10 +254,10 @@ class WMSServer(object):
         vsec_layers = []
         for dataset in self.vsec_layer_registry:
             for layer in self.vsec_layer_registry[dataset].values():
-                if layer.uses_time_dimensions() and len(layer.get_init_times()) == 0:
+                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
                     logging.error(u"layer %s/%s has no init times!", layer, dataset)
                     continue
-                if layer.uses_time_dimensions() and len(layer.get_all_valid_times()) == 0:
+                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
                     logging.error(u"layer %s/%s has no valid times!", layer, dataset)
                     continue
                 vsec_layers.append((dataset, layer))
@@ -324,7 +322,7 @@ class WMSServer(object):
         init_time = query.get('DIM_INIT_TIME')
         if init_time is not None:
             try:
-                init_time = datetime.strptime(init_time, "%Y-%m-%dT%H:%M:%SZ")
+                init_time = parse_iso_datetime(init_time)
             except ValueError:
                 return self.create_service_exception(
                     code="InvalidDimensionValue",
@@ -335,7 +333,7 @@ class WMSServer(object):
         valid_time = query.get('TIME')
         if valid_time is not None:
             try:
-                valid_time = datetime.strptime(valid_time, "%Y-%m-%dT%H:%M:%SZ")
+                valid_time = parse_iso_datetime(valid_time)
             except ValueError:
                 return self.create_service_exception(
                     code="InvalidDimensionValue",
@@ -384,13 +382,12 @@ class WMSServer(object):
                     text=u"Invalid LAYER '{}.{}' requested".format(dataset, layer))
 
             # Check if the layer requires time information and if they are given.
-            if self.hsec_layer_registry[dataset][layer].uses_time_dimensions():
-                if init_time is None:
-                    return self.create_service_exception(
-                        code="MissingDimensionValue",
-                        text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)")
-                if valid_time is None:
-                    return self.create_service_exception(code="MissingDimensionValue", text="TIME not specified")
+            if self.hsec_layer_registry[dataset][layer].uses_inittime_dimension() and init_time is None:
+                return self.create_service_exception(
+                    code="MissingDimensionValue",
+                    text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)")
+            if self.hsec_layer_registry[dataset][layer].uses_validtime_dimension() and valid_time is None:
+                return self.create_service_exception(code="MissingDimensionValue", text="TIME not specified")
 
             # Check if the requested coordinate system is supported.
             if not self.hsec_layer_registry[dataset][layer].support_epsg_code(crs):
@@ -451,7 +448,7 @@ class WMSServer(object):
                     text=u"Invalid LAYER '{}.{}' requested".format(dataset, layer))
 
             # Check if the layer requires time information and if they are given.
-            if self.vsec_layer_registry[dataset][layer].uses_time_dimensions():
+            if self.vsec_layer_registry[dataset][layer].uses_inittime_dimension():
                 if init_time is None:
                     return self.create_service_exception(
                         code="MissingDimensionValue",
@@ -504,20 +501,26 @@ def application():
         query = request.args
 
         # Processing
+        # ToDo Refactor
         request_type = query.get('request')
         if request_type is None:  # request_type may *actually* be set to None
             request_type = ''
         request_type = request_type.lower()
+        request_service = query.get('service', '')
+        request_service = request_service.lower()
+        request_version = query.get('version', '')
 
         url = request.url
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
-        if request_type == "getcapabilities":
+        if (request_type in ('getcapabilities', 'capabilities') and
+                request_service == 'wms' and request_version in ('1.1.1', '')):
             return_data, return_format = server.get_capabilities(server_url)
-        elif request_type in ['getmap', 'getvsec']:
+        elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:
-            raise RuntimeError(u"Request type '{}' is not valid.".format(request))
+            logging.debug(u'Request type "%s" is not valid.', request)
+            raise RuntimeError(u"Request type is not valid.")
 
         res = make_response(return_data, 200)
         response_headers = [('Content-type', return_format), ('Content-Length', str(len(return_data)))]
@@ -528,11 +531,11 @@ def application():
 
     except Exception as ex:
         error_message = u"{}: {}\n".format(type(ex), ex)
+        logging.error("Unexpected error: %s", error_message)
         error_message = error_message.encode("utf-8")
 
         response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
         res = make_response(error_message, 404)
         for response_header in response_headers:
             res.headers[response_header[0]] = response_header[1]
-
         return res

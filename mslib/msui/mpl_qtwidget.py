@@ -227,6 +227,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         if sideview:
             self.toolitems = [
                 _x for _x in NavigationToolbar2QT.toolitems if _x[0] in ('Save',)]
+            self.set_history_buttons = lambda: None
         else:
             self.toolitems = [
                 _x for _x in NavigationToolbar2QT.toolitems if
@@ -427,8 +428,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             a.setCheckable(True)
             a.setToolTip(tooltip_text)
 
-        self.buttons = {}
-
         # Add the x,y location widget at the right side of the toolbar
         # The stretch factor is 1 which means any resizing of the toolbar
         # will resize this label instead of the buttons.
@@ -441,9 +440,6 @@ class NavigationToolbar(NavigationToolbar2QT):
                                       QtWidgets.QSizePolicy.Ignored))
             labelAction = self.addWidget(self.locLabel)
             labelAction.setVisible(True)
-
-        # reference holder for subplots_adjust window
-        self.adj_window = None
 
         # Esthetic adjustments - we need to set these explicitly in PyQt5
         # otherwise the layout looks different - but we don't want to set it if
@@ -496,6 +492,8 @@ class MplSideViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws a side view (vertical section) of a
        flight track / list of waypoints.
     """
+    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
+    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
     def __init__(self, model=None, settings=None, numlabels=None):
         """
@@ -564,64 +562,39 @@ class MplSideViewCanvas(MplCanvas):
         vaxis = self.settings_dict["vertical_axis"]
         if vaxis == "pressure":
             # Compute the position of major and minor ticks. Major ticks are labelled.
-            # By default, major ticks are drawn every 100hPa. If p_top < 100hPa,
-            # the distance is reduced to every 10hPa above 100hPa.
-            label_distance = 10000
-            label_bot = self.p_bot - (self.p_bot % label_distance)
-            major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
-
-            # .. check step reduction to 10 hPa ..
-            if self.p_top < 10000:
-                major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1, -label_distance // 10)
-                len_major_ticks = len(major_ticks)
-                major_ticks = np.resize(major_ticks,
-                                        len_major_ticks + len(major_ticks2) - 1)
-                major_ticks[len_major_ticks:] = major_ticks2[1:]
-                if self.p_top < 1000:
-                    major_ticks3 = np.arange(major_ticks[-1], self.p_top - 1, -label_distance // 100)
-                    len_major_ticks = len(major_ticks)
-                    major_ticks = np.resize(major_ticks,
-                                            len_major_ticks + len(major_ticks3) - 1)
-                    major_ticks[len_major_ticks:] = major_ticks3[1:]
-                if major_ticks[-1] != self.p_top:
-                    top = np.arange(self.p_top, 0, -100000)
-                    major_ticks = np.append(major_ticks, top)
-
+            major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
+            minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
+            if len(major_ticks) > 20:
+                major_ticks = [x for x in major_ticks if not str(x)[0] in "975"]
+            elif len(major_ticks) > 10:
+                major_ticks = [x for x in major_ticks if not str(x)[0] in "9"]
             labels = ["{}".format(int(l / 100.))
                       if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
-
-            # .. the same for the minor ticks ..
-            p_top_minor = max(label_distance, self.p_top)
-            label_distance_minor = 1000
-            label_bot_minor = self.p_bot - (self.p_bot % label_distance_minor)
-            minor_ticks = np.arange(label_bot_minor, p_top_minor - 1,
-                                    -label_distance_minor)
-
-            if self.p_top < 10000:
-                minor_ticks2 = np.arange(minor_ticks[-1], self.p_top - 1, -label_distance_minor // 10)
-                len_minor_ticks = len(minor_ticks)
-                minor_ticks = np.resize(minor_ticks,
-                                        len_minor_ticks + len(minor_ticks2) - 1)
-                minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
-                if self.p_top < 10000:
-                    minor_ticks3 = np.arange(1000, self.p_top - 1, -label_distance_minor // 100)
-                    len_minor_ticks = len(minor_ticks)
-                    minor_ticks = np.resize(minor_ticks,
-                                            len_minor_ticks + len(minor_ticks3) - 1)
-                    minor_ticks[len_minor_ticks:] = minor_ticks3[1:]
             self.ax.set_ylabel("pressure (hPa)")
         elif vaxis == "pressure altitude":
-            major_heights = np.arange(0, thermolib.pressure2flightlevel(self.p_top) * 0.03048, 2)
-            minor_heights = np.arange(0, thermolib.pressure2flightlevel(self.p_top) * 0.03048, 0.5)
-            major_fl = 10 * major_heights / 0.3048
-            minor_fl = 10 * minor_heights / 0.3048
-            major_ticks = thermolib.flightlevel2pressure_a(major_fl)
-            minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
+            bot_km = thermolib.pressure2flightlevel(self.p_bot) * 0.03048
+            top_km = thermolib.pressure2flightlevel(self.p_top) * 0.03048
+            ma_dist, mi_dist = 4, 1.0
+            if (top_km - bot_km) <= 20:
+                ma_dist, mi_dist = 1, 0.5
+            elif (top_km - bot_km) <= 40:
+                ma_dist, mi_dist = 2, 0.5
+            major_heights = np.arange(0, top_km + 1, ma_dist)
+            minor_heights = np.arange(0, top_km + 1, mi_dist)
+            major_ticks = thermolib.flightlevel2pressure_a(major_heights / 0.03048)
+            minor_ticks = thermolib.flightlevel2pressure_a(minor_heights / 0.03048)
             labels = major_heights
             self.ax.set_ylabel("pressure altitude (km)")
         elif vaxis == "flight level":
-            major_fl = np.arange(0, 1551, 50)
-            minor_fl = np.arange(0, 1551, 10)
+            bot_km = thermolib.pressure2flightlevel(self.p_bot) * 0.03048
+            top_km = thermolib.pressure2flightlevel(self.p_top) * 0.03048
+            ma_dist, mi_dist = 50, 10
+            if (top_km - bot_km) <= 10:
+                ma_dist, mi_dist = 20, 10
+            elif (top_km - bot_km) <= 40:
+                ma_dist, mi_dist = 40, 10
+            major_fl = np.arange(0, 2132, ma_dist)
+            minor_fl = np.arange(0, 2132, mi_dist)
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl
@@ -804,8 +777,8 @@ class MplSideViewCanvas(MplCanvas):
 
         # Return a tuple (num_interpolation_points, p_bot[hPa],
         #                 num_labels, p_top[hPa]) as BBOX.
-        bbox = (num_interpolation_points, (axis[2] // 100),
-                num_labels, (axis[3] // 100))
+        bbox = (num_interpolation_points, (axis[2] / 100),
+                num_labels, (axis[3] / 100))
         return bbox
 
     def draw_legend(self, img):
@@ -842,8 +815,8 @@ class MplSideViewCanvas(MplCanvas):
             self.image.remove()
 
         # Plot the new image in the image axes and adjust the axes limits.
-        self.image = self.imgax.imshow(img, interpolation="nearest", aspect="auto",
-                                       origin=PIL_IMAGE_ORIGIN)
+        self.image = self.imgax.imshow(
+            img, interpolation="nearest", aspect="auto", origin=PIL_IMAGE_ORIGIN)
         self.imgax.set_xlim(0, ix - 1)
         self.imgax.set_ylim(iy - 1, 0)
         self.draw()
@@ -1036,8 +1009,7 @@ class MplTopViewCanvas(MplCanvas):
         """Draw the image img on the current plot.
         """
         logging.debug("plotting image..")
-        self.wms_image = self.map.imshow(img, interpolation="nearest", alpha=1.,
-                                         origin=PIL_IMAGE_ORIGIN)
+        self.wms_image = self.map.imshow(img, interpolation="nearest", origin=PIL_IMAGE_ORIGIN)
         # NOTE: imshow always draws the images to the lowest z-level of the
         # plot.
         # See these mailing list entries:
@@ -1085,8 +1057,7 @@ class MplTopViewCanvas(MplCanvas):
                 self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
 
             # Plot the new legimg in the legax axes.
-            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal",
-                                            interpolation="nearest")
+            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal", interpolation="nearest")
         self.draw()
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()

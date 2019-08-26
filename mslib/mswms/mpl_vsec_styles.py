@@ -38,8 +38,9 @@ from matplotlib import patheffects
 import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, convert_to
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib.mswms.msschem import MSSChemTargets
+from mslib.utils import convert_to
 from mslib import thermolib
 
 
@@ -47,7 +48,6 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
     """
     Temperature
     Vertical section of temperature.
-
     """
 
     name = "VS_T01"
@@ -56,19 +56,15 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K")]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
-        if 'air_potential_temperature' not in self.data:
-            self.data['air_potential_temperature'] = \
-                thermolib.pot_temp(self.data['air_pressure'],
-                                   self.data['air_temperature'])
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
         """Make a temperature/potential temperature vertical section.
@@ -133,10 +129,6 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         elif self.name[-2:] == "tl":
             self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
             self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
-        if self.data_units["air_pressure"] not in ["Pa", "hPa"]:
-            raise ValueError("air_pressure neither hPa nor Pa: %s", self.data_units["air_pressure"])
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
 
     def _plot_style(self):
         ax = self.ax
@@ -207,7 +199,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
 def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
                        fix_styles=None, add_styles=None, add_prepare=None):
     if add_data is None:
-        add_data = [(vert, "ertel_potential_vorticity")]
+        add_data = [(vert, "ertel_potential_vorticity", "PVU")]
     if add_contours is None:
         add_contours = [  # ("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
             ("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "dashed", 2, True),
@@ -220,7 +212,7 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
         title = Targets.TITLES.get(entity, entity)
         if units:
             title += u" ({})".format(units)
-        required_datafields = [(vert, entity)] + add_data
+        required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours
 
     fnord.__name__ = name
@@ -243,10 +235,16 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
 
 
 _ADD_DATA = {
-    "al": [("al", "ertel_potential_vorticity"), ("al", "air_pressure"), ("al", "air_potential_temperature")],
-    "ml": [("ml", "ertel_potential_vorticity"), ("ml", "air_pressure"), ("ml", "air_potential_temperature")],
-    "pl": [("pl", "ertel_potential_vorticity"), ("pl", "air_potential_temperature")],
-    "tl": [("tl", "ertel_potential_vorticity"), ("tl", "air_pressure")],
+    "al": [("al", "ertel_potential_vorticity", "PVU"),
+           ("al", "air_pressure", "Pa"),
+           ("al", "air_potential_temperature", "K")],
+    "ml": [("ml", "ertel_potential_vorticity", "PVU"),
+           ("ml", "air_pressure", "Pa"),
+           ("ml", "air_potential_temperature", "K")],
+    "pl": [("pl", "ertel_potential_vorticity", "PVU"),
+           ("pl", "air_potential_temperature", "K")],
+    "tl": [("tl", "ertel_potential_vorticity", "PVU"),
+           ("tl", "air_pressure", "Pa")],
 }
 
 for vert in ["al", "ml", "pl", "tl"]:
@@ -269,16 +267,16 @@ for vert in ["al", "ml", "pl", "tl"]:
     make_generic_class(
         "VS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
         "air_temperature_residual", vert,
-        add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure"),
-                                    ("sfc", "secondary_tropopause_air_pressure")],
+        add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure", "Pa"),
+                                    ("sfc", "secondary_tropopause_air_pressure", "Pa")],
         add_contours=[("tropopause_air_pressure", None, "darkgrey", "darkgrey", "solid", 2, True),
                       ("secondary_tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("gravity_wave_temperature_perturbation", "")])
     make_generic_class(
         "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
         "square_of_brunt_vaisala_frequency_in_air", vert,
-        add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure"),
-                                    ("sfc", "secondary_tropopause_air_pressure")],
+        add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure", "Pa"),
+                                    ("sfc", "secondary_tropopause_air_pressure", "Pa")],
         add_contours=[("tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True),
                       ("secondary_tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
@@ -287,7 +285,7 @@ vert = "pl"
 make_generic_class(
     "VS_GenericStyle_{}_{}".format(vert.upper(), "cloud_ice_mixing_ratio"),
     "cloud_ice_mixing_ratio", vert,
-    add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
+    add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
                    [90, 100, 120, 160],
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
@@ -298,7 +296,7 @@ make_generic_class(
 make_generic_class(
     "VS_GenericStyle_{}_{}".format(vert.upper(), "number_concentration_of_ice_crystals_in_air"),
     "number_concentration_of_ice_crystals_in_air", vert,
-    add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
+    add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
                    [90, 100, 120, 160],
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
@@ -309,7 +307,7 @@ make_generic_class(
 make_generic_class(
     "VS_GenericStyle_{}_{}".format(vert.upper(), "mean_mass_radius_of_cloud_ice_crystals"),
     "mean_mass_radius_of_cloud_ice_crystals", vert,
-    add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory")],
+    add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
                    [90, 100, 120, 160],
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
@@ -334,16 +332,14 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "cloud_area_fraction_in_atmosphere_layer")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "cloud_area_fraction_in_atmosphere_layer", 'dimensionless')]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
 
@@ -419,18 +415,16 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "cloud_area_fraction_in_atmosphere_layer"),
-        ("ml", "eastward_wind"),
-        ("ml", "northward_wind")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "cloud_area_fraction_in_atmosphere_layer", 'dimensionless'),
+        ("ml", "eastward_wind", "m/s"),
+        ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
         self.data["horizontal_wind"] = np.hypot(
@@ -502,16 +496,14 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "specific_humidity")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "specific_humidity", "kg/kg")]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
         self.data["relative_humidity"] = thermolib.rel_hum(
@@ -604,17 +596,15 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "specific_humidity"),
-        ("ml", "northward_wind")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "specific_humidity", "g/kg"),
+        ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
 
@@ -626,7 +616,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         curtain_p = self.data["air_pressure"]
         curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
-        curtain_q = self.data["specific_humidity"] * 1000.  # convert from kg/kg to g/kg
+        curtain_q = self.data["specific_humidity"]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -717,22 +707,21 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "lagrangian_tendency_of_air_pressure")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "lagrangian_tendency_of_air_pressure", "Pa/s")]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes vertical
         velocity in cm/s.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
-        self.data["upward_wind"] = thermolib.omega_to_w(
-            self.data["lagrangian_tendency_of_air_pressure"],
-            self.data['air_pressure'], self.data["air_temperature"])
+        self.data["upward_wind"] = convert_to(
+            thermolib.omega_to_w(self.data["lagrangian_tendency_of_air_pressure"],
+                                 self.data['air_pressure'], self.data["air_temperature"]),
+            "m/s", "cm/s")
 
     def _plot_style(self):
         """Make a vertical velocity vertical section with temperature/potential
@@ -742,7 +731,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         curtain_p = self.data["air_pressure"]
         curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
-        curtain_w = self.data["upward_wind"] * 100.
+        curtain_w = self.data["upward_wind"]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -821,17 +810,15 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "eastward_wind"),
-        ("ml", "northward_wind")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "eastward_wind", "m/s"),
+        ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
         self.data["horizontal_wind"] = np.hypot(
@@ -1056,20 +1043,18 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "eastward_wind"),
-        ("ml", "northward_wind"),
-        ("ml", "specific_cloud_liquid_water_content"),
-        ("ml", "specific_cloud_ice_water_content"),
-        ("ml", "ertel_potential_vorticity")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "eastward_wind", "m/s"),
+        ("ml", "northward_wind", "m/s"),
+        ("ml", "specific_cloud_liquid_water_content", "g/kg"),
+        ("ml", "specific_cloud_ice_water_content", "g/kg"),
+        ("ml", "ertel_potential_vorticity", "PVU")]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
         self.data["horizontal_wind"] = np.hypot(
@@ -1083,8 +1068,8 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         curtain_p = self.data["air_pressure"]
         curtain_pt = self.data["air_potential_temperature"]
         curtain_pv = self.data["ertel_potential_vorticity"]
-        curtain_clwc = self.data["specific_cloud_liquid_water_content"] * 1000.
-        curtain_ciwc = self.data["specific_cloud_ice_water_content"] * 1000.
+        curtain_clwc = self.data["specific_cloud_liquid_water_content"]
+        curtain_ciwc = self.data["specific_cloud_ice_water_content"]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -1189,20 +1174,18 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "eastward_wind"),
-        ("ml", "northward_wind"),
-        ("ml", "specific_cloud_liquid_water_content"),
-        ("ml", "specific_cloud_ice_water_content"),
-        ("ml", "probability_of_wcb_occurrence")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "eastward_wind", "m/s"),
+        ("ml", "northward_wind", "m/s"),
+        ("ml", "specific_cloud_liquid_water_content", "g/kg"),
+        ("ml", "specific_cloud_ice_water_content", "g/kg"),
+        ("ml", "probability_of_wcb_occurrence", 'dimensionless')]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature and
            total horizontal wind speed.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
         self.data["horizontal_wind"] = np.hypot(
@@ -1216,8 +1199,8 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         curtain_p = self.data["air_pressure"]
         curtain_pt = self.data["air_potential_temperature"]
         curtain_pwcb = self.data["probability_of_wcb_occurrence"] * 100.
-        curtain_clwc = self.data["specific_cloud_liquid_water_content"] * 1000.
-        curtain_ciwc = self.data["specific_cloud_ice_water_content"] * 1000.
+        curtain_clwc = self.data["specific_cloud_liquid_water_content"]
+        curtain_ciwc = self.data["specific_cloud_ice_water_content"]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)
@@ -1294,15 +1277,11 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "air_pressure"),
-        ("pl", "number_of_wcb_trajectories"),
-        ("pl", "number_of_insitu_trajectories"),
-        ("pl", "number_of_mix_trajectories")
+        ("pl", "air_pressure", "Pa"),
+        ("pl", "number_of_wcb_trajectories", 'dimensionless'),
+        ("pl", "number_of_insitu_trajectories", 'dimensionless'),
+        ("pl", "number_of_mix_trajectories", 'dimensionless')
     ]
-
-    def _prepare_datafields(self):
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
 
     def _plot_style(self):
         """Make a horizontal velocity vertical section with temperature/potential
@@ -1368,16 +1347,14 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_pressure"),
-        ("ml", "air_temperature"),
-        ("ml", "emac_R12")]
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K"),
+        ("ml", "emac_R12", 'dimensionless')]
 
     def _prepare_datafields(self):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "Pa")
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
 
@@ -1456,7 +1433,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [("ml", "air_pressure")]
+    required_datafields = [("ml", "air_pressure", "Pa")]
 
     # In order to use information from the DataAccess class to construct the titles, we override the set_driver to set
     # self.title.  This cannot happen in __init__, as the WMSServer doesn't initialize the layers with the driver but
@@ -1577,7 +1554,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
 
         else:
             # all other layer types need to read air_pressure from the data
-            add_data = [(vert, "air_pressure")]
+            add_data = [(vert, "air_pressure", "Pa")]
     if add_contours is None:
         add_contours = []
 
@@ -1591,7 +1568,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
         long_name = entity
         if units:
             title += u" ({})".format(units)
-        required_datafields = [(vert, entity)] + add_data
+        required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours if add_contours else []
 
     fnord.__name__ = nam
