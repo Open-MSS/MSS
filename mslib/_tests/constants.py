@@ -51,3 +51,15 @@ SERVER_CONFIG_FILE_PATH = os.path.join(SERVER_CONFIG_FS.root_path, SERVER_CONFIG
 
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2
 DATA_DIR = DATA_FS.root_path
+
+# deployed mscolab url
+MSCOLAB_URL = 'http://localhost:8083'
+# mscolab test server's url
+MSCOLAB_URL_TEST = 'http://localhost:8084'
+
+
+# dir where mss output files are stored
+TEST_DATA_DIR = os.path.expanduser("/tmp/colabdata")
+TEST_BASE_DIR = os.path.expanduser("/tmp")
+# test data dir mscolab
+TEST_MSCOLAB_DATA_DIR = os.path.join(TEST_DATA_DIR, 'filedata')

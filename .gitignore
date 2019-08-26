@@ -12,6 +12,8 @@ mslib/msui/mss_settings.py
 mslib/msui/wms_cache/
 mslib/mswms/mss_wms_settings.py
 mslib/mswms/mss_wms_auth.py
+mslib/mscolab/conf.py
+mslib/mscolab/data
 docs/_build
 build/
 mss.egg-info/

@@ -54,6 +54,12 @@ requirements:
     - flask
     - flask-httpauth
     - werkzeug
+    - flask-socketio
+    - flask-sqlalchemy
+    - passlib
+    - python-socketio[client]
+    - gitpython
+    - psycopg2
 
 test:
   imports:
