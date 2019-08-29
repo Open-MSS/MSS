@@ -863,7 +863,7 @@ class MplTopViewCanvas(MplCanvas):
         """
         super(MplTopViewCanvas, self).__init__()
         self.waypoints_interactor = None
-        self.satoverpasspatch = None
+        self.satoverpasspatch = []
         self.kmloverlay = None
         self.map = None
         self.basename = "topview"
@@ -955,8 +955,8 @@ class MplTopViewCanvas(MplCanvas):
         self.pdlg.setValue(8)
         QtWidgets.QApplication.processEvents()
 
-        if self.satoverpasspatch:
-            self.satoverpasspatch.update()
+        for segment in self.satoverpasspatch:
+            segment.update()
 
         if self.kmloverlay:
             self.kmloverlay.update()
@@ -1069,18 +1069,20 @@ class MplTopViewCanvas(MplCanvas):
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()
 
-    def plot_satellite_overpass(self, segment):
+    def plot_satellite_overpass(self, segments):
         """Plots a satellite track on top of the map.
         """
-        if self.satoverpasspatch:
-            # If track is currently plotted on the map, remove it.
-            self.satoverpasspatch.remove()
-            if not segment:
-                self.satoverpasspatch = None
-                self.draw()
-        if segment:
+        # If track is currently plotted on the map, remove it.
+        for segment in self.satoverpasspatch:
+            segment.remove()
+        self.satoverpasspatch = []
+
+        if segments:
             # Create a new patch.
-            self.satoverpasspatch = mpl_map.SatelliteOverpassPatch(self.map, segment)
+            self.satoverpasspatch = [
+                mpl_map.SatelliteOverpassPatch(self.map, segment)
+                for segment in segments]
+        self.draw()
 
     def plot_kml(self, kmloverlay):
         """Plots a satellite track on top of the map.
