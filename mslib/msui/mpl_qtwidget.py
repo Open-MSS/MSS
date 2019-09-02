@@ -357,6 +357,14 @@ class NavigationToolbar(NavigationToolbar2QT):
             self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
         NavigationToolbar2QT.zoom(self, *args)
 
+    def release_zoom(self, event):
+        NavigationToolbar2QT.release_zoom(self, event)
+        self.canvas.redraw_map()
+
+    def release_pan(self, event):
+        NavigationToolbar2QT.release_pan(self, event)
+        self.canvas.redraw_map()
+
     def motion_wp(self, event):
         self.canvas.waypoints_interactor.motion_notify_callback(event)
 
@@ -494,6 +502,9 @@ class MplSideViewCanvas(MplCanvas):
     _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
     _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
+    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
+    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
+
     def __init__(self, model=None, settings=None, numlabels=None):
         """
         Arguments:
@@ -563,12 +574,12 @@ class MplSideViewCanvas(MplCanvas):
             # Compute the position of major and minor ticks. Major ticks are labelled.
             major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
             minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
-            if len(major_ticks) > 20:
-                major_ticks = [x for x in major_ticks if not str(x)[0] in "975"]
-            elif len(major_ticks) > 10:
-                major_ticks = [x for x in major_ticks if not str(x)[0] in "9"]
             labels = ["{}".format(int(l / 100.))
                       if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
+            if len(labels) > 20:
+                labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
+            elif len(labels) > 10:
+                labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
             self.ax.set_ylabel("pressure (hPa)")
         elif vaxis == "pressure altitude":
             bot_km = thermolib.pressure2flightlevel(self.p_bot) * 0.03048
@@ -925,7 +936,6 @@ class MplTopViewCanvas(MplCanvas):
         See MapCanvas.update_with_coordinate_change(). After the map redraw,
         coordinates of all objects overlain on the map have to be updated.
         """
-
         # remove legend
         self.draw_legend(None)
 
@@ -1161,15 +1171,6 @@ class MplTopViewWidget(MplNavBarWidget):
                 action.setEnabled(False)
             elif action.text() in ["Home", "Back", "Forward"]:
                 action.triggered.connect(self.historyEvent)
-        # Identify zoom events to redraw the map, if necessary.
-        self.canvas.mpl_connect('button_release_event', self.zoomEvent)
-
-    def zoomEvent(self, event):
-        """Slot to react to zoom events. Called on button release events.
-           Redraws the map after the user has zoomed or panned the image.
-        """
-        if self.navbar.mode in ["zoom rect", "pan/zoom"]:
-            self.canvas.redraw_map()
 
     def historyEvent(self):
         """Slot to react to clicks on one of the history buttons in the

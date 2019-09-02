@@ -362,7 +362,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 waypoint.comments = variant_to_string(value)
             self.modified = True
             # Performance computations loose their validity if a change is made.
-            self.dataChanged.emit(index, index2)
+            if update:
+                self.dataChanged.emit(index, index2)
             return True
         return False
 
@@ -674,8 +675,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                 lat, lon = locations[loc]
                 # Don't update distances and flight performance twice, hence
                 # set update=False for LAT.
-                model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat),
-                              update=False)
+                model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat), update=False)
                 model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
             else:
                 for wp in self.parent().waypoints_model.all_waypoint_data():
@@ -683,8 +683,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                         lat, lon = wp.lat, wp.lon
                         # Don't update distances and flight performance twice, hence
                         # set update=False for LAT.
-                        model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat),
-                                      update=False)
+                        model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat), update=False)
                         model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
 
             model.setData(index, QtCore.QVariant(editor.currentText()))
