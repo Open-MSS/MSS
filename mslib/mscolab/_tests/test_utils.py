@@ -27,7 +27,7 @@ from mslib.mscolab.server import db, app, initialize_managers, start_server
 from mslib.mscolab.models import User
 from mslib.mscolab.utils import get_recent_pid
 from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
-from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+from mslib.mscolab.conf import mscolab_settings
 
 import multiprocessing
 import time
@@ -36,7 +36,7 @@ import time
 class Test_Utils(object):
     def setup(self):
         self.app = app
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
         self.app, sockio, cm, fm = initialize_managers(self.app)
         self.fm = fm

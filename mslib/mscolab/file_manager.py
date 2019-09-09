@@ -28,7 +28,7 @@ import difflib
 import logging
 import git
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
-from mslib.mscolab.conf import STUB_CODE
+from mslib.mscolab.conf import mscolab_settings
 
 
 class FileManager(object):
@@ -63,7 +63,7 @@ class FileManager(object):
         if content is not None:
             project_file.write(content)
         else:
-            project_file.write(STUB_CODE)
+            project_file.write(mscolab_settings.STUB_CODE)
         project_path = fs.path.combine(self.data_dir, project.path)
         r = git.Repo.init(project_path)
         r.index.add(['main.ftml'])

@@ -32,13 +32,13 @@ import functools
 from validate_email import validate_email
 
 from mslib.mscolab.models import User, db, Change
-from mslib.mscolab.conf import SQLALCHEMY_DB_URI, SECRET_KEY, MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.sockets_manager import setup_managers
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
-app.config['MSCOLAB_DATA_DIR'] = MSCOLAB_DATA_DIR
-app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DB_URI
-app.config['SECRET_KEY'] = SECRET_KEY
+app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+app.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
