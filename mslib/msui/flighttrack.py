@@ -44,7 +44,7 @@ import logging
 import os
 import xml.dom.minidom
 import xml.parsers.expat
-from fs import open_fs
+from fs import open_fs, path
 
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float
 from mslib import utils, __version__
@@ -142,12 +142,14 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     flight performance calculations.
     """
 
-    def __init__(self, name="", filename=None, waypoints=None):
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False):
         super(WaypointsTableModel, self).__init__()
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
         self.modified = False  # for "save on exit"
         self.waypoints = []  # user-defined waypoints
+        # file-save events are handled in a different manner
+        self.mscolab_mode = mscolab_mode
 
         # self.aircraft.setErrorHandling("permissive")
         self.settings_tag = "performance"
@@ -360,7 +362,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 waypoint.comments = variant_to_string(value)
             self.modified = True
             # Performance computations loose their validity if a change is made.
-            self.dataChanged.emit(index, index2)
+            if update:
+                self.dataChanged.emit(index, index2)
             return True
         return False
 
@@ -516,6 +519,15 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.waypoints = []
         self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints)
 
+    def save_to_mscolab(self):
+        # note p_id can be a member of this class
+        logging.debug("saving to mscolab")
+        fname_temp = path.combine(mss_default.mss_dir, 'tempfile_mscolab.ftml')
+        self.save_to_ftml(filename=fname_temp)
+        _fs = open_fs(mss_default.mss_dir)
+        content = _fs.readtext('tempfile_mscolab.ftml')
+        return content
+
     def save_to_ftml(self, filename=None):
         """Save the flight track to an XML file.
 
@@ -663,8 +675,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                 lat, lon = locations[loc]
                 # Don't update distances and flight performance twice, hence
                 # set update=False for LAT.
-                model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat),
-                              update=False)
+                model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat), update=False)
                 model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
             else:
                 for wp in self.parent().waypoints_model.all_waypoint_data():
@@ -672,8 +683,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
                         lat, lon = wp.lat, wp.lon
                         # Don't update distances and flight performance twice, hence
                         # set update=False for LAT.
-                        model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat),
-                                      update=False)
+                        model.setData(index.sibling(index.row(), LAT), QtCore.QVariant(lat), update=False)
                         model.setData(index.sibling(index.row(), LON), QtCore.QVariant(lon))
 
             model.setData(index, QtCore.QVariant(editor.currentText()))

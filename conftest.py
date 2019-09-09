@@ -54,6 +54,10 @@ imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
 
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 
+# ToDo refactor
+from mslib.mscolab.demodata import create_test_data
+create_test_data()
+
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):

@@ -166,6 +166,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
             items = [u"{} to {}".format(str(seg["utc"][0]), str(seg["utc"][-1]))
                      for seg in overpass_segments]
             items.insert(0, "None (select item to plot)")
+            items.insert(1, "All tracks")
             self.cbSatelliteOverpasses.addItems(items)
 
             self.overpass_segments = overpass_segments
@@ -173,10 +174,12 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
     def plot_overpass_track(self, index):
         """
         """
-        index -= 1
+        index -= 2
         logging.debug("plotting satellite overpass #%i", index)
-        segment = None
+        segments = []
         if 0 <= index < len(self.overpass_segments):
-            segment = self.overpass_segments[index]
+            segments = [self.overpass_segments[index]]
+        elif index == -1:
+            segments = self.overpass_segments
         if self.view is not None:
-            self.view.plot_satellite_overpass(segment)
+            self.view.plot_satellite_overpass(segments)

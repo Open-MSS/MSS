@@ -186,7 +186,7 @@ Install mod_wsgi
 ................
 
 On some distributions an old mod_wsgi is shipped and have to become replaced by a version compatible to the
-conda environment.
+conda environment. This procedure may need the package apache2-dev on your server.
 
 At current state we have to use pip to install mod_wsgi into the INSTANCE environment::
 

@@ -56,6 +56,7 @@ from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import constants
 from mslib.msui import wms_control
+from mslib.msui import mscolab
 from mslib.utils import config_loader, setup_logging
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
@@ -197,6 +198,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Tools menu.
         self.actionTrajectoryToolLagranto.triggered.connect(self.create_new_tool)
         self.actionTimeSeriesViewTrajectories.triggered.connect(self.create_new_tool)
+
+        # mscolab menu
+        self.actionMscolabProjects.triggered.connect(self.activate_mscolab_window)
 
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
@@ -492,6 +496,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         item.window.showNormal()
         item.window.raise_()
         item.window.activateWindow()
+
+    def activate_mscolab_window(self):
+        # initiate mscolab window
+        self.mscolab_window = mscolab.MSSMscolabWindow(parent=self.menu_Mscolab)
+        self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.mscolab_window.show()
 
     new_flight_track_counter = 0
 

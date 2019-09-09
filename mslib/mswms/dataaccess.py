@@ -155,6 +155,12 @@ class NWPDataAccess(with_metaclass(ABCMeta, object)):
         """
         pass
 
+    @abstractmethod
+    def get_elevation_units(self, vert_type):
+        """Returns units of supplied vertical type.
+        """
+        pass
+
     _mfDatasetArgsDict = {}
 
     def mfDatasetArgs(self):
@@ -194,10 +200,7 @@ class DefaultDataAccess(NWPDataAccess):
         """
         assert self._filetree is not None, "filetree is None. Forgot to call setup()?"
         try:
-            filename = self._filetree[vartype][init_time][variable][valid_time]
-            if not os.path.exists(filename):
-                raise KeyError
-            return filename
+            return self._filetree[vartype][init_time][variable][valid_time]
         except KeyError:
             if reload:
                 self.setup()
@@ -210,7 +213,7 @@ class DefaultDataAccess(NWPDataAccess):
                                  .format(vartype, variable))
 
     def _parse_file(self, filename):
-        elevations = []
+        elevations = {"levels": [], "units": None}
         with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
 
             time_name, time_var = netCDF4tools.identify_CF_time(dataset)
@@ -234,15 +237,17 @@ class DefaultDataAccess(NWPDataAccess):
                 raise IOError("Problem with longitude coordinate variable")
 
             if vert_type != "sfc":
+                elevations = {"levels": vert_var[:], "units": vert_var.units}
                 if vert_type in self._elevations:
                     if len(vert_var[:]) != len(self._elevations[vert_type]["levels"]):
                         raise IOError("Number of vertical levels does not fit to levels of "
                                       "previous file '{}'.".format(self._elevations[vert_type]["filename"]))
-
                     if not np.allclose(vert_var[:], self._elevations[vert_type]["levels"]):
                         raise IOError("vertical levels do not fit to levels of previous "
                                       "file '{}'.".format(self._elevations[vert_type]["filename"]))
-                elevations = vert_var[:]
+                    if elevations["units"] != self._elevations[vert_type]["units"]:
+                        raise IOError("vertical level units do not match previous file '{}'".format(
+                            self._elevations[vert_type]["filename"]))
 
             standard_names = []
             for ncvarname, ncvar in dataset.variables.items():
@@ -288,7 +293,6 @@ class DefaultDataAccess(NWPDataAccess):
         else:
             logging.debug("valid_times='%s' standard_names='%s'",
                           content["valid_times"], content["standard_names"])
-
         leaf = self._filetree.setdefault(content["vert_type"], {}).setdefault(content["init_time"], {})
         for standard_name in content["standard_names"]:
             var_leaf = leaf.setdefault(standard_name, {})
@@ -310,7 +314,7 @@ class DefaultDataAccess(NWPDataAccess):
                      self._domain_id, self._available_files)
 
         self._filetree = {}
-        self._elevations = {"sfc": {"filename": None, "levels": []}}
+        self._elevations = {"sfc": {"filename": None, "levels": [], "units": None}}
 
         # Build the tree structure.
         for filename in self._available_files:
@@ -320,6 +324,8 @@ class DefaultDataAccess(NWPDataAccess):
             except IOError as ex:
                 logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
                 continue
+            if content["vert_type"] not in self._elevations:
+                self._elevations[content["vert_type"]] = content["elevations"]
             self._add_to_filetree(filename, content)
 
     def get_init_times(self):
@@ -342,7 +348,14 @@ class DefaultDataAccess(NWPDataAccess):
     def get_elevations(self, vert_type):
         """Return a list of available elevations for a vertical level type.
         """
+        logging.debug("%s", self._elevations)
         return self._elevations[vert_type]["levels"]
+
+    def get_elevation_units(self, vert_type):
+        """Return a list of available elevations for a vertical level type.
+        """
+        logging.debug("%s", self._elevations)
+        return self._elevations[vert_type]["units"]
 
     def get_all_valid_times(self, variable, vartype):
         """Similar to get_valid_times(), but returns the combined valid times
@@ -401,7 +414,9 @@ class CachedDataAccess(DefaultDataAccess):
                 if content["vert_type"] != "sfc":
                     if content["vert_type"] not in self._elevations:
                         self._elevations[content["vert_type"]] = content["elevations"]
-                    elif not np.allclose(self._elevations[content["vert_type"]], content["elevations"]):
+                    elif not np.allclose(
+                            self._elevations[content["vert_type"]]["levels"],
+                            content["elevations"]["levels"]):
                         logging.error("Skipping file '%s' due to elevation mismatch", filename)
                         continue
 

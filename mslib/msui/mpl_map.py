@@ -389,7 +389,10 @@ class MapCanvas(basemap.Basemap):
         self.appearance["colour_water"] = bg_color
 
         if not visible and self.map_boundary is not None:
-            self.map_boundary.remove()
+            try:
+                self.map_boundary.remove()
+            except NotImplementedError as ex:
+                logging.debug("{}".format(ex))
             self.map_boundary = None
             self.ax.figure.canvas.draw()
         elif visible:
@@ -417,7 +420,6 @@ class MapCanvas(basemap.Basemap):
             self.__call__(axis[0], axis[2], inverse=True)
         self.kwargs['urcrnrlon'], self.kwargs['urcrnrlat'] = \
             self.__call__(axis[1], axis[3], inverse=True)
-
         logging.debug("corner coordinates (lat/lon): ll(%.2f,%.2f), ur(%.2f,%.2f)",
                       self.kwargs['llcrnrlat'], self.kwargs['llcrnrlon'],
                       self.kwargs['urcrnrlat'], self.kwargs['urcrnrlon'])
@@ -457,13 +459,10 @@ class MapCanvas(basemap.Basemap):
         # the backgorund colour).
         if self.map_boundary is not None:
             try:
-                # TODO: review
-                # FIX (mr, 15Oct2012) -- something seems to have changed in
-                # newer Matplotlib versions: this causes an exception when
-                # the user zooms/pans..
                 self.map_boundary.remove()
             except NotImplementedError as ex:
                 logging.debug("{}".format(ex))
+            self.map_boundary = None
 
         cont_vis = self.appearance["fill_continents"]
         self.set_fillcontinents_visible(False)

@@ -226,7 +226,7 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         lons2_ind = lons2.argsort()
         udat, vdat, xv, yv = bm.transform_vector(u[:, lons2_ind], v[:, lons2_ind],
                                                  lons2[lons2_ind], self.lats,
-                                                 16, 16, returnxy=True)
+                                                 16, 16, returnxy=True, masked=True)
 
         # Plot wind barbs.
         bm.barbs(xv, yv, udat, vdat,
@@ -791,7 +791,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         lons2_ind = lons2.argsort()
         udat, vdat, xv, yv = bm.transform_vector(uk[:, lons2_ind], vk[:, lons2_ind],
                                                  lons2[lons2_ind], self.lats,
-                                                 16, 16, returnxy=True)
+                                                 16, 16, returnxy=True, masked=True)
 
         # Plot wind barbs.
         bm.barbs(xv, yv, udat, vdat,
