@@ -284,9 +284,9 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         tp_dir = (np.array(los).T * dist).T
 
-        tps = [(x0 + tp_x, y0 + tp_y) for
+        tps = [(x0 + tp_x, y0 + tp_y, y0) for
                ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lins, tp_dir)]
-        tps = [(x0 / np.cos(np.deg2rad(y0)), y0) for (x0, y0) in tps]
+        tps = [(x0 / np.cos(np.deg2rad(yp)), y0) for (x0, y0, yp) in tps]
         return tps
 
     def direction_coordinates(self, lon_lin, lat_lin):

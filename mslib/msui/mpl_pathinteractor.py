@@ -940,13 +940,10 @@ class HPathInteractor(PathInteractor):
             lat, lon = loc[0]
         else:
             lat, lon = float(round(lat, 2)), float(round(lon, 2))
-        # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
-        # TODO: can lat/lon be submitted together to avoid emitting dataChanged() signals
-        #      twice?
-        qt_index = self.waypoints_model.createIndex(self._ind, ft.LAT)
-        self.waypoints_model.setData(qt_index, QtCore.QVariant(lat))
-        qt_index = self.waypoints_model.createIndex(self._ind, ft.LON)
-        self.waypoints_model.setData(qt_index, QtCore.QVariant(lon))
+        self.waypoints_model.setData(
+            self.waypoints_model.createIndex(self._ind, ft.LAT), QtCore.QVariant(lat), update=False)
+        self.waypoints_model.setData(
+            self.waypoints_model.createIndex(self._ind, ft.LON), QtCore.QVariant(lon))
 
         self._ind = None
 
