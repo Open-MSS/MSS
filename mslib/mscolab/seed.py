@@ -26,7 +26,7 @@
 from flask import Flask
 
 from mslib.mscolab.models import User, db, Permission, Project
-from mslib.mscolab.conf import SECRET_KEY
+from mslib.mscolab.conf import mscolab_settings
 # set the project root directory as the static folder
 app = Flask(__name__, static_url_path='')
 
@@ -34,7 +34,7 @@ app = Flask(__name__, static_url_path='')
 def seed_data(db_uri):
 
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SECRET_KEY'] = SECRET_KEY
+    app.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
     db.init_app(app)
 
     with app.app_context():
@@ -123,7 +123,7 @@ def seed_data(db_uri):
 
 def create_tables(db_uri):
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SECRET_KEY'] = SECRET_KEY
+    app.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
     db.init_app(app)
     with app.app_context():
         db.create_all()

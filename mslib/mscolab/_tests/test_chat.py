@@ -33,7 +33,7 @@ import time
 from mslib.mscolab.models import Message
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
-from mslib.mscolab.conf import TEST_SQLALCHEMY_DB_URI
+from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import db, app, initialize_managers, start_server
 
 
@@ -42,7 +42,7 @@ class Test_Chat(object):
     def setup(self):
         self.sockets = []
         self.app = app
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = TEST_SQLALCHEMY_DB_URI
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
         self.app, sockio, cm, fm = initialize_managers(self.app)
         self.cm = cm
