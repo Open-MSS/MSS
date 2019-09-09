@@ -29,6 +29,7 @@ try:
     logging.info("Using user defined settings from {}".format(mscolab_settings.__file__))
 except ImportError as ex:
     logging.warning(u"Couldn't import mss_wms_settings (ImportError:'%s'), creating dummy config.", ex)
+
     class mscolab_settings(object):
         from mslib._tests.constants import TEST_BASE_DIR, TEST_DATA_DIR
         # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
