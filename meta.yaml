@@ -15,6 +15,7 @@ build:
     - mss = mslib.msui.mss_pyui:main
     - mswms = mslib.mswms.mswms:main
     - demodata = mslib.mswms.demodata:main
+    - mscolab = mslib.mscolab.server:main
 
 requirements:
   build:
