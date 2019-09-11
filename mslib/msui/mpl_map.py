@@ -139,7 +139,7 @@ class MapCanvas(basemap.Basemap):
             try:
                 self._draw_auto_graticule()
             except Exception as ex:
-                logging.error("ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
+                logging.error("ERROR: cannot plot graticule (message: %s - '%s')", type(ex), ex)
         else:
             self.map_parallels = None
             self.map_meridians = None
@@ -457,7 +457,7 @@ class MapCanvas(basemap.Basemap):
             try:
                 self.map_boundary.remove()
             except NotImplementedError as ex:
-                logging.debug("{}".format(ex))
+                logging.debug("%s", ex)
             self.map_boundary = None
 
         cont_vis = self.appearance["fill_continents"]

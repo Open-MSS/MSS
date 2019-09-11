@@ -280,7 +280,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     waypoint.lat = value
                     waypoint.location = ""
@@ -305,7 +305,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     waypoint.lon = value
                     waypoint.location = ""
@@ -325,7 +325,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     waypoint.flightlevel = flightlevel
                     waypoint.pressure = pressure
@@ -346,7 +346,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     waypoint.pressure = pressure
                     waypoint.flightlevel = flightlevel

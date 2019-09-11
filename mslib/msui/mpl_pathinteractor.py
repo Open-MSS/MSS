@@ -460,7 +460,7 @@ class PathInteractor(QtCore.QObject):
             # function. However, when I print the codes array in that function,
             # it looks fine -- correct length and correct codes. I can't figure
             # out why that error occurs.. (mr, 2013Feb08).
-            logging.error("{} {}".format(ex, type(ex)))
+            logging.error("%s %s", ex, type(ex))
         self.ax.draw_artist(self.line)
         for t in self.wp_labels:
             self.ax.draw_artist(t)

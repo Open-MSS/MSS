@@ -44,7 +44,7 @@ class FileManager(object):
         """
         # set codes on these later
         if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
-            logging.debug("malicious request: %s".format(user))
+            logging.debug("malicious request: %s", user)
             return False
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
@@ -185,7 +185,7 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if attribute == "path":
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
-                logging.debug("malicious request: %s".format(user))
+                logging.debug("malicious request: %s", user)
                 return False
             data = fs.open_fs(self.data_dir)
             if data.exists(value):

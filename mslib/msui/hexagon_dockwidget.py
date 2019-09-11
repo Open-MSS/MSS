@@ -36,7 +36,7 @@ from mslib.utils import config_loader, rotate_point
 
 class HexagonException(Exception):
     def __init__(self, error_string):
-        logging.debug("{}".format(error_string))
+        logging.debug("%s", error_string)
 
 
 def create_hexagon(center_lat, center_lon, radius, angle=0.):

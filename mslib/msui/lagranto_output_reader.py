@@ -375,7 +375,7 @@ Example:
                 try:
                     time = datetime.datetime.strptime(name[i:i + tflen], tf)
                 except ValueError as er:
-                    logging.error("{} {}".format(er, type(er)))
+                    logging.error("%s %s", er, type(er))
                 else:
                     return time
         return None

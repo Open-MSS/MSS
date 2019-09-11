@@ -376,7 +376,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 try:
                     lat, lon = self.canvas.waypoints_interactor.get_lat_lon(event)
                 except (ValueError, OverflowError) as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     s = "lat={:6.2f}, lon={:7.2f}".format(lat, lon)
                     artists = [a for a in event.inaxes._mouseover_set
@@ -803,7 +803,7 @@ class MplSideViewCanvas(MplCanvas):
         """
         logging.debug("plotting vertical section image..")
         ix, iy = img.size
-        logging.debug("  image size is {:d}{:d} px, format is {}".format(ix, iy, img.format))
+        logging.debug("  image size is %dx%d px, format is '%s'", ix, iy, img.format)
         # Test if the image axes exist. If not, create them.
         if self.imgax is None:
             # Disable old white figure background so that the new underlying
@@ -1296,7 +1296,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         # Iterative list traversal no. 2: Draw / update plots.
         for item in itemsList:
 
-            logging.debug("plotting item {}".format(item.getName()))
+            logging.debug("plotting item %s", item.getName())
             # The variables that have to be plotted are children of self.mapItem.
             # Plot all variables whose visible-flag is set to True.
             variablesToPlot = [variable for variable in item.childItems
