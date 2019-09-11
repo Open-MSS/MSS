@@ -126,7 +126,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
                 lon, lat = gc.npts(wp_prev.lon, wp_prev.lat, wp_next.lon, wp_next.lat, 3)[1]
 
         self.waypoints_model.insertRows(
-            row, waypoints=[ft.Waypoint(lat=round(lat, 2), lon=round(lon, 2), flightlevel=flightlevel)])
+            row, waypoints=[ft.Waypoint(lat=lat, lon=lon, flightlevel=flightlevel)])
 
         index = self.waypoints_model.index(row, 0)
         tableView = self.tableWayPoints

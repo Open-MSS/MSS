@@ -67,8 +67,8 @@ def seconds_to_string(seconds):
 
 TABLE_FULL = [
     ("Location                   ", lambda waypoint: waypoint.location, True),
-    ("Lat\n(+-90)", lambda waypoint: waypoint.lat, True),
-    ("Lon\n(+-180)", lambda waypoint: waypoint.lon, True),
+    ("Lat\n(+-90)", lambda waypoint: round(float(waypoint.lat), 2), True),
+    ("Lon\n(+-180)", lambda waypoint: round(float(waypoint.lon), 2), True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
     ("Pressure\n(hPa)", lambda waypoint: QtCore.QLocale().toString(waypoint.pressure / 100., 'f', 2), True),
     ("Leg dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
