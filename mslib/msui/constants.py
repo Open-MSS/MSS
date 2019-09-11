@@ -31,11 +31,11 @@
 import os
 
 HOME = os.path.expanduser("~/")
-MSS_CONFIG_PATH = os.getenv("MSS_CONFIG_PATH", os.path.join(HOME, u".config", u"mss"))
+MSS_CONFIG_PATH = os.getenv("MSS_CONFIG_PATH", os.path.join(HOME, ".config", "mss"))
 if not os.path.exists(MSS_CONFIG_PATH):
     os.makedirs(MSS_CONFIG_PATH)
 
-MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, u"mss_settings.json"))
+MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
 
 WMS_LOGIN_CACHE = {}
 CACHED_CONFIG_FILE = None

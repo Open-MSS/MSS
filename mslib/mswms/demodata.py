@@ -701,12 +701,12 @@ class DataFiles(object):
     def __init__(self, data_fs=None, server_config_fs=None):
         self.data_fs = data_fs
         self.server_config_fs = server_config_fs
-        self.server_config_file = u"mss_wms_settings.py"
-        self.server_auth_config_file = u"mss_wms_auth.py"
+        self.server_config_file = "mss_wms_settings.py"
+        self.server_auth_config_file = "mss_wms_auth.py"
         # define file dimension / geographical  range
 
     def create_server_config(self, detailed_information=False):
-        simple_auth_config = u'''# -*- coding: utf-8 -*-
+        simple_auth_config = '''# -*- coding: utf-8 -*-
 """
 
     mss_wms_settings
@@ -746,7 +746,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 
 '''
         if detailed_information:
-            simple_server_config = u'''# -*- coding: utf-8 -*-
+            simple_server_config = '''# -*- coding: utf-8 -*-
 """
 
     mss_wms_settings
@@ -895,7 +895,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             fid.write(simple_server_config)
             fid.close()
         else:
-            print(u'''
+            print('''
 /!\\ existing server config: "{}" for demodata not overwritten!
             '''.format(self.server_config_file))
         if not self.server_config_fs.exists(self.server_auth_config_file):
@@ -903,7 +903,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             fid.write(simple_auth_config)
             fid.close()
         else:
-            print(u'''
+            print('''
 /!\\ existing server auth config: "{}" for demodata not overwritten!
                 '''.format(self.server_auth_config_file))
 
@@ -920,7 +920,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
         # ToDo nc.Dataset needs fileobject like access
 
         filename_out = os.path.join(
-            self.data_fs.root_path, u"20121017_12_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(label, leveltype))
+            self.data_fs.root_path, "20121017_12_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(label, leveltype))
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
 
         for dim, values in dimvals:
@@ -1044,12 +1044,12 @@ def main():
     """
     creates various test data files and also the server configuration
     """
-    root_fs = fs.open_fs(u"~/")
-    if not root_fs.exists(u"mss/testdata"):
-        root_fs.makedirs(u"mss/testdata")
+    root_fs = fs.open_fs("~/")
+    if not root_fs.exists("mss/testdata"):
+        root_fs.makedirs("mss/testdata")
 
-    examples = DataFiles(data_fs=fs.open_fs(u"~/mss/testdata"),
-                         server_config_fs=fs.open_fs(u"~/mss"))
+    examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
+                         server_config_fs=fs.open_fs("~/mss"))
     examples.create_server_config(detailed_information=True)
     examples.create_data()
     print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")

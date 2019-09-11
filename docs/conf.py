@@ -53,11 +53,11 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'MSS - Mission Support System'
+project = 'MSS - Mission Support System'
 copyright = \
-    u'2016-2019 see AUTHORS file, ' \
-    u'2011-2014 Marc Rautenhaus, ' \
-    u'2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V., '
+    '2016-2019 see AUTHORS file, ' \
+    '2011-2014 Marc Rautenhaus, ' \
+    '2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V., '
 
 author = 'see AUTHORS file'
 # The version info for the project you're documenting, acts as replacement for
@@ -253,8 +253,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'MSS-MissionSupportSystem.tex', u'MSS - Mission Support System Documentation',
-     u'M. Rautenhaus, J. Ungermann, J.-U. Grooß, T. Breuer, R. Bauer', 'manual'),
+    (master_doc, 'MSS-MissionSupportSystem.tex', 'MSS - Mission Support System Documentation',
+     'M. Rautenhaus, J. Ungermann, J.-U. Grooß, T. Breuer, R. Bauer', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -283,7 +283,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'mss-missionsupportsystem', u'MSS - Mission Support System Documentation',
+    (master_doc, 'mss-missionsupportsystem', 'MSS - Mission Support System Documentation',
      [author], 1)
 ]
 
@@ -297,7 +297,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'MSS-MissionSupportSystem', u'MSS - Mission Support System Documentation',
+    (master_doc, 'MSS-MissionSupportSystem', 'MSS - Mission Support System Documentation',
      author, 'MSS-MissionSupportSystem', 'One line description of project.',
      'Miscellaneous'),
 ]

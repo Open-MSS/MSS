@@ -57,7 +57,7 @@ def main():
 
     setup_logging(args)
 
-    logging.info(u"Configuration File: '{}'".format(mss_wms_settings.__file__))
+    logging.info("Configuration File: '%s'", mss_wms_settings.__file__)
 
     application.run(args.host, args.port)
 

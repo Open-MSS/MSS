@@ -149,7 +149,7 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         Assumes that the same elevation levels are available for all time
         steps.
         """
-        logging.debug(u"checking vertical dimensions for layer '%s'.", self.name)
+        logging.debug("checking vertical dimensions for layer '%s'.", self.name)
         if self.uses_elevation_dimension() and self.driver is not None:
             return [str(x) for x in self.driver.get_elevations(self._vert_type)]
         else:

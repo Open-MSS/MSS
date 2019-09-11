@@ -206,7 +206,7 @@ class DefaultDataAccess(NWPDataAccess):
             except KeyError as ex:
                 logging.error("Could not identify filename. %s %s %s %s %s %s",
                               variable, vartype, init_time, valid_time, type(ex), ex)
-                raise ValueError(u"variable type {} not available for variable {}"
+                raise ValueError("variable type {} not available for variable {}"
                                  .format(vartype, variable))
 
     def _parse_file(self, filename):

@@ -105,8 +105,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
         idx_ice = numpy.where(t <= 273.15)
         idx_liq = numpy.where(t > 273.15)
     else:
-        raise VapourPressureError(u"Cannot recognize the force_phase "
-                                  u"keyword: '{}' (valid are ice, liquid, None)".format(force_phase))
+        raise VapourPressureError("Cannot recognize the force_phase "
+                                  "keyword: '{}' (valid are ice, liquid, None)".format(force_phase))
 
     # Initialise output field.
     e_sat = numpy.zeros(numpy.shape(t))
@@ -285,8 +285,8 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
                                          0.014025 * t[idx_liq])) / 100.)
 
         else:
-            raise VapourPressureError(u"Unkown method for computing "
-                                      u"the vapour pressure curve over liquid: {}".format(liquid))
+            raise VapourPressureError("Unkown method for computing "
+                                      "the vapour pressure curve over liquid: {}".format(liquid))
 
     # =============================================================================
     #  Calculate saturation pressure over ice -------------------------------------
@@ -639,7 +639,7 @@ def dewpoint_approx(p, q, method='Bolton'):
     if method == 'Bolton':
         td = (243.5 / ((17.67 / numpy.log(e_q / 100. / 6.112)) - 1)) + 273.15
     else:
-        raise ValueError(u"invalid dew point method '{}'".format(method))
+        raise ValueError("invalid dew point method '{}'".format(method))
 
     return td
 

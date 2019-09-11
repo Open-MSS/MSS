@@ -110,15 +110,15 @@ class AbstractLagrantoDataItem(object):
                     self.gxElements['general']['linestyle']) + '/' + str(
                         self.gxElements['general']['linewidth'])
             except Exception as ex:
-                logging.debug(u"caught a wildcard Exception: %s, %s", type(ex), ex)
+                logging.debug("caught a wildcard Exception: %s, %s", type(ex), ex)
                 return ''
         elif column == 3:
             # Item markers.
             s = ''
             try:
-                s += u'time({})'.format(self.gxElements['general']['timeMarkerInterval'].strftime('%H:%M'))
+                s += 'time({})'.format(self.gxElements['general']['timeMarkerInterval'].strftime('%H:%M'))
             except Exception as ex:
-                logging.debug(u"caught a wildcard Exception: %s, %s", type(ex), ex)
+                logging.debug("caught a wildcard Exception: %s, %s", type(ex), ex)
             return s
         else:
             return ''
@@ -422,7 +422,7 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().find(identifier) >= 0:
                     self.timeVariableChild = item
-                    logging.debug(u"identified time variable <%s>", item.getName())
+                    logging.debug("identified time variable <%s>", item.getName())
                     #
                     # The time variable has to be modified a bit: convert
                     # seconds to hours and change the name correspondingly.
@@ -439,8 +439,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.lonVariableChild = item
-                    logging.debug(u"identified longitude variable <%s> with "
-                                  u"identifier <%s>", item.getName(), identifier)
+                    logging.debug("identified longitude variable <%s> with "
+                                  "identifier <%s>", item.getName(), identifier)
                     break
             if self.lonVariableChild is not None:
                 break
@@ -450,8 +450,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.latVariableChild = item
-                    logging.debug(u"identified latitude variable <%s> with "
-                                  u"identifier <%s>", item.getName(), identifier)
+                    logging.debug("identified latitude variable <%s> with "
+                                  "identifier <%s>", item.getName(), identifier)
                     break
             if self.latVariableChild is not None:
                 break
@@ -461,8 +461,8 @@ class FlightTrackItem(LagrantoMapItem):
             for item in self.childItems:
                 if item.getName().upper().find(identifier) >= 0:
                     self.pressureVariableChild = item
-                    logging.debug(u"identified pressure variable <%s> with "
-                                  u"identifier <%s>", item.getName(), identifier)
+                    logging.debug("identified pressure variable <%s> with "
+                                  "identifier <%s>", item.getName(), identifier)
                     break
             if self.pressureVariableChild is not None:
                 break
@@ -480,7 +480,7 @@ class FlightTrackItem(LagrantoMapItem):
             self.nafile.readData()
         except TypeError as ex:  # catch TypeError as nappy itself triggers Exception when raising
             self.nafile = None
-            logging.error(u"%s %s", type(ex), ex)
+            logging.error("%s %s", type(ex), ex)
             return
         #
         # Convert variable array of nafile from 'list' to 'NumPy array' for
@@ -556,7 +556,7 @@ class LagrantoOutputItem(LagrantoMapItem):
             trname = "{:04d} ".format(i)
             if "startcoordinates" in metadata:
                 trname += str(
-                    [u"{:.2f}".format(r) for r in metadata["startcoordinates"]]).replace('\'', '')
+                    ["{:.2f}".format(r) for r in metadata["startcoordinates"]]).replace('\'', '')
             TrajectoryItem(trname, True, self, trajectory, metadata)
 
 
@@ -629,7 +629,7 @@ class TrajectoryItem(LagrantoMapItem):
             for key, value in self.metadata.items():
                 if key not in ["starttime", "file", "starttime_filename",
                                "startcoordinates", "duration"]:
-                    s += u"{} = {}, ".format(key, str(value))
+                    s += "{} = {}, ".format(key, str(value))
             return s
 
     def getStartTime(self):
