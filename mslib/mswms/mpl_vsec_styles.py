@@ -29,8 +29,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 import matplotlib
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator

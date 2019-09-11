@@ -26,12 +26,6 @@
     limitations under the License.
 """
 
-from future import standard_library
-standard_library.install_aliases()
-
-from past.builtins import basestring
-from builtins import str
-
 import time
 from datetime import datetime
 
@@ -167,12 +161,12 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # given as strings, use these strings directly as WMS arguments.
         if isinstance(time, datetime):
             request[time_name] = time.isoformat()
-        elif isinstance(time, basestring):
+        elif isinstance(time, str):
             request[time_name] = time
 
         if isinstance(init_time, datetime):
             request[init_time_name] = init_time.isoformat()
-        elif isinstance(init_time, basestring):
+        elif isinstance(init_time, str):
             request[init_time_name] = init_time
 
         if level is not None:

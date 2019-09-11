@@ -25,17 +25,17 @@
     limitations under the License.
 """
 
-from __future__ import division
+import collections
 
+from matplotlib.collections import LineCollection
+from matplotlib.colors import BoundaryNorm, ListedColormap
 import numpy as np
+from skyfield.api import Loader, Topos, utc
+
 from mslib.msui.constants import MSS_CONFIG_PATH
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
 from mslib.utils import jsec_to_datetime, datetime_to_jsec, get_distance, rotate_point, fix_angle
-from matplotlib.collections import LineCollection
-from matplotlib.colors import BoundaryNorm, ListedColormap
-import collections
-from skyfield.api import Loader, Topos, utc
 
 
 EARTH_RADIUS = 6371.

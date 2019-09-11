@@ -28,12 +28,6 @@
 """
 # style definitions should be put in mpl_hsec_styles.py
 
-from __future__ import division
-
-
-from future import standard_library
-standard_library.install_aliases()
-
 
 import io
 import logging

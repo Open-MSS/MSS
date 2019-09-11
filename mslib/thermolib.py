@@ -26,8 +26,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 # The function sat_vapour_pressure() has been ported from the IDL function
 # 'VaporPressure' by Holger Voemel, available at http://cires.colorado.edu/~voemel/vp.html.
 

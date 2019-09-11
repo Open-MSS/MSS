@@ -29,10 +29,9 @@
 
 import logging
 from abc import ABCMeta, abstractmethod
-from future.utils import with_metaclass
 
 
-class Abstract2DSectionStyle(with_metaclass(ABCMeta, object)):
+class Abstract2DSectionStyle(metaclass=ABCMeta):
     """
     Horizontal Section Styles
     Abstract 2D section super class. Use this class as a parent

@@ -25,8 +25,6 @@
     limitations under the License.
 """
 
-from builtins import str
-
 from fs import open_fs
 import logging
 from lxml import etree, objectify

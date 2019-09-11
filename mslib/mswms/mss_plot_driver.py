@@ -26,9 +26,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-
 from datetime import datetime
 
 import logging
@@ -39,10 +36,9 @@ import numpy as np
 
 from mslib import netCDF4tools
 from mslib import utils
-from future.utils import with_metaclass
 
 
-class MSSPlotDriver(with_metaclass(ABCMeta, object)):
+class MSSPlotDriver(metaclass=ABCMeta):
     """
     Abstract super class for implementing driver classes that provide
     access to the MSS data server.

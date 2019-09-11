@@ -26,10 +26,7 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 from abc import ABCMeta, abstractmethod
-from future.utils import with_metaclass
 import itertools
 import os
 import logging
@@ -41,7 +38,7 @@ from mslib import netCDF4tools
 from mslib.utils import UR
 
 
-class NWPDataAccess(with_metaclass(ABCMeta, object)):
+class NWPDataAccess(metaclass=ABCMeta):
     """Abstract superclass providing a framework to let the user query
        in which data file a given variable at a given time can be found.
 

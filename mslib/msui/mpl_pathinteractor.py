@@ -44,8 +44,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 import logging
 import math
 import numpy as np

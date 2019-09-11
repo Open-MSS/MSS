@@ -32,10 +32,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-from builtins import str
-
 import logging
 import numpy as np
 import matplotlib

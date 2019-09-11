@@ -34,11 +34,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-from builtins import str
-from past.builtins import unicode
-
 import datetime
 import logging
 import os
@@ -545,7 +540,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         doc = xml.dom.minidom.Document()
 
         ft_el = doc.createElement(u"FlightTrack")
-        ft_el.setAttribute(u"version", unicode(__version__))
+        ft_el.setAttribute(u"version", __version__)
         doc.appendChild(ft_el)
         # The list of waypoint elements.
         wp_el = doc.createElement(u"ListOfWaypoints")
@@ -554,12 +549,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         for wp in self.waypoints:
             element = doc.createElement(u"Waypoint")
             wp_el.appendChild(element)
-            element.setAttribute(u"location", unicode(wp.location))
-            element.setAttribute(u"lat", unicode(wp.lat))
-            element.setAttribute(u"lon", unicode(wp.lon))
-            element.setAttribute(u"flightlevel", unicode(wp.flightlevel))
+            element.setAttribute(u"location", str(wp.location))
+            element.setAttribute(u"lat", str(wp.lat))
+            element.setAttribute(u"lon", str(wp.lon))
+            element.setAttribute(u"flightlevel", str(wp.flightlevel))
             comments = doc.createElement(u"Comments")
-            comments.appendChild(doc.createTextNode(unicode(wp.comments)))
+            comments.appendChild(doc.createTextNode(str(wp.comments)))
             element.appendChild(comments)
 
         _dirname, _name = os.path.split(self.filename)

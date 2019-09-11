@@ -27,17 +27,15 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-from builtins import str
-
 import datetime
 import logging
 import os
+
+import numpy
+
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import QtCore, QtGui
-import numpy
 
 try:
     import nappy

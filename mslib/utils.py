@@ -26,10 +26,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-from past.builtins import basestring
-
 import datetime
 import isodate
 from fs import open_fs, errors
@@ -180,7 +176,7 @@ def save_settings_qsettings(tag, settings):
     :param settings: dictionary of settings
     :return: None
     """
-    assert isinstance(tag, basestring)
+    assert isinstance(tag, str)
     assert isinstance(settings, dict)
     q_settings = QtCore.QSettings("mss", "mss-core")
     file_path = q_settings.fileName()

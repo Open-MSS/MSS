@@ -25,8 +25,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 import bisect
 import numpy as np
 

@@ -28,7 +28,6 @@
 import importlib
 import logging
 import os
-from past.builtins import unicode
 import platform
 import sys
 import traceback
@@ -112,8 +111,8 @@ def get_existing_directory(parent, title, defaultdir, pickertag=None, pickertype
 
 def variant_to_string(variant):
     if isinstance(variant, QtCore.QVariant):
-        return unicode(variant.value())
-    return unicode(variant)
+        return str(variant.value())
+    return str(variant)
 
 
 def variant_to_float(variant, locale=QtCore.QLocale()):
