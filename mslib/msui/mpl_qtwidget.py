@@ -520,9 +520,11 @@ class MplSideViewCanvas(MplCanvas):
                               "draw_flighttrack": True,
                               "fill_flighttrack": True,
                               "label_flighttrack": True,
+                              "draw_ceiling": True,
                               "colour_ft_vertices": (0, 0, 1, 1),
                               "colour_ft_waypoints": (1, 0, 0, 1),
-                              "colour_ft_fill": (0, 0, 1, 0.15)}
+                              "colour_ft_fill": (0, 0, 1, 0.15),
+                              "colour_ceiling": (0, 0, 1, 0.15)}
         if settings is not None:
             self.settings_dict.update(settings)
 
@@ -537,8 +539,10 @@ class MplSideViewCanvas(MplCanvas):
         self.draw_flight_levels()
         self.imgax = None
         self.image = None
+        self.ceiling_alt = []
         # If a waypoints model has been passed, create an interactor on it.
         self.waypoints_interactor = None
+        self.waypoints_model = None
         self.basename = "sideview"
         if model:
             self.set_waypoints_model(model)
@@ -675,6 +679,31 @@ class MplSideViewCanvas(MplCanvas):
                                                   lons[::tick_index_step],
                                                   times[::tick_index_step])],
                                     rotation=25, fontsize=10, horizontalalignment="right")
+
+        for _line in self.ceiling_alt:
+            _line.remove()
+        self.ceiling_alt = []
+        if self.waypoints_model is not None and self.waypoints_interactor is not None:
+            vertices = self.waypoints_interactor.pathpatch.get_path().vertices
+            vx, vy = list(zip(*vertices))
+            wpd = self.waypoints_model.all_waypoint_data()
+            xs, ys = [], []
+            aircraft = self.waypoints_model.performance_settings["aircraft"]
+            for i in range(len(wpd) - 1):
+                weight = np.linspace(wpd[i].weight, wpd[i + 1].weight, 5, endpoint=False)
+                ceil = [aircraft.get_ceiling_altitude(_w) for _w in weight]
+                xs.extend(np.linspace(vx[i], vx[i + 1], 5, endpoint=False))
+                ys.extend(ceil)
+            xs.append(vx[-1])
+            ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
+
+            self.ceiling_alt = self.ax.plot(
+                xs, thermolib.flightlevel2pressure_a(np.asarray(ys)),
+                color="k", ls="--")
+            self.update_ceiling(
+                self.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
+                self.settings_dict["colour_ceiling"])
+
         self.draw()
 
     def set_vertical_extent(self, pbot, ptop):
@@ -738,6 +767,14 @@ class MplSideViewCanvas(MplCanvas):
             gxelement.set_visible(visible)
         self.draw()
 
+    def update_ceiling(self, visible, color):
+        """Toggle the visibility of the flight level lines.
+        """
+        for line in self.ceiling_alt:
+            line.set_color(color)
+            line.set_visible(visible)
+        self.draw()
+
     def get_settings(self):
         """Returns a dictionary containing settings regarding the side view
            appearance.
@@ -753,6 +790,12 @@ class MplSideViewCanvas(MplCanvas):
         self.set_flight_levels(settings["flightlevels"])
         self.set_vertical_extent(*settings["vertical_extent"])
         self.set_flight_levels_visible(settings["draw_flightlevels"])
+        self.update_ceiling(
+            settings["draw_ceiling"] and (
+                self.waypoints_model is not None and
+                self.waypoints_model.performance_settings["visible"]),
+            settings["colour_ceiling"])
+
         if self.waypoints_interactor is not None:
             self.waypoints_interactor.set_vertices_visible(
                 settings["draw_flighttrack"])

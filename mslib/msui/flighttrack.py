@@ -80,10 +80,11 @@ TABLE_FULL = [
     ("Time (UTC)", lambda waypoint: waypoint.utc_time.strftime("%Y-%m-%d %H:%M:%S"), False),
     ("Rem. fuel\n(lb)", lambda waypoint: ("{:d}".format(int(waypoint.rem_fuel))), False),
     ("Aircraft\nweight (lb)", lambda waypoint: ("{:d}".format(int(waypoint.weight))), False),
+    ("Ceiling\naltitude (hft)", lambda waypoint: ("{:d}".format(waypoint.ceiling_alt)), False),
     ("Comments                        ", lambda waypoint: waypoint.comments, True),
 ]
 
-TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 6
+TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 7
 
 
 class Waypoint(object):
@@ -113,6 +114,7 @@ class Waypoint(object):
         self.leg_fuel = None  # fuel consumption since previous waypoint
         self.rem_fuel = None  # total fuel consumption
         self.weight = None  # aircraft gross weight
+        self.ceiling_alt = None  # aircraft ceiling altitude
 
         self.wpnumber_major = None
         self.wpnumber_minor = None
@@ -413,9 +415,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         according to the number of modified waypoints.
         """
         waypoints = self.waypoints
+        aircraft = self.performance_settings["aircraft"]
 
         def get_duration_fuel(flightlevel0, flightlevel1, distance, weight, lastleg):
-            aircraft = self.performance_settings["aircraft"]
             if flightlevel0 == flightlevel1:
                 tas, fuelflow = aircraft.get_cruise_performance(flightlevel0 * 100, weight)
                 duration = 3600. * distance / (1.852 * tas)  # convert to s (tas is in nm/h)
@@ -466,6 +468,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp1.leg_fuel = fuel
                 wp1.rem_fuel = wp0.rem_fuel - wp1.leg_fuel
                 wp1.weight = wp0.weight - wp1.leg_fuel
+            wp1.ceiling_alt = aircraft.get_ceiling_altitude(wp1.weight)
 
         # Update the distance of the following waypoint as well.
         if pos < len(waypoints) - 1:
@@ -490,6 +493,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             wp1.leg_fuel = fuel
             wp1.rem_fuel = wp0.rem_fuel - wp1.leg_fuel
             wp1.weight = wp0.weight - wp1.leg_fuel
+            wp1.ceiling_alt = aircraft.get_ceiling_altitude(wp1.weight)
 
         index1 = self.createIndex(0, TIME_UTC)
         self.dataChanged.emit(index1, index1)

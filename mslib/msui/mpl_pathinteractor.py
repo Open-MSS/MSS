@@ -657,6 +657,7 @@ class VPathInteractor(PathInteractor):
         self.signal_get_vsec.emit()
         if self.clear_figure() is not None:
             self.clear_figure()
+
         if self.redraw_xaxis is not None:
             self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
         self.ax.figure.canvas.draw()
