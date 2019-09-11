@@ -160,12 +160,12 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # create formatted strings with the given formatter. If they are
         # given as strings, use these strings directly as WMS arguments.
         if isinstance(time, datetime):
-            request[time_name] = time.isoformat()
+            request[time_name] = time.isoformat() + "Z"
         elif isinstance(time, str):
             request[time_name] = time
 
         if isinstance(init_time, datetime):
-            request[init_time_name] = init_time.isoformat()
+            request[init_time_name] = init_time.isoformat() + "Z"
         elif isinstance(init_time, str):
             request[init_time_name] = init_time
 
@@ -893,7 +893,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if enable_init_time:
             self.allowed_init_times = self.parse_time_extent(
                 extents[self.init_time_name]["values"])
-            self.cbInitTime.addItems([_time.isoformat() for _time in self.allowed_init_times])
+            self.cbInitTime.addItems([_time.isoformat() + "Z" for _time in self.allowed_init_times])
             if len(self.allowed_init_times) == 0:
                 msg = "cannot determine init time format."
                 logging.error(msg)
@@ -921,7 +921,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.allowed_valid_times = self.parse_time_extent(
                 extents[self.valid_time_name]["values"])
             self.cbValidTime.addItems(
-                [_time.isoformat() for _time in self.allowed_valid_times])
+                [_time.isoformat() + "Z" for _time in self.allowed_valid_times])
 
             if len(self.allowed_valid_times) == 0:
                 msg = "cannot determine valid time format."
@@ -1084,7 +1084,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         font.setStrikeOut(not init_time_available)
         self.dteInitTime.setFont(font)
         if init_time_available:
-            index = self.cbInitTime.findText(pydt.isoformat())
+            index = self.cbInitTime.findText(pydt.isoformat() + "Z")
             self.cbInitTime.setCurrentIndex(index)
 
     def check_valid_time(self, dt):
@@ -1094,7 +1094,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         pydt = dt.toPyDateTime()
         if self.allowed_valid_times:
             if pydt in self.allowed_valid_times:
-                index = self.cbValidTime.findText(pydt.isoformat())
+                index = self.cbValidTime.findText(pydt.isoformat() + "Z")
                 # setCurrentIndex also sets the date/time edit via signal.
                 self.cbValidTime.setCurrentIndex(index)
             else:
