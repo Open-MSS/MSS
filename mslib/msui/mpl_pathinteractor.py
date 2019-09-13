@@ -697,7 +697,6 @@ class VPathInteractor(PathInteractor):
         if loc is not None:
             (lat, lon), location = loc
         else:
-            lat, lon = float(round(lat, 2)), float(round(lon, 2))
             location = ""
         new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
         wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
@@ -747,8 +746,8 @@ class VPathInteractor(PathInteractor):
                 if x <= vertex:
                     best_index1 = index + 1
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
-        return [round(intermediate_waypoints_list[0][best_index1 - 1], 2),
-                round(intermediate_waypoints_list[1][best_index1 - 1], 2)], best_index
+        return [intermediate_waypoints_list[0][best_index1 - 1],
+                intermediate_waypoints_list[1][best_index1 - 1]], best_index
 
     def button_release_move_callback(self, event):
         """Called whenever a mouse button is released.
@@ -906,7 +905,6 @@ class HPathInteractor(PathInteractor):
         if loc is not None:
             (lat, lon), location = loc
         else:
-            lat, lon = float(round(lat, 2)), float(round(lon, 2))
             location = ""
         wpm = self.waypoints_model
         if len(wpm.all_waypoint_data()) > 0 and 0 < best_index <= len(wpm.all_waypoint_data()):
@@ -936,8 +934,6 @@ class HPathInteractor(PathInteractor):
         loc = find_location(lat, lon, tolerance=self.appropriate_epsilon_km(px=15))
         if loc is not None:
             lat, lon = loc[0]
-        else:
-            lat, lon = float(round(lat, 2)), float(round(lon, 2))
         self.waypoints_model.setData(
             self.waypoints_model.createIndex(self._ind, ft.LAT), QtCore.QVariant(lat), update=False)
         self.waypoints_model.setData(

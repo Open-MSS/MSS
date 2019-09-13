@@ -103,7 +103,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         waypoints = []
         for i, point in enumerate(points):
             waypoints.append(
-                ft.Waypoint(lon=float(round(point[1], 2)), lat=float(round(point[0], 2)),
+                ft.Waypoint(lon=float(point[1]), lat=float(point[0]),
                             flightlevel=float(flightlevel), comments="Hexagon {:d}".format(i + 1)))
         waypoints_model.insertRows(row, rows=len(waypoints), waypoints=waypoints)
         index = waypoints_model.index(row, 0)
