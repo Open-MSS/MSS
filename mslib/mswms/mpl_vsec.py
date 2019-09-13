@@ -28,12 +28,6 @@
 """
 # style definitions should be put in mpl_vsec_styles.py
 
-from __future__ import division
-
-
-from future import standard_library
-standard_library.install_aliases()
-
 import PIL.Image
 import io
 import logging
@@ -71,7 +65,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         return ["VERT:LOGP"]
 
     # TODO: the general setup should be a separate class as well
-    def _latlon_logp_setup(self, orography=105000., titlestring=u""):
+    def _latlon_logp_setup(self, orography=105000., titlestring=""):
         """General setup for lat/lon vs. log p vertical cross-sections.
         """
         ax = self.ax
@@ -121,11 +115,11 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax.grid(b=True)
 
         # Plot title (either in image axes or above).
-        titlestring = u"{} [{:.0f}..{:.0f} hPa]\nValid: {}".format(
+        titlestring = "{} [{:.0f}..{:.0f} hPa]\nValid: {}".format(
             titlestring, self.p_bot / 100., self.p_top / 100.,
             self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
         if self.uses_inittime_dimension():
-            titlestring += u" (step {:.0f} hrs from {})".format(
+            titlestring += " (step {:.0f} hrs from {})".format(
                 (self.valid_time - self.init_time).total_seconds() / 3600,
                 self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
@@ -147,7 +141,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.data_units = self.driver.data_units.copy()
         for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
-                raise KeyError(u"required data field '{}' not found".format(dataitem))
+                raise KeyError("required data field '{}' not found".format(dataitem))
             origunit = self.driver.data_units[dataitem]
             if dataunit is not None:
                 data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
@@ -299,8 +293,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             for var in self.data:
                 node = xmldoc.createElement(var)
                 data_shape = self.data[var].shape
-                node.setAttribute("num_levels", u"{}".format(data_shape[0]))
-                node.setAttribute("num_waypoints", u"{}".format(data_shape[1]))
+                node.setAttribute("num_levels", "{}".format(data_shape[0]))
+                node.setAttribute("num_waypoints", "{}".format(data_shape[1]))
 
                 data_str = ""
                 for data_row in self.data[var]:

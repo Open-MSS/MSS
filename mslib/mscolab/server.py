@@ -110,7 +110,7 @@ def start_server(app, sockio, cm, fm, port=8083):
                               'token': token.decode('ascii'),
                               'user': {'username': user.username, 'id': user.id}})
         else:
-            logging.debug("Unauthorized user: %s".format(emailid))
+            logging.debug("Unauthorized user: %s", emailid)
             return "False"
 
     @app.route('/test_authorized')

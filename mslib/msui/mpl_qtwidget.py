@@ -26,8 +26,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 # Parts of the code have been adapted from Chapter 6 of Sandro Tosi,
 # 'Matplotlib for Python Developers'.
 
@@ -95,12 +93,12 @@ class MplCanvas(FigureCanvasQTAgg):
         """
         self.default_filename = ""
         if title:
-            self.default_filename += u"_{:>5}".format(title.split()[0])
+            self.default_filename += "_{:>5}".format(title.split()[0])
         if style:
-            title += u' ({})'.format(style)
+            title += " ({})".format(style)
         if level:
-            title += u' at {}'.format(level)
-            self.default_filename += u"_{}".format(level.split()[0])
+            title += " at {}".format(level)
+            self.default_filename += "_{}".format(level.split()[0])
         if isinstance(valid_time, datetime) and isinstance(init_time, datetime):
             time_step = valid_time - init_time
         else:
@@ -114,12 +112,12 @@ class MplCanvas(FigureCanvasQTAgg):
         if valid_time:
             if init_time:
                 if time_step is not None:
-                    title += u"\nValid: {} (step {:d} hrs from {})".format(
+                    title += "\nValid: {} (step {:d} hrs from {})".format(
                         valid_time, (time_step.days * 86400 + time_step.seconds) // 3600, init_time)
                 else:
-                    title += u"\nValid: {} (initialisation: {})".format(valid_time, init_time)
+                    title += "\nValid: {} (initialisation: {})".format(valid_time, init_time)
             else:
-                title += u"\nValid: {}".format(valid_time)
+                title += "\nValid: {}".format(valid_time)
 
         # Set title.
         self.ax.set_title(title, horizontalalignment='left', x=0)
@@ -159,8 +157,8 @@ class MplWidget(QtWidgets.QWidget):
         self.setLayout(self.vbl)
 
 
-def _getSaveFileName(parent, title="Choose a filename to save to", filename=u"test.png",
-                     filters=u" Images (*.png)"):
+def _getSaveFileName(parent, title="Choose a filename to save to", filename="test.png",
+                     filters=" Images (*.png)"):
     _dirname, _name = os.path.split(filename)
     _dirname = os.path.join(_dirname, "")
     return getSaveFileNameAndFilter(parent, fs_url=_dirname, file_pattern=filters,
@@ -378,7 +376,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 try:
                     lat, lon = self.canvas.waypoints_interactor.get_lat_lon(event)
                 except (ValueError, OverflowError) as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     s = "lat={:6.2f}, lon={:7.2f}".format(lat, lon)
                     artists = [a for a in event.inaxes._mouseover_set
@@ -719,7 +717,7 @@ class MplSideViewCanvas(MplCanvas):
         for level in self.flightlevels:
             pressure = thermolib.flightlevel2pressure(level)
             self.fl_label_list.append(ax.axhline(pressure, color='k'))
-            self.fl_label_list.append(ax.text(0.1, pressure, u"FL{:d}".format(level)))
+            self.fl_label_list.append(ax.text(0.1, pressure, "FL{:d}".format(level)))
         self.draw()
 
     def get_flight_levels(self):
@@ -805,7 +803,7 @@ class MplSideViewCanvas(MplCanvas):
         """
         logging.debug("plotting vertical section image..")
         ix, iy = img.size
-        logging.debug(u"  image size is {:d}{:d} px, format is {}".format(ix, iy, img.format))
+        logging.debug("  image size is %dx%d px, format is '%s'", ix, iy, img.format)
         # Test if the image axes exist. If not, create them.
         if self.imgax is None:
             # Disable old white figure background so that the new underlying
@@ -1298,7 +1296,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
         # Iterative list traversal no. 2: Draw / update plots.
         for item in itemsList:
 
-            logging.debug(u"plotting item {}".format(item.getName()))
+            logging.debug("plotting item %s", item.getName())
             # The variables that have to be plotted are children of self.mapItem.
             # Plot all variables whose visible-flag is set to True.
             variablesToPlot = [variable for variable in item.childItems
@@ -1310,7 +1308,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                 for variable in variablesToPlot:
                     plt.setp(
                         variable.getGxElementProperty(
-                            "timeseries", u"instance::{}".format(self.identifier)),
+                            "timeseries", "instance::{}".format(self.identifier)),
                         visible=item.isVisible(self.identifier),
                         color=item.getGxElementProperty("general", "colour"),
                         linestyle=item.getGxElementProperty("general", "linestyle"),
@@ -1340,7 +1338,7 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                         linestyle=item.getGxElementProperty("general", "linestyle"),
                         linewidth=item.getGxElementProperty("general", "linewidth"))
                     variable.setGxElementProperty(
-                        "timeseries", u"instance::{}".format(self.identifier), plotInstance)
+                        "timeseries", "instance::{}".format(self.identifier), plotInstance)
                     #
                     # If we've just plotted the pressure variable flip the y-axis
                     # upside down.
@@ -1366,10 +1364,10 @@ class MplTimeSeriesViewCanvas(MplCanvas):
                     # The topmost subplot gets the title (the name of self.mapItem).
                     if index == 0:
                         if len(itemsList) > 1:
-                            ax.set_title(u"Ensemble: {} to {}".format(
+                            ax.set_title("Ensemble: {} to {}".format(
                                 itemsList[0].getName(), itemsList[-1].getName()))
                         else:
-                            ax.set_title(u"Single item: {}".format(itemsList[0].getName()))
+                            ax.set_title("Single item: {}".format(itemsList[0].getName()))
 
                     #
                     # The bottommost subplot gets the x-label: The name of the time

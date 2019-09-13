@@ -28,7 +28,6 @@
 import importlib
 import logging
 import os
-from past.builtins import unicode
 import platform
 import sys
 import traceback
@@ -69,7 +68,7 @@ def get_pickertype(tag, typ):
 def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=None):
     pickertype = get_pickertype(pickertag, pickertype)
     if pickertype == "fs":
-        filename = getOpenFileName(parent, dirname, filt, title=u"Import Flight Track")
+        filename = getOpenFileName(parent, dirname, filt, title="Import Flight Track")
     elif pickertype in ["qt", "default"]:
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
@@ -112,8 +111,8 @@ def get_existing_directory(parent, title, defaultdir, pickertag=None, pickertype
 
 def variant_to_string(variant):
     if isinstance(variant, QtCore.QVariant):
-        return unicode(variant.value())
-    return unicode(variant)
+        return str(variant.value())
+    return str(variant)
 
 
 def variant_to_float(variant, locale=QtCore.QLocale()):
@@ -173,29 +172,29 @@ def excepthook(type_, value, traceback_):
     import mslib.utils
     tb = "".join(traceback.format_exception(type_, value, traceback_))
     traceback.print_exception(type_, value, traceback_)
-    logging.critical(u"MSS Version: %s", mslib.__version__)
-    logging.critical(u"Python Version: %s", sys.version)
-    logging.critical(u"Platform: %s (%s)", platform.platform(), platform.architecture())
-    logging.critical(u"Fatal error: %s", tb)
+    logging.critical("MSS Version: %s", mslib.__version__)
+    logging.critical("Python Version: %s", sys.version)
+    logging.critical("Platform: %s (%s)", platform.platform(), platform.architecture())
+    logging.critical("Fatal error: %s", tb)
 
     if type_ is mslib.utils.FatalUserError:
         QtWidgets.QMessageBox.critical(
-            None, u"fatal error",
-            u"Fatal user error in MSS {} on {}\n"
-            u"Python {}\n"
-            u"\n"
-            u"{}".format(mslib.__version__, platform.platform(), sys.version, value))
+            None, "fatal error",
+            "Fatal user error in MSS {} on {}\n"
+            "Python {}\n"
+            "\n"
+            "{}".format(mslib.__version__, platform.platform(), sys.version, value))
     else:
         QtWidgets.QMessageBox.critical(
-            None, u"fatal error",
-            u"Fatal error in MSS {} on {}\n"
-            u"Python {}\n"
-            u"\n"
-            u"Please report bugs in MSS to https://bitbucket.org/wxmetvis/mss\n"
-            u"\n"
-            u"Information about the fatal error:\n"
-            u"\n"
-            u"{}".format(mslib.__version__, platform.platform(), sys.version, tb))
+            None, "fatal error",
+            "Fatal error in MSS {} on {}\n"
+            "Python {}\n"
+            "\n"
+            "Please report bugs in MSS to https://bitbucket.org/wxmetvis/mss\n"
+            "\n"
+            "Information about the fatal error:\n"
+            "\n"
+            "{}".format(mslib.__version__, platform.platform(), sys.version, tb))
 
 
 sys.excepthook = excepthook

@@ -26,8 +26,6 @@
     limitations under the License.
 """
 
-from builtins import str
-
 import logging
 import functools
 from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to

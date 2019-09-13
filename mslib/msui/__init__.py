@@ -54,7 +54,7 @@ class MissionSupportSystemDefaultConfig(object):
     filepicker_default = "default"
 
     # dir where mss output files are stored
-    data_dir = u"~/mssdata"
+    data_dir = "~/mssdata"
 
     # layout of different views, with immutable they can't resized
     layout = {"topview": (963, 702),

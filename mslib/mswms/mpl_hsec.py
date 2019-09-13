@@ -28,12 +28,6 @@
 """
 # style definitions should be put in mpl_hsec_styles.py
 
-from __future__ import division
-
-
-from future import standard_library
-standard_library.install_aliases()
-
 
 import io
 import logging
@@ -225,7 +219,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.data_units = self.driver.data_units.copy()
         for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
-                raise KeyError(u"required data field '{}' not found".format(dataitem))
+                raise KeyError("required data field '{}' not found".format(dataitem))
             origunit = self.driver.data_units[dataitem]
             if dataunit is not None:
                 data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
@@ -309,7 +303,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             bm = basemap.Basemap(resolution=None, **bm_params)
             (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,
              bm.coastsegs, bm.landpolygons, bm.lakepolygons, bm.cntrysegs) = BASEMAP_CACHE[key]
-            logging.debug(u"Loaded '%s' from basemap cache", key)
+            logging.debug("Loaded '%s' from basemap cache", key)
         else:
             bm = basemap.Basemap(resolution='l', **bm_params)
             # read in countries manually, as those are laoded only on demand
@@ -399,7 +393,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                 facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
             facecolor_index = lut.index(tuple(facecolor_rgb))
 
-            logging.debug(u"saving figure as transparent PNG with transparency index %s.", facecolor_index)
+            logging.debug("saving figure as transparent PNG with transparency index %s.", facecolor_index)
             palette_img.save(output, format="PNG", transparency=facecolor_index)
 
         logging.debug("returning figure..")
@@ -419,7 +413,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)
         left_longitude = min(self.bm.llcrnrlon, ulcrnrlon)
-        logging.debug(u"shifting data grid to leftmost longitude in map %2.f..", left_longitude)
+        logging.debug("shifting data grid to leftmost longitude in map %2.f..", left_longitude)
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.

@@ -44,8 +44,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 import logging
 import math
 import numpy as np
@@ -462,7 +460,7 @@ class PathInteractor(QtCore.QObject):
             # function. However, when I print the codes array in that function,
             # it looks fine -- correct length and correct codes. I can't figure
             # out why that error occurs.. (mr, 2013Feb08).
-            logging.error("{} {}".format(ex, type(ex)))
+            logging.error("%s %s", ex, type(ex))
         self.ax.draw_artist(self.line)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
@@ -544,9 +542,9 @@ class PathInteractor(QtCore.QObject):
         x, y = list(zip(*vertices))
         wpd = self.waypoints_model.all_waypoint_data()
         for i in range(len(wpd)):
-            textlabel = u"{:}   ".format(str(i))
+            textlabel = "{:}   ".format(str(i))
             if wpd[i].location != "":
-                textlabel = u"{:}   ".format(wpd[i].location)
+                textlabel = "{:}   ".format(wpd[i].location)
             t = self.ax.text(x[i],
                              y[i],
                              textlabel,
@@ -595,7 +593,7 @@ class PathInteractor(QtCore.QObject):
             wp = wps[row]
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
-                u"Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
+                "Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
                 .format(row, wp.lat, wp.lon, wp.flightlevel),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
@@ -700,7 +698,7 @@ class VPathInteractor(PathInteractor):
             (lat, lon), location = loc
         else:
             lat, lon = float(round(lat, 2)), float(round(lon, 2))
-            location = u""
+            location = ""
         new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
         wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
         self.redraw_figure()
@@ -899,8 +897,8 @@ class HPathInteractor(PathInteractor):
         x, y = event.xdata, event.ydata
         best_index = self.pathpatch.get_path().index_of_closest_segment(
             x, y, eps=self.appropriate_epsilon())
-        logging.debug(u"TopView insert point: clicked at (%f, %f), "
-                      u"best index: %d", x, y, best_index)
+        logging.debug("TopView insert point: clicked at (%f, %f), "
+                      "best index: %d", x, y, best_index)
         self.pathpatch.get_path().insert_vertex(best_index, [x, y], WaypointsPath.LINETO)
 
         lon, lat = self.map(x, y, inverse=True)
@@ -909,14 +907,14 @@ class HPathInteractor(PathInteractor):
             (lat, lon), location = loc
         else:
             lat, lon = float(round(lat, 2)), float(round(lon, 2))
-            location = u""
+            location = ""
         wpm = self.waypoints_model
         if len(wpm.all_waypoint_data()) > 0 and 0 < best_index <= len(wpm.all_waypoint_data()):
             flightlevel = wpm.waypoint_data(best_index - 1).flightlevel
         elif len(wpm.all_waypoint_data()) > 0 and best_index == 0:
             flightlevel = wpm.waypoint_data(0).flightlevel
         else:
-            logging.error(u"Cannot copy flightlevel. best_index: %s, len: %s",
+            logging.error("Cannot copy flightlevel. best_index: %s, len: %s",
                           best_index, len(wpm.all_waypoint_data()))
             flightlevel = 0
         new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
@@ -1058,7 +1056,7 @@ class HPathInteractor(PathInteractor):
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
-                textlabel = u"{:}".format(wpd[i].location)
+                textlabel = "{:}".format(wpd[i].location)
             t = self.ax.text(x[i] + label_offset,
                              y[i] + label_offset,
                              textlabel,

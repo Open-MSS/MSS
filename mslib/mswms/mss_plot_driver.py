@@ -26,9 +26,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-
 from datetime import datetime
 
 import logging
@@ -39,10 +36,9 @@ import numpy as np
 
 from mslib import netCDF4tools
 from mslib import utils
-from future.utils import with_metaclass
 
 
-class MSSPlotDriver(with_metaclass(ABCMeta, object)):
+class MSSPlotDriver(metaclass=ABCMeta):
     """
     Abstract super class for implementing driver classes that provide
     access to the MSS data server.
@@ -109,8 +105,8 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         fc_step = fc_time - init_time
         fc_step = fc_step.days * 24 + (fc_step.seconds // 3600)
         self.fc_time = fc_time
-        logging.debug(u"\trequested initialisation time %s", init_time)
-        logging.debug(u"\trequested forecast valid time %s (step %s hrs)", fc_time, fc_step)
+        logging.debug("\trequested initialisation time %s", init_time)
+        logging.debug("\trequested forecast valid time %s (step %s hrs)", fc_time, fc_step)
 
         # Check if a dataset is open and if it contains the requested times.
         # (a dataset will only be open if the used layer has not changed,
@@ -118,9 +114,9 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         if self.dataset is not None:
             logging.debug("checking on open dataset.")
             if self.init_time == init_time:
-                logging.debug(u"\tinitialisation time ok (%s).", init_time)
+                logging.debug("\tinitialisation time ok (%s).", init_time)
                 if fc_time in self.times:
-                    logging.debug(u"\tforecast valid time contained (%s).", fc_time)
+                    logging.debug("\tforecast valid time contained (%s).", fc_time)
                     return
             logging.debug("need to re-open input files.")
             self.dataset.close()
@@ -136,7 +132,7 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
                 var, vartype, init_time, fc_time, fullpath=True)
             if filename not in filenames:
                 filenames.append(filename)
-            logging.debug(u"\tvariable '%s' requires input file '%s'",
+            logging.debug("\tvariable '%s' requires input file '%s'",
                           var, os.path.basename(filename))
 
         if len(filenames) == 0:
@@ -161,7 +157,7 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         #     raise ValueError("wrong initialisation time in input")
 
         if fc_time not in times:
-            msg = u"Forecast valid time '{}' is not available.".format(fc_time)
+            msg = "Forecast valid time '{}' is not available.".format(fc_time)
             logging.error(msg)
             dataset.close()
             raise ValueError(msg)
@@ -170,7 +166,7 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         try:
             lat_data, lon_data, lat_order = netCDF4tools.get_latlon_data(dataset)
         except Exception as ex:
-            logging.error(u"ERROR: %s %s", type(ex), ex)
+            logging.error("ERROR: %s %s", type(ex), ex)
             dataset.close()
             raise
 
@@ -483,8 +479,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         # Determine the leftmost longitude in the plot.
         left_longitude = self.lons.min()
-        logging.debug(u"shifting data grid to leftmost longitude in path "
-                      u"(%.2f)..", left_longitude)
+        logging.debug("shifting data grid to leftmost longitude in path "
+                      "(%.2f)..", left_longitude)
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.

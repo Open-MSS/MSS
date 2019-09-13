@@ -32,10 +32,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-from builtins import str
-
 import logging
 import numpy as np
 import matplotlib
@@ -143,7 +139,7 @@ class MapCanvas(basemap.Basemap):
             try:
                 self._draw_auto_graticule()
             except Exception as ex:
-                logging.error(u"ERROR: cannot plot graticule (message: {} - '{}')".format(type(ex), ex))
+                logging.error("ERROR: cannot plot graticule (message: %s - '%s')", type(ex), ex)
         else:
             self.map_parallels = None
             self.map_meridians = None
@@ -461,7 +457,7 @@ class MapCanvas(basemap.Basemap):
             try:
                 self.map_boundary.remove()
             except NotImplementedError as ex:
-                logging.debug("{}".format(ex))
+                logging.debug("%s", ex)
             self.map_boundary = None
 
         cont_vis = self.appearance["fill_continents"]
@@ -681,7 +677,7 @@ class MapCanvas(basemap.Basemap):
                     elif element == "lineplot":
                         plt.setp(
                             item.getGxElementProperty(element,
-                                                      u"instance::{}".format(self.identifier)),
+                                                      "instance::{}".format(self.identifier)),
                             visible=item_properties["visible"],
                             color=item_properties["colour"],
                             linestyle=item_properties["linestyle"],
@@ -689,7 +685,7 @@ class MapCanvas(basemap.Basemap):
                     elif element == "timemarker":
                         plt.setp(
                             item.getGxElementProperty(element,
-                                                      u"instance::{}".format(self.identifier)),
+                                                      "instance::{}".format(self.identifier)),
                             visible=item_properties["visible"],
                             color=item_properties["colour"])
 
@@ -707,7 +703,7 @@ class MapCanvas(basemap.Basemap):
                     # Remove old plot instances.
                     try:
                         instances = item.getGxElementProperty("lineplot",
-                                                              u"instance::{}".format(self.identifier))
+                                                              "instance::{}".format(self.identifier))
                         for instance in instances:
                             instance.remove()
                     except (KeyError, ValueError) as error:
@@ -719,7 +715,7 @@ class MapCanvas(basemap.Basemap):
                                               linestyle=item_properties["linestyle"],
                                               linewidth=item_properties["linewidth"])
                     item.setGxElementProperty("lineplot",
-                                              u"instance::{}".format(self.identifier),
+                                              "instance::{}".format(self.identifier),
                                               plot_instance)
 
                 # Get the indexes for the time markers. If no time markers should
@@ -728,7 +724,7 @@ class MapCanvas(basemap.Basemap):
                     # Try to remove an existing time marker instance from
                     # the plot.
                     old_scatter_instance = item.getGxElementProperty("timemarker",
-                                                                     u"instance::{}".format(self.identifier))
+                                                                     "instance::{}".format(self.identifier))
                     plt.setp(old_scatter_instance, visible=False)
                     old_scatter_instance.remove()
                 except (KeyError, ValueError) as error:
@@ -739,7 +735,7 @@ class MapCanvas(basemap.Basemap):
                                                     s=20, c=item_properties["colour"],
                                                     visible=item_properties["visible"], linewidth=0)
                     item.setGxElementProperty("timemarker",
-                                              u"instance::{}".format(self.identifier),
+                                              "instance::{}".format(self.identifier),
                                               scatter_instance)
 
         # Update the figure canvas.

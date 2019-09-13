@@ -100,7 +100,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
                 title = "Hexagon Control"
                 widget = hex.HexagonControlWidget(view=self)
             else:
-                raise IndexError(u"invalid control index ({})".format(index))
+                raise IndexError("invalid control index ({})".format(index))
             self.createDockWidget(index, title, widget)
 
     def invertDirection(self):

@@ -20,7 +20,6 @@ requirements:
   build:
     - python
     - setuptools
-    - future
     - menuinst  # [win]
   run:
     - python >=3.6
@@ -42,7 +41,6 @@ requirements:
     - scipy
     - sgp4
     - skyfield >=1.10
-    - six
     - tk
     - owslib
     - unicodecsv
@@ -50,7 +48,6 @@ requirements:
     - cftime >=1.0.1
     - matplotlib
     - proj4
-    - future
     - flask
     - flask-httpauth
     - werkzeug
