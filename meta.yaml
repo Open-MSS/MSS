@@ -14,13 +14,14 @@ build:
   entry_points:
     - mss = mslib.msui.mss_pyui:main
     - mswms = mslib.mswms.mswms:main
-    - demodata = mslib.mswms.demodata:main
+    - mswms_demodata = mslib.mswms.demodata:main
+    - mscolab = mslib.mscolab.server:main
+    - mscolab_demodata = mslib.mscolab.demodata:main
 
 requirements:
   build:
     - python
     - setuptools
-    - future
     - menuinst  # [win]
   run:
     - python >=3.6
@@ -42,7 +43,6 @@ requirements:
     - scipy
     - sgp4
     - skyfield >=1.10
-    - six
     - tk
     - owslib
     - unicodecsv
@@ -50,7 +50,6 @@ requirements:
     - cftime >=1.0.1
     - matplotlib
     - proj4
-    - future
     - flask
     - flask-httpauth
     - werkzeug

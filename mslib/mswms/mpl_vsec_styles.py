@@ -29,8 +29,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 import matplotlib
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator
@@ -206,12 +204,12 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
             ("air_potential_temperature", np.arange(200, 700, 10), "dimgrey", "dimgrey", "solid", 2, True)]
 
     class fnord(VS_GenericStyle):
-        name = u"VS_{}_{}".format(entity, vert)
+        name = "VS_{}_{}".format(entity, vert)
         dataname = entity
         units, unit_scale = Targets.get_unit(dataname)
         title = Targets.TITLES.get(entity, entity)
         if units:
-            title += u" ({})".format(units)
+            title += " ({})".format(units)
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours
 
@@ -1559,7 +1557,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
         add_contours = []
 
     class fnord(VS_MSSChemStyle):
-        name = u"VS_{}_{}".format(entity, vert)
+        name = "VS_{}_{}".format(entity, vert)
         dataname = entity
         units, unit_scale = Targets.get_unit(dataname)
         units = units
@@ -1567,7 +1565,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None,
         title = nam + " (" + vert + ")"
         long_name = entity
         if units:
-            title += u" ({})".format(units)
+            title += " ({})".format(units)
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours if add_contours else []
 

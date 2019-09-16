@@ -64,18 +64,18 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
                 contact = collections.defaultdict(lambda: None)
             else:
                 contact = vars(provider.contact)
-            text = (u"<b>Title:</b> {title}<p>"
-                    u"<b>Service type:</b> {type} {version}<br>"
-                    u"<b>Abstract:</b><br>{abstract}<br>"
-                    u"<b>Contact:</b><br>"
-                    u"    {name}<br>"
-                    u"    {organization}<br>"
-                    u"    {email}<br>"
-                    u"    {address}<br>"
-                    u"    {postcode} {city}<br>\n"
-                    u"<b>Keywords:</b> {keywords}<br>\n"
-                    u"<b>Access constraints:</b> {accessconstraints}<br>\n"
-                    u"<b>Fees:</b> {fees}").format(
+            text = ("<b>Title:</b> {title}<p>"
+                    "<b>Service type:</b> {type} {version}<br>"
+                    "<b>Abstract:</b><br>{abstract}<br>"
+                    "<b>Contact:</b><br>"
+                    "    {name}<br>"
+                    "    {organization}<br>"
+                    "    {email}<br>"
+                    "    {address}<br>"
+                    "    {postcode} {city}<br>\n"
+                    "<b>Keywords:</b> {keywords}<br>\n"
+                    "<b>Access constraints:</b> {accessconstraints}<br>\n"
+                    "<b>Fees:</b> {fees}").format(
                 url=provider.url,
                 type=identification.type,
                 version=identification.version,

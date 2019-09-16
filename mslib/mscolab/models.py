@@ -28,7 +28,7 @@ from flask_sqlalchemy import SQLAlchemy
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
-from mslib.mscolab.conf import SECRET_KEY
+from mslib.mscolab.conf import mscolab_settings
 
 import logging
 import datetime
@@ -59,7 +59,7 @@ class User(db.Model):
         return pwd_context.verify(password_, self.password)
 
     def generate_auth_token(self, expiration=600):
-        s = Serializer(SECRET_KEY, expires_in=expiration)
+        s = Serializer(mscolab_settings.SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 
     @staticmethod
@@ -67,7 +67,7 @@ class User(db.Model):
         """
         token is the authentication string provided by client for each request
         """
-        s = Serializer(SECRET_KEY)
+        s = Serializer(mscolab_settings.SECRET_KEY)
         try:
             data = s.loads(token)
         except SignatureExpired:

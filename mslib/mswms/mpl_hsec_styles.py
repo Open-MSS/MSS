@@ -63,8 +63,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 import logging
 
 import numpy as np
@@ -319,7 +317,7 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Plot title.
         titlestring = "Solar Elevation Angle "
-        titlestring += u"\nValid: {}".format(
+        titlestring += "\nValid: {}".format(
             self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
         if not self.noframe:
             ax.set_title(titlestring,
@@ -540,13 +538,13 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
         add_contours = [("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
 
     class fnord(HS_GenericStyle):
-        name = u"{}_{}".format(entity, vert)
+        name = "{}_{}".format(entity, vert)
         dataname = entity
         title = Targets.TITLES.get(entity, entity)
         long_name = entity
         units, unit_scale = Targets.get_unit(entity)
         if units:
-            title += u" ({})".format(units)
+            title += " ({})".format(units)
 
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours
@@ -1765,8 +1763,8 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         #                 thin_contours, colors="saddlebrown", linewidths=1)
 
         titlestring = "10.8 um Brightness Temperature (K)"
-        titlestring += u'\nValid: {}' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += "\nValid: {}" \
+            .format(self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1856,7 +1854,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         _contourname = "_pcontours"
 
     class fnord(HS_MSSChemStyle):
-        name = u"HS_{}_{}{}".format(entity, vert, _contourname)
+        name = "HS_{}_{}{}".format(entity, vert, _contourname)
         dataname = entity
         units, unit_scale = Targets.get_unit(dataname)
         units = units
@@ -1864,7 +1862,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         _title_tpl = nam + " (" + vert + ")"
         long_name = entity
         if units:
-            _title_tpl += u" ({})".format(units)
+            _title_tpl += " ({})".format(units)
 
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours

@@ -34,11 +34,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-from builtins import str
-from past.builtins import unicode
-
 import datetime
 import logging
 import os
@@ -72,8 +67,8 @@ def seconds_to_string(seconds):
 
 TABLE_FULL = [
     ("Location                   ", lambda waypoint: waypoint.location, True),
-    ("Lat\n(+-90)", lambda waypoint: waypoint.lat, True),
-    ("Lon\n(+-180)", lambda waypoint: waypoint.lon, True),
+    ("Lat\n(+-90)", lambda waypoint: round(float(waypoint.lat), 2), True),
+    ("Lon\n(+-180)", lambda waypoint: round(float(waypoint.lon), 2), True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
     ("Pressure\n(hPa)", lambda waypoint: QtCore.QLocale().toString(waypoint.pressure / 100., 'f', 2), True),
     ("Leg dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
@@ -160,7 +155,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             if filename.endswith(".ftml"):
                 self.load_from_ftml(filename)
             else:
-                logging.debug(u"No known file extension! '%s'", filename)
+                logging.debug("No known file extension! '%s'", filename)
 
         if waypoints:
             self.replace_waypoints(waypoints)
@@ -285,10 +280,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     waypoint.lat = value
-                    waypoint.location = u""
+                    waypoint.location = ""
                     loc = find_location(waypoint.lat, waypoint.lon, 1e-3)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
@@ -310,10 +305,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     waypoint.lon = value
-                    waypoint.location = u""
+                    waypoint.location = ""
                     loc = find_location(waypoint.lat, waypoint.lon, 1e-3)
                     if loc is not None:
                         waypoint.lat, waypoint.lon = loc[0]
@@ -330,7 +325,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     waypoint.flightlevel = flightlevel
                     waypoint.pressure = pressure
@@ -351,7 +346,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("{}".format(ex))
+                    logging.error("%s", ex)
                 else:
                     waypoint.pressure = pressure
                     waypoint.flightlevel = flightlevel
@@ -507,7 +502,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         for i in range(1, len(self.waypoints)):
             wp_comm = self.waypoints[i].comments
             if len(wp_comm) == 9 and wp_comm.startswith("Hexagon "):
-                wp_comm = u"Hexagon {:d}".format(8 - int(wp_comm[-1]))
+                wp_comm = "Hexagon {:d}".format(8 - int(wp_comm[-1]))
                 self.waypoints[i].comments = wp_comm
         self.update_distances(position=0, rows=len(self.waypoints))
         index = self.index(0, 0)
@@ -544,28 +539,28 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         doc = xml.dom.minidom.Document()
 
-        ft_el = doc.createElement(u"FlightTrack")
-        ft_el.setAttribute(u"version", unicode(__version__))
+        ft_el = doc.createElement("FlightTrack")
+        ft_el.setAttribute("version", __version__)
         doc.appendChild(ft_el)
         # The list of waypoint elements.
-        wp_el = doc.createElement(u"ListOfWaypoints")
+        wp_el = doc.createElement("ListOfWaypoints")
         ft_el.appendChild(wp_el)
 
         for wp in self.waypoints:
-            element = doc.createElement(u"Waypoint")
+            element = doc.createElement("Waypoint")
             wp_el.appendChild(element)
-            element.setAttribute(u"location", unicode(wp.location))
-            element.setAttribute(u"lat", unicode(wp.lat))
-            element.setAttribute(u"lon", unicode(wp.lon))
-            element.setAttribute(u"flightlevel", unicode(wp.flightlevel))
-            comments = doc.createElement(u"Comments")
-            comments.appendChild(doc.createTextNode(unicode(wp.comments)))
+            element.setAttribute("location", str(wp.location))
+            element.setAttribute("lat", str(wp.lat))
+            element.setAttribute("lon", str(wp.lon))
+            element.setAttribute("flightlevel", str(wp.flightlevel))
+            comments = doc.createElement("Comments")
+            comments.appendChild(doc.createTextNode(str(wp.comments)))
             element.appendChild(comments)
 
         _dirname, _name = os.path.split(self.filename)
         _fs = open_fs(_dirname)
         with _fs.open(_name, 'w') as file_object:
-            doc.writexml(file_object, indent=u"  ", addindent=u"  ", newl=u"\n", encoding=u"utf-8")
+            doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
 
     def load_from_ftml(self, filename):
         """Load a flight track from an XML file at <filename>.

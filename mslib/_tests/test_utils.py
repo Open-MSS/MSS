@@ -69,7 +69,7 @@ class TestConfigLoader(object):
 
     def test_default_config_wrong_file(self):
         # return default if no access to config file given
-        data = utils.config_loader(config_file=u"foo.json", default={"foo": "123"})
+        data = utils.config_loader(config_file="foo.json", default={"foo": "123"})
         assert data == {"foo": "123"}
 
 

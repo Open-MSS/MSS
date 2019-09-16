@@ -26,8 +26,6 @@
     limitations under the License.
 """
 
-from builtins import str
-
 import logging
 import os
 from datetime import datetime, timedelta
@@ -136,7 +134,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """
         filename = get_open_filename(
             self, "Open NASA satellite overpass prediction",
-            os.path.join(os.path.dirname(self.leFile.text())), u"All Files (*)",
+            os.path.join(os.path.dirname(self.leFile.text())), "All Files (*)",
             pickertag="filepicker_satellitetrack")
         if not filename:
             return
@@ -156,14 +154,14 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         try:
             overpass_segments = read_nasa_satellite_prediction(filename)
         except (IOError, OSError, ValueError) as ex:
-            logging.error(u"Problem accessing '%s' file", filename)
+            logging.error("Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
-                                           self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
+                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
         else:
             logging.debug("read %i segments", len(overpass_segments))
 
             self.cbSatelliteOverpasses.clear()
-            items = [u"{} to {}".format(str(seg["utc"][0]), str(seg["utc"][-1]))
+            items = ["{} to {}".format(str(seg["utc"][0]), str(seg["utc"][-1]))
                      for seg in overpass_segments]
             items.insert(0, "None (select item to plot)")
             items.insert(1, "All tracks")
