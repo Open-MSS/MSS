@@ -30,10 +30,15 @@ from __future__ import print_function
 import imp
 import sys
 import pytest
+import multiprocessing
+import time
 
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
 
+from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.server import app, initialize_managers, start_server
 
 try:
     # package currently on pypi only
@@ -71,6 +76,31 @@ def configure_testsetup(request):
         VIRT_DISPLAY.stop()
     else:
         yield
+
+
+p = None
+
+
+@pytest.fixture(scope="session", autouse=True)
+def start_mscolab_server(request):
+    _app = app
+    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
+    _app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+    _app, sockio, cm, fm = initialize_managers(_app)
+    p = multiprocessing.Process(
+        target=start_server,
+        args=(_app, sockio, cm, fm,),
+        kwargs={'port': 8084})
+    p.start()
+    time.sleep(2)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def stop_server(request):
+    """Cleanup a testing directory once we are finished."""
+    def stop_callback():
+        p.terminate()
+    request.addfinalizer(stop_callback)
 
 
 @pytest.fixture(scope="class")
