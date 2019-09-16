@@ -87,6 +87,7 @@ def start_mscolab_server(request):
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
     _app, sockio, cm, fm = initialize_managers(_app)
+    global p
     p = multiprocessing.Process(
         target=start_server,
         args=(_app, sockio, cm, fm,),
@@ -99,6 +100,7 @@ def start_mscolab_server(request):
 def stop_server(request):
     """Cleanup a testing directory once we are finished."""
     def stop_callback():
+        global p
         p.terminate()
     request.addfinalizer(stop_callback)
 
