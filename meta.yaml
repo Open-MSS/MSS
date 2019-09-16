@@ -14,8 +14,9 @@ build:
   entry_points:
     - mss = mslib.msui.mss_pyui:main
     - mswms = mslib.mswms.mswms:main
-    - demodata = mslib.mswms.demodata:main
+    - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.server:main
+    - mscolab_demodata = mslib.mscolab.demodata:main
 
 requirements:
   build:
