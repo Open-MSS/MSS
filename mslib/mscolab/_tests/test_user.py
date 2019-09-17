@@ -23,11 +23,9 @@
     limitations under the License.
 """
 import requests
-import multiprocessing
 import json
-import time
 
-from mslib.mscolab.server import db, check_login, register_user, app, initialize_managers, start_server
+from mslib.mscolab.server import db, check_login, register_user, app, initialize_managers
 from mslib.mscolab.conf import mscolab_settings
 from mslib._tests.constants import MSCOLAB_URL_TEST, TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.models import User
@@ -39,15 +37,9 @@ class Test_UserMethods(object):
         self.app = app
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
-        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.app, _, cm, _ = initialize_managers(self.app)
         self.cm = cm
-        self.p = multiprocessing.Process(
-            target=start_server,
-            args=(self.app, sockio, cm, fm,),
-            kwargs={'port': 8084})
-        self.p.start()
         db.init_app(self.app)
-        time.sleep(3)
 
     def test_registration(self):
         with self.app.app_context():
@@ -95,4 +87,3 @@ class Test_UserMethods(object):
             User.query.filter_by(emailid="sdf@s.com").delete()
             User.query.filter_by(emailid="sdf@s1.com").delete()
             db.session.commit()
-        self.p.terminate()
