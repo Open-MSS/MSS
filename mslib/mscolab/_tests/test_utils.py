@@ -23,14 +23,11 @@
     limitations under the License.
 """
 
-from mslib.mscolab.server import db, app, initialize_managers, start_server
+from mslib.mscolab.server import db, app, initialize_managers
 from mslib.mscolab.models import User
 from mslib.mscolab.utils import get_recent_pid
 from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.conf import mscolab_settings
-
-import multiprocessing
-import time
 
 
 class Test_Utils(object):
@@ -38,16 +35,10 @@ class Test_Utils(object):
         self.app = app
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
-        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
-        self.p = multiprocessing.Process(
-            target=start_server,
-            args=(self.app, sockio, cm, fm,),
-            kwargs={'port': 8084})
-        self.p.start()
         db.init_app(self.app)
-        time.sleep(1)
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
 
@@ -57,5 +48,4 @@ class Test_Utils(object):
         assert p_id == 3
 
     def teardown(self):
-        self.p.terminate()
         pass

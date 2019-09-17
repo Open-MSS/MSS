@@ -26,15 +26,13 @@
 import socketio
 import requests
 import json
-import multiprocessing
 import datetime
-import time
 
 from mslib.mscolab.models import Message
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import db, app, initialize_managers, start_server
+from mslib.mscolab.server import db, app, initialize_managers
 
 
 class Test_Chat(object):
@@ -44,15 +42,9 @@ class Test_Chat(object):
         self.app = app
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
-        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.app, _, cm, _ = initialize_managers(self.app)
         self.cm = cm
-        self.p = multiprocessing.Process(
-            target=start_server,
-            args=(self.app, sockio, cm, fm,),
-            kwargs={'port': 8084})
-        self.p.start()
         db.init_app(self.app)
-        time.sleep(3)
 
     def test_send_message(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
@@ -162,4 +154,3 @@ class Test_Chat(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        self.p.terminate()

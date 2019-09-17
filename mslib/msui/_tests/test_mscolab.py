@@ -27,10 +27,9 @@
 import sys
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import logging
-import multiprocessing
 import time
 
-from mslib.mscolab.server import db, app, initialize_managers, start_server
+from mslib.mscolab.server import db, app, initialize_managers
 from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR, MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Project
@@ -50,16 +49,10 @@ class Test_Mscolab(object):
         self.app = app
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
-        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
-        self.p = multiprocessing.Process(
-            target=start_server,
-            args=(self.app, sockio, cm, fm,),
-            kwargs={'port': 8084})
-        self.p.start()
         db.init_app(self.app)
-        time.sleep(1)
 
     def teardown(self):
         # to disconnect connections, and clear token
@@ -70,8 +63,6 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        # close mscolab server
-        self.p.terminate()
 
     def test_login(self):
         self._login()
