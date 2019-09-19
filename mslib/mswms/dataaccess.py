@@ -179,9 +179,8 @@ class DefaultDataAccess(NWPDataAccess):
 
     # Workaround for the numerical issue concering the lon dimension in
     # NetCDF files produced by netcdf-java 4.3..
-    _mfDatasetArgsDict = {"skipDimCheck": ["lon"]}
 
-    def __init__(self, rootpath, domain_id, **kwargs):
+    def __init__(self, rootpath, domain_id, skip_dim_check=[], **kwargs):
         """Constructor takes the path of the data directory and determines whether
            this class employs different init_times or valid_times.
         """
@@ -189,6 +188,7 @@ class DefaultDataAccess(NWPDataAccess):
         self._domain_id = domain_id
         self._available_files = None
         self._filetree = None
+        self._mfDatasetArgsDict = {"skip_dim_check": skip_dim_check}
 
     def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
         """Determines the name of the data file that contains
