@@ -17,6 +17,7 @@ Mission Support System's Documentation
    usage
    deployment
    demodata
+   mscolab
    development
    authors
 
