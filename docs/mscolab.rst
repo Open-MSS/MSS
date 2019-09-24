@@ -1,5 +1,5 @@
 Mscolab - Mission Support Collaboration
-============================
+=======================================
 
 Mscolab has been developed to make mss workable in a collaborative environment, with additional features such as
 chat-messages, keeping track of the made changes, permissions of the collaborators.
@@ -10,8 +10,19 @@ Steps to run
   - Mscolab server has to be manually installed, the instructions can be found at https://mss.readthedocs.io/en/stable/development.html 
   - Once mss is installed, mscolab server can be started by the command 'mscolab'
   - Mscolab UI will be in the future, the new main UI. For now, to get also users experience included we add it as a new menu in the tool-bar. We evolve the new UI  by these inputs of more users and will deprecate in this process the old one.
-  - Once the server is set, mslib/mscolab/conf.py has to be updated. Description of constants can be found in the file.
   - To start mscolab from ui select `mscolab` option in msui menu.
+
+Configuration of mscolab
+~~~~~~~~~~~~~~~~~~~~~~~~
+The mscolab server comes with a default configuration, built on top of :code:`sqlite3`. One can override these settings by making a copy
+of the following file in a location in :code:`$PYTHONPATH`.
+
+Description of the variables can be found in comments.
+
+**mscolab_settings.py**
+
+ .. literalinclude:: samples/config/mscolab/mscolab_settings.py.sample
+
 
 User based features
 ~~~~~~~~~~~~~~~~~~~
