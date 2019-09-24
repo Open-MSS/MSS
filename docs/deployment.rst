@@ -143,6 +143,11 @@ of "0" were the init time (which need not be present in the file).
 For example, if the units field of "time" contains "hours since 2012-10-17T12:00:00.000Z", 2012-10-17T12Z would
 be the init time. Data for different time steps may be contained in one file or split over several ones.
 
+In case a file contains additional dimensions beyond the four required ones, MSS might discard the file,
+if they are inconsistently used among files or are missing coordinate variables, etc., even though they would
+not affect the operation of MSS. One may skip checks on these dimensions in the data access class by specifying
+a list of said dimensions in the "skip_dim_check" constructor parameter.
+
 An exemplary header for a file containing ozone on a vertical pressure coordinate and a 3-D tropopause
 would look as follows:
 
