@@ -7,7 +7,7 @@ chat-messages, keeping track of the made changes, permissions of the collaborato
 
 Steps to run 
 ~~~~~~~~~~~~~~~~
-  - Mscolab server has to be manually installed, the instructions can be found at https://mss.readthedocs.io/en/stable/development.html 
+  - Mscolab server has to be manually installed, the instructions can be found at :ref:`development`
   - Once mss is installed, mscolab server can be started by the command 'mscolab'
   - Mscolab UI will be in the future, the new main UI. For now, to get also users experience included we add it as a new menu in the tool-bar. We evolve the new UI  by these inputs of more users and will deprecate in this process the old one.
   - To start mscolab from ui select `mscolab` option in msui menu.
