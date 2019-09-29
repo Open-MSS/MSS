@@ -4,6 +4,8 @@
 Simulated Data and its configuration
 ====================================
 
+mswms
+~~~~~
 We provide demodata by executing the demodata programm. This creates in your home directory data files and also
 the needed server configuration files. The program creates 70MB of examples.
 This script does not overwrite an existing mss_wms_settings.py.
@@ -52,3 +54,13 @@ Detailed server configuration *mss_wms_settings.py* for this demodata
 For setting authentication see *mss_wms_auth.py*
 
  .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
+
+mscolab
+~~~~~~~
+* To use mscolab server, one should have a db instance of :code:`sqlite3/postgres` installed. This will be used
+  to store project state, user details, change details etc.
+* The default configuration mscolab ships with is with sqlite3. If Postgres is used, the configuration file
+  needs to be updated. 
+  Steps are mentioned :ref:`configuration-mscolab`
+
+* On your first run of mscolab, the demodata would be setup.
