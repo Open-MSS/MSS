@@ -56,7 +56,6 @@ requirements:
     - flask-socketio
     - flask-sqlalchemy
     - passlib
-    - python-socketio[client]
     - gitpython
     - psycopg2
 
