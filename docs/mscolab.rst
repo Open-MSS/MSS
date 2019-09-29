@@ -12,6 +12,8 @@ Steps to run
   - Mscolab UI will be in the future, the new main UI. For now, to get also users experience included we add it as a new menu in the tool-bar. We evolve the new UI  by these inputs of more users and will deprecate in this process the old one.
   - To start mscolab from ui select `mscolab` option in msui menu.
 
+.. _configuration-mscolab:
+
 Configuration of mscolab
 ~~~~~~~~~~~~~~~~~~~~~~~~
 The mscolab server comes with a default configuration, built on top of :code:`sqlite3`. One can override these settings by making a copy

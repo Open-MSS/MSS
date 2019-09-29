@@ -61,10 +61,6 @@ mscolab
   to store project state, user details, change details etc.
 * The default configuration mscolab ships with is with sqlite3. If Postgres is used, the configuration file
   needs to be updated. 
-  Steps are as follows
-
-  * change directory to where mss is cloned
-  * copy :code:`docs/samples/config/mscolab/mscolab_settings.py.sample` to :code:`your_convinient_location/mscolab_settings.py`
-  * add this location to :code:`$PYTHONPATH`
+  Steps are mentioned :ref:`configuration-mscolab`
 
 * On your first run of mscolab, the demodata would be setup.
