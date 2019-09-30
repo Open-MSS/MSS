@@ -65,7 +65,9 @@ class Test_DefaultDataAccess(object):
 
     def test_mfDatasetArgs(self):
         mfDatasetArgs = self.dut.mfDatasetArgs()
-        assert mfDatasetArgs == {'skipDimCheck': ['lon']}
+        assert mfDatasetArgs == {'skip_dim_check': []}
+        mfDatasetArgs2 = DefaultDataAccess(DATA_DIR, "EUR_LL015", skip_dim_check=["time1"]).mfDatasetArgs()
+        assert mfDatasetArgs2 == {'skip_dim_check': ['time1']}
 
     def test_get_valid_times(self):
         valid_times = self.dut.get_valid_times("air_pressure", "ml", datetime(2012, 10, 17, 12, 0))

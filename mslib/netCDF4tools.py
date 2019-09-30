@@ -185,7 +185,7 @@ def get_latlon_data(ncfile, autoreverse=True):
 
 
 class MFDatasetCommonDims(netCDF4.MFDataset):
-    """MFDatasetCommonDims(self, files, exclude=[], requireDimNum=False)
+    """MFDatasetCommonDims(self, files, exclude=[], require_dim_num=False)
 
     Class for reading multi-file netCDF Datasets with common dimensions,
     making variables in different files appear as if they were in one file.
@@ -197,8 +197,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
     <http://netcdf4-python.googlecode.com/>} library by Jeffrey Whitaker.
     """
 
-    def __init__(self, files, exclude=None, skipDimCheck=None,
-                 requireDimNum=False):
+    def __init__(self, files, exclude=None, skip_dim_check=None,
+                 require_dim_num=False):
         """
         Open a Dataset spanning multiple files sharing common dimensions but
         containing different record variables, making it look as if it was a
@@ -209,8 +209,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
         Usage:
 
-        nc = MFDatasetCommonDims(files, exclude=[], skipDimCheck=[],
-                                 requireDimNum=False)
+        nc = MFDatasetCommonDims(files, exclude=[], skip_dim_check=[],
+                                 require_dim_num=False)
 
         @param files: either a sequence of netCDF files or a string with a
         wildcard (converted to a sorted list of files using glob)  The first file
@@ -223,22 +223,22 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         the 'master' file (e.g. a file with only surface and no upper air
         fields). They may *not* contain any other dimension as the master.
         Exactly the same dimensions in every file can be forced by setting
-        requireDimNum to True.
+        require_dim_num to True.
 
         @param exclude: A list of variable names to exclude from aggregation.
         Default is an empty list.
-        @param skipDimCheck: Only use this parameter if you know what you are
+        @param skip_dim_check: Only use this parameter if you know what you are
         doing. Each dimension in this list of dimension names is not checked
         against the master dimension. Use this parameter as a workaround for
         numerical inaccuracies when opening NetCDF files converted from mixed
         GRIB1/2 files. (mr 03Aug2012)
-        @param requireDimNum: see above.
+        @param require_dim_num: see above.
         """
         # Open the master file in the base class, so that the CDFMF instance
         # can be used like a CDF instance.
 
         exclude = exclude or []
-        skipDimCheck = skipDimCheck or []
+        skip_dim_check = skip_dim_check or []
         if isinstance(files, str):
             files = sorted(glob.glob(files))
 
@@ -280,7 +280,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
             # Make sure dimension of new dataset are contained in the master.
             for dimName in part.dimensions:
                 # (..except those that shall not be tested..)
-                if dimName not in skipDimCheck:
+                if dimName not in skip_dim_check:
                     if dimName not in masterDims:
                         raise IOError("dimension '{}' not defined in master '{}'".format(dimName, master))
                     if dimName not in part.variables:
@@ -290,7 +290,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                         raise IOError("dimension '{}' differs in master '{}' and "
                                       "file '{}'".format(dimName, master, f))
 
-            if requireDimNum:
+            if require_dim_num:
                 if len(part.dimensions) != len(masterDims):
                     raise IOError("number of dimensions not consistent in master "
                                   "'{}' and '{}'".format(master, f))
