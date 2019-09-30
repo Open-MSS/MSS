@@ -37,7 +37,8 @@ DEFAULT_PERFORMANCE = {
     "visible": False,
     "takeoff_weight": 0,
     "takeoff_time": QtCore.QDateTime.currentDateTimeUtc(),
-    "fuel": 0
+    "fuel": 0,
+    "ceiling_alt": [410],
 }
 
 
