@@ -58,16 +58,20 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         super(MSS_SV_OptionsDialog, self).__init__(parent)
         self.setupUi(self)
 
-        default_settings_dict = {"vertical_extent": (1050, 180),
-                                 "vertical_axis": "pressure",
-                                 "flightlevels": [300, 320, 340],
-                                 "draw_flightlevels": True,
-                                 "draw_flighttrack": True,
-                                 "fill_flighttrack": True,
-                                 "label_flighttrack": True,
-                                 "colour_ft_vertices": (0, 0, 0, 0),
-                                 "colour_ft_waypoints": (0, 0, 0, 0),
-                                 "colour_ft_fill": (0, 0, 0, 0)}
+        default_settings_dict = {
+            "vertical_extent": (1050, 180),
+            "vertical_axis": "pressure",
+            "flightlevels": [300, 320, 340],
+            "draw_flightlevels": True,
+            "draw_flighttrack": True,
+            "fill_flighttrack": True,
+            "label_flighttrack": True,
+            "colour_ft_vertices": (0, 0, 0, 0),
+            "colour_ft_waypoints": (0, 0, 0, 0),
+            "colour_ft_fill": (0, 0, 0, 0),
+            "draw_ceiling": True,
+            "colour_ceiling": (0.1, 0.5, 0.1, 0),
+        }
         suffixes = [' hpa', ' km', ' hft']
         if settings_dict is not None:
             default_settings_dict.update(settings_dict)
@@ -94,10 +98,12 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
         self.cbFillFlightTrack.setChecked(settings_dict["fill_flighttrack"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
+        self.cbDrawCeiling.setChecked(settings_dict["draw_ceiling"])
 
         for button, ids in [(self.btFillColour, "colour_ft_fill"),
                             (self.btWaypointsColour, "colour_ft_waypoints"),
-                            (self.btVerticesColour, "colour_ft_vertices")]:
+                            (self.btVerticesColour, "colour_ft_vertices"),
+                            (self.btCeilingColour, "colour_ceiling")]:
             palette = QtGui.QPalette(button.palette())
             colour = QtGui.QColor()
             colour.setRgbF(*settings_dict[ids])
@@ -109,6 +115,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.btFillColour.clicked.connect(functools.partial(self.setColour, "ft_fill"))
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
+        self.btCeilingColour.clicked.connect(functools.partial(self.setColour, "ceiling"))
 
         self.btAdd.clicked.connect(self.addItem)
         self.btDelete.clicked.connect(self.deleteSelected)
@@ -136,6 +143,8 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             button = self.btVerticesColour
         elif which == "ft_waypoints":
             button = self.btWaypointsColour
+        elif which == "ceiling":
+            button = self.btCeilingColour
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
@@ -192,6 +201,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "vertical_extent": (float(self.sbPbot.value()), float(self.sbPtop.value())),
             "vertical_axis": self.cbVerticalAxis.currentText(),
             "flightlevels": self.get_flight_levels(),
+            "draw_ceiling": self.cbDrawCeiling.isChecked(),
             "draw_flightlevels": self.cbDrawFlightLevels.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "fill_flighttrack": self.cbFillFlightTrack.isChecked(),
@@ -201,7 +211,9 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "colour_ft_waypoints":
                 QtGui.QPalette(self.btWaypointsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_ft_fill":
-                QtGui.QPalette(self.btFillColour.palette()).color(QtGui.QPalette.Button).getRgbF()
+                QtGui.QPalette(self.btFillColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
+            "colour_ceiling":
+                QtGui.QPalette(self.btCeilingColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
         }
         return settings_dict
 

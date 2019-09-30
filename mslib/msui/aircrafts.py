@@ -26,6 +26,8 @@
 """
 
 import bisect
+import logging
+
 import numpy as np
 
 AIRCRAFT_DUMMY = {
@@ -34,7 +36,8 @@ AIRCRAFT_DUMMY = {
     "fuel": 35000,
     "climb": [[0.00, 0.0, 0.0, 0.0, 0.0]],
     "descent": [[0.00, 0.0, 0.0, 0.0, 0.0]],
-    "cruise": [[0.00, 0.00, 400, 2900.00]]
+    "cruise": [[0.00, 0.00, 400, 2900.00]],
+    "ceiling": [410],
 }
 
 
@@ -51,6 +54,7 @@ class SimpleAircraft(object):
         self._climb = self._setup(data["climb"])
         self._descent = self._setup(data["descent"])
         self._cruise = self._setup(data["cruise"])
+        self._ceiling_poly = np.asarray(data.get("ceiling", [410]))[::-1]
 
     def _setup(self, data):
         data = np.asarray(data)
@@ -107,7 +111,7 @@ class SimpleAircraft(object):
 
         Args:
             altitude:     altitude in ft to climb to
-            grossweight: total weight of the aircraft in lbs
+            grossweight:  total weight of the aircraft in lbs
         """
         return self._interpolate(self._climb, altitude, grossweight)
 
@@ -118,7 +122,7 @@ class SimpleAircraft(object):
 
         Args:
             altitude:     altitude in ft to climb to
-            grossweight: total weight of the aircraft in lbs
+            grossweight:  total weight of the aircraft in lbs
         """
         return self._interpolate(self._cruise, altitude, grossweight)
 
@@ -130,6 +134,22 @@ class SimpleAircraft(object):
 
         Args:
             altitude:     altitude in ft to climb to
-            grossweight: total weight of the aircraft in lbs
+            grossweight:  total weight of the aircraft in lbs
         """
         return self._interpolate(self._descent, altitude, grossweight)
+
+    def get_ceiling_altitude(self, grossweight):
+        """
+        Ceiling altitude of aircraft for given weight [lbs]. Computed by
+        a polynomial with arbitray number of terms.
+
+        Args:
+            grossweight:  total weight of the aircraft in lbs
+        """
+        if hasattr(self, "_ceiling_poly"):
+            maxFL = int(np.polyval(self._ceiling_poly, grossweight))
+        else:
+            logging.error("No data stored for computation of ceiling altitude. "
+                          "Please reload performance data from JSON.")
+            maxFL = 4000
+        return maxFL

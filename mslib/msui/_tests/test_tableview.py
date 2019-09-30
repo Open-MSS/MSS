@@ -96,7 +96,7 @@ class Test_TableView(object):
         self.window.waypoints_model.dataChanged.emit(
             self.window.waypoints_model.index(0, 0), self.window.waypoints_model.index(0, 0))
         self.window.resizeColumns()
-        assert self.window.waypoints_model.columnCount() == 13
+        assert self.window.waypoints_model.columnCount() == 14
         visible = dict(DEFAULT_PERFORMANCE)
         visible["visible"] = True
         self.window.waypoints_model.performance_settings = visible
@@ -104,7 +104,7 @@ class Test_TableView(object):
         self.window.waypoints_model.dataChanged.emit(
             self.window.waypoints_model.index(0, 0), self.window.waypoints_model.index(0, 0))
         self.window.resizeColumns()
-        assert self.window.waypoints_model.columnCount() == 13
+        assert self.window.waypoints_model.columnCount() == 14
         # todo this does not check that actually something happens
 
     def test_insert_point(self):
