@@ -74,6 +74,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.addProject.clicked.connect(self.add_project_handler)
         self.addUser.clicked.connect(self.add_user_handler)
         self.export_2.clicked.connect(self.handle_export)
+        self.connectMscolab.clicked.connect(self.connect_handler)
 
         # int to store active pid
         self.active_pid = None
@@ -96,9 +97,34 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.disable_action_buttons()
         # set data dir, uri
         self.data_dir = data_dir
-        self.mscolab_server_url = mscolab_server_url
+        self.mscolab_server_url = None
         # autosave status
         self.autosave_status = None
+    
+    def connect_handler(self):
+        try:
+            url = self.url.text()
+            r = requests.get(url)
+            if url == self.mscolab_server_url:
+                return
+            if r.text == "Mscolab server":
+                # assign new url to self.mscolab_server_url
+                self.mscolab_server_url = url
+                self.status.setText("Status: connected")
+                self.loginButton.setEnabled(True)
+                self.addUser.setEnabled(True)
+            return
+        except requests.exceptions.ConnectionError:
+            logging.debug("mscolab server isn't active")
+        except requests.exceptions.InvalidSchema:
+            logging.debug("invalid schema of url")
+        except requests.exceptions.InvalidURL:
+            logging.debug("invalid url")
+        except Exception as e:
+            logging.debug("Error {}".format(str(e)))
+        # inform user that url is invalid
+        pass
+        
 
     def handle_export(self):
         # ToDo when autosave mode gets upgraded, have to fetch from remote
@@ -120,6 +146,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.projWindow.setEnabled(False)
         self.autoSave.setEnabled(False)
         self.export_2.setEnabled(False)
+        # disabling login, add user button. they are enabled when url is connected
+        self.loginButton.setEnabled(False)
+        self.addUser.setEnabled(False)
 
     def add_project_handler(self):
         if self.token is None:
