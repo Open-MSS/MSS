@@ -58,6 +58,7 @@ requirements:
     - passlib
     - gitpython
     - psycopg2
+    - validate_email
 
 test:
   imports:
