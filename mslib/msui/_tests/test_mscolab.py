@@ -77,8 +77,19 @@ class Test_Mscolab(object):
         assert self.window.loggedInWidget.isVisible() is False
         assert self.window.loginWidget.isVisible() is True
 
+    def test_disconnect(self):
+        self._connect_to_mscolab()
+        QtTest.QTest.mouseClick(self.window.disconnectMscolab, QtCore.Qt.LeftButton)
+        assert self.window.mscolab_server_url is None
+
+    def _connect_to_mscolab(self):
+        self.window.url.setText("http://localhost:8084")
+        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        time.sleep(0.5)
+
     def _login(self):
         # login
+        self._connect_to_mscolab()
         self.window.emailid.setText('a')
         self.window.password.setText('a')
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
