@@ -73,6 +73,9 @@ Add developer packages for running tests, activate your env and run::
   $ conda install --file requirements.d/development.txt
 
 On linux install `xvfb` from your linux package manager. This is used to run tests on a virtual display.
+If you don't want tests redirected to the xvfb display just setup an environment variable::
+
+ $ export TESTS_VISIBLE=TRUE
 
 
 Setup demodata

@@ -28,6 +28,7 @@ from __future__ import print_function
 
 
 import imp
+import os
 import sys
 import multiprocessing
 import time
@@ -40,12 +41,13 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import app, initialize_managers, start_server
 from mslib.mscolab.demodata import create_test_data
 
-try:
-    # package currently on pypi only
-    # ToDo conda-forge package similiar to pykml
-    from pyvirtualdisplay import Display
-except ImportError:
+if os.getenv("TESTS_VISIBLE") is None or os.getenv("TESTS_VISIBLE") == "TRUE":
     Display = None
+else:
+    try:
+        from pyvirtualdisplay import Display
+    except ImportError:
+        Display = None
 
 if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
     print('\n configure testdata')
