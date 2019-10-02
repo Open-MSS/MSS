@@ -55,7 +55,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.setupUi(self)
 
         self.view = view
-        self.load = Loader(MSS_CONFIG_PATH)
+        self.load = Loader(MSS_CONFIG_PATH, verbose=False)
         self.planets = self.load('de421.bsp')
         self.timescale = self.load.timescale()
 
