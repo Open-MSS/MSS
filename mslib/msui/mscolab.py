@@ -39,6 +39,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import topview, sideview, tableview
 from mslib.msui import socket_control as sc
 from mslib.msui import mscolab_project as mp
+from mslib.utils import load_settings_qsettings, save_settings_qsettings
 
 import logging
 import requests
@@ -75,6 +76,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.addUser.clicked.connect(self.add_user_handler)
         self.export_2.clicked.connect(self.handle_export)
         self.connectMscolab.clicked.connect(self.connect_handler)
+        self.disconnectMscolab.clicked.connect(self.disconnect_handler)
 
         # int to store active pid
         self.active_pid = None
@@ -100,20 +102,47 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.mscolab_server_url = None
         # autosave status
         self.autosave_status = None
-    
+
+        # disabling login, add user button. they are enabled when url is connected
+        self.loginButton.setEnabled(False)
+        self.addUser.setEnabled(False)
+        self.disconnectMscolab.setEnabled(False)
+
+        # fill value of mscolab url if found in QSettings storage
+        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None})
+        if self.settings['mscolab_url'] is not None:
+            self.url.setText(self.settings['mscolab_url'])
+
+    def disconnect_handler(self):
+        self.logout()
+        # enable and disable right buttons
+        self.disconnectMscolab.setEnabled(False)
+        self.loginButton.setEnabled(False)
+        self.addUser.setEnabled(False)
+        self.connectMscolab.setEnabled(True)
+        # set mscolab_server_url to None
+        self.mscolab_server_url = None
+
+    def show_info(self, text):
+        self.error_dialog = QtWidgets.QErrorMessage()
+        self.error_dialog.showMessage(text)
+
     def connect_handler(self):
         try:
             url = self.url.text()
             r = requests.get(url)
-            if url == self.mscolab_server_url:
-                return
             if r.text == "Mscolab server":
                 # assign new url to self.mscolab_server_url
                 self.mscolab_server_url = url
                 self.status.setText("Status: connected")
+                # enable and disable right buttons
                 self.loginButton.setEnabled(True)
                 self.addUser.setEnabled(True)
-            return
+                self.disconnectMscolab.setEnabled(True)
+                self.connectMscolab.setEnabled(False)
+                self.settings["mscolab_url"] = url
+                save_settings_qsettings('mscolab', self.settings)
+                return
         except requests.exceptions.ConnectionError:
             logging.debug("mscolab server isn't active")
         except requests.exceptions.InvalidSchema:
@@ -123,8 +152,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         except Exception as e:
             logging.debug("Error {}".format(str(e)))
         # inform user that url is invalid
-        pass
-        
+        self.show_info("Invalid url, please try again!")
 
     def handle_export(self):
         # ToDo when autosave mode gets upgraded, have to fetch from remote
@@ -146,9 +174,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.projWindow.setEnabled(False)
         self.autoSave.setEnabled(False)
         self.export_2.setEnabled(False)
-        # disabling login, add user button. they are enabled when url is connected
-        self.loginButton.setEnabled(False)
-        self.addUser.setEnabled(False)
 
     def add_project_handler(self):
         if self.token is None:
