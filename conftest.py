@@ -29,6 +29,9 @@ from __future__ import print_function
 
 import imp
 import sys
+# Disable pyc files
+sys.dont_write_bytecode = True
+
 import multiprocessing
 import time
 import pytest
