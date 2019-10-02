@@ -138,8 +138,14 @@ class Test_MscolabProject(object):
         QtTest.QTest.mouseClick(self.proj_window.modify, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
+    def _connect_to_mscolab(self):
+        self.window.url.setText("http://localhost:8084")
+        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        time.sleep(0.5)
+
     def _login(self):
         # login
+        self._connect_to_mscolab()
         self.window.emailid.setText('a')
         self.window.password.setText('a')
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
