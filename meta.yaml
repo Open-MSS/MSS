@@ -29,7 +29,6 @@ requirements:
     - chameleon
     - execnet
     - isodate
-    - jplephem
     - lxml
     - netcdf4
     - hdf4
@@ -40,8 +39,7 @@ requirements:
     - qt 5.*
     - requests
     - scipy
-    - sgp4
-    - skyfield >=1.10
+    - skyfield >=1.12
     - six
     - tk
     - owslib
