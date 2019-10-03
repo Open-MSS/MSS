@@ -44,7 +44,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import app, initialize_managers, start_server
 from mslib.mscolab.demodata import create_test_data
 
-if os.getenv("TESTS_VISIBLE") is None or os.getenv("TESTS_VISIBLE") == "TRUE":
+if os.getenv("TESTS_VISIBLE") == "TRUE":
     Display = None
 else:
     try:
