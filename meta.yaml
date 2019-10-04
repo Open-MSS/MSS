@@ -30,26 +30,24 @@ requirements:
     - chameleon
     - execnet
     - isodate
-    - jplephem
     - lxml
     - netcdf4
     - hdf4
-    - pillow 5.*
     - pint
+    - pillow >=5,<6
     - pytz
     - pyqt 5.*
     - qt 5.*
     - requests
     - scipy
-    - sgp4
-    - skyfield >=1.10
+    - skyfield >=1.12
     - tk
     - owslib
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
     - matplotlib
-    - proj4
+    - proj4 <6
     - flask
     - flask-httpauth
     - werkzeug

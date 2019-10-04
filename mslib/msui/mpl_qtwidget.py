@@ -630,12 +630,9 @@ class MplSideViewCanvas(MplCanvas):
         self.checknconvert()
 
         ax = self.ax
-        self.fig.subplots_adjust(left=0.08, right=0.96,
-                                 top=0.9, bottom=0.14)
+        self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
 
         ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
-        ax.set_xlim(0, 10)
-
         ax.set_yscale("log")
 
         # Set axis limits and draw grid for major ticks.
