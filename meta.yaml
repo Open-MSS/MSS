@@ -29,7 +29,6 @@ requirements:
     - chameleon
     - execnet
     - isodate
-    - jplephem
     - lxml
     - netcdf4
     - hdf4
