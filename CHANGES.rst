@@ -1,6 +1,23 @@
 Changelog
 =========
 
+Version 1.8.3
+-------------
+
+Bug Fixes:
+  - Visual distortion after changing side view settings, #464
+  - MSS ignores skip variable dimension check, #461
+  - tangent points not properly calculated at longitudes != 0, #451
+  - disable progressbar in skyfield Loader, #449
+  - TopView hang upon switching projection under certain conditions, #445
+  - Top view crashes under windows 7 when started from start-menu, #444
+  - barb plots show barbs outside range of valid data, #443
+  - crash upon switch from pressure altitude to pressure, #439
+  - Zooming in TopView does not update properly, #437
+
+Other Changes:
+  - we contributed to the conda-forge feedstock of skyfield, #447
+
 Version 1.8.2
 -------------
 
