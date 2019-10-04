@@ -32,13 +32,14 @@ requirements:
     - lxml
     - netcdf4
     - hdf4
-    - pillow 5.*
+    - pillow >=5,<6
     - python-dateutil
     - pytz
     - pyqt 5.*
     - qt 5.*
     - requests
     - scipy
+    - sgp4
     - skyfield >=1.12
     - six
     - tk
@@ -47,7 +48,7 @@ requirements:
     - fs_filepicker
     - cftime >=1.0.1
     - matplotlib ==3.0.2
-    - proj4
+    - proj4 <6
     - future
     - flask
     - flask-httpauth
