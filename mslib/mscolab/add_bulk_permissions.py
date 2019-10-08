@@ -70,6 +70,10 @@ if __name__ == "__main__":
                 if u is None:
                     logging.info("User {} doesn't exist, skipping entry".format(_username))
                     continue
+                perm_existing = Permission.query.filter_by(u_id=u.id, p_id=p.id).first()
+                if perm_existing:
+                    logging.info("permission exists, skipping entry")
+                    continue
                 perm = Permission(u.id, p.id, permission)
                 db.session.add(perm)
                 db.session.commit()
