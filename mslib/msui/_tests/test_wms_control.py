@@ -550,7 +550,7 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2012-10-17', '2012-10-18', '2012-10-19']
+            ['2012-10-17T00:00:00Z', '2012-10-18T00:00:00Z', '2012-10-19T00:00:00Z']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
             ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
 
@@ -558,7 +558,7 @@ class TestWMSControlWidgetSetupSimple(object):
     def test_xml_time_error(self, mockbox):
         dimext_time_error = """
             <Dimension name="TIME" units="ISO8610"> </Dimension>
-            <Extent name="TIME"> 2012-10-17aT12:00:00Z/2012-10-18T00:00:00Z/PT6H </Extent>"""
+            <Extent name="TIME"> a2012-10-17T12:00:00Z/2012-10-18T00:00:00Z/PT6H </Extent>"""
         testxml = self.xml.format(
             "", self.srs_base, dimext_time_error + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))

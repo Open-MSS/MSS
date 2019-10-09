@@ -28,19 +28,29 @@ from __future__ import print_function
 
 
 import imp
+import os
 import sys
+# Disable pyc files
+sys.dont_write_bytecode = True
+
+import multiprocessing
+import time
 import pytest
 
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
+from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
+from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.server import app, initialize_managers, start_server
+from mslib.mscolab.demodata import create_test_data
 
-
-try:
-    # package currently on pypi only
-    # ToDo conda-forge package similiar to pykml
-    from pyvirtualdisplay import Display
-except ImportError:
+if os.getenv("TESTS_VISIBLE") == "TRUE":
     Display = None
+else:
+    try:
+        from pyvirtualdisplay import Display
+    except ImportError:
+        Display = None
 
 if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
     print('\n configure testdata')
@@ -53,6 +63,9 @@ if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
 imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
 
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
+
+# ToDo refactor
+create_test_data()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -67,6 +80,33 @@ def configure_testsetup(request):
         VIRT_DISPLAY.stop()
     else:
         yield
+
+
+process = None
+
+
+@pytest.fixture(scope="session", autouse=True)
+def start_mscolab_server(request):
+    _app = app
+    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
+    _app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+    _app, sockio, cm, fm = initialize_managers(_app)
+    global process
+    process = multiprocessing.Process(
+        target=start_server,
+        args=(_app, sockio, cm, fm,),
+        kwargs={'port': 8084})
+    process.start()
+    time.sleep(2)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def stop_server(request):
+    """Cleanup a testing directory once we are finished."""
+    def stop_callback():
+        global process
+        process.terminate()
+    request.addfinalizer(stop_callback)
 
 
 @pytest.fixture(scope="class")

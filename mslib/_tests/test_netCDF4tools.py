@@ -58,9 +58,9 @@ class Test_netCDF4tools(object):
         self.ncfile_al.close()
 
     def test_identify_variable(self):
-        checklist = [('time', u'time'),
-                     ('latitude', u'lat'),
-                     ('longitude', u'lon'),
+        checklist = [('time', 'time'),
+                     ('latitude', 'lat'),
+                     ('longitude', 'lon'),
                      ('atmosphere_hybrid_pressure_coordinate', 'hyam'),
                      ('atmosphere_hybrid_height_coordinate', 'hybm'),
                      ('cloud_area_fraction_in_atmosphere_layer', 'cloud_area_fraction_in_atmosphere_layer')]
@@ -70,7 +70,7 @@ class Test_netCDF4tools(object):
 
     def test_identify_CF_coordhybrid(self):
         lat_name, lat_var, lon_name, lon_var = identify_CF_lonlat(self.ncfile_ml)
-        assert (lat_name, lon_name) == (u'lat', u'lon')
+        assert (lat_name, lon_name) == ('lat', 'lon')
         assert lat_var.size == 40
         assert lon_var.size == 100
 

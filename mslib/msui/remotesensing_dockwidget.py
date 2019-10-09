@@ -25,17 +25,17 @@
     limitations under the License.
 """
 
-from __future__ import division
+import collections
 
+from matplotlib.collections import LineCollection
+from matplotlib.colors import BoundaryNorm, ListedColormap
 import numpy as np
+from skyfield.api import Loader, Topos, utc
+
 from mslib.msui.constants import MSS_CONFIG_PATH
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
 from mslib.utils import jsec_to_datetime, datetime_to_jsec, get_distance, rotate_point, fix_angle
-from matplotlib.collections import LineCollection
-from matplotlib.colors import BoundaryNorm, ListedColormap
-import collections
-from skyfield.api import Loader, Topos, utc
 
 
 EARTH_RADIUS = 6371.
@@ -55,7 +55,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.setupUi(self)
 
         self.view = view
-        self.load = Loader(MSS_CONFIG_PATH)
+        self.load = Loader(MSS_CONFIG_PATH, verbose=False)
         self.planets = self.load('de421.bsp')
         self.timescale = self.load.timescale()
 
@@ -284,9 +284,9 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         tp_dir = (np.array(los).T * dist).T
 
-        tps = [(x0 + tp_x, y0 + tp_y) for
+        tps = [(x0 + tp_x, y0 + tp_y, y0) for
                ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lins, tp_dir)]
-        tps = [(x0 / np.cos(np.deg2rad(y0)), y0) for (x0, y0) in tps]
+        tps = [(x0 / np.cos(np.deg2rad(yp)), y0) for (x0, y0, yp) in tps]
         return tps
 
     def direction_coordinates(self, lon_lin, lat_lin):

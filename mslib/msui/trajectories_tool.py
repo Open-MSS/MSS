@@ -26,7 +26,6 @@
     limitations under the License.
 """
 
-from builtins import str
 import logging
 import os
 
@@ -126,7 +125,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             # nas_file = _fs.open(_name, "wb")
             nas_file = os.path.expanduser(filename)
 
-            logging.debug(u"Loading flight track data from '%s'", nas_file)
+            logging.debug("Loading flight track data from '%s'", nas_file)
 
             # Add the flight track to the data tree.
             try:
@@ -138,7 +137,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
                 self.tvVisibleElements.resizeColumnToContents(0)
             except RuntimeError:
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("Trajectory Tool"), self.tr(u"ERROR:\nCould not read file\n{}".format(nas_file)))
+                    self, self.tr("Trajectory Tool"), self.tr("ERROR:\nCould not read file\n{}".format(nas_file)))
 
     def loadTrajectories(self):
         """Slot for the 'Open Trajectories..' menu entry. Opens a QFileDialog
@@ -148,7 +147,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         traj_dir = get_existing_directory(
             self, "Open Lagranto Output Directory", self.last_save_directory)
         if traj_dir is not None:
-            logging.debug(u"Loading trajectory data from '%s'", traj_dir)
+            logging.debug("Loading trajectory data from '%s'", traj_dir)
 
             # Test if selected directory contains subdirectories (as is
             # the case with ensemble runs). If yes,
@@ -297,7 +296,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             colour = "blue"
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug(u"Changing colour of element %s",
+            logging.debug("Changing colour of element %s",
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing colour of selected elements")
@@ -316,7 +315,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             lineStyle = "-"
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug(u"Changing line style of element %s",
+            logging.debug("Changing line style of element %s",
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing line style of selected elements")
@@ -324,7 +323,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             self.traj_item_tree.changeItemGxProperty_list(indices, "general",
                                                           "linestyle", lineStyle)
         except Exception as ex:
-            QtWidgets.QMessageBox.warning(self, self.tr('item line style'), self.tr(u"{} {}".format(type(ex), ex)))
+            QtWidgets.QMessageBox.warning(self, self.tr('item line style'), self.tr("{} {}".format(type(ex), ex)))
 
     def setCurrentItemLineWidth(self):
         """Informs traj_item_tree to change the line width of the selected
@@ -333,7 +332,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         lineWidth = self.sbLineWidth.value()
         indices = self.selectedMapElements()
         if len(indices) == 1:
-            logging.debug(u"Changing line thickness of element %s",
+            logging.debug("Changing line thickness of element %s",
                           indices[0].internalPointer().getName())
         else:
             logging.debug("Changing line thickness of selected elements")
@@ -341,7 +340,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             self.traj_item_tree.changeItemGxProperty_list(indices, "general",
                                                           "linewidth", lineWidth)
         except Exception as ex:
-            QtWidgets.QMessageBox.warning(self, self.tr('item line width'), self.tr(u"{} {}".format(type(ex), ex)))
+            QtWidgets.QMessageBox.warning(self, self.tr('item line width'), self.tr("{} {}".format(type(ex), ex)))
 
     def setCurrentItemTimeMarker(self):
         """Set the given time markers for the selected item and all its
@@ -382,7 +381,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
             #
             # Now set the time marker for the current item.
             try:
-                logging.debug(u"Setting time marker for element %s",
+                logging.debug("Setting time marker for element %s",
                               item.getName())
                 setInterval = self.traj_item_tree.setTimeMarker(index, interval,
                                                                 emit_change=False)
@@ -399,7 +398,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
                     first_index = index
                 last_index = index
             except Exception as ex:
-                QtWidgets.QMessageBox.warning(self, self.tr("Time marker"), self.tr(u"{} {}".format(type(ex), ex)))
+                QtWidgets.QMessageBox.warning(self, self.tr("Time marker"), self.tr("{} {}".format(type(ex), ex)))
 
         self.traj_item_tree.emitChange(first_index, last_index, mode="MARKER_CHANGE")
 
@@ -411,14 +410,14 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         if view_name != "None" and len(selection) > 0:
             view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
                          self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
-            logging.debug(u"Plotting selected elements in view <%s>", view_name)
+            logging.debug("Plotting selected elements in view <%s>", view_name)
             # Connect the trajectory tree to the view.
             view_window = view_item.window
             view = view_window.getView()
             self.traj_item_tree.setItemVisibleInView_list(
                 selection, view_item.window, True)
             if view_window not in self.connected_views:
-                logging.debug(u"Connecting to view window <%s>",
+                logging.debug("Connecting to view window <%s>",
                               view_window.identifier)
                 self.connected_views.append(view_window)
                 view.set_trajectory_model(self.traj_item_tree)
@@ -430,7 +429,7 @@ class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
         if view_name != "None":
             view_item = (self.listviews.findItems(view_name, QtCore.Qt.MatchContains) +
                          self.listtools.findItems(view_name, QtCore.Qt.MatchContains))[0]
-            logging.debug(u"Removing selected elements from view <%s>", view_name)
+            logging.debug("Removing selected elements from view <%s>", view_name)
             self.traj_item_tree.setItemVisibleInView_list(
                 self.selectedMapElements(), view_item.window, False)
 

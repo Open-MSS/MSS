@@ -44,14 +44,14 @@ versions for dependencies (On the Anaconda Prompt on Windows, you have to
 leave out the 'source' here and below). ::
 
    $ conda create -n mssenv mss python=3
-   $ source activate mssenv
+   $ conda activate mssenv
    $ mss
 
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If an existing environment shall be updated, it is important
 to update all packages in this environment. ::
 
-   $ source activate mssenv
+   $ conda activate mssenv
    $ conda update --all
    $ mss
 

@@ -26,9 +26,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-
 from datetime import datetime
 
 import logging
@@ -39,10 +36,9 @@ import numpy as np
 
 from mslib import netCDF4tools
 from mslib import utils
-from future.utils import with_metaclass
 
 
-class MSSPlotDriver(with_metaclass(ABCMeta, object)):
+class MSSPlotDriver(metaclass=ABCMeta):
     """
     Abstract super class for implementing driver classes that provide
     access to the MSS data server.
@@ -109,8 +105,8 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         fc_step = fc_time - init_time
         fc_step = fc_step.days * 24 + (fc_step.seconds // 3600)
         self.fc_time = fc_time
-        logging.debug(u"\trequested initialisation time %s", init_time)
-        logging.debug(u"\trequested forecast valid time %s (step %s hrs)", fc_time, fc_step)
+        logging.debug("\trequested initialisation time %s", init_time)
+        logging.debug("\trequested forecast valid time %s (step %s hrs)", fc_time, fc_step)
 
         # Check if a dataset is open and if it contains the requested times.
         # (a dataset will only be open if the used layer has not changed,
@@ -118,9 +114,9 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         if self.dataset is not None:
             logging.debug("checking on open dataset.")
             if self.init_time == init_time:
-                logging.debug(u"\tinitialisation time ok (%s).", init_time)
+                logging.debug("\tinitialisation time ok (%s).", init_time)
                 if fc_time in self.times:
-                    logging.debug(u"\tforecast valid time contained (%s).", fc_time)
+                    logging.debug("\tforecast valid time contained (%s).", fc_time)
                     return
             logging.debug("need to re-open input files.")
             self.dataset.close()
@@ -129,23 +125,15 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         # Determine the input files from the required variables and the
         # requested time:
 
-        # Get a list of the available data files. The path to the data files
-        # is provided by the NWPDataAccess object in self.data_access.
-        available_files = self.data_access.get_all_datafiles()
-
         # Create the names of the files containing the required parameters.
         filenames = []
-        for vartype, var in self.plot_object.required_datafields:
-            filename = self.data_access.get_filename(var, vartype,
-                                                     init_time, fc_time,
-                                                     fullpath=True)
-            short_filename = os.path.basename(filename)
+        for vartype, var, _ in self.plot_object.required_datafields:
+            filename = self.data_access.get_filename(
+                var, vartype, init_time, fc_time, fullpath=True)
             if filename not in filenames:
                 filenames.append(filename)
-            logging.debug(u"\tvariable '%s' requires input file '%s'", var, short_filename)
-            if short_filename not in available_files:
-                logging.error(u"ERROR: file '%s' does not exist", short_filename)
-                raise IOError(u"file '%s' does not exist", short_filename)
+            logging.debug("\tvariable '%s' requires input file '%s'",
+                          var, os.path.basename(filename))
 
         if len(filenames) == 0:
             raise ValueError("no files found that correspond to the specified "
@@ -169,7 +157,7 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         #     raise ValueError("wrong initialisation time in input")
 
         if fc_time not in times:
-            msg = u"Forecast valid time '{}' is not available.".format(fc_time)
+            msg = "Forecast valid time '{}' is not available.".format(fc_time)
             logging.error(msg)
             dataset.close()
             raise ValueError(msg)
@@ -178,7 +166,7 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         try:
             lat_data, lon_data, lat_order = netCDF4tools.get_latlon_data(dataset)
         except Exception as ex:
-            logging.error(u"ERROR: %s %s", type(ex), ex)
+            logging.error("ERROR: %s %s", type(ex), ex)
             dataset.close()
             raise
 
@@ -208,11 +196,21 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """
         self.data_vars = {}
         self.data_units = {}
-        for df_type, df_name in self.plot_object.required_datafields:
+        for df_type, df_name, _ in self.plot_object.required_datafields:
             varname, var = netCDF4tools.identify_variable(self.dataset, df_name, check=True)
             logging.debug("\tidentified variable <%s> for field <%s>", varname, df_name)
             self.data_vars[df_name] = var
             self.data_units[df_name] = getattr(var, "units", None)
+
+    def have_data(self, plot_object, init_time, valid_time):
+        """Checks if this driver has the required data to do the plot
+
+        This inquires the contained data access class if data is available for
+        all required data fields for the specified times.
+        """
+        return all(
+            self.data_access.have_data(var, vartype, init_time, valid_time)
+            for vartype, var in plot_object.required_datafields)
 
     @abstractmethod
     def set_plot_parameters(self, plot_object, init_time=None, valid_time=None,
@@ -302,6 +300,16 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """
         return self.data_access.get_init_times()
 
+    def get_elevations(self, vert_type):
+        """See ECMWFDataAccess.get_elevations().
+        """
+        return self.data_access.get_elevations(vert_type)
+
+    def get_elevation_units(self, vert_type):
+        """See ECMWFDataAccess.get_elevation().
+        """
+        return self.data_access.get_elevation_units(vert_type)
+
     def get_all_valid_times(self, variable, vartype):
         """See ECMWFDataAccess.get_all_valid_times().
         """
@@ -311,6 +319,16 @@ class MSSPlotDriver(with_metaclass(ABCMeta, object)):
         """See ECMWFDataAccess.get_valid_times().
         """
         return self.data_access.get_valid_times(variable, vartype, init_time)
+
+    def uses_inittime_dimension(self):
+        """Returns whether this driver uses the WMS inittime dimensions.
+        """
+        return self.data_access.uses_inittime_dimension()
+
+    def uses_validtime_dimension(self):
+        """Returns whether this layer uses the WMS time dimensions.
+        """
+        return self.data_access.uses_validtime_dimension()
 
 
 class VerticalSectionDriver(MSSPlotDriver):
@@ -461,8 +479,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         # Determine the leftmost longitude in the plot.
         left_longitude = self.lons.min()
-        logging.debug(u"shifting data grid to leftmost longitude in path "
-                      u"(%.2f)..", left_longitude)
+        logging.debug("shifting data grid to leftmost longitude in path "
+                      "(%.2f)..", left_longitude)
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.

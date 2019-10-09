@@ -26,8 +26,6 @@
     limitations under the License.
 """
 
-from builtins import str
-
 import logging
 import os
 from datetime import datetime, timedelta
@@ -136,7 +134,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """
         filename = get_open_filename(
             self, "Open NASA satellite overpass prediction",
-            os.path.join(os.path.dirname(self.leFile.text())), u"All Files (*)",
+            os.path.join(os.path.dirname(self.leFile.text())), "All Files (*)",
             pickertag="filepicker_satellitetrack")
         if not filename:
             return
@@ -156,16 +154,17 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         try:
             overpass_segments = read_nasa_satellite_prediction(filename)
         except (IOError, OSError, ValueError) as ex:
-            logging.error(u"Problem accessing '%s' file", filename)
+            logging.error("Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
-                                           self.tr(u"ERROR:\n{}\n{}".format(type(ex), ex)))
+                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
         else:
             logging.debug("read %i segments", len(overpass_segments))
 
             self.cbSatelliteOverpasses.clear()
-            items = [u"{} to {}".format(str(seg["utc"][0]), str(seg["utc"][-1]))
+            items = ["{} to {}".format(str(seg["utc"][0]), str(seg["utc"][-1]))
                      for seg in overpass_segments]
             items.insert(0, "None (select item to plot)")
+            items.insert(1, "All tracks")
             self.cbSatelliteOverpasses.addItems(items)
 
             self.overpass_segments = overpass_segments
@@ -173,10 +172,12 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
     def plot_overpass_track(self, index):
         """
         """
-        index -= 1
+        index -= 2
         logging.debug("plotting satellite overpass #%i", index)
-        segment = None
+        segments = []
         if 0 <= index < len(self.overpass_segments):
-            segment = self.overpass_segments[index]
+            segments = [self.overpass_segments[index]]
+        elif index == -1:
+            segments = self.overpass_segments
         if self.view is not None:
-            self.view.plot_satellite_overpass(segment)
+            self.view.plot_satellite_overpass(segments)

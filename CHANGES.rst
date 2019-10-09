@@ -1,6 +1,50 @@
 Changelog
 =========
 
+Version 1.8.3
+-------------
+
+Bug Fixes:
+  - Visual distortion after changing side view settings, #464
+  - MSS ignores skip variable dimension check, #461
+  - tangent points not properly calculated at longitudes != 0, #451
+  - disable progressbar in skyfield Loader, #449
+  - TopView hang upon switching projection under certain conditions, #445
+  - Top view crashes under windows 7 when started from start-menu, #444
+  - barb plots show barbs outside range of valid data, #443
+  - crash upon switch from pressure altitude to pressure, #439
+  - Zooming in TopView does not update properly, #437
+
+Other Changes:
+  - we contributed to the conda-forge feedstock of skyfield, #447
+
+Version 1.8.2
+-------------
+
+Bug Fixes:
+  - Rework ylabels to remove crash for low pressures, #439
+  - mss server requires long time to provide capabilities document, #432
+
+Other Changes:
+  - hint in docs for mod_wsgi, #415
+
+
+Version 1.8.1
+-------------
+
+Bug Fixes:
+  - SideView options allow for illegal vertical range, #430
+  - mss server raises error once, when asked for available, but previously unknown data, #425
+  - epsg code support warnings too annoying in practice, #421
+  - GetCapabilities&version= version string ignores, #411
+  - Runtime Error for Url without parameters, #410
+  - Improve wsgi documentation, #409
+  - fixate matplotlib 3.0.2, #408
+
+Other Changes:
+  - improve documentation for demodata, #413
+
+
 Version 1.8.0
 -------------
 

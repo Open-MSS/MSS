@@ -147,7 +147,7 @@ Example:
         fname -- file name of the lsl-file, without path (i.e. only 'lsl_...').
         """
 
-        logging.debug(u"Parsing output file '%s'", fname)
+        logging.debug("Parsing output file '%s'", fname)
 
         #
         # Open the lsl text file and read its contents into the list 'lines',
@@ -159,11 +159,11 @@ Example:
 
         #
         # Open and read the metadata file, if existent.
-        metafile = os.path.join(self.lagrantoOutputPath, fname) + u'.meta.pyl'
+        metafile = os.path.join(self.lagrantoOutputPath, fname) + ".meta.pyl"
         _dirname, _name = os.path.split(metafile)
         _fs = open_fs(_dirname)
         if _fs.exists(_name):
-            logging.debug(u"Reading metadata file '%s'", os.path.basename(metafile))
+            logging.debug("Reading metadata file '%s'", os.path.basename(metafile))
             # ToDo example file without UnicodeDecodeError: 'ascii' codec can't decode byte 0xfa in
             # position 1: ordinal not in range(128)
             with _fs.open(_name, "rb") as fileobj:
@@ -172,7 +172,7 @@ Example:
                 duration = pickle.load(fileobj)
 
         else:
-            logging.debug(u"No metadata file '%s' found.", metafile)
+            logging.debug("No metadata file '%s' found.", metafile)
             startCoordinates = None
             startTime = None
             duration = None
@@ -375,7 +375,7 @@ Example:
                 try:
                     time = datetime.datetime.strptime(name[i:i + tflen], tf)
                 except ValueError as er:
-                    logging.error("{} {}".format(er, type(er)))
+                    logging.error("%s %s", er, type(er))
                 else:
                     return time
         return None

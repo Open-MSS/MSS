@@ -28,13 +28,6 @@
 """
 # style definitions should be put in mpl_vsec_styles.py
 
-from __future__ import division
-
-
-from future import standard_library
-standard_library.install_aliases()
-
-
 import PIL.Image
 import io
 import logging
@@ -43,7 +36,9 @@ from abc import abstractmethod
 from xml.dom.minidom import getDOMImplementation
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
 from mslib.mswms import mss_2D_sections
+from mslib.utils import convert_to
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
@@ -54,6 +49,9 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     Abstract Vertical Section Style
     Superclass for all Matplotlib-based vertical section styles.
     """
+
+    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
+    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
     def __init__(self, driver=None):
         """Constructor.
@@ -67,7 +65,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         return ["VERT:LOGP"]
 
     # TODO: the general setup should be a separate class as well
-    def _latlon_logp_setup(self, orography=105000., titlestring=u""):
+    def _latlon_logp_setup(self, orography=105000., titlestring=""):
         """General setup for lat/lon vs. log p vertical cross-sections.
         """
         ax = self.ax
@@ -96,38 +94,15 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Set pressure axis scale to log.
         ax.set_yscale("log")
 
-        # Compute the position of major and minor ticks. Major ticks are labelled.
-        # By default, major ticks are drawn every 100hPa. If p_top < 100hPa,
-        # the distance is reduced to every 10hPa above 100hPa.
-        label_distance = 10000
-        label_bot = self.p_bot - (self.p_bot % label_distance)
-        major_ticks = np.arange(label_bot, self.p_top - 1, -label_distance)
-
-        # .. check step reduction to 10 hPa ..
-        if self.p_top < 10000:
-            major_ticks2 = np.arange(major_ticks[-1], self.p_top - 1,
-                                     -label_distance // 10)
-            len_major_ticks = len(major_ticks)
-            major_ticks = np.resize(major_ticks,
-                                    len_major_ticks + len(major_ticks2) - 1)
-            major_ticks[len_major_ticks:] = major_ticks2[1:]
-
-        labels = ["{:.0f}".format(l / 100.) for l in major_ticks]
-
-        # .. the same for the minor ticks ..
-        p_top_minor = max(label_distance, self.p_top)
-        label_distance_minor = 1000
-        label_bot_minor = self.p_bot - (self.p_bot % label_distance_minor)
-        minor_ticks = np.arange(label_bot_minor, p_top_minor - 1,
-                                -label_distance_minor)
-
-        if self.p_top < 10000:
-            minor_ticks2 = np.arange(minor_ticks[-1], self.p_top - 1,
-                                     -label_distance_minor // 10)
-            len_minor_ticks = len(minor_ticks)
-            minor_ticks = np.resize(minor_ticks,
-                                    len_minor_ticks + len(minor_ticks2) - 1)
-            minor_ticks[len_minor_ticks:] = minor_ticks2[1:]
+        major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
+        minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
+        labels = ["{}".format(int(x / 100.)) if (x / 100.) - int(x / 100.) == 0
+                  else "{}".format(float(x / 100.))
+                  for x in major_ticks]
+        if len(labels) > 20:
+            labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
+        elif len(labels) > 10:
+            labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
 
         # Draw ticks and tick labels.
         ax.set_yticks(minor_ticks, minor=True)
@@ -140,12 +115,13 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax.grid(b=True)
 
         # Plot title (either in image axes or above).
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
-        titlestring = u"{} [{:.0f}..{:.0f} hPa]\nValid: {} (step {:d} hrs from {})".format(
+        titlestring = "{} [{:.0f}..{:.0f} hPa]\nValid: {}".format(
             titlestring, self.p_bot / 100., self.p_top / 100.,
-            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"),
-            time_step_hrs, self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+        if self.uses_inittime_dimension():
+            titlestring += " (step {:.0f} hrs from {})".format(
+                (self.valid_time - self.init_time).total_seconds() / 3600,
+                self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
     @abstractmethod
     def _plot_style(self):
@@ -162,13 +138,19 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         """
         # Check if required data is available.
-        for datatype, dataitem in self.required_datafields:
+        self.data_units = self.driver.data_units.copy()
+        for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
-                raise KeyError(u"required data field '{}' not found".format(dataitem))
+                raise KeyError("required data field '{}' not found".format(dataitem))
+            origunit = self.driver.data_units[dataitem]
+            if dataunit is not None:
+                data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
+                self.data_units[dataitem] = dataunit
+            else:
+                logging.debug("Please add units to plot variables")
 
         # Copy parameters to properties.
         self.data = data
-        self.data_units = self.driver.data_units.copy()
         self.lats = lats
         self.lat_inds = np.arange(len(lats))
         self.lons = lons
@@ -311,8 +293,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             for var in self.data:
                 node = xmldoc.createElement(var)
                 data_shape = self.data[var].shape
-                node.setAttribute("num_levels", u"{}".format(data_shape[0]))
-                node.setAttribute("num_waypoints", u"{}".format(data_shape[1]))
+                node.setAttribute("num_levels", "{}".format(data_shape[0]))
+                node.setAttribute("num_waypoints", "{}".format(data_shape[1]))
 
                 data_str = ""
                 for data_row in self.data[var]:

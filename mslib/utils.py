@@ -26,17 +26,15 @@
     limitations under the License.
 """
 
-from __future__ import division
-
-from past.builtins import basestring
-
 import datetime
+import isodate
 from fs import open_fs, errors
 import json
 import logging
 import netCDF4 as nc
 import numpy as np
 import os
+import pint
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import werkzeug.datastructures
@@ -49,6 +47,38 @@ except ImportError:
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore
+
+UR = pint.UnitRegistry()
+UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
+UR.define("degrees_north = degrees")
+UR.define("degrees_south = -degrees")
+UR.define("degrees_east = degrees")
+UR.define("degrees_west = -degrees")
+UR.define("sigma = dimensionless")
+UR.define("fraction = [] = frac")
+UR.define("percent = 1e-2 fraction")
+UR.define("permille = 1e-3 fraction")
+UR.define("ppm = 1e-6 fraction")
+UR.define("ppmv = 1e-6 fraction")
+UR.define("ppb = 1e-9 fraction")
+UR.define("ppbv = 1e-9 fraction")
+UR.define("ppt = 1e-12 fraction")
+UR.define("pptv = 1e-12 fraction")
+
+
+def parse_iso_datetime(string):
+    try:
+        result = isodate.parse_datetime(string)
+    except isodate.ISO8601Error:
+        result = isodate.parse_date(string)
+        result = datetime.datetime.fromordinal(result.toordinal())
+    if result.tzinfo is not None:
+        result = result.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    return result
+
+
+def parse_iso_duration(string):
+    return isodate.parse_duration(string)
 
 
 class FatalUserError(Exception):
@@ -87,19 +117,19 @@ def config_loader(config_file=None, dataset=None, default=None):
         with _fs.open(_name, 'r') as source:
             data = json.load(source)
     except (AttributeError, IOError, TypeError, errors.ResourceNotFound) as ex:
-        logging.error(u"MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
+        logging.error("MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
         if default is not None:
             return default
         raise IOError("MSS config File not found")
     except ValueError as ex:
-        error_message = u"MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
+        error_message = "MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
         raise FatalUserError(error_message)
     if dataset:
         try:
             return data[dataset]
         except KeyError:
-            logging.debug(u"Config File used: '{:}'".format(config_file))
-            logging.debug(u"Key not defined in config_file! '{:}'".format(dataset))
+            logging.debug("Config File used: '{:}'".format(config_file))
+            logging.debug("Key not defined in config_file! '{:}'".format(dataset))
             if default is not None:
                 return default
             raise KeyError("default value for key not set")
@@ -146,7 +176,7 @@ def save_settings_qsettings(tag, settings):
     :param settings: dictionary of settings
     :return: None
     """
-    assert isinstance(tag, basestring)
+    assert isinstance(tag, str)
     assert isinstance(settings, dict)
     q_settings = QtCore.QSettings("mss", "mss-core")
     file_path = q_settings.fileName()
@@ -175,7 +205,7 @@ def load_settings_qsettings(tag, default_settings=None):
     settings = {}
     q_settings = QtCore.QSettings("mss", "mss-core")
     file_path = q_settings.fileName()
-    logging.debug(u"loading settings for %s from %s", tag, file_path)
+    logging.debug("loading settings for %s from %s", tag, file_path)
     try:
         settings = q_settings.value(tag)
     except Exception as ex:
@@ -516,6 +546,26 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
         return pressure
 
 
+def convert_to(value, from_unit, to_unit, default=1.):
+    try:
+        value_unit = UR.Quantity(value, UR(from_unit))
+        result = value_unit.to(to_unit).magnitude
+    except pint.UndefinedUnitError:
+        logging.error("Error in unit conversion (undefined) %s/%s", from_unit, to_unit)
+        result = value * default
+    except pint.DimensionalityError:
+        if UR(to_unit).to_base_units().units == UR.m:
+            try:
+                result = (value_unit / UR.Quantity(9.81, "m s^-2")).to(to_unit).magnitude
+            except pint.DimensionalityError:
+                logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
+                result = value * default
+        else:
+            logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
+            result = value * default
+    return result
+
+
 class CaseInsensitiveMultiDict(werkzeug.datastructures.ImmutableMultiDict):
     """Extension to werkzeug.datastructures.ImmutableMultiDict
     that makes the MultiDict case-insensitive.
@@ -581,20 +631,20 @@ from xml.dom.minidom import _write_data, Node
 # Copyright © 2000 BeOpen.com. All rights reserved.
 
 
-def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
+def writexml(self, writer, indent="", addindent="", newl=""):
     # indent = current indentation
     # addindent = indentation to add to higher levels
     # newl = newline string
-    writer.write(indent + u"<" + self.tagName)
+    writer.write(indent + "<" + self.tagName)
 
     attrs = self._get_attributes()
 
     for a_name in sorted(attrs.keys()):
-        writer.write(u" %s=\"" % a_name)
+        writer.write(" %s=\"" % a_name)
         _write_data(writer, attrs[a_name].value)
-        writer.write(u"\"")
+        writer.write("\"")
     if self.childNodes:
-        writer.write(u">")
+        writer.write(">")
         if (len(self.childNodes) == 1 and self.childNodes[0].nodeType == Node.TEXT_NODE):
             self.childNodes[0].writexml(writer, '', '', '')
         else:
@@ -602,6 +652,6 @@ def writexml(self, writer, indent=u"", addindent=u"", newl=u""):
             for node in self.childNodes:
                 node.writexml(writer, indent + addindent, addindent, newl)
             writer.write(indent)
-        writer.write(u"</%s>%s" % (self.tagName, newl))
+        writer.write("</%s>%s" % (self.tagName, newl))
     else:
-        writer.write(u"/>%s" % (newl))
+        writer.write("/>%s" % (newl))

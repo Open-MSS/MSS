@@ -55,7 +55,7 @@ class Test_SatelliteDockWidget(object):
         assert self.window.cbSatelliteOverpasses.count() == 0
         QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert self.window.cbSatelliteOverpasses.count() == 10
+        assert self.window.cbSatelliteOverpasses.count() == 11
         assert self.view.plot_satellite_overpass.call_count == 1
         self.window.cbSatelliteOverpasses.currentIndexChanged.emit(2)
         QtWidgets.QApplication.processEvents()

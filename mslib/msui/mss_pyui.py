@@ -28,7 +28,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from __future__ import print_function
 
 import argparse
 import copy
@@ -56,6 +55,7 @@ from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import constants
 from mslib.msui import wms_control
+from mslib.msui import mscolab
 from mslib.utils import config_loader, setup_logging
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
@@ -90,10 +90,10 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """Add ID number to the title of the corresponing view window.
         """
         QActiveViewsListWidgetItem.opened_views += 1
-        view_name = u"({:d}) {}".format(QActiveViewsListWidgetItem.opened_views, view_window.name)
+        view_name = "({:d}) {}".format(QActiveViewsListWidgetItem.opened_views, view_window.name)
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, type)
 
-        view_window.setWindowTitle(u"({:d}) {}".format(
+        view_window.setWindowTitle("({:d}) {}".format(
             QActiveViewsListWidgetItem.opened_views, view_window.windowTitle()))
         view_window.setIdentifier(view_name)
         self.window = view_window
@@ -149,7 +149,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         """
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
-        self.lblVersion.setText(u"Version: {}".format(__version__))
+        self.lblVersion.setText("Version: {}".format(__version__))
         blub = QtGui.QPixmap(python_powered())
         self.lblPython.setPixmap(blub)
 
@@ -169,7 +169,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # instead of the default Icon of python/pyhtonw
         try:
             import ctypes
-            myappid = u"mss.mss_pyui.{}".format(__version__)  # arbitrary string
+            myappid = "mss.mss_pyui.{}".format(__version__)  # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
@@ -197,6 +197,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Tools menu.
         self.actionTrajectoryToolLagranto.triggered.connect(self.create_new_tool)
         self.actionTimeSeriesViewTrajectories.triggered.connect(self.create_new_tool)
+
+        # mscolab menu
+        self.actionMscolabProjects.triggered.connect(self.activate_mscolab_window)
 
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
@@ -273,20 +276,20 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 imported_module = importlib.import_module(module)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
-                logging.error(u"Error on import: %s: %s", type(ex), ex)
+                logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         self._imported_plugins, type(ex), ex)))
                 continue
             try:
                 self.add_import_filter(name, extension, getattr(imported_module, function), pickertype=picker_type)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
-                logging.error(u"Error on installing plugin: %s: %s", type(ex), ex)
+                logging.error("Error on installing plugin: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         self._imported_plugins, type(ex), ex)))
                 continue
 
@@ -300,20 +303,20 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 imported_module = importlib.import_module(module)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
-                logging.error(u"Error on import: %s: %s", type(ex), ex)
+                logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr(u"ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
+                    self.tr("ERROR: Configuration\n\n{}\n\nthrows {} error:\n{}".format(
                         self._exported_plugins, type(ex), ex)))
                 continue
             try:
                 self.add_export_filter(name, extension, getattr(imported_module, function), pickertype=picker_type)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
-                logging.error(u"Error on installing plugin: %s: %s", type(ex), ex)
+                logging.error("Error on installing plugin: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error"),
-                    self.tr(u"ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
+                    self.tr("ERROR: Configuration for export {} plugins\n\n{}\n\nthrows error:\n{}".format(
                         self._exported_plugins, type(ex), ex)))
                 continue
 
@@ -337,7 +340,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def add_import_filter(self, name, extension, function, pickertag=None, pickertype=None):
         full_name = "actionImportFlightTrack" + clean_string(name)
         if hasattr(self, full_name):
-            raise ValueError(u"'{}' has already been set!".format(full_name))
+            raise ValueError("'{}' has already been set!".format(full_name))
 
         action = QtWidgets.QAction(self)
         action.setObjectName(full_name)
@@ -346,8 +349,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         def load_function_wrapper(self):
             filename = get_open_filename(
-                self, u"Import Flight Track", self.last_save_directory,
-                u"All Files (*." + extension + ")", pickertype=pickertype)
+                self, "Import Flight Track", self.last_save_directory,
+                "All Files (*." + extension + ")", pickertype=pickertype)
             if filename is not None:
                 try:
                     ft_name, new_waypoints = function(filename)
@@ -356,7 +359,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     logging.error("file io plugin error: %s %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
-                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
+                        self.tr("ERROR: {} {}".format(type(ex), ex)))
                 else:
                     if not ft_name:
                         ft_name = filename
@@ -374,7 +377,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def add_export_filter(self, name, extension, function, pickertag=None, pickertype=None):
         full_name = "actionExportFlightTrack" + clean_string(name)
         if hasattr(self, full_name):
-            raise ValueError(u"'{}' has already been set!".format(full_name))
+            raise ValueError("'{}' has already been set!".format(full_name))
 
         action = QtWidgets.QAction(self)
         action.setObjectName(full_name)
@@ -384,7 +387,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         def save_function_wrapper(self):
             default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name) + "." + extension
             filename = get_save_filename(
-                self, u"Export Flight Track", default_filename,
+                self, "Export Flight Track", default_filename,
                 name + " (*." + extension + ")", pickertype=pickertype)
             if filename is not None:
                 try:
@@ -394,7 +397,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     logging.error("file io plugin error: %s %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
-                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
+                        self.tr("ERROR: {} {}".format(type(ex), ex)))
 
         setattr(self, full_name, types.MethodType(save_function_wrapper, self))
         action.triggered.connect(getattr(self, full_name))
@@ -493,6 +496,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         item.window.raise_()
         item.window.activateWindow()
 
+    def activate_mscolab_window(self):
+        # initiate mscolab window
+        self.mscolab_window = mscolab.MSSMscolabWindow(parent=self.menu_Mscolab)
+        self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.mscolab_window.show()
+
     new_flight_track_counter = 0
 
     def create_new_flight_track(self, template=None, filename=None):
@@ -549,7 +558,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             filename = get_open_filename(
-                self, u"Open Config file", constants.MSS_CONFIG_PATH, u'Config Files (*.json)',
+                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)",
                 pickertag="filepicker_config")
             if filename is not None:
                 self.listViews.clear()
@@ -563,7 +572,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            passes the result to createNewFlightTrack().
         """
         filename = get_open_filename(
-            self, u"Open Flight Track", self.last_save_directory, u'Flight Track Files (*.ftml)',
+            self, "Open Flight Track", self.last_save_directory, "Flight Track Files (*.ftml)",
             pickertag="filepicker_flightrack")
         if filename is not None:
             try:
@@ -571,12 +580,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self.create_new_flight_track(filename=filename)
                 else:
                     QtWidgets.QMessageBox.warning(self, "Open flight track",
-                                                  u"No supported file extension recognized!\n{:}".format(filename))
+                                                  "No supported file extension recognized!\n{:}".format(filename))
 
             except (SyntaxError, OSError, IOError) as ex:
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("Problem while opening flight track FTML:"),
-                    self.tr(u"ERROR: {} {}".format(type(ex), ex)))
+                    self.tr("ERROR: {} {}".format(type(ex), ex)))
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
@@ -611,7 +620,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         filename = self.active_flight_track.get_filename()
         if filename and filename.endswith('.ftml'):
             sel = QtWidgets.QMessageBox.question(self, "Save flight track",
-                                                 u"Saving flight track to '{:s}'. Continue?".format(filename),
+                                                 "Saving flight track to '{:s}'. Continue?".format(filename),
                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if sel == QtWidgets.QMessageBox.Yes:
                 try:
@@ -619,7 +628,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while saving flight track to FTML:"),
-                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
+                        self.tr("ERROR: {} {}".format(type(ex), ex)))
         else:
             self.save_flight_track_as()
 
@@ -628,7 +637,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         filename = get_save_filename(
-            self, "Save Flight Track", default_filename, u"Flight Track (*.ftml)", pickertag="filepicker_flightrack")
+            self, "Save Flight Track", default_filename, "Flight Track (*.ftml)", pickertag="filepicker_flightrack")
         logging.debug("filename : '%s'", filename)
         if filename:
             self.last_save_directory = fs.path.dirname(filename)
@@ -638,13 +647,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while saving flight track to FTML:"),
-                        self.tr(u"ERROR: {} {}".format(type(ex), ex)))
+                        self.tr("ERROR: {} {}".format(type(ex), ex)))
                 for idx in range(self.listFlightTracks.count()):
                     if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
                         self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
             else:
                 QtWidgets.QMessageBox.warning(self, "Save flight track",
-                                              u"File extension is not '.ftml'!\n{:}".format(filename))
+                                              "File extension is not '.ftml'!\n{:}".format(filename))
 
     def activate_flight_track(self, item):
         """Set the currently selected flight track to be the active one, i.e.
@@ -748,10 +757,10 @@ def main():
         logging.info("menu entry removed")
         sys.exit()
 
-    logging.info(u"MSS Version: %s", __version__)
-    logging.info(u"Python Version: %s", sys.version)
-    logging.info(u"Platform: %s (%s)", platform.platform(), platform.architecture())
-    logging.info(u"Launching user interface...")
+    logging.info("MSS Version: %s", __version__)
+    logging.info("Python Version: %s", sys.version)
+    logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
+    logging.info("Launching user interface...")
 
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = MSSMainWindow()

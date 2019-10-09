@@ -54,7 +54,7 @@ class MissionSupportSystemDefaultConfig(object):
     filepicker_default = "default"
 
     # dir where mss output files are stored
-    data_dir = u"~/mssdata"
+    data_dir = "~/mssdata"
 
     # layout of different views, with immutable they can't resized
     layout = {"topview": (963, 702),
@@ -158,3 +158,10 @@ class MissionSupportSystemDefaultConfig(object):
     traj_nas_lon_identifier = ["GPS LON", "LONGITUDE"]
     traj_nas_lat_identifier = ["GPS LAT", "LATITUDE"]
     traj_nas_p_identifier = ["STATIC PRESSURE"]
+
+    # ToDo configurable later
+    # mscolab server
+    mscolab_server_url = "http://localhost:8083"
+    # ToDo refactor to rename this to data_dir/mss_data_dir
+    # mss dir
+    mss_dir = "~/mss"

@@ -25,11 +25,11 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 import numpy as np
 import matplotlib
+import pint
 
+UR = pint.UnitRegistry()
 N_LEVELS = 16
 
 
@@ -55,16 +55,24 @@ class Targets(object):
         "equivalent_latitude",
         "ertel_potential_vorticity",
         "mean_age_of_air",
+        "mole_fraction_of_active_chlorine_in_air",
+        "mole_fraction_of_bromine_nitrate_in_air",
+        "mole_fraction_of_bromo_methane_in_air",
+        "mole_fraction_of_bromochlorodifluoromethane_in_air",
+        "mole_fraction_of_bromotrifluoromethane_in_air",
         "mole_fraction_of_carbon_monoxide_in_air",
         "mole_fraction_of_carbon_dioxide_in_air",
         "mole_fraction_of_carbon_tetrachloride_in_air",
         "mole_fraction_of_chlorine_nitrate_in_air",
+        "mole_fraction_of_chlorine_dioxide_in_air",
         "mole_fraction_of_cfc11_in_air",
         "mole_fraction_of_cfc113_in_air",
         "mole_fraction_of_cfc12_in_air",
         "mole_fraction_of_ethane_in_air",
         "mole_fraction_of_formaldehyde_in_air",
         "mole_fraction_of_hcfc22_in_air",
+        "mole_fraction_of_hydrogen_chloride_in_air",
+        "mole_fraction_of_hypobromite_in_air",
         "mole_fraction_of_methane_in_air",
         "mole_fraction_of_nitric_acid_in_air",
         "mole_fraction_of_nitrous_oxide_in_air",
@@ -74,6 +82,7 @@ class Targets(object):
         "mole_fraction_of_peroxyacetyl_nitrate_in_air",
         "mole_fraction_of_sulfur_dioxide_in_air",
         "mole_fraction_of_water_vapor_in_air",
+
         "northward_wind",
         "square_of_brunt_vaisala_frequency_in_air",
         "surface_origin_tracer_from_india_and_china",
@@ -98,12 +107,13 @@ class Targets(object):
         "ertel_potential_vorticity": ("PVU", 1),
         "gravity_wave_temperature_perturbation": ("K", 1),
         "mean_age_of_air": ("month", 1),
+        "median_of_age_of_air_spectrum": ("month", 1),
         "northward_wind": ("1/ms", 1),
-        "square_of_brunt_vaisala_frequency_in_air": (u"1/s²", 1),
+        "square_of_brunt_vaisala_frequency_in_air": ("1/s²", 1),
         "tropopause_altitude": ("km", 1),
         "cloud_ice_mixing_ratio": ("ppmv", 1),
-        "number_concentration_of_ice_crystals_in_air": (u"1/cm³", 1),
-        "mean_mass_radius_of_cloud_ice_crystals": (u"µm", 1),
+        "number_concentration_of_ice_crystals_in_air": ("1/cm³", 1),
+        "mean_mass_radius_of_cloud_ice_crystals": ("µm", 1),
         "maximum_pressure_on_backtrajectory": ("hPa", 1),
         "maximum_relative_humidity_wrt_ice_on_backtrajectory": ("%", 1),
     }
@@ -130,26 +140,37 @@ class Targets(object):
             UNITS[standard_name] = ("%", 1)
 
     for standard_name in [
+            "mole_fraction_of_carbon_dioxide_in_air",
             "mole_fraction_of_methane_in_air",
             "mole_fraction_of_ozone_in_air",
             "mole_fraction_of_water_vapor_in_air",
     ]:
-        UNITS[standard_name] = (u"µmol/mol", 1e6)
+        UNITS[standard_name] = ("µmol/mol", 1e6)
 
     for standard_name in [
+            "mole_fraction_of_active_chlorine_in_air",
             "mole_fraction_of_carbon_monoxide_in_air",
             "mole_fraction_of_chlorine_nitrate_in_air",
+            "mole_fraction_of_hydrogen_chloride_in_air",
             "mole_fraction_of_nitric_acid_in_air",
             "mole_fraction_of_nitrous_oxide_in_air",
     ]:
         UNITS[standard_name] = ("nmol/mol", 1e9)
 
     for standard_name in [
+            "mole_fraction_of_bromine_nitrate_in_air",
+            "mole_fraction_of_bromo_methane_in_air",
+            "mole_fraction_of_bromochlorodifluoromethane_in_air",
+            "mole_fraction_of_bromotrifluoromethane_in_air",
             "mole_fraction_of_carbon_tetrachloride_in_air",
+            "mole_fraction_of_chlorine_dioxide_in_air",
             "mole_fraction_of_cfc11_in_air",
             "mole_fraction_of_cfc12_in_air",
+            "mole_fraction_of_cfc113_in_air",
+            "mole_fraction_of_hcfc22_in_air",
             "mole_fraction_of_ethane_in_air",
             "mole_fraction_of_formaldehyde_in_air",
+            "mole_fraction_of_hypobromite_in_air",
             "mole_fraction_of_nitrogen_dioxide_in_air",
             "mole_fraction_of_nitrogen_monoxide_in_air",
             "mole_fraction_of_peroxyacetyl_nitrate_in_air",
@@ -164,14 +185,16 @@ class Targets(object):
         UNITS[standard_name] = ("%", 100)
 
     TITLES = {
-        "ertel_potential_vorticity": u"PV",
-        "square_of_brunt_vaisala_frequency_in_air": u"N²",
-        "gravity_wave_temperature_perturbation": u"Gravity Wave Temperature Residual",
-        "tropopause_altitude": u"Thermal Tropopause",
+        "ertel_potential_vorticity": "PV",
+        "square_of_brunt_vaisala_frequency_in_air": "N²",
+        "gravity_wave_temperature_perturbation": "Gravity Wave Temperature Residual",
+        "tropopause_altitude": "Thermal Tropopause",
     }
     for standard_name in _TARGETS:
         if standard_name.startswith("mole_fraction_of_") and standard_name.endswith("_in_air"):
-            TITLES[standard_name] = standard_name[17:-7]
+            TITLES[standard_name] = standard_name[17:-7].replace("_", " ")
+        elif standard_name not in TITLES:
+            TITLES[standard_name] = standard_name.replace("_", " ")
 
     @staticmethod
     def get_targets():
@@ -430,7 +453,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
             clev = np.array([0, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     else:
-        raise RuntimeError(u"Illegal plotting style?! ({})".format(style))
+        raise RuntimeError("Illegal plotting style?! ({})".format(style))
     if clev[0] == clev[-1]:
         cmin, cmax = 0, 1
         clev = np.linspace(0, 1, len(clev))
@@ -453,16 +476,6 @@ def get_cbar_label_format(style, maxvalue):
     if style == 'log_ice_cloud':
         format = "%.0E"
     return format
-
-
-def convert_to(value, fr_un, to_un, default=1.):
-    factors = {
-        "hPa": {"hPa": 1., "Pa": 0.01},
-        "Pa": {"Pa": 1., "hPa": 100.},
-        "m": {"m": 1., "km": 1000., "m**2 s**-2": 1. / 9.81},
-        "km": {"km": 1., "m": 0.001, "m**2 s**-2": 1. / 9810.},
-    }
-    return value * factors.get(to_un, {}).get(fr_un, default)
 
 
 def conditional_decorator(dec, condition):

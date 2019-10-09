@@ -14,13 +14,14 @@ build:
   entry_points:
     - mss = mslib.msui.mss_pyui:main
     - mswms = mslib.mswms.mswms:main
-    - demodata = mslib.mswms.demodata:main
+    - mswms_demodata = mslib.mswms.demodata:main
+    - mscolab = mslib.mscolab.server:main
+    - mscolab_demodata = mslib.mscolab.demodata:main
 
 requirements:
   build:
     - python
     - setuptools
-    - future
     - menuinst  # [win]
   run:
     - python >=3.6
@@ -29,31 +30,33 @@ requirements:
     - chameleon
     - execnet
     - isodate
-    - jplephem
     - lxml
     - netcdf4
     - hdf4
-    - pillow 5.*
-    - python-dateutil
+    - pint
+    - pillow >=5,<6
     - pytz
     - pyqt 5.*
     - qt 5.*
     - requests
     - scipy
-    - sgp4
-    - skyfield >=1.10
-    - six
+    - skyfield >=1.12
     - tk
     - owslib
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
-    - matplotlib >=3.0.2
-    - proj4
-    - future
+    - matplotlib
+    - proj4 <6
     - flask
     - flask-httpauth
     - werkzeug
+    - flask-socketio
+    - flask-sqlalchemy
+    - passlib
+    - gitpython
+    - psycopg2
+    - validate_email
 
 test:
   imports:

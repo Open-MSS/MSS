@@ -28,12 +28,6 @@
 """
 # style definitions should be put in mpl_hsec_styles.py
 
-from __future__ import division
-
-
-from future import standard_library
-standard_library.install_aliases()
-
 
 import io
 import logging
@@ -47,7 +41,7 @@ import numpy as np
 import PIL.Image
 
 from mslib.mswms import mss_2D_sections
-from mslib.utils import get_projection_params
+from mslib.utils import get_projection_params, convert_to
 
 
 BASEMAP_CACHE = {}
@@ -222,13 +216,19 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         logging.debug("plotting data..")
 
         # Check if required data is available.
-        for datatype, dataitem in self.required_datafields:
+        self.data_units = self.driver.data_units.copy()
+        for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
-                raise KeyError(u"required data field '{}' not found".format(dataitem))
+                raise KeyError("required data field '{}' not found".format(dataitem))
+            origunit = self.driver.data_units[dataitem]
+            if dataunit is not None:
+                data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
+                self.data_units[dataitem] = dataunit
+            else:
+                logging.debug("Please add units to plot variables")
 
         # Copy parameters to properties.
         self.data = data
-        self.data_units = self.driver.data_units.copy()
         self.lats = lats
         self.lons = lons
         self.level = level
@@ -303,7 +303,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             bm = basemap.Basemap(resolution=None, **bm_params)
             (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,
              bm.coastsegs, bm.landpolygons, bm.lakepolygons, bm.cntrysegs) = BASEMAP_CACHE[key]
-            logging.debug(u"Loaded '%s' from basemap cache", key)
+            logging.debug("Loaded '%s' from basemap cache", key)
         else:
             bm = basemap.Basemap(resolution='l', **bm_params)
             # read in countries manually, as those are laoded only on demand
@@ -393,7 +393,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                 facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
             facecolor_index = lut.index(tuple(facecolor_rgb))
 
-            logging.debug(u"saving figure as transparent PNG with transparency index %s.", facecolor_index)
+            logging.debug("saving figure as transparent PNG with transparency index %s.", facecolor_index)
             palette_img.save(output, format="PNG", transparency=facecolor_index)
 
         logging.debug("returning figure..")
@@ -413,17 +413,17 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)
         left_longitude = min(self.bm.llcrnrlon, ulcrnrlon)
-        logging.debug(u"shifting data grid to leftmost longitude in map %2.f..", left_longitude)
+        logging.debug("shifting data grid to leftmost longitude in map %2.f..", left_longitude)
 
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
         self.lons = ((self.lons - left_longitude) % 360) + left_longitude
-        lon_indices = self.lons.argsort()
-        self.lons = self.lons[lon_indices]
+        self.lon_indices = self.lons.argsort()
+        self.lons = self.lons[self.lon_indices]
 
         # Shift data fields correspondingly.
         for key in self.data:
-            self.data[key] = self.data[key][:, lon_indices]
+            self.data[key] = self.data[key][:, self.lon_indices]
 
     def mask_data(self):
         """Mask data arrays so that all values outside the map domain

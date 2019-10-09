@@ -53,10 +53,10 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
 
     name = "Table View"
 
-    def __init__(self, parent=None, model=None):
+    def __init__(self, parent=None, model=None, _id=None):
         """
         """
-        super(MSSTableViewWindow, self).__init__(parent)
+        super(MSSTableViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -100,7 +100,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
                 title = "Hexagon Control"
                 widget = hex.HexagonControlWidget(view=self)
             else:
-                raise IndexError(u"invalid control index ({})".format(index))
+                raise IndexError("invalid control index ({})".format(index))
             self.createDockWidget(index, title, widget)
 
     def invertDirection(self):
@@ -126,7 +126,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
                 lon, lat = gc.npts(wp_prev.lon, wp_prev.lat, wp_next.lon, wp_next.lat, 3)[1]
 
         self.waypoints_model.insertRows(
-            row, waypoints=[ft.Waypoint(lat=round(lat, 2), lon=round(lon, 2), flightlevel=flightlevel)])
+            row, waypoints=[ft.Waypoint(lat=lat, lon=lon, flightlevel=flightlevel)])
 
         index = self.waypoints_model.index(row, 0)
         tableView = self.tableWayPoints

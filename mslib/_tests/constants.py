@@ -37,17 +37,29 @@ else:
     repo = git.Repo(search_parent_directories=True)
     SHA = repo.head.object.hexsha
 
-SERVER_CONFIG_FILE = u"mss_wms_settings.py"
+SERVER_CONFIG_FILE = "mss_wms_settings.py"
 ROOT_FS = TempFS(identifier="mss{}".format(SHA))
 ROOT_DIR = ROOT_FS.root_path
 
-if not ROOT_FS.exists(u"mss/testdata"):
-    ROOT_FS.makedirs(u"mss/testdata")
-SERVER_CONFIG_FS = fs.open_fs(os.path.join(ROOT_DIR, u'mss'))
-DATA_FS = fs.open_fs(os.path.join(ROOT_DIR, u'mss/testdata'))
+if not ROOT_FS.exists("mss/testdata"):
+    ROOT_FS.makedirs("mss/testdata")
+SERVER_CONFIG_FS = fs.open_fs(os.path.join(ROOT_DIR, "mss"))
+DATA_FS = fs.open_fs(os.path.join(ROOT_DIR, "mss/testdata"))
 
 os.environ["MSS_CONFIG_PATH"] = SERVER_CONFIG_FS.root_path
 SERVER_CONFIG_FILE_PATH = os.path.join(SERVER_CONFIG_FS.root_path, SERVER_CONFIG_FILE)
 
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2
 DATA_DIR = DATA_FS.root_path
+
+# deployed mscolab url
+MSCOLAB_URL = "http://localhost:8083"
+# mscolab test server's url
+MSCOLAB_URL_TEST = "http://localhost:8084"
+
+
+# dir where mss output files are stored
+TEST_DATA_DIR = os.path.expanduser("/tmp/colabdata")
+TEST_BASE_DIR = os.path.expanduser("/tmp")
+# test data dir mscolab
+TEST_MSCOLAB_DATA_DIR = os.path.join(TEST_DATA_DIR, 'filedata')

@@ -45,22 +45,66 @@ def callback_404_plain(status, response_headers):
 
 
 class Test_WMS(object):
-    def test_get_capabilities(self):
+    def test_get_query_string_missing_parameters(self):
         environ = {
             'wsgi.url_scheme': 'http',
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
-            'QUERY_STRING': 'request=GetCapabilities&version=1.1.1'}
+            'QUERY_STRING': 'request=GetCapabilities'}
 
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_ok_xml(result.status, result.headers)
+        callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
+
+    def test_get_query_string_wrong_values(self):
+        # version implemented is 1.1.1
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.3.0'}
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_404_plain(result.status, result.headers)
+        assert isinstance(result.data, bytes), result
+
+    def test_get_capabilities(self):
+        cases = (
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.1.1'
+            },
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=capabilities&service=WMS&version=1.1.1'
+            },
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1',
+                'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=capabilities&service=WMS&version'
+            },
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1',
+                'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=capabilities&service=WMS'
+            },
+        )
+
+        for tst_case in cases:
+            self.client = mswms.application.test_client()
+            result = self.client.get('/?{}'.format(tst_case["QUERY_STRING"]))
+            callback_ok_xml(result.status, result.headers)
+            assert isinstance(result.data, bytes), result
 
     def test_get_capabilities_lowercase(self):
         environ = {
             'wsgi.url_scheme': 'http',
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
-            'QUERY_STRING': 'request=getcapabilities&version=1.1.1'}
+            'QUERY_STRING': 'request=getcapabilities&service=wms&version=1.1.1'}
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_xml(result.status, result.headers)
@@ -74,9 +118,7 @@ class Test_WMS(object):
                 'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=200&srs=EPSG%3A4326&format=image%2Fpng&'
                 'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
-                'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'
-        }
-
+                'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_image(result.status, result.headers)
@@ -97,8 +139,8 @@ class Test_WMS(object):
         assert result.data.count(b"ServiceExceptionReport") == 0, result
 
         for orig, fake in [
-                ("dim_init_time=2012-10-17T12%3A00%3A00Z", "dim_init_time=20121017T12%3A00%3A00Z"),
-                ("time=2012-10-17T12%3A00%3A00Z", "time=201210-17T12%3A00%3A00Z"),
+                ("dim_init_time=2012-10-17T12%3A00%3A00Z", "dim_init_time=a20121017T12%3A00%3A00Z"),
+                ("time=2012-10-17T12%3A00%3A00Z", "time=a20121-0-17T12%3A00%3A00Z"),
                 ("time=2012-10-17T12%3A00%3A00Z", "time=2012-01-17T12%3A00%3A00Z"),
                 ("&dim_init_time=2012-10-17T12%3A00%3A00Z", ""),
                 ("&time=2012-10-17T12%3A00%3A00Z", ""),
@@ -111,7 +153,6 @@ class Test_WMS(object):
                 ("format=image%2Fpng", "format=omage%2Fpng"),
                 ("bbox=-50.0%2C20.0%2C20.0%2C75.0", "bbox=-abcd%2C20.0%2C20.0%2C75.0")]:
             environ["QUERY_STRING"] = query_string.replace(orig, fake)
-
             result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
             callback_ok_xml(result.status, result.headers)
             assert result.data.count(b"ServiceExceptionReport") > 0, result

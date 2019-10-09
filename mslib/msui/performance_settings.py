@@ -37,7 +37,8 @@ DEFAULT_PERFORMANCE = {
     "visible": False,
     "takeoff_weight": 0,
     "takeoff_time": QtCore.QDateTime.currentDateTimeUtc(),
-    "fuel": 0
+    "fuel": 0,
+    "ceiling_alt": [410],
 }
 
 
@@ -99,7 +100,7 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
 
             except KeyError as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr(u"JSON File missing '{}' entry".format(ex)))
+                                               self.tr("JSON File missing '{}' entry".format(ex)))
             except (FatalUserError, ValueError) as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr(u"JSON File has Syntax Problems:\n{}".format(ex)))
+                                               self.tr("JSON File has Syntax Problems:\n{}".format(ex)))

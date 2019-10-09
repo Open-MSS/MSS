@@ -30,6 +30,7 @@
 from abc import abstractmethod
 
 from mslib.msui.mss_qt import QtCore, QtWidgets
+import logging
 
 
 class MSSViewWindow(QtWidgets.QMainWindow):
@@ -40,8 +41,10 @@ class MSSViewWindow(QtWidgets.QMainWindow):
     identifier = None
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
+    # views for mscolab
+    viewClosesId = QtCore.Signal(int, name="viewClosesId")
 
-    def __init__(self, parent=None, model=None):
+    def __init__(self, parent=None, model=None, _id=None):
         super(MSSViewWindow, self).__init__(parent)
 
         # Object variables:
@@ -51,6 +54,10 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         # in proper size in derived classes!
         self.docks = []
 
+        # emit _id if not none
+        logging.debug(_id)
+        self._id = _id
+
     def closeEvent(self, event):
         """Ask user if he/she wants to close the window.
 
@@ -58,11 +65,14 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         Qt receives a window close request for our application window.
         """
         ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                            self.tr(u"Do you want to close this {}?".format(self.name)),
+                                            self.tr("Do you want to close this {}?".format(self.name)),
                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                             QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             self.viewCloses.emit()
+            if self._id is not None:
+                self.viewClosesId.emit(self._id)
+            logging.debug(self._id)
             event.accept()
         else:
             event.ignore()
@@ -124,8 +134,9 @@ class MSSMplViewWindow(MSSViewWindow):
     """Adds Matplotlib-specific functionality to MSSViewWindow.
     """
 
-    def __init__(self, parent=None, model=None):
-        super(MSSMplViewWindow, self).__init__(parent, model)
+    def __init__(self, parent=None, model=None, _id=None):
+        super(MSSMplViewWindow, self).__init__(parent, model, _id)
+        logging.debug(_id)
         self.mpl = None
 
     def setFlightTrackModel(self, model):

@@ -26,11 +26,9 @@
     limitations under the License.
 """
 
-from builtins import str
-
 import logging
 import functools
-from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import QtGui, QtWidgets
 from mslib.msui.mss_qt import QtCore
@@ -60,21 +58,26 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         super(MSS_SV_OptionsDialog, self).__init__(parent)
         self.setupUi(self)
 
-        default_settings_dict = {"vertical_extent": (1050, 180),
-                                 "vertical_axis": "pressure",
-                                 "flightlevels": [300, 320, 340],
-                                 "draw_flightlevels": True,
-                                 "draw_flighttrack": True,
-                                 "fill_flighttrack": True,
-                                 "label_flighttrack": True,
-                                 "colour_ft_vertices": (0, 0, 0, 0),
-                                 "colour_ft_waypoints": (0, 0, 0, 0),
-                                 "colour_ft_fill": (0, 0, 0, 0)}
+        default_settings_dict = {
+            "vertical_extent": (1050, 180),
+            "vertical_axis": "pressure",
+            "flightlevels": [300, 320, 340],
+            "draw_flightlevels": True,
+            "draw_flighttrack": True,
+            "fill_flighttrack": True,
+            "label_flighttrack": True,
+            "colour_ft_vertices": (0, 0, 0, 0),
+            "colour_ft_waypoints": (0, 0, 0, 0),
+            "colour_ft_fill": (0, 0, 0, 0),
+            "draw_ceiling": True,
+            "colour_ceiling": (0.1, 0.5, 0.1, 0),
+        }
         suffixes = [' hpa', ' km', ' hft']
         if settings_dict is not None:
             default_settings_dict.update(settings_dict)
         settings_dict = default_settings_dict
 
+        self.setBotTopLimits(settings_dict["vertical_axis"])
         self.sbPbot.setValue(settings_dict["vertical_extent"][0])
         self.sbPtop.setValue(settings_dict["vertical_extent"][1])
 
@@ -95,10 +98,12 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
         self.cbFillFlightTrack.setChecked(settings_dict["fill_flighttrack"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
+        self.cbDrawCeiling.setChecked(settings_dict["draw_ceiling"])
 
         for button, ids in [(self.btFillColour, "colour_ft_fill"),
                             (self.btWaypointsColour, "colour_ft_waypoints"),
-                            (self.btVerticesColour, "colour_ft_vertices")]:
+                            (self.btVerticesColour, "colour_ft_vertices"),
+                            (self.btCeilingColour, "colour_ceiling")]:
             palette = QtGui.QPalette(button.palette())
             colour = QtGui.QColor()
             colour.setRgbF(*settings_dict[ids])
@@ -110,11 +115,23 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.btFillColour.clicked.connect(functools.partial(self.setColour, "ft_fill"))
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
+        self.btCeilingColour.clicked.connect(functools.partial(self.setColour, "ceiling"))
 
         self.btAdd.clicked.connect(self.addItem)
         self.btDelete.clicked.connect(self.deleteSelected)
 
         self.tableWidget.itemChanged.connect(self.itemChanged)
+
+    def setBotTopLimits(self, type):
+        bot, top = {
+            "maximum": (0, 2132),
+            "pressure": (0.1, 1050),
+            "pressure altitude": (0, 65),
+            "flight level": (0, 2132),
+        }[type]
+        for button in (self.sbPbot, self.sbPtop):
+            button.setMinimum(bot)
+            button.setMaximum(top)
 
     def setColour(self, which):
         """Slot for the colour buttons: Opens a QColorDialog and sets the
@@ -126,6 +143,8 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             button = self.btVerticesColour
         elif which == "ft_waypoints":
             button = self.btWaypointsColour
+        elif which == "ceiling":
+            button = self.btCeilingColour
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
@@ -182,6 +201,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "vertical_extent": (float(self.sbPbot.value()), float(self.sbPtop.value())),
             "vertical_axis": self.cbVerticalAxis.currentText(),
             "flightlevels": self.get_flight_levels(),
+            "draw_ceiling": self.cbDrawCeiling.isChecked(),
             "draw_flightlevels": self.cbDrawFlightLevels.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "fill_flighttrack": self.cbFillFlightTrack.isChecked(),
@@ -191,41 +211,36 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "colour_ft_waypoints":
                 QtGui.QPalette(self.btWaypointsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_ft_fill":
-                QtGui.QPalette(self.btFillColour.palette()).color(QtGui.QPalette.Button).getRgbF()
+                QtGui.QPalette(self.btFillColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
+            "colour_ceiling":
+                QtGui.QPalette(self.btCeilingColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
         }
         return settings_dict
 
     def verticalunitsclicked(self, index):
+        units = {"pressure": "hPa", "pressure altitude": "km", "flight level": "hft"}
         _translate = QtCore.QCoreApplication.translate
-        unit = self.cbVerticalAxis.model().itemFromIndex(index)
-        currentunit = self.cbVerticalAxis.currentText()
-        if unit.text() == "pressure":
-            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
-            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
-            if currentunit == "pressure altitude":
-                self.sbPbot.setValue(thermolib.flightlevel2pressure(self.sbPbot.value() * 32.80) / 100)
-                self.sbPtop.setValue(thermolib.flightlevel2pressure(self.sbPtop.value() * 32.80) / 100)
-            elif currentunit == "flight level":
-                self.sbPbot.setValue(thermolib.flightlevel2pressure(self.sbPbot.value()) / 100)
-                self.sbPtop.setValue(thermolib.flightlevel2pressure(self.sbPtop.value()) / 100)
-        elif unit.text() == "pressure altitude":
-            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " km"))
-            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " km"))
-            if currentunit == "pressure":
-                self.sbPbot.setValue(thermolib.pressure2flightlevel(self.sbPbot.value() * 100) * 0.03048)
-                self.sbPtop.setValue(thermolib.pressure2flightlevel(self.sbPtop.value() * 100) * 0.03048)
-            elif currentunit == "flight level":
-                self.sbPbot.setValue(self.sbPbot.value() * 0.03048)
-                self.sbPtop.setValue(self.sbPtop.value() * 0.03048)
-        elif unit.text() == "flight level":
-            self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hft"))
-            self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hft"))
-            if currentunit == "pressure":
-                self.sbPbot.setValue(thermolib.pressure2flightlevel(self.sbPbot.value() * 100))
-                self.sbPtop.setValue(thermolib.pressure2flightlevel(self.sbPtop.value() * 100))
-            elif currentunit == "pressure altitude":
-                self.sbPbot.setValue(self.sbPbot.value() * 32.80)
-                self.sbPtop.setValue(self.sbPtop.value() * 32.80)
+        unit = units[self.cbVerticalAxis.model().itemFromIndex(index).text()]
+        currentunit = units[self.cbVerticalAxis.currentText()]
+        if unit == currentunit:
+            return
+        self.setBotTopLimits("maximum")
+        self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " " + unit))
+        self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " " + unit))
+        if unit == "hPa":
+            self.sbPtop.setValue(thermolib.flightlevel2pressure(
+                convert_to(self.sbPtop.value(), currentunit, "hft", 1)) / 100)
+            self.sbPbot.setValue(thermolib.flightlevel2pressure(
+                convert_to(self.sbPbot.value(), currentunit, "hft", 1)) / 100)
+        elif currentunit == "hPa":
+            self.sbPtop.setValue(convert_to(
+                thermolib.pressure2flightlevel(self.sbPtop.value() * 100), "hft", unit))
+            self.sbPbot.setValue(convert_to(
+                thermolib.pressure2flightlevel(self.sbPbot.value() * 100), "hft", unit))
+        else:
+            self.sbPtop.setValue(convert_to(self.sbPtop.value(), currentunit, unit, 1))
+            self.sbPbot.setValue(convert_to(self.sbPbot.value(), currentunit, unit, 1))
+        self.setBotTopLimits(self.cbVerticalAxis.model().itemFromIndex(index).text())
 
 
 class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
@@ -234,10 +249,10 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
     """
     name = "Side View"
 
-    def __init__(self, parent=None, model=None):
+    def __init__(self, parent=None, model=None, _id=None):
         """Set up user interface, connect signal/slots.
         """
-        super(MSSSideViewWindow, self).__init__(parent)
+        super(MSSSideViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -274,12 +289,13 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
             if index == WMS:
                 # Open a WMS control widget.
                 title = "Web Service Plot Control"
-                widget = wms.VSecWMSControlWidget(default_WMS=config_loader(dataset="default_VSEC_WMS",
-                                                                            default=mss_default.default_VSEC_WMS),
-                                                  waypoints_model=self.waypoints_model,
-                                                  view=self.mpl.canvas,
-                                                  wms_cache=config_loader(dataset="wms_cache",
-                                                                          default=mss_default.wms_cache))
+                widget = wms.VSecWMSControlWidget(
+                    default_WMS=config_loader(dataset="default_VSEC_WMS",
+                                              default=mss_default.default_VSEC_WMS),
+                    waypoints_model=self.waypoints_model,
+                    view=self.mpl.canvas,
+                    wms_cache=config_loader(dataset="wms_cache",
+                                            default=mss_default.wms_cache))
                 self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
             else:
                 raise IndexError("invalid control index")

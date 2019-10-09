@@ -63,8 +63,6 @@
     limitations under the License.
 """
 
-from __future__ import division
-
 import logging
 
 import numpy as np
@@ -75,9 +73,10 @@ import mpl_toolkits.basemap
 from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, convert_to
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
 from mslib.mswms.msschem import MSSChemTargets
 from mslib import thermolib
+from mslib.utils import convert_to
 
 
 class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
@@ -96,10 +95,10 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ('sfc', 'low_cloud_area_fraction'),
-        ('sfc', 'medium_cloud_area_fraction'),
-        ('sfc', 'high_cloud_area_fraction'),
-        ('sfc', 'air_pressure_at_sea_level')]
+        ('sfc', 'low_cloud_area_fraction', 'dimensionless'),
+        ('sfc', 'medium_cloud_area_fraction', 'dimensionless'),
+        ('sfc', 'high_cloud_area_fraction', 'dimensionless'),
+        ('sfc', 'air_pressure_at_sea_level', 'hPa')]
 
     def _plot_style(self):
         """
@@ -152,7 +151,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 axins1.yaxis.set_ticks_position("left")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, 0.01 * data['air_pressure_at_sea_level'],
+        cs = bm.contour(lonmesh, latmesh, data['air_pressure_at_sea_level'],
                         np.arange(950, 1050, 4), colors="burlywood", linewidths=2)
         ax.clabel(cs, fontsize=8, fmt='%i')
 
@@ -163,12 +162,14 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             titlestring = "Medium cloud cover (0-1)"
         elif self.style == "HIGH":
             titlestring = "High cloud cover (0-1)"
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -189,13 +190,11 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("sfc", "air_pressure_at_sea_level"),
-        ("sfc", "surface_eastward_wind"),
-        ("sfc", "surface_northward_wind")]
+        ("sfc", "air_pressure_at_sea_level", "hPa"),
+        ("sfc", "surface_eastward_wind", "knots"),
+        ("sfc", "surface_northward_wind", "knots")]
 
     def _plot_style(self):
-        """
-        """
         bm = self.bm
         ax = self.bm.ax
         data = self.data
@@ -207,7 +206,7 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
-        mslp = 0.01 * data['air_pressure_at_sea_level']
+        mslp = data['air_pressure_at_sea_level']
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, mslp,
@@ -217,17 +216,15 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
                         thin_contours, colors="darkblue", linewidths=1)
 
         # Convert wind data from m/s to knots.
-        u = data['surface_eastward_wind'] * 1.944
-        v = data['surface_northward_wind'] * 1.944
+        u = data['surface_eastward_wind']
+        v = data['surface_northward_wind']
 
         # Transform wind vector field to fit map.
         lons2 = ((self.lons + 180) % 360) - 180
         lons2_ind = lons2.argsort()
         udat, vdat, xv, yv = bm.transform_vector(u[:, lons2_ind], v[:, lons2_ind],
                                                  lons2[lons2_ind], self.lats,
-                                                 16, 16, returnxy=True)
-        # udat, vdat, xv, yv = bm.transform_vector(u, v, self.lons, self.lats,
-        #                                         16, 16, returnxy=True)
+                                                 16, 16, returnxy=True, masked=True)
 
         # Plot wind barbs.
         bm.barbs(xv, yv, udat, vdat,
@@ -246,12 +243,14 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         #                    s=20, c='blue', marker='s')
 
         titlestring = "Mean sea level pressure (hPa) and surface wind"
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -271,7 +270,7 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("sfc", "solar_elevation_angle")]
+        ("sfc", "solar_elevation_angle", "degree")]
 
     def _plot_style(self):
         """
@@ -318,8 +317,8 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Plot title.
         titlestring = "Solar Elevation Angle "
-        titlestring += u"\nValid: {}" \
-            .format(self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+        titlestring += "\nValid: {}".format(
+            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
@@ -343,7 +342,7 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("sfc", "sea_ice_area_fraction")]
+        ("sfc", "sea_ice_area_fraction", 'dimensionless')]
 
     def _plot_style(self):
         """
@@ -384,12 +383,15 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Plot title.
         titlestring = "Sea Ice Cover"
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+
         if not self.noframe:
             ax.set_title(titlestring,
                          horizontalalignment='left', x=0, fontsize=14)
@@ -408,7 +410,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "air_temperature")]
+        ("ml", "air_temperature", "degC")]
 
     def _plot_style(self):
         """
@@ -426,7 +428,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         thin_contours = [c for c in np.arange(cmin, cmax, 2)
                          if c not in thick_contours]
 
-        tempC = data['air_temperature'] - 273.15
+        tempC = data['air_temperature']
 
         tc = bm.contourf(lonmesh, latmesh, tempC,
                          np.arange(cmin, cmax, 2), cmap=plt.cm.nipy_spectral)
@@ -449,12 +451,14 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                         thin_contours, colors="saddlebrown", linewidths=1)
 
         titlestring = "Temperature (degC) at model level {}".format(self.level)
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -529,20 +533,20 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
 def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
                        fix_styles=None, add_styles=None, add_prepare=None):
     if add_data is None:
-        add_data = [(vert, "ertel_potential_vorticity")]
+        add_data = [(vert, "ertel_potential_vorticity", "PVU")]
     if add_contours is None:
         add_contours = [("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
 
     class fnord(HS_GenericStyle):
-        name = u"{}_{}".format(entity, vert)
+        name = "{}_{}".format(entity, vert)
         dataname = entity
         title = Targets.TITLES.get(entity, entity)
         long_name = entity
         units, unit_scale = Targets.get_unit(entity)
         if units:
-            title += u" ({})".format(units)
+            title += " ({})".format(units)
 
-        required_datafields = [(vert, entity)] + add_data
+        required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours
 
     fnord.__name__ = name
@@ -644,12 +648,8 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "air_temperature"),
-        ("pl", "geopotential_height")]
-
-    def _prepare_datafields(self):
-        self.data["geopotential_height"] = convert_to(
-            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+        ("pl", "air_temperature", "degC"),
+        ("pl", "geopotential_height", "m")]
 
     def _plot_style(self):
         """
@@ -667,7 +667,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         thin_contours = [c for c in np.arange(cmin, cmax, 2)
                          if c not in thick_contours]
 
-        tempC = data['air_temperature'] - 273.15
+        tempC = data['air_temperature']
 
         tc = bm.contourf(lonmesh, latmesh, tempC,
                          np.arange(cmin, cmax, 2), cmap=plt.cm.nipy_spectral)
@@ -704,12 +704,14 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Temperature (degC) and Geopotential Height (m) at " \
             "{:.0f} hPa".format(self.level)
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -735,13 +737,9 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "geopotential_height"),
-        ("pl", "eastward_wind"),
-        ("pl", "northward_wind")]
-
-    def _prepare_datafields(self):
-        self.data["geopotential_height"] = convert_to(
-            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+        ("pl", "geopotential_height", "m"),
+        ("pl", "eastward_wind", "m/s"),
+        ("pl", "northward_wind", "m/s")]
 
     def _plot_style(self):
         """
@@ -756,7 +754,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         # Compute wind speed.
         u = data["eastward_wind"]
         v = data["northward_wind"]
-        wind = np.sqrt(u ** 2 + v ** 2)
+        wind = np.hypot(u, v)
 
         # Plot wind contours.
         # NOTE: Setting alpha=0.8 raises the transparency problem in the client
@@ -783,15 +781,15 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
         # Convert wind data from m/s to knots for the wind barbs.
-        u *= 1.944
-        v *= 1.944
+        uk = convert_to(u, "m/s", "knots")
+        vk = convert_to(v, "m/s", "knots")
 
         # Transform wind vector field to fit map.
         lons2 = ((self.lons + 180) % 360) - 180
         lons2_ind = lons2.argsort()
-        udat, vdat, xv, yv = bm.transform_vector(u[:, lons2_ind], v[:, lons2_ind],
+        udat, vdat, xv, yv = bm.transform_vector(uk[:, lons2_ind], vk[:, lons2_ind],
                                                  lons2[lons2_ind], self.lats,
-                                                 16, 16, returnxy=True)
+                                                 16, 16, returnxy=True, masked=True)
 
         # Plot wind barbs.
         bm.barbs(xv, yv, udat, vdat,
@@ -813,12 +811,14 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         # Plot title.
         titlestring = "Geopotential Height (m) and Horizontal Wind (m/s) " \
             "at {:.0f} hPa".format(self.level)
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -839,15 +839,13 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "air_temperature"),
-        ("pl", "geopotential_height"),
-        ("pl", "specific_humidity")]
+        ("pl", "air_temperature", "K"),
+        ("pl", "geopotential_height", "m"),
+        ("pl", "specific_humidity", "kg/kg")]
 
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
-        self.data["geopotential_height"] = convert_to(
-            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
         self.data["relative_humidity"] = thermolib.rel_hum(
             self.level * 100., self.data["air_temperature"], self.data["specific_humidity"])
 
@@ -899,12 +897,14 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Relative Humditiy (%%) and Geopotential Height (m) at " \
             "{:.0f} hPa".format(self.level)
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -925,17 +925,17 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "air_temperature"),
-        ("pl", "geopotential_height"),
-        ("pl", "specific_humidity")]
+        ("pl", "air_temperature", "K"),
+        ("pl", "geopotential_height", "m"),
+        ("pl", "specific_humidity", "kg/kg")]
 
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
-        self.data["geopotential_height"] = convert_to(
-            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
         self.data["equivalent_potential_temperature"] = thermolib.eqpt_approx(
             self.level * 100., self.data["air_temperature"], self.data["specific_humidity"])
+        self.data["equivalent_potential_temperature"] = convert_to(
+            self.data["equivalent_potential_temperature"], "K", "degC")
 
     def _plot_style(self):
         """
@@ -950,8 +950,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         filled_contours = np.arange(0, 72, 2)
         thin_contours = np.arange(-40, 100, 2)
 
-        eqpt = data["equivalent_potential_temperature"] - 273.15
-
+        eqpt = data["equivalent_potential_temperature"]
         eqptc = bm.contourf(lonmesh, latmesh, eqpt,
                             filled_contours, cmap=plt.cm.gist_rainbow_r)
         if not self.noframe:
@@ -989,12 +988,14 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Equivalent Potential Temperature (degC) and Geopotential Height (m) at " \
                       "{:.0f} hPa".format(self.level)
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1015,18 +1016,17 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "lagrangian_tendency_of_air_pressure"),
-        ("pl", "air_temperature"),
-        ("pl", "geopotential_height")]
+        ("pl", "lagrangian_tendency_of_air_pressure", "Pa/s"),
+        ("pl", "air_temperature", "K"),
+        ("pl", "geopotential_height", "m")]
 
     def _prepare_datafields(self):
         """Computes relative humidity from p, t, q.
         """
-        self.data["geopotential_height"] = convert_to(
-            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
         self.data["upward_wind"] = thermolib.omega_to_w(
             self.data["lagrangian_tendency_of_air_pressure"],
             self.level * 100., self.data["air_temperature"])
+        self.data["upward_wind"] = convert_to(self.data["upward_wind"], "m/s", "cm/s")
 
     def _plot_style(self):
         """
@@ -1039,7 +1039,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         upward_contours = np.arange(-42, 46, 4)
-        w = data["upward_wind"] * 100.
+        w = data["upward_wind"]
 
         wc = bm.contourf(lonmesh, latmesh, w,
                          upward_contours, cmap=plt.cm.bwr)
@@ -1077,12 +1077,14 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Vertical Velocity (cm/s) and Geopotential Height (m) at " \
                       "{:.0f} hPa".format(self.level)
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1103,12 +1105,8 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "divergence_of_wind"),
-        ("pl", "geopotential_height")]
-
-    def _prepare_datafields(self):
-        self.data["geopotential_height"] = convert_to(
-            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
+        ("pl", "divergence_of_wind", "1/s"),
+        ("pl", "geopotential_height", "m")]
 
     def _plot_style(self):
         """
@@ -1147,12 +1145,14 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Divergence (positive: red, negative: blue) and Geopotential Height (m) at " \
             "{:.0f} hPa".format(self.level)
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += "\nValid: {}".format(
+            self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1172,7 +1172,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("ml", "emac_R12")]
+        ("ml", "emac_R12", 'dimensionless')]
 
     def _plot_style(self):
         """
@@ -1212,12 +1212,13 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
         titlestring = "EMAC Eyjafjallajokull Tracer (relative) at model level {:.0f}".format(self.level)
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1237,7 +1238,7 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("sfc", "emac_column_density")]
+        ("sfc", "emac_column_density", "kg/m^2")]
 
     def _plot_style(self):
         """
@@ -1264,7 +1265,6 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
 
         tc = bm.pcolor(lonmesh, latmesh, tracer,
                        cmap=plt.cm.hot_r,
-                       # norm=matplotlib.colors.Normalize(vmin=0.1, vmax=1.5),
                        norm=matplotlib.colors.LogNorm(vmin=0.05, vmax=0.5),
                        edgecolors='none')
 
@@ -1286,12 +1286,13 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
         titlestring = "EMAC Eyjafjallajokull Tracer Total Column Density (kg/m^2)"
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1313,21 +1314,15 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pv", "air_potential_temperature"),
-        ("pv", "geopotential_height"),
-        ("pv", "air_pressure")]
+        ("pv", "air_potential_temperature", "K"),
+        ("pv", "geopotential_height", "m"),
+        ("pv", "air_pressure", "hPa")]
 
     styles = [
         ("default", "Pressure (hPa)"),
         ("GEOP", "Geopotential Height (m)"),
         ("PT", "Potential Temperature (K)"),
         ("PRES", "Pressure (hPa)")]
-
-    def _prepare_datafields(self):
-        self.data["air_pressure"] = convert_to(
-            self.data["air_pressure"], self.data_units["air_pressure"], "hPa", 1)
-        self.data["geopotential_height"] = convert_to(
-            self.data["geopotential_height"], self.data_units["geopotential_height"], "m", 1. / 9.81)
 
     def _plot_style(self):
         """
@@ -1399,12 +1394,13 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         elif self.style == "GEOP":
             titlestring = "Dynamical Tropopause Geopotential Height (m) at " \
                           "{:.1f} PVU".format(int(self.level))
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1426,8 +1422,8 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("sfc", "tropopause_altitude"),
-        ("sfc", "secondary_tropopause_altitude"),
+        ("sfc", "tropopause_altitude", "km"),
+        ("sfc", "secondary_tropopause_altitude", "km"),
     ]
 
     styles = [
@@ -1452,13 +1448,6 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         # temperature, a rainbow colourmap is used (blue=low temps, red=hight
         # temps).
         fcmap = plt.cm.terrain
-
-        if self.data_units["tropopause_altitude"] != "km":
-            raise ValueError("tropopause_altitude has wrong unit %s. Should be 'km'",
-                             self.data_units["tropopause_altitude"])
-        if self.data_units["secondary_tropopause_altitude"] != "km":
-            raise ValueError("secondary_tropopause_altitude has wrong unit %s. Should be 'km'",
-                             self.data_units["secondary_tropopause_altitude"])
 
         if self.style == "default":
             vardata = data["tropopause_altitude"]
@@ -1521,8 +1510,8 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("sfc", "air_pressure_at_sea_level"),
-        ("sfc", "vertically_integrated_probability_of_wcb_occurrence")
+        ("sfc", "air_pressure_at_sea_level", "hPa"),
+        ("sfc", "vertically_integrated_probability_of_wcb_occurrence", 'dimensionless')
     ]
 
     def _plot_style(self):
@@ -1539,7 +1528,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
 
-        mslp = 0.01 * data["air_pressure_at_sea_level"]
+        mslp = data["air_pressure_at_sea_level"]
         pwcb = 100. * data["vertically_integrated_probability_of_wcb_occurrence"]
 
         # Contour plot of mean sea level pressure.
@@ -1561,12 +1550,13 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
         titlestring = "Mean sea level pressure (hPa) and total column probability of WCB (0-1)"
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1588,14 +1578,12 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("pl", "number_of_wcb_trajectories"),
-        ("pl", "number_of_insitu_trajectories"),
-        ("pl", "number_of_mix_trajectories")
+        ("pl", "number_of_wcb_trajectories", 'dimensionless'),
+        ("pl", "number_of_insitu_trajectories", 'dimensionless'),
+        ("pl", "number_of_mix_trajectories", 'dimensionless')
     ]
 
     def _plot_style(self):
-        """
-        """
         bm = self.bm
         ax = self.bm.ax
         data = self.data
@@ -1637,12 +1625,13 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
         titlestring = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = ((time_step.days * 86400 + time_step.seconds) // 3600)
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1662,19 +1651,10 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("sfc", "air_pressure_at_sea_level"),
-        ("sfc", "atmosphere_boundary_layer_thickness")]
-
-    def _prepare_datafields(self):
-        self.data["air_pressure_at_sea_level"] = convert_to(
-            self.data["air_pressure_at_sea_level"], self.data_units["air_pressure_at_sea_level"], "hPa", 1)
-        self.data["atmosphere_boundary_layer_thickness"] = convert_to(
-            self.data["atmosphere_boundary_layer_thickness"],
-            self.data_units["atmosphere_boundary_layer_thickness"], "m", 1)
+        ("sfc", "air_pressure_at_sea_level", "hPa"),
+        ("sfc", "atmosphere_boundary_layer_thickness", "m")]
 
     def _plot_style(self):
-        """
-        """
         bm = self.bm
         ax = self.bm.ax
         data = self.data
@@ -1697,8 +1677,8 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
 
         # Filled contours of BLH, interval 100m.
         blh = data["atmosphere_boundary_layer_thickness"]
-        contours = bm.contourf(lonmesh, latmesh, blh,
-                               np.arange(0, 3000, 100), cmap=plt.cm.terrain, extend="max")
+        contours = bm.contourf(
+            lonmesh, latmesh, blh, np.arange(0, 3000, 100), cmap=plt.cm.terrain, extend="max")
         if not self.noframe:
             self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
@@ -1714,12 +1694,13 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
 
         # Title
         titlestring = "Boundary layer height (m) and mean sea level pressure (hPa)"
-        time_step = self.valid_time - self.init_time
-        time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
-        titlestring += '\nValid: {} (step {:d} hrs from {})' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'),
-                    time_step_hrs,
-                    self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += '\nValid: {}'.format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        if self.uses_inittime_dimension():
+            time_step = self.valid_time - self.init_time
+            time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
+            titlestring += ' (step {:d} hrs from {})'.format(
+                time_step_hrs,
+                self.init_time.strftime('%a %Y-%m-%d %H:%M UTC'))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1739,7 +1720,7 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
     required_datafields = [
-        ("sfc", "msg_brightness_temperature_108")]
+        ("sfc", "msg_brightness_temperature_108", "K")]
 
     def _plot_style(self):
         """
@@ -1782,8 +1763,8 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         #                 thin_contours, colors="saddlebrown", linewidths=1)
 
         titlestring = "10.8 um Brightness Temperature (K)"
-        titlestring += u'\nValid: {}' \
-            .format(self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC'))
+        titlestring += "\nValid: {}" \
+            .format(self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
 
         if not self.noframe:
             ax.set_title(titlestring,
@@ -1873,7 +1854,7 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         _contourname = "_pcontours"
 
     class fnord(HS_MSSChemStyle):
-        name = u"HS_{}_{}{}".format(entity, vert, _contourname)
+        name = "HS_{}_{}{}".format(entity, vert, _contourname)
         dataname = entity
         units, unit_scale = Targets.get_unit(dataname)
         units = units
@@ -1881,9 +1862,9 @@ def make_msschem_class(entity, nam, vert, units, scale, add_data=None, add_conto
         _title_tpl = nam + " (" + vert + ")"
         long_name = entity
         if units:
-            _title_tpl += u" ({})".format(units)
+            _title_tpl += " ({})".format(units)
 
-        required_datafields = [(vert, entity)] + add_data
+        required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours
 
     fnord.__name__ = nam
@@ -1905,8 +1886,9 @@ for vert in ["ml"]:
         name, qty, units, scale = props
         # ToDo string substitution
         key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty + "_pcontours"
-        globals()[key] = make_msschem_class(stdname, name, vert, units, scale, add_data=[(vert, "air_pressure")],
-                                            add_contours=[("air_pressure", _pressurelevels,
-                                                           ["dimgrey"] * _npressurelevels,
-                                                           ["dimgrey"] * _npressurelevels,
-                                                           ["dotted"] * _npressurelevels, 1, True)],)
+        globals()[key] = make_msschem_class(
+            stdname, name, vert, units, scale, add_data=[(vert, "air_pressure", None)],
+            add_contours=[("air_pressure", _pressurelevels,
+                           ["dimgrey"] * _npressurelevels,
+                           ["dimgrey"] * _npressurelevels,
+                           ["dotted"] * _npressurelevels, 1, True)],)

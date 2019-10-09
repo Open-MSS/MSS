@@ -1,3 +1,6 @@
+.. _development:
+
+
 Development
 ============================
 
@@ -70,6 +73,28 @@ Add developer packages for running tests, activate your env and run::
   $ conda install --file requirements.d/development.txt
 
 On linux install `xvfb` from your linux package manager. This is used to run tests on a virtual display.
+If you don't want tests redirected to the xvfb display just setup an environment variable::
+
+ $ export TESTS_VISIBLE=TRUE
+
+
+Setup demodata
+~~~~~~~~~~~~~~
+
+:ref:`demodata` is provided by executing::
+
+   $(mssdev) python mslib/mswms/demodata.py
+   $(mssdev) python mslib/mscolab/demodata.py --init
+
+To use this data add the mss_wms_settings.py in your python path::
+
+   $(mssdev) :~/PycharmProjects/mss
+   $(mssdev) export PYTHONPATH="`pwd`:~/mss"
+   $(mssdev) python mslib/mswms/mswms.py
+
+Developer documentation of mscolab
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A design documentation of mscolab can be found `here <https://docs.google.com/document/d/1TKanCW7kgNS9Qy1pQZd_Ovt8zZ6tH2RkOJkl2nM1qvs/edit?usp=sharing/>`_.
 
 Running tests
 ~~~~~~~~~~~~~~~~~~~
