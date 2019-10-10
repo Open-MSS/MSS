@@ -37,7 +37,6 @@ import os
 import pint
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
-import werkzeug.datastructures
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -564,28 +563,6 @@ def convert_to(value, from_unit, to_unit, default=1.):
             logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
             result = value * default
     return result
-
-
-class CaseInsensitiveMultiDict(werkzeug.datastructures.ImmutableMultiDict):
-    """Extension to werkzeug.datastructures.ImmutableMultiDict
-    that makes the MultiDict case-insensitive.
-
-    The only overridden method is __getitem__(), which converts string keys
-    to lower case before carrying out comparisons.
-
-    See ../paste/util/multidict.py as well as
-      http://stackoverflow.com/questions/2082152/case-insensitive-dictionary
-    """
-
-    def __getitem__(self, key):
-        if hasattr(key, 'lower'):
-            key = key.lower()
-        for k, v in self.items():
-            if hasattr(k, 'lower'):
-                k = k.lower()
-            if k == key:
-                return v
-        raise KeyError(repr(key))
 
 
 def setup_logging(args):

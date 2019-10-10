@@ -53,6 +53,7 @@ from chameleon import PageTemplateLoader
 
 from flask import Flask, request, make_response
 from flask_httpauth import HTTPBasicAuth
+from multidict import CIMultiDict
 from mslib.mswms.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
 
@@ -122,7 +123,7 @@ if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
         return authfunc(username, password)
 
 from mslib.mswms import mss_plot_driver
-from mslib.utils import CaseInsensitiveMultiDict, get_projection_params
+from mslib.utils import get_projection_params
 
 # Logging the Standard Output, which will be added to the Apache Log Files
 logging.basicConfig(level=logging.DEBUG,
@@ -296,7 +297,7 @@ class WMSServer(object):
 
         # 1) Make query parameters Case Insenstitive
         # =========================================
-        query = CaseInsensitiveMultiDict(query)
+        query = CIMultiDict(query)
         # 2) Evaluate query parameters:
         # =============================
 
