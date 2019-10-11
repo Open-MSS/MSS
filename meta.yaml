@@ -17,7 +17,7 @@ build:
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.server:main
     - mscolab_demodata = mslib.mscolab.demodata:main
-    - add_permissions = mslib.mscolab.add_bulk_permissions:main
+    - mscolab_add_permissions = mslib.mscolab.add_bulk_permissions:main
 
 requirements:
   build:

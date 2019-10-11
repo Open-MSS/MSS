@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.modulename
-    ~~~~~~~~~~~~~~~~
+    mslib.mscolab.add_bulk_permissions
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Text line as description
+    This file is used to insert permissions in bulk to mscolab db. This would in future, be
+    evolved to a circle management module, to deal with groups of users(circles).
 
     This file is part of mss.
 
