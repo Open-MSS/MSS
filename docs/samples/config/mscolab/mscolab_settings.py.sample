@@ -23,13 +23,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from mslib._tests.constants import TEST_BASE_DIR, TEST_DATA_DIR
 # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
 import logging
 # directory where mss output files are stored
 DATA_DIR = os.path.expanduser("~/mss/colabdata")
 BASE_DIR = os.path.expanduser("~/mss")
+# test configuration
+
+# dir where mss output files are stored
+TEST_DATA_DIR = os.path.expanduser("/tmp/colabdata")
+TEST_BASE_DIR = os.path.expanduser("/tmp")
+# test data dir mscolab
+TEST_MSCOLAB_DATA_DIR = os.path.join(TEST_DATA_DIR, 'filedata')
 # file to the sqlite3 db file
 SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
 

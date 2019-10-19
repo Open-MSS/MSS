@@ -43,7 +43,6 @@ except ImportError:
     ms = None
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Project, Permission
-from mslib._tests.constants import TEST_BASE_DIR, TEST_DATA_DIR
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.mscolab.seed import seed_data, create_tables
 
@@ -52,11 +51,11 @@ def create_test_data():
     # for tempfile_mscolab.ftml
     create_mssdir()
     # creating test directory
-    fs_datadir = fs.open_fs(TEST_BASE_DIR)
+    fs_datadir = fs.open_fs(mscolab_settings.TEST_BASE_DIR)
     if fs_datadir.exists('colabdata'):
         fs_datadir.removetree('colabdata')
     fs_datadir.makedir('colabdata')
-    fs_datadir = fs.open_fs(TEST_DATA_DIR)
+    fs_datadir = fs.open_fs(mscolab_settings.TEST_DATA_DIR)
 
     if mscolab_settings.TEST_SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
@@ -150,18 +149,19 @@ def create_test_data():
 
 
 def create_test_files():
-    fs_datadir = fs.open_fs(TEST_DATA_DIR)
+    fs_datadir = fs.open_fs(mscolab_settings.TEST_DATA_DIR)
     if not fs_datadir.exists('filedata'):
         fs_datadir.makedir('filedata')
         # add files
-        file_dir = fs.open_fs(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata'))
+        file_dir = fs.open_fs(fs.path.combine(mscolab_settings.TEST_BASE_DIR, 'colabdata/filedata'))
         # make directories
         file_paths = ['one', 'two', 'three']
         for file_path in file_paths:
             file_dir.makedir(file_path)
             file_dir.writetext('{}/main.ftml'.format(file_path), mscolab_settings.STUB_CODE)
             # initiate git
-            r = git.Repo.init(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
+            r = git.Repo.init(fs.path.combine(mscolab_settings.TEST_BASE_DIR,
+                                              'colabdata/filedata/{}'.format(file_path)))
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")
         file_dir.close()

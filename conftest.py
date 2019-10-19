@@ -35,7 +35,6 @@ import pytest
 
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
-from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import app, initialize_managers, start_server
 from mslib.mscolab.demodata import create_test_data
@@ -84,7 +83,7 @@ process = None
 def start_mscolab_server(request):
     _app = app
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.TEST_MSCOLAB_DATA_DIR
     _app, sockio, cm, fm = initialize_managers(_app)
     global process
     process = multiprocessing.Process(

@@ -31,7 +31,7 @@ import time
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
-from mslib._tests.constants import MSCOLAB_URL_TEST, TEST_MSCOLAB_DATA_DIR
+from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.server import db, app, initialize_managers
 
 
@@ -43,7 +43,7 @@ class Test_Sockets(object):
         self.sockets = []
         self.app = app
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.TEST_MSCOLAB_DATA_DIR
         self.app, _, cm, _ = initialize_managers(self.app)
         self.cm = cm
         db.init_app(self.app)
