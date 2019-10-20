@@ -93,7 +93,7 @@ MSS currently offers several import/export filters in the mslib.plugins.io modul
 as an example for the definition of own plugins. The CSV plugin is enabled by default. Enabling the
 experimental FliteStar text import plugin would require those lines in the UI settings file:
 
-.. code:: json
+.. code:: text
 
     "import_plugins": {
         "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"]
@@ -106,7 +106,7 @@ path.
 
 An exemplary test file format that can be ex- and imported may be activated by:
 
-.. code:: json
+.. code:: text
 
     "import_plugins": {
         "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"]
@@ -215,7 +215,7 @@ File picker dialogue
 MSS supports the use of a general file picker to access locations on remote machines
 facilitating collaboration on campaigns. To enable this feature apply
 
-.. code:: json
+.. code:: text
 
     "filepicker_default": "fs",
 
@@ -241,7 +241,7 @@ and `sshfs <https://github.com/libfuse/sshfs>`_ service.
 
 With setting the option "filepicker_default": "default" you can only access local storages.
 
-.. code:: json
+.. code:: text
 
   "data_dir": "~/mssdata",
 
