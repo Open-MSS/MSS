@@ -40,7 +40,7 @@ class Test_Mscolab(object):
     def setup(self):
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mc.MSSMscolabWindow(data_dir=mscolab_settings.TEST_MSCOLAB_DATA_DIR,
+        self.window = mc.MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                           mscolab_server_url=MSCOLAB_URL_TEST)
         self.window.show()
         QtWidgets.QApplication.processEvents()
@@ -48,8 +48,8 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
 
         self.app = app
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.TEST_MSCOLAB_DATA_DIR
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm

@@ -38,8 +38,8 @@ class Test_Files(object):
         self.sockets = []
         self.file_message_counter = [0] * 2
         self.app = app
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.TEST_MSCOLAB_DATA_DIR
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
