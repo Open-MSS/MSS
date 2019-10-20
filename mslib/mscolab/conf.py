@@ -42,12 +42,6 @@ except ImportError as ex:
         SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
         # test configuration
 
-        # dir where mss output files are stored
-        TEST_DATA_DIR = os.path.expanduser("/tmp/colabdata")
-        TEST_BASE_DIR = os.path.expanduser("/tmp")
-        # test data dir mscolab
-        TEST_MSCOLAB_DATA_DIR = os.path.join(TEST_DATA_DIR, 'filedata')
-
         # used to generate and parse tokens
         SECRET_KEY = 'secretkEyu'
         DB_HOST = '127.0.0.1'
@@ -56,21 +50,6 @@ except ImportError as ex:
         DB_NAME = 'test_1'
 
         # SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
-
-        TEST_DB_HOST = 'localhost'
-        TEST_DB_USER = 'username'
-        TEST_DB_PASSWORD = 'password'
-        TEST_DB_NAME = 'test_db'
-        # for sqlalchemy
-        TEST_SQLITE_FILE_PATH = os.path.join(TEST_DATA_DIR, 'mscolab.db')
-        TEST_SQLALCHEMY_DB_URI = 'sqlite:///' + TEST_SQLITE_FILE_PATH
-        # for postgres
-        """
-        TEST_SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(TEST_DB_USER,
-                                                                   TEST_DB_PASSWORD,
-                                                                   TEST_DB_HOST,
-                                                                   TEST_DB_NAME)
-        """
 
         # mscolab data directory
         MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')

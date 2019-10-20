@@ -60,7 +60,7 @@ class Test_Files(object):
             # test for '/' in path
             assert self.fm.create_project('test/path', 'sth', self.user) is False
             # check file existence
-            assert os.path.exists(os.path.join(mscolab_settings.TEST_MSCOLAB_DATA_DIR, 'test_path')) is True
+            assert os.path.exists(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db
             p = Project.query.filter_by(path="test_path").first()
             assert p is not None
@@ -185,7 +185,7 @@ class Test_Files(object):
             assert self.fm.update_project(p_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_project(p_id, 'path', 'dummy/wrong', self.user) is False
             assert self.fm.update_project(p_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(mscolab_settings.TEST_MSCOLAB_DATA_DIR, 'dummy'))
+            assert os.path.exists(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'dummy'))
             assert self.fm.update_project(p_id, 'description', 'dummy', self.user) is True
 
     def test_delete_project(self):
