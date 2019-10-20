@@ -15,10 +15,7 @@ Mission Support System's Documentation
    about
    dependencies
    installation
-   usage
-   deployment
-   mscolab
-   demodata
+   compounds
    development
    authors
 
