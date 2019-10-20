@@ -55,14 +55,14 @@ using a local meta.yaml recipe::
   $ conda install --use-local mss
   $ mkdir "$HOME/.config/mss"
   $ # cp mss_settings.json.sample to "$HOME/.config/mss/mss_settings.json"
-  $ conda remove mss
+  $ conda remove mss --force
 
 
 alternative get the whole package first::
 
  $ conda create -n mssdev mss
  $ conda activate mssdev
- $ conda remove mss
+ $ conda remove mss --force
 
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
 
