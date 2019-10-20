@@ -58,7 +58,6 @@ imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
 
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 
-# ToDo refactor
 create_test_data()
 
 

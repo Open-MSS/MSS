@@ -56,6 +56,7 @@ def create_test_data():
         fs_datadir.removetree('colabdata')
     fs_datadir.makedir('colabdata')
     fs_datadir = fs.open_fs(mscolab_settings.TEST_DATA_DIR)
+    create_test_files()
 
     if mscolab_settings.TEST_SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
@@ -134,18 +135,15 @@ def create_test_data():
 
         pass
     elif mscolab_settings.TEST_SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
-        # path_prepend = os.path.dirname(os.path.abspath(__file__))
-        cur_dir = os.path.dirname(os.path.abspath(__file__))
-        mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
-        if fs_datadir.exists('mscolab.db'):
-            logging.info("Database exists")
-        else:
-            create_test_files()
-            fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
+        create_tables(mscolab_settings.TEST_SQLALCHEMY_DB_URI)
+        seed_data(mscolab_settings.TEST_SQLALCHEMY_DB_URI)
 
     elif mscolab_settings.TEST_SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
-        create_test_files()
         create_postgres_test()
+
+
+def create_test_config():
+    pass
 
 
 def create_test_files():
@@ -225,13 +223,7 @@ def create_data():
         fs_datadir.makedir('filedata')
     if mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
-        fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
-        cur_dir = os.path.dirname(os.path.abspath(__file__))
-        mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
-        if fs_datadir.exists('mscolab.db'):
-            logging.info("Database exists")
-        else:
-            fs.copy.copy_file(mss_dir, 'mscolab_deploy.db.sample', fs_datadir, 'mscolab.db')
+        create_tables(mscolab_settings.SQLALCHEMY_DB_URI)
     elif mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
         create_postgres()
 
