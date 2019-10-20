@@ -32,8 +32,11 @@ browser. FS URLs are useful if you want to specify a filesystem dynamically, suc
 from the command line.
 
 
-Format
-------
+Syntax for PyFilesystem2 Urls
+------------------------~----
+
+We have internally implemented `PyFilesystem2 <https://docs.pyfilesystem.org/en/latest/index.html>`_
+
 
 FS URLs are formatted in the following way::
 
