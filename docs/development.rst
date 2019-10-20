@@ -212,7 +212,7 @@ Creating a new release
 * create a release on anaconda conda-forge
 * announce on:
 * Mailing list
-* Twitter (follow @ReimarBauer for these tweets)
+* Twitter (follow @TheMSSystem for these tweets)
 
 
 Publish on Conda Forge
