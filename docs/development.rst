@@ -16,7 +16,7 @@ to make a pull request to the develop branch. Documentation of changes is done b
 When it is ready the developer version becomes the next stable.
 
 
-The stable version of MSS is tracked on `BLACK DICK Open Hub <https://www.openhub.net/p/mss>`_
+The stable version of MSS is tracked on `BLACK DUCK Open Hub <https://www.openhub.net/p/mss>`_
 
 
 Style guide
