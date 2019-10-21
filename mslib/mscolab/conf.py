@@ -40,7 +40,6 @@ except ImportError as ex:
         SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
 
         SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
-        # test configuration
 
         # used to generate and parse tokens
         SECRET_KEY = 'secretkEyu'

@@ -51,7 +51,6 @@ def create_test_data():
     # for tempfile_mscolab.ftml
     create_mssdir()
     # creating test directory
-    print(mscolab_settings.BASE_DIR)
     fs_datadir = fs.open_fs(mscolab_settings.BASE_DIR)
     if fs_datadir.exists('colabdata'):
         fs_datadir.removetree('colabdata')
