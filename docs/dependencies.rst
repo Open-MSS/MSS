@@ -1,4 +1,4 @@
-Mission Support Dependencies
-===============================
+Dependencies
+============
 
 .. include:: ../NOTICE
