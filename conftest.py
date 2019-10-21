@@ -57,9 +57,9 @@ imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 
 # create test config and link import to it
-create_test_config()
-imp.load_source('mscolab_settings', '/tmp/mscolab_settings.py')
-sys.path.insert(0, '/tmp')
+path, parent_path = create_test_config()
+imp.load_source('mscolab_settings', path)
+sys.path.insert(0, parent_path)
 
 # after test config is created, test data is created
 from mslib.mscolab.demodata import create_test_data

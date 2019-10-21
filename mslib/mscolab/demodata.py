@@ -34,6 +34,7 @@ import argparse
 import git
 import psycopg2
 import sqlalchemy
+from fs.tempfs import TempFS
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 
@@ -205,10 +206,17 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 </FlightTrack>
 """
     '''
-    fs_tmpdir = fs.open_fs('/tmp')
-    fs_tmpdir.writetext('mscolab_settings.py', config_string)
-    fs_tmpdir.close()
-
+    repo = git.Repo(search_parent_directories=True)
+    sha = repo.head.object.hexsha
+    ROOT_FS = TempFS(identifier="mss{}".format(sha))
+    ROOT_DIR = ROOT_FS.root_path
+    if not ROOT_FS.exists('mscolab'):
+        ROOT_FS.makedir('mscolab')
+    mscolab_fs = fs.open_fs(os.path.join(ROOT_DIR, "mscolab"))
+    mscolab_fs.writetext('mscolab_settings.py', config_string)
+    mscolab_fs.close()
+    return (os.path.join(ROOT_DIR, 'mscolab', 'mscolab_settings.py'),
+                         os.path.join(ROOT_DIR, 'mscolab'))
 
 def create_test_files():
     fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
