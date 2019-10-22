@@ -34,7 +34,6 @@ import argparse
 import git
 import psycopg2
 import sqlalchemy
-from fs.tempfs import TempFS
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 
@@ -46,6 +45,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Project, Permission
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.mscolab.seed import seed_data, create_tables
+from mslib._tests.constants import ROOT_DIR
 
 
 def create_test_data():
@@ -173,9 +173,13 @@ def create_test_config():
 # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
 import logging
+import fs
+from mslib._tests.constants import ROOT_DIR
 # directory where mss output files are stored
-DATA_DIR = os.path.expanduser("/tmp/colabdata")
-BASE_DIR = os.path.expanduser("/tmp")
+root_fs = fs.open_fs(ROOT_DIR)
+root_fs.makedir('colabdata')
+DATA_DIR = os.path.join(ROOT_DIR, 'colabdata')
+BASE_DIR = ROOT_DIR
 SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
 
 SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
@@ -206,10 +210,7 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 </FlightTrack>
 """
     '''
-    repo = git.Repo(search_parent_directories=True)
-    sha = repo.head.object.hexsha
-    ROOT_FS = TempFS(identifier="mss{}".format(sha))
-    ROOT_DIR = ROOT_FS.root_path
+    ROOT_FS = fs.open_fs(ROOT_DIR)
     if not ROOT_FS.exists('mscolab'):
         ROOT_FS.makedir('mscolab')
     mscolab_fs = fs.open_fs(os.path.join(ROOT_DIR, "mscolab"))
