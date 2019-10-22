@@ -216,7 +216,8 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
     mscolab_fs.writetext('mscolab_settings.py', config_string)
     mscolab_fs.close()
     return (os.path.join(ROOT_DIR, 'mscolab', 'mscolab_settings.py'),
-                         os.path.join(ROOT_DIR, 'mscolab'))
+            os.path.join(ROOT_DIR, 'mscolab'))
+
 
 def create_test_files():
     fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
