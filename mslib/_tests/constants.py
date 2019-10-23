@@ -56,10 +56,3 @@ DATA_DIR = DATA_FS.root_path
 MSCOLAB_URL = "http://localhost:8083"
 # mscolab test server's url
 MSCOLAB_URL_TEST = "http://localhost:8084"
-
-
-# dir where mss output files are stored
-TEST_DATA_DIR = os.path.expanduser("/tmp/colabdata")
-TEST_BASE_DIR = os.path.expanduser("/tmp")
-# test data dir mscolab
-TEST_MSCOLAB_DATA_DIR = os.path.join(TEST_DATA_DIR, 'filedata')

@@ -30,7 +30,7 @@ import logging
 import time
 
 from mslib.mscolab.server import db, app, initialize_managers
-from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR, MSCOLAB_URL_TEST
+from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Project
 import mslib.msui.mscolab as mc
@@ -40,15 +40,16 @@ class Test_Mscolab(object):
     def setup(self):
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mc.MSSMscolabWindow(data_dir=TEST_MSCOLAB_DATA_DIR, mscolab_server_url=MSCOLAB_URL_TEST)
+        self.window = mc.MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                          mscolab_server_url=MSCOLAB_URL_TEST)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
         self.app = app
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm

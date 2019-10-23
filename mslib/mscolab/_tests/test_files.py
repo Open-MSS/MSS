@@ -30,7 +30,6 @@ import os
 from functools import partial
 import time
 
-from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib._tests.constants import MSCOLAB_URL_TEST
@@ -43,8 +42,8 @@ class Test_Files(object):
         self.sockets = []
         self.file_message_counter = [0] * 2
         self.app = app
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
@@ -61,7 +60,7 @@ class Test_Files(object):
             # test for '/' in path
             assert self.fm.create_project('test/path', 'sth', self.user) is False
             # check file existence
-            assert os.path.exists(os.path.join(TEST_MSCOLAB_DATA_DIR, 'test_path')) is True
+            assert os.path.exists(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db
             p = Project.query.filter_by(path="test_path").first()
             assert p is not None
@@ -186,7 +185,7 @@ class Test_Files(object):
             assert self.fm.update_project(p_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_project(p_id, 'path', 'dummy/wrong', self.user) is False
             assert self.fm.update_project(p_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(TEST_MSCOLAB_DATA_DIR, 'dummy'))
+            assert os.path.exists(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'dummy'))
             assert self.fm.update_project(p_id, 'description', 'dummy', self.user) is True
 
     def test_delete_project(self):
