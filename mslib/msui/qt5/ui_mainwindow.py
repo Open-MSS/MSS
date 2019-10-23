@@ -127,7 +127,7 @@ class Ui_MSSMainWindow(object):
         self.menu_Help.addAction(self.actionAboutMSUI)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menu_View.menuAction())
-        self.menubar.addAction(self.menu_Tools.menuAction())
+        # self.menubar.addAction(self.menu_Tools.menuAction())
         self.menubar.addAction(self.menu_Mscolab.menuAction())
         self.menubar.addAction(self.menu_Help.menuAction())
 
