@@ -81,10 +81,11 @@ TABLE_FULL = [
     ("Rem. fuel\n(lb)", lambda waypoint: ("{:d}".format(int(waypoint.rem_fuel))), False),
     ("Aircraft\nweight (lb)", lambda waypoint: ("{:d}".format(int(waypoint.weight))), False),
     ("Ceiling\naltitude (hft)", lambda waypoint: ("{:d}".format(waypoint.ceiling_alt)), False),
+    ("Ascent rate\n(ft/minute)", lambda waypoint: ("{:d}".format(waypoint.ascent_rate)), False),
     ("Comments                        ", lambda waypoint: waypoint.comments, True),
 ]
 
-TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 7
+TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 8
 
 
 class Waypoint(object):
@@ -115,6 +116,7 @@ class Waypoint(object):
         self.rem_fuel = None  # total fuel consumption
         self.weight = None  # aircraft gross weight
         self.ceiling_alt = None  # aircraft ceiling altitude
+        self.ascent_rate = None  # aircraft ascent rate
 
         self.wpnumber_major = None
         self.wpnumber_minor = None
@@ -454,6 +456,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp1.weight = self.performance_settings["takeoff_weight"]
                 wp1.leg_fuel = 0
                 wp1.rem_fuel = self.performance_settings["fuel"]
+                wp1.ascent_rate = 0
             else:
                 wp0 = waypoints[pos - 1]
                 wp1.distance_to_prev = utils.get_distance((wp0.lat, wp0.lon),
@@ -468,6 +471,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp1.leg_fuel = fuel
                 wp1.rem_fuel = wp0.rem_fuel - wp1.leg_fuel
                 wp1.weight = wp0.weight - wp1.leg_fuel
+                if wp1.leg_time != 0:
+                    wp1.ascent_rate = int((wp1.flightlevel - wp0.flightlevel) * 100 / (wp1.leg_time / 60))
+                else:
+                    wp1.ascent_rate = 0
             wp1.ceiling_alt = aircraft.get_ceiling_altitude(wp1.weight)
 
         # Update the distance of the following waypoint as well.
@@ -475,6 +482,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             wp2 = waypoints[pos + 1]
             wp2.distance_to_prev = utils.get_distance((wp1.lat, wp1.lon),
                                                       (wp2.lat, wp2.lon))
+            if wp2.leg_time != 0:
+                wp2.ascent_rate = int((wp2.flightlevel - wp1.flightlevel) * 100 / (wp2.leg_time / 60))
+            else:
+                wp2.ascent_rate = 0
 
         # Update total distances of waypoint at index position and all
         # following waypoints.
