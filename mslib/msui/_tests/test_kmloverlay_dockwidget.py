@@ -52,11 +52,24 @@ class Test_KmlOverlayDockWidget(object):
         del self.window
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_load_error(self, mockbox):
+        """
+        Test that program mitigates loading a non-existing file
+        """
+        # load a non existing path
+        path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
+                            "samples", "satellite_tracks", "satellite_predictor.txt")
+        self.window.leFile.setText(path)
+        QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockbox.critical.call_count == 1
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_load(self, mockbox):
         """
         Test for flawless loading of parsing of KML files
         """
-        for sample in ["folder.kml", "line.kml"]:
+        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml"]:
             path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", sample)
             self.window.leFile.setText(path)
             QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
@@ -78,16 +91,3 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.cbManualStyle, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    def test_load_error(self, mockbox):
-        """
-        Test that program mitigates loading a non-existing file
-        """
-        # load a non existing path
-        path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
-                            "samples", "satellite_tracks", "satellite_predictor.txt")
-        self.window.leFile.setText(path)
-        QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 1
