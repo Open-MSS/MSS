@@ -34,7 +34,7 @@ from mslib._tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CO
 import mslib.mswms.demodata as demodata
 
 
-class TestDemodate(object):
+class TestDemodata(object):
     def test_data_creation(self):
         assert ROOT_FS.exists(u'.')
         assert DATA_FS.exists(u'.')
@@ -46,8 +46,8 @@ class TestDemodate(object):
 
     def test_get_profile(self):
         mean, std = demodata.get_profile("air_pressure", [1000, 10000, 50000], "air_temperature")
-        assert np.allclose(mean, [215., 212., 255.])
-        assert np.allclose(std, [3.79, 6.31, 6.33])
+        assert np.allclose(mean, [223., 212., 255.])
+        assert np.allclose(std, [3.03, 6.31, 6.33])
 
         mean, std = demodata.get_profile("air_potential_temperature", [300, 350, 400], "geopotential_height")
         assert np.allclose(mean, [2953.99369248, 12007.44365002, 15285.95068235])

@@ -43,22 +43,24 @@ except ImportError:
     ms = None
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Project, Permission
-from mslib._tests.constants import TEST_BASE_DIR, TEST_DATA_DIR
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.mscolab.seed import seed_data, create_tables
+from mslib._tests.constants import ROOT_DIR
 
 
 def create_test_data():
     # for tempfile_mscolab.ftml
     create_mssdir()
     # creating test directory
-    fs_datadir = fs.open_fs(TEST_BASE_DIR)
+    fs_datadir = fs.open_fs(mscolab_settings.BASE_DIR)
     if fs_datadir.exists('colabdata'):
         fs_datadir.removetree('colabdata')
     fs_datadir.makedir('colabdata')
-    fs_datadir = fs.open_fs(TEST_DATA_DIR)
+    fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
+    # creating filedata directory
+    create_test_files()
 
-    if mscolab_settings.TEST_SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
+    if mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
             logging.info("""can't complete demodata setup,
                          use sqlite3 or configure mysql with proper modules""")
@@ -134,34 +136,104 @@ def create_test_data():
             db.session.commit()
 
         pass
-    elif mscolab_settings.TEST_SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
-        # path_prepend = os.path.dirname(os.path.abspath(__file__))
-        cur_dir = os.path.dirname(os.path.abspath(__file__))
-        mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
-        if fs_datadir.exists('mscolab.db'):
-            logging.info("Database exists")
-        else:
-            create_test_files()
-            fs.copy.copy_file(mss_dir, 'mscolab.db.sample', fs_datadir, 'mscolab.db')
+    elif mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
+        create_tables(mscolab_settings.SQLALCHEMY_DB_URI)
+        seed_data(mscolab_settings.SQLALCHEMY_DB_URI)
 
-    elif mscolab_settings.TEST_SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
-        create_test_files()
+    elif mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
         create_postgres_test()
 
 
+def create_test_config():
+    config_string = '''# -*- coding: utf-8 -*-
+"""
+
+    mslib.mscolab.conf.py.example
+    ~~~~~~~~~~~~~~~~~~~~
+
+    config for mscolab.
+
+    This file is part of mss.
+
+    :copyright: Copyright 2019 Shivashis Padhi
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+import os
+import logging
+import fs
+from mslib._tests.constants import ROOT_DIR
+# directory where mss output files are stored
+root_fs = fs.open_fs(ROOT_DIR)
+root_fs.makedir('colabdata')
+DATA_DIR = os.path.join(ROOT_DIR, 'colabdata')
+BASE_DIR = ROOT_DIR
+SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
+
+SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
+
+# used to generate and parse tokens
+# details of database connections
+SECRET_KEY = 'secretkEyu'
+DB_HOST = '127.0.0.1'
+DB_USER = 'user'
+DB_PASSWORD = 'pass'
+DB_NAME = 'test_1'
+
+# SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
+
+# mscolab data directory
+MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+# text to be written in new mscolab based ftml files.
+STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
+<FlightTrack version="1.7.6">
+  <ListOfWaypoints>
+    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
+      <Comments></Comments>
+    </Waypoint>
+    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
+      <Comments></Comments>
+    </Waypoint>
+  </ListOfWaypoints>
+</FlightTrack>
+"""
+    '''
+    ROOT_FS = fs.open_fs(ROOT_DIR)
+    if not ROOT_FS.exists('mscolab'):
+        ROOT_FS.makedir('mscolab')
+    mscolab_fs = fs.open_fs(os.path.join(ROOT_DIR, "mscolab"))
+    mscolab_fs.writetext('mscolab_settings.py', config_string)
+    mscolab_fs.close()
+    return (os.path.join(ROOT_DIR, 'mscolab', 'mscolab_settings.py'),
+            os.path.join(ROOT_DIR, 'mscolab'))
+
+
 def create_test_files():
-    fs_datadir = fs.open_fs(TEST_DATA_DIR)
+    fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
     if not fs_datadir.exists('filedata'):
         fs_datadir.makedir('filedata')
         # add files
-        file_dir = fs.open_fs(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata'))
+        file_dir = fs.open_fs(fs.path.combine(mscolab_settings.BASE_DIR, 'colabdata/filedata'))
         # make directories
         file_paths = ['one', 'two', 'three']
         for file_path in file_paths:
             file_dir.makedir(file_path)
             file_dir.writetext('{}/main.ftml'.format(file_path), mscolab_settings.STUB_CODE)
             # initiate git
-            r = git.Repo.init(fs.path.combine(TEST_BASE_DIR, 'colabdata/filedata/{}'.format(file_path)))
+            r = git.Repo.init(fs.path.combine(mscolab_settings.BASE_DIR,
+                                              'colabdata/filedata/{}'.format(file_path)))
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")
         file_dir.close()
@@ -190,21 +262,21 @@ def create_postgres(seed=False):
 
 def create_postgres_test():
     con = psycopg2.connect(dbname="template1",
-                           user=mscolab_settings.TEST_DB_USER,
-                           host=mscolab_settings.TEST_DB_HOST,
-                           password=mscolab_settings.TEST_DB_PASSWORD)
+                           user=mscolab_settings.DB_USER,
+                           host=mscolab_settings.DB_HOST,
+                           password=mscolab_settings.DB_PASSWORD)
 
     con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
     cur = con.cursor()
-    cur.execute("DROP DATABASE IF EXISTS {};".format(mscolab_settings.TEST_DB_NAME))
-    cur.execute("CREATE DATABASE {};".format(mscolab_settings.TEST_DB_NAME))
-    create_tables(mscolab_settings.TEST_SQLALCHEMY_DB_URI)
+    cur.execute("DROP DATABASE IF EXISTS {};".format(mscolab_settings.DB_NAME))
+    cur.execute("CREATE DATABASE {};".format(mscolab_settings.DB_NAME))
+    create_tables(mscolab_settings.SQLALCHEMY_DB_URI)
     # to reset cursors
-    con = psycopg2.connect(dbname=mscolab_settings.TEST_DB_NAME,
-                           user=mscolab_settings.TEST_DB_USER,
-                           host=mscolab_settings.TEST_DB_HOST,
-                           password=mscolab_settings.TEST_DB_PASSWORD)
+    con = psycopg2.connect(dbname=mscolab_settings.DB_NAME,
+                           user=mscolab_settings.DB_USER,
+                           host=mscolab_settings.DB_HOST,
+                           password=mscolab_settings.DB_PASSWORD)
 
     con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
@@ -212,7 +284,7 @@ def create_postgres_test():
     cur.execute("ALTER SEQUENCE users_id_seq RESTART WITH 4;")
     cur.execute("ALTER SEQUENCE projects_id_seq RESTART WITH 4;")
     cur.execute("ALTER SEQUENCE permissions_id_seq RESTART WITH 11;")
-    seed_data(mscolab_settings.TEST_SQLALCHEMY_DB_URI)
+    seed_data(mscolab_settings.SQLALCHEMY_DB_URI)
 
 
 def create_data():
@@ -225,13 +297,7 @@ def create_data():
         fs_datadir.makedir('filedata')
     if mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
         # path_prepend = os.path.dirname(os.path.abspath(__file__))
-        fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
-        cur_dir = os.path.dirname(os.path.abspath(__file__))
-        mss_dir = fs.open_fs(fs.path.combine(cur_dir, '../../docs/samples/config/mscolab/'))
-        if fs_datadir.exists('mscolab.db'):
-            logging.info("Database exists")
-        else:
-            fs.copy.copy_file(mss_dir, 'mscolab_deploy.db.sample', fs_datadir, 'mscolab.db')
+        create_tables(mscolab_settings.SQLALCHEMY_DB_URI)
     elif mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
         create_postgres()
 

@@ -16,6 +16,9 @@ to make a pull request to the develop branch. Documentation of changes is done b
 When it is ready the developer version becomes the next stable.
 
 
+The stable version of MSS is tracked on `BLACK DUCK Open Hub <https://www.openhub.net/p/mss>`_
+
+
 Style guide
 ~~~~~~~~~~~~~~~~
 
@@ -55,14 +58,14 @@ using a local meta.yaml recipe::
   $ conda install --use-local mss
   $ mkdir "$HOME/.config/mss"
   $ # cp mss_settings.json.sample to "$HOME/.config/mss/mss_settings.json"
-  $ conda remove mss
+  $ conda remove mss --force
 
 
 alternative get the whole package first::
 
  $ conda create -n mssdev mss
  $ conda activate mssdev
- $ conda remove mss
+ $ conda remove mss --force
 
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
 
@@ -209,5 +212,17 @@ Creating a new release
 * create a release on anaconda conda-forge
 * announce on:
 * Mailing list
-* Twitter (follow @ReimarBauer for these tweets)
+* Twitter (follow @TheMSSystem for these tweets)
+
+
+Publish on Conda Forge
+~~~~~~~~~~~~~~~~~~~~~~
+
+* update a fork of the `mss-feedstock <https://github.com/conda-forge/mss-feedstock>`_
+ * set version string
+ * set sha256 checksum of the tagged release
+ * update dependencies
+* rerender the feedstock by conda smithy
+* send a pull request
+* maintainer will merge if there is no error
 

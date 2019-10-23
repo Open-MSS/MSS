@@ -31,7 +31,6 @@ except ImportError as ex:
     logging.warning(u"Couldn't import mss_wms_settings (ImportError:'%s'), creating dummy config.", ex)
 
     class mscolab_settings(object):
-        from mslib._tests.constants import TEST_BASE_DIR, TEST_DATA_DIR
         # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
         import os
         import logging
@@ -50,21 +49,6 @@ except ImportError as ex:
         DB_NAME = 'test_1'
 
         # SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
-
-        TEST_DB_HOST = 'localhost'
-        TEST_DB_USER = 'username'
-        TEST_DB_PASSWORD = 'password'
-        TEST_DB_NAME = 'test_db'
-        # for sqlalchemy
-        TEST_SQLITE_FILE_PATH = os.path.join(TEST_DATA_DIR, 'mscolab.db')
-        TEST_SQLALCHEMY_DB_URI = 'sqlite:///' + TEST_SQLITE_FILE_PATH
-        # for postgres
-        """
-        TEST_SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(TEST_DB_USER,
-                                                                   TEST_DB_PASSWORD,
-                                                                   TEST_DB_HOST,
-                                                                   TEST_DB_NAME)
-        """
 
         # mscolab data directory
         MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')

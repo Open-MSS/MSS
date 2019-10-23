@@ -57,7 +57,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.view = view
         self.load = Loader(MSS_CONFIG_PATH, verbose=False)
         self.planets = self.load('de421.bsp')
-        self.timescale = self.load.timescale()
+        self.timescale = self.load.timescale(builtin=True)
+        # don't download files, use shipped files
 
         button = self.btTangentsColour
         palette = QtGui.QPalette(button.palette())

@@ -12,12 +12,10 @@ Mission Support System's Documentation
 .. toctree::
    :maxdepth: 2
 
+   about
    dependencies
    installation
-   usage
-   deployment
-   mscolab
-   demodata
+   compounds
    development
    authors
 

@@ -39,10 +39,7 @@ import pytest
 
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
-from mslib._tests.constants import TEST_MSCOLAB_DATA_DIR
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import app, initialize_managers, start_server
-from mslib.mscolab.demodata import create_test_data
+from mslib.mscolab.demodata import create_test_config
 
 if os.getenv("TESTS_VISIBLE") == "TRUE":
     Display = None
@@ -64,7 +61,13 @@ imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
 
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 
-# ToDo refactor
+# create test config and link import to it
+path, parent_path = create_test_config()
+imp.load_source('mscolab_settings', path)
+sys.path.insert(0, parent_path)
+
+# after test config is created, test data is created
+from mslib.mscolab.demodata import create_test_data
 create_test_data()
 
 
@@ -87,9 +90,12 @@ process = None
 
 @pytest.fixture(scope="session", autouse=True)
 def start_mscolab_server(request):
+    from mslib.mscolab.conf import mscolab_settings
+    from mslib.mscolab.server import app, initialize_managers, start_server
+
     _app = app
-    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.TEST_SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = TEST_MSCOLAB_DATA_DIR
+    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
     _app, sockio, cm, fm = initialize_managers(_app)
     global process
     process = multiprocessing.Process(

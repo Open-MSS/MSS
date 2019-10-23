@@ -1,4 +1,4 @@
-Mscolab - Mission Support Collaboration
+mscolab - Collaboration on Flighpathes
 =======================================
 
 Mscolab has been developed to make mss workable in a collaborative environment, with additional features such as
