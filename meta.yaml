@@ -58,6 +58,7 @@ requirements:
     - gitpython
     - psycopg2
     - validate_email
+    - multidict
 
 test:
   imports:

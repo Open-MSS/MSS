@@ -27,6 +27,8 @@
 
 import datetime
 from mslib import utils
+import multidict
+import werkzeug
 
 
 class TestSettingsSave(object):
@@ -249,3 +251,34 @@ def test_pathpoints():
     assert all(len(_x) == 100 for _x in result)
     assert all(result[i][0] == p1[i] for i in range(3))
     assert all(result[i][-1] == p3[i] for i in range(3))
+
+
+class TestCIMultiDict(object):
+
+    class CaseInsensitiveMultiDict(werkzeug.datastructures.ImmutableMultiDict):
+        """Extension to werkzeug.datastructures.ImmutableMultiDict
+        that makes the MultiDict case-insensitive.
+
+        The only overridden method is __getitem__(), which converts string keys
+        to lower case before carrying out comparisons.
+
+        See ../paste/util/multidict.py as well as
+          http://stackoverflow.com/questions/2082152/case-insensitive-dictionary
+        """
+
+        def __getitem__(self, key):
+            if hasattr(key, 'lower'):
+                key = key.lower()
+            for k, v in self.items():
+                if hasattr(k, 'lower'):
+                    k = k.lower()
+                if k == key:
+                    return v
+            raise KeyError(repr(key))
+
+    def test_multidict(object):
+        dict = TestCIMultiDict.CaseInsensitiveMultiDict([('title', 'MSS')])
+        dict_multidict = multidict.CIMultiDict([('title', 'MSS')])
+        assert 'title' in dict_multidict
+        assert 'tiTLE' in dict_multidict
+        assert dict_multidict['Title'] == dict['tITLE']
