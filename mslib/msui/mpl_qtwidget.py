@@ -218,7 +218,18 @@ NavigationToolbar2QT.save_figure = save_figure
 
 
 class NavigationToolbar(NavigationToolbar2QT):
-    # only display the buttons we need
+    """
+    parts of this class have been copied from the NavigationToolbar2QT class.
+
+    According to https://matplotlib.org/users/license.html we shall
+    summarise our changes to matplotlib code:
+
+    We copied small parts of the given implementation of the navigation
+    toolbar class to allow for our custom waypoint buttons. Our code extends
+    the matplotlib toolbar to allow for less or additional buttons and properly
+    update all plots and elements in case the pan or zoom elements were
+    triggered by the user.
+    """
 
     def __init__(self, canvas, parent, sideview=False, coordinates=True):
         if sideview:
