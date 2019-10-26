@@ -8,7 +8,7 @@ chat-messages, keeping track of the made changes, permissions of the collaborato
 Steps to run 
 ~~~~~~~~~~~~~~~~
   - Mscolab server has to be manually installed, the instructions can be found at :ref:`development`
-  - Once mss is installed, mscolab server can be started by the command 'mscolab'
+  - Once mss is installed, mscolab server can be started by the command :code:`mscolab`
   - Mscolab UI will be in the future, the new main UI. For now, to get also users experience included we add it as a new menu in the tool-bar. We evolve the new UI  by these inputs of more users and will deprecate in this process the old one.
   - To start mscolab from ui select `mscolab` option in msui menu.
 
@@ -62,3 +62,30 @@ Notes regarding current release
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   - Autosave mode has to be enabled at this stage. Only admins/creators can enable autosave. If enabled, all the changes are synced across all instances of mscolab opened by users. Else there’d be conflicted files.
   - However, all the changes are stored as VCS commits, so the project can be reverted to any past state safely.
+
+Notes for server administrators
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you're configuring mscolab server, there isn't a GUI to add or manage a group of users. There is however a
+proposal to bring this on around the next release of mss. For now, there is a command line tool available with the
+installation of mss, :code:`mscolab_add_permissions`. It's usage is as follows
+
+- Make a text file with the following format
+  ::
+    path1
+    u1-c
+    u2-c
+    u3-a
+
+    path2
+    u1-a
+
+    path3
+    u2-v
+- `path1` represents the path of project in mscolab db. 
+- u1, u2, u3 are usernames. 
+- `c` stands for collaborator, `a` for admin, `v` for viewer.
+- Different paths are separated by 2 '\n's.
+- The tool can be invocated anywhere using,
+  ::
+    $ mscolab_add_permissions /path/to/file
+  where :code:`/path/to/file` represents the path to file created above.
