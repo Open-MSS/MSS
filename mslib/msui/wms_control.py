@@ -396,11 +396,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Initial list of WMS servers.
         self.cbWMS_URL.setModel(WMS_URL_LIST)
-
+        if default_WMS is not None:
+            add_wms_urls(self.cbWMS_URL, default_WMS)
         # set last connected url to editable
         wms_settings = load_settings_qsettings('wms', {'recent_wms_url': None})
         if wms_settings['recent_wms_url'] is not None:
-            self.cbWMS_URL.setEditText(wms_settings['recent_wms_url'])
+            add_wms_urls(self.cbWMS_URL, [wms_settings['recent_wms_url']])
 
         # Initially allowed WMS parameters and date/time formats.
         self.allowed_init_times = []
