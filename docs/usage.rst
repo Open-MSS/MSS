@@ -23,7 +23,7 @@ interface (top view and side view).
 Configuration of mss
 ++++++++++++++++++++
 
-For storage capabilities mss uses the `pyfilesystem <http://pyfilesystem2.readthedocs.io>` approach.
+For storage capabilities mss uses the `PyFilesystem2 <http://pyfilesystem2.readthedocs.io>`__ approach.
 The default data dir is predefined as a directory: `~/mssdata` which is the same as `osfs://~/mssdata`.
 
 
@@ -35,7 +35,7 @@ from the command line.
 Syntax for PyFilesystem2 Urls
 ------------------------~----
 
-We have internally implemented `PyFilesystem2 <https://docs.pyfilesystem.org/en/latest/index.html>`_
+We have internally implemented `PyFilesystem2 <http://pyfilesystem2.readthedocs.io>`__
 
 
 FS URLs are formatted in the following way::
@@ -237,7 +237,7 @@ data dir
 ~~~~~~~~
 
 With using the "filepicker_default": "fs" setting you can enable any implemented
-`pyfilesystem2 <http://pyfilesystem2.readthedocs.io/en/latest/openers.html>`_ fs url.
+`PyFilesystem2 <http://pyfilesystem2.readthedocs.io/en/latest/openers.html>`_ fs url.
 Additional to the builtin fs urls we have added optional the `webdavfs <https://github.com/PyFilesystem/webdavfs>`_
 and `sshfs <https://github.com/libfuse/sshfs>`_ service.
 

@@ -219,9 +219,9 @@ Publish on Conda Forge
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * update a fork of the `mss-feedstock <https://github.com/conda-forge/mss-feedstock>`_
- * set version string
- * set sha256 checksum of the tagged release
- * update dependencies
+  * set version string
+  * set sha256 checksum of the tagged release
+  * update dependencies
 * rerender the feedstock by conda smithy
 * send a pull request
 * maintainer will merge if there is no error

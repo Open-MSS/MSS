@@ -70,8 +70,10 @@ proposal to bring this on around the next release of mss. For now, there is a co
 installation of mss, :code:`mscolab_add_permissions`. It's usage is as follows
 
 - Make a text file with the following format
-  ::
-    path1
+
+ .. code-block:: text
+
+  path1
     u1-c
     u2-c
     u3-a
@@ -81,11 +83,15 @@ installation of mss, :code:`mscolab_add_permissions`. It's usage is as follows
 
     path3
     u2-v
+
 - `path1` represents the path of project in mscolab db. 
 - u1, u2, u3 are usernames. 
 - `c` stands for collaborator, `a` for admin, `v` for viewer.
 - Different paths are separated by 2 '\n's.
-- The tool can be invocated anywhere using,
-  ::
-    $ mscolab_add_permissions /path/to/file
-  where :code:`/path/to/file` represents the path to file created above.
+- The tool can be invocated anywhere by a command, where :code:`/path/to/file` represents the path to file created above.
+
+ .. code-block:: text
+
+  $ mscolab_add_permissions /path/to/file
+
+
