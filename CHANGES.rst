@@ -1,6 +1,48 @@
 Changelog
 =========
 
+Version 1.9.0
+-------------
+
+New Features:
+  - `Collaborative editing of flight path in real-time - GSoC19 (Shivashis Padhi)  <https://bitbucket.org/wxmetvis/mss/wiki/Mscolab:%20Collaborative%20editing%20of%20flight%20path%20in%20real-time%20-%20GSoC19>`_
+  - test should not write pyc bytecode files, #469
+  - MSS should allow simpler access to skip checks on additional dimensions or variables in NetCDF files, #463
+  - satellite overpass widget shall get a "all" options. #450
+  - unification of time string parsing, #440
+  - Store lon_indices in plot driver so more complicated plots are feasible, #428
+  - Support data with no init time in MSS server, #427
+  - env disable for pyvirtualdisplay for tests, #426
+  - Server is too slow when loading in many netCDF files, #423
+  - use pint for unit conversion, #422
+  - use package multidict, #404
+  - color for missing data, move to matplotlib 3.1.0, #397
+  - enlarge vertical range of demodata, #396
+  - display realistic flight altitude on descent/ascent in side view, #299
+
+Bug Fixes:
+  - Some bugs and important features missing in KML support, #474
+  - Server does not provide a capability xml with erroneous files, #468
+  - Fix dependency issue of python-socketio, flask-socketio, #466
+  - After moving a waypoint, the point first jumps to a different location before settling to its final position, #436
+  - deprecation errors and warnings with current matplotlib versions, #435
+  - mss server does not provide logging message in case of unexpected exception, #433
+  - skyfield database download breaks sometimes, #431
+  - Rounding of lon/lat coordinates, #285
+
+Other Changes:
+  - check on proper citing/licensing of employed matplotlib related sections, #438
+  - Remove python2 remnants, #432
+
+HINT
+~~~~
+  - We deprecated and disabled the unmaintained feature trajectory and time series view. This will become removed in
+    the next major release, #476
+  - We added a new powerfull feature for collaborative editing of flight pathes.
+    This is a new server and also a new client gui window.
+    In a future version the client gui will replace the standard gui.
+
+
 Version 1.8.3
 -------------
 
@@ -74,6 +116,7 @@ Bug Fixes:
   - sideview options dialog suffix always hPa, #394
   - Msui crashes on selecting Northern Hemisphere (stereo) from drop down menu under Top View section, #388
   - qt widget property issue, #387
+  - localhost server url path not defined, #345
   - Updating only MSS in anaconda may result in an error, #336
 
 Other Changes:
