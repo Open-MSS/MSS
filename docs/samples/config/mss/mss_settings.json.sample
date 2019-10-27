@@ -56,6 +56,7 @@
 
    "default_WMS": ["http://www.your-server.de/forecasts"],
    "default_VSEC_WMS": ["http://www.your-server.de/forecasts"],
+   "default_MSCOLAB": ["http://www.your-mscolab-server.de/"],
    "WMS_login": {
                   "http://www.your-server.de/forecasts" : ["youruser", "yourpassword"]
                  },

@@ -140,7 +140,7 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
 
     def _connect_to_mscolab(self):
-        self.window.url.setText("http://localhost:8084")
+        self.window.url.setEditText("http://localhost:8084")
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 

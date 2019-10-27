@@ -65,6 +65,9 @@ class Test_Mscolab(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
+    def test_url_combo(self):
+        assert self.window.url.count() >= 1
+
     def test_login(self):
         self._login()
         # screen shows logout button
@@ -84,7 +87,7 @@ class Test_Mscolab(object):
         assert self.window.mscolab_server_url is None
 
     def _connect_to_mscolab(self):
-        self.window.url.setText("http://localhost:8084")
+        self.window.url.setEditText("http://localhost:8084")
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
