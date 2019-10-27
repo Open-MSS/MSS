@@ -104,9 +104,10 @@ class MissionSupportSystemDefaultConfig(object):
     ]
 
     # URLs of default mscolab servers
-    default_MSCOLAB = ["http://localhost:8083",
+    default_MSCOLAB = [
+        "http://localhost:8083",
     ]
-    
+
     # WMS image cache settings:
     wms_cache = os.path.join(tempfile.gettempdir(), "msui_wms_cache")
 
