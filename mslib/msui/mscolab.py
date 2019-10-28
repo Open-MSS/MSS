@@ -40,11 +40,20 @@ from mslib.msui import topview, sideview, tableview
 from mslib.msui import socket_control as sc
 from mslib.msui import mscolab_project as mp
 from mslib.utils import load_settings_qsettings, save_settings_qsettings
+from mslib.utils import config_loader
 
 import logging
 import requests
 import json
 import fs
+
+MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
+
+
+def add_mscolab_urls(combo_box, url_list):
+    combo_box_urls = [combo_box.itemText(_i) for _i in range(combo_box.count())]
+    for url in (_url for _url in url_list if _url not in combo_box_urls):
+        combo_box.addItem(url)
 
 
 class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
@@ -108,10 +117,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.addUser.setEnabled(False)
         self.disconnectMscolab.setEnabled(False)
 
+        self.url.setEditable(True)
+        self.url.setModel(MSCOLAB_URL_LIST)
+        # fill value of mscolab url from config
+        default_MSCOLAB = config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)
+        add_mscolab_urls(self.url, default_MSCOLAB)
         # fill value of mscolab url if found in QSettings storage
         self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None})
         if self.settings['mscolab_url'] is not None:
-            self.url.setText(self.settings['mscolab_url'])
+            add_mscolab_urls(self.url, [self.settings['mscolab_url']])
 
     def disconnect_handler(self):
         self.logout()
@@ -129,7 +143,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def connect_handler(self):
         try:
-            url = self.url.text()
+            url = str(self.url.currentText())
             r = requests.get(url)
             if r.text == "Mscolab server":
                 # assign new url to self.mscolab_server_url
