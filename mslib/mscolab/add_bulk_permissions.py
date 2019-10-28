@@ -45,7 +45,8 @@ app.config['SECRET_KEY'] = 'secret!'.encode('utf-8')
 db.init_app(app)
 path = sys.argv[1]
 
-if __name__ == "__main__":
+
+def main():
     with app.app_context():
         file = open(path, 'r')
         content = file.read()
@@ -78,3 +79,7 @@ if __name__ == "__main__":
                 perm = Permission(u.id, p.id, permission)
                 db.session.add(perm)
                 db.session.commit()
+
+
+if __name__ == "__main__":
+    main()

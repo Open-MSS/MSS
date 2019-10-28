@@ -309,7 +309,7 @@ def create_mssdir():
         fs_datadir.makedir(basename)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description="Tool to setup data for usage of mscolab")
     parser.add_argument("--test", action="store_true", help="setup test data")
     parser.add_argument("--init", action="store_true", help="setup deployment data")
@@ -320,3 +320,7 @@ if __name__ == '__main__':
         create_data()
     else:
         print("for help, use -h flag")
+
+
+if __name__ == '__main__':
+    main()
