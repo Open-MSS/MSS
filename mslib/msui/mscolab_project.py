@@ -26,7 +26,8 @@
 
 from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_mscolab_project_window as ui
-from mslib._tests.constants import MSCOLAB_URL
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils import config_loader
 
 import logging
 import requests
@@ -44,7 +45,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
-    def __init__(self, token, p_id, conn, access_level, parent=None, mscolab_server_url=MSCOLAB_URL):
+    def __init__(self, token, p_id, conn, access_level, parent=None,
+                 mscolab_server_url=config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)):
         """
         token: access_token
         p_id: project id
