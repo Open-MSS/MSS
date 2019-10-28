@@ -15,7 +15,7 @@ Mission Support System's Documentation
    about
    dependencies
    installation
-   compounds
+   components
    development
    authors
 
