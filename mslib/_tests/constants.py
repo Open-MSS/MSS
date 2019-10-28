@@ -34,7 +34,7 @@ try:
 except ImportError:
     SHA = ""
 else:
-    repo = git.Repo(search_parent_directories=True)
+    repo = git.Repo(os.path.dirname(os.path.realpath(__file__)), search_parent_directories=True)
     SHA = repo.head.object.hexsha
 
 SERVER_CONFIG_FILE = "mss_wms_settings.py"
