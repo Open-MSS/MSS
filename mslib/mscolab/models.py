@@ -58,7 +58,7 @@ class User(db.Model):
     def verify_password(self, password_):
         return pwd_context.verify(password_, self.password)
 
-    def generate_auth_token(self, expiration=600):
+    def generate_auth_token(self, expiration=864000):
         s = Serializer(mscolab_settings.SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 

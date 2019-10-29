@@ -274,13 +274,13 @@ def start_server(app, sockio, cm, fm, port=8083):
     sockio.run(app, port=port)
 
 
-def main(app):
+def main():
     from mslib.mscolab.demodata import create_data
     # create data if not created
     create_data()
-    app, sockio, cm, fm = initialize_managers(app)
-    start_server(app, sockio, cm, fm)
+    _app, sockio, cm, fm = initialize_managers(app)
+    start_server(_app, sockio, cm, fm)
 
 
 if __name__ == '__main__':
-    main(app)
+    main()
