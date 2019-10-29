@@ -254,7 +254,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'MSS-MissionSupportSystem.tex', 'MSS - Mission Support System Documentation',
-     'M. Rautenhaus, J. Ungermann, J.-U. Grooß, T. Breuer, R. Bauer', 'manual'),
+     u'A.Hilboll, A.Lal, C.Rolf, I.Krisch, J.-U.Grooß, J.Ungermann, M.Rautenhaus, R.Bauer, S.Padhi, T.Breuer', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
