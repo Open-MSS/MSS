@@ -381,6 +381,7 @@
     <string>Ctrl+W</string>
    </property>
   </action>
+  <addaction name="actionCloseWindow"/>
  </widget>
  <resources/>
  <connections>
