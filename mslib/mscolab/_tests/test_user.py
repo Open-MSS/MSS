@@ -25,7 +25,7 @@
 import requests
 import json
 
-from mslib.mscolab.server import db, check_login, register_user, app, initialize_managers
+from mslib.mscolab.server import db, check_login, register_user, APP, initialize_managers
 from mslib.mscolab.conf import mscolab_settings
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.models import User
@@ -34,7 +34,7 @@ from mslib.mscolab.models import User
 class Test_UserMethods(object):
 
     def setup(self):
-        self.app = app
+        self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, _ = initialize_managers(self.app)
