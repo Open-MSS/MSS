@@ -92,6 +92,7 @@ class Ui_MSSMscolabWindow(object):
         self.emailid.setObjectName("emailid")
         self.horizontalLayout_3.addWidget(self.emailid)
         self.password = QtWidgets.QLineEdit(self.loginWidget)
+        self.password.setEchoMode(QtWidgets.QLineEdit.PasswordEchoOnEdit)
         self.password.setObjectName("password")
         self.horizontalLayout_3.addWidget(self.password)
         self.loginButton = QtWidgets.QPushButton(self.loginWidget)
