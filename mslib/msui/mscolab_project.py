@@ -24,7 +24,7 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
+from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.msui.mss_qt import ui_mscolab_project_window as ui
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
@@ -247,33 +247,27 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             item._id = change['id']
             self.changes.addItem(item)
         self.changes.scrollToBottom()
-        self.changes.itemActivated.connect(self.handle_change_activate)
-
-    def handle_change_activate(self, item):
-        self.active_ch_id = item._id
-        # change font style for selected
-        font = QtGui.QFont()
-        for i in range(self.changes.count()):
-            self.changes.item(i).setFont(font)
-        font.setBold(True)
-        item.setFont(font)
 
     def handle_undo(self):
-        if self.active_ch_id is None:
-            return
+        index = self.changes.currentIndex()
+        qm = QtWidgets.QMessageBox
+        if not index.isValid():
+            qm.critical(
+                self, self.tr("Undo"),
+                self.tr("Please select a change first."))
+        else:
+            ret = qm.question(
+                self, self.tr("Undo"),
+                "Do you want to checkout to this change?", qm.Yes, qm.No)
 
-        self.qm = QtWidgets.QMessageBox
-        self.w = QtWidgets.QWidget()
-        ret = self.qm.question(self.w, 'Undo', "Do you want to checkout to this change?", self.qm.Yes, self.qm.No)
-        if ret == self.qm.Yes:
-            self.request_undo_mscolab()
-        return
+            if ret == qm.Yes:
+                self.request_undo_mscolab(index)
 
-    def request_undo_mscolab(self):
+    def request_undo_mscolab(self, index):
         # undo change from server
         data = {
             "token": self.token,
-            "ch_id": self.active_ch_id
+            "ch_id": self.changes.itemFromIndex(index)._id
         }
         # 'undo' request
         r = requests.post(self.mscolab_server_url + '/undo', data=data)
