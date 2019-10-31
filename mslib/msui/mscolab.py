@@ -29,7 +29,7 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_save_filename, get_open_filename
 from mslib.msui.mss_qt import ui_mscolab_window as ui
 from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
 from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
@@ -170,12 +170,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def handle_export(self):
         # ToDo when autosave mode gets upgraded, have to fetch from remote
-        file_path = QtWidgets.QFileDialog.getSaveFileName()[0]
-        f_name = fs.path.basename(file_path)
-        f_dir = fs.open_fs(fs.path.dirname(file_path))
-        temp_name = 'tempfile_mscolab.ftml'
-        temp_dir = fs.open_fs(self.data_dir)
-        fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
+        file_path = get_save_filename(
+            self, "Save fight track", "", "Flight Track Files (*.ftml)")
+        if file_path is not None:
+            f_name = fs.path.basename(file_path)
+            f_dir = fs.open_fs(fs.path.dirname(file_path))
+            temp_name = 'tempfile_mscolab.ftml'
+            temp_dir = fs.open_fs(self.data_dir)
+            fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
 
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
@@ -213,14 +215,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.add_proj_dialog.buttonBox.setEnabled(True)
 
     def set_exported_file(self):
-        file_path = QtWidgets.QFileDialog.getOpenFileName()[0]
-        if file_path == "":
-            return
-        f_name = fs.path.basename(file_path)
-        f_dir = fs.open_fs(fs.path.dirname(file_path))
-        f_content = f_dir.readtext(f_name)
-        self.add_proj_dialog.f_content = f_content
-        self.add_proj_dialog.selectedFile.setText(f_name)
+        file_path = get_open_filename(
+            self, "Open ftml file", "", "Flight Track Files (*.ftml)")
+        if file_path is not None:
+            f_name = fs.path.basename(file_path)
+            f_dir = fs.open_fs(fs.path.dirname(file_path))
+            f_content = f_dir.readtext(f_name)
+            self.add_proj_dialog.f_content = f_content
+            self.add_proj_dialog.selectedFile.setText(f_name)
 
     def add_project(self):
         path = self.add_proj_dialog.path.text()
