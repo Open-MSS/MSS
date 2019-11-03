@@ -25,23 +25,22 @@
 """
 
 from flask import Flask, request, g
-import logging
-import json
 import datetime
 import functools
+import json
+import logging
 from validate_email import validate_email
 
 from mslib.mscolab.models import User, db, Change
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.sockets_manager import setup_managers
-# set the project root directory as the static folder
-app = Flask(__name__, static_url_path='')
-app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-app.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+# set the project root directory as the static folder
+
+APP = Flask(__name__, static_url_path='')
+APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 
 
 def initialize_managers(app):
@@ -107,8 +106,8 @@ def start_server(app, sockio, cm, fm, port=8083):
         if user:
             token = user.generate_auth_token()
             return json.dumps({
-                              'token': token.decode('ascii'),
-                              'user': {'username': user.username, 'id': user.id}})
+                'token': token.decode('ascii'),
+                'user': {'username': user.username, 'id': user.id}})
         else:
             logging.debug("Unauthorized user: %s", emailid)
             return "False"
@@ -211,7 +210,10 @@ def start_server(app, sockio, cm, fm, port=8083):
         access_level = request.form.get('access_level', None)
         user = g.user
         if u_id == 0:
-            u_id = User.query.filter_by(username=username).first().id
+            user_v = User.query.filter_by(username=username).first()
+            if user_v is None:
+                return "False"
+            u_id = user_v.id
         success = str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
         if success == "True":
             sockio.sm.join_collaborator_to_room(int(u_id), int(p_id))
@@ -235,8 +237,11 @@ def start_server(app, sockio, cm, fm, port=8083):
         username = request.form.get('username', None)
         access_level = request.form.get('access_level', None)
         user = g.user
-        if username is not None:
-            u_id = User.query.filter_by(username=username).first().id
+        if u_id == 0:
+            user_v = User.query.filter_by(username=username).first()
+            if user_v is None:
+                return "False"
+            u_id = user_v.id
         success = str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
         if success == "True":
             sockio.sm.emit_update_permission(u_id, p_id)
@@ -272,11 +277,3 @@ def start_server(app, sockio, cm, fm, port=8083):
         return str(result)
 
     sockio.run(app, port=port)
-
-
-if __name__ == '__main__':
-    from mslib.mscolab.demodata import create_data
-    # create data if not created
-    create_data()
-    app, sockio, cm, fm = initialize_managers(app)
-    start_server(app, sockio, cm, fm)

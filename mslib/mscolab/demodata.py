@@ -45,7 +45,10 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Project, Permission
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.mscolab.seed import seed_data, create_tables
-from mslib._tests.constants import ROOT_DIR
+from fs.tempfs import TempFS
+
+ROOT_FS = TempFS(identifier="mss")
+ROOT_DIR = ROOT_FS.root_path
 
 
 def create_test_data():
@@ -174,7 +177,14 @@ def create_test_config():
 import os
 import logging
 import fs
-from mslib._tests.constants import ROOT_DIR
+
+from fs.tempfs import TempFS
+
+
+ROOT_FS = TempFS(identifier="mss")
+ROOT_DIR = ROOT_FS.root_path
+
+
 # directory where mss output files are stored
 root_fs = fs.open_fs(ROOT_DIR)
 root_fs.makedir('colabdata')
@@ -309,7 +319,7 @@ def create_mssdir():
         fs_datadir.makedir(basename)
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description="Tool to setup data for usage of mscolab")
     parser.add_argument("--test", action="store_true", help="setup test data")
     parser.add_argument("--init", action="store_true", help="setup deployment data")
@@ -320,3 +330,7 @@ if __name__ == '__main__':
         create_data()
     else:
         print("for help, use -h flag")
+
+
+if __name__ == '__main__':
+    main()
