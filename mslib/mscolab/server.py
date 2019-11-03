@@ -52,7 +52,7 @@ def initialize_managers(app):
     return (app, sockio, cm, fm)
 
 
-_app, sockio, cm, fm = initialize_managers(app)
+_app, sockio, cm, fm = initialize_managers(APP)
 
 
 def check_login(emailid, password):
@@ -93,7 +93,7 @@ def verify_user(func):
 
 
 # ToDo setup codes in return statements
-@app.route("/")
+@APP.route("/")
 def hello():
     return "Mscolab server"
 
@@ -101,7 +101,7 @@ def hello():
 # User related routes
 
 
-@app.route('/token', methods=["POST"])
+@APP.route('/token', methods=["POST"])
 def get_auth_token():
     emailid = request.form['email']
     password = request.form['password']
@@ -116,7 +116,7 @@ def get_auth_token():
         return "False"
 
 
-@app.route('/test_authorized')
+@APP.route('/test_authorized')
 def authorized():
     token = request.values['token']
     user = User.verify_auth_token(token)
@@ -126,7 +126,7 @@ def authorized():
         return "False"
 
 
-@app.route("/register", methods=["POST"])
+@APP.route("/register", methods=["POST"])
 def user_register_handler():
     email = request.form['email']
     password = request.form['password']
@@ -134,14 +134,14 @@ def user_register_handler():
     return register_user(email, password, username)
 
 
-@app.route('/user', methods=["GET"])
+@APP.route('/user', methods=["GET"])
 @verify_user
 def get_user():
     return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
 
 # Chat related routes
-@app.route("/messages", methods=['POST'])
+@APP.route("/messages", methods=['POST'])
 @verify_user
 def messages():
     timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
@@ -151,7 +151,7 @@ def messages():
 
 
 # File related routes
-@app.route('/create_project', methods=["POST"])
+@APP.route('/create_project', methods=["POST"])
 @verify_user
 def create_project():
     path = request.values['path']
@@ -161,7 +161,7 @@ def create_project():
     return str(fm.create_project(path, description, user, content=content))
 
 
-@app.route('/get_project', methods=['GET'])
+@APP.route('/get_project', methods=['GET'])
 @verify_user
 def get_project():
     p_id = request.values.get('p_id', None)
@@ -172,7 +172,7 @@ def get_project():
     return json.dumps({"content": result})
 
 
-@app.route('/get_changes', methods=['GET'])
+@APP.route('/get_changes', methods=['GET'])
 @verify_user
 def get_changes():
     p_id = request.values.get('p_id', None)
@@ -183,7 +183,7 @@ def get_changes():
     return json.dumps({"changes": result})
 
 
-@app.route('/get_change_id', methods=['GET'])
+@APP.route('/get_change_id', methods=['GET'])
 @verify_user
 def get_change_by_id():
     ch_id = request.values.get('ch_id', None)
@@ -194,21 +194,21 @@ def get_change_by_id():
     return json.dumps({"change": result})
 
 
-@app.route('/authorized_users', methods=['GET'])
+@APP.route('/authorized_users', methods=['GET'])
 @verify_user
 def authorized_users():
     p_id = request.values.get('p_id', None)
     return json.dumps({"users": fm.get_authorized_users(int(p_id))})
 
 
-@app.route('/projects', methods=['GET'])
+@APP.route('/projects', methods=['GET'])
 @verify_user
 def get_projects():
     user = g.user
     return json.dumps({"projects": fm.list_projects(user)})
 
 
-@app.route('/delete_project', methods=["POST"])
+@APP.route('/delete_project', methods=["POST"])
 @verify_user
 def delete_project():
     p_id = request.form.get('p_id', None)
@@ -216,7 +216,7 @@ def delete_project():
     return str(fm.delete_file(int(p_id), user))
 
 
-@app.route('/add_permission', methods=['POST'])
+@APP.route('/add_permission', methods=['POST'])
 @verify_user
 def add_permission():
     p_id = request.form.get('p_id', 0)
@@ -236,7 +236,7 @@ def add_permission():
     return success
 
 
-@app.route('/revoke_permission', methods=['POST'])
+@APP.route('/revoke_permission', methods=['POST'])
 @verify_user
 def revoke_permission():
     p_id = request.form.get('p_id', 0)
@@ -246,7 +246,7 @@ def revoke_permission():
     return str(fm.revoke_permission(int(p_id), int(u_id), username, user))
 
 
-@app.route('/modify_permission', methods=['POST'])
+@APP.route('/modify_permission', methods=['POST'])
 @verify_user
 def modify_permission():
     p_id = request.form.get('p_id', 0)
@@ -265,7 +265,7 @@ def modify_permission():
     return success
 
 
-@app.route('/update_project', methods=['POST'])
+@APP.route('/update_project', methods=['POST'])
 @verify_user
 def update_project():
     p_id = request.form.get('p_id', None)
@@ -275,7 +275,7 @@ def update_project():
     return str(fm.update_project(int(p_id), attribute, value, user))
 
 
-@app.route('/project_details', methods=["GET"])
+@APP.route('/project_details', methods=["GET"])
 @verify_user
 def get_project_details():
     p_id = request.form.get('p_id', None)
@@ -283,7 +283,7 @@ def get_project_details():
     return json.dumps(fm.get_project_details(int(p_id), user))
 
 
-@app.route('/undo', methods=["POST"])
+@APP.route('/undo', methods=["POST"])
 @verify_user
 def undo_ftml():
     ch_id = request.form.get('ch_id', -1)
