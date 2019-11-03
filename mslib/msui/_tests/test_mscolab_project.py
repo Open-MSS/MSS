@@ -29,7 +29,7 @@ from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import logging
 import time
 
-from mslib.mscolab.server import db, app, initialize_managers
+from mslib.mscolab.server import db, APP, initialize_managers
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message, Change
@@ -40,7 +40,7 @@ class Test_MscolabProject(object):
     def setup(self):
 
         # start mscolab server
-        self.app = app
+        self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, fm = initialize_managers(self.app)

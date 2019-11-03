@@ -29,7 +29,7 @@ import json
 from mslib.mscolab.models import User, Change, Project
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import db, app, initialize_managers
+from mslib.mscolab.server import db, APP, initialize_managers
 from mslib.mscolab.utils import get_recent_pid
 
 
@@ -37,7 +37,7 @@ class Test_Files(object):
     def setup(self):
         self.sockets = []
         self.file_message_counter = [0] * 2
-        self.app = app
+        self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, fm = initialize_managers(self.app)

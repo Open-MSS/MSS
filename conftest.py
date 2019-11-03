@@ -91,9 +91,9 @@ process = None
 @pytest.fixture(scope="session", autouse=True)
 def start_mscolab_server(request):
     from mslib.mscolab.conf import mscolab_settings
-    from mslib.mscolab.server import app, initialize_managers, start_server
+    from mslib.mscolab.server import APP, initialize_managers, start_server
 
-    _app = app
+    _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
     _app, sockio, cm, fm = initialize_managers(_app)
