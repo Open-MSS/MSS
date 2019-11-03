@@ -120,8 +120,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
-        default_MSCOLAB = config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)
+        default_MSCOLAB = config_loader(
+            dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)
         add_mscolab_urls(self.url, default_MSCOLAB)
+
+        self.emailid.setText(config_loader(dataset="MSCOLAB_mailid", default=""))
+        self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
+
         # fill value of mscolab url if found in QSettings storage
         self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None})
         if self.settings['mscolab_url'] is not None:
@@ -316,9 +321,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def authorize(self):
         emailid = self.emailid.text()
         password = self.password.text()
-        # to prevent someone nearby from seeing the id, password
-        self.emailid.setText('')
-        self.password.setText('')
         data = {
             "email": emailid,
             "password": password
