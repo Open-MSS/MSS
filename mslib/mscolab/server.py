@@ -30,6 +30,7 @@ import functools
 import json
 import logging
 from validate_email import validate_email
+import socketio
 
 from mslib.mscolab.models import User, db, Change
 from mslib.mscolab.conf import mscolab_settings
@@ -49,6 +50,9 @@ def initialize_managers(app):
     sockio.init_app(app)
     db.init_app(app)
     return (app, sockio, cm, fm)
+
+
+_app, sockio, cm, fm = initialize_managers(app)
 
 
 def check_login(emailid, password):
@@ -88,192 +92,225 @@ def verify_user(func):
     return wrapper
 
 
+# ToDo setup codes in return statements
+@app.route("/")
+def hello():
+    return "Mscolab server"
+
+
+# User related routes
+
+
+@app.route('/token', methods=["POST"])
+def get_auth_token():
+    emailid = request.form['email']
+    password = request.form['password']
+    user = check_login(emailid, password)
+    if user:
+        token = user.generate_auth_token()
+        return json.dumps({
+                          'token': token.decode('ascii'),
+                          'user': {'username': user.username, 'id': user.id}})
+    else:
+        logging.debug("Unauthorized user: %s", emailid)
+        return "False"
+
+
+@app.route('/test_authorized')
+def authorized():
+    token = request.values['token']
+    user = User.verify_auth_token(token)
+    if user:
+        return "True"
+    else:
+        return "False"
+
+
+@app.route("/register", methods=["POST"])
+def user_register_handler():
+    email = request.form['email']
+    password = request.form['password']
+    username = request.form['username']
+    return register_user(email, password, username)
+
+
+@app.route('/user', methods=["GET"])
+@verify_user
+def get_user():
+    return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
+
+
+# Chat related routes
+@app.route("/messages", methods=['POST'])
+@verify_user
+def messages():
+    timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
+    p_id = request.form.get('p_id', None)
+    messages = cm.get_messages(p_id, last_timestamp=timestamp)
+    return json.dumps({'messages': messages})
+
+
+# File related routes
+@app.route('/create_project', methods=["POST"])
+@verify_user
+def create_project():
+    path = request.values['path']
+    description = request.values['description']
+    content = request.values.get('content', None)
+    user = g.user
+    return str(fm.create_project(path, description, user, content=content))
+
+
+@app.route('/get_project', methods=['GET'])
+@verify_user
+def get_project():
+    p_id = request.values.get('p_id', None)
+    user = g.user
+    result = fm.get_file(int(p_id), user)
+    if result is False:
+        return "False"
+    return json.dumps({"content": result})
+
+
+@app.route('/get_changes', methods=['GET'])
+@verify_user
+def get_changes():
+    p_id = request.values.get('p_id', None)
+    user = g.user
+    result = fm.get_changes(int(p_id), user)
+    if result is False:
+        return "False"
+    return json.dumps({"changes": result})
+
+
+@app.route('/get_change_id', methods=['GET'])
+@verify_user
+def get_change_by_id():
+    ch_id = request.values.get('ch_id', None)
+    user = g.user
+    result = fm.get_change_by_id(int(ch_id), user)
+    if result is False:
+        return "False"
+    return json.dumps({"change": result})
+
+
+@app.route('/authorized_users', methods=['GET'])
+@verify_user
+def authorized_users():
+    p_id = request.values.get('p_id', None)
+    return json.dumps({"users": fm.get_authorized_users(int(p_id))})
+
+
+@app.route('/projects', methods=['GET'])
+@verify_user
+def get_projects():
+    user = g.user
+    return json.dumps({"projects": fm.list_projects(user)})
+
+
+@app.route('/delete_project', methods=["POST"])
+@verify_user
+def delete_project():
+    p_id = request.form.get('p_id', None)
+    user = g.user
+    return str(fm.delete_file(int(p_id), user))
+
+
+@app.route('/add_permission', methods=['POST'])
+@verify_user
+def add_permission():
+    p_id = request.form.get('p_id', 0)
+    u_id = request.form.get('u_id', 0)
+    username = request.form.get('username', None)
+    access_level = request.form.get('access_level', None)
+    user = g.user
+    if u_id == 0:
+        user_v = User.query.filter_by(username=username).first()
+        if user_v is None:
+            return "False"
+        u_id = user_v.id
+    success = str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
+    if success == "True":
+        sockio.sm.join_collaborator_to_room(int(u_id), int(p_id))
+        sockio.sm.emit_new_permission(int(u_id), int(p_id))
+    return success
+
+
+@app.route('/revoke_permission', methods=['POST'])
+@verify_user
+def revoke_permission():
+    p_id = request.form.get('p_id', 0)
+    u_id = request.form.get('u_id', 0)
+    username = request.form.get('username', None)
+    user = g.user
+    return str(fm.revoke_permission(int(p_id), int(u_id), username, user))
+
+
+@app.route('/modify_permission', methods=['POST'])
+@verify_user
+def modify_permission():
+    p_id = request.form.get('p_id', 0)
+    u_id = request.form.get('u_id', 0)
+    username = request.form.get('username', None)
+    access_level = request.form.get('access_level', None)
+    user = g.user
+    if u_id == 0:
+        user_v = User.query.filter_by(username=username).first()
+        if user_v is None:
+            return "False"
+        u_id = user_v.id
+    success = str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
+    if success == "True":
+        sockio.sm.emit_update_permission(u_id, p_id)
+    return success
+
+
+@app.route('/update_project', methods=['POST'])
+@verify_user
+def update_project():
+    p_id = request.form.get('p_id', None)
+    attribute = request.form['attribute']
+    value = request.form['value']
+    user = g.user
+    return str(fm.update_project(int(p_id), attribute, value, user))
+
+
+@app.route('/project_details', methods=["GET"])
+@verify_user
+def get_project_details():
+    p_id = request.form.get('p_id', None)
+    user = g.user
+    return json.dumps(fm.get_project_details(int(p_id), user))
+
+
+@app.route('/undo', methods=["POST"])
+@verify_user
+def undo_ftml():
+    ch_id = request.form.get('ch_id', -1)
+    ch_id = int(ch_id)
+    user = g.user
+    result = fm.undo(ch_id, user)
+    # get p_id from change
+    ch = Change.query.filter_by(id=ch_id).first()
+    if result is True:
+        sockio.sm.emit_file_change(ch.p_id)
+    return str(result)
+
+
 def start_server(app, sockio, cm, fm, port=8083):
-
-    @app.route("/")
-    def hello():
-        return "Mscolab server"
-
-    # ToDo setup codes in return statements
-
-    # User related routes
-
-    @app.route('/token', methods=["POST"])
-    def get_auth_token():
-        emailid = request.form['email']
-        password = request.form['password']
-        user = check_login(emailid, password)
-        if user:
-            token = user.generate_auth_token()
-            return json.dumps({
-                'token': token.decode('ascii'),
-                'user': {'username': user.username, 'id': user.id}})
-        else:
-            logging.debug("Unauthorized user: %s", emailid)
-            return "False"
-
-    @app.route('/test_authorized')
-    def authorized():
-        token = request.values['token']
-        user = User.verify_auth_token(token)
-        if user:
-            return "True"
-        else:
-            return "False"
-
-    @app.route("/register", methods=["POST"])
-    def user_register_handler():
-        email = request.form['email']
-        password = request.form['password']
-        username = request.form['username']
-        return register_user(email, password, username)
-
-    @app.route('/user', methods=["GET"])
-    @verify_user
-    def get_user():
-        return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
-
-    # Chat related routes
-    @app.route("/messages", methods=['POST'])
-    @verify_user
-    def messages():
-        timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
-        p_id = request.form.get('p_id', None)
-        messages = cm.get_messages(p_id, last_timestamp=timestamp)
-        return json.dumps({'messages': messages})
-
-    # File related routes
-    @app.route('/create_project', methods=["POST"])
-    @verify_user
-    def create_project():
-        path = request.values['path']
-        description = request.values['description']
-        content = request.values.get('content', None)
-        user = g.user
-        return str(fm.create_project(path, description, user, content=content))
-
-    @app.route('/get_project', methods=['GET'])
-    @verify_user
-    def get_project():
-        p_id = request.values.get('p_id', None)
-        user = g.user
-        result = fm.get_file(int(p_id), user)
-        if result is False:
-            return "False"
-        return json.dumps({"content": result})
-
-    @app.route('/get_changes', methods=['GET'])
-    @verify_user
-    def get_changes():
-        p_id = request.values.get('p_id', None)
-        user = g.user
-        result = fm.get_changes(int(p_id), user)
-        if result is False:
-            return "False"
-        return json.dumps({"changes": result})
-
-    @app.route('/get_change_id', methods=['GET'])
-    @verify_user
-    def get_change_by_id():
-        ch_id = request.values.get('ch_id', None)
-        user = g.user
-        result = fm.get_change_by_id(int(ch_id), user)
-        if result is False:
-            return "False"
-        return json.dumps({"change": result})
-
-    @app.route('/authorized_users', methods=['GET'])
-    @verify_user
-    def authorized_users():
-        p_id = request.values.get('p_id', None)
-        return json.dumps({"users": fm.get_authorized_users(int(p_id))})
-
-    @app.route('/projects', methods=['GET'])
-    @verify_user
-    def get_projects():
-        user = g.user
-        return json.dumps({"projects": fm.list_projects(user)})
-
-    @app.route('/delete_project', methods=["POST"])
-    @verify_user
-    def delete_project():
-        p_id = request.form.get('p_id', None)
-        user = g.user
-        return str(fm.delete_file(int(p_id), user))
-
-    @app.route('/add_permission', methods=['POST'])
-    @verify_user
-    def add_permission():
-        p_id = request.form.get('p_id', 0)
-        u_id = request.form.get('u_id', 0)
-        username = request.form.get('username', None)
-        access_level = request.form.get('access_level', None)
-        user = g.user
-        if u_id == 0:
-            user_v = User.query.filter_by(username=username).first()
-            if user_v is None:
-                return "False"
-            u_id = user_v.id
-        success = str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
-        if success == "True":
-            sockio.sm.join_collaborator_to_room(int(u_id), int(p_id))
-            sockio.sm.emit_new_permission(int(u_id), int(p_id))
-        return success
-
-    @app.route('/revoke_permission', methods=['POST'])
-    @verify_user
-    def revoke_permission():
-        p_id = request.form.get('p_id', 0)
-        u_id = request.form.get('u_id', 0)
-        username = request.form.get('username', None)
-        user = g.user
-        return str(fm.revoke_permission(int(p_id), int(u_id), username, user))
-
-    @app.route('/modify_permission', methods=['POST'])
-    @verify_user
-    def modify_permission():
-        p_id = request.form.get('p_id', 0)
-        u_id = request.form.get('u_id', 0)
-        username = request.form.get('username', None)
-        access_level = request.form.get('access_level', None)
-        user = g.user
-        if u_id == 0:
-            user_v = User.query.filter_by(username=username).first()
-            if user_v is None:
-                return "False"
-            u_id = user_v.id
-        success = str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
-        if success == "True":
-            sockio.sm.emit_update_permission(u_id, p_id)
-        return success
-
-    @app.route('/update_project', methods=['POST'])
-    @verify_user
-    def update_project():
-        p_id = request.form.get('p_id', None)
-        attribute = request.form['attribute']
-        value = request.form['value']
-        user = g.user
-        return str(fm.update_project(int(p_id), attribute, value, user))
-
-    @app.route('/project_details', methods=["GET"])
-    @verify_user
-    def get_project_details():
-        p_id = request.form.get('p_id', None)
-        user = g.user
-        return json.dumps(fm.get_project_details(int(p_id), user))
-
-    @app.route('/undo', methods=["POST"])
-    @verify_user
-    def undo_ftml():
-        ch_id = request.form.get('ch_id', -1)
-        ch_id = int(ch_id)
-        user = g.user
-        result = fm.undo(ch_id, user)
-        # get p_id from change
-        ch = Change.query.filter_by(id=ch_id).first()
-        if result is True:
-            sockio.sm.emit_file_change(ch.p_id)
-        return str(result)
-
     sockio.run(app, port=port)
+
+
+def main():
+    from mslib.mscolab.demodata import create_data
+    # create data if not created
+    create_data()
+    start_server(_app, sockio, cm, fm)
+
+
+# for wsgi
+application = socketio.WSGIApp(sockio)
+
+if __name__ == '__main__':
+    main()
+
