@@ -313,4 +313,3 @@ application = socketio.WSGIApp(sockio)
 
 if __name__ == '__main__':
     main()
-
