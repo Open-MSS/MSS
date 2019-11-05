@@ -13,7 +13,8 @@
 #
 # For the mss ui:
 # xhost +local:docker
-# docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest mss
+# docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix \
+# dreimark/mss:latest /opt/conda/envs/mssenv/bin/mss
 #
 # For the wms server:
 # docker run -d --net=host  dreimark/mss:latest
@@ -50,17 +51,21 @@ RUN mkdir -p /root/.local/share/applications/ \
   && mkdir -p /root/.local/share/icons/hicolor/48x48/apps/ \
   && mkdir /srv/mss
 
-# Install Mission Support Software
-RUN conda install mss -y
+# Install Mission Support System Software
+RUN conda create -n mssenv mss -y
+
 
 # path for data and mss_wms_settings config
 ENV PYTHONPATH="/srv/mss:/root/mss"
+ENV PROJ_LIB="/opt/conda/envs/mssenv/share/proj"
 
-# Run demodata
+# Run mswms and mscolab demodata
 # server based on demodata until you mount a data volume on /srv/mss
 # also you can replace the data in the demodata dir /root/mss.
-RUN mswms_demodata
+RUN /opt/conda/envs/mssenv/bin/mswms_demodata
+RUN /opt/conda/envs/mssenv/bin/mscolab_demodata
 
-EXPOSE 80
-CMD ["/opt/conda/bin/mswms", "--port", "80"]
-
+EXPOSE 80 8083
+CMD ["/opt/conda/envs/mssenv/bin/mswms", "--port", "80"]
+# ToDo fix after 1.9.1 release
+# CMD ["/opt/conda/envs/mssenv/bin/mscolab"]
