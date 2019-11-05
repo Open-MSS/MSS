@@ -420,6 +420,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listViews.clear()
             self.listTools.clear()
             self.listFlightTracks.clear()
+            # cleanup mscolab window
+            if self.mscolab_window is not None:
+                # disconnect sockets
+                if self.mscolab_window.conn is not None:
+                    self.mscolab_window.conn.disconnect()
+                # delete the reference to QWidget
+                self.mscolab_window = None
             event.accept()
         else:
             event.ignore()
