@@ -22,7 +22,8 @@ build:
 requirements:
   build:
     - python
-    - setuptools
+    - pip
+    - future
     - menuinst  # [win]
   run:
     - python >=3.6
