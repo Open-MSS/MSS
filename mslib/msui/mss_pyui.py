@@ -177,6 +177,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # views.
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
+        self.mscolab_window = None
 
         # Connect Qt SIGNALs:
         # ===================
