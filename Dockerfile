@@ -30,7 +30,6 @@ MAINTAINER Reimar Bauer <rb.proj@gmail.com>
 
 # install packages for qt X
 RUN apt-get --yes update && apt-get --yes upgrade && apt-get --yes install \
-  python-xpyb \
   libgl1-mesa-glx \
   libx11-xcb1 \
   libxi6 \
@@ -60,7 +59,7 @@ ENV PYTHONPATH="/srv/mss:/root/mss"
 # Run demodata
 # server based on demodata until you mount a data volume on /srv/mss
 # also you can replace the data in the demodata dir /root/mss.
-RUN demodata
+RUN mswms_demodata
 
 EXPOSE 80
 CMD ["/opt/conda/bin/mswms", "--port", "80"]
