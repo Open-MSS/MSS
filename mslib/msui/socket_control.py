@@ -41,7 +41,7 @@ class ConnectionManager(QtCore.QObject):
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
-        self.sio = socketio.Client()
+        self.sio = socketio.Client(reconnection_attempts=5)
         self.sio.on('file-changed', handler=self.handle_file_change)
         # ToDo merge them into one 'autosave-client' event
         self.sio.on('autosave-client-en', handler=self.handle_autosave_enable)

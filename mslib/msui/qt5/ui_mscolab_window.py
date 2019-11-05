@@ -183,6 +183,7 @@ class Ui_MSSMscolabWindow(object):
         MSSMscolabWindow.setCentralWidget(self.centralwidget)
         self.actionCloseWindow = QtWidgets.QAction(MSSMscolabWindow)
         self.actionCloseWindow.setObjectName("actionCloseWindow")
+        MSSMscolabWindow.addAction(self.actionCloseWindow)
 
         self.retranslateUi(MSSMscolabWindow)
         self.actionCloseWindow.triggered.connect(MSSMscolabWindow.close)
