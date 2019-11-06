@@ -1,6 +1,23 @@
 Changelog
 =========
 
+
+Version 1.9.1
+-------------
+
+Bug Fixes:
+  - side view crashes when no ceiling perf data available, #507
+  - mss pyui crashes when quitting, #505
+  - Dockerfile fails on demodata, #501
+  - Dockerfile Unable to locate package python-xpyb, #500
+  - msco server does not check for None in certain circumstances, #498
+  - make rtfd use of Non-ASCII characters, #492
+  - mscolab server command crashes, #491
+  - MSS doesn't close when "quit"ing while being connected to MSCO server, #490
+  - "Checkout" of older revisions has no effect without double-clicking the revison, #485
+  - Adding unknown user to project throws exception, #483
+  - mcso windows cannot be closed by ctrl+w, #473
+
 Version 1.9.0
 -------------
 
