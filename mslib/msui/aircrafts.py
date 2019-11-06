@@ -151,5 +151,5 @@ class SimpleAircraft(object):
         else:
             logging.error("No data stored for computation of ceiling altitude. "
                           "Please reload performance data from JSON.")
-            maxFL = 4000
+            maxFL = 410
         return maxFL
