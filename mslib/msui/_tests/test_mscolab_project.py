@@ -103,7 +103,7 @@ class Test_MscolabProject(object):
         old_count = self.proj_window.changes.count()
         self._activate_change_at_index(0)
         QtWidgets.QApplication.processEvents()
-        self.proj_window.request_undo_mscolab()
+        self.proj_window.request_undo_mscolab(self.proj_window.changes.currentIndex())
         # wait till server emits event to reload
         time.sleep(3)
         self.proj_window.load_all_changes()
