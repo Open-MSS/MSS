@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'msui/ui/ui_tableview_window.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_tableview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -22,6 +22,9 @@ class Ui_TableViewWindow(object):
         font.setBold(False)
         font.setWeight(50)
         self.tableWayPoints.setFont(font)
+        self.tableWayPoints.setDragEnabled(True)
+        self.tableWayPoints.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.tableWayPoints.setDefaultDropAction(QtCore.Qt.CopyAction)
         self.tableWayPoints.setAlternatingRowColors(True)
         self.tableWayPoints.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWayPoints.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
