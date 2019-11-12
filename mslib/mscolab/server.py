@@ -25,6 +25,7 @@
 """
 
 from flask import Flask, request, g
+from flask_httpauth import HTTPBasicAuth
 import datetime
 import functools
 import json
@@ -35,6 +36,7 @@ import socketio
 from mslib.mscolab.models import User, db, Change
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.sockets_manager import setup_managers
+from mslib.utils import conditional_decorator
 
 # set the project root directory as the static folder
 
@@ -43,6 +45,37 @@ APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 
+auth = HTTPBasicAuth()
+
+try:
+    import mss_mscolab_auth
+except ImportError as ex:
+    logging.warning("Couldn't import mss_mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
+
+    class mss_mscolab_auth(object):
+        allowed_users = [("mscolab", "add_md5_digest_of_PASSWORD_here"),
+                         ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
+        __file__ = None
+
+# setup http auth
+if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
+    logging.debug("Enabling basic HTTP authentication. Username and "
+                  "password required to access the service.")
+    import hashlib
+
+    def authfunc(username, password):
+        for u, p in mss_mscolab_auth.allowed_users:
+            if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
+                return True
+        return False
+
+    @auth.verify_password
+    def verify_pw(username, password):
+        if request.authorization:
+            auth = request.authorization
+            username = auth.username
+            password = auth.password
+        return authfunc(username, password)
 
 def initialize_managers(app):
     sockio, cm, fm = setup_managers(app)
@@ -102,6 +135,7 @@ def hello():
 
 
 @APP.route('/token', methods=["POST"])
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def get_auth_token():
     emailid = request.form['email']
     password = request.form['password']

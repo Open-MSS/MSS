@@ -476,12 +476,3 @@ def get_cbar_label_format(style, maxvalue):
     if style == 'log_ice_cloud':
         format = "%.0E"
     return format
-
-
-def conditional_decorator(dec, condition):
-    def decorator(func):
-        if not condition:
-            # Return the function unchanged, not decorated.
-            return func
-        return dec(func)
-    return decorator

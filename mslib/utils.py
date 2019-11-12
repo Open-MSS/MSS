@@ -632,3 +632,12 @@ def writexml(self, writer, indent="", addindent="", newl=""):
         writer.write("</%s>%s" % (self.tagName, newl))
     else:
         writer.write("/>%s" % (newl))
+
+
+def conditional_decorator(dec, condition):
+    def decorator(func):
+        if not condition:
+            # Return the function unchanged, not decorated.
+            return func
+        return dec(func)
+    return decorator
