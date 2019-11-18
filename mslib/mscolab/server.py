@@ -77,6 +77,7 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
             password = auth.password
         return authfunc(username, password)
 
+
 def initialize_managers(app):
     sockio, cm, fm = setup_managers(app)
     # initiatializing socketio and db
