@@ -219,6 +219,7 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
   </ListOfWaypoints>
 </FlightTrack>
 """
+enable_basic_http_authentication = False
     '''
     ROOT_FS = fs.open_fs(ROOT_DIR)
     if not ROOT_FS.exists('mscolab'):
