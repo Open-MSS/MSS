@@ -54,7 +54,7 @@ from chameleon import PageTemplateLoader
 from flask import Flask, request, make_response
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
-from mslib.mswms.utils import conditional_decorator
+from mslib.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
 
 # Flask basic auth's documentation
