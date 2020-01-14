@@ -186,9 +186,14 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         if self.performance_settings["visible"]:
             table = TABLE_FULL
         if table[column][2]:
-            return QtCore.Qt.ItemFlags(QtCore.QAbstractTableModel.flags(self, index) | QtCore.Qt.ItemIsEditable)
+            return QtCore.Qt.ItemFlags(
+                QtCore.QAbstractTableModel.flags(self, index) |
+                QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDragEnabled |
+                QtCore.Qt.ItemIsDropEnabled)
         else:
-            return QtCore.Qt.ItemFlags(QtCore.QAbstractTableModel.flags(self, index))
+            return QtCore.Qt.ItemFlags(
+                QtCore.QAbstractTableModel.flags(self, index) |
+                QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled)
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         """Return a data field at the given index (of type QModelIndex,

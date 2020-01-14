@@ -26,6 +26,7 @@
 """
 
 import mock
+import pytest
 import sys
 
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
@@ -173,3 +174,32 @@ class Test_TableView(object):
         QtWidgets.QApplication.processEvents()
         wps2 = self.window.waypoints_model.waypoints
         assert all([_x == _y for _x, _y in zip(wps[::-1], wps2)])
+
+    def test_drag_point(self):
+        """
+        Check insertion of points
+        """
+
+        pytest.skip("drag/drop testing does not seem to work o qt5.")
+
+        assert len(self.window.waypoints_model.waypoints) == 5
+        wps_before = list(self.window.waypoints_model.waypoints)
+        item1 = self.window.tableWayPoints.visualRect(
+            self.window.waypoints_model.index(2, 0))
+        item2 = self.window.tableWayPoints.visualRect(
+            self.window.waypoints_model.index(3, 0))
+        QtTest.QTest.mousePress(
+            self.window.tableWayPoints.viewport(),
+            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item1.center())
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseMove(
+            self.window.tableWayPoints.viewport(),
+            item2.center())
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseRelease(
+            self.window.tableWayPoints.viewport(),
+            QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item2.center())
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.waypoints_model.waypoints) == 5
+        wps_after = list(self.window.waypoints_model.waypoints)
+        assert wps_before != wps_after, (wps_before, wps_after)
