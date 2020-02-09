@@ -29,10 +29,11 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_save_filename, get_open_filename
 from mslib.msui.mss_qt import ui_mscolab_window as ui
 from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
 from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
+from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.icons import icons
 from mslib.msui import flighttrack as ft
@@ -44,6 +45,7 @@ from mslib.utils import config_loader
 
 import logging
 import requests
+from requests.auth import HTTPBasicAuth
 import json
 import fs
 
@@ -120,10 +122,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
-        default_MSCOLAB = config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)
+        default_MSCOLAB = config_loader(
+            dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)
         add_mscolab_urls(self.url, default_MSCOLAB)
+
+        self.emailid.setText(config_loader(dataset="MSCOLAB_mailid", default=""))
+        self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
+
         # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None})
+        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url':None,'auth':None})
         if self.settings['mscolab_url'] is not None:
             add_mscolab_urls(self.url, [self.settings['mscolab_url']])
 
@@ -146,6 +153,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             url = str(self.url.currentText())
             r = requests.get(url)
             if r.text == "Mscolab server":
+                # delete mscolab http_auth settings for the url
+                del(self.settings["auth"])
+                save_settings_qsettings('mscolab', self.settings)
                 # assign new url to self.mscolab_server_url
                 self.mscolab_server_url = url
                 self.status.setText("Status: connected")
@@ -170,12 +180,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def handle_export(self):
         # ToDo when autosave mode gets upgraded, have to fetch from remote
-        file_path = QtWidgets.QFileDialog.getSaveFileName()[0]
-        f_name = fs.path.basename(file_path)
-        f_dir = fs.open_fs(fs.path.dirname(file_path))
-        temp_name = 'tempfile_mscolab.ftml'
-        temp_dir = fs.open_fs(self.data_dir)
-        fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
+        file_path = get_save_filename(
+            self, "Save fight track", "", "Flight Track Files (*.ftml)")
+        if file_path is not None:
+            f_name = fs.path.basename(file_path)
+            f_dir = fs.open_fs(fs.path.dirname(file_path))
+            temp_name = 'tempfile_mscolab.ftml'
+            temp_dir = fs.open_fs(self.data_dir)
+            fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
 
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
@@ -213,14 +225,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.add_proj_dialog.buttonBox.setEnabled(True)
 
     def set_exported_file(self):
-        file_path = QtWidgets.QFileDialog.getOpenFileName()[0]
-        if file_path == "":
-            return
-        f_name = fs.path.basename(file_path)
-        f_dir = fs.open_fs(fs.path.dirname(file_path))
-        f_content = f_dir.readtext(f_name)
-        self.add_proj_dialog.f_content = f_content
-        self.add_proj_dialog.selectedFile.setText(f_name)
+        file_path = get_open_filename(
+            self, "Open ftml file", "", "Flight Track Files (*.ftml)")
+        if file_path is not None:
+            f_name = fs.path.basename(file_path)
+            f_dir = fs.open_fs(fs.path.dirname(file_path))
+            f_content = f_dir.readtext(f_name)
+            self.add_proj_dialog.f_content = f_content
+            self.add_proj_dialog.selectedFile.setText(f_name)
 
     def add_project(self):
         path = self.add_proj_dialog.path.text()
@@ -314,23 +326,37 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.emit_autosave(self.token, self.active_pid, 0)
 
     def authorize(self):
+        auth = ('', '')
+        self.settings = load_settings_qsettings('mscolab', default_settings={'auth': None})
+        if ((self.settings["auth"] is not None) and 
+            (self.mscolab_server_url in self.settings["auth"].keys()) and 
+            (self.settings["auth"] is not None)):
+            auth = self.settings["auth"]
+        # get mscolab /token http auth credentials from cache
         emailid = self.emailid.text()
         password = self.password.text()
-        # to prevent someone nearby from seeing the id, password
-        self.emailid.setText('')
-        self.password.setText('')
         data = {
             "email": emailid,
             "password": password
         }
-        r = requests.post(self.mscolab_server_url + '/token', data=data)
-        if r.text == "False":
+        r = requests.post(self.mscolab_server_url + '/token', data=data, auth=HTTPBasicAuth(auth[0], auth[1]))
+        if r.status_code == 401:
+            dlg = MSCOLAB_AuthenticationDialog(parent=self)
+            dlg.setModal(True)
+            if dlg.exec_() == QtWidgets.QDialog.Accepted:
+                username, password = dlg.getAuthInfo()
+                self.settings["auth"] = {}
+                self.settings["auth"][self.mscolab_server_url] = (username, password)
+                # save to cache
+                save_settings_qsettings('mscolab', self.settings)
+        elif r.text == "False":
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
             pass
         else:
             # remove the login modal and put text there
+            print(r.text)
             _json = json.loads(r.text)
             self.token = _json["token"]
             self.user = _json["user"]
@@ -615,6 +641,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         self.disable_action_buttons()
 
+        # delete mscolab http_auth settings for the url
+        self.settings["auth"] = None
+        save_settings_qsettings('mscolab', self.settings)
+
     def save_wp_mscolab(self, comment=None):
         if self.active_pid is not None:
             # to save to temp file
@@ -764,3 +794,23 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def closeEvent(self, event):
         if self.conn:
             self.conn.disconnect()
+
+
+class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
+    """Dialog to ask the user for username/password should this be
+       required by a WMS server.
+    """
+
+    def __init__(self, parent=None):
+        """
+        Arguments:
+        parent -- Qt widget that is parent to this widget.
+        """
+        super(MSCOLAB_AuthenticationDialog, self).__init__(parent)
+        self.setupUi(self)
+
+    def getAuthInfo(self):
+        """Return the entered username and password.
+        """
+        return (self.leUsername.text(),
+                self.lePassword.text())
