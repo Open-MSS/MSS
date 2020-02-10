@@ -218,7 +218,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def set_exported_file(self):
         file_path = QtWidgets.QFileDialog.getOpenFileName()[0]
         if file_path == "":
--            return
+-           return
         f_name = fs.path.basename(file_path)
         f_dir = fs.open_fs(fs.path.dirname(file_path))
         f_content = f_dir.readtext(f_name)
@@ -350,7 +350,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             pass
         else:
             # remove the login modal and put text there
-            print(r.text)
             _json = json.loads(r.text)
             self.token = _json["token"]
             self.user = _json["user"]
