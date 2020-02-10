@@ -123,7 +123,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         default_MSCOLAB = config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)
         add_mscolab_urls(self.url, default_MSCOLAB)
         # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url':None,'auth':None})
+        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None,'auth':None})
         if self.settings['mscolab_url'] is not None:
             add_mscolab_urls(self.url, [self.settings['mscolab_url']])
 
@@ -147,7 +147,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             r = requests.get(url)
             if r.text == "Mscolab server":
                 # delete mscolab http_auth settings for the url
-                del(self.settings["auth"])
+                del self.settings["auth"]
                 save_settings_qsettings('mscolab', self.settings)
                 # assign new url to self.mscolab_server_url
                 self.mscolab_server_url = url
@@ -218,7 +218,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def set_exported_file(self):
         file_path = QtWidgets.QFileDialog.getOpenFileName()[0]
         if file_path == "":
--           return
+            return
         f_name = fs.path.basename(file_path)
         f_dir = fs.open_fs(fs.path.dirname(file_path))
         f_content = f_dir.readtext(f_name)
@@ -345,7 +345,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 save_settings_qsettings('mscolab', self.settings)
         elif r.text == "False":
             # popup that has wrong credentials
-            self.error_dialog = QtWidgets.QErrorMessage()`
+            self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
             pass
         else:
