@@ -507,9 +507,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.get(self.mscolab_server_url + '/get_project', data=data)
         ftml = json.loads(r.text)["content"]
-        data_dir = fs.open_fs(self.data_dir)
-        data_dir.writetext('tempfile_mscolab.ftml', ftml)
-        fname_temp = fs.path.combine(self.data_dir, 'tempfile_mscolab.ftml')
+
+        try:
+            data_dir = fs.open_fs(self.data_dir)
+            data_dir.makedirs(self.user['username'])
+        except:
+            data_dir = fs.open_fs(self.data_dir)
+        data_dir.writetext(self.user['username']+'/tempfile_mscolab.ftml', ftml)
+        fname_temp = fs.path.combine(self.data_dir,self.user['username']+'/tempfile_mscolab.ftml')
         self.fname_temp = fname_temp
         self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
 
