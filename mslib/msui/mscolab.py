@@ -511,7 +511,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         try:
             data_dir = fs.open_fs(self.data_dir)
             data_dir.makedirs(self.user['username'])
-        except:
+        # ToDo Remove exception when deleting of a temporary directory is implemented.
+        except fs.errors.DirectoryExists as e:
+            logging.debug(e)
             data_dir = fs.open_fs(self.data_dir)
         data_dir.writetext(self.user['username']+'/tempfile_mscolab.ftml', ftml)
         fname_temp = fs.path.combine(self.data_dir,self.user['username']+'/tempfile_mscolab.ftml')
