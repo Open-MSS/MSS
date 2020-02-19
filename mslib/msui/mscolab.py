@@ -48,6 +48,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 import fs
+from fs import path, open_fs
 
 MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
 
@@ -183,10 +184,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         file_path = get_save_filename(
             self, "Save fight track", "", "Flight Track Files (*.ftml)")
         if file_path is not None:
-            f_name = fs.path.basename(file_path)
-            f_dir = fs.open_fs(fs.path.dirname(file_path))
+            f_name = path.basename(file_path)
+            f_dir = open_fs(path.dirname(file_path))
             temp_name = 'tempfile_mscolab.ftml'
-            temp_dir = fs.open_fs(self.data_dir)
+            temp_dir = open_fs(self.data_dir)
             fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
 
     def disable_action_buttons(self):
@@ -228,8 +229,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         file_path = get_open_filename(
             self, "Open ftml file", "", "Flight Track Files (*.ftml)")
         if file_path is not None:
-            f_name = fs.path.basename(file_path)
-            f_dir = fs.open_fs(fs.path.dirname(file_path))
+            f_name = path.basename(file_path)
+            f_dir = open_fs(path.dirname(file_path))
             f_content = f_dir.readtext(f_name)
             self.add_proj_dialog.f_content = f_content
             self.add_proj_dialog.selectedFile.setText(f_name)
@@ -509,14 +510,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         ftml = json.loads(r.text)["content"]
 
         try:
-            data_dir = fs.open_fs(self.data_dir)
+            data_dir = open_fs(self.data_dir)
             data_dir.makedirs(self.user['username'])
         # ToDo Remove exception when deleting of a temporary directory is implemented.
         except fs.errors.DirectoryExists as e:
             logging.debug(e)
-            data_dir = fs.open_fs(self.data_dir)
-        data_dir.writetext(self.user['username']+'/tempfile_mscolab.ftml', ftml)
-        fname_temp = fs.path.combine(self.data_dir,self.user['username']+'/tempfile_mscolab.ftml')
+            data_dir = open_fs(self.data_dir)
+        data_dir.writetext(path.combine(self.user['username'], 'tempfile_mscolab.ftml'), ftml)
+        fname_temp = path.combine(self.data_dir, path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
         self.fname_temp = fname_temp
         self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
 
