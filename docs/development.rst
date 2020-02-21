@@ -71,6 +71,10 @@ Compare versions used in the meta.yaml between stable and develop branch and app
 
 Add the path of your local cloned mss directory to $PYTHONPATH.
 
+For accessing the full potential of the GUI testing features, the developers must add the following package at the end of the requirements.d/requirements.txt (not available for Windows)::
+
+  pyvirtualdisplay
+
 Add developer packages for running tests, activate your env and run::
 
   $ conda install --file requirements.d/development.txt
