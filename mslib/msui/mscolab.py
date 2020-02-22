@@ -131,7 +131,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
 
         # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None})
+        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None, 'auth': None})
         if self.settings['mscolab_url'] is not None:
             add_mscolab_urls(self.url, [self.settings['mscolab_url']])
 

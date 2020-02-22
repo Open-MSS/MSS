@@ -177,6 +177,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # views.
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
+        self.mscolab_window = None
 
         # Connect Qt SIGNALs:
         # ===================
@@ -420,6 +421,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listViews.clear()
             self.listTools.clear()
             self.listFlightTracks.clear()
+            # cleanup mscolab window
+            if self.mscolab_window is not None:
+                # disconnect sockets
+                if self.mscolab_window.conn is not None:
+                    self.mscolab_window.conn.disconnect()
+                # delete the reference to QWidget
+                self.mscolab_window = None
             event.accept()
         else:
             event.ignore()
