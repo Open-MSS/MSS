@@ -30,42 +30,28 @@ Output and Logging
 When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
 warning for warnings, error for errors, critical for critical errors/states).
 
-Building a development environment
+Setup a development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to contribute make a fork on bitbucket of `mss <https://bitbucket.org/wxmetvis/mss>`_.
-For building you have to use the conda recipe localy and install in a new environment.
 
 Some of used packages are in the conda-forge channel located, so we have to add this channel to the default::
 
   $ conda config --add channels conda-forge
+  $ conda config --add channels defaults
 
-Or add the channel by an editor to the .condarc config file::
+Your content of the .condarc config file should have defaults on top::
 
   $ more ~/.condarc
   channels:
   - defaults
   - conda-forge
 
+Create an environment and install the whole mss package dependencies then remove the mss package::
 
-using a local meta.yaml recipe::
-
-  $ git clone https://bitbucket.org/yourfork/mss.git
-  $ cd mss
-  $ conda create -n mssdev python=3
+  $ conda create -n mssdev mss
   $ conda activate mssdev
-  $ conda build .
-  $ conda install --use-local mss
-  $ mkdir "$HOME/.config/mss"
-  $ # cp mss_settings.json.sample to "$HOME/.config/mss/mss_settings.json"
   $ conda remove mss --force
-
-
-alternative get the whole package first::
-
- $ conda create -n mssdev mss
- $ conda activate mssdev
- $ conda remove mss --force
 
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
 
@@ -194,6 +180,24 @@ Bug fixes we have done in stable we need to merge regulary into develop too::
     git checkout develop
     git pull
     git merge stable
+
+
+Testing local build
+~~~~~~~~~~~~~~~~~~~
+
+We provide in the dir localbuild the setup which will be used as a base on conda-forge to build mss.
+As developer you should copy this directory and adjust the source path, build number.
+
+using a local meta.yaml recipe::
+
+  $ cd yourlocalbuild
+  $ conda build .
+  $ conda create -n mssbuildtest
+  $ conda activate mssbuildtest
+  $ conda install --use-local mss
+
+
+Take care on removing alpha builds, or increase the build number for a new version.
 
 
 Creating a new release
