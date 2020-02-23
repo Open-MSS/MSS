@@ -35,6 +35,9 @@ Setup a development environment
 
 If you want to contribute make a fork on bitbucket of `mss <https://bitbucket.org/wxmetvis/mss>`_.
 
+In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
+mss repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
+
 Some of used packages are in the conda-forge channel located, so we have to add this channel to the default::
 
   $ conda config --add channels conda-forge
