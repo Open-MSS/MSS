@@ -13,4 +13,3 @@ sphinx_rtd_theme
 gitpython
 mock
 pytest-cov
-pyvirtualdisplay
