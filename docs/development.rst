@@ -53,11 +53,13 @@ Create an environment and install the whole mss package dependencies then remove
   $ conda activate mssdev
   $ conda remove mss --force
 
+
+You can also first create the environment and then install mss.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
 
 Add the path of your local cloned mss directory to $PYTHONPATH.
 
-Add developer packages for running tests, activate your env and run::
+For developer we provide additional packages for running tests, activate your env and run::
 
   $ conda install --file requirements.d/development.txt
 
