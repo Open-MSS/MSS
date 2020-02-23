@@ -42,7 +42,7 @@ Some of used packages are in the conda-forge channel located, so we have to add 
 
 Your content of the .condarc config file should have defaults on top::
 
-  $ more ~/.condarc
+  $ more $HOME/.condarc
   channels:
   - defaults
   - conda-forge
@@ -79,8 +79,8 @@ Setup demodata
 
 To use this data add the mss_wms_settings.py in your python path::
 
-   $(mssdev) :~/PycharmProjects/mss
-   $(mssdev) export PYTHONPATH="`pwd`:~/mss"
+   $(mssdev) cd $HOME/PycharmProjects/mss
+   $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
    $(mssdev) python mslib/mswms/mswms.py
 
 Developer documentation of mscolab
@@ -130,7 +130,7 @@ example::
 
 
     To use this setup you need the mss_wms_settings.py in your python path e.g.
-    export PYTHONPATH=~/mss
+    export PYTHONPATH=$HOME/mss
              398119 function calls (389340 primitive calls) in 0.834 seconds
 
        Ordered by: internal time
