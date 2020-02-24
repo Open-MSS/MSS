@@ -656,7 +656,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def save_wp_mscolab(self, comment=None):
         if self.active_pid is not None:
             # to save to temp file
-            xml_text = self.waypoints_model.save_to_mscolab()
+            xml_text = self.waypoints_model.save_to_mscolab(self.user["username"])
             # to emit to mscolab
             self.conn.save_file(self.token, self.active_pid, xml_text, comment=comment)
 
