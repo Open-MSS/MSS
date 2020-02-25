@@ -99,15 +99,15 @@ You can start server and client by loading the image ::
 
  $ xhost +local:docker
  $ docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest  /bin/bash
- $ mss &
- $ mswms
+ $ /opt/conda/envs/mssenv/bin/mss &
+ $ /opt/conda/envs/mssenv/bin/mswms --port 80 &
+ $ /opt/conda/envs/mssenv/bin/mscolab &
+ $ curl http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1
+ $ curl http://localhost:8083
 
-
-If you want both server and ciient interact ::
+One component can be called by ::
 
  $  xhost +local:docker
- $  docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest mss
-
- $ docker run -d --net=host  dreimark/mss:latest:latest
- $ curl "http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1"
+ $  docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest \
+   /opt/conda/envs/mssenv/bin/mss
 
