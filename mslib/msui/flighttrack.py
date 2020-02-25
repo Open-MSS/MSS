@@ -534,13 +534,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.waypoints = []
         self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints)
 
-    def save_to_mscolab(self):
+    def save_to_mscolab(self, username):
         # note p_id can be a member of this class
         logging.debug("saving to mscolab")
-        fname_temp = path.combine(mss_default.mss_dir, path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
+        fname_temp = path.combine(mss_default.mss_dir, path.combine(username, 'tempfile_mscolab.ftml'))
         self.save_to_ftml(filename=fname_temp)
         _fs = open_fs(mss_default.mss_dir)
-        content = _fs.readtext(path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
+        content = _fs.readtext(path.combine(username, 'tempfile_mscolab.ftml'))
         return content
 
     def save_to_ftml(self, filename=None):
