@@ -525,7 +525,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         data_dir.writetext(path.combine(self.user['username'], 'tempfile_mscolab.ftml'), ftml)
         fname_temp = path.combine(self.data_dir, path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
         self.fname_temp = fname_temp
-        self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
+        self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp, data_dir=self.data_dir)
 
         # connect change events viewwindow HERE to emit file-save
         self.waypoints_model.dataChanged.connect(self.handle_data_change)
