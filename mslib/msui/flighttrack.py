@@ -141,10 +141,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     flight performance calculations.
     """
 
-    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False):
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir):
         super(WaypointsTableModel, self).__init__()
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
+        self.data_dir = data_dir
         self.modified = False  # for "save on exit"
         self.waypoints = []  # user-defined waypoints
         # file-save events are handled in a different manner
@@ -537,9 +538,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def save_to_mscolab(self, username):
         # note p_id can be a member of this class
         logging.debug("saving to mscolab")
-        fname_temp = path.combine(mss_default.mss_dir, path.combine(username, 'tempfile_mscolab.ftml'))
+        fname_temp = path.combine(self.data_dir, path.combine(username, 'tempfile_mscolab.ftml'))
         self.save_to_ftml(filename=fname_temp)
-        _fs = open_fs(mss_default.mss_dir)
+        _fs = open_fs(self.data_dir)
         content = _fs.readtext(path.combine(username, 'tempfile_mscolab.ftml'))
         return content
 
