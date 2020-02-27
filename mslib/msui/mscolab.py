@@ -330,7 +330,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def authorize(self):
         auth = ('', '')
         self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}})
-        if (self.settings["auth"] is not None) and (self.mscolab_server_url in self.settings["auth"].keys()):
+        if (self.mscolab_server_url in self.settings["auth"].keys()):
             auth = self.settings["auth"][self.mscolab_server_url]
         # get mscolab /token http auth credentials from cache
         emailid = self.emailid.text()
