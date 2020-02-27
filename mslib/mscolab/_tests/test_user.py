@@ -63,10 +63,10 @@ class Test_UserMethods(object):
             "password": "sdf",
             "username": "sdf1"
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
-        assert r.text == "True"
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
-        assert r.text == "False"
+        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data).json()
+        assert r["success"] is True
+        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data).json()
+        assert r["success"] is False
 
     def test_token_api(self):
         data = {

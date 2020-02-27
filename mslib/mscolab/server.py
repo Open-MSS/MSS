@@ -24,7 +24,7 @@
     limitations under the License.
 """
 
-from flask import Flask, request, g
+from flask import Flask, request, g, jsonify
 from flask_httpauth import HTTPBasicAuth
 import datetime
 import functools
@@ -99,18 +99,21 @@ def check_login(emailid, password):
 
 def register_user(email, password, username):
     user = User(email, username, password)
+    is_valid_username = True if username.find("@") == -1 else False
+    is_valid_email = validate_email(email)
+    if not is_valid_email:
+        return jsonify({"success": False, "message": "Oh no, your email ID is not valid!"}), 200
+    if not is_valid_username:
+        return jsonify({"success": False, "message": "Oh no, your username cannot contain @ symbol!"}), 200
     user_exists = User.query.filter_by(emailid=str(email)).first()
-    is_valid = validate_email(email)
-    if not is_valid:
-        return 'False'
     if user_exists:
-        return 'False'
+        return jsonify({"success": False, "message": "Oh no, this email ID is already taken!"}), 200
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
-        return 'False'
+        return jsonify({"success": False, "message": "Oh no, this username is already registered"}), 200
     db.session.add(user)
     db.session.commit()
-    return 'True'
+    return jsonify({"success": True}), 201
 
 
 def verify_user(func):
@@ -333,7 +336,7 @@ def undo_ftml():
 
 
 def start_server(app, sockio, cm, fm, port=8083):
-    sockio.run(app, port=port)
+    sockio.run(app, port=port, debug=True)
 
 
 def main():
