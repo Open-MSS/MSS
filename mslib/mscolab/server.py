@@ -48,6 +48,7 @@ log.setLevel(logging.ERROR)
 def initialize_managers(app):
     sockio, cm, fm = setup_managers(app)
     # initiatializing socketio and db
+    app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
     db.init_app(app)
     return (app, sockio, cm, fm)
