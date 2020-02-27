@@ -263,7 +263,7 @@ def add_permission():
     access_level = request.form.get('access_level', None)
     user = g.user
     if u_id == 0:
-        user_v = User.query.filter_by(username=username).first()
+        user_v = User.query.filter((User.username == username) | (User.emailid == username)).first()
         if user_v is None:
             return "False"
         u_id = user_v.id
@@ -293,7 +293,7 @@ def modify_permission():
     access_level = request.form.get('access_level', None)
     user = g.user
     if u_id == 0:
-        user_v = User.query.filter_by(username=username).first()
+        user_v = User.query.filter((User.username == username) | (User.emailid == username)).first()
         if user_v is None:
             return "False"
         u_id = user_v.id
@@ -336,7 +336,7 @@ def undo_ftml():
 
 
 def start_server(app, sockio, cm, fm, port=8083):
-    sockio.run(app, port=port, debug=True)
+    sockio.run(app, port=port)
 
 
 def main():
