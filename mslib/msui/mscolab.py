@@ -131,7 +131,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
 
         # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None, 'auth': None})
+        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None, 'auth': {}})
         if self.settings['mscolab_url'] is not None:
             add_mscolab_urls(self.url, [self.settings['mscolab_url']])
 
@@ -155,7 +155,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             r = requests.get(url)
             if r.text == "Mscolab server":
                 # delete mscolab http_auth settings for the url
-                self.settings["auth"][self.mscolab_server_url] = ('', '')
+                if self.mscolab_server_url in self.settings["auth"].keys():
+                    del self.settings["auth"][self.mscolab_server_url]
                 save_settings_qsettings('mscolab', self.settings)
                 # assign new url to self.mscolab_server_url
                 self.mscolab_server_url = url
@@ -328,10 +329,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def authorize(self):
         auth = ('', '')
-        self.settings = load_settings_qsettings('mscolab', default_settings={'auth': None})
-        if((self.settings["auth"] is not None) and
-           (self.mscolab_server_url in self.settings["auth"].keys()) and
-           (self.settings["auth"][self.mscolab_server_url] is not None)):
+        self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}})
+        if (self.settings["auth"] is not None) and (self.mscolab_server_url in self.settings["auth"].keys()):
             auth = self.settings["auth"][self.mscolab_server_url]
         # get mscolab /token http auth credentials from cache
         emailid = self.emailid.text()
@@ -346,7 +345,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             dlg.setModal(True)
             if dlg.exec_() == QtWidgets.QDialog.Accepted:
                 username, password = dlg.getAuthInfo()
-                self.settings["auth"] = {}
                 self.settings["auth"][self.mscolab_server_url] = (username, password)
                 # save to cache
                 save_settings_qsettings('mscolab', self.settings)
@@ -650,7 +648,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.disable_action_buttons()
 
         # delete mscolab http_auth settings for the url
-        self.settings["auth"][self.mscolab_server_url] = ('', '')
+        if self.mscolab_server_url in self.settings["auth"].keys():
+            del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
 
     def save_wp_mscolab(self, comment=None):
