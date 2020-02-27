@@ -414,12 +414,18 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
         self.listProjects.clear()
+        selectedProject = None
         for project in projects:
             project_desc = '{} - {}'.format(project['path'], project["access_level"])
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
             widgetItem.p_id = project["p_id"]
             widgetItem.access_level = project["access_level"]
+            if widgetItem.p_id == self.active_pid:
+                selectedProject = widgetItem
             self.listProjects.addItem(widgetItem)
+        if selectedProject is not None:
+            self.listProjects.setCurrentItem(selectedProject)
+            self.listProjects.itemActivated.emit(selectedProject)
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def set_active_pid(self, item):
