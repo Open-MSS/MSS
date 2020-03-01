@@ -47,6 +47,11 @@ except ImportError:
 from mslib.msui import lagranto_output_reader
 
 
+import warnings
+warnings.warn("the trajectory_item_tree module is deprecated", DeprecationWarning,
+              stacklevel=2)
+
+
 class LagrantoTreeModelUnsupportedOperationError(Exception):
     """Exception class to handle wrong method arguments.
     """

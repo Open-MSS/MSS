@@ -681,7 +681,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 if item.p_id == p_id:
                     desc = item.text().split('-')
                     desc[-1] = access_level
-                    desc = ''.join(desc)
+                    desc = '-'.join(desc)
                     item.setText(desc)
                     item.p_id = p_id
                     item.access_level = access_level
