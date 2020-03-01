@@ -37,6 +37,10 @@ from mslib.msui.icons import icons
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
 
+import warnings
+warnings.warn("the trajectories_tool module is deprecated", DeprecationWarning,
+              stacklevel=2)
+
 
 class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):
     """Implements a trajectory tool.
