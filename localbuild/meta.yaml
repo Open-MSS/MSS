@@ -28,6 +28,7 @@ requirements:
     - menuinst  # [win]
   run:
     - python
+    - defusedxml
     - menuinst  # [win]
     - basemap >=1.2.0
     - chameleon
