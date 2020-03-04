@@ -387,7 +387,7 @@ class MapCanvas(basemap.Basemap):
             try:
                 self.map_boundary.remove()
             except NotImplementedError as ex:
-                logging.debug("{}".format(ex))
+                logging.debug("%s", ex)
             self.map_boundary = None
             self.ax.figure.canvas.draw()
         elif visible:

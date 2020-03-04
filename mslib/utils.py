@@ -82,7 +82,7 @@ def parse_iso_duration(string):
 
 class FatalUserError(Exception):
     def __init__(self, error_string):
-        logging.debug("{}".format(error_string))
+        logging.debug("%s", error_string)
 
 
 def config_loader(config_file=None, dataset=None, default=None):
