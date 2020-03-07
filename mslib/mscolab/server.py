@@ -246,7 +246,16 @@ def revoke_permission():
     u_id = request.form.get('u_id', 0)
     username = request.form.get('username', None)
     user = g.user
-    return str(fm.revoke_permission(int(p_id), int(u_id), username, user))
+    if u_id == 0:
+        user_v = User.query.filter_by(username=username).first()
+        if user_v is None:
+            return "False"
+        u_id = user_v.id
+    success = str(fm.revoke_permission(int(p_id), int(u_id), username, user))
+    if success:
+        sockio.sm.emit_revoke_permission(int(u_id), int(p_id))
+        sockio.sm.remove_collaborator_from_room(int(u_id), int(p_id))
+    return success
 
 
 @app.route('/modify_permission', methods=['POST'])
