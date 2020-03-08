@@ -40,7 +40,7 @@ class VapourPressureError(Exception):
     """
 
     def __init__(self, error_string):
-        logging.debug("{}".format(error_string))
+        logging.debug("%s", error_string)
 
 
 def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',

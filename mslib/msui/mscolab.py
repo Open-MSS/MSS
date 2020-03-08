@@ -176,7 +176,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
         except Exception as e:
-            logging.debug("Error {}".format(str(e)))
+            logging.debug("Error %s", str(e))
         # inform user that url is invalid
         self.show_info("Invalid url, please try again!")
 
