@@ -33,6 +33,7 @@ import json
 from mslib.mscolab.models import Permission, User
 from mslib.mscolab.chat_manager import ChatManager
 from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.utils import get_session_id
 
 socketio = SocketIO()
 
@@ -72,20 +73,13 @@ class SocketsManager(object):
             - u_id: user id(collaborator's id)
             - p_id: project id
         """
-        s_id = None
-        for ss in self.sockets:
-            if ss["u_id"] == u_id:
-                s_id = ss["s_id"]
+        s_id = get_session_id(self.sockets, u_id)
         if s_id is not None:
             join_room(str(p_id), sid=s_id, namespace='/')
 
     def remove_collaborator_from_room(self, u_id, p_id):
-        s_id = None
-        for ss in self.sockets:
-            if ss["u_id"] == u_id:
-                s_id = ss["s_id"]
+        s_id = get_session_id(self.sockets, u_id)
         if s_id is not None:
-            # Remove User from the room
             leave_room(str(p_id), sid=s_id, namespace='/')
 
     def handle_start_event(self, json):
