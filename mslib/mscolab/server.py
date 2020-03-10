@@ -104,18 +104,18 @@ def register_user(email, password, username):
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
-        return jsonify({"success": False, "message": "Oh no, your email ID is not valid!"}), 200
+        return {"success": False, "message": "Oh no, your email ID is not valid!"}
     if not is_valid_username:
-        return jsonify({"success": False, "message": "Oh no, your username cannot contain @ symbol!"}), 200
+        return {"success": False, "message": "Oh no, your username cannot contain @ symbol!"}
     user_exists = User.query.filter_by(emailid=str(email)).first()
     if user_exists:
-        return jsonify({"success": False, "message": "Oh no, this email ID is already taken!"}), 200
+        return {"success": False, "message": "Oh no, this email ID is already taken!"}
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
-        return jsonify({"success": False, "message": "Oh no, this username is already registered"}), 200
+        return {"success": False, "message": "Oh no, this username is already registered"}
     db.session.add(user)
     db.session.commit()
-    return jsonify({"success": True}), 201
+    return {"success": True}
 
 
 def verify_user(func):
@@ -171,7 +171,11 @@ def user_register_handler():
     email = request.form['email']
     password = request.form['password']
     username = request.form['username']
-    return register_user(email, password, username)
+    result = register_user(email, password, username)
+    status_code = 200
+    if result["success"]:
+        status_code = 201
+    return jsonify(result), status_code
 
 
 @APP.route('/user', methods=["GET"])
