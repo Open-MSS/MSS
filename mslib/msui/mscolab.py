@@ -285,13 +285,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 "password": password,
                 "username": username
             }
-            r = requests.post('{}/register'.format(self.mscolab_server_url), data=data)
-            if r.text == "True":
+            r = requests.post('{}/register'.format(self.mscolab_server_url), data=data).json()
+            if r["success"]:
                 self.error_dialog = QtWidgets.QErrorMessage()
                 self.error_dialog.showMessage('You are registered, you can now log in.')
             else:
                 self.error_dialog = QtWidgets.QErrorMessage()
-                self.error_dialog.showMessage('Oh no, your emailid is either invalid or taken')
+                self.error_dialog.showMessage(r["message"])
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your passwords don\'t match')

@@ -94,7 +94,7 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         if username:
-            user_victim = User.query.filter_by(username=username).first()
+            user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
             if not user_victim:
                 return False
             u_id = user_victim.id
@@ -120,7 +120,7 @@ class FileManager(object):
             return False
         else:
             if username:
-                user_victim = User.query.filter_by(username=username).first()
+                user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
                 if not user_victim:
                     return False
                 u_id = user_victim.id
@@ -203,7 +203,7 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         if username:
-            user_victim = User.query.filter_by(username=username).first()
+            user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
             if not user_victim:
                 return False
             u_id = user_victim.id
