@@ -45,11 +45,11 @@ class Test_UserMethods(object):
     def test_registration(self):
         with self.app.app_context():
             x = register_user('sdf@s.com', 'sdf', 'sdf')
-            assert x == 'True'
+            assert x["success"] is True
             x = register_user('sdf@s.com', 'sdf', 'sdf')
-            assert x == 'False'
+            assert x["success"] is False
             x = register_user('sdf@ ssdf @s.com', 'sdf', 'sdf')
-            assert x == 'False'
+            assert x["success"] is False
 
     def test_login(self):
         with self.app.app_context():
