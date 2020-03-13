@@ -179,7 +179,8 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 layer = layer_class(self.hsec_drivers[dataset])
-            except KeyError:
+            except KeyError as ex:
+                logging.debug("ERROR: %s %s".format(type(ex), ex))
                 continue
             logging.debug("registering horizontal section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
@@ -202,7 +203,8 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 layer = layer_class(self.vsec_drivers[dataset])
-            except KeyError:
+            except KeyError as ex:
+                logging.debug("ERROR: %s %s".format(type(ex), ex))
                 continue
             logging.debug("registering vertical section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If

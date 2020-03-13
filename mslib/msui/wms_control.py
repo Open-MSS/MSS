@@ -559,6 +559,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     wms = MSSWebMapService(base_url, version='1.1.1',
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
+                    logging.error("ERROR: %s %s".format(type(ex),ex))
                     if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
                             "Unauthorized") >= 0:
                         # Catch the "401 Unauthorized" error if one has been
@@ -890,6 +891,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.init_time_name = [x for x in ["init_time", "reference_time", "run"] if x in extents][0]
             enable_init_time = True
         except IndexError:
+            logging.debug("Index Error encountered due to FAILURE of initialisation.")
             enable_init_time = False
 
         # Both time dimension and time extent tags were found. Try to determine the
@@ -909,6 +911,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.valid_time_name = [x for x in ["time", "forecast"] if x in extents][0]
             enable_valid_time = True
         except IndexError:
+            logging.debug("Index Error Encountered due to invalid time.")
             enable_valid_time = False
 
         # TODO Relic from the past: Is this really necessary or even correct??
@@ -1375,7 +1378,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     if _x in prefetch_config:
                         try:
                             value = int(prefetch_config[_x])
-                        except ValueError:
+                        except ValueError as VE:
+                            logging.error("ERROR: %s %s".format(type(VE),VE))
                             value = 0
                         prefetch_config[_x] = max(0, value)
                     else:

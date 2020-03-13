@@ -71,6 +71,7 @@ def parse_iso_datetime(string):
     except isodate.ISO8601Error:
         result = isodate.parse_date(string)
         result = datetime.datetime.fromordinal(result.toordinal())
+        logging.debug("ISO String Couldn't be Parsed.\n ISO8601Error Encountered.")
     if result.tzinfo is not None:
         result = result.astimezone(datetime.timezone.utc).replace(tzinfo=None)
     return result
@@ -109,6 +110,7 @@ def config_loader(config_file=None, dataset=None, default=None):
             try:
                 return default_config[dataset]
             except KeyError:
+                logging.debug("'{:}' Key(s) are not defined!".format(dataset))
                 return default
     _dirname, _name = os.path.split(config_file)
     _fs = open_fs(_dirname)

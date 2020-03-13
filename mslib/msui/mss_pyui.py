@@ -66,6 +66,7 @@ try:
     import nappy
     HAVE_NAPPY = True
 except ImportError:
+    logging.debug("*** NAppy is not available. You will not be able to read NASA Ames files. ***")
     HAVE_NAPPY = False
 
 # Add config path to PYTHONPATH so plugins located there may be found
