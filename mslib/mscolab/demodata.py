@@ -42,6 +42,7 @@ try:
     import MySQLdb as ms
 except ImportError:
     ms = None
+    logging.debug("Failed to import MySQLdb")
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Project, Permission
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default

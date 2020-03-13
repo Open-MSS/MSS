@@ -643,6 +643,7 @@ class TrajectoryItem(LagrantoMapItem):
         try:
             return self.metadata["starttime"]
         except KeyError:
+            logging.debug("Starting time of the trajectory not found.")
             return self.metadata["starttime_filename"]
 
     def getMetadata(self):
@@ -661,6 +662,7 @@ class TrajectoryItem(LagrantoMapItem):
         try:
             return self.metadata[key]
         except KeyError:
+            logging.debug("'%s' key not found int the metadata", key)
             return None
 
 

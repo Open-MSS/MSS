@@ -42,6 +42,7 @@ import mpl_toolkits.basemap as basemap
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
 except ImportError:
+    logging.debug("Failed to pyproj from mpl_toolkits.basemap")
     import pyproj
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
