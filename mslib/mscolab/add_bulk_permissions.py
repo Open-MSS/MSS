@@ -10,6 +10,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,7 +71,7 @@ def main():
 
                 u = User.query.filter_by(username=_username).first()
                 if u is None:
-                    logging.info("User {} doesn't exist, skipping entry".format(_username))
+                    logging.info("User %s doesn't exist, skipping entry", _username)
                     continue
                 perm_existing = Permission.query.filter_by(u_id=u.id, p_id=p.id).first()
                 if perm_existing:

@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ class VapourPressureError(Exception):
     """
 
     def __init__(self, error_string):
-        logging.debug("{}".format(error_string))
+        logging.debug("%s", error_string)
 
 
 def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',

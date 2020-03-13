@@ -9,6 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +27,7 @@
 import logging
 try:
     import mscolab_settings
-    logging.info("Using user defined settings from {}".format(mscolab_settings.__file__))
+    logging.info("Using user defined settings from %s", mscolab_settings.__file__)
 except ImportError as ex:
     logging.warning(u"Couldn't import mss_wms_settings (ImportError:'%s'), creating dummy config.", ex)
 

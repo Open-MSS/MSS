@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,10 @@ from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.icons import icons
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
+
+import warnings
+warnings.warn("the trajectories_tool module is deprecated", DeprecationWarning,
+              stacklevel=2)
 
 
 class MSSTrajectoriesToolWindow(MSSViewWindow, ui.Ui_TrajectoriesWindow):

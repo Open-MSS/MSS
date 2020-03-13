@@ -16,7 +16,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -387,7 +387,7 @@ class MapCanvas(basemap.Basemap):
             try:
                 self.map_boundary.remove()
             except NotImplementedError as ex:
-                logging.debug("{}".format(ex))
+                logging.debug("%s", ex)
             self.map_boundary = None
             self.ax.figure.canvas.draw()
         elif visible:

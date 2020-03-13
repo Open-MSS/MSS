@@ -131,7 +131,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
 
         # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None})
+        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None, 'auth': {}})
         if self.settings['mscolab_url'] is not None:
             add_mscolab_urls(self.url, [self.settings['mscolab_url']])
 
@@ -155,7 +155,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             r = requests.get(url)
             if r.text == "Mscolab server":
                 # delete mscolab http_auth settings for the url
-                self.settings["auth"][self.mscolab_server_url] = ('', '')
+                if self.mscolab_server_url in self.settings["auth"].keys():
+                    del self.settings["auth"][self.mscolab_server_url]
                 save_settings_qsettings('mscolab', self.settings)
                 # assign new url to self.mscolab_server_url
                 self.mscolab_server_url = url
@@ -175,7 +176,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
         except Exception as e:
-            logging.debug("Error {}".format(str(e)))
+            logging.debug("Error %s", str(e))
         # inform user that url is invalid
         self.show_info("Invalid url, please try again!")
 
@@ -284,13 +285,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 "password": password,
                 "username": username
             }
-            r = requests.post('{}/register'.format(self.mscolab_server_url), data=data)
-            if r.text == "True":
+            r = requests.post('{}/register'.format(self.mscolab_server_url), data=data).json()
+            if r["success"]:
                 self.error_dialog = QtWidgets.QErrorMessage()
                 self.error_dialog.showMessage('You are registered, you can now log in.')
             else:
                 self.error_dialog = QtWidgets.QErrorMessage()
-                self.error_dialog.showMessage('Oh no, your emailid is either invalid or taken')
+                self.error_dialog.showMessage(r["message"])
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your passwords don\'t match')
@@ -328,10 +329,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def authorize(self):
         auth = ('', '')
-        self.settings = load_settings_qsettings('mscolab', default_settings={'auth': None})
-        if((self.settings["auth"] is not None) and
-           (self.mscolab_server_url in self.settings["auth"].keys()) and
-           (self.settings["auth"][self.mscolab_server_url] is not None)):
+        self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}})
+        if (self.mscolab_server_url in self.settings["auth"].keys()):
             auth = self.settings["auth"][self.mscolab_server_url]
         # get mscolab /token http auth credentials from cache
         emailid = self.emailid.text()
@@ -346,7 +345,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             dlg.setModal(True)
             if dlg.exec_() == QtWidgets.QDialog.Accepted:
                 username, password = dlg.getAuthInfo()
-                self.settings["auth"] = {}
                 self.settings["auth"][self.mscolab_server_url] = (username, password)
                 # save to cache
                 save_settings_qsettings('mscolab', self.settings)
@@ -414,12 +412,18 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
         self.listProjects.clear()
+        selectedProject = None
         for project in projects:
             project_desc = '{} - {}'.format(project['path'], project["access_level"])
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
             widgetItem.p_id = project["p_id"]
             widgetItem.access_level = project["access_level"]
+            if widgetItem.p_id == self.active_pid:
+                selectedProject = widgetItem
             self.listProjects.addItem(widgetItem)
+        if selectedProject is not None:
+            self.listProjects.setCurrentItem(selectedProject)
+            self.listProjects.itemActivated.emit(selectedProject)
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def set_active_pid(self, item):
@@ -519,7 +523,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         data_dir.writetext(path.combine(self.user['username'], 'tempfile_mscolab.ftml'), ftml)
         fname_temp = path.combine(self.data_dir, path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
         self.fname_temp = fname_temp
-        self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp)
+        self.waypoints_model = ft.WaypointsTableModel(filename=fname_temp, data_dir=self.data_dir)
 
         # connect change events viewwindow HERE to emit file-save
         self.waypoints_model.dataChanged.connect(self.handle_data_change)
@@ -650,13 +654,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.disable_action_buttons()
 
         # delete mscolab http_auth settings for the url
-        self.settings["auth"][self.mscolab_server_url] = ('', '')
+        if self.mscolab_server_url in self.settings["auth"].keys():
+            del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
 
     def save_wp_mscolab(self, comment=None):
         if self.active_pid is not None:
             # to save to temp file
-            xml_text = self.waypoints_model.save_to_mscolab()
+            xml_text = self.waypoints_model.save_to_mscolab(self.user["username"])
             # to emit to mscolab
             self.conn.save_file(self.token, self.active_pid, xml_text, comment=comment)
 
@@ -676,7 +681,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 if item.p_id == p_id:
                     desc = item.text().split('-')
                     desc[-1] = access_level
-                    desc = ''.join(desc)
+                    desc = '-'.join(desc)
                     item.setText(desc)
                     item.p_id = p_id
                     item.access_level = access_level

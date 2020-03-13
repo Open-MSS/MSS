@@ -18,7 +18,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -141,10 +141,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     flight performance calculations.
     """
 
-    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False):
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir):
         super(WaypointsTableModel, self).__init__()
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
+        self.data_dir = data_dir
         self.modified = False  # for "save on exit"
         self.waypoints = []  # user-defined waypoints
         # file-save events are handled in a different manner
@@ -534,13 +535,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.waypoints = []
         self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints)
 
-    def save_to_mscolab(self):
+    def save_to_mscolab(self, username):
         # note p_id can be a member of this class
         logging.debug("saving to mscolab")
-        fname_temp = path.combine(mss_default.mss_dir, path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
+        fname_temp = path.combine(self.data_dir, path.combine(username, 'tempfile_mscolab.ftml'))
         self.save_to_ftml(filename=fname_temp)
-        _fs = open_fs(mss_default.mss_dir)
-        content = _fs.readtext(path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
+        _fs = open_fs(self.data_dir)
+        content = _fs.readtext(path.combine(username, 'tempfile_mscolab.ftml'))
         return content
 
     def save_to_ftml(self, filename=None):

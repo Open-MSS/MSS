@@ -9,6 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,6 +116,7 @@ class Test_Chat(object):
         sio.sleep(4)
         with self.app.app_context():
             messages = self.cm.get_messages(1)
+            assert messages[0]["text"] == "message from 1"
             assert len(messages) == 2
             assert messages[0]["user"] == 8
 

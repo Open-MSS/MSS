@@ -94,4 +94,16 @@ installation of mss, :code:`mscolab_add_permissions`. It's usage is as follows
 
   $ mscolab_add_permissions /path/to/file
 
+instructions to use mscolab wsgi
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+make a file called :code:`server.py`
+
+**server.py**::
+
+  from mslib.mscolab.server import _app as app
+
+Then run the following commands. ::
+
+  $ conda install gunicorn eventlet
+  $ gunicorn -b 0.0.0.0:8087 server:app

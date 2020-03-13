@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016-2017 Joern Ungermann
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -151,5 +151,5 @@ class SimpleAircraft(object):
         else:
             logging.error("No data stored for computation of ceiling altitude. "
                           "Please reload performance data from JSON.")
-            maxFL = 4000
+            maxFL = 410
         return maxFL

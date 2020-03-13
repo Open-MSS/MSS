@@ -1,6 +1,43 @@
 Changelog
 =========
 
+Version 1.9.2
+-------------
+
+Bug Fixes:
+  - replace xml.etree.ElementTree, #542
+  - flake8 3.5.0 has better tests, #541
+  - update doc samples compare with mswms demodata, #540
+  - Error in handling project permission update in mscolab, #539
+  - mscolab: Selected Project highlight removed if new project is added, #533
+  - GUI tests fail in OSX, #531
+  - developer hint seperate data from source, #529
+  - PyVirtualDisplay Package not found for Windows OS, #527
+  - sync our meta.yaml with the one on conda-forge, #526
+  - improve "Building a development environment", #524
+  - Mscolab on first connection gives error, #523
+  - server vhost documentation home directory wrong path, #519
+  - layers of different horizontal extent may be combined, erroneously, by MSWMS, 513
+  - update Dockerfile for mscolab, #499
+  - Describe how to setup mscolab wsgi by gunicorn, #494
+
+
+Version 1.9.1
+-------------
+
+Bug Fixes:
+  - side view crashes when no ceiling perf data available, #507
+  - mss pyui crashes when quitting, #505
+  - Dockerfile fails on demodata, #501
+  - Dockerfile Unable to locate package python-xpyb, #500
+  - msco server does not check for None in certain circumstances, #498
+  - make rtfd use of Non-ASCII characters, #492
+  - mscolab server command crashes, #491
+  - MSS doesn't close when "quit"ing while being connected to MSCO server, #490
+  - "Checkout" of older revisions has no effect without double-clicking the revison, #485
+  - Adding unknown user to project throws exception, #483
+  - mcso windows cannot be closed by ctrl+w, #473
+
 Version 1.9.0
 -------------
 

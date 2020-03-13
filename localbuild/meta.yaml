@@ -1,4 +1,4 @@
-{% set version = load_setup_py_data().version %}
+{% set version = "alpha" %}
 
 
 package:
@@ -6,11 +6,12 @@ package:
   version: {{ version }}
 
 source:
-  git_url: https://bitbucket.org/wxmetvis/mss.git
+  path: ../
 
 build:
-  skip: true  # [py35]
-  number: 0
+  skip: true  # [py27]
+  number: 1000
+  script: "{{ PYTHON }} -m pip install . --no-deps -vv"  # [not win]
   entry_points:
     - mss = mslib.msui.mss_pyui:main
     - mswms = mslib.mswms.mswms:main
@@ -22,10 +23,12 @@ build:
 requirements:
   build:
     - python
-    - setuptools
+    - pip
+    - future
     - menuinst  # [win]
   run:
-    - python >=3.6
+    - python
+    - defusedxml
     - menuinst  # [win]
     - basemap >=1.2.0
     - chameleon
@@ -34,11 +37,10 @@ requirements:
     - lxml
     - netcdf4
     - hdf4
-    - pint
     - pillow >=5,<6
     - pytz
-    - pyqt 5.*
-    - qt 5.*
+    - pyqt >=5,<6
+    - qt >=5,<6
     - requests
     - scipy
     - skyfield >=1.12
@@ -47,7 +49,7 @@ requirements:
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
-    - matplotlib
+    - matplotlib ==3.0.2
     - proj4 <6
     - flask
     - flask-httpauth
@@ -56,9 +58,11 @@ requirements:
     - flask-sqlalchemy
     - passlib
     - gitpython
+    - git
     - psycopg2
     - validate_email
     - multidict
+    - pint
 
 test:
   imports:
@@ -66,6 +70,7 @@ test:
   commands:
     - mswms -h
     - mss -h
+    - mscolab_demodata -h
 
 about:
   summary: 'A web service based tool to plan atmospheric research flights.'

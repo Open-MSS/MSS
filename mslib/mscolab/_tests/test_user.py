@@ -9,6 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -44,11 +45,11 @@ class Test_UserMethods(object):
     def test_registration(self):
         with self.app.app_context():
             x = register_user('sdf@s.com', 'sdf', 'sdf')
-            assert x == 'True'
+            assert x["success"] is True
             x = register_user('sdf@s.com', 'sdf', 'sdf')
-            assert x == 'False'
+            assert x["success"] is False
             x = register_user('sdf@ ssdf @s.com', 'sdf', 'sdf')
-            assert x == 'False'
+            assert x["success"] is False
 
     def test_login(self):
         with self.app.app_context():
@@ -63,10 +64,10 @@ class Test_UserMethods(object):
             "password": "sdf",
             "username": "sdf1"
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
-        assert r.text == "True"
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
-        assert r.text == "False"
+        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data).json()
+        assert r["success"] is True
+        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data).json()
+        assert r["success"] is False
 
     def test_token_api(self):
         data = {

@@ -30,52 +30,43 @@ Output and Logging
 When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
 warning for warnings, error for errors, critical for critical errors/states).
 
-Building a development environment
+Setup a development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to contribute make a fork on bitbucket of `mss <https://bitbucket.org/wxmetvis/mss>`_.
-For building you have to use the conda recipe localy and install in a new environment.
+
+In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
+mss repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
 
 Some of used packages are in the conda-forge channel located, so we have to add this channel to the default::
 
   $ conda config --add channels conda-forge
+  $ conda config --add channels defaults
 
-Or add the channel by an editor to the .condarc config file::
+Your content of the .condarc config file should have defaults on top::
 
-  $ more ~/.condarc
+  $ more $HOME/.condarc
   channels:
   - defaults
   - conda-forge
 
+Create an environment and install the whole mss package dependencies then remove the mss package::
 
-using a local meta.yaml recipe::
-
-  $ git clone https://bitbucket.org/yourfork/mss.git
-  $ cd mss
-  $ conda create -n mssdev python=3
+  $ conda create -n mssdev mss
   $ conda activate mssdev
-  $ conda build .
-  $ conda install --use-local mss
-  $ mkdir "$HOME/.config/mss"
-  $ # cp mss_settings.json.sample to "$HOME/.config/mss/mss_settings.json"
   $ conda remove mss --force
 
 
-alternative get the whole package first::
-
- $ conda create -n mssdev mss
- $ conda activate mssdev
- $ conda remove mss --force
-
+You can also first create the environment and then install mss.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
 
 Add the path of your local cloned mss directory to $PYTHONPATH.
 
-Add developer packages for running tests, activate your env and run::
+For developer we provide additional packages for running tests, activate your env and run::
 
   $ conda install --file requirements.d/development.txt
 
-On linux install `xvfb` from your linux package manager. This is used to run tests on a virtual display.
+On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager. This is used to run tests on a virtual display.
 If you don't want tests redirected to the xvfb display just setup an environment variable::
 
  $ export TESTS_VISIBLE=TRUE
@@ -91,8 +82,8 @@ Setup demodata
 
 To use this data add the mss_wms_settings.py in your python path::
 
-   $(mssdev) :~/PycharmProjects/mss
-   $(mssdev) export PYTHONPATH="`pwd`:~/mss"
+   $(mssdev) cd $HOME/PycharmProjects/mss
+   $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
    $(mssdev) python mslib/mswms/mswms.py
 
 Developer documentation of mscolab
@@ -142,7 +133,7 @@ example::
 
 
     To use this setup you need the mss_wms_settings.py in your python path e.g.
-    export PYTHONPATH=~/mss
+    export PYTHONPATH=$HOME/mss
              398119 function calls (389340 primitive calls) in 0.834 seconds
 
        Ordered by: internal time
@@ -196,6 +187,24 @@ Bug fixes we have done in stable we need to merge regulary into develop too::
     git merge stable
 
 
+Testing local build
+~~~~~~~~~~~~~~~~~~~
+
+We provide in the dir localbuild the setup which will be used as a base on conda-forge to build mss.
+As developer you should copy this directory and adjust the source path, build number.
+
+using a local meta.yaml recipe::
+
+  $ cd yourlocalbuild
+  $ conda build .
+  $ conda create -n mssbuildtest
+  $ conda activate mssbuildtest
+  $ conda install --use-local mss
+
+
+Take care on removing alpha builds, or increase the build number for a new version.
+
+
 Creating a new release
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -219,9 +228,9 @@ Publish on Conda Forge
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * update a fork of the `mss-feedstock <https://github.com/conda-forge/mss-feedstock>`_
-  * set version string
-  * set sha256 checksum of the tagged release
-  * update dependencies
+ - set version string
+ - set sha256 checksum of the tagged release
+ - update dependencies
 * rerender the feedstock by conda smithy
 * send a pull request
 * maintainer will merge if there is no error

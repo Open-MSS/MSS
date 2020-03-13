@@ -9,6 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +25,7 @@
     limitations under the License.
 """
 
-from flask import Flask, request, g
+from flask import Flask, request, g, jsonify
 from flask_httpauth import HTTPBasicAuth
 import datetime
 import functools
@@ -81,6 +82,7 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
 def initialize_managers(app):
     sockio, cm, fm = setup_managers(app)
     # initiatializing socketio and db
+    app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
     db.init_app(app)
     return (app, sockio, cm, fm)
@@ -99,18 +101,21 @@ def check_login(emailid, password):
 
 def register_user(email, password, username):
     user = User(email, username, password)
+    is_valid_username = True if username.find("@") == -1 else False
+    is_valid_email = validate_email(email)
+    if not is_valid_email:
+        return {"success": False, "message": "Oh no, your email ID is not valid!"}
+    if not is_valid_username:
+        return {"success": False, "message": "Oh no, your username cannot contain @ symbol!"}
     user_exists = User.query.filter_by(emailid=str(email)).first()
-    is_valid = validate_email(email)
-    if not is_valid:
-        return 'False'
     if user_exists:
-        return 'False'
+        return {"success": False, "message": "Oh no, this email ID is already taken!"}
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
-        return 'False'
+        return {"success": False, "message": "Oh no, this username is already registered"}
     db.session.add(user)
     db.session.commit()
-    return 'True'
+    return {"success": True}
 
 
 def verify_user(func):
@@ -166,7 +171,11 @@ def user_register_handler():
     email = request.form['email']
     password = request.form['password']
     username = request.form['username']
-    return register_user(email, password, username)
+    result = register_user(email, password, username)
+    status_code = 200
+    if result["success"]:
+        status_code = 201
+    return jsonify(result), status_code
 
 
 @APP.route('/user', methods=["GET"])
@@ -260,7 +269,7 @@ def add_permission():
     access_level = request.form.get('access_level', None)
     user = g.user
     if u_id == 0:
-        user_v = User.query.filter_by(username=username).first()
+        user_v = User.query.filter((User.username == username) | (User.emailid == username)).first()
         if user_v is None:
             return "False"
         u_id = user_v.id
@@ -290,7 +299,7 @@ def modify_permission():
     access_level = request.form.get('access_level', None)
     user = g.user
     if u_id == 0:
-        user_v = User.query.filter_by(username=username).first()
+        user_v = User.query.filter((User.username == username) | (User.emailid == username)).first()
         if user_v is None:
             return "False"
         u_id = user_v.id

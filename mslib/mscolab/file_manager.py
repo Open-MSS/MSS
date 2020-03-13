@@ -9,6 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,7 +94,7 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         if username:
-            user_victim = User.query.filter_by(username=username).first()
+            user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
             if not user_victim:
                 return False
             u_id = user_victim.id
@@ -119,7 +120,7 @@ class FileManager(object):
             return False
         else:
             if username:
-                user_victim = User.query.filter_by(username=username).first()
+                user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
                 if not user_victim:
                     return False
                 u_id = user_victim.id
@@ -202,7 +203,7 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
         if username:
-            user_victim = User.query.filter_by(username=username).first()
+            user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
             if not user_victim:
                 return False
             u_id = user_victim.id
