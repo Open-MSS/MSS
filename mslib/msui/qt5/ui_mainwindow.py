@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MSSMainWindow(object):
     def setupUi(self, MSSMainWindow):
         MSSMainWindow.setObjectName("MSSMainWindow")
-        MSSMainWindow.resize(424, 540)
+        MSSMainWindow.resize(442, 636)
         self.centralwidget = QtWidgets.QWidget(MSSMainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -47,9 +47,13 @@ class Ui_MSSMainWindow(object):
         self.listTools.setObjectName("listTools")
         self.verticalLayout_5.addWidget(self.listTools)
         self.verticalLayout.addWidget(self.groupBox_2)
+        self.statusBar = QtWidgets.QLabel(self.centralwidget)
+        self.statusBar.setText("")
+        self.statusBar.setObjectName("statusBar")
+        self.verticalLayout.addWidget(self.statusBar)
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 424, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 442, 22))
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
@@ -61,10 +65,10 @@ class Ui_MSSMainWindow(object):
         self.menu_View.setObjectName("menu_View")
         self.menu_Tools = QtWidgets.QMenu(self.menubar)
         self.menu_Tools.setObjectName("menu_Tools")
-        self.menu_Mscolab = QtWidgets.QMenu(self.menubar)
-        self.menu_Mscolab.setObjectName("menu_Mscolab")
         self.menu_Help = QtWidgets.QMenu(self.menubar)
         self.menu_Help.setObjectName("menu_Help")
+        self.menu_Mscolab = QtWidgets.QMenu(self.menubar)
+        self.menu_Mscolab.setObjectName("menu_Mscolab")
         MSSMainWindow.setMenuBar(self.menubar)
         self.action_Quit = QtWidgets.QAction(MSSMainWindow)
         self.action_Quit.setObjectName("action_Quit")
@@ -89,8 +93,6 @@ class Ui_MSSMainWindow(object):
         self.actionTimeSeriesViewTrajectories.setObjectName("actionTimeSeriesViewTrajectories")
         self.actionTrajectoryToolLagranto = QtWidgets.QAction(MSSMainWindow)
         self.actionTrajectoryToolLagranto.setObjectName("actionTrajectoryToolLagranto")
-        self.actionMscolabProjects = QtWidgets.QAction(MSSMainWindow)
-        self.actionMscolabProjects.setObjectName("actionMscolabProjects")
         self.actionAboutMSUI = QtWidgets.QAction(MSSMainWindow)
         self.actionAboutMSUI.setObjectName("actionAboutMSUI")
         self.actionLoad_Configuration = QtWidgets.QAction(MSSMainWindow)
@@ -100,6 +102,8 @@ class Ui_MSSMainWindow(object):
         self.actionActivateSelectedFlightTrack = QtWidgets.QAction(MSSMainWindow)
         self.actionActivateSelectedFlightTrack.setShortcut("")
         self.actionActivateSelectedFlightTrack.setObjectName("actionActivateSelectedFlightTrack")
+        self.actionMscolabProjects = QtWidgets.QAction(MSSMainWindow)
+        self.actionMscolabProjects.setObjectName("actionMscolabProjects")
         self.menu_File.addAction(self.actionNewFlightTrack)
         self.menu_File.addAction(self.actionOpenFlightTrack)
         self.menu_File.addSeparator()
@@ -121,13 +125,13 @@ class Ui_MSSMainWindow(object):
         self.menu_View.addAction(self.actionTableView)
         self.menu_Tools.addAction(self.actionTrajectoryToolLagranto)
         self.menu_Tools.addAction(self.actionTimeSeriesViewTrajectories)
-        self.menu_Mscolab.addAction(self.actionMscolabProjects)
         self.menu_Tools.addSeparator()
         self.menu_Help.addAction(self.actionOnlineHelp)
         self.menu_Help.addAction(self.actionAboutMSUI)
+        self.menu_Mscolab.addAction(self.actionMscolabProjects)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menu_View.menuAction())
-        # self.menubar.addAction(self.menu_Tools.menuAction())
+        self.menubar.addAction(self.menu_Tools.menuAction())
         self.menubar.addAction(self.menu_Mscolab.menuAction())
         self.menubar.addAction(self.menu_Help.menuAction())
 
@@ -171,9 +175,9 @@ class Ui_MSSMainWindow(object):
         self.actionTableView.setShortcut(_translate("MSSMainWindow", "Ctrl+T"))
         self.actionTimeSeriesViewTrajectories.setText(_translate("MSSMainWindow", "T&ime Series View (Trajectories)"))
         self.actionTrajectoryToolLagranto.setText(_translate("MSSMainWindow", "&Trajectory Tool (Lagranto)"))
-        self.actionMscolabProjects.setText(_translate("MSSMainWindow", "Mscolab &Projects"))
         self.actionAboutMSUI.setText(_translate("MSSMainWindow", "&About MSS"))
         self.actionLoad_Configuration.setText(_translate("MSSMainWindow", "Load Configuration"))
         self.actionOnlineHelp.setText(_translate("MSSMainWindow", "Online &Help"))
         self.actionActivateSelectedFlightTrack.setText(_translate("MSSMainWindow", "Activate Selected Flight Track"))
+        self.actionMscolabProjects.setText(_translate("MSSMainWindow", "Mscolab projects"))
 

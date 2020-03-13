@@ -87,7 +87,7 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
 
     def __init__(self, view_window, parent=None, viewsChanged=None,
                  type=QtWidgets.QListWidgetItem.UserType):
-        """Add ID number to the title of the corresponing view window.
+        """Add ID number to the title of the corresponding view window.
         """
         QActiveViewsListWidgetItem.opened_views += 1
         view_name = "({:d}) {}".format(QActiveViewsListWidgetItem.opened_views, view_window.name)
@@ -166,7 +166,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
-        # instead of the default Icon of python/pyhtonw
+        # instead of the default Icon of python/pythonw
         try:
             import ctypes
             myappid = "mss.mss_pyui.{}".format(__version__)  # arbitrary string
@@ -227,7 +227,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         preload_urls = config_loader(dataset="WMS_preload", default=[])
         self.preload_wms(preload_urls)
 
+        #Status Bar
+        self.statusBar.setText(self.status())
+
     @staticmethod
+      
     def preload_wms(urls):
         """
         This method accesses a list of WMS servers and load their capability documents.
@@ -242,7 +246,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         for i, base_url in enumerate(urls):
             pdlg.setValue(i)
             QtWidgets.QApplication.processEvents()
-            # initialize login cache fomr config file, but do not overwrite existing keys
+            # initialize login cache from config file, but do not overwrite existing keys
             for key, value in config_loader(dataset="WMS_login", default={}).items():
                 if key not in constants.WMS_LOGIN_CACHE:
                     constants.WMS_LOGIN_CACHE[key] = value
@@ -699,6 +703,16 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.actionTrajectoryToolLagranto.setEnabled(False)
             self.actionTimeSeriesViewTrajectories.setEnabled(False)
 
+    def status(self):
+
+        HOME = os.path.expanduser("~/")
+        MSS_CONFIG_PATH = os.getenv("MSS_CONFIG_PATH", os.path.join(HOME, ".config", "mss"))
+        MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
+        if not os.path.exists(MSS_SETTINGS):
+            return ("Status : System Configuration")
+        else : 
+            return ("Status : User Configuration")
+
 
 def main():
     try:
@@ -731,7 +745,7 @@ def main():
     setup_logging(args)
 
     if args.menu:
-        # Experimental feature to get mss into application menue
+        # Experimental feature to get mss into application menu
         if platform.system() == "Linux":
             icon_size = '48x48'
             src_icon_path = icons(icon_size)
