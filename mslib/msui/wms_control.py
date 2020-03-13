@@ -559,7 +559,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     wms = MSSWebMapService(base_url, version='1.1.1',
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
-                    logging.error("ERROR: %s %s".format(type(ex),ex))
+                    logging.error("ERROR: %s %s", type(ex), ex)
                     if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
                             "Unauthorized") >= 0:
                         # Catch the "401 Unauthorized" error if one has been
@@ -1379,7 +1379,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         try:
                             value = int(prefetch_config[_x])
                         except ValueError as VE:
-                            logging.error("ERROR: %s %s".format(type(VE),VE))
+                            logging.error("ERROR: %s %s", type(VE), VE)
                             value = 0
                         prefetch_config[_x] = max(0, value)
                     else:
