@@ -110,7 +110,7 @@ def config_loader(config_file=None, dataset=None, default=None):
             try:
                 return default_config[dataset]
             except KeyError:
-                logging.debug("'{:}' Key(s) are not defined!".format(dataset))
+                logging.debug("'%s' Key(s) are not defined!", dataset)
                 return default
     _dirname, _name = os.path.split(config_file)
     _fs = open_fs(_dirname)
@@ -118,19 +118,19 @@ def config_loader(config_file=None, dataset=None, default=None):
         with _fs.open(_name, 'r') as source:
             data = json.load(source)
     except (AttributeError, IOError, TypeError, errors.ResourceNotFound) as ex:
-        logging.error("MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
+        logging.error("MSS config File error '%s' - '%s' - '%s'", config_file, type(ex), ex)
         if default is not None:
             return default
         raise IOError("MSS config File not found")
     except ValueError as ex:
-        error_message = "MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
+        error_message = ("MSS config File '%s' has a syntax error:\n\n'%s'", config_file, ex)
         raise FatalUserError(error_message)
     if dataset:
         try:
             return data[dataset]
         except KeyError:
-            logging.debug("Config File used: '{:}'".format(config_file))
-            logging.debug("Key not defined in config_file! '{:}'".format(dataset))
+            logging.debug("Config File used: '%s'", config_file)
+            logging.debug("Key not defined in config_file! '%s'", dataset)
             if default is not None:
                 return default
             raise KeyError("default value for key not set")

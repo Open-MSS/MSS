@@ -662,7 +662,7 @@ class TrajectoryItem(LagrantoMapItem):
         try:
             return self.metadata[key]
         except KeyError:
-            logging.debug("'{:}' key not found int the metadata".format(key))
+            logging.debug("'%s' key not found int the metadata", key)
             return None
 
 
