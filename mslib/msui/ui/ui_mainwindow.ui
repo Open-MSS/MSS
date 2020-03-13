@@ -87,7 +87,7 @@ Save a flight track to name it.</string>
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="statusBar">
+     <widget class="QLabel" name="labelStatusbar">
       <property name="text">
        <string>Status : </string>
       </property>

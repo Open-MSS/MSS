@@ -227,11 +227,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         preload_urls = config_loader(dataset="WMS_preload", default=[])
         self.preload_wms(preload_urls)
 
-        #Status Bar
-        self.statusBar.setText(self.status())
+        # Status Bar
+        self.labelStatusbar.setText(self.status())
 
     @staticmethod
-      
     def preload_wms(urls):
         """
         This method accesses a list of WMS servers and load their capability documents.
@@ -704,13 +703,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.actionTimeSeriesViewTrajectories.setEnabled(False)
 
     def status(self):
-
-        HOME = os.path.expanduser("~/")
-        MSS_CONFIG_PATH = os.getenv("MSS_CONFIG_PATH", os.path.join(HOME, ".config", "mss"))
-        MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
-        if not os.path.exists(MSS_SETTINGS):
+        if constants.CACHED_CONFIG_FILE is None:
             return ("Status : System Configuration")
-        else : 
+        else:
             return ("Status : User Configuration")
 
 
