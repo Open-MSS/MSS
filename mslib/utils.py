@@ -123,7 +123,7 @@ def config_loader(config_file=None, dataset=None, default=None):
             return default
         raise IOError("MSS config File not found")
     except ValueError as ex:
-        error_message = ("MSS config File '%s' has a syntax error:\n\n'%s'", config_file, ex)
+        error_message = "MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
         raise FatalUserError(error_message)
     if dataset:
         try:

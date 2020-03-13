@@ -1378,8 +1378,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     if _x in prefetch_config:
                         try:
                             value = int(prefetch_config[_x])
-                        except ValueError as VE:
-                            logging.error("ERROR: %s %s", type(VE), VE)
+                        except ValueError as ex:
+                            logging.error("ERROR: %s %s", type(ex), ex)
                             value = 0
                         prefetch_config[_x] = max(0, value)
                     else:
