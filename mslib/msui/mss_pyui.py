@@ -708,7 +708,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if constants.CACHED_CONFIG_FILE is None:
             return ("Status : System Configuration")
         else:
-            return ("Status : User Configuration")
+            filename = constants.CACHED_CONFIG_FILE
+            head_filename, tail_filename = os.path.split(filename)
+            return("Status : User Configuration '" + tail_filename + "' loaded")
 
 
 def main():
