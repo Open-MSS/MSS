@@ -576,6 +576,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.listTools.clear()
                 self.remove_plugins()
                 constants.CACHED_CONFIG_FILE = filename
+                head_filename, tail_filename = os.path.split(filename)
+                self.labelStatusbar.setText("Status : User Configuration '" + tail_filename + "' loaded")
                 self.add_plugins()
 
     def open_flight_track(self):
