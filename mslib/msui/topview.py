@@ -233,7 +233,6 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
                 widget = wc.HSecWMSControlWidget(
                     default_WMS=config_loader(dataset="default_WMS", default=mss_default.default_WMS),
                     view=self.mpl.canvas,
-                    parent=self,
                     wms_cache=config_loader(dataset="wms_cache", default=mss_default.wms_cache))
                 widget.signal_disable_cbs.connect(self.disable_cbs)
                 widget.signal_enable_cbs.connect(self.enable_cbs)
