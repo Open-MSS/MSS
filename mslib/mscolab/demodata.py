@@ -10,6 +10,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,6 +42,7 @@ try:
     import MySQLdb as ms
 except ImportError:
     ms = None
+    logging.debug("Failed to import MySQLdb")
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Project, Permission
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -159,6 +161,7 @@ def create_test_config():
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

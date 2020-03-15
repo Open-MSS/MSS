@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -240,7 +240,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_2)
         QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Slash)
-
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 

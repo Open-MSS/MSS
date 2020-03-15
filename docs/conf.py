@@ -18,7 +18,7 @@ import logging
 try:
     from past.builtins import execfile
 except ImportError as ex:
-    logging.error("{}".format(ex))
+    logging.error("%s", ex)
 execfile('../mslib/version.py')
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'

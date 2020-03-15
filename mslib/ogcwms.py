@@ -61,7 +61,7 @@ from future import standard_library
 standard_library.install_aliases()
 
 import cgi
-import xml.etree.ElementTree as etree
+import defusedxml.ElementTree as etree
 import requests
 import logging
 

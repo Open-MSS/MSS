@@ -11,7 +11,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,6 +45,11 @@ except ImportError:
     HAVE_NAPPY = False
 
 from mslib.msui import lagranto_output_reader
+
+
+import warnings
+warnings.warn("the trajectory_item_tree module is deprecated", DeprecationWarning,
+              stacklevel=2)
 
 
 class LagrantoTreeModelUnsupportedOperationError(Exception):
@@ -638,6 +643,7 @@ class TrajectoryItem(LagrantoMapItem):
         try:
             return self.metadata["starttime"]
         except KeyError:
+            logging.debug("Starting time of the trajectory not found.")
             return self.metadata["starttime_filename"]
 
     def getMetadata(self):
@@ -656,6 +662,7 @@ class TrajectoryItem(LagrantoMapItem):
         try:
             return self.metadata[key]
         except KeyError:
+            logging.debug("'%s' key not found int the metadata", key)
             return None
 
 

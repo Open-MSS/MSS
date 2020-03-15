@@ -10,7 +10,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -863,7 +863,7 @@ class DataFiles(object):
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -903,7 +903,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -922,14 +922,18 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 import os
 import sys
 
+# on a productions system you may want to limit the amout of tracebacks to 0
+# sys.tracebacklimit = 0
+
 # Configuration of Python's code search path
 # If you already have set up the PYTHONPATH environment variable for the
 # stuff you see below, you don't need to do a1) and a2).
 
 # a1) Path of the directory where the mss code package is located.
-# sys.path.insert(0, '/home/mss/miniconda2/lib/python3.6/site-packages')
+# sys.path.insert(0, '/home/mss/miniconda3/lib/python3.7/site-packages')
 
 # a2) Path of the directory where mss_wms_settings.py is located
+
 #MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
 #sys.path.insert(0, MSSCONFIGPATH)
 #os.chdir(MSSCONFIGPATH)
@@ -975,7 +979,7 @@ import mslib.mswms
 _datapath = r"{data_dir}"
 
 data = {{
-   "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
+    "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
 }}
 
 

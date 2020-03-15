@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,6 +71,7 @@ def parse_iso_datetime(string):
     except isodate.ISO8601Error:
         result = isodate.parse_date(string)
         result = datetime.datetime.fromordinal(result.toordinal())
+        logging.debug("ISO String Couldn't be Parsed.\n ISO8601Error Encountered.")
     if result.tzinfo is not None:
         result = result.astimezone(datetime.timezone.utc).replace(tzinfo=None)
     return result
@@ -109,6 +110,7 @@ def config_loader(config_file=None, dataset=None, default=None):
             try:
                 return default_config[dataset]
             except KeyError:
+                logging.debug("'%s' Key(s) are not defined!", dataset)
                 return default
     _dirname, _name = os.path.split(config_file)
     _fs = open_fs(_dirname)
@@ -116,7 +118,7 @@ def config_loader(config_file=None, dataset=None, default=None):
         with _fs.open(_name, 'r') as source:
             data = json.load(source)
     except (AttributeError, IOError, TypeError, errors.ResourceNotFound) as ex:
-        logging.error("MSS config File error '{:}' - '{:}' - '{:}'".format(config_file, type(ex), ex))
+        logging.error("MSS config File error '%s' - '%s' - '%s'", config_file, type(ex), ex)
         if default is not None:
             return default
         raise IOError("MSS config File not found")
@@ -127,8 +129,8 @@ def config_loader(config_file=None, dataset=None, default=None):
         try:
             return data[dataset]
         except KeyError:
-            logging.debug("Config File used: '{:}'".format(config_file))
-            logging.debug("Key not defined in config_file! '{:}'".format(dataset))
+            logging.debug("Config File used: '%s'", config_file)
+            logging.debug("Key not defined in config_file! '%s'", dataset)
             if default is not None:
                 return default
             raise KeyError("default value for key not set")

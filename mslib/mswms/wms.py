@@ -25,7 +25,7 @@
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Omar Qunsul (oq)
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -179,7 +179,8 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 layer = layer_class(self.hsec_drivers[dataset])
-            except KeyError:
+            except KeyError as ex:
+                logging.debug("ERROR: %s %s", type(ex), ex)
                 continue
             logging.debug("registering horizontal section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
@@ -202,7 +203,8 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 layer = layer_class(self.vsec_drivers[dataset])
-            except KeyError:
+            except KeyError as ex:
+                logging.debug("ERROR: %s %s", type(ex), ex)
                 continue
             logging.debug("registering vertical section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If

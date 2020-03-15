@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2019 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -198,7 +198,8 @@ class Test_SideViewWMS(object):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
-        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(782, 266))
+        point = self.window.mpl.canvas.rect().center()
+        QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(1, 1))
