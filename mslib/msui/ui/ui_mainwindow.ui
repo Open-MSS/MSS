@@ -146,14 +146,6 @@ Save a flight track to name it.</string>
     <addaction name="actionSideView"/>
     <addaction name="actionTableView"/>
    </widget>
-   <widget class="QMenu" name="menu_Tools">
-    <property name="title">
-     <string>&amp;Tools</string>
-    </property>
-    <addaction name="actionTrajectoryToolLagranto"/>
-    <addaction name="actionTimeSeriesViewTrajectories"/>
-    <addaction name="separator"/>
-   </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
      <string>&amp;Help</string>
@@ -169,7 +161,6 @@ Save a flight track to name it.</string>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_View"/>
-   <addaction name="menu_Tools"/>
    <addaction name="menu_Mscolab"/>
    <addaction name="menu_Help"/>
   </widget>
