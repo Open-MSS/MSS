@@ -46,7 +46,6 @@ except ImportError:
     import pyproj
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
-from mslib.msui import trajectory_item_tree as titree
 
 
 class MapCanvas(basemap.Basemap):
@@ -152,10 +151,6 @@ class MapCanvas(basemap.Basemap):
             self, "traj_item_tree") else None
         if traj_item_tree is not None:
             self.set_trajectory_tree(traj_item_tree)
-
-        # The View may be destroyed and then this class is left dangling due to the connected
-        # trajectories unless we disconnect it.
-        self.ax.figure.canvas.destroyed.connect(self.disconnectTrajectories)
 
     def set_identifier(self, identifier):
         self.identifier = identifier
@@ -511,46 +506,6 @@ class MapCanvas(basemap.Basemap):
         self.ax.figure.canvas.draw()
         return self.image
 
-    def set_trajectory_tree(self, tree):
-        """Set a reference to the tree data structure containing the information
-           about the elements plotted on the map (e.g. flight tracks,
-           trajectories).
-        """
-        logging.debug("registering trajectory tree model")
-        # Disconnect old tree, if defined.
-        if self.traj_item_tree is not None:
-            self.traj_item_tree.dataChanged.disconnect(self.update_from_trajectory_tree)
-        # Set and connect new tree.
-        self.traj_item_tree = tree
-        self.traj_item_tree.dataChanged.connect(self.update_from_trajectory_tree)
-        # Draw tree items.
-        self.update_trajectory_items()
-
-    def disconnectTrajectories(self):
-        if self.traj_item_tree is not None:
-            self.traj_item_tree.dataChanged.disconnect(self.update_from_trajectory_tree)
-
-    def update_from_trajectory_tree(self, index1, index2):
-        """This method should be connected to the 'dataChanged()' signal
-           of the MapItemsTree.
-
-        NOTE: If index1 != index2, the entire tree will be updated (I haven't
-              found out so far how to get all the items between the two
-              indices).
-        """
-        if self.traj_item_tree is None:
-            return
-        # Update the map elements if the change that occured in traj_item_tree
-        # affected a LagrantoMapItem.
-        item = index1.internalPointer()
-        item2 = index2.internalPointer()
-        if isinstance(item, titree.LagrantoMapItem):
-            last_change = self.traj_item_tree.getLastChange()
-            # Update the given item or the entire tree if the two given
-            # items are different.
-            self.update_trajectory_items(item=item if item == item2 else None,
-                                         mode=last_change)
-
     def update_trajectory_items(self, item=None, mode="DRAW_EVERYTHING"):
         """Draw or update map elements.
 
@@ -564,7 +519,7 @@ class MapCanvas(basemap.Basemap):
         all items on the map will be drawn or updated.
 
         Keyword arguments:
-        item -- LagrantoMapItem instance from which the traversal should
+        item -- Instance from which the traversal should
                 be started.
         mode -- string with information on what should be done (draw vs.
                 update):
@@ -592,11 +547,6 @@ class MapCanvas(basemap.Basemap):
         if item is None:
             item = self.traj_item_tree.getRootItem()
             logging.debug("processing all trajectory items")
-
-        # This method can only operate on LagrantoMapItems -- raise an exception
-        # if the argument is not of this type.
-        elif not isinstance(item, titree.LagrantoMapItem):
-            raise TypeError("This method can only process 'LagrantoMapItem's.")
 
         # Traverse the tree upward from the current item to the tree root,
         # to check if there are any properties that are inherited from an
@@ -652,17 +602,6 @@ class MapCanvas(basemap.Basemap):
                     if parent_properties[propName] \
                     else item.getGxElementProperty("general",
                                                    propName)
-
-            # Push all children of the current item onto the stack that are
-            # instances of LagrantoMapItem (VariableItems are not plotted on
-            # the map).
-            item_stack.extend([(child, item_properties) for child in item.childItems
-                               if isinstance(child, titree.LagrantoMapItem)])
-
-            # Plotting and graphics property update operations can only be
-            # performed for flight tracks and trajectories.
-            if not (isinstance(item, titree.FlightTrackItem) or isinstance(item, titree.TrajectoryItem)):
-                continue
 
             if mode in ["GXPROPERTY_CHANGE", "VISIBILITY_CHANGE"]:
                 # Set the visibility of all graphics elements of the current item
