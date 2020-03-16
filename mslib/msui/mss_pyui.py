@@ -51,6 +51,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import tableview
 from mslib.msui import topview
 from mslib.msui import sideview
+from mslib.msui import editor
 from mslib.msui import timeseriesview
 from mslib.msui import trajectories_tool
 from mslib.msui import constants
@@ -207,8 +208,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
 
-        # Load Config
-        self.actionLoad_Configuration.triggered.connect(self.open_config_file)
+        # Config
+        self.actionConfiguration.triggered.connect(self.open_config_file)
 
         # Flight Tracks.
         self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
@@ -569,17 +570,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.tr("Opening a config file will reset application. Continue?"),
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
-            filename = get_open_filename(
-                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)",
-                pickertag="filepicker_config")
-            if filename is not None:
-                self.listViews.clear()
-                self.listTools.clear()
-                self.remove_plugins()
-                constants.CACHED_CONFIG_FILE = filename
-                head_filename, tail_filename = os.path.split(filename)
-                self.labelStatusbar.setText("Status : User Configuration '" + tail_filename + "' loaded")
-                self.add_plugins()
+            text_editor = editor.MainWindow(self)
 
     def open_flight_track(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
