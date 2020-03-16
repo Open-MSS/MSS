@@ -970,11 +970,6 @@ class MplTopViewCanvas(MplCanvas):
                 markerfacecolor=appearance["colour_ft_waypoints"])
             self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
 
-    def set_trajectory_model(self, model):
-        """
-        """
-        self.map.set_trajectory_tree(model)
-
     def redraw_map(self, kwargs_update=None):
         """Redraw map canvas.
 
