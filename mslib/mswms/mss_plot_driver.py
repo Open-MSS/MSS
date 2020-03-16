@@ -51,7 +51,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
 
     MSSPlotDriver implements methods that determine, given a list of required
     variables from a plotting instance <plot_object> and a forecast time
-    specified by intitialisation and valid time, the corresponding data files.
+    specified by initialisation and valid time, the corresponding data files.
     The files are opened and the NetCDF variable objects are determined.
 
     Classes that derive from this class need to implement the two methods
