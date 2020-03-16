@@ -6,7 +6,7 @@
 
     Mission Support System Python/Qt User Interface
     Main window of the user interface application. Manages view and tool windows
-    (the user can open multiple windows) and provides functionalty to open, save,
+    (the user can open multiple windows) and provides functionality to open, save,
     and switch between flight tracks.
 
     This file is part of mss.
@@ -51,8 +51,6 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import tableview
 from mslib.msui import topview
 from mslib.msui import sideview
-from mslib.msui import timeseriesview
-from mslib.msui import trajectories_tool
 from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
@@ -62,12 +60,6 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, get_open_filename, get_save_filename
 
-try:
-    import nappy
-    HAVE_NAPPY = True
-except ImportError:
-    logging.debug("*** NAppy is not available. You will not be able to read NASA Ames files. ***")
-    HAVE_NAPPY = False
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
@@ -119,13 +111,13 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
 
     def __init__(self, flighttrack_model, parent=None,
                  type=QtWidgets.QListWidgetItem.UserType):
-        """Item class for the list widget that accomodates the open flight
+        """Item class for the list widget that accommodates the open flight
            tracks.
 
         Arguments:
         flighttrack_model -- instance of a flight track model that is
                              associated with the item
-        parent -- pointer to the QListWidgetItem that accomodates this item.
+        parent -- pointer to the QListWidgetItem that accommodates this item.
                   If not None, the itemChanged() signal of the parent is
                   connected to the nameChanged() slot of this class, reacting
                   to name changes of the item.
@@ -195,10 +187,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionTopView.triggered.connect(self.create_new_view)
         self.actionSideView.triggered.connect(self.create_new_view)
         self.actionTableView.triggered.connect(self.create_new_view)
-
-        # Tools menu.
-        self.actionTrajectoryToolLagranto.triggered.connect(self.create_new_tool)
-        self.actionTimeSeriesViewTrajectories.triggered.connect(self.create_new_tool)
 
         # mscolab menu
         self.actionMscolabProjects.triggered.connect(self.activate_mscolab_window)
@@ -471,32 +459,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listViews.setCurrentItem(listitem)
             self.viewsChanged.emit()
 
-    def create_new_tool(self):
-        """Method called when the user selects a new tool to be opened. Creates
-           a new instance of the tool and adds a QActiveViewsListWidgetItem to
-           the list of open tools (self.listTools).
-        """
-        tool_window = None
-        if self.sender() == self.actionTrajectoryToolLagranto:
-            # Trajectory tool.
-            tool_window = trajectories_tool.MSSTrajectoriesToolWindow(listviews=self.listViews,
-                                                                      listtools=self.listTools,
-                                                                      viewsChanged=self.viewsChanged)
-        elif self.sender() == self.actionTimeSeriesViewTrajectories:
-            # Time series view.
-            tool_window = timeseriesview.MSSTimeSeriesViewWindow()
-
-        if tool_window is not None:
-            # Make sure view window will be deleted after being closed, not
-            # just hidden (cf. Chapter 5 in PyQt4).
-            tool_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            # Open as a non-modal window.
-            tool_window.show()
-            # Add an entry referencing the new view to the list of views.
-            listitem = QActiveViewsListWidgetItem(tool_window, self.listTools, self.viewsChanged)
-            tool_window.viewCloses.connect(listitem.view_destroyed)
-            self.viewsChanged.emit()
-
     def activate_sub_window(self, item):
         """When the user clicks on one of the open view or tool windows, this
            window is brought to the front. This function implements the slot to
@@ -696,15 +658,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
-    def configure_menu(self):
-        """
-        disables menu entries which won't work, because libraries missing or not configured
-        """
-        # trajectory analyses
-        if not HAVE_NAPPY:
-            self.actionTrajectoryToolLagranto.setEnabled(False)
-            self.actionTimeSeriesViewTrajectories.setEnabled(False)
-
     def status(self):
         if constants.CACHED_CONFIG_FILE is None:
             return ("Status : System Configuration")
@@ -786,7 +739,6 @@ def main():
 
     application = QtWidgets.QApplication(sys.argv)
     mainwindow = MSSMainWindow()
-    mainwindow.configure_menu()
     mainwindow.create_new_flight_track()
     mainwindow.show()
     sys.exit(application.exec_())

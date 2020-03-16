@@ -157,13 +157,6 @@ class MissionSupportSystemDefaultConfig(object):
     # None is not wanted here
     proxies = {}
 
-    # Trajectory tool: When NASA Ames files are opened, the following
-    # variables will be used for lon/lat/pressure:
-
-    traj_nas_lon_identifier = ["GPS LON", "LONGITUDE"]
-    traj_nas_lat_identifier = ["GPS LAT", "LATITUDE"]
-    traj_nas_p_identifier = ["STATIC PRESSURE"]
-
     # ToDo configurable later
     # mscolab server
     mscolab_server_url = "http://localhost:8083"

@@ -99,22 +99,6 @@ class Test_MSSSideViewWindow(object):
         assert self.window.listViews.count() == 1
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    def test_open_trajectory_tool(self, mockbox):
-        assert self.window.listTools.count() == 0
-        self.window.actionTrajectoryToolLagranto.trigger()
-        QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
-        assert self.window.listTools.count() == 1
-
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    def test_open_timeseries_tool(self, mockbox):
-        assert self.window.listTools.count() == 0
-        self.window.actionTimeSeriesViewTrajectories.trigger()
-        QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
-        assert self.window.listTools.count() == 1
-
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_open_about(self, mockbox):
         self.window.actionAboutMSUI.trigger()
         QtWidgets.QApplication.processEvents()
