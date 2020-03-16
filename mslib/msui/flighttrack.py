@@ -201,7 +201,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
            specifying row and column); overrides the corresponding
            QAbstractTableModel method.
 
-        NOTE: Other roles (e.g. for display appearence) could be specified in
+        NOTE: Other roles (e.g. for display appearance) could be specified in
         this method as well. Cf. the 'ships' example in chapter 14/16 of 'Rapid
         GUI Programming with Python and Qt: The Definitive Guide to PyQt
         Programming' (Mark Summerfield).

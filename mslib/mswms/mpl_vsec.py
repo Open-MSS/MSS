@@ -203,7 +203,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # smaller file size (~factor 4, from RGBA to one 8bit value, plus the
             # space to store the palette colours).
             # NOTE: PIL at the current time can only create an adaptive palette for
-            # RGB images, hence alpha values are lost here. If transpareny is
+            # RGB images, hence alpha values are lost here. If transparency is
             # requested, the figure face colour is stored as the "transparent"
             # colour in the image. This works in most cases, but might lead to
             # visible artefacts in some cases.

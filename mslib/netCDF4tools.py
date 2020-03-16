@@ -143,7 +143,7 @@ def num2date(times, units, calendar='standard'):
 
     Refer to netCDF4.num2date() for further documentation.
     """
-    # Patch to adress the problem of netCDF4.num2date not being able
+    # Patch to address the problem of netCDF4.num2date not being able
     # to handle masked array without a mask.
     if hasattr(times, "mask") and times.mask is np.ma.nomask:
         times = times.data

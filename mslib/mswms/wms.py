@@ -297,7 +297,7 @@ class WMSServer(object):
         """
         logging.debug("GetMap/GetVSec request. Interpreting parameters..")
 
-        # 1) Make query parameters Case Insenstitive
+        # 1) Make query parameters Case Insensitive
         # =========================================
         query = CIMultiDict(query)
         # 2) Evaluate query parameters:
