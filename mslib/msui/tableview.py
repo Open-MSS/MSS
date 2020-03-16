@@ -35,7 +35,7 @@
 import types
 
 from mslib.msui import hexagon_dockwidget as hex
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
+from mslib.msui.mss_qt import QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_tableview_window as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSSViewWindow
