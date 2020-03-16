@@ -3,7 +3,6 @@ mss - User Interface
 
 The executable for the user interface application is "**mss**".
 A short description of how to start the program is given by the --help option.
-Warnings about CDAT features are due to the NAppy package and can be ignored.
 The program should open the main window of the user interface, from which you can
 open further windows, including top view, side view and so on.
 
@@ -129,15 +128,6 @@ If you are in an area with a very low bandwith you may consider to use a squid w
 and add those lines in your mss_settings pointing to the proxy server.
 
 .. literalinclude:: samples/config/mss/snippets/proxies.sample
-
-
-Trajectory Tool
-~~~~~~~~~~~~~~~
-
-For accessing trajectory data based on NASA AMES format you need the nappy python module installed and
-can configure this view by
-
-.. literalinclude:: samples/config/mss/snippets/trajectorytool.sample
 
 
 Caching
