@@ -86,10 +86,19 @@ added to the PYTHONPATH. E.g.::
 
 For testing your server you can use the :ref:`demodata`
 
+The plots contained in MSS are mainly defined for meteorological forecast data. The intent is for the
+user to define their own plotting classes based on the the MSS infrastructure for data access.
+Some less tested plots are given as examples in the *samples* part of the documentation as templates.
+The next configuration exemplarily shows how to include user defined plots: 
+
+ .. literalinclude:: samples/config/wms/mss_chem_plots.py
+
+ .. literalinclude:: samples/config/wms/mss_wms_settings.py.chem_plots
+
 
 .. _meteo_data:
 
-meteorological data
+Meteorological data
 --------------------
 
 Data for the MSS server shall be provided in CF-compliant NetCDF format.
