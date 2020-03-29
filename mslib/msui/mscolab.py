@@ -77,6 +77,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.token = None
         self.loginButton.clicked.connect(self.authorize)
         self.logoutButton.clicked.connect(self.logout)
+        self.deleteAccountButton.clicked.connect(self.delete_account)
         self.topview.clicked.connect(self.open_topview)
         self.sideview.clicked.connect(self.open_sideview)
         self.tableview.clicked.connect(self.open_tableview)
@@ -626,6 +627,21 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                                 qm.No)
             if reply == QtWidgets.QMessageBox.No:
                 return
+        self.clean_up_window()
+
+    def delete_account(self):
+        w = QtWidgets.QWidget()
+        qm = QtWidgets.QMessageBox
+        reply = qm.question(w, 'Continue?', 'You cannot undo this operation!', qm.Yes, qm.No)
+        if reply == QtWidgets.QMessageBox.No:
+            return
+        data = {
+            "token": self.token
+        }
+        r = requests.delete(self.mscolab_server_url + '/delete_user', data=data)
+        self.clean_up_window()
+
+    def clean_up_window(self):
         # delete token and show login widget-items
         self.token = None
         # delete active-project-id
