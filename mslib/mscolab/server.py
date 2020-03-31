@@ -184,7 +184,7 @@ def get_user():
     return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
 
-@APP.route("/delete_user", methods=["DELETE"])
+@APP.route("/delete_user", methods=["POST"])
 @verify_user
 def delete_user():
     user = g.user

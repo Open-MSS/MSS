@@ -187,6 +187,5 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.listProjects) == 0
-        assert len(self.window.active_windows) == 0
         assert self.window.loggedInWidget.isVisible() is False
         assert self.window.loginWidget.isVisible() is True

@@ -638,7 +638,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         data = {
             "token": self.token
         }
-        r = requests.delete(self.mscolab_server_url + '/delete_user', data=data)
+        r = requests.post(self.mscolab_server_url + '/delete_user', data=data)
         self.clean_up_window()
 
     def clean_up_window(self):
