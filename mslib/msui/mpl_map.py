@@ -37,7 +37,6 @@ import numpy as np
 import matplotlib
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
 import mpl_toolkits.basemap as basemap
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -46,7 +45,6 @@ except ImportError:
     import pyproj
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
-from mslib.msui import trajectory_item_tree as titree
 
 
 class MapCanvas(basemap.Basemap):
@@ -55,7 +53,7 @@ class MapCanvas(basemap.Basemap):
     """
 
     def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None,
-                 traj_item_tree=None, appearance=None, **kwargs):
+                 appearance=None, **kwargs):
         """New constructor automatically adds coastlines, continents, and
            a graticule to the map.
 
@@ -146,16 +144,6 @@ class MapCanvas(basemap.Basemap):
 
         # self.warpimage() # disable fillcontinents when loading bluemarble
         self.ax.set_autoscale_on(False)
-
-        # Connect to the trajectory item tree, if defined.
-        self.traj_item_tree = traj_item_tree if traj_item_tree is not None else self.traj_item_tree if hasattr(
-            self, "traj_item_tree") else None
-        if traj_item_tree is not None:
-            self.set_trajectory_tree(traj_item_tree)
-
-        # The View may be destroyed and then this class is left dangling due to the connected
-        # trajectories unless we disconnect it.
-        self.ax.figure.canvas.destroyed.connect(self.disconnectTrajectories)
 
     def set_identifier(self, identifier):
         self.identifier = identifier
@@ -452,7 +440,7 @@ class MapCanvas(basemap.Basemap):
             del self.cntrysegs
 
         # map_boundary is None for rectangular projections (basemap simply sets
-        # the backgorund colour).
+        # the background colour).
         if self.map_boundary is not None:
             try:
                 self.map_boundary.remove()
@@ -474,8 +462,6 @@ class MapCanvas(basemap.Basemap):
                     del self.kwargs[key]
             self.kwargs.update(kwargs_update)
         self.__init__(**self.kwargs)
-
-        self.update_trajectory_items()
 
         # TODO: HOW TO MAKE THIS MORE EFFICIENT.
         # POSSIBILITY B): Only set the Basemap parameters that influence the
@@ -510,236 +496,6 @@ class MapCanvas(basemap.Basemap):
         self.image = super(MapCanvas, self).imshow(X, zorder=2, **kwargs)
         self.ax.figure.canvas.draw()
         return self.image
-
-    def set_trajectory_tree(self, tree):
-        """Set a reference to the tree data structure containing the information
-           about the elements plotted on the map (e.g. flight tracks,
-           trajectories).
-        """
-        logging.debug("registering trajectory tree model")
-        # Disconnect old tree, if defined.
-        if self.traj_item_tree is not None:
-            self.traj_item_tree.dataChanged.disconnect(self.update_from_trajectory_tree)
-        # Set and connect new tree.
-        self.traj_item_tree = tree
-        self.traj_item_tree.dataChanged.connect(self.update_from_trajectory_tree)
-        # Draw tree items.
-        self.update_trajectory_items()
-
-    def disconnectTrajectories(self):
-        if self.traj_item_tree is not None:
-            self.traj_item_tree.dataChanged.disconnect(self.update_from_trajectory_tree)
-
-    def update_from_trajectory_tree(self, index1, index2):
-        """This method should be connected to the 'dataChanged()' signal
-           of the MapItemsTree.
-
-        NOTE: If index1 != index2, the entire tree will be updated (I haven't
-              found out so far how to get all the items between the two
-              indices).
-        """
-        if self.traj_item_tree is None:
-            return
-        # Update the map elements if the change that occured in traj_item_tree
-        # affected a LagrantoMapItem.
-        item = index1.internalPointer()
-        item2 = index2.internalPointer()
-        if isinstance(item, titree.LagrantoMapItem):
-            last_change = self.traj_item_tree.getLastChange()
-            # Update the given item or the entire tree if the two given
-            # items are different.
-            self.update_trajectory_items(item=item if item == item2 else None,
-                                         mode=last_change)
-
-    def update_trajectory_items(self, item=None, mode="DRAW_EVERYTHING"):
-        """Draw or update map elements.
-
-        The map items tree is traversed downward starting at the item
-        given as the argument 'item' (i.e. the given item and all its
-        children will be processed). Also, the path from the given
-        item to the root of the tree will be followed to check if any
-        property (visibility, colour) is inherited from a higher level.
-
-        If no item is given, the traverse will start at the root, i.e.
-        all items on the map will be drawn or updated.
-
-        Keyword arguments:
-        item -- LagrantoMapItem instance from which the traversal should
-                be started.
-        mode -- string with information on what should be done (draw vs.
-                update):
-
-                DRAW_EVERYTHING -- draw or redraw all elements on the map.
-                FLIGHT_TRACK_ADDED -- draw the flight track represented
-                    by 'item' (including markers).
-                TRAJECTORY_DIR_ADDED -- draw the trajectory represented
-                    by 'item' (including markers).
-                MARKER_CHANGE -- markers for the current item (and all items in
-                    its subtree) have been changed. Delete the old graphics
-                    instances and draw new markers.
-                GXPROPERTY_CHANGE -- a graphics property has been changed (e.g.
-                    colour). Perform a pylab.setp() call to change the property.
-                VISIBILITY_CHANGE -- same action as for GXPROPERTY_CHANGE
-        """
-        # If no trajectory item tree is defined exit the method.
-        if self.traj_item_tree is None:
-            return
-
-        logging.debug("updating trajectory items on map <%s>, mode %s",
-                      self.identifier, mode)
-
-        # If no item is given start at the root of the 'traj_item_tree'.
-        if item is None:
-            item = self.traj_item_tree.getRootItem()
-            logging.debug("processing all trajectory items")
-
-        # This method can only operate on LagrantoMapItems -- raise an exception
-        # if the argument is not of this type.
-        elif not isinstance(item, titree.LagrantoMapItem):
-            raise TypeError("This method can only process 'LagrantoMapItem's.")
-
-        # Traverse the tree upward from the current item to the tree root,
-        # to check if there are any properties that are inherited from an
-        # item node at a higher level to the current item (e.g. an item
-        # inherits visibility, colour and timeMarkerInterval from its
-        # ancestors).
-        #
-        # Default values: The item is visible and inherits no other properties.
-        parent_properties = {"visible": True,
-                             "colour": None,
-                             "linestyle": None,
-                             "linewidth": None,
-                             "timeMarkerInterval": None}
-        parent = item.parent()  # this would be None if item == rootItem
-        while parent is not None:  # loop until root has been reached
-            # Set visible to False if one item along the path to the root is
-            # found to be set to invisible.
-            parent_properties["visible"] = parent.isVisible(self.identifier) and parent_properties["visible"]
-
-            # Inherit colour and time marker interval of the highest tree level
-            # on which they are set (set the current property to the value
-            # encountered on the current level if the property is not None,
-            # otherwise keep the old value -- since we're moving upward,
-            # the property will eventually have the value of the highest
-            # level on which is was not None).
-            for propName in ["colour", "linestyle", "linewidth",
-                             "timeMarkerInterval"]:
-                prop = parent.getGxElementProperty("general", propName)
-                parent_properties[propName] = prop if prop \
-                    else parent_properties[propName]
-
-            # Move up one level.
-            parent = parent.parent()
-
-        # Iterative tree traversal: Put the item and its attributes on a
-        # stack.
-        item_stack = [(item, parent_properties)]
-
-        # Operate on the items in the stack until the stack is empty.
-        while len(item_stack) > 0:
-
-            # Get a new item from the stack.
-            item, parent_properties = item_stack.pop()
-
-            # Its visibility is determined by its own visibility status
-            # and that of its parent (i.e. the subtree it is part of).
-            item_properties = {}
-            item_properties["visible"] = item.isVisible(self.identifier) and parent_properties["visible"]
-            #
-            for propName in ["colour", "linestyle", "linewidth",
-                             "timeMarkerInterval"]:
-                item_properties[propName] = parent_properties[propName] \
-                    if parent_properties[propName] \
-                    else item.getGxElementProperty("general",
-                                                   propName)
-
-            # Push all children of the current item onto the stack that are
-            # instances of LagrantoMapItem (VariableItems are not plotted on
-            # the map).
-            item_stack.extend([(child, item_properties) for child in item.childItems
-                               if isinstance(child, titree.LagrantoMapItem)])
-
-            # Plotting and graphics property update operations can only be
-            # performed for flight tracks and trajectories.
-            if not (isinstance(item, titree.FlightTrackItem) or isinstance(item, titree.TrajectoryItem)):
-                continue
-
-            if mode in ["GXPROPERTY_CHANGE", "VISIBILITY_CHANGE"]:
-                # Set the visibility of all graphics elements of the current item
-                # to 'itemVisible'.
-                # NOTE: We do not have to test if the item is of type
-                #   FlightTrackItem or TrajectoryItem, since only these
-                #   two classes contain fields other that 'general' in
-                #   gxElements.
-                for element in item.getGxElements():
-                    if element == "general":
-                        continue
-                    elif element == "lineplot":
-                        plt.setp(
-                            item.getGxElementProperty(element,
-                                                      "instance::{}".format(self.identifier)),
-                            visible=item_properties["visible"],
-                            color=item_properties["colour"],
-                            linestyle=item_properties["linestyle"],
-                            linewidth=item_properties["linewidth"])
-                    elif element == "timemarker":
-                        plt.setp(
-                            item.getGxElementProperty(element,
-                                                      "instance::{}".format(self.identifier)),
-                            visible=item_properties["visible"],
-                            color=item_properties["colour"])
-
-            elif mode in ["FLIGHT_TRACK_ADDED", "TRAJECTORY_DIR_ADDED",
-                          "MARKER_CHANGE", "DRAW_EVERYTHING"]:
-
-                # Convert lat/lon data into map coordinates, plot the item path
-                # and set the visibility flag. A handle on the plot is stored
-                # via the setplotInstance() method, this allows to later switch
-                # on/off the visibility.
-                x, y = self.__call__(item.getLonVariable().getVariableData(),
-                                     item.getLatVariable().getVariableData())
-
-                if mode != "MARKER_CHANGE":
-                    # Remove old plot instances.
-                    try:
-                        instances = item.getGxElementProperty("lineplot",
-                                                              "instance::{}".format(self.identifier))
-                        for instance in instances:
-                            instance.remove()
-                    except (KeyError, ValueError) as error:
-                        logging.debug("KeyError, ValueError Exception %s", error)
-                    # Plot new instances.
-                    plot_instance = self.plot(x, y,
-                                              color=item_properties["colour"],
-                                              visible=item_properties["visible"],
-                                              linestyle=item_properties["linestyle"],
-                                              linewidth=item_properties["linewidth"])
-                    item.setGxElementProperty("lineplot",
-                                              "instance::{}".format(self.identifier),
-                                              plot_instance)
-
-                # Get the indexes for the time markers. If no time markers should
-                # be drawn, 'None' is returned.
-                try:
-                    # Try to remove an existing time marker instance from
-                    # the plot.
-                    old_scatter_instance = item.getGxElementProperty("timemarker",
-                                                                     "instance::{}".format(self.identifier))
-                    plt.setp(old_scatter_instance, visible=False)
-                    old_scatter_instance.remove()
-                except (KeyError, ValueError) as error:
-                    logging.debug("KeyError, ValueError Exception %s", error)
-                imarker = item.getTimeMarkerIndexes()
-                if imarker is not None:
-                    scatter_instance = self.scatter(x[imarker], y[imarker],
-                                                    s=20, c=item_properties["colour"],
-                                                    visible=item_properties["visible"], linewidth=0)
-                    item.setGxElementProperty("timemarker",
-                                              "instance::{}".format(self.identifier),
-                                              scatter_instance)
-
-        # Update the figure canvas.
-        self.ax.figure.canvas.draw()
 
     def gcpoints2(self, lon1, lat1, lon2, lat2, del_s=100., map_coords=True):
         """

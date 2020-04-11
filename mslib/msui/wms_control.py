@@ -391,7 +391,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         self.view = view
 
-        # Accomodates MSSWebMapService instances.
+        # Accommodates MSSWebMapService instances.
         self.wms = None
 
         # Initial list of WMS servers.
@@ -439,7 +439,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         self.cbTransparent.setChecked(False)
 
-        # Check for WMS image cache directory, create if neceassary.
+        # Check for WMS image cache directory, create if necessary.
         if wms_cache is not None:
             self.wms_cache = os.path.join(wms_cache, "")
             logging.debug("checking for WMS image cache at %s ...", self.wms_cache)
@@ -1224,7 +1224,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def get_init_time(self):
         """Get the initialisation time from the GUI elements.
 
-        If the init time date/time edit is enabled (i.e. the times specifed
+        If the init time date/time edit is enabled (i.e. the times specified
         in the WMS capabilities document can be interpreted), return a
         datetime object of the currently set time. Otherwise, return the
         string that is selected in the init time combobox.

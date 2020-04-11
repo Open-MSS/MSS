@@ -35,10 +35,9 @@ import six
 import logging
 import numpy as np
 import matplotlib
-import matplotlib.pyplot as plt
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
-from matplotlib import cbook
+from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
@@ -46,7 +45,6 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import QtGui
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
-from mslib.msui import trajectory_item_tree as titree
 from mslib.msui.icons import icons
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.utils import convert_pressure_to_vertical_axis_measure
@@ -972,11 +970,6 @@ class MplTopViewCanvas(MplCanvas):
                 markerfacecolor=appearance["colour_ft_waypoints"])
             self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
 
-    def set_trajectory_model(self, model):
-        """
-        """
-        self.map.set_trajectory_tree(model)
-
     def redraw_map(self, kwargs_update=None):
         """Redraw map canvas.
 
@@ -1226,223 +1219,3 @@ class MplTopViewWidget(MplNavBarWidget):
            navigation toolbar. Redraws the image.
         """
         self.canvas.redraw_map()
-
-
-class MplTimeSeriesViewCanvas(MplCanvas):
-    """Specialised MplCanvas that draws time series of trajectory data.
-    """
-
-    def __init__(self, identifier=None, traj_item_tree=None):
-        """
-        """
-        super(MplTimeSeriesViewCanvas, self).__init__()
-        self.identifier = identifier
-        self.traj_item_tree = None
-        if traj_item_tree:
-            self.setTrajectoryModel(traj_item_tree)
-        self.subPlots = []
-        self.basename = "timeseries"
-
-    def setIdentifier(self, identifier):
-        self.identifier = identifier
-
-    def setTrajectoryModel(self, tree):
-        """Set a reference to the tree data structure containing the information
-           about the elements plotted in the view (e.g. flight tracks,
-           trajectories).
-        """
-        logging.debug("registering trajectory tree model")
-        # Disconnect old tree, if defined.
-        if self.traj_item_tree:
-            self.traj_item_tree.dataChanged.disconnect(self.updateFromTrajectoryTree)
-        # Set and connect new tree.
-        self.traj_item_tree = tree
-        self.traj_item_tree.dataChanged.connect(self.updateFromTrajectoryTree)
-        # Draw tree items.
-        self.updateTrajectoryItems()
-
-    def updateFromTrajectoryTree(self, index1, index2):
-        """This method should be connected to the 'dataChanged()' signal
-           of the trajectory items tree.
-
-        NOTE: If index1 != index2, the entire tree will be updated (I haven't
-              found out so far how to get all the items between the two
-              indices).
-        """
-        logging.debug("received dataChanged() signal")
-        if not self.traj_item_tree:
-            return
-        # Update the map elements if the change that occured in traj_item_tree
-        # affected a LagrantoMapItem.
-        item = index1.internalPointer()
-        item2 = index2.internalPointer()
-        if isinstance(item, (titree.LagrantoMapItem, titree.AbstractVariableItem)):
-            lastChange = self.traj_item_tree.getLastChange()
-            if lastChange == "VISIBILITY_CHANGE":
-                lastChange = "REDRAW"
-                item = None
-            elif lastChange == "MARKER_CHANGE":
-                item = None
-            # Update the given item or the entire tree if the two given
-            # items are different.
-            logging.debug("updating..")
-            self.updateTrajectoryItems(item=item if item == item2 else None,
-                                       mode=lastChange)
-
-    def updateTrajectoryItems(self, item=None, mode="REDRAW"):
-        """Delete the old figure and draw a new one.
-        """
-        # If no trajectory item tree is defined exit the method.
-        if not self.traj_item_tree:
-            return
-
-        logging.debug("updating trajectory items on view '%s', mode '%s'",
-                      self.identifier, mode)
-
-        # Determine which items have to be plotted (these are the items that
-        # own the variables that will be plotted, not the actual variables
-        # themselves).
-        itemsList = []
-        stack = []
-        if not item:
-            # No item was passed -- determine all visible items from the
-            # entire tree.
-            logging.debug("processing all trajectory items")
-            stack.extend(self.traj_item_tree.getRootItem().childItems)
-        elif isinstance(item, titree.AbstractVariableItem):
-            # The visibility of a single variable has been changed --
-            # remember the item that owns this variable.
-            stack.append(item.parent())
-        else:
-            # Remember the item that has been changed.
-            stack.append(item)
-
-        while len(stack) > 0:
-            # Downwards traversal of the tree to determine all visible items
-            # below the items that are on the stack.
-            item = stack.pop()
-            if item.isVisible(self.identifier):
-                if isinstance(item, (titree.FlightTrackItem, titree.TrajectoryItem)):
-                    itemsList.append(item)
-                else:
-                    stack.extend(item.childItems)
-
-        logging.debug("Plotting elements '%s'", [i.getName() for i in itemsList])
-
-        if mode in ["REDRAW", "MARKER_CHANGE"]:
-            # Clear the figure -- it needs to be completely redrawn.
-            self.fig.clf()
-
-        if mode in ["REDRAW", "MARKER_CHANGE"]:
-            # Iterative list traversal no. 1: Determine the earliest start time
-            # and the required number of subplots.
-            earliestStartTime = datetime(3000, 1, 1)
-            self.subPlots = []
-            for item in itemsList:
-                earliestStartTime = min(earliestStartTime, item.getStartTime())
-                for variable in item.childItems:
-                    if variable.isVisible(self.identifier) and variable.getVariableName() not in self.subPlots:
-                        self.subPlots.append(variable.getVariableName())
-
-        # Iterative list traversal no. 2: Draw / update plots.
-        for item in itemsList:
-
-            logging.debug("plotting item %s", item.getName())
-            # The variables that have to be plotted are children of self.mapItem.
-            # Plot all variables whose visible-flag is set to True.
-            variablesToPlot = [variable for variable in item.childItems
-                               if variable.getVariableName() in self.subPlots]
-
-            if mode in ["GXPROPERTY_CHANGE"]:
-                # If only a graphics property has been changed: Apply setp with
-                # the new properties to all variables of trajectory 'item'.
-                for variable in variablesToPlot:
-                    plt.setp(
-                        variable.getGxElementProperty(
-                            "timeseries", "instance::{}".format(self.identifier)),
-                        visible=item.isVisible(self.identifier),
-                        color=item.getGxElementProperty("general", "colour"),
-                        linestyle=item.getGxElementProperty("general", "linestyle"),
-                        linewidth=item.getGxElementProperty("general", "linewidth"))
-
-            elif mode in ["REDRAW", "MARKER_CHANGE"]:
-                # Loop over all variables to plot.
-                for variable in variablesToPlot:
-                    #
-                    # A total of len(self.subPlots) subplots are drawn.
-                    # Place the plot of this variable on the index+1-th subplot,
-                    # where index is the index of the variable name in 'self.subPlots'.
-                    index = self.subPlots.index(variable.getVariableName())
-                    ax = self.fig.add_subplot(len(self.subPlots), 1, index + 1)
-                    #
-                    # The x-axis is the time axis. Shift the current time data
-                    # so that the common time axis starts with the earliest
-                    # start time determined above.
-                    x = item.getTimeVariable().getVariableData() + \
-                        ((item.getStartTime() - earliestStartTime).seconds / 3600.)
-                    y = variable.getVariableData()
-                    #
-                    # Plot the variable data with the colour determines above, store
-                    # the plot instance in the variable's gxElements.
-                    plotInstance = ax.plot(
-                        x, y, color=item.getGxElementProperty("general", "colour"),
-                        linestyle=item.getGxElementProperty("general", "linestyle"),
-                        linewidth=item.getGxElementProperty("general", "linewidth"))
-                    variable.setGxElementProperty(
-                        "timeseries", "instance::{}".format(self.identifier), plotInstance)
-                    #
-                    # If we've just plotted the pressure variable flip the y-axis
-                    # upside down.
-                    if variable == item.getPressureVariable():
-                        ymin, ymax = ax.get_ylim()
-                        if ymin < ymax:
-                            ax.set_ylim(ymax, ymin)
-                    #
-                    # Put the variable name on the y-axis and tighten the x-axis range
-                    # to the range in which data are actually available.
-                    ax.set_ylabel(variable.getVariableName())
-                    ax.axis('tight')
-
-                    #
-                    # Draw vertical dotted lines at the time marker indexes to help
-                    # identify the time markers on the time series plot.
-                    timeMarkerIndexes = item.getTimeMarkerIndexes()
-                    if timeMarkerIndexes is not None:
-                        for time in x[timeMarkerIndexes[1:]]:
-                            ax.axvline(time, color='black', linestyle=':')
-
-                    #
-                    # The topmost subplot gets the title (the name of self.mapItem).
-                    if index == 0:
-                        if len(itemsList) > 1:
-                            ax.set_title("Ensemble: {} to {}".format(
-                                itemsList[0].getName(), itemsList[-1].getName()))
-                        else:
-                            ax.set_title("Single item: {}".format(itemsList[0].getName()))
-
-                    #
-                    # The bottommost subplot gets the x-label: The name of the time
-                    # variable.
-                    if index == len(self.subPlots) - 1:
-                        ax.set_xlabel(
-                            "time [hr since {}]".format(earliestStartTime.strftime("%Y-%m-%d %H:%M UTC")))
-
-        # Update the figure canvas.
-        self.fig.canvas.draw()
-
-
-class MplTimeSeriesViewWidget(MplNavBarWidget):
-    """MplNavBarWidget using an MplTimeSeriesViewCanvas as the Matplotlib
-       view instance.
-    """
-
-    def __init__(self, parent=None):
-        super(MplTimeSeriesViewWidget, self).__init__(
-            parent=parent, canvas=MplTimeSeriesViewCanvas())
-        # Disable some elements of the Matplotlib navigation toolbar.
-        # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
-        #                    Customize, Save
-        actions = self.navbar.actions()
-        for action in actions:
-            if action.text() in ["Customize"]:
-                action.setEnabled(False)
