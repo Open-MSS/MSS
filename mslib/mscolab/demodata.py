@@ -58,9 +58,9 @@ def create_test_data():
     create_mssdir()
     # creating test directory
     fs_datadir = fs.open_fs(mscolab_settings.BASE_DIR)
-    if fs_datadir.exists('colabdata'):
-        fs_datadir.removetree('colabdata')
-    fs_datadir.makedir('colabdata')
+    if fs_datadir.exists('colabTestData'):
+        fs_datadir.removetree('colabTestData')
+    fs_datadir.makedir('colabTestData')
     fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
     # creating filedata directory
     create_test_files()
@@ -190,8 +190,8 @@ ROOT_DIR = ROOT_FS.root_path
 
 # directory where mss output files are stored
 root_fs = fs.open_fs(ROOT_DIR)
-root_fs.makedir('colabdata')
-DATA_DIR = os.path.join(ROOT_DIR, 'colabdata')
+root_fs.makedir('colabTestData')
+DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
 BASE_DIR = ROOT_DIR
 SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
 
@@ -239,7 +239,7 @@ def create_test_files():
     if not fs_datadir.exists('filedata'):
         fs_datadir.makedir('filedata')
         # add files
-        file_dir = fs.open_fs(fs.path.combine(mscolab_settings.BASE_DIR, 'colabdata/filedata'))
+        file_dir = fs.open_fs(fs.path.combine(mscolab_settings.DATA_DIR, 'filedata'))
         # make directories
         file_paths = ['one', 'two', 'three']
         for file_path in file_paths:
@@ -247,7 +247,7 @@ def create_test_files():
             file_dir.writetext('{}/main.ftml'.format(file_path), mscolab_settings.STUB_CODE)
             # initiate git
             r = git.Repo.init(fs.path.combine(mscolab_settings.BASE_DIR,
-                                              'colabdata/filedata/{}'.format(file_path)))
+                                              'colabTestData/filedata/{}'.format(file_path)))
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")
         file_dir.close()
@@ -321,6 +321,12 @@ def create_mssdir():
     basename = fs.path.basename(mss_default.mss_dir)
     if not fs_datadir.exists(basename):
         fs_datadir.makedir(basename)
+
+
+def delete_test_data():
+    fs_datadir = fs.open_fs(mscolab_settings.BASE_DIR)
+    if fs_datadir.exists('colabTestData'):
+        fs_datadir.removetree('colabTestData')
 
 
 def main():

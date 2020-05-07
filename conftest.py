@@ -39,7 +39,7 @@ import pytest
 
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
-from mslib.mscolab.demodata import create_test_config
+from mslib.mscolab.demodata import create_test_config, create_test_data, delete_test_data
 
 if os.getenv("TESTS_VISIBLE") == "TRUE":
     Display = None
@@ -66,9 +66,12 @@ path, parent_path = create_test_config()
 imp.load_source('mscolab_settings', path)
 sys.path.insert(0, parent_path)
 
-# after test config is created, test data is created
-from mslib.mscolab.demodata import create_test_data
-create_test_data()
+
+@pytest.fixture(scope="session", autouse=True)
+def create_data():
+    create_test_data()
+    yield
+    delete_test_data()
 
 
 @pytest.fixture(scope="session", autouse=True)
