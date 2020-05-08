@@ -38,6 +38,7 @@ else:
     SHA = repo.head.object.hexsha
 
 SERVER_CONFIG_FILE = "mss_wms_settings.py"
+MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
 ROOT_FS = TempFS(identifier="mss{}".format(SHA))
 ROOT_DIR = ROOT_FS.root_path
 

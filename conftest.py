@@ -36,10 +36,9 @@ sys.dont_write_bytecode = True
 import multiprocessing
 import time
 import pytest
-
+import fs
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
-from mslib.mscolab.demodata import create_test_config, create_test_data, delete_test_data
 
 if os.getenv("TESTS_VISIBLE") == "TRUE":
     Display = None
@@ -57,21 +56,97 @@ if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
     examples.create_server_config(detailed_information=True)
     examples.create_data()
 
+if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
+    config_string = f'''# -*- coding: utf-8 -*-
+"""
+
+    mslib.mscolab.conf.py.example
+    ~~~~~~~~~~~~~~~~~~~~
+
+    config for mscolab.
+
+    This file is part of mss.
+
+    :copyright: Copyright 2019 Shivashis Padhi
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+import os
+import logging
+import fs
+
+ROOT_DIR = '{constants.ROOT_DIR}'
+# directory where mss output files are stored
+root_fs = fs.open_fs(ROOT_DIR)
+root_fs.makedir('colabTestData')
+DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
+BASE_DIR = ROOT_DIR
+SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
+
+SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
+
+# used to generate and parse tokens
+# details of database connections
+SECRET_KEY = 'secretkEyu'
+DB_HOST = '127.0.0.1'
+DB_USER = 'user'
+DB_PASSWORD = 'pass'
+DB_NAME = 'test_1'
+
+# SQLALCHEMY_DB_URI = 'postgresql://{{}}:{{}}@{{}}/{{}}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
+
+# mscolab data directory
+MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+# text to be written in new mscolab based ftml files.
+STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
+<FlightTrack version="1.7.6">
+  <ListOfWaypoints>
+    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
+      <Comments></Comments>
+    </Waypoint>
+    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
+      <Comments></Comments>
+    </Waypoint>
+  </ListOfWaypoints>
+</FlightTrack>
+"""
+enable_basic_http_authentication = False
+    '''
+    ROOT_FS = fs.open_fs(constants.ROOT_DIR)
+    if not ROOT_FS.exists('mscolab'):
+        ROOT_FS.makedir('mscolab')
+    mscolab_fs = fs.open_fs(os.path.join(constants.ROOT_DIR, "mscolab"))
+    mscolab_fs.writetext('mscolab_settings.py', config_string)
+    mscolab_fs.close()
+    path = os.path.join(constants.ROOT_DIR, 'mscolab', 'mscolab_settings.py')
+    parent_path = os.path.join(constants.ROOT_DIR, 'mscolab')
+
+
 imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
-
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
-
-# create test config and link import to it
-path, parent_path = create_test_config()
 imp.load_source('mscolab_settings', path)
 sys.path.insert(0, parent_path)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def create_data():
+    from mslib.mscolab.demodata import create_test_data, delete_test_data
     create_test_data()
     yield
-    delete_test_data()
+    delete_test_data(constants.ROOT_FS)
 
 
 @pytest.fixture(scope="session", autouse=True)
