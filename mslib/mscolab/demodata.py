@@ -47,20 +47,13 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Project, Permission
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.mscolab.seed import seed_data, create_tables
-from fs.tempfs import TempFS
-
-ROOT_FS = TempFS(identifier="mss")
-ROOT_DIR = ROOT_FS.root_path
 
 
 def create_test_data():
-    # for tempfile_mscolab.ftml
-    create_mssdir()
-    # creating test directory
     fs_datadir = fs.open_fs(mscolab_settings.BASE_DIR)
-    if fs_datadir.exists('colabdata'):
-        fs_datadir.removetree('colabdata')
-    fs_datadir.makedir('colabdata')
+    if fs_datadir.exists('colabTestData'):
+        fs_datadir.removetree('colabTestData')
+    fs_datadir.makedir('colabTestData')
     fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
     # creating filedata directory
     create_test_files()
@@ -149,97 +142,12 @@ def create_test_data():
         create_postgres_test()
 
 
-def create_test_config():
-    config_string = '''# -*- coding: utf-8 -*-
-"""
-
-    mslib.mscolab.conf.py.example
-    ~~~~~~~~~~~~~~~~~~~~
-
-    config for mscolab.
-
-    This file is part of mss.
-
-    :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
-    :license: APACHE-2.0, see LICENSE for details.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-"""
-# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
-import os
-import logging
-import fs
-
-from fs.tempfs import TempFS
-
-
-ROOT_FS = TempFS(identifier="mss")
-ROOT_DIR = ROOT_FS.root_path
-
-
-# directory where mss output files are stored
-root_fs = fs.open_fs(ROOT_DIR)
-root_fs.makedir('colabdata')
-DATA_DIR = os.path.join(ROOT_DIR, 'colabdata')
-BASE_DIR = ROOT_DIR
-SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
-
-SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
-
-# used to generate and parse tokens
-# details of database connections
-SECRET_KEY = 'secretkEyu'
-DB_HOST = '127.0.0.1'
-DB_USER = 'user'
-DB_PASSWORD = 'pass'
-DB_NAME = 'test_1'
-
-# SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
-
-# mscolab data directory
-MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
-# text to be written in new mscolab based ftml files.
-STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-<FlightTrack version="1.7.6">
-  <ListOfWaypoints>
-    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-      <Comments></Comments>
-    </Waypoint>
-    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-      <Comments></Comments>
-    </Waypoint>
-  </ListOfWaypoints>
-</FlightTrack>
-"""
-enable_basic_http_authentication = False
-    '''
-    ROOT_FS = fs.open_fs(ROOT_DIR)
-    if not ROOT_FS.exists('mscolab'):
-        ROOT_FS.makedir('mscolab')
-    mscolab_fs = fs.open_fs(os.path.join(ROOT_DIR, "mscolab"))
-    mscolab_fs.writetext('mscolab_settings.py', config_string)
-    mscolab_fs.close()
-    return (os.path.join(ROOT_DIR, 'mscolab', 'mscolab_settings.py'),
-            os.path.join(ROOT_DIR, 'mscolab'))
-
-
 def create_test_files():
     fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
     if not fs_datadir.exists('filedata'):
         fs_datadir.makedir('filedata')
         # add files
-        file_dir = fs.open_fs(fs.path.combine(mscolab_settings.BASE_DIR, 'colabdata/filedata'))
+        file_dir = fs.open_fs(fs.path.combine(mscolab_settings.DATA_DIR, 'filedata'))
         # make directories
         file_paths = ['one', 'two', 'three']
         for file_path in file_paths:
@@ -247,7 +155,7 @@ def create_test_files():
             file_dir.writetext('{}/main.ftml'.format(file_path), mscolab_settings.STUB_CODE)
             # initiate git
             r = git.Repo.init(fs.path.combine(mscolab_settings.BASE_DIR,
-                                              'colabdata/filedata/{}'.format(file_path)))
+                                              'colabTestData/filedata/{}'.format(file_path)))
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")
         file_dir.close()
@@ -321,6 +229,10 @@ def create_mssdir():
     basename = fs.path.basename(mss_default.mss_dir)
     if not fs_datadir.exists(basename):
         fs_datadir.makedir(basename)
+
+
+def delete_test_data(temp_fs):
+    temp_fs.clean()
 
 
 def main():
