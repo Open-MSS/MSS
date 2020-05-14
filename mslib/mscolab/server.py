@@ -184,6 +184,15 @@ def get_user():
     return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
 
+@APP.route("/delete_user", methods=["POST"])
+@verify_user
+def delete_user():
+    user = g.user
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"success": True}), 200
+
+
 # Chat related routes
 @APP.route("/messages", methods=['POST'])
 @verify_user

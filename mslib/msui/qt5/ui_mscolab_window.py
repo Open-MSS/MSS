@@ -74,6 +74,9 @@ class Ui_MSSMscolabWindow(object):
         self.logoutButton.setMaximumSize(QtCore.QSize(60, 16777215))
         self.logoutButton.setObjectName("logoutButton")
         self.horizontalLayout_7.addWidget(self.logoutButton)
+        self.deleteAccountButton = QtWidgets.QPushButton(self.loggedInWidget)
+        self.deleteAccountButton.setObjectName("deleteAccountButton")
+        self.horizontalLayout_7.addWidget(self.deleteAccountButton)
         spacerItem1 = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem1)
         self.verticalLayout.addWidget(self.loggedInWidget)
@@ -200,6 +203,7 @@ class Ui_MSSMscolabWindow(object):
         self.disconnectMscolab.setText(_translate("MSSMscolabWindow", "disconnect"))
         self.label.setText(_translate("MSSMscolabWindow", "TextLabel"))
         self.logoutButton.setText(_translate("MSSMscolabWindow", "logout"))
+        self.deleteAccountButton.setText(_translate("MSSMscolabWindow", "Delete Account"))
         self.emailid.setPlaceholderText(_translate("MSSMscolabWindow", "emailid"))
         self.password.setPlaceholderText(_translate("MSSMscolabWindow", "password"))
         self.loginButton.setText(_translate("MSSMscolabWindow", "login"))
@@ -216,4 +220,14 @@ class Ui_MSSMscolabWindow(object):
         self.projWindow.setText(_translate("MSSMscolabWindow", "chat window"))
         self.actionCloseWindow.setText(_translate("MSSMscolabWindow", "CloseWindow"))
         self.actionCloseWindow.setShortcut(_translate("MSSMscolabWindow", "Ctrl+W"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MSSMscolabWindow = QtWidgets.QMainWindow()
+    ui = Ui_MSSMscolabWindow()
+    ui.setupUi(MSSMscolabWindow)
+    MSSMscolabWindow.show()
+    sys.exit(app.exec_())
 

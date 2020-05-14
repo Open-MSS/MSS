@@ -44,6 +44,7 @@ class User(db.Model):
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255), unique=True)
+    permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
 
     def __init__(self, emailid, username, password):
         self.username = username

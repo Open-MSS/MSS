@@ -29,6 +29,7 @@ import sys
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import logging
 import time
+import mock
 
 from mslib.mscolab.server import db, APP, initialize_managers
 from mslib._tests.constants import MSCOLAB_URL_TEST
@@ -179,3 +180,12 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         # top let server process
         time.sleep(2)
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    def test_user_delete(self, mockbox):
+        self._login()
+        QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.listProjects) == 0
+        assert self.window.loggedInWidget.isVisible() is False
+        assert self.window.loginWidget.isVisible() is True
