@@ -29,7 +29,7 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_save_filename
 from mslib.msui.mss_qt import ui_mscolab_window as ui
 from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
 from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
@@ -170,12 +170,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def handle_export(self):
         # ToDo when autosave mode gets upgraded, have to fetch from remote
-        file_path = QtWidgets.QFileDialog.getSaveFileName()[0]
-        f_name = fs.path.basename(file_path)
-        f_dir = fs.open_fs(fs.path.dirname(file_path))
-        temp_name = 'tempfile_mscolab.ftml'
-        temp_dir = fs.open_fs(self.data_dir)
-        fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
+        file_path = get_save_filename(
+            self, "Save fight track", "", "Flight Track Files (*.ftml)")
+        if file_path is not None:
+            f_name = fs.path.basename(file_path)
+            f_dir = fs.open_fs(fs.path.dirname(file_path))
+            temp_name = 'tempfile_mscolab.ftml'
+            temp_dir = fs.open_fs(self.data_dir)
+            fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
 
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
