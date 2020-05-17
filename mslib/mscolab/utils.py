@@ -29,3 +29,11 @@ def get_recent_pid(fm, user):
     projects = fm.list_projects(user)
     p_id = projects[-1]["p_id"]
     return p_id
+
+
+def get_session_id(sockets, u_id):
+    s_id = None
+    for ss in sockets:
+        if ss["u_id"] == u_id:
+            s_id = ss["s_id"]
+    return s_id

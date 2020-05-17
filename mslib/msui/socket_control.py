@@ -39,6 +39,7 @@ class ConnectionManager(QtCore.QObject):
     signal_message_receive = QtCore.Signal(str, str, name="message rcv")
     signal_new_permission = QtCore.Signal(int, int, name="new permission")
     signal_update_permission = QtCore.Signal(int, int, str, name="update permission")
+    signal_revoke_permission = QtCore.Signal(int, int, name="revoke permission")
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -53,6 +54,8 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('new-permission', handler=self.handle_new_permission)
         # on update of permission
         self.sio.on('update-permission', handler=self.handle_update_permission)
+        # on revoking project permission
+        self.sio.on('revoke-permission', handler=self.handle_revoke_permission)
         self.mscolab_server_url = mscolab_server_url
         self.sio.connect(self.mscolab_server_url)
         self.sio.emit('start', {'token': token})
@@ -77,6 +80,15 @@ class ConnectionManager(QtCore.QObject):
         p_id = int(message["p_id"])
         u_id = int(message["u_id"])
         self.signal_new_permission.emit(p_id, u_id)
+
+    def handle_revoke_permission(self, message):
+        """
+        Signal update of revoked permission
+        """
+        message = json.loads(message)
+        p_id = int(message["p_id"])
+        u_id = int(message["u_id"])
+        self.signal_revoke_permission.emit(p_id, u_id)
 
     def handle_incoming_message(self, message):
         # raise signal to render to view
