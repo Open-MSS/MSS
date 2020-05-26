@@ -55,6 +55,11 @@ def seed_data(db_uri):
             'id': 10,
             'password': 'c',
             'emailid': 'c'
+        }, {
+            'username': 'd',
+            'id': 11,
+            'password': 'd',
+            'emailid': 'd'
         }]
         for user in users:
             db_user = User(user['emailid'], user['username'], user['password'])
@@ -75,8 +80,13 @@ def seed_data(db_uri):
             'autosave': False
         }, {
             'id': 3,
-            'path': 'three`',
+            'path': 'three',
             'description': 'a, c',
+            'autosave': False
+        }, {
+            'id': 4,
+            'path': 'four',
+            'description': 'd',
             'autosave': False
         }]
         for project in projects:
@@ -114,6 +124,10 @@ def seed_data(db_uri):
             'u_id': 10,
             'p_id': 1,
             'access_level': "viewer"
+        }, {
+            'u_id': 11,
+            'p_id': 4,
+            'access_level': 'creator'
         }]
         for perm in permissions:
             db_perm = Permission(perm['u_id'], perm['p_id'], perm['access_level'])
