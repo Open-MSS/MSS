@@ -101,6 +101,7 @@ def create_test_data():
                 ('a', 8, 'a', 'a'),
                 ('b', 9, 'b', 'b'),
                 ('c', 10, 'c', 'c'),
+                ('d', 11, 'd', 'd')
             ]
             for data_point in data:
                 user = User(data_point[0], data_point[3], data_point[2])
@@ -112,6 +113,7 @@ def create_test_data():
                 (1, 'one', 'a, b'),
                 (2, 'two', 'b, c'),
                 (3, 'three', 'a, c'),
+                (4, 'four', 'd')
             ]
             for data_point in data:
                 project = Project(data_point[1], data_point[2])
@@ -127,6 +129,7 @@ def create_test_data():
                 (5, 10, 3, 'creator'),
                 (6, 8, 3, 'collaborator'),
                 (7, 10, 1, 'viewer'),
+                (8, 11, 4, 'creator')
             ]
             for data_point in data:
                 project = Permission(data_point[1], data_point[2], data_point[3])

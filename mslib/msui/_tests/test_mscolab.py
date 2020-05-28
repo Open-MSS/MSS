@@ -93,11 +93,11 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
-    def _login(self):
+    def _login(self, emailid="a", password="a"):
         # login
         self._connect_to_mscolab()
-        self.window.emailid.setText('a')
-        self.window.password.setText('a')
+        self.window.emailid.setText(emailid)
+        self.window.password.setText(password)
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
@@ -183,7 +183,7 @@ class Test_Mscolab(object):
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockbox):
-        self._login()
+        self._login(emailid="d", password="d")
         QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.listProjects) == 0
