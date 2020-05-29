@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 1.9.3
+-------------
+
+Bug Fixes:
+  - tests failing on OSX, #549
+  - fixate socketio and engineio, #546
+  - Revoking permission does not remove project from revoked user's mscolab project window, #538
+
 Version 1.9.2
 -------------
 
