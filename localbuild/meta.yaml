@@ -28,6 +28,7 @@ requirements:
     - menuinst  # [win]
   run:
     - python
+    - defusedxml
     - menuinst  # [win]
     - basemap >=1.2.0
     - chameleon
@@ -62,6 +63,7 @@ requirements:
     - validate_email
     - multidict
     - pint
+    - python-socketio >=4.4.0
 
 test:
   imports:
