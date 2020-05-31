@@ -844,6 +844,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def closeEvent(self, event):
         if self.conn:
             self.conn.disconnect()
+        self.viewCloses.emit()
 
 
 class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
