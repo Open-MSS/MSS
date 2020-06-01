@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MSSMscolabWindow(object):
     def setupUi(self, MSSMscolabWindow):
         MSSMscolabWindow.setObjectName("MSSMscolabWindow")
-        MSSMscolabWindow.resize(510, 510)
+        MSSMscolabWindow.resize(627, 660)
         MSSMscolabWindow.setMinimumSize(QtCore.QSize(510, 510))
         self.centralwidget = QtWidgets.QWidget(MSSMscolabWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -180,6 +180,9 @@ class Ui_MSSMscolabWindow(object):
         self.projWindow.setSizePolicy(sizePolicy)
         self.projWindow.setObjectName("projWindow")
         self.horizontalLayout.addWidget(self.projWindow)
+        self.adminWindowBtn = QtWidgets.QPushButton(self.groupBox)
+        self.adminWindowBtn.setObjectName("adminWindowBtn")
+        self.horizontalLayout.addWidget(self.adminWindowBtn)
         spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem4)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -218,16 +221,7 @@ class Ui_MSSMscolabWindow(object):
         self.sideview.setText(_translate("MSSMscolabWindow", "sideview"))
         self.topview.setText(_translate("MSSMscolabWindow", "topview"))
         self.projWindow.setText(_translate("MSSMscolabWindow", "chat window"))
+        self.adminWindowBtn.setText(_translate("MSSMscolabWindow", "Manage Users"))
         self.actionCloseWindow.setText(_translate("MSSMscolabWindow", "CloseWindow"))
         self.actionCloseWindow.setShortcut(_translate("MSSMscolabWindow", "Ctrl+W"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MSSMscolabWindow = QtWidgets.QMainWindow()
-    ui = Ui_MSSMscolabWindow()
-    ui.setupUi(MSSMscolabWindow)
-    MSSMscolabWindow.show()
-    sys.exit(app.exec_())
 

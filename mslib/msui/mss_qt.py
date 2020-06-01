@@ -154,7 +154,8 @@ for mod in [
         "ui_mscolab_window",
         "ui_mscolab_project_window",
         "ui_add_project_dialog",
-        "ui_add_user_dialog"]:
+        "ui_add_user_dialog",
+        "ui_mscolab_admin_window"]:
     globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 
 # to store config by QSettings

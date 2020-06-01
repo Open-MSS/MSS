@@ -359,6 +359,72 @@ def undo_ftml():
     return str(result)
 
 
+@APP.route("/users_without_permission", methods=["GET"])
+@verify_user
+def get_users_without_permission():
+    p_id = request.form.get('p_id', None)
+    users = fm.fetch_users_without_permission(int(p_id))
+    return jsonify({"users": users}), 200
+
+
+@APP.route("/users_with_permission", methods=["GET"])
+@verify_user
+def get_users_with_permission():
+    p_id = request.form.get('p_id', None)
+    u_id = g.user.id
+    users = fm.fetch_users_with_permission(int(p_id), u_id)
+    return jsonify({"users": users}), 200
+
+
+@APP.route("/add_bulk_permissions", methods=["POST"])
+@verify_user
+def add_bulk_permissions():
+    p_id = int(request.form.get('p_id'))
+    new_u_ids = json.loads(request.form.get('selected_userids', []))
+    access_level = request.form.get('selected_access_level')
+    user = g.user
+    success = fm.add_bulk_permission(p_id, user, new_u_ids, access_level)
+    if success:
+        for u_id in new_u_ids:
+            sockio.sm.join_collaborator_to_room(u_id, p_id)
+            sockio.sm.emit_new_permission(u_id, p_id)
+        return jsonify({"success": True, "message": "Users successfully added!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
+@APP.route("/modify_bulk_permissions", methods=["POST"])
+@verify_user
+def modify_bulk_permissions():
+    p_id = int(request.form.get('p_id'))
+    u_ids = json.loads(request.form.get('selected_userids', []))
+    new_access_level = request.form.get('selected_access_level')
+    user = g.user
+    success = fm.modify_bulk_permission(p_id, user, u_ids, new_access_level)
+    if success:
+        for u_id in u_ids:
+            sockio.sm.emit_update_permission(u_id, p_id)
+        return jsonify({"success": True, "message": "User permissions successfully updated!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
+@APP.route("/delete_bulk_permissions", methods=["POST"])
+@verify_user
+def delete_bulk_permissions():
+    p_id = int(request.form.get('p_id'))
+    u_ids = json.loads(request.form.get('selected_userids', []))
+    user = g.user
+    success = fm.delete_bulk_permission(p_id, user, u_ids)
+    if success:
+        for u_id in u_ids:
+            sockio.sm.emit_revoke_permission(u_id, p_id)
+            sockio.sm.remove_collaborator_from_room(u_id, p_id)
+        return jsonify({"success": True, "message": "User permissions successfully deleted!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
 def start_server(app, sockio, cm, fm, port=8083):
     sockio.run(app, port=port)
 
