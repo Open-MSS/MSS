@@ -470,11 +470,20 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         item.window.raise_()
         item.window.activateWindow()
 
+    def close_mscolab_window(self):
+        self.mscolab_window = None
+
     def activate_mscolab_window(self):
         # initiate mscolab window
-        self.mscolab_window = mscolab.MSSMscolabWindow(parent=self.menu_Mscolab)
-        self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.mscolab_window.show()
+        if self.mscolab_window is None:
+            self.mscolab_window = mscolab.MSSMscolabWindow(parent=self.menu_Mscolab)
+            self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.mscolab_window.viewCloses.connect(self.close_mscolab_window)
+            self.mscolab_window.show()
+        else:
+            self.mscolab_window.setWindowState(QtCore.Qt.WindowNoState)
+            self.mscolab_window.raise_()
+            self.mscolab_window.activateWindow()
 
     new_flight_track_counter = 0
 
