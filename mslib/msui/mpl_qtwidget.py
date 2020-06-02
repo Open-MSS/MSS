@@ -37,7 +37,7 @@ import numpy as np
 import matplotlib
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
-from matplotlib import cbook, figure
+from matplotlib import cbook
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
@@ -585,8 +585,8 @@ class MplSideViewCanvas(MplCanvas):
             # Compute the position of major and minor ticks. Major ticks are labelled.
             major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
             minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
-            labels = ["{}".format(int(l / 100.))
-                      if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
+            labels = ["{}".format(int(x / 100.))
+                      if (x / 100.) - int(x / 100.) == 0 else "{}".format(float(x / 100.)) for x in major_ticks]
             if len(labels) > 20:
                 labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
             elif len(labels) > 10:

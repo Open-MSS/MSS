@@ -77,6 +77,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.token = None
         self.loginButton.clicked.connect(self.authorize)
         self.logoutButton.clicked.connect(self.logout)
+        self.deleteAccountButton.clicked.connect(self.delete_account)
         self.topview.clicked.connect(self.open_topview)
         self.sideview.clicked.connect(self.open_sideview)
         self.tableview.clicked.connect(self.open_tableview)
@@ -371,6 +372,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.signal_autosave.connect(self.autosave_toggle)
             self.conn.signal_new_permission.connect(self.render_new_permission)
             self.conn.signal_update_permission.connect(self.handle_update_permission)
+            self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
             # activate add project button here
             self.addProject.setEnabled(True)
 
@@ -626,6 +628,21 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                                 qm.No)
             if reply == QtWidgets.QMessageBox.No:
                 return
+        self.clean_up_window()
+
+    def delete_account(self):
+        w = QtWidgets.QWidget()
+        qm = QtWidgets.QMessageBox
+        reply = qm.question(w, 'Continue?', 'You cannot undo this operation!', qm.Yes, qm.No)
+        if reply == QtWidgets.QMessageBox.No:
+            return
+        data = {
+            "token": self.token
+        }
+        requests.post(self.mscolab_server_url + '/delete_user', data=data)
+        self.clean_up_window()
+
+    def clean_up_window(self):
         # delete token and show login widget-items
         self.token = None
         # delete active-project-id
@@ -722,6 +739,26 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # update project window if open
         if self.project_window is not None:
             self.project_window.load_users()
+
+    @QtCore.Slot(int, int)
+    def handle_revoke_permission(self, p_id, u_id):
+        if u_id == self.user["id"]:
+            # Check if the user has opened any windows of revoked project and close them
+            if self.active_pid == p_id:
+                for window in self.active_windows:
+                    window.close()
+                if self.project_window is not None:
+                    self.project_window.close()
+                self.active_pid = None
+
+            # Update project list
+            remove_item = None
+            for i in range(self.listProjects.count()):
+                item = self.listProjects.item(i)
+                if item.p_id == p_id:
+                    remove_item = item
+            if remove_item is not None:
+                self.listProjects.takeItem(self.listProjects.row(remove_item))
 
     @QtCore.Slot()
     def reload_windows_slot(self):

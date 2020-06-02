@@ -29,6 +29,7 @@ import sys
 from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import logging
 import time
+import mock
 
 from mslib.mscolab.server import db, APP, initialize_managers
 from mslib._tests.constants import MSCOLAB_URL_TEST
@@ -92,11 +93,11 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
-    def _login(self):
+    def _login(self, emailid="a", password="a"):
         # login
         self._connect_to_mscolab()
-        self.window.emailid.setText('a')
-        self.window.password.setText('a')
+        self.window.emailid.setText(emailid)
+        self.window.password.setText(password)
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
@@ -179,3 +180,12 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         # top let server process
         time.sleep(2)
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    def test_user_delete(self, mockbox):
+        self._login(emailid="d", password="d")
+        QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.listProjects) == 0
+        assert self.window.loggedInWidget.isVisible() is False
+        assert self.window.loginWidget.isVisible() is True

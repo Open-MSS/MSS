@@ -65,3 +65,4 @@ except ImportError as ex:
           </ListOfWaypoints>
         </FlightTrack>
         """
+        enable_basic_http_authentication = False
