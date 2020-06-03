@@ -211,7 +211,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.projWindow.setEnabled(False)
         self.autoSave.setEnabled(False)
         self.export_2.setEnabled(False)
-        self.adminWindowBtn.setEnabled(False)
 
     def add_project_handler(self):
         if self.token is None:
@@ -482,7 +481,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.projWindow.setEnabled(True)
         self.autoSave.setEnabled(True)
         self.export_2.setEnabled(True)
-        self.adminWindowBtn.setEnabled(True)
         # configuring autosave button
         data = {
             "token": self.token,
@@ -770,6 +768,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.autoSave.setChecked(False)
                     self.autoSave.blockSignals(False)
                 self.autosaveStatus.setText("")
+
+                # Enable Admin Window
+                self.adminWindowBtn.setVisible(True)
             else:
                 # disable autosave, set status text
                 self.autoSave.setVisible(False)
@@ -777,6 +778,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.autosaveStatus.setText("Autosave is enabled!")
                 else:
                     self.autosaveStatus.setText("Autosave is enabled!")
+
+                # Disable Admin Window
+                if self.admin_window is not None:
+                    self.admin_window.close()
+                self.adminWindowBtn.setVisible(False)
 
         # update project window if open
         if self.project_window is not None:

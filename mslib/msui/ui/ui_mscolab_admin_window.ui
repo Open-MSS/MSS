@@ -14,7 +14,7 @@
    <string>Admin Window</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -198,7 +198,7 @@
              </property>
              <item>
               <property name="text">
-               <string>(Filter By Permission)</string>
+               <string>all</string>
               </property>
              </item>
              <item>

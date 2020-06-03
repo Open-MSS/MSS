@@ -65,6 +65,11 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.selectAllModifyBtn.clicked.connect(lambda: self.select_all(self.modifyUsersTable))
         self.deselectAllModifyBtn.clicked.connect(lambda: self.deselect_all(self.modifyUsersTable))
 
+        # Search filter
+        self.addUsersSearch.textChanged.connect(lambda text: self.search_user_filter(text, self.addUsersTable))
+        self.modifyUsersSearch.textChanged.connect(lambda text: self.search_user_filter(text, self.modifyUsersTable))
+        self.modifyUsersPermissionFilter.currentTextChanged.connect(self.apply_permission_filter)
+
         self.set_label_text()
         self.load_users_without_permission()
         self.load_users_with_permission()
@@ -88,14 +93,41 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     def select_all(self, table):
         table.setFocus()
         for row_num in range(table.rowCount()):
-            if table.item(row_num, 0).isSelected() is False:
+            # Check if row is hidden due to some filter to exclude it
+            if table.item(row_num, 0).isSelected() is False and table.isRowHidden(row_num) is False:
                 table.selectRow(row_num)
 
     def deselect_all(self, table):
         table.setFocus()
         for row_num in range(table.rowCount()):
-            if table.item(row_num, 0).isSelected():
+            # Check if row is hidden due to some filter to exclude it
+            if table.item(row_num, 0).isSelected() and table.isRowHidden(row_num) is False:
                 table.selectRow(row_num)
+
+    # TODO: Think of a more cleaner implementation.
+    def apply_filters(self, table, text_filter, permission_filter=None):
+        for row_num in range(table.rowCount()):
+            if text_filter in table.item(row_num, 0).text() or text_filter in table.item(row_num, 1).text():
+                if permission_filter:
+                    if permission_filter == "all" or permission_filter == table.item(row_num, 2).text():
+                        table.showRow(row_num)
+                    else:
+                        table.hideRow(row_num)
+                else:
+                    table.showRow(row_num)
+            else:
+                table.hideRow(row_num)
+
+    def search_user_filter(self, text_filter, table):
+        permission_filter = None
+        if table == self.modifyUsersTable:
+            permission_filter = str(self.modifyUsersPermissionFilter.currentText())
+        self.apply_filters(table, text_filter, permission_filter)
+
+    def apply_permission_filter(self, permission_filter):
+        self.modifyUsersTable.setFocus()
+        text_filter = self.modifyUsersSearch.text()
+        self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
 
     def set_label_text(self):
         self.projectNameLabel.setText(f"Project: {self.project_name}")
@@ -111,6 +143,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         res = res.json()
         self.addUsers = res["users"]
         self.populate_table(self.addUsersTable, self.addUsers)
+        text_filter = self.addUsersSearch.text()
+        self.apply_filters(self.addUsersTable, text_filter, None)
 
     def load_users_with_permission(self):
         self.modifyUsers = []
@@ -121,7 +155,11 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         res = requests.get(self.mscolab_server_url + "/users_with_permission", data=data)
         res = res.json()
         self.modifyUsers = res["users"]
+        permission_filter = str(self.modifyUsersPermissionFilter.currentText())
         self.populate_table(self.modifyUsersTable, self.modifyUsers)
+        text_filter = self.modifyUsersSearch.text()
+        permission_filter = str(self.modifyUsersPermissionFilter.currentText())
+        self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
 
     def add_selected_users(self):
         selected_userids = self.get_selected_userids(self.addUsersTable, self.addUsers)
@@ -176,7 +214,6 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         }
         res = requests.post(self.mscolab_server_url + "/delete_bulk_permissions", data=data)
         res = res.json()
-        print("res:", res)
         if res["success"]:
             self.load_users_without_permission()
             self.load_users_with_permission()
