@@ -389,9 +389,7 @@ class FileManager(object):
             .add_columns(User.id, User.username, User.emailid) \
             .filter(Permission.u_id == None)
 
-        users = []
-        for user in user_list:
-            users.append((user.username, user.emailid, user.id))
+        users = [[user.username, user.emailid, user.id] for user in user_list]
         return users
 
     def fetch_users_with_permission(self, p_id, u_id):
@@ -401,9 +399,7 @@ class FileManager(object):
             .filter(Permission.p_id == p_id) \
             .filter((User.id != u_id) & (Permission.access_level != 'creator'))
 
-        users = []
-        for user in user_list:
-            users.append((user.username, user.emailid, user.access_level, user.id))
+        users = [[user.username, user.emailid, user.access_level, user.id] for user in user_list]
         return users
 
     def add_bulk_permission(self, p_id, user, new_u_ids, access_level):
@@ -425,7 +421,7 @@ class FileManager(object):
         if not self.is_admin(user.id, p_id):
             return False
 
-        # TODO: Check weather we need synchronize_session False Or Fetch
+        # TODO: Check whether we need synchronize_session False Or Fetch
         Permission.query\
             .filter(Permission.p_id == p_id)\
             .filter(Permission.u_id.in_(u_ids))\

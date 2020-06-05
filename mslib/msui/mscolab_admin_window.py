@@ -28,6 +28,7 @@ from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.msui.mss_qt import ui_mscolab_admin_window as ui
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
+from werkzeug.urls import url_join
 import requests
 import json
 
@@ -139,7 +140,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "token": self.token,
             "p_id": self.p_id
         }
-        res = requests.get(self.mscolab_server_url + "/users_without_permission", data=data)
+        url = url_join(self.mscolab_server_url, "users_without_permission")
+        res = requests.get(url, data=data)
         res = res.json()
         self.addUsers = res["users"]
         self.populate_table(self.addUsersTable, self.addUsers)
@@ -152,7 +154,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "token": self.token,
             "p_id": self.p_id
         }
-        res = requests.get(self.mscolab_server_url + "/users_with_permission", data=data)
+        url = url_join(self.mscolab_server_url, "users_with_permission")
+        res = requests.get(url, data=data)
         res = res.json()
         self.modifyUsers = res["users"]
         permission_filter = str(self.modifyUsersPermissionFilter.currentText())
@@ -173,7 +176,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "selected_userids": json.dumps(selected_userids),
             "selected_access_level": selected_access_level
         }
-        res = requests.post(self.mscolab_server_url + "/add_bulk_permissions", data=data)
+        url = url_join(self.mscolab_server_url, "add_bulk_permissions")
+        res = requests.post(url, data=data)
         res = res.json()
         if res["success"]:
             # TODO: Do we need a success popup?
@@ -194,7 +198,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "selected_userids": json.dumps(selected_userids),
             "selected_access_level": selected_access_level
         }
-        res = requests.post(self.mscolab_server_url + "/modify_bulk_permissions", data=data)
+        url = url_join(self.mscolab_server_url, "modify_bulk_permissions")
+        res = requests.post(url, data=data)
         res = res.json()
         if res["success"]:
             self.load_users_without_permission()
@@ -212,7 +217,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "p_id": self.p_id,
             "selected_userids": json.dumps(selected_userids)
         }
-        res = requests.post(self.mscolab_server_url + "/delete_bulk_permissions", data=data)
+        url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
+        res = requests.post(url, data=data)
         res = res.json()
         if res["success"]:
             self.load_users_without_permission()
