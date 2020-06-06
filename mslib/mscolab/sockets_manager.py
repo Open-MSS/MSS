@@ -226,6 +226,9 @@ class SocketsManager(object):
     def emit_revoke_permission(self, u_id, p_id):
         socketio.emit("revoke-permission", json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
 
+    def emit_project_permissions_updated(self, u_id, p_id):
+        socketio.emit("project-permissions-updated", json.dumps({"u_id": u_id}), room=str(p_id))
+
 
 def setup_managers(app):
     """
