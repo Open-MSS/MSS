@@ -387,7 +387,7 @@ class FileManager(object):
         user_list = User.query\
             .join(Permission, (User.id == Permission.u_id) & (Permission.p_id == p_id), isouter=True) \
             .add_columns(User.id, User.username, User.emailid) \
-            .filter(Permission.u_id == None)
+            .filter(Permission.u_id.is_(None))
 
         users = [[user.username, user.emailid, user.id] for user in user_list]
         return users
