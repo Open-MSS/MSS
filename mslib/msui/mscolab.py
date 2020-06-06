@@ -40,6 +40,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import topview, sideview, tableview
 from mslib.msui import socket_control as sc
 from mslib.msui import mscolab_project as mp
+from mslib.msui import mscolab_admin_window as maw
 from mslib.utils import load_settings_qsettings, save_settings_qsettings
 from mslib.utils import config_loader
 
@@ -90,11 +91,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.export_2.clicked.connect(self.handle_export)
         self.connectMscolab.clicked.connect(self.connect_handler)
         self.disconnectMscolab.clicked.connect(self.disconnect_handler)
+        self.adminWindowBtn.clicked.connect(self.open_admin_window)
 
         # int to store active pid
         self.active_pid = None
         # storing access_level to save network call
         self.access_level = None
+        # storing project_name to save network call
+        self.active_project_name = None
         # store active_flight_path here as object
         self.waypoints_model = None
         # store a reference of window in class
@@ -109,6 +113,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.id_count = 0
         # project window
         self.project_window = None
+        # Admin Window
+        self.admin_window = None
+        self.adminWindowBtn.setVisible(False)
+
         self.disable_action_buttons()
         # set data dir, uri
         self.data_dir = data_dir
@@ -224,7 +232,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.proj_diag.show()
 
     def check_and_enable_project_accept(self):
-        if(self.add_proj_dialog.path.text() != "" and self.add_proj_dialog.description.toPlainText() != ""):
+        if (self.add_proj_dialog.path.text() != "" and self.add_proj_dialog.description.toPlainText() != ""):
             self.add_proj_dialog.buttonBox.setEnabled(True)
 
     def set_exported_file(self):
@@ -313,6 +321,26 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def close_project_window(self):
         self.project_window = None
+
+    def close_admin_window(self):
+        self.admin_window = None
+
+    def open_admin_window(self):
+        if self.active_pid is None:
+            return
+
+        # Initialise window
+        if self.admin_window is None:
+            self.admin_window = maw.MSColabAdminWindow(self.token, self.active_pid, self.user, self.active_project_name,
+                                                       self.conn, self.projWindow, self.mscolab_server_url)
+            self.admin_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.admin_window.viewCloses.connect(self.close_admin_window)
+            self.admin_window.show()
+
+        # If already open bring to focus
+        else:
+            self.admin_window.raise_()
+            self.admin_window.activateWindow()
 
     def autosave_emit(self):
         # emit signal to server to enable or disable
@@ -440,6 +468,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # set active_pid here
         self.active_pid = item.p_id
         self.access_level = item.access_level
+        self.active_project_name = item.text().split("-")[0].strip()
         # set active flightpath here
         self.load_wps_from_server()
 
@@ -477,8 +506,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.autoSave.blockSignals(False)
             self.autosave_status = False
 
-        # hide autosave button if access_level is non-admin
+        # hide autosave and admin window btn if access_level is non-admin
         if self.access_level == "viewer" or self.access_level == "collaborator":
+            self.adminWindowBtn.setVisible(False)
             self.autoSave.setVisible(False)
             # set autosave status
             if _json["autosave"]:
@@ -488,6 +518,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         else:
             self.autosaveStatus.setText("")
             self.autoSave.setVisible(True)
+            self.adminWindowBtn.setVisible(True)
 
         # change font style for selected
         font = QtGui.QFont()
@@ -649,6 +680,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_pid = None
         # delete active access_level
         self.access_level = None
+        # delete active project_name
+        self.active_project_name = None
         # clear projects list here
         self.loggedInWidget.hide()
         self.loginWidget.show()
@@ -664,6 +697,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # close project window if active
         if self.project_window is not None:
             self.project_window.close()
+
+        # Close Admin Window if active
+        if self.admin_window is not None:
+            self.admin_window.close()
+
+        self.adminWindowBtn.setVisible(False)
+
         # show autosave button, and empty autosaveStatus
         self.autoSave.setVisible(True)
         self.autosaveStatus.setText("")
@@ -696,9 +736,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             for i in range(self.listProjects.count()):
                 item = self.listProjects.item(i)
                 if item.p_id == p_id:
-                    desc = item.text().split('-')
+                    desc = item.text().split(' - ')
                     desc[-1] = access_level
-                    desc = '-'.join(desc)
+                    desc = ' - '.join(desc)
                     item.setText(desc)
                     item.p_id = p_id
                     item.access_level = access_level
@@ -728,6 +768,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.autoSave.setChecked(False)
                     self.autoSave.blockSignals(False)
                 self.autosaveStatus.setText("")
+
+                # Enable Admin Window
+                self.adminWindowBtn.setVisible(True)
             else:
                 # disable autosave, set status text
                 self.autoSave.setVisible(False)
@@ -735,6 +778,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.autosaveStatus.setText("Autosave is enabled!")
                 else:
                     self.autosaveStatus.setText("Autosave is enabled!")
+
+                # Disable Admin Window
+                if self.admin_window is not None:
+                    self.admin_window.close()
+                self.adminWindowBtn.setVisible(False)
 
         # update project window if open
         if self.project_window is not None:
@@ -749,7 +797,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     window.close()
                 if self.project_window is not None:
                     self.project_window.close()
+                if self.admin_window is not None:
+                    self.admin_window.close()
                 self.active_pid = None
+                self.access_level = None
+                self.active_project_name = None
 
             # Update project list
             remove_item = None
@@ -844,6 +896,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def closeEvent(self, event):
         if self.conn:
             self.conn.disconnect()
+        self.viewCloses.emit()
 
 
 class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):

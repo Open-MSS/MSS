@@ -28,6 +28,7 @@ import fs
 import difflib
 import logging
 import git
+from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
@@ -381,3 +382,66 @@ class FileManager(object):
         except Exception as ex:
             logging.debug(ex)
             return False
+
+    def fetch_users_without_permission(self, p_id):
+        user_list = User.query\
+            .join(Permission, (User.id == Permission.u_id) & (Permission.p_id == p_id), isouter=True) \
+            .add_columns(User.id, User.username, User.emailid) \
+            .filter(Permission.u_id == None)
+
+        users = [[user.username, user.emailid, user.id] for user in user_list]
+        return users
+
+    def fetch_users_with_permission(self, p_id, u_id):
+        user_list = User.query\
+            .join(Permission, User.id == Permission.u_id)\
+            .add_columns(User.id, User.username, User.emailid, Permission.access_level) \
+            .filter(Permission.p_id == p_id) \
+            .filter((User.id != u_id) & (Permission.access_level != 'creator'))
+
+        users = [[user.username, user.emailid, user.access_level, user.id] for user in user_list]
+        return users
+
+    def add_bulk_permission(self, p_id, user, new_u_ids, access_level):
+        if not self.is_admin(user.id, p_id):
+            return False
+
+        new_permissions = []
+        for u_id in new_u_ids:
+            new_permissions.append(Permission(u_id, p_id, access_level))
+        db.session.add_all(new_permissions)
+        try:
+            db.session.commit()
+            return True
+        except IntegrityError:
+            db.session.rollback()
+            return False
+
+    def modify_bulk_permission(self, p_id, user, u_ids, new_access_level):
+        if not self.is_admin(user.id, p_id):
+            return False
+
+        # TODO: Check whether we need synchronize_session False Or Fetch
+        Permission.query\
+            .filter(Permission.p_id == p_id)\
+            .filter(Permission.u_id.in_(u_ids))\
+            .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
+
+        try:
+            db.session.commit()
+            return True
+        except IntegrityError:
+            db.session.rollback()
+            return False
+
+    def delete_bulk_permission(self, p_id, user, u_ids):
+        if not self.is_admin(user.id, p_id):
+            return False
+
+        Permission.query \
+            .filter(Permission.p_id == p_id) \
+            .filter(Permission.u_id.in_(u_ids)) \
+            .delete(synchronize_session='fetch')
+
+        db.session.commit()
+        return True
