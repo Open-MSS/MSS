@@ -230,6 +230,11 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             self.show_error_popup(res["message"])
 
     def show_popup(self, title, message, icon=0):
+        """
+            title: Title of message box
+            message: Display Message
+            icon: 0 = Error Icon, 1 = Information Icon
+        """
         if icon == 0:
             QtWidgets.QMessageBox.critical(self, title, message)
         elif icon == 1:
