@@ -388,6 +388,7 @@ def add_bulk_permissions():
         for u_id in new_u_ids:
             sockio.sm.join_collaborator_to_room(u_id, p_id)
             sockio.sm.emit_new_permission(u_id, p_id)
+        sockio.sm.emit_project_permissions_updated(user.id, p_id)
         return jsonify({"success": True, "message": "Users successfully added!"})
 
     return jsonify({"success": False, "message": "Some error occurred. Please try again."})
@@ -404,6 +405,7 @@ def modify_bulk_permissions():
     if success:
         for u_id in u_ids:
             sockio.sm.emit_update_permission(u_id, p_id)
+        sockio.sm.emit_project_permissions_updated(user.id, p_id)
         return jsonify({"success": True, "message": "User permissions successfully updated!"})
 
     return jsonify({"success": False, "message": "Some error occurred. Please try again."})
@@ -420,6 +422,7 @@ def delete_bulk_permissions():
         for u_id in u_ids:
             sockio.sm.emit_revoke_permission(u_id, p_id)
             sockio.sm.remove_collaborator_from_room(u_id, p_id)
+        sockio.sm.emit_project_permissions_updated(user.id, p_id)
         return jsonify({"success": True, "message": "User permissions successfully deleted!"})
 
     return jsonify({"success": False, "message": "Some error occurred. Please try again."})

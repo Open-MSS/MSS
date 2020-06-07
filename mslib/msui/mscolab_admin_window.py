@@ -71,6 +71,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.modifyUsersSearch.textChanged.connect(lambda text: self.search_user_filter(text, self.modifyUsersTable))
         self.modifyUsersPermissionFilter.currentTextChanged.connect(self.apply_permission_filter)
 
+        # Setting handlers for connection manager
+        self.conn.signal_project_permissions_updated.connect(self.handle_permissions_updated)
+
         self.set_label_text()
         self.load_users_without_permission()
         self.load_users_with_permission()
@@ -184,7 +187,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             self.load_users_without_permission()
             self.load_users_with_permission()
         else:
-            self.show_error_popup(res["message"])
+            self.show_popup("Error", res["message"])
 
     def modify_selected_users(self):
         selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
@@ -226,14 +229,25 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         else:
             self.show_error_popup(res["message"])
 
-    def show_error_popup(self, message):
-        error_msg = QtWidgets.QMessageBox()
-        error_msg.setWindowTitle("Error")
-        error_msg.setText(message)
-        error_msg.setIcon(QtWidgets.QMessageBox.Critical)
-        error_msg.exec_()
+    def show_popup(self, title, message, icon=0):
+        """
+            title: Title of message box
+            message: Display Message
+            icon: 0 = Error Icon, 1 = Information Icon
+        """
+        if icon == 0:
+            QtWidgets.QMessageBox.critical(self, title, message)
+        elif icon == 1:
+            QtWidgets.QMessageBox.information(self, title, message)
+
+    # Socket Events
+    def handle_permissions_updated(self, u_id):
+        if self.user["id"] == u_id:
+            return
+
+        self.show_popup('Alert', 'The permissions for this project were updated! The window is going to refresh.', 1)
+        self.load_users_without_permission()
+        self.load_users_with_permission()
 
     def closeEvent(self, event):
         self.viewCloses.emit()
-
-    # TODO: DO WE NEED SOCKET EVENT UPDATES FOR ADMIN WINDOW?
