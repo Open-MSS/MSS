@@ -4,7 +4,7 @@
     mslib.msui.kmloverlay_dockwidget
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Control widget to configure remote sensing overlays.
+    Control widget to configure kml overlays.
 
     This file is part of mss.
 
@@ -28,16 +28,14 @@
 import copy
 from fs import open_fs
 import logging
-from lxml import etree, objectify
+from fastkml import kml
+# from lxml import etree, objectify
 import os
 from matplotlib import patheffects
 
 from mslib.msui.mss_qt import QtGui, QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
-
-
-KMLPARSER = objectify.makeparser(strip_cdata=False)
 
 
 class KMLPatch(object):
@@ -98,8 +96,11 @@ class KMLPatch(object):
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
 
     def parse_geometries(self, placemark):
-        name = getattr(placemark, "name", None)
-        styleurl = str(getattr(placemark, "styleUrl", ""))
+        name = placemark.name
+        print(name)
+        styleurl = placemark.styleUrl
+        # print(styleurl)
+        # styleurl = str(getattr(placemark, "styleUrl", ""))
         if styleurl and len(styleurl) > 0 and styleurl[0] == "#":
             # Remove # at beginning of style marking a locally defined style.
             # general urls for styles are not supported
@@ -110,20 +111,71 @@ class KMLPatch(object):
                 ("Point", self.add_point),
                 ("Polygon", self.add_polygon),
                 ("LineString", self.add_line),
-                ("MultiGeometry", self.parse_geometries)):
+                ("MultiGeometry", self.parse_geometries)
+                ):
             for attr in getattr(placemark, attr_name, []):
                 logging.debug("Found %s", attr_name)
+                print(attr_name)
                 method(attr, style, name)
 
-    def parse_placemarks(self, level):
-        for placemark in getattr(level, "Placemark", []):
-            name = getattr(placemark, "name", None)
-            logging.debug("Placemark: %s", name)
-            self.parse_geometries(placemark)
-        for folder in getattr(level, "Folder", []):
-            name = getattr(folder, "name", None)
-            logging.debug("Folder: %s", name)
-            self.parse_placemarks(folder)
+    def parse_placemarks(self, level): 
+        
+        #only works if folder exists & only if 1 folder exists.
+        # k_doc = level[0]
+        # doc_child = list(k_doc.features())[0]
+        # for feature in doc_child.features():
+        #     # if isinstance(feature, kml.Placemark):
+        #         placemark = getattr(feature, "name", None)
+        #         print(placemark)
+        #         self.parse_geometries(placemark)
+
+        # this works for 1 folder and only if 1 exists too. 
+        # but currently supports the way code has been rewritten
+        innerFeature = list(level[0].features())
+        placemarks = list(innerFeature[0].features())
+        for placemark in range(len(placemarks)): 
+            # print(placemarks[placemark]) 
+            self.parse_geometries(placemarks[placemark])
+                
+
+
+    # example to help
+
+    # def read_kml(kml_text):
+    #     k = kml.KML()
+
+    #     # Reading the kml from a text string
+    #     k.from_string(kml_text)
+
+    #     k_doc = list(k.features())[0]
+
+    #     # Getting the first document child that must be a folder or a placemark
+    #     # but you can iterate over it to get multiple folders or placemarks
+    #     doc_child = list(k_doc.features())[0] --> Folder
+
+    #     lst_geoms = list()
+    #     if isinstance(doc_child, kml.Folder):
+    #         for feature in doc_child.features():
+    #             lst_geoms.append(feature.geometry)
+    #     elif isinstance(doc_child, kml.Placemark):
+    #         lst_geoms.append(doc_child.geometry)
+
+    #     # Returning the geometries found list  
+    #     return lst_geoms
+
+    
+        #original
+
+        # for placemark in getattr(level[0].features(), "Placemark", []):
+        #     name = getattr(placemark, "name", None)
+        #     logging.debug("Placemark: %s", name)
+        #     print(placemark.name)
+        #     # self.parse_geometries(placemark)
+        # for folder in getattr(level, "Folder", []):
+        #     name = getattr(folder, "name", None)
+        #     logging.debug("Folder: %s", name)
+        #     self.parse_placemarks(folder)
+        
 
     def get_style_params(self, style, color=None, linewidth=None):
         if color is None:
@@ -145,24 +197,24 @@ class KMLPatch(object):
         return result
 
     def parse_styles(self, level):
-        for style in getattr(level, "Style", []):
-            name = style.attrib.get("id")
+        Style1 = list(level[0].styles())[0]  
+        AllStyle = list(Style1.styles())[0]
+        for style in getattr(AllStyle, "Style", []): 
+            name = style.getattr(style, "id")
+            # print(name)
             if name is None:
                 continue
             self.styles[name] = {
                 "LineStyle": self.get_style_params(getattr(style, "LineStyle", None)),
                 "PolyStyle": self.get_style_params(getattr(style, "PolyStyle", None)),
             }
-        for folder in getattr(level, "Folder", []):
-            name = getattr(folder, "name", None)
-            logging.debug("Folder: %s", name)
-            self.parse_styles(folder)
 
-    def parse_local_styles(self, level, default_styles):
+    def parse_local_styles(self, placemark, default_styles):
         logging.debug("styles before %s", default_styles)
         local_styles = copy.deepcopy(default_styles)
-        for style in getattr(level, "Style", []):
+        for style in getattr(placemark, "Style", []):
             logging.debug("style %s", style)
+            # print(style)
             for supported in ["LineStyle", "PolyStyle"]:
                 if supported in local_styles and hasattr(style, supported):
                     local_styles["LineStyle"] = self.get_style_params(
@@ -171,6 +223,7 @@ class KMLPatch(object):
                 elif hasattr(style, supported):
                     local_styles["LineStyle"] = self.get_style_params(getattr(style, supported))
         logging.debug("styles after %s", local_styles)
+        # print(local_styles)
         return local_styles
 
     def draw(self):
@@ -178,9 +231,9 @@ class KMLPatch(object):
         """
         # Plot satellite track.
         self.styles = {}
-        if not self.overwrite:
-            self.parse_styles(self.kml.Document)
-        self.parse_placemarks(self.kml.Document)
+        # if not self.overwrite:
+        #     self.parse_styles(self.kml)
+        self.parse_placemarks(self.kml)
 
         self.map.ax.figure.canvas.draw()
 
@@ -288,10 +341,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if not filename:
             return
         self.leFile.setText(filename)
-
+    
     def load_file(self):
         """
-        Loads an KML file selected by the leFile box and constructs the
+        Loads a KML file selected by the leFile box and constructs the
         corresponding patch.
         """
         _dirname, _name = os.path.split(self.leFile.text())
@@ -303,13 +356,18 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.cbOverlay.setEnabled(False)
         try:
             with _fs.open(_name, 'r') as kmlf:
-                self.kml = objectify.parse(kmlf, parser=KMLPARSER).getroot()
+
+                k = kml.KML()
+                k.from_string(kmlf.read().encode('utf-8'))
+                 # print(k.to_string(prettyprint=True))
+                self.kml = list(k.features()) # <Document>
                 self.patch = KMLPatch(self.view.map, self.kml,
                                       self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
             self.cbOverlay.setEnabled(True)
             if self.view is not None and self.cbOverlay.isChecked():
                 self.view.plot_kml(self.patch)
-        except (IOError, etree.XMLSyntaxError) as ex:
+        except IOError as ex:
             logging.error("KML Overlay - %s: %s", type(ex), ex)
             QtWidgets.QMessageBox.critical(
                 self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+# except (IOError, etree.XMLSyntaxError) as ex:
