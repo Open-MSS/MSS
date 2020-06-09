@@ -137,8 +137,6 @@ class KMLPatch(object):
             # print(placemarks[placemark]) 
             self.parse_geometries(placemarks[placemark])
                 
-
-
     # example to help
 
     # def read_kml(kml_text):
