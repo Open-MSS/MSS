@@ -55,8 +55,9 @@ class KMLPatch(object):
         self.draw()
 
     def compute_xy(self, coordinates):
-        coords = str(coordinates).split()
-        lons, lats = [[float(_x.split(",")[_i]) for _x in coords] for _i in range(2)]
+        #coords = str(coordinates).split()
+        # lons, lats = [[float(_x.split(" ")[_i]) for _x in coords] for _i in range(2)]
+        lons , lats = (coordinates.x, coordinates.y)
         return self.map(lons, lats)
 
     def add_polygon(self, polygon, style, _):
@@ -78,11 +79,11 @@ class KMLPatch(object):
         :param point: pykml object specifying point
         :param name: name of placemark for annotation
         """
-        x, y = self.compute_xy(point.coordinates)
-        self.patches.append(self.map.plot(x[0], y[0], "o", zorder=10, color=self.color))
+        x, y = self.compute_xy(point.geometry)
+        self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
-                name, xy=(x[0], y[0]), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
+                name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
 
     def add_line(self, line, style, _):
@@ -107,16 +108,17 @@ class KMLPatch(object):
             styleurl = styleurl[1:]
         style = self.parse_local_styles(
             placemark, self.styles.get(styleurl, {}))
-        for attr_name, method in (
-                ("Point", self.add_point),
-                ("Polygon", self.add_polygon),
-                ("LineString", self.add_line),
-                ("MultiGeometry", self.parse_geometries)
-                ):
-            for attr in getattr(placemark, attr_name, []):
-                logging.debug("Found %s", attr_name)
-                print(attr_name)
-                method(attr, style, name)
+        self.add_point(placemark, style, placemark.name)
+        # for attr_name, method in (
+        #         ("Point", self.add_point),
+        #         ("Polygon", self.add_polygon),
+        #         ("LineString", self.add_line),
+        #         ("MultiGeometry", self.parse_geometries)
+        #         ):
+        #     for attr in getattr(placemark, attr_name, []):
+        #         logging.debug("Found %s", attr_name)
+        #         print(attr_name)
+        #         method(attr, style, name)
 
     def parse_placemarks(self, level): 
         
