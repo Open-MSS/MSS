@@ -26,7 +26,7 @@
 """
 import requests
 import json
-
+from werkzeug.urls import url_join
 from mslib.mscolab.models import User, Change, Project
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
@@ -148,6 +148,89 @@ class Test_Files(object):
         assert r.text == "True"
         r = requests.post(MSCOLAB_URL_TEST + '/revoke_permission', data=data)
         assert r.text == "False"
+
+    def test_get_users_without_permission(self):
+        with self.app.app_context():
+            p_id = get_recent_pid(self.fm, self.user)
+        data = {
+            "token": self.token,
+            "p_id": p_id
+        }
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_without_permission"), data=data)
+        res = res.json()
+        assert res["success"] is True
+        data["p_id"] = 123
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_without_permission"), data=data)
+        res = res.json()
+        assert res["success"] is False
+
+    def test_get_users_with_permission(self):
+        with self.app.app_context():
+            p_id = get_recent_pid(self.fm, self.user)
+        data = {
+            "token": self.token,
+            "p_id": p_id
+        }
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_with_permission"), data=data)
+        res = res.json()
+        assert res["success"] is True
+        data["p_id"] = 123
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_with_permission"), data=data)
+        res = res.json()
+        assert res["success"] is False
+
+    def test_add_bulk_permissions(self):
+        with self.app.app_context():
+            p_id = get_recent_pid(self.fm, self.user)
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "selected_userids": json.dumps([12, 13]),
+            "selected_access_level": "collaborator"
+        }
+        res = requests.post(url_join(MSCOLAB_URL_TEST, 'add_bulk_permissions'), data=data)
+        res = res.json()
+        assert res["success"] is True
+        # testing for wrong p_id
+        data["p_id"] = 123
+        res = requests.post(url_join(MSCOLAB_URL_TEST, 'add_bulk_permissions'), data=data)
+        res = res.json()
+        assert res["success"] is False
+
+    def test_modify_bulk_permissions(self):
+        with self.app.app_context():
+            p_id = get_recent_pid(self.fm, self.user)
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "selected_userids": json.dumps([12, 13]),
+            "selected_access_level": "viewer"
+        }
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'modify_bulk_permissions'), data=data)
+        r = r.json()
+        assert r["success"] is True
+        # testing for wrong p_id
+        data["p_id"] = 123
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'modify_bulk_permissions'), data=data)
+        r = r.json()
+        assert r["success"] is False
+
+    def test_delete_bulk_permissions(self):
+        with self.app.app_context():
+            p_id = get_recent_pid(self.fm, self.user)
+        data = {
+            "token": self.token,
+            "p_id": p_id,
+            "selected_userids": json.dumps([12, 13]),
+        }
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions'), data=data)
+        r = r.json()
+        assert r["success"] is True
+        # testing for wrong p_id
+        data["p_id"] = 123
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions'), data=data)
+        r = r.json()
+        assert r["success"] is False
 
     def test_update_project(self):
         with self.app.app_context():

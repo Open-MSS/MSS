@@ -60,6 +60,26 @@ def seed_data(db_uri):
             'id': 11,
             'password': 'd',
             'emailid': 'd'
+        }, {
+            'username': 'test1',
+            'id': 12,
+            'password': 'test1',
+            'emailid': 'test1'
+        }, {
+            'username': 'test2',
+            'id': 13,
+            'password': 'test2',
+            'emailid': 'test2'
+        }, {
+            'username': 'test3',
+            'id': 14,
+            'password': 'test3',
+            'emailid': 'test3'
+        }, {
+            'username': 'test4',
+            'id': 15,
+            'password': 'test4',
+            'emailid': 'test4'
         }]
         for user in users:
             db_user = User(user['emailid'], user['username'], user['password'])
@@ -87,6 +107,11 @@ def seed_data(db_uri):
             'id': 4,
             'path': 'four',
             'description': 'd',
+            'autosave': False
+        }, {
+            'id': 5,
+            'path': 'Admin_Test',
+            'description': 'Project for testing admin window',
             'autosave': False
         }]
         for project in projects:
@@ -128,6 +153,22 @@ def seed_data(db_uri):
             'u_id': 11,
             'p_id': 4,
             'access_level': 'creator'
+        }, {
+            'u_id': 12,
+            'p_id': 5,
+            'access_level': 'creator'
+        }, {
+            'u_id': 15,
+            'p_id': 5,
+            'access_level': 'viewer'
+        }, {
+            'u_id': 14,
+            'p_id': 3,
+            'access_level': 'collaborator'
+        }, {
+            'u_id': 15,
+            'p_id': 3,
+            'access_level': 'collaborator'
         }]
         for perm in permissions:
             db_perm = Permission(perm['u_id'], perm['p_id'], perm['access_level'])
