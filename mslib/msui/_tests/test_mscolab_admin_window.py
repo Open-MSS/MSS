@@ -70,11 +70,25 @@ class Test_MscolabAdminWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    def test_filters(self):
-        len_unadded_users = self.admin_window.addUsersTable.rowCount()
-        len_added_users = self.admin_window.modifyUsersTable. rowCount()
+    def test_permission_filter(self):
+        len_added_users = self.admin_window.modifyUsersTable.rowCount()
+        # Change filter to viewer
+        self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
+        QtWidgets.QApplication.processEvents()
+        # Check how many users are visible
+        visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
+        assert visible_row_count == 1
+        # Change it back to all
+        self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("all")
+        QtWidgets.QApplication.processEvents()
+        # Check how many rows are visible
+        visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
+        assert visible_row_count == len_added_users
 
-        # Search Filter Add Users Table
+    def test_text_search_filter(self):
+        len_unadded_users = self.admin_window.addUsersTable.rowCount()
+        len_added_users = self.admin_window.modifyUsersTable.rowCount()
+        # Text Search in add users Table
         QtTest.QTest.keyClicks(self.admin_window.addUsersSearch, "test2")
         QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.addUsersTable)
@@ -84,7 +98,7 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.addUsersTable)
         assert visible_row_count == len_unadded_users
-        # Search Filter Modify Users Table
+        # Text Search in modify users Table
         QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "test4")
         QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
@@ -94,16 +108,8 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
-        # Permission Filter Modify Filter Table
-        self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
-        QtWidgets.QApplication.processEvents()
-        visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
-        assert visible_row_count == 1
-        self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("all")
-        QtWidgets.QApplication.processEvents()
-        visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
-        assert visible_row_count == len_added_users
-        # Both Search and permission filter together
+
+    def test_permission_and_text_together(self):
         QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "test4")
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
         QtWidgets.QApplication.processEvents()
@@ -114,48 +120,44 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 0
 
-    def test_permission_operations(self):
-        # Get starting number of users in each table
+    def test_add_permissions(self):
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
-
-        # Select 2 test Users
-        self._select_users(self.admin_window.addUsersTable)
-        assert len(self.admin_window.addUsersTable.selectionModel().selectedRows()) == 2
-
-        # Add the 2 selected users
+        users = ["test2", "test3"]
+        # Select users in the add users table
+        self._select_users(self.admin_window.addUsersTable, users)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        # Check if they have been added in the modify users table
+        self._check_users_present(self.admin_window.modifyUsersTable, users, "admin")
         assert len_unadded_users - 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
 
-        # Select the 2 new added users from the modify table
-        self._select_users(self.admin_window.modifyUsersTable)
-        assert len(self.admin_window.modifyUsersTable.selectionModel().selectedRows()) == 2
-
-        # Set their permission to viewer
+    def test_modify_permissions(self):
+        users = ["test2", "test3"]
+        # Select users in the modify users table
+        self._select_users(self.admin_window.modifyUsersTable, users)
+        # Update their permission to viewer
         index = self.admin_window.modifyUsersPermission.findText("viewer", QtCore.Qt.MatchFixedString)
         self.admin_window.modifyUsersPermission.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.modifyUsersBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
+        # Check if the permission has been updated
+        self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
-        # Check if their permission has been updated
-        for row_num in range(self.admin_window.modifyUsersTable.rowCount()):
-            item = self.admin_window.modifyUsersTable.item(row_num, 0)
-            username = item.text()
-            if username == "test2" or username == "test3":
-                assert self.admin_window.modifyUsersTable.item(row_num, 2).text() == "viewer"
-
-        # Select the users from modify table
-        self._select_users(self.admin_window.modifyUsersTable)
-        assert len(self.admin_window.modifyUsersTable.selectionModel().selectedRows()) == 2
-
-        # Delete the users
+    def test_delete_permissions(self):
+        len_unadded_users = self.admin_window.addUsersTable.rowCount()
+        len_added_users = self.admin_window.modifyUsersTable.rowCount()
+        users = ["test2", "test3"]
+        # Select users in the modify users table
+        self._select_users(self.admin_window.modifyUsersTable, users)
+        # Click on delete permissions
         QtTest.QTest.mouseClick(self.admin_window.deleteUsersBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert len_unadded_users == self.admin_window.addUsersTable.rowCount()
-        assert len_added_users == self.admin_window.modifyUsersTable.rowCount()
+        # Check if the deleted users can be found in the add users table
+        self._check_users_present(self.admin_window.addUsersTable, users)
+        assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
+        assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")
@@ -178,14 +180,15 @@ class Test_MscolabAdminWindow(object):
         QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
 
-    def _select_users(self, table):
+    def _select_users(self, table, users):
         for row_num in range(table.rowCount()):
             item = table.item(row_num, 0)
             username = item.text()
-            if username == "test2" or username == "test3":
+            if username in users:
                 point = table.visualItemRect(item).center()
                 QtTest.QTest.mouseClick(table.viewport(), QtCore.Qt.LeftButton, pos=point)
                 QtWidgets.QApplication.processEvents()
+        assert len(table.selectionModel().selectedRows()) == 2
 
     def _get_visible_row_count(self, table):
         visible_row_count = 0
@@ -193,3 +196,14 @@ class Test_MscolabAdminWindow(object):
             if table.isRowHidden(row_num) is False:
                 visible_row_count += 1
         return visible_row_count
+
+    def _check_users_present(self, table, users, access_level=None):
+        found = 0
+        for row_num in range(table.rowCount()):
+            item = table.item(row_num, 0)
+            username = item.text()
+            if username in users:
+                found += 1
+                if access_level is not None:
+                    assert table.item(row_num, 2).text() == access_level
+        assert found == 2
