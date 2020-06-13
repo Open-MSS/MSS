@@ -37,7 +37,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
-    def __init__(self, token, p_id, user, project_name, conn, parent=None,
+    def __init__(self, token, p_id, user, project_name, projects, conn, parent=None,
                  mscolab_server_url=config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)):
         """
         token: access token
@@ -52,6 +52,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.p_id = p_id
         self.user = user
         self.project_name = project_name
+        self.projects = projects
         self.conn = conn
 
         self.addUsers = []
@@ -61,6 +62,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.addUsersBtn.clicked.connect(self.add_selected_users)
         self.modifyUsersBtn.clicked.connect(self.modify_selected_users)
         self.deleteUsersBtn.clicked.connect(self.delete_selected_users)
+        self.importPermissionsBtn.clicked.connect(self.import_permissions)
         self.selectAllAddBtn.clicked.connect(lambda: self.select_all(self.addUsersTable))
         self.deselectAllAddBtn.clicked.connect(lambda: self.deselect_all(self.addUsersTable))
         self.selectAllModifyBtn.clicked.connect(lambda: self.select_all(self.modifyUsersTable))
@@ -77,6 +79,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.set_label_text()
         self.load_users_without_permission()
         self.load_users_with_permission()
+        self.populate_import_permission_cb()
 
     def populate_table(self, table, users):
         table.setRowCount(0)
@@ -85,6 +88,12 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             for col_number, item in enumerate(row_data):
                 new_item = QtWidgets.QTableWidgetItem(item)
                 table.setItem(row_number, col_number, new_item)
+
+    def populate_import_permission_cb(self):
+        self.importPermissionsCB.clear()
+        for project in self.projects:
+            if project['p_id'] != self.p_id:
+                self.importPermissionsCB.addItem(project['path'], project['p_id'])
 
     def get_selected_userids(self, table, users):
         u_ids = []
@@ -161,7 +170,6 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         res = requests.get(url, data=data)
         res = res.json()
         self.modifyUsers = res["users"]
-        permission_filter = str(self.modifyUsersPermissionFilter.currentText())
         self.populate_table(self.modifyUsersTable, self.modifyUsers)
         text_filter = self.modifyUsersSearch.text()
         permission_filter = str(self.modifyUsersPermissionFilter.currentText())
@@ -228,6 +236,21 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             self.load_users_with_permission()
         else:
             self.show_error_popup(res["message"])
+
+    def import_permissions(self):
+        import_p_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
+        data = {
+            "token": self.token,
+            "current_p_id": self.p_id,
+            "import_p_id": import_p_id
+        }
+        url = url_join(self.mscolab_server_url, 'import_permissions')
+        res = requests.post(url, data=data).json()
+        if res["success"]:
+            self.load_users_without_permission()
+            self.load_users_with_permission()
+        else:
+            self.show_popup("Error", res["message"])
 
     def show_popup(self, title, message, icon=0):
         """
