@@ -383,7 +383,10 @@ class FileManager(object):
             logging.debug(ex)
             return False
 
-    def fetch_users_without_permission(self, p_id):
+    def fetch_users_without_permission(self, p_id, u_id):
+        if not self.is_admin(u_id, p_id):
+            return False
+
         user_list = User.query\
             .join(Permission, (User.id == Permission.u_id) & (Permission.p_id == p_id), isouter=True) \
             .add_columns(User.id, User.username, User.emailid) \
@@ -393,6 +396,9 @@ class FileManager(object):
         return users
 
     def fetch_users_with_permission(self, p_id, u_id):
+        if not self.is_admin(u_id, p_id):
+            return False
+
         user_list = User.query\
             .join(Permission, User.id == Permission.u_id)\
             .add_columns(User.id, User.username, User.emailid, Permission.access_level) \

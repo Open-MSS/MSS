@@ -363,8 +363,12 @@ def undo_ftml():
 @verify_user
 def get_users_without_permission():
     p_id = request.form.get('p_id', None)
-    users = fm.fetch_users_without_permission(int(p_id))
-    return jsonify({"users": users}), 200
+    u_id = g.user.id
+    users = fm.fetch_users_without_permission(int(p_id), u_id)
+    if users is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+
+    return jsonify({"success": True, "users": users}), 200
 
 
 @APP.route("/users_with_permission", methods=["GET"])
@@ -373,7 +377,10 @@ def get_users_with_permission():
     p_id = request.form.get('p_id', None)
     u_id = g.user.id
     users = fm.fetch_users_with_permission(int(p_id), u_id)
-    return jsonify({"users": users}), 200
+    if users is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+
+    return jsonify({"success": True, "users": users}), 200
 
 
 @APP.route("/add_bulk_permissions", methods=["POST"])

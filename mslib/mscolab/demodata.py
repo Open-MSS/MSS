@@ -152,7 +152,7 @@ def create_test_files():
         # add files
         file_dir = fs.open_fs(fs.path.combine(mscolab_settings.DATA_DIR, 'filedata'))
         # make directories
-        file_paths = ['one', 'two', 'three']
+        file_paths = ['one', 'two', 'three', 'four', 'Admin_Test']
         for file_path in file_paths:
             file_dir.makedir(file_path)
             file_dir.writetext('{}/main.ftml'.format(file_path), mscolab_settings.STUB_CODE)

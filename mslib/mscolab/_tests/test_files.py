@@ -75,6 +75,16 @@ class Test_Files(object):
             projects = self.fm.list_projects(self.user)
             assert len(projects) == 3
 
+    def test_is_admin(self):
+        with self.app.app_context():
+            p_id = get_recent_pid(self.fm, self.user)
+            u_id = self.user.id
+            assert self.fm.is_admin(u_id, p_id) is True
+            undefined_p_id = 123
+            assert self.fm.is_admin(u_id, undefined_p_id) is False
+            no_perm_p_id = 4
+            assert self.fm.is_admin(u_id, no_perm_p_id) is False
+
     def test_add_permission(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
