@@ -428,6 +428,29 @@ def delete_bulk_permissions():
     return jsonify({"success": False, "message": "Some error occurred. Please try again."})
 
 
+@APP.route('/import_permissions', methods=['POST'])
+@verify_user
+def import_permissions():
+    import_p_id = int(request.form.get('import_p_id'))
+    current_p_id = int(request.form.get('current_p_id'))
+    user = g.user
+    success, users = fm.import_permissions(import_p_id, current_p_id, user.id)
+    if success:
+        for u_id in users["add_users"]:
+            sockio.sm.join_collaborator_to_room(u_id, current_p_id)
+            sockio.sm.emit_new_permission(u_id, current_p_id)
+        for u_id in users["modify_users"]:
+            sockio.sm.emit_update_permission(u_id, current_p_id)
+        for u_id in users["delete_users"]:
+            sockio.sm.emit_revoke_permission(u_id, current_p_id)
+            sockio.sm.remove_collaborator_from_room(u_id, current_p_id)
+        sockio.sm.emit_project_permissions_updated(user.id, current_p_id)
+        return jsonify({"success": True})
+
+    return jsonify({"success": False,
+                    "message": "Some error occurred! Could not import permissions. Please try again."})
+
+
 def start_server(app, sockio, cm, fm, port=8083):
     sockio.run(app, port=port)
 

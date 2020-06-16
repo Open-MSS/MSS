@@ -99,6 +99,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.access_level = None
         # storing project_name to save network call
         self.active_project_name = None
+        # Storing project list to pass to admin window
+        self.projects = None
         # store active_flight_path here as object
         self.waypoints_model = None
         # store a reference of window in class
@@ -331,8 +333,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         # Initialise window
         if self.admin_window is None:
-            self.admin_window = maw.MSColabAdminWindow(self.token, self.active_pid, self.user, self.active_project_name,
-                                                       self.conn, self.projWindow, self.mscolab_server_url)
+            self.admin_window = maw.MSColabAdminWindow(self.token, self.active_pid, self.user,
+                                                       self.active_project_name, self.projects, self.conn,
+                                                       self.projWindow, self.mscolab_server_url)
             self.admin_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             self.admin_window.viewCloses.connect(self.close_admin_window)
             self.admin_window.show()
@@ -411,8 +414,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         r = requests.get(self.mscolab_server_url + '/projects', data=data)
         _json = json.loads(r.text)
-        projects = _json["projects"]
-        self.add_projects_to_ui(projects)
+        self.projects = _json["projects"]
+        self.add_projects_to_ui(self.projects)
 
     def get_recent_pid(self):
         """

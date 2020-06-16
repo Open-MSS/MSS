@@ -445,3 +445,51 @@ class FileManager(object):
 
         db.session.commit()
         return True
+
+    def import_permissions(self, import_p_id, current_p_id, u_id):
+        if not self.is_admin(u_id, current_p_id):
+            return False, None
+
+        existing_perms = Permission.query \
+            .filter(Permission.p_id == current_p_id) \
+            .filter((Permission.u_id != u_id) & (Permission.access_level != 'creator')) \
+            .all()
+
+        current_project_creator = Permission.query.filter(Permission.access_level == "creator").first()
+
+        import_perms = Permission.query\
+            .filter(Permission.p_id == import_p_id)\
+            .filter((Permission.u_id != u_id) & (Permission.u_id != current_project_creator.u_id))\
+            .all()
+
+        # We Delete all the existing permissions
+        existing_users = []
+        for perm in existing_perms:
+            existing_users.append(perm.u_id)
+            db.session.delete(perm)
+
+        db.session.flush()
+
+        # Then add the permissions of the imported project
+        new_users = []
+        for perm in import_perms:
+            access_level = perm.access_level
+            if perm.access_level == "creator":
+                access_level = "admin"
+            new_users.append(perm.u_id)
+            db.session.add(Permission(perm.u_id, current_p_id, access_level))
+
+        # Set Difference of lists new_users - existing users
+        add_users = [u_id for u_id in new_users if u_id not in existing_users]
+        # Intersection of lists existing_users and new_users
+        modify_users = [u_id for u_id in existing_users if u_id in new_users]
+        # Set Difference of lists existing users - new_users
+        delete_users = [u_id for u_id in new_users if u_id in existing_users]
+
+        try:
+            db.session.commit()
+            return True, {"add_users": add_users, "modify_users": modify_users, "delete_users": delete_users}
+
+        except IntegrityError:
+            db.session.rollback()
+            return False, None
