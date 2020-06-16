@@ -44,10 +44,9 @@ class KMLPatch(object):
     KML overlay implementation is currently very crude and basic and most features are not supported.
     """
 
-    def __init__(self, mapcanvas, kml, kml_file, overwrite=False, color="red", linewidth=1):
+    def __init__(self, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
         self.map = mapcanvas
         self.kml = kml
-        self.kml_file = kml_file  # used for style functions
         self.patches = []
         self.color = color
         self.linewidth = linewidth
@@ -99,9 +98,7 @@ class KMLPatch(object):
 
     def parse_geometries(self, placemark):
         name = placemark.name
-        # print(name) 
         styleurl = placemark.styleUrl
-        # print(styleurl)
         if styleurl and len(styleurl) > 0 and styleurl[0] == "#":
             # Remove # at beginning of style marking a locally defined style.
             # general urls for styles are not supported
@@ -119,14 +116,11 @@ class KMLPatch(object):
         for feature in document:
             if isinstance(feature, kml.Placemark):  # when there is no folder
                 placemark = feature
-                # print(placemark.name) # Prints name of all placemarks
                 self.parse_geometries(placemark)
         for feature in document:
             if isinstance(feature, kml.Folder):
-                # print(feature.name) # Prints name of all folders
                 self.parse_placemarks(list(feature.features()))
             if isinstance(feature, kml.Document):  # Document inside another document
-                # print(feature.name) # Prints name of all Documents
                 self.parse_placemarks(list(feature.features()))
 
     def get_style_params(self, style, color=None, linewidth=None):
@@ -148,10 +142,10 @@ class KMLPatch(object):
         logging.debug("color after %s", result["color"])
         return result
 
-    def parse_styles(self, kml_file):
+    def parse_styles(self, kml_doc):
         # exterior_style : <Style> OUTSIDE placemarks
         # interior style : within <Style> 
-        for exterior_style in kml_file.styles():
+        for exterior_style in kml_doc.styles():
             if isinstance(exterior_style, styles.Style):
                 name = exterior_style.id
                 if name is None:
@@ -187,8 +181,10 @@ class KMLPatch(object):
         # Plot satellite track.
         self.styles = {}
         if not self.overwrite:
-            self.parse_styles(self.kml_file)
-        self.parse_placemarks(self.kml)
+            kml_doc = list(self.kml.features())[0]  # All kml files start with the first <Document>
+            self.parse_styles(kml_doc)
+        kml_features = list(kml_doc.features())
+        self.parse_placemarks(kml_features)
 
         self.map.ax.figure.canvas.draw()
 
@@ -227,7 +223,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.setupUi(self)
         self.view = view
         self.kml = None
-        self.kml_file = None
         self.patch = None
 
         # Connect slots and signals.
@@ -313,12 +308,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         try:
             with _fs.open(_name, 'r') as kmlf:
 
-                k = kml.KML()
-                k.from_string(kmlf.read().encode('utf-8'))
-                # print(k.to_string(prettyprint=True)) # Prints the kml file back
-                self.kml_file = list(k.features())[0]  # All kml files start with the first <Document>
-                self.kml = list(self.kml_file.features())
-                self.patch = KMLPatch(self.view.map, self.kml, self.kml_file,
+                self.kml = kml.KML()
+                self.kml.from_string(kmlf.read().encode('utf-8'))
+                self.patch = KMLPatch(self.view.map, self.kml,
                                       self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
             self.cbOverlay.setEnabled(True)
             if self.view is not None and self.cbOverlay.isChecked():
