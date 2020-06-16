@@ -38,6 +38,8 @@ class Test_Files(object):
     def setup(self):
         self.sockets = []
         self.file_message_counter = [0] * 2
+        self.undefined_p_id = 123
+        self.no_perm_p_id = 4
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
@@ -156,12 +158,13 @@ class Test_Files(object):
             "token": self.token,
             "p_id": p_id
         }
-        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_without_permission"), data=data)
-        res = res.json()
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_without_permission"), data=data).json()
         assert res["success"] is True
-        data["p_id"] = 123
-        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_without_permission"), data=data)
-        res = res.json()
+        data["p_id"] = self.undefined_p_id
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_without_permission"), data=data).json()
+        assert res["success"] is False
+        data["p_id"] = self.no_perm_p_id
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_without_permission"), data=data).json()
         assert res["success"] is False
 
     def test_get_users_with_permission(self):
@@ -171,12 +174,13 @@ class Test_Files(object):
             "token": self.token,
             "p_id": p_id
         }
-        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_with_permission"), data=data)
-        res = res.json()
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_with_permission"), data=data).json()
         assert res["success"] is True
-        data["p_id"] = 123
-        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_with_permission"), data=data)
-        res = res.json()
+        data["p_id"] = self.undefined_p_id
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_with_permission"), data=data).json()
+        assert res["success"] is False
+        data["p_id"] = self.no_perm_p_id
+        res = requests.get(url_join(MSCOLAB_URL_TEST, "users_with_permission"), data=data).json()
         assert res["success"] is False
 
     def test_add_bulk_permissions(self):
@@ -188,13 +192,13 @@ class Test_Files(object):
             "selected_userids": json.dumps([12, 13]),
             "selected_access_level": "collaborator"
         }
-        res = requests.post(url_join(MSCOLAB_URL_TEST, 'add_bulk_permissions'), data=data)
-        res = res.json()
+        res = requests.post(url_join(MSCOLAB_URL_TEST, 'add_bulk_permissions'), data=data).json()
         assert res["success"] is True
-        # testing for wrong p_id
-        data["p_id"] = 123
-        res = requests.post(url_join(MSCOLAB_URL_TEST, 'add_bulk_permissions'), data=data)
-        res = res.json()
+        data["p_id"] = self.undefined_p_id
+        res = requests.post(url_join(MSCOLAB_URL_TEST, 'add_bulk_permissions'), data=data).json()
+        assert res["success"] is False
+        data["p_id"] = self.no_perm_p_id
+        res = requests.post(url_join(MSCOLAB_URL_TEST, 'add_bulk_permissions'), data=data).json()
         assert res["success"] is False
 
     def test_modify_bulk_permissions(self):
@@ -206,13 +210,13 @@ class Test_Files(object):
             "selected_userids": json.dumps([12, 13]),
             "selected_access_level": "viewer"
         }
-        r = requests.post(url_join(MSCOLAB_URL_TEST, 'modify_bulk_permissions'), data=data)
-        r = r.json()
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'modify_bulk_permissions'), data=data).json()
         assert r["success"] is True
-        # testing for wrong p_id
-        data["p_id"] = 123
-        r = requests.post(url_join(MSCOLAB_URL_TEST, 'modify_bulk_permissions'), data=data)
-        r = r.json()
+        data["p_id"] = self.undefined_p_id
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'modify_bulk_permissions'), data=data).json()
+        assert r["success"] is False
+        data["p_id"] = self.no_perm_p_id
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'modify_bulk_permissions'), data=data).json()
         assert r["success"] is False
 
     def test_delete_bulk_permissions(self):
@@ -223,13 +227,13 @@ class Test_Files(object):
             "p_id": p_id,
             "selected_userids": json.dumps([12, 13]),
         }
-        r = requests.post(url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions'), data=data)
-        r = r.json()
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions'), data=data).json()
         assert r["success"] is True
-        # testing for wrong p_id
-        data["p_id"] = 123
-        r = requests.post(url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions'), data=data)
-        r = r.json()
+        data["p_id"] = self.undefined_p_id
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions'), data=data).json()
+        assert r["success"] is False
+        data["p_id"] = self.no_perm_p_id
+        r = requests.post(url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions'), data=data).json()
         assert r["success"] is False
 
     def test_update_project(self):
