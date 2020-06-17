@@ -76,7 +76,7 @@ class Test_Mscolab(object):
         assert self.window.loggedInWidget.isVisible() is True
         assert self.window.loginWidget.isVisible() is False
         # test project listing visibility
-        assert self.window.listProjects.model().rowCount() == 2
+        assert self.window.listProjects.model().rowCount() == 3
         # test logout
         QtTest.QTest.mouseClick(self.window.logoutButton, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()

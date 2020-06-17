@@ -456,6 +456,10 @@ class FileManager(object):
         if not self.is_admin(u_id, current_p_id):
             return False, None
 
+        perm = Permission.query.filter_by(u_id=u_id, p_id=import_p_id).first()
+        if not perm:
+            return False, None
+
         existing_perms = Permission.query \
             .filter(Permission.p_id == current_p_id) \
             .filter((Permission.u_id != u_id) & (Permission.access_level != 'creator')) \
