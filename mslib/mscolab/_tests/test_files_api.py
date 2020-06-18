@@ -39,7 +39,7 @@ class Test_Files(object):
         self.sockets = []
         self.file_message_counter = [0] * 2
         self.undefined_p_id = 123
-        self.no_perm_p_id = 4
+        self.no_perm_p_id = 2
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
@@ -73,7 +73,7 @@ class Test_Files(object):
         }
         r = requests.get(MSCOLAB_URL_TEST + '/projects', data=data)
         json_res = json.loads(r.text)
-        assert len(json_res["projects"]) == 3
+        assert len(json_res["projects"]) == 4
         data["token"] = "garbage text"
         r = requests.get(MSCOLAB_URL_TEST + '/projects', data=data)
         assert r.text == "False"
@@ -235,6 +235,23 @@ class Test_Files(object):
         data["p_id"] = self.no_perm_p_id
         r = requests.post(url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions'), data=data).json()
         assert r["success"] is False
+
+    def test_import_permissions(self):
+        current_p_id = 4
+        import_p_id = 1
+        data = {
+            "token": self.token,
+            "current_p_id": current_p_id,
+            "import_p_id": import_p_id
+        }
+        res = requests.post(url_join(MSCOLAB_URL_TEST, 'import_permissions'), data=data).json()
+        assert res["success"] is True
+        data["import_p_id"] = self.no_perm_p_id
+        res = requests.post(url_join(MSCOLAB_URL_TEST, 'import_permissions'), data=data).json()
+        assert res["success"] is False
+        data["current_p_id"] = self.no_perm_p_id
+        res = requests.post(url_join(MSCOLAB_URL_TEST, 'import_permissions'), data=data).json()
+        assert res["success"] is False
 
     def test_update_project(self):
         with self.app.app_context():

@@ -73,7 +73,7 @@ class Test_Files(object):
     def test_projects(self):
         with self.app.app_context():
             projects = self.fm.list_projects(self.user)
-            assert len(projects) == 3
+            assert len(projects) == 4
 
     def test_is_admin(self):
         with self.app.app_context():
@@ -82,7 +82,7 @@ class Test_Files(object):
             assert self.fm.is_admin(u_id, p_id) is True
             undefined_p_id = 123
             assert self.fm.is_admin(u_id, undefined_p_id) is False
-            no_perm_p_id = 4
+            no_perm_p_id = 2
             assert self.fm.is_admin(u_id, no_perm_p_id) is False
 
     def test_add_permission(self):

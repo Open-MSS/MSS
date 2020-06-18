@@ -37,7 +37,9 @@ import mslib.msui.mscolab as mc
 
 class Test_MscolabAdminWindow(object):
     def setup(self):
-        # start mscolab server
+        """
+        User being used during test: id = 5, username = test1
+        """
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
@@ -62,7 +64,7 @@ class Test_MscolabAdminWindow(object):
         # Not logging out since it pops up a dialog
         # self.window.logout()
         if self.window.admin_window:
-            self.window.admin_window.hide()
+            self.window.admin_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
         self.window.close()
@@ -158,6 +160,15 @@ class Test_MscolabAdminWindow(object):
         self._check_users_present(self.admin_window.addUsersTable, users)
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
+
+    def test_import_permissions(self):
+        index = self.admin_window.importPermissionsCB.findText("three", QtCore.Qt.MatchFixedString)
+        self.admin_window.importPermissionsCB.setCurrentIndex(index)
+        QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(1)
+        assert self.admin_window.addUsersTable.rowCount() == 2
+        assert self.admin_window.modifyUsersTable.rowCount() == 4
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")

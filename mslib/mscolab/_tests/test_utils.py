@@ -45,7 +45,7 @@ class Test_Utils(object):
     def test_get_recent_pid(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
-        assert p_id == 3
+        assert p_id == 4
 
     def teardown(self):
         pass

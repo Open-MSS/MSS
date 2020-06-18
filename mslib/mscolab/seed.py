@@ -154,9 +154,21 @@ def seed_data(db_uri):
             'p_id': 4,
             'access_level': 'creator'
         }, {
+            'u_id': 8,
+            'p_id': 4,
+            'access_level': 'admin'
+        }, {
+            'u_id': 13,
+            'p_id': 3,
+            'access_level': 'viewer'
+        }, {
             'u_id': 12,
             'p_id': 5,
             'access_level': 'creator'
+        }, {
+            'u_id': 12,
+            'p_id': 3,
+            'access_level': 'collaborator'
         }, {
             'u_id': 15,
             'p_id': 5,
