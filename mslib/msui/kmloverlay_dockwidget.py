@@ -112,7 +112,7 @@ class KMLPatch(object):
             if isinstance(placemark.geometry, geometry.Polygon):
                 self.add_polygon(placemark, style, placemark.name)
         except AttributeError:
-            print("A Placemark in kml file may not possess geometry.")
+            logging.error('Placemark in kml file may not possess geometry attribute.')
 
     def parse_placemarks(self, document):
         for feature in document:
@@ -168,14 +168,14 @@ class KMLPatch(object):
         for exterior_style in placemark.styles():
             interior_style = exterior_style.styles()
             for style in interior_style:
-                supported = ('LineStyle' or 'PolyStyle')
-                if isinstance(style, (styles.LineStyle or styles.PolyStyle)) and supported in local_styles:
-                    local_styles["LineStyle"] = self.get_style_params(
-                        style,
-                        color=local_styles[supported]['color'],
-                        linewidth=local_styles[supported]['linewidth'])
-                elif isinstance(style, (styles.LineStyle or styles.PolyStyle)):
-                    local_styles["LineStyle"] = self.get_style_params(style)
+                for supported, supported_type in (('LineStyle', styles.LineStyle), ('PolyStyle', styles.PolyStyle)):
+                    if isinstance(style, supported_type) and supported in local_styles:
+                        local_styles[supported] = self.get_style_params(
+                            style,
+                            color=local_styles[supported]['color'],
+                            linewidth=local_styles[supported]['linewidth'])
+                    elif isinstance(style, supported_type):
+                        local_styles[supported] = self.get_style_params(style)
         return local_styles
 
     def draw(self):

@@ -69,7 +69,7 @@ class Test_KmlOverlayDockWidget(object):
         """
         Test for flawless loading of parsing of KML files
         """
-        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml"]:
+        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml"]:
             path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", sample)
             self.window.leFile.setText(path)
             QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
