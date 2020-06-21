@@ -23,8 +23,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from PyQt5.QtWidgets import QWidget
-
 from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_mscolab_project_window as ui
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -225,6 +223,7 @@ class MessageItem(QtWidgets.QWidget):
         self.containerLayout.setSpacing(0)
         self.containerLayout.setContentsMargins(5, 5, 5, 5)
         self.setLayout(self.containerLayout)
+
 
 # Deregister all the syntax that we don't want to allow
 # Can't find any part in documentation where all the syntax names are mentioned

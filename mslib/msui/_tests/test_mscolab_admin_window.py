@@ -167,8 +167,8 @@ class Test_MscolabAdminWindow(object):
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         time.sleep(1)
-        assert self.admin_window.addUsersTable.rowCount() == 2
-        assert self.admin_window.modifyUsersTable.rowCount() == 4
+        assert self.admin_window.addUsersTable.rowCount() == 1
+        assert self.admin_window.modifyUsersTable.rowCount() == 5
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")

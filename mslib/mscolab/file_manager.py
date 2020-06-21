@@ -85,58 +85,6 @@ class FileManager(object):
                    }
         return project
 
-    def add_permission(self, p_id, u_id, username, access_level, user):
-        """
-        p_id: project id
-        u_id: user-id who is being given permission
-        access_level: the access level given to user
-        user: authorized user, making this request
-        """
-        if not self.is_admin(user.id, p_id):
-            return False
-        if username:
-            user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
-            if not user_victim:
-                return False
-            u_id = user_victim.id
-        perm_old = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-        if perm_old or (access_level == "creator"):
-            return False
-        perm_new = Permission(u_id, p_id, access_level)
-        db.session.add(perm_new)
-        db.session.commit()
-        return True
-
-    def revoke_permission(self, p_id, u_id, username, user):
-        """
-        p_id: project id
-        u_id: user-id
-        username: to identify victim user
-        user: logged in user
-        """
-        deleted = None
-        if user.id == u_id:
-            return False
-        if not self.is_admin(user.id, p_id):
-            return False
-        else:
-            if username:
-                user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
-                if not user_victim:
-                    return False
-                u_id = user_victim.id
-            perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-            if perm is None:
-                return False
-            if perm.access_level == "creator":
-                return False
-            deleted = Permission.query.filter_by(u_id=u_id, p_id=p_id).delete()
-            db.session.commit()
-        if deleted:
-            return True
-        else:
-            return False
-
     def list_projects(self, user):
         """
         user: logged in user
@@ -197,23 +145,6 @@ class FileManager(object):
             data.makedir(value)
             data.movedir(project.path, value)
         setattr(project, attribute, value)
-        db.session.commit()
-        return True
-
-    def update_access_level(self, p_id, u_id, username, access_level, user):
-        if not self.is_admin(user.id, p_id):
-            return False
-        if username:
-            user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
-            if not user_victim:
-                return False
-            u_id = user_victim.id
-        if u_id is None or u_id == user.id:
-            return
-        perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-        if not perm or perm.access_level == "creator":
-            return False
-        perm.access_level = access_level
         db.session.commit()
         return True
 

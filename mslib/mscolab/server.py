@@ -269,64 +269,6 @@ def delete_project():
     return str(fm.delete_file(int(p_id), user))
 
 
-@APP.route('/add_permission', methods=['POST'])
-@verify_user
-def add_permission():
-    p_id = request.form.get('p_id', 0)
-    u_id = request.form.get('u_id', 0)
-    username = request.form.get('username', None)
-    access_level = request.form.get('access_level', None)
-    user = g.user
-    if u_id == 0:
-        user_v = User.query.filter((User.username == username) | (User.emailid == username)).first()
-        if user_v is None:
-            return "False"
-        u_id = user_v.id
-    success = str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
-    if success == "True":
-        sockio.sm.join_collaborator_to_room(int(u_id), int(p_id))
-        sockio.sm.emit_new_permission(int(u_id), int(p_id))
-    return success
-
-
-@APP.route('/revoke_permission', methods=['POST'])
-@verify_user
-def revoke_permission():
-    p_id = request.form.get('p_id', 0)
-    u_id = request.form.get('u_id', 0)
-    username = request.form.get('username', None)
-    user = g.user
-    if u_id == 0:
-        user_v = User.query.filter_by(username=username).first()
-        if user_v is None:
-            return "False"
-        u_id = user_v.id
-    success = str(fm.revoke_permission(int(p_id), int(u_id), username, user))
-    if success:
-        sockio.sm.emit_revoke_permission(int(u_id), int(p_id))
-        sockio.sm.remove_collaborator_from_room(int(u_id), int(p_id))
-    return success
-
-
-@APP.route('/modify_permission', methods=['POST'])
-@verify_user
-def modify_permission():
-    p_id = request.form.get('p_id', 0)
-    u_id = request.form.get('u_id', 0)
-    username = request.form.get('username', None)
-    access_level = request.form.get('access_level', None)
-    user = g.user
-    if u_id == 0:
-        user_v = User.query.filter((User.username == username) | (User.emailid == username)).first()
-        if user_v is None:
-            return "False"
-        u_id = user_v.id
-    success = str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
-    if success == "True":
-        sockio.sm.emit_update_permission(u_id, p_id)
-    return success
-
-
 @APP.route('/update_project', methods=['POST'])
 @verify_user
 def update_project():

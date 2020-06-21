@@ -24,17 +24,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-import sys
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
-import logging
-import time
-
-from mslib.mscolab.server import db, APP, initialize_managers
-from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Message, Change
-import mslib.msui.mscolab as mc
+#
+# import sys
+# from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
+# import logging
+# import time
+#
+# from mslib.mscolab.server import db, APP, initialize_managers
+# from mslib._tests.constants import MSCOLAB_URL_TEST
+# from mslib.mscolab.conf import mscolab_settings
+# from mslib.mscolab.models import Message, Change
+# import mslib.msui.mscolab as mc
 
 
 # TODO: COMPLETE CHANGE WINDOW TEST

@@ -33,7 +33,7 @@ import time
 from mslib.mscolab.server import db, APP, initialize_managers
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Message, Change
+from mslib.mscolab.models import Message
 import mslib.msui.mscolab as mc
 
 
@@ -83,7 +83,7 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
         # delete message from db here
         # wait till server processes the change
-        time.sleep(3)
+        time.sleep(1)
         with self.app.app_context():
             assert Message.query.filter_by(text='some - message').count() == 1
             Message.query.filter_by(text='some - message').delete()
