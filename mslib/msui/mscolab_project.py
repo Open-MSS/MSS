@@ -23,13 +23,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from PyQt5.QtWidgets import QWidget
 
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_mscolab_project_window as ui
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
 
-import logging
+from markdown import Markdown
+from markdown.extensions import Extension
 import requests
 import json
 import datetime
@@ -45,94 +47,55 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
-    def __init__(self, token, p_id, conn, access_level, parent=None,
+    def __init__(self, token, p_id, user, project_name, access_level, conn, parent=None,
                  mscolab_server_url=config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)):
         """
         token: access_token
         p_id: project id
+        user: logged in user
+        project_name: active project name,
+        access_level: access level of user logged in
         conn: to send messages, recv messages, if a direct slot-signal can't be setup
             to be connected at parents'
+        parent: widget parent
+        mscolab_server_url: server url for mscolab
         """
         super(MSColabProjectWindow, self).__init__(parent)
         self.setupUi(self)
-        # set url
+
         self.mscolab_server_url = mscolab_server_url
-
-        # constrain vertical layout
-        # self.verticalLayout.setSizeConstraint(self.verticalLayout_6.SetMinimumSize)
-        # self.messages.setWordWrap(True)
-
         self.token = token
+        self.user = user
         self.p_id = p_id
+        self.project_name = project_name
         self.conn = conn
         self.access_level = access_level
-        # add receive message handler
-        self.conn.signal_message_receive.connect(self.render_new_message)
-        logging.debug(ui.Ui_MscolabProject)
-        # establish button press handlers
-        self.add.clicked.connect(self.add_handler)
-        self.modify.clicked.connect(self.modify_handler)
-        self.delete_1.clicked.connect(self.delete_handler)
-        self.checkout.clicked.connect(self.handle_undo)
-        # send message handler
+        self.text = ""
+        self.messages = []
+        self.markdown = Markdown(extensions=['nl2br', 'sane_lists', DeregisterSyntax()])
+
+        # Signals
         self.sendMessage.clicked.connect(self.send_message)
-        # load users
+        self.previewBtn.clicked.connect(self.toggle_preview)
+
+        # Socket Connection handlers
+        self.conn.signal_message_receive.connect(self.render_new_message)
+
+        # Set Label text
+        self.set_label_text()
+
+        # load all users
         self.load_users()
-        # load changes
-        self.load_all_changes()
+
         # load messages
         self.load_all_messages()
-        # active change
-        self.active_ch_id = None
-        user_d = self.get_user_details(self.token)
-        proj_d = self.get_project_details(self.p_id)
-        self.user_info.setText("logged in as: {}".format(user_d["username"]))
-        self.proj_info.setText("Project name: {}".format(proj_d["path"]))
-        # disable admin actions if viewer or collaborator
-        self.check_permission_and_render_control(self.access_level)
 
-    def check_permission_and_render_control(self, access_level):
-        """
-        block some control according to access_level
-        """
-        if access_level == "collaborator" or access_level == "viewer":
-            self.add.setEnabled(False)
-            self.modify.setEnabled(False)
-            self.delete_1.setEnabled(False)
-        else:
-            self.add.setEnabled(True)
-            self.modify.setEnabled(True)
-            self.delete_1.setEnabled(True)
+    # UI SET UP METHODS
+    def set_label_text(self):
+        self.user_info.setText(f"Logged in: {self.user['username']}")
+        self.proj_info.setText(f"Project: {self.project_name}")
 
-        if access_level == "viewer":
-            self.checkout.setEnabled(False)
-            self.sendMessage.setEnabled(False)
-        else:
-            self.checkout.setEnabled(True)
-            self.sendMessage.setEnabled(True)
-
-    def get_user_details(self, token):
-        """
-        token: auth token of the user to be fetched from mscolab server
-        """
-        data = {
-            'token': token
-        }
-        r = requests.get(self.mscolab_server_url + '/user', data=data)
-        json_ = json.loads(r.text)
-        return json_['user']
-
-    def get_project_details(self, p_id):
-        """
-        p_id: active project id details of which are fetched from mscolab server
-        """
-        data = {
-            'token': self.token,
-            'p_id': p_id
-        }
-        r = requests.get(self.mscolab_server_url + '/project_details', data=data)
-        json_ = json.loads(r.text)
-        return json_
+    # Signal Slots
 
     def send_message(self):
         """
@@ -142,58 +105,23 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.conn.send_message(message_text, self.p_id)
         self.messageText.clear()
 
-    def add_handler(self):
-        # get username, p_id
-        username = self.username.text()
-        access_level = str(self.accessLevel.currentText())
-        # send request to add
-        data = {
-            "token": self.token,
-            "p_id": self.p_id,
-            "username": username,
-            "access_level": access_level
-        }
-        r = requests.post(self.mscolab_server_url + '/add_permission', data=data)
-        if r.text == "True":
-            self.load_users()
+    def toggle_preview(self):
+        # Go Back to text box
+        if self.messageText.isReadOnly():
+            self.messageText.setHtml("")
+            self.messageText.setText(self.text)
+            self.messageText.moveCursor(QtGui.QTextCursor.End)
+            self.messageText.setReadOnly(False)
+            self.previewBtn.setDefault(False)
+        # Show preview
         else:
-            # show a QMessageBox with errors
-            pass
+            self.text = self.messageText.toPlainText()
+            html = self.markdown.convert(self.text)
+            self.messageText.setHtml(html)
+            self.messageText.setReadOnly(True)
+            self.previewBtn.setDefault(True)
 
-    def modify_handler(self):
-        # get username, p_id
-        username = self.username.text()
-        access_level = str(self.accessLevel.currentText())
-        # send request to modify
-        data = {
-            "token": self.token,
-            "p_id": self.p_id,
-            "username": username,
-            "access_level": access_level
-        }
-        r = requests.post(self.mscolab_server_url + '/modify_permission', data=data)
-        if r.text == "True":
-            self.load_users()
-        else:
-            # show a QMessageBox with errors
-            pass
-
-    def delete_handler(self):
-        # get username, p_id
-        username = self.username.text()
-        p_id = self.p_id
-        # send request to delete
-        data = {
-            "token": self.token,
-            "p_id": p_id,
-            "username": username
-        }
-        r = requests.post(self.mscolab_server_url + '/revoke_permission', data=data)
-        if r.text == "True":
-            self.load_users()
-        else:
-            # show a QMessageBox with errors
-            pass
+    # API REQUESTS
 
     def load_users(self):
         # load users to side-tab here
@@ -221,60 +149,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     def update_username_wrt_item(self, item):
         self.username.setText(item.username)
 
-    @QtCore.Slot(str, str)
-    def render_new_message(self, username, message, scroll=True):
-        item = QtWidgets.QListWidgetItem("{}: {}\n".format(username, message), parent=self.messages)
-        self.messages.addItem(item)
-        if scroll:
-            self.messages.scrollToBottom()
-
-    def load_all_changes(self):
-        """
-        get changes from api, clear listwidget, render them to ui
-        """
-        data = {
-            "token": self.token,
-            "p_id": self.p_id
-        }
-        # 'get all changes' request
-        r = requests.get(self.mscolab_server_url + '/get_changes', data=data)
-        changes = json.loads(r.text)["changes"]
-        self.changes.clear()
-        self.active_ch_id = None
-        for change in changes:
-            item = QtWidgets.QListWidgetItem("{}: {}\n".format(change["username"],
-                                             change["content"]), parent=self.changes)
-            item._id = change['id']
-            self.changes.addItem(item)
-        self.changes.scrollToBottom()
-
-    def handle_undo(self):
-        index = self.changes.currentIndex()
-        qm = QtWidgets.QMessageBox
-        if not index.isValid():
-            qm.critical(
-                self, self.tr("Undo"),
-                self.tr("Please select a change first."))
-        else:
-            ret = qm.question(
-                self, self.tr("Undo"),
-                "Do you want to checkout to this change?", qm.Yes, qm.No)
-
-            if ret == qm.Yes:
-                self.request_undo_mscolab(index)
-
-    def request_undo_mscolab(self, index):
-        # undo change from server
-        data = {
-            "token": self.token,
-            "ch_id": self.changes.itemFromIndex(index)._id
-        }
-        # 'undo' request
-        r = requests.post(self.mscolab_server_url + '/undo', data=data)
-        if r.text == "True":
-            # reload windows
-            self.reloadWindows.emit()
-
     def load_all_messages(self):
         # empty messages and reload from server
         data = {
@@ -287,15 +161,91 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         response = json.loads(r.text)
 
         messages = response["messages"]
-        logging.debug(messages)
-        logging.debug(type(messages))
         # clear message box
-        self.messages.clear()
         for message in messages:
             username = message["username"]
             message_text = message["text"]
-            self.render_new_message(username, message_text, scroll=False)
-        self.messages.scrollToBottom()
+            self.render_new_message(username, message_text, False)
+        self.messageList.scrollToBottom()
+
+    # SOCKET HANDLERS
+
+    @QtCore.Slot(str, str)
+    def render_new_message(self, username, message, scroll=True):
+        message_item = MessageItem(username, message, self.user["username"], self.markdown)
+        list_widget_item = QtWidgets.QListWidgetItem(self.messageList)
+        list_widget_item.setSizeHint(message_item.sizeHint())
+        self.messageList.addItem(list_widget_item)
+        self.messageList.setItemWidget(list_widget_item, message_item)
+        self.messages.append(message_item)
+        if scroll:
+            self.messageList.scrollToBottom()
 
     def closeEvent(self, event):
         self.viewCloses.emit()
+
+
+class MessageItem(QtWidgets.QWidget):
+    def __init__(self, username, message_text, current_username, markdown_helper):
+        super(MessageItem, self).__init__()
+        self.username = username
+        self.message_text = message_text
+        self.current_username = current_username
+        self.messageTextEdit = QtWidgets.QTextEdit()
+        html = markdown_helper.convert(self.message_text)
+        self.messageTextEdit.setHtml(html)
+        self.messageTextEdit.setReadOnly(True)
+        self.messageTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.messageTextEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.messageTextEdit.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.messageTextEdit.setAttribute(103)
+        self.messageTextEdit.show()
+        self.messageTextEdit.setFixedHeight(
+            self.messageTextEdit.document().size().height() + self.messageTextEdit.contentsMargins().top() * 2
+        )
+        self.containerLayout = QtWidgets.QHBoxLayout()
+
+        if current_username == username:
+            self.messageTextEdit.setStyleSheet("background: #dcf8c6")
+            self.containerLayout.addStretch()
+            self.containerLayout.addWidget(self.messageTextEdit)
+
+        else:
+            self.messageTextEdit.setStyleSheet("background: transparent; border: none;")
+            self.textArea = QtWidgets.QWidget()
+            self.textAreaLayout = QtWidgets.QVBoxLayout()
+            self.usernameLabel = QtWidgets.QLabel(f"{self.username}:")
+            self.textAreaLayout.addWidget(self.usernameLabel)
+            self.textAreaLayout.addWidget(self.messageTextEdit)
+            self.textArea.setLayout(self.textAreaLayout)
+            self.textArea.setStyleSheet("background: #eff0f1")
+            self.containerLayout.addWidget(self.textArea)
+            self.containerLayout.addStretch()
+
+        self.containerLayout.setSpacing(0)
+        self.containerLayout.setContentsMargins(5, 5, 5, 5)
+        self.setLayout(self.containerLayout)
+
+# Deregister all the syntax that we don't want to allow
+# Can't find any part in documentation where all the syntax names are mentioned
+# For future reference to syntax name refer to:
+# https://github.com/Python-Markdown/markdown/blob/a06659b62209de98cbc23715addb2b768a245788/markdown/core.py#L100
+class DeregisterSyntax(Extension):
+    def extendMarkdown(self, md):
+        # Deregister block syntax
+        md.parser.blockprocessors.deregister('hashheader')
+        md.parser.blockprocessors.deregister('setextheader')
+        md.parser.blockprocessors.deregister('hr')
+        md.parser.blockprocessors.deregister('quote')
+
+        # Deregister inline syntax
+        md.inlinePatterns.deregister('reference')
+        md.inlinePatterns.deregister('link')
+        md.inlinePatterns.deregister('image_link')
+        md.inlinePatterns.deregister('image_reference')
+        md.inlinePatterns.deregister('short_reference')
+        md.inlinePatterns.deregister('autolink')
+        md.inlinePatterns.deregister('automail')
+        md.inlinePatterns.deregister('linebreak')
+        md.inlinePatterns.deregister('html')
+        md.inlinePatterns.deregister('entity')

@@ -465,8 +465,7 @@ class FileManager(object):
             .filter((Permission.u_id != u_id) & (Permission.access_level != 'creator')) \
             .all()
 
-        current_project_creator = Permission.query.filter(Permission.access_level == "creator").first()
-
+        current_project_creator = Permission.query.filter_by(p_id=current_p_id, access_level="creator").first()
         import_perms = Permission.query\
             .filter(Permission.p_id == import_p_id)\
             .filter((Permission.u_id != u_id) & (Permission.u_id != current_project_creator.u_id))\

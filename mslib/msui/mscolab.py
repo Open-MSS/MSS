@@ -115,6 +115,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.id_count = 0
         # project window
         self.project_window = None
+        self.projWindow.setVisible(False)
         # Admin Window
         self.admin_window = None
         self.adminWindowBtn.setVisible(False)
@@ -210,7 +211,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.setEnabled(False)
         self.sideview.setEnabled(False)
         self.tableview.setEnabled(False)
-        self.projWindow.setEnabled(False)
         self.autoSave.setEnabled(False)
         self.export_2.setEnabled(False)
 
@@ -312,8 +312,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             return
         if self.project_window is not None:
             return
-        view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.conn,
-                                              self.access_level, parent=self.projWindow,
+        view_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.user, self.active_project_name,
+                                              self.access_level, self.conn, parent=self.projWindow,
                                               mscolab_server_url=self.mscolab_server_url)
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         view_window.viewCloses.connect(self.close_project_window)
@@ -481,7 +481,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.setEnabled(True)
         self.sideview.setEnabled(True)
         self.tableview.setEnabled(True)
-        self.projWindow.setEnabled(True)
         self.autoSave.setEnabled(True)
         self.export_2.setEnabled(True)
         # configuring autosave button
@@ -511,6 +510,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         # hide autosave and admin window btn if access_level is non-admin
         if self.access_level == "viewer" or self.access_level == "collaborator":
+
+            if self.access_level == "viewer":
+                self.projWindow.setVisible(False)
+            else:
+                self.projWindow.setVisible(True)
+
             self.adminWindowBtn.setVisible(False)
             self.autoSave.setVisible(False)
             # set autosave status
@@ -522,6 +527,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.autosaveStatus.setText("")
             self.autoSave.setVisible(True)
             self.adminWindowBtn.setVisible(True)
+            self.projWindow.setVisible(True)
 
         # change font style for selected
         font = QtGui.QFont()
@@ -701,6 +707,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.project_window is not None:
             self.project_window.close()
 
+        self.projWindow.setVisible(False)
+
         # Close Admin Window if active
         if self.admin_window is not None:
             self.admin_window.close()
@@ -787,6 +795,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.admin_window.close()
                 self.adminWindowBtn.setVisible(False)
 
+            if self.access_level == "viewer":
+                self.projWindow.setVisible(False)
+            else:
+                self.projWindow.setVisible(True)
         # update project window if open
         if self.project_window is not None:
             self.project_window.load_users()
