@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_kmloverlay_dockwidget.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,9 +11,17 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_KMLOverlayDockWidget(object):
     def setupUi(self, KMLOverlayDockWidget):
         KMLOverlayDockWidget.setObjectName("KMLOverlayDockWidget")
-        KMLOverlayDockWidget.resize(649, 120)
+        KMLOverlayDockWidget.resize(668, 158)
         self.verticalLayout = QtWidgets.QVBoxLayout(KMLOverlayDockWidget)
         self.verticalLayout.setObjectName("verticalLayout")
+        self.label_3 = QtWidgets.QLabel(KMLOverlayDockWidget)
+        self.label_3.setObjectName("label_3")
+        self.verticalLayout.addWidget(self.label_3)
+        self.line_2 = QtWidgets.QFrame(KMLOverlayDockWidget)
+        self.line_2.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_2.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line_2.setObjectName("line_2")
+        self.verticalLayout.addWidget(self.line_2)
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.cbOverlay = QtWidgets.QCheckBox(KMLOverlayDockWidget)
@@ -48,11 +56,11 @@ class Ui_KMLOverlayDockWidget(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout_7)
-        self.label = QtWidgets.QLabel(KMLOverlayDockWidget)
-        self.label.setObjectName("label")
-        self.verticalLayout.addWidget(self.label)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout.addItem(spacerItem1)
+        self.btLoadMultipleKMLDialog = QtWidgets.QPushButton(KMLOverlayDockWidget)
+        self.btLoadMultipleKMLDialog.setObjectName("btLoadMultipleKMLDialog")
+        self.verticalLayout.addWidget(self.btLoadMultipleKMLDialog)
 
         self.retranslateUi(KMLOverlayDockWidget)
         QtCore.QMetaObject.connectSlotsByName(KMLOverlayDockWidget)
@@ -60,10 +68,11 @@ class Ui_KMLOverlayDockWidget(object):
     def retranslateUi(self, KMLOverlayDockWidget):
         _translate = QtCore.QCoreApplication.translate
         KMLOverlayDockWidget.setWindowTitle(_translate("KMLOverlayDockWidget", "KML Overlay"))
+        self.label_3.setText(_translate("KMLOverlayDockWidget", "Single KML File Overlay"))
         self.cbOverlay.setToolTip(_translate("KMLOverlayDockWidget", "Hide/unhide loaded KML overlay."))
         self.cbOverlay.setText(_translate("KMLOverlayDockWidget", "KML Overlay"))
         self.btSelectFile.setToolTip(_translate("KMLOverlayDockWidget", "Specify KML file using a file dialog."))
-        self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "..."))
+        self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "Add KML File"))
         self.btLoadFile.setToolTip(_translate("KMLOverlayDockWidget", "Load specified KML file."))
         self.btLoadFile.setText(_translate("KMLOverlayDockWidget", "load"))
         self.cbManualStyle.setToolTip(_translate("KMLOverlayDockWidget", "Overwrite styles of KML document with colour/linewidth specified to the right."))
@@ -72,6 +81,5 @@ class Ui_KMLOverlayDockWidget(object):
         self.pbSelectColour.setText(_translate("KMLOverlayDockWidget", "Colour"))
         self.label_2.setToolTip(_translate("KMLOverlayDockWidget", "Line width for KML overlay."))
         self.label_2.setText(_translate("KMLOverlayDockWidget", "line width"))
-        self.label.setToolTip(_translate("KMLOverlayDockWidget", "KML support is experimental. Please communicate important missing features to the MSS issue tracker!"))
-        self.label.setText(_translate("KMLOverlayDockWidget", "!Experimental Feature! Not all KML files and contained features will work."))
+        self.btLoadMultipleKMLDialog.setText(_translate("KMLOverlayDockWidget", "Add Multiple KML Files"))
 

@@ -34,6 +34,7 @@ from matplotlib import patheffects
 
 from mslib.msui.mss_qt import QtGui, QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
+from mslib.msui.mss_qt import ui_add_multiple_kml_overlay as ui2
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
 
 
@@ -233,6 +234,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.cbOverlay.stateChanged.connect(self.update_settings)
         self.dsbLineWidth.valueChanged.connect(self.update_settings)
         self.cbManualStyle.stateChanged.connect(self.update_settings)
+        # self.btLoadMultipleKMLDialog.clicked.connect()
 
         self.cbOverlay.setChecked(True)
         self.cbOverlay.setEnabled(False)
@@ -319,4 +321,4 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         except IOError as ex:
             logging.error("KML Overlay - %s: %s", type(ex), ex)
             QtWidgets.QMessageBox.critical(
-                self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))                         
+                self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))

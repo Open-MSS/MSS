@@ -6,14 +6,28 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>649</width>
-    <height>120</height>
+    <width>668</width>
+    <height>158</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>KML Overlay</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Single KML File Overlay</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_5">
      <item>
@@ -35,7 +49,7 @@
         <string>Specify KML file using a file dialog.</string>
        </property>
        <property name="text">
-        <string>...</string>
+        <string>Add KML File</string>
        </property>
       </widget>
      </item>
@@ -109,27 +123,27 @@
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="label">
-     <property name="toolTip">
-      <string>KML support is experimental. Please communicate important missing features to the MSS issue tracker!</string>
-     </property>
-     <property name="text">
-      <string>!Experimental Feature! Not all KML files and contained features will work.</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>10</height>
       </size>
      </property>
     </spacer>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btLoadMultipleKMLDialog">
+     <property name="text">
+      <string>Add Multiple KML Files</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
