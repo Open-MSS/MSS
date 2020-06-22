@@ -104,15 +104,13 @@ class KMLPatch(object):
             # general urls for styles are not supported
             styleurl = styleurl[1:]
         style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
-        try:
+        if hasattr(placemark, "geometry"):
             if isinstance(placemark.geometry, geometry.Point):
                 self.add_point(placemark, style, placemark.name)
             if isinstance(placemark.geometry, geometry.LineString):
                 self.add_line(placemark, style, placemark.name)
             if isinstance(placemark.geometry, geometry.Polygon):
                 self.add_polygon(placemark, style, placemark.name)
-        except AttributeError:
-            logging.error('Placemark in kml file may not possess geometry attribute.')
 
     def parse_placemarks(self, document):
         for feature in document:
