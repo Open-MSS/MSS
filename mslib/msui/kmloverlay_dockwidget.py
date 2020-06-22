@@ -30,7 +30,7 @@ from fs import open_fs
 import logging
 from fastkml import kml, geometry, styles
 import os
-from matplotlib import patheffects, pyplot
+from matplotlib import patheffects
 
 from mslib.msui.mss_qt import QtGui, QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
@@ -80,7 +80,7 @@ class KMLPatch(object):
         Plot KML line
 
         :param line: fastkml LineString object
-        """ 
+        """
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(line.geometry)
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
@@ -103,8 +103,8 @@ class KMLPatch(object):
             # Remove # at beginning of style marking a locally defined style.
             # general urls for styles are not supported
             styleurl = styleurl[1:]
-        style = self.parse_local_styles(placemark, self.styles)
-        if placemark.geometry is not None:
+        style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
+        if hasattr(placemark, "geometry"):
             if isinstance(placemark.geometry, geometry.Point):
                 self.add_point(placemark, style, placemark.name)
             if isinstance(placemark.geometry, geometry.LineString):
@@ -144,18 +144,19 @@ class KMLPatch(object):
 
     def parse_styles(self, kml_doc):
         # exterior_style : <Style> OUTSIDE placemarks
-        # interior style : within <Style> 
+        # interior style : within <Style>
         for exterior_style in kml_doc.styles():
             if isinstance(exterior_style, styles.Style):
                 name = exterior_style.id
                 if name is None:
-                    continue 
+                    continue
+                self.styles[name] = {}
                 interior_style = exterior_style.styles()
                 for style in interior_style:
                     if isinstance(style, styles.LineStyle):
-                        self.styles["LineStyle"] = [self.get_style_params(style)]
+                        self.styles[name]["LineStyle"] = self.get_style_params(style)
                     elif isinstance(style, styles.PolyStyle):
-                        self.styles["PolyStyle"] = [self.get_style_params(style)]
+                        self.styles[name]["PolyStyle"] = self.get_style_params(style)
 
     def parse_local_styles(self, placemark, default_styles):
         # exterior_style : <Style> INSIDE placemarks
@@ -165,14 +166,14 @@ class KMLPatch(object):
         for exterior_style in placemark.styles():
             interior_style = exterior_style.styles()
             for style in interior_style:
-                supported = ('LineStyle' or 'PolyStyle')
-                if isinstance(style, (styles.LineStyle or styles.PolyStyle)) and supported in local_styles:
-                    local_styles["LineStyle"] = self.get_style_params(
-                        style,
-                        color=local_styles[supported][0]['color'],
-                        linewidth=local_styles[supported][0]['linewidth'])
-                elif isinstance(style, (styles.LineStyle or styles.PolyStyle)):
-                    local_styles[supported] = self.get_style_params(style)
+                for supported, supported_type in (('LineStyle', styles.LineStyle), ('PolyStyle', styles.PolyStyle)):
+                    if isinstance(style, supported_type) and supported in local_styles:
+                        local_styles[supported] = self.get_style_params(
+                            style,
+                            color=local_styles[supported]['color'],
+                            linewidth=local_styles[supported]['linewidth'])
+                    elif isinstance(style, supported_type):
+                        local_styles[supported] = self.get_style_params(style)
         return local_styles
 
     def draw(self):
@@ -318,4 +319,4 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         except IOError as ex:
             logging.error("KML Overlay - %s: %s", type(ex), ex)
             QtWidgets.QMessageBox.critical(
-                self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+                self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))                         
