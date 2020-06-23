@@ -37,7 +37,7 @@ import numpy as np
 import matplotlib
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
-from matplotlib import cbook
+from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
@@ -64,7 +64,7 @@ class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self):
         # setup Matplotlib Figure and Axis
-        self.fig = matplotlib.figure.Figure(facecolor="w")  # 0.75
+        self.fig = figure.Figure(facecolor="w")  # 0.75
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.default_filename = "_image"
 
