@@ -32,9 +32,9 @@ from fastkml import kml, geometry, styles
 import os
 from matplotlib import patheffects
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, get_open_filename
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filename, get_open_filename_qt
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
-from mslib.msui.mss_qt import ui_add_multiple_kml_overlay as ui2
+from mslib.msui.mss_qt import ui_add_multiple_kml_overlay
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
 
 
@@ -234,7 +234,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.cbOverlay.stateChanged.connect(self.update_settings)
         self.dsbLineWidth.valueChanged.connect(self.update_settings)
         self.cbManualStyle.stateChanged.connect(self.update_settings)
-        # self.btLoadMultipleKMLDialog.clicked.connect()
+        self.btLoadMultipleKMLDialog.clicked.connect(self.open_multiple_kml_dialog)
 
         self.cbOverlay.setChecked(True)
         self.cbOverlay.setEnabled(False)
@@ -252,6 +252,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
         self.pbSelectColour.setPalette(palette)
+
+    def open_multiple_kml_dialog(self):
+        self.dialog = DialogWidget(self)
+        self.dialog.show()
 
     def __del__(self):
         settings = {
@@ -322,3 +326,47 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             logging.error("KML Overlay - %s: %s", type(ex), ex)
             QtWidgets.QMessageBox.critical(
                 self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+
+
+class DialogWidget(QtWidgets.QDialog, ui_add_multiple_kml_overlay.Ui_Dialog):
+    """
+    This class provides the interface for accessing Multiple KML files simultaneously and
+    adding the appropriate patches to the TopView canvas.
+    """
+    def __init__(self, parent=KMLOverlayControlWidget):
+        super(DialogWidget, self).__init__(parent)
+        self.setupUi(self)
+
+        # Connect slots and signals.
+        self.pushButton_add.clicked.connect(self.add_file)
+        self.pushButton_remove.clicked.connect(self.remove_file)
+        self.pushButton_remove_all.clicked.connect(self.remove_all_files)
+
+    def add_file(self):
+        """Slot that opens a file dialog to choose a kml file
+        """
+
+        # Adds item to the top
+        text = "hello"
+        item = QtWidgets.QListWidgetItem(text)
+        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+        item.setCheckState(QtCore.Qt.Unchecked)
+        self.listWidget.addItem(item)
+
+        # # Adds item above the topmost ticked item
+        # text = "hello"
+        # row = self.listWidget.currentRow()
+        # item = QtWidgets.QListWidgetItem(text)
+        # item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+        # item.setCheckState(QtCore.Qt.Unchecked)
+        # self.listWidget.insertItem(row, item)
+      
+    def remove_all_files(self):
+        self.listWidget.clear()
+  
+    def remove_file(self):
+        for index in range(self.listWidget.count()):
+            if hasattr(self.listWidget.item(index), "checkState") and (
+                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                self.listWidget.takeItem(index)
+                self.remove_file()
