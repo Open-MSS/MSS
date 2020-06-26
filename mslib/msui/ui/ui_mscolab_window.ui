@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>627</width>
-    <height>660</height>
+    <width>579</width>
+    <height>667</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -265,6 +265,13 @@
             </widget>
            </item>
            <item>
+            <widget class="Line" name="line_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QCheckBox" name="autoSave">
              <property name="text">
               <string>autosave</string>
@@ -289,6 +296,40 @@
             <widget class="QLabel" name="autosaveStatus">
              <property name="text">
               <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="Line" name="line">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="chatWindowBtn">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Chat</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="adminWindowBtn">
+             <property name="text">
+              <string>Manage Users</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="versionHistoryBtn">
+             <property name="text">
+              <string>Version History</string>
              </property>
             </widget>
            </item>
@@ -347,26 +388,6 @@
            </property>
            <property name="text">
             <string>topview</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="projWindow">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>chat window</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="adminWindowBtn">
-           <property name="text">
-            <string>Manage Users</string>
            </property>
           </widget>
          </item>

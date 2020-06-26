@@ -33,8 +33,7 @@ import sys
 import traceback
 
 from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
-
-from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
+from PyQt5 import QtGui, QtCore, QtWidgets, QtTest, Qt
 
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -156,7 +155,7 @@ for mod in [
         "ui_add_project_dialog",
         "ui_add_user_dialog",
         "ui_mscolab_admin_window",
-        "ui_mscolab_change_history"]:
+        "ui_mscolab_version_history"]:
     globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 
 # to store config by QSettings

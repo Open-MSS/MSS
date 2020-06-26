@@ -24,15 +24,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import sys
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import time
 
-from mslib.mscolab.server import db, APP, initialize_managers
+from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-import mslib.msui.mscolab as mc
+from mslib.mscolab.server import APP, db, initialize_managers
+from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
 
 
 class Test_MscolabAdminWindow(object):
@@ -49,8 +48,8 @@ class Test_MscolabAdminWindow(object):
         db.init_app(self.app)
 
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mc.MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                          mscolab_server_url=MSCOLAB_URL_TEST)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=MSCOLAB_URL_TEST)
         self._login()
         self._activate_project_at_index(0)
         QtTest.QTest.mouseClick(self.window.adminWindowBtn, QtCore.Qt.LeftButton)

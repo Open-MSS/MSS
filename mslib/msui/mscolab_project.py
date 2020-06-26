@@ -23,16 +23,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
-from mslib.msui.mss_qt import ui_mscolab_project_window as ui
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.utils import config_loader
+import datetime
+import json
+import requests
 
 from markdown import Markdown
 from markdown.extensions import Extension
-import requests
-import json
-import datetime
+from werkzeug.urls import url_join
+
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.msui.mss_qt import Qt, QtCore, QtGui, QtWidgets, ui_mscolab_project_window as ui
+from mslib.utils import config_loader
 
 
 class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
@@ -129,7 +130,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "token": self.token,
             "p_id": self.p_id
         }
-        r = requests.get(self.mscolab_server_url + '/authorized_users', data=data)
+        url = url_join(self.mscolab_server_url, 'authorized_users')
+        r = requests.get(url, data=data)
         if r.text == "False":
             # show QMessageBox errors here
             pass
@@ -142,10 +144,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
                                                  parent=self.collaboratorsList)
                 item.username = user["username"]
                 self.collaboratorsList.addItem(item)
-            self.collaboratorsList.itemActivated.connect(self.update_username_wrt_item)
-
-    def update_username_wrt_item(self, item):
-        self.username.setText(item.username)
 
     def load_all_messages(self):
         # empty messages and reload from server
@@ -155,9 +153,9 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             "timestamp": datetime.datetime(1970, 1, 1).strftime("%m %d %Y, %H:%M:%S")
         }
         # returns an array of messages
-        r = requests.post(self.mscolab_server_url + "/messages", data=data)
+        url = url_join(self.mscolab_server_url, 'messages')
+        r = requests.post(url, data=data)
         response = json.loads(r.text)
-
         messages = response["messages"]
         # clear message box
         for message in messages:
@@ -189,14 +187,15 @@ class MessageItem(QtWidgets.QWidget):
         self.username = username
         self.message_text = message_text
         self.current_username = current_username
-        self.messageTextEdit = QtWidgets.QTextEdit()
+        self.messageTextEdit = QtWidgets.QTextBrowser()
         html = markdown_helper.convert(self.message_text)
         self.messageTextEdit.setHtml(html)
-        self.messageTextEdit.setReadOnly(True)
+        self.messageTextEdit.setOpenLinks(False)
         self.messageTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.messageTextEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.messageTextEdit.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.messageTextEdit.setAttribute(103)
+        self.messageTextEdit.anchorClicked.connect(self.on_link_click)
         self.messageTextEdit.show()
         self.messageTextEdit.setFixedHeight(
             self.messageTextEdit.document().size().height() + self.messageTextEdit.contentsMargins().top() * 2
@@ -224,26 +223,38 @@ class MessageItem(QtWidgets.QWidget):
         self.containerLayout.setContentsMargins(5, 5, 5, 5)
         self.setLayout(self.containerLayout)
 
+    def on_link_click(self, url):
+        if url.scheme() == "":
+            url.setScheme("http")
+        Qt.QDesktopServices.openUrl(url)
+
 
 # Deregister all the syntax that we don't want to allow
 # Can't find any part in documentation where all the syntax names are mentioned
 # For future reference to syntax name refer to:
 # https://github.com/Python-Markdown/markdown/blob/a06659b62209de98cbc23715addb2b768a245788/markdown/core.py#L100
 class DeregisterSyntax(Extension):
+    """
+    Current Supported syntax:
+    *text* : emphasis
+    **text** : bold
+    - text : unordered list
+    1. text : ordered list
+    # text : Heading
+    [text](link) : link
+    <link> : clickable link
+    """
     def extendMarkdown(self, md):
         # Deregister block syntax
-        md.parser.blockprocessors.deregister('hashheader')
         md.parser.blockprocessors.deregister('setextheader')
         md.parser.blockprocessors.deregister('hr')
         md.parser.blockprocessors.deregister('quote')
 
         # Deregister inline syntax
         md.inlinePatterns.deregister('reference')
-        md.inlinePatterns.deregister('link')
         md.inlinePatterns.deregister('image_link')
         md.inlinePatterns.deregister('image_reference')
         md.inlinePatterns.deregister('short_reference')
-        md.inlinePatterns.deregister('autolink')
         md.inlinePatterns.deregister('automail')
         md.inlinePatterns.deregister('linebreak')
         md.inlinePatterns.deregister('html')
