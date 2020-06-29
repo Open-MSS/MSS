@@ -237,7 +237,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.cbOverlay.setChecked(True)
-        self.cbOverlay.setEnabled(False)
+        self.cbOverlay.setEnabled(False) #dimmed
         self.cbManualStyle.setChecked(False)
 
         self.settings_tag = "kmldock"
@@ -325,7 +325,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                print(self.listWidget.item(index).text())
+                # print(self.listWidget.item(index).text())
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
                 _fs = open_fs(_dirname)
                 try:
@@ -336,8 +336,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                               self.cbManualStyle.isChecked(),
                                               self.get_color(), self.dsbLineWidth.value())
                     self.cbOverlay.setEnabled(True)
-                    if self.view is not None and self.cbOverlay.isChecked():
-                        self.view.plot_kml(self.patch)
+                    # if self.view is not None and self.cbOverlay.isChecked(): #any use of this??
+                    #     self.view.plot_kml(self.patch)
                 except IOError as ex:
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
