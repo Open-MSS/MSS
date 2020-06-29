@@ -104,53 +104,6 @@ class Test_Files(object):
         users = json.loads(r.text)["users"]
         assert len(users) == 0
 
-    def test_add_permission(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-        data = {
-            "token": self.token,
-            "p_id": p_id,
-            "u_id": 9,
-            "access_level": "collaborator"
-        }
-        r = requests.post(MSCOLAB_URL_TEST + '/add_permission', data=data)
-        assert r.text == "True"
-        r = requests.post(MSCOLAB_URL_TEST + '/add_permission', data=data)
-        assert r.text == "False"
-        data["p_id"] = 343
-        # testing access of wrong pids
-        r = requests.post(MSCOLAB_URL_TEST + '/add_permission', data=data)
-        assert r.text == "False"
-
-    def test_modify_permission(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-        data = {
-            "token": self.token,
-            "p_id": p_id,
-            "u_id": 9,
-            "access_level": "viewer"
-        }
-        r = requests.post(MSCOLAB_URL_TEST + '/modify_permission', data=data)
-        assert r.text == "True"
-        data["p_id"] = 123
-        # testing access of wrong pids
-        r = requests.post(MSCOLAB_URL_TEST + '/modify_permission', data=data)
-        assert r.text == "False"
-
-    def test_revoke_permission(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-        data = {
-            "token": self.token,
-            "p_id": p_id,
-            "u_id": 9
-        }
-        r = requests.post(MSCOLAB_URL_TEST + '/revoke_permission', data=data)
-        assert r.text == "True"
-        r = requests.post(MSCOLAB_URL_TEST + '/revoke_permission', data=data)
-        assert r.text == "False"
-
     def test_get_users_without_permission(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)

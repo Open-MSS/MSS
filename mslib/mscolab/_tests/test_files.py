@@ -85,23 +85,6 @@ class Test_Files(object):
             no_perm_p_id = 2
             assert self.fm.is_admin(u_id, no_perm_p_id) is False
 
-    def test_add_permission(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-            assert self.fm.add_permission(p_id, 9, None, 'collaborator', self.user) is True
-            user2 = User.query.filter_by(id=9).first()
-            projects = self.fm.list_projects(user2)
-            assert len(projects) == 3
-
-    def test_modify_permission(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-            # modifying permission to 'viewer'
-            assert self.fm.update_access_level(p_id, 9, None, 'viewer', self.user) is True
-            user2 = User.query.filter_by(id=9).first()
-            projects = self.fm.list_projects(user2)
-            assert projects[-1]["access_level"] == "viewer"
-
     def test_file_save(self):
         r = requests.post(MSCOLAB_URL_TEST + "/token", data={
                           'email': 'a',
@@ -127,6 +110,9 @@ class Test_Files(object):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             user2 = User.query.filter_by(id=9).first()
+            perm = Permission(u_id=9, p_id=p_id, access_level="admin")
+            db.session.add(perm)
+            db.session.commit()
             sio1.emit('start', response1)
             sio2.emit('start', response2)
             time.sleep(4)
@@ -154,6 +140,9 @@ class Test_Files(object):
             change = Change.query.first()
             change_function_result = self.fm.get_change_by_id(change.id, self.user)
             assert change.content == change_function_result['content']
+            perm = Permission.query.filter_by(u_id=9, p_id=p_id).first()
+            db.session.delete(perm)
+            db.session.commit()
             # to disconnect sockets later
             self.sockets.append(sio1)
             self.sockets.append(sio2)
@@ -165,17 +154,6 @@ class Test_Files(object):
             assert self.fm.undo(changes[0].id, self.user) is True
             assert len(self.fm.get_changes(p_id, self.user)) == 3
             assert self.fm.get_file(p_id, self.user) == "test"
-
-    def test_revoke_permission(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-            assert self.fm.update_access_level(p_id, 9, None, 'admin', self.user) is True
-            user2 = User.query.filter_by(id=9).first()
-            # returns false because non-creator can't revoke permission of creator
-            assert self.fm.revoke_permission(p_id, 8, None, user2) is False
-            assert self.fm.revoke_permission(p_id, 9, None, self.user) is True
-            projects = self.fm.list_projects(user2)
-            assert len(projects) == 2
 
     def test_get_project(self):
         with self.app.app_context():

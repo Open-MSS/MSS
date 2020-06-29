@@ -23,14 +23,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import json
+import requests
 
+from werkzeug.urls import url_join
+
+from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.msui.mss_qt import ui_mscolab_admin_window as ui
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
-from werkzeug.urls import url_join
-import requests
-import json
 
 
 class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):

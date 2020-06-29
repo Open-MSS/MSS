@@ -24,26 +24,25 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-import sys
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
 import logging
+import sys
 import time
 import mock
 
-from mslib.mscolab.server import db, APP, initialize_managers
+from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Project
-import mslib.msui.mscolab as mc
+from mslib.mscolab.server import APP, db, initialize_managers
+from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
 
 
 class Test_Mscolab(object):
     def setup(self):
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mc.MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                          mscolab_server_url=MSCOLAB_URL_TEST)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=MSCOLAB_URL_TEST)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
