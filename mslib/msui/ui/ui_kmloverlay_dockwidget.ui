@@ -6,82 +6,82 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>668</width>
-    <height>158</height>
+    <width>545</width>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>KML Overlay</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Single KML File Overlay</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="Line" name="line_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_5">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QCheckBox" name="cbOverlay">
-       <property name="toolTip">
-        <string>Hide/unhide loaded KML overlay.</string>
-       </property>
-       <property name="text">
-        <string>KML Overlay</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QListWidget" name="listWidget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QLineEdit" name="leFile"/>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btSelectFile">
-       <property name="toolTip">
-        <string>Specify KML file using a file dialog.</string>
-       </property>
-       <property name="text">
-        <string>Add KML File</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btLoadFile">
-       <property name="toolTip">
-        <string>Load specified KML file.</string>
-       </property>
-       <property name="text">
-        <string>load</string>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QCheckBox" name="cbOverlay">
+         <property name="text">
+          <string>KML Overlay</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btSelectFile">
+         <property name="text">
+          <string>Add KML File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btLoadFile">
+         <property name="text">
+          <string>Load</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_remove">
+         <property name="text">
+          <string>Remove</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_remove_all">
+         <property name="text">
+          <string>Remove All</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QCheckBox" name="cbManualStyle">
-       <property name="toolTip">
-        <string>Overwrite styles of KML document with colour/linewidth specified to the right.</string>
-       </property>
        <property name="text">
-        <string>manual style</string>
+        <string>Manual Style</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="pbSelectColour">
-       <property name="toolTip">
-        <string>Colour for KML overlay.</string>
-       </property>
        <property name="text">
         <string>Colour</string>
        </property>
@@ -89,23 +89,13 @@
      </item>
      <item>
       <widget class="QLabel" name="label_2">
-       <property name="toolTip">
-        <string>Line width for KML overlay.</string>
-       </property>
        <property name="text">
         <string>line width</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="dsbLineWidth">
-       <property name="singleStep">
-        <double>0.500000000000000</double>
-       </property>
-       <property name="value">
-        <double>1.000000000000000</double>
-       </property>
-      </widget>
+      <widget class="QDoubleSpinBox" name="dsbLineWidth"/>
      </item>
      <item>
       <spacer name="horizontalSpacer">
@@ -123,27 +113,7 @@
     </layout>
    </item>
    <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>10</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
-    <widget class="QPushButton" name="btLoadMultipleKMLDialog">
-     <property name="text">
-      <string>Add Multiple KML Files</string>
-     </property>
-    </widget>
+    <widget class="QLineEdit" name="leFile"/>
    </item>
   </layout>
  </widget>

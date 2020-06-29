@@ -32,9 +32,8 @@ from fastkml import kml, geometry, styles
 import os
 from matplotlib import patheffects
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filename, get_open_filename_qt
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
-from mslib.msui.mss_qt import ui_add_multiple_kml_overlay
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
 
 
@@ -230,11 +229,12 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         # Connect slots and signals.
         self.btSelectFile.clicked.connect(self.select_file)
         self.btLoadFile.clicked.connect(self.load_file)
+        self.pushButton_remove.clicked.connect(self.remove_file)
+        self.pushButton_remove_all.clicked.connect(self.remove_all_files)
         self.pbSelectColour.clicked.connect(self.select_colour)
         self.cbOverlay.stateChanged.connect(self.update_settings)
         self.dsbLineWidth.valueChanged.connect(self.update_settings)
         self.cbManualStyle.stateChanged.connect(self.update_settings)
-        self.btLoadMultipleKMLDialog.clicked.connect(self.open_multiple_kml_dialog)
 
         self.cbOverlay.setChecked(True)
         self.cbOverlay.setEnabled(False)
@@ -252,10 +252,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
         self.pbSelectColour.setPalette(palette)
-
-    def open_multiple_kml_dialog(self):
-        self.dialog = DialogWidget(self)
-        self.dialog.show()
 
     def __del__(self):
         settings = {
@@ -300,67 +296,12 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             return
         self.leFile.setText(filename)
 
-    def load_file(self):
-        """
-        Loads a KML file selected by the leFile box and constructs the
-        corresponding patch.
-        """
-        _dirname, _name = os.path.split(self.leFile.text())
-        _fs = open_fs(_dirname)
-        if self.patch is not None:
-            self.patch.remove()
-            self.view.plot_kml(None)
-            self.patch = None
-            self.cbOverlay.setEnabled(False)
-        try:
-            with _fs.open(_name, 'r') as kmlf:
-
-                self.kml = kml.KML()
-                self.kml.from_string(kmlf.read().encode('utf-8'))
-                self.patch = KMLPatch(self.view.map, self.kml,
-                                      self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
-            self.cbOverlay.setEnabled(True)
-            if self.view is not None and self.cbOverlay.isChecked():
-                self.view.plot_kml(self.patch)
-        except IOError as ex:
-            logging.error("KML Overlay - %s: %s", type(ex), ex)
-            QtWidgets.QMessageBox.critical(
-                self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
-
-
-class DialogWidget(QtWidgets.QDialog, ui_add_multiple_kml_overlay.Ui_Dialog):
-    """
-    This class provides the interface for accessing Multiple KML files simultaneously and
-    adding the appropriate patches to the TopView canvas.
-    """
-    def __init__(self, parent=KMLOverlayControlWidget):
-        super(DialogWidget, self).__init__(parent)
-        self.setupUi(self)
-
-        # Connect slots and signals.
-        self.pushButton_add.clicked.connect(self.add_file)
-        self.pushButton_remove.clicked.connect(self.remove_file)
-        self.pushButton_remove_all.clicked.connect(self.remove_all_files)
-
-    def add_file(self):
-        """Slot that opens a file dialog to choose a kml file
-        """
-
-        # Adds item to the top
-        text = "hello"
+        text = filename
         item = QtWidgets.QListWidgetItem(text)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
         item.setCheckState(QtCore.Qt.Unchecked)
         self.listWidget.addItem(item)
 
-        # # Adds item above the topmost ticked item
-        # text = "hello"
-        # row = self.listWidget.currentRow()
-        # item = QtWidgets.QListWidgetItem(text)
-        # item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-        # item.setCheckState(QtCore.Qt.Unchecked)
-        # self.listWidget.insertItem(row, item)
-      
     def remove_all_files(self):
         self.listWidget.clear()
   
@@ -370,3 +311,34 @@ class DialogWidget(QtWidgets.QDialog, ui_add_multiple_kml_overlay.Ui_Dialog):
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 self.listWidget.takeItem(index)
                 self.remove_file()
+
+    def load_file(self):
+        """
+        Loads a KML file selected by the leFile box and constructs the
+        corresponding patch.
+        """
+        if self.patch is not None:
+            self.patch.remove()
+            self.view.plot_kml(None)
+            self.patch = None
+            self.cbOverlay.setEnabled(False)
+        for index in range(self.listWidget.count()):
+            if hasattr(self.listWidget.item(index), "checkState") and (
+                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                print(self.listWidget.item(index).text())
+                _dirname, _name = os.path.split(self.listWidget.item(index).text())
+                _fs = open_fs(_dirname)
+                try:
+                    with _fs.open(_name, 'r') as kmlf:
+                        self.kml = kml.KML()
+                        self.kml.from_string(kmlf.read().encode('utf-8'))
+                        self.patch = KMLPatch(self.view.map, self.kml,
+                                              self.cbManualStyle.isChecked(),
+                                              self.get_color(), self.dsbLineWidth.value())
+                    self.cbOverlay.setEnabled(True)
+                    if self.view is not None and self.cbOverlay.isChecked():
+                        self.view.plot_kml(self.patch)
+                except IOError as ex:
+                    logging.error("KML Overlay - %s: %s", type(ex), ex)
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
