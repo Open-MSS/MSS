@@ -65,7 +65,7 @@ class Test_MscolabProject(object):
         # Not logging out since it pops up a dialog
         # self.window.logout()
         if self.window.chat_window:
-            self.window.chat_window.close()
+            self.window.chat_window.hide()
         if self.window.conn:
             self.window.conn.disconnect()
         self.window.hide()
@@ -73,9 +73,9 @@ class Test_MscolabProject(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    def test_chat(self):
+    def test_send_message(self):
         self.chat_window.messageText.setPlainText('some - message')
-        QtTest.QTest.mouseClick(self.chat_window.sendMessage, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.chat_window.sendMessageBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         # delete message from db here
         # wait till server processes the change
@@ -84,6 +84,8 @@ class Test_MscolabProject(object):
             assert Message.query.filter_by(text='some - message').count() == 1
             Message.query.filter_by(text='some - message').delete()
             db.session.commit()
+
+    # TODO: Add test for delete message
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")

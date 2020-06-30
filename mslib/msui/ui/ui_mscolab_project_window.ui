@@ -179,7 +179,7 @@
               <item>
                <layout class="QVBoxLayout" name="verticalLayout">
                 <item>
-                 <widget class="QPushButton" name="sendMessage">
+                 <widget class="QPushButton" name="sendMessageBtn">
                   <property name="text">
                    <string>send</string>
                   </property>
@@ -190,6 +190,9 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="deleteMessageBtn">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
                   <property name="text">
                    <string>Delete</string>
                   </property>

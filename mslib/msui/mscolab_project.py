@@ -74,18 +74,17 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.markdown = Markdown(extensions=['nl2br', 'sane_lists', DeregisterSyntax()])
 
         # Signals
-        self.sendMessage.clicked.connect(self.send_message)
+        self.messageList.itemActivated.connect(self.message_selected)
         self.previewBtn.clicked.connect(self.toggle_preview)
-
+        self.sendMessageBtn.clicked.connect(self.send_message)
+        self.deleteMessageBtn.clicked.connect(self.delete_message)
         # Socket Connection handlers
-        self.conn.signal_message_receive.connect(self.render_new_message)
-
+        self.conn.signal_message_receive.connect(self.handle_incoming_message)
+        self.conn.signal_message_deleted.connect(self.handle_deleted_message)
         # Set Label text
         self.set_label_text()
-
         # load all users
         self.load_users()
-
         # load messages
         self.load_all_messages()
 
@@ -95,14 +94,12 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.proj_info.setText(f"Project: {self.project_name}")
 
     # Signal Slots
-
-    def send_message(self):
-        """
-        send message through connection
-        """
-        message_text = self.messageText.toPlainText()
-        self.conn.send_message(message_text, self.p_id)
-        self.messageText.clear()
+    def message_selected(self, item):
+        message = self.messageList.itemWidget(item)
+        if message.username == self.user["username"] and message.system_message is False:
+            self.deleteMessageBtn.setEnabled(True)
+        else:
+            self.deleteMessageBtn.setEnabled(False)
 
     def toggle_preview(self):
         # Go Back to text box
@@ -119,6 +116,21 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             self.messageText.setHtml(html)
             self.messageText.setReadOnly(True)
             self.previewBtn.setDefault(True)
+
+    def send_message(self):
+        """
+        send message through connection
+        """
+        message_text = self.messageText.toPlainText()
+        if message_text == "":
+            return
+        self.conn.send_message(message_text, self.p_id)
+        self.messageText.clear()
+
+    def delete_message(self):
+        item = self.messageList.selectedItems()[0]
+        message = self.messageList.itemWidget(item)
+        self.conn.delete_message(message.id, self.p_id)
 
     # API REQUESTS
 
@@ -150,42 +162,57 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         data = {
             "token": self.token,
             "p_id": self.p_id,
-            "timestamp": datetime.datetime(1970, 1, 1).strftime("%m %d %Y, %H:%M:%S")
+            "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
         }
         # returns an array of messages
-        url = url_join(self.mscolab_server_url, 'messages')
-        r = requests.post(url, data=data)
-        response = json.loads(r.text)
-        messages = response["messages"]
+        url = url_join(self.mscolab_server_url, "messages")
+        res = requests.get(url, data=data).json()
+        messages = res["messages"]
         # clear message box
         for message in messages:
-            username = message["username"]
-            message_text = message["text"]
-            self.render_new_message(username, message_text, False)
+            self.render_new_message(message, scroll=False)
         self.messageList.scrollToBottom()
 
-    # SOCKET HANDLERS
-
-    @QtCore.Slot(str, str)
-    def render_new_message(self, username, message, scroll=True):
-        message_item = MessageItem(username, message, self.user["username"], self.markdown)
+    def render_new_message(self, message, scroll=True):
+        message_item = MessageItem(message, self.user["username"], self.markdown)
         list_widget_item = QtWidgets.QListWidgetItem(self.messageList)
         list_widget_item.setSizeHint(message_item.sizeHint())
         self.messageList.addItem(list_widget_item)
         self.messageList.setItemWidget(list_widget_item, message_item)
-        self.messages.append(message_item)
         if scroll:
             self.messageList.scrollToBottom()
+
+    # SOCKET HANDLERS
+    @QtCore.Slot(str)
+    def handle_incoming_message(self, message):
+        message = json.loads(message)
+        self.render_new_message(message)
+
+    @QtCore.Slot(str)
+    def handle_deleted_message(self, message):
+        message = json.loads(message)
+        message_id = message["message_id"]
+        for i in range(len(self.messageList) - 1, -1, -1):
+            item = self.messageList.item(i)
+            message_widget = self.messageList.itemWidget(item)
+            if message_widget.id == message_id:
+                self.messageList.takeItem(i)
+                break
+        self.deleteMessageBtn.setEnabled(False)
 
     def closeEvent(self, event):
         self.viewCloses.emit()
 
 
 class MessageItem(QtWidgets.QWidget):
-    def __init__(self, username, message_text, current_username, markdown_helper):
+    def __init__(self, message, current_username, markdown_helper):
         super(MessageItem, self).__init__()
-        self.username = username
-        self.message_text = message_text
+        self.id = message["id"]
+        self.u_id = message["u_id"]
+        self.username = message["username"]
+        self.message_text = message["text"]
+        self.system_message = message["system_message"]
+        self.time = message["time"]
         self.current_username = current_username
         self.messageTextEdit = QtWidgets.QTextBrowser()
         html = markdown_helper.convert(self.message_text)
@@ -201,24 +228,27 @@ class MessageItem(QtWidgets.QWidget):
             self.messageTextEdit.document().size().height() + self.messageTextEdit.contentsMargins().top() * 2
         )
         self.containerLayout = QtWidgets.QHBoxLayout()
-
-        if current_username == username:
-            self.messageTextEdit.setStyleSheet("background: #dcf8c6")
+        if current_username == self.username:
+            if self.system_message:
+                self.messageTextEdit.setStyleSheet("background: #a9d3e0")
+            else:
+                self.messageTextEdit.setStyleSheet("background: #dcf8c6")
             self.containerLayout.addStretch()
             self.containerLayout.addWidget(self.messageTextEdit)
-
         else:
-            self.messageTextEdit.setStyleSheet("background: transparent; border: none;")
             self.textArea = QtWidgets.QWidget()
             self.textAreaLayout = QtWidgets.QVBoxLayout()
             self.usernameLabel = QtWidgets.QLabel(f"{self.username}:")
             self.textAreaLayout.addWidget(self.usernameLabel)
             self.textAreaLayout.addWidget(self.messageTextEdit)
             self.textArea.setLayout(self.textAreaLayout)
-            self.textArea.setStyleSheet("background: #eff0f1")
+            self.messageTextEdit.setStyleSheet("background: transparent; border: none;")
+            if self.system_message:
+                self.textArea.setStyleSheet("background: #a9d3e0")
+            else:
+                self.textArea.setStyleSheet("background: #eff0f1")
             self.containerLayout.addWidget(self.textArea)
             self.containerLayout.addStretch()
-
         self.containerLayout.setSpacing(0)
         self.containerLayout.setContentsMargins(5, 5, 5, 5)
         self.setLayout(self.containerLayout)

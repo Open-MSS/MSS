@@ -131,10 +131,25 @@ class SocketsManager(object):
         user = User.verify_auth_token(_json['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         if perm:
-            self.cm.add_message(user, _json['message_text'], str(p_id))
-            socketio.emit('chat-message-client', json.dumps({'user': user.username,
-                                                            'message_text': _json['message_text']}),
-                          room=str(p_id))
+            new_message = self.cm.add_message(user, _json['message_text'], str(p_id))
+            message = {
+                "id": new_message.id,
+                "u_id": user.id,
+                "username": user.username,
+                "text": new_message.text,
+                "system_message": new_message.system_message,
+                "time": new_message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+            }
+            socketio.emit('chat-message-client', json.dumps(message), room=str(p_id))
+
+    def handle_message_delete(self, socket_message):
+        message_id = socket_message["message_id"]
+        p_id = socket_message["p_id"]
+        user = User.verify_auth_token(socket_message['token'])
+        perm = self.permission_check_emit(user.id, int(p_id))
+        if perm:
+            self.cm.delete_message(message_id)
+            socketio.emit('delete-message-client', json.dumps({"message_id": message_id}), room=str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
         """
@@ -177,10 +192,16 @@ class SocketsManager(object):
         if perm and self.fm.save_file(int(p_id), content, user, comment):
             # send service message
             message_ = "[service message] saved changes"
-            self.cm.add_message(user, message_, str(p_id))
-            socketio.emit('chat-message-client', json.dumps({'user': user.username,
-                                                            'message_text': message_}),
-                          room=str(p_id))
+            new_message = self.cm.add_message(user, message_, str(p_id), system_message=True)
+            message = {
+                "id": new_message.id,
+                "u_id": user.id,
+                "username": user.username,
+                "text": new_message.text,
+                "system_message": new_message.system_message,
+                "time": new_message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+            }
+            socketio.emit('chat-message-client', json.dumps(message), room=str(p_id))
             # emit file-changed event to trigger reload of flight track
             socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
 
@@ -246,6 +267,7 @@ def setup_managers(app):
     socketio.on_event('start', sm.handle_start_event)
     socketio.on_event('disconnect', sm.handle_disconnect)
     socketio.on_event('chat-message', sm.handle_message)
+    socketio.on_event('delete-message', sm.handle_message_delete)
     socketio.on_event('file-save', sm.handle_file_save)
     socketio.on_event('autosave', sm.handle_autosave_enable)
     socketio.on_event('add-user-to-room', sm.join_creator_to_room)

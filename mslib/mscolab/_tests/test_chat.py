@@ -28,6 +28,7 @@ import socketio
 import requests
 import json
 import datetime
+from werkzeug.urls import url_join
 
 from mslib.mscolab.models import Message
 from mslib._tests.constants import MSCOLAB_URL_TEST
@@ -47,7 +48,8 @@ class Test_Chat(object):
         db.init_app(self.app)
 
     def test_send_message(self):
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        url = url_join(MSCOLAB_URL_TEST, 'token')
+        r = requests.post(url, data={
                           'email': 'a',
                           'password': 'a'
                           })
@@ -87,7 +89,8 @@ class Test_Chat(object):
             db.session.commit()
 
     def test_get_messages(self):
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        url = url_join(MSCOLAB_URL_TEST, 'token')
+        r = requests.post(url, data={
                           'email': 'a',
                           'password': 'a'
                           })
@@ -101,7 +104,7 @@ class Test_Chat(object):
         sio.on('chat-message-client', handler=handle_chat_message)
         sio.connect(MSCOLAB_URL_TEST)
         sio.emit('start', response)
-        sio.sleep(2)
+        sio.sleep(1)
         self.sockets.append(sio)
         sio.emit("chat-message", {
                  "p_id": 1,
@@ -113,22 +116,23 @@ class Test_Chat(object):
                  "token": response['token'],
                  "message_text": "message from 1"
                  })
-        sio.sleep(4)
+        sio.sleep(1)
         with self.app.app_context():
             messages = self.cm.get_messages(1)
             assert messages[0]["text"] == "message from 1"
             assert len(messages) == 2
-            assert messages[0]["user"] == 8
-
-            messages = self.cm.get_messages(1, last_timestamp=datetime.datetime(1970, 1, 1))
+            assert messages[0]["u_id"] == 8
+            timestamp = datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
+            messages = self.cm.get_messages(1, timestamp)
             assert len(messages) == 2
-            assert messages[0]["user"] == 8
-
-            messages = self.cm.get_messages(1, last_timestamp=datetime.datetime.now())
+            assert messages[0]["u_id"] == 8
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
+            messages = self.cm.get_messages(1, timestamp)
             assert len(messages) == 0
 
     def test_get_messages_api(self):
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        url = url_join(MSCOLAB_URL_TEST, 'token')
+        r = requests.post(url, data={
                           'email': 'a',
                           'password': 'a'
                           })
@@ -137,16 +141,16 @@ class Test_Chat(object):
         data = {
             "token": token,
             "p_id": 1,
-            "timestamp": datetime.datetime(1970, 1, 1).strftime("%m %d %Y, %H:%M:%S")
+            "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
         }
         # returns an array of messages
-        r = requests.post(MSCOLAB_URL_TEST + "/messages", data=data)
-        response = json.loads(r.text)
-        assert len(response["messages"]) == 2
+        url = url_join(MSCOLAB_URL_TEST, 'messages')
+        res = requests.get(url, data=data).json()
+        assert len(res["messages"]) == 2
 
         data["token"] = "dummy"
         # returns False due to bad authorization
-        r = requests.post(MSCOLAB_URL_TEST + "/messages", data=data)
+        r = requests.get(url, data=data)
         assert r.text == "False"
         with self.app.app_context():
             Message.query.filter_by(text="message from 1").delete()

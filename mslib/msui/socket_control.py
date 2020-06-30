@@ -36,7 +36,8 @@ class ConnectionManager(QtCore.QObject):
 
     signal_reload = QtCore.Signal(int, name="reload_wps")
     signal_autosave = QtCore.Signal(int, int, name="autosave en/db")
-    signal_message_receive = QtCore.Signal(str, str, name="message rcv")
+    signal_message_receive = QtCore.Signal(str, name="message rcv")
+    signal_message_deleted = QtCore.Signal(str, name="message deleted")
     signal_new_permission = QtCore.Signal(int, int, name="new permission")
     signal_update_permission = QtCore.Signal(int, int, str, name="update permission")
     signal_revoke_permission = QtCore.Signal(int, int, name="revoke permission")
@@ -51,6 +52,8 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('autosave-client-db', handler=self.handle_autosave_disable)
         # on chat message recive
         self.sio.on('chat-message-client', handler=self.handle_incoming_message)
+        # on message delete
+        self.sio.on('delete-message-client', handler=self.handle_message_deleted)
         # on new permission
         self.sio.on('new-permission', handler=self.handle_new_permission)
         # on update of permission
@@ -100,10 +103,12 @@ class ConnectionManager(QtCore.QObject):
 
     def handle_incoming_message(self, message):
         # raise signal to render to view
-        message = json.loads(message)
         logging.debug(message)
         # emit signal
-        self.signal_message_receive.emit(message["user"], message["message_text"])
+        self.signal_message_receive.emit(message)
+
+    def handle_message_deleted(self, message):
+        self.signal_message_deleted.emit(message)
 
     def handle_file_change(self, message):
         message = json.loads(message)
@@ -121,6 +126,13 @@ class ConnectionManager(QtCore.QObject):
                       "p_id": p_id,
                       "token": self.token,
                       "message_text": message_text})
+
+    def delete_message(self, message_id, p_id):
+        self.sio.emit('delete-message', {
+            'message_id': message_id,
+            'p_id': p_id,
+            'token': self.token
+        })
 
     def save_file(self, token, p_id, content, comment=None):
         logging.debug("saving file")
