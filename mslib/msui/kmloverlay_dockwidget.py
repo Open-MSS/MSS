@@ -302,7 +302,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
             item.setCheckState(QtCore.Qt.Checked)
             self.listWidget.addItem(item)
-        self.leFile.setText(text)
+            self.leFile.setText(text)
 
     def remove_file(self):
         for index in range(self.listWidget.count()):
