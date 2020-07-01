@@ -225,6 +225,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.view = view
         self.kml = None
         self.patch = None
+        self.list_kml_patch = []
 
         # Connect slots and signals.
         self.btSelectFile.clicked.connect(self.select_file)
@@ -233,8 +234,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.pushButton_remove_all.clicked.connect(self.remove_all_files)
         self.pbSelectColour.clicked.connect(self.select_colour)
         self.cbOverlay.stateChanged.connect(self.update_settings)
-        self.dsbLineWidth.valueChanged.connect(self.update_settings)
-        self.cbManualStyle.stateChanged.connect(self.update_settings)
+        # self.dsbLineWidth.valueChanged.connect(self.update_settings)
+        # self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.cbOverlay.setChecked(True)
         self.cbOverlay.setEnabled(False) #dimmed
@@ -274,7 +275,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.view.plot_kml(self.patch)
             self.patch.update(self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
         elif self.patch is not None:
-            self.view.plot_kml(None)
+            print(self.patch)
+            # self.view.plot_kml(None)
 
     def select_colour(self):
         button = self.pbSelectColour
@@ -288,23 +290,20 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.update_settings()
 
     def select_file(self):
-        """Slot that opens a file dialog to choose a kml file
+        """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
-        filename = get_open_filename(
+        filenames = get_open_filename(
             self, "Open KML Polygonal File", os.path.dirname(str(self.leFile.text())), "KML Files (*.kml)")
-        if not filename:
-            return
-        self.leFile.setText(filename)
+        for filename in filenames:
+            if not filename:
+                return
+            text = filename
+            item = QtWidgets.QListWidgetItem(text)
+            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+            item.setCheckState(QtCore.Qt.Checked)
+            self.listWidget.addItem(item)
+        self.leFile.setText(text)
 
-        text = filename
-        item = QtWidgets.QListWidgetItem(text)
-        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-        item.setCheckState(QtCore.Qt.Unchecked)
-        self.listWidget.addItem(item)
-
-    def remove_all_files(self):
-        self.listWidget.clear()
-  
     def remove_file(self):
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
@@ -312,20 +311,25 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.listWidget.takeItem(index)
                 self.remove_file()
 
+    def remove_all_files(self):
+        self.listWidget.clear()
+
     def load_file(self):
         """
         Loads a KML file selected by the leFile box and constructs the
         corresponding patch.
         """
         if self.patch is not None:
-            self.patch.remove()
-            self.view.plot_kml(None)
-            self.patch = None
+            # print(self.list_kml_patch)
+            for patch in self.list_kml_patch:
+                patch.remove()
+            self.list_kml_patch = []
             self.cbOverlay.setEnabled(False)
+            self.view.plot_kml(None)
+                 
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                # print(self.listWidget.item(index).text())
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
                 _fs = open_fs(_dirname)
                 try:
@@ -335,10 +339,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         self.patch = KMLPatch(self.view.map, self.kml,
                                               self.cbManualStyle.isChecked(),
                                               self.get_color(), self.dsbLineWidth.value())
-                    self.cbOverlay.setEnabled(True)
+                        self.list_kml_patch.append(self.patch)
+                    # self.cbOverlay.setEnabled(True) # goes to update_settings()
                     # if self.view is not None and self.cbOverlay.isChecked(): #any use of this??
                     #     self.view.plot_kml(self.patch)
                 except IOError as ex:
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+
+

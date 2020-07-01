@@ -41,8 +41,8 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
 def get_open_filename_qt(*args):
-    filename = QtWidgets.QFileDialog.getOpenFileName(*args)
-    return filename[0] if isinstance(filename, tuple) else str(filename)
+    filenames = QtWidgets.QFileDialog.getOpenFileNames(*args)
+    return filenames[0] if isinstance(filenames, tuple) else str(filenames)
 
 
 def get_save_filename_qt(*args):
