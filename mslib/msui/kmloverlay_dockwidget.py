@@ -34,6 +34,7 @@ from matplotlib import patheffects
 
 from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
+from mslib.msui.mss_qt import ui_customize_kml
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
 
 
@@ -237,8 +238,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         # self.dsbLineWidth.valueChanged.connect(self.update_settings)
         # self.cbManualStyle.stateChanged.connect(self.update_settings)
 
+        self.dialog = CustomizeKMLWidget(self)
+        self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
+
         self.cbOverlay.setChecked(True)
-        self.cbOverlay.setEnabled(False) #dimmed
+        self.cbOverlay.setEnabled(False)  # dimmed
         self.cbManualStyle.setChecked(False)
 
         self.settings_tag = "kmldock"
@@ -253,6 +257,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
         self.pbSelectColour.setPalette(palette)
+
+    def open_customize_kml_dialog(self):
+        self.dialog.show()
 
     def __del__(self):
         settings = {
@@ -349,3 +356,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
 
 
+class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDialog):
+    """
+    This class provides the interface for accessing Multiple KML files simultaneously and
+    adding the appropriate patches to the TopView canvas.
+    """
+    def __init__(self, parent=None):
+        super(CustomizeKMLWidget, self).__init__(parent)
+        self.setupUi(self)

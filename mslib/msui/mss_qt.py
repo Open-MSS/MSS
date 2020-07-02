@@ -139,6 +139,7 @@ for mod in [
         "ui_about_dialog",
         "ui_hexagon_dockwidget",
         "ui_kmloverlay_dockwidget",
+        "ui_customize_kml",
         "ui_mainwindow",
         "ui_performance_settings",
         "ui_remotesensing_dockwidget",
