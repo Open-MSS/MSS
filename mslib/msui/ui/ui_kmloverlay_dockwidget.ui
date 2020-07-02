@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>545</width>
-    <height>300</height>
+    <height>234</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -113,7 +113,11 @@
     </layout>
    </item>
    <item>
-    <widget class="QLineEdit" name="leFile"/>
+    <widget class="QPushButton" name="pushButton_merge">
+     <property name="text">
+      <string>Merge and Export KML File</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

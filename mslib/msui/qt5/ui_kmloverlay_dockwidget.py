@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_KMLOverlayDockWidget(object):
     def setupUi(self, KMLOverlayDockWidget):
         KMLOverlayDockWidget.setObjectName("KMLOverlayDockWidget")
-        KMLOverlayDockWidget.resize(545, 300)
+        KMLOverlayDockWidget.resize(545, 234)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(KMLOverlayDockWidget)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
@@ -63,9 +63,9 @@ class Ui_KMLOverlayDockWidget(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
-        self.leFile = QtWidgets.QLineEdit(KMLOverlayDockWidget)
-        self.leFile.setObjectName("leFile")
-        self.verticalLayout_2.addWidget(self.leFile)
+        self.pushButton_merge = QtWidgets.QPushButton(KMLOverlayDockWidget)
+        self.pushButton_merge.setObjectName("pushButton_merge")
+        self.verticalLayout_2.addWidget(self.pushButton_merge)
 
         self.retranslateUi(KMLOverlayDockWidget)
         QtCore.QMetaObject.connectSlotsByName(KMLOverlayDockWidget)
@@ -81,4 +81,5 @@ class Ui_KMLOverlayDockWidget(object):
         self.cbManualStyle.setText(_translate("KMLOverlayDockWidget", "Manual Style"))
         self.pbSelectColour.setText(_translate("KMLOverlayDockWidget", "Colour"))
         self.label_2.setText(_translate("KMLOverlayDockWidget", "line width"))
+        self.pushButton_merge.setText(_translate("KMLOverlayDockWidget", "Merge and Export KML File"))
 

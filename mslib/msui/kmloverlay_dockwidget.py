@@ -245,7 +245,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         settings = load_settings_qsettings(
             self.settings_tag, {"filename": "", "linewidth": 1, "colour": (0, 0, 0, 1)})
 
-        self.leFile.setText(settings["filename"])
+        self.directory_location = settings["filename"]
         self.dsbLineWidth.setValue(settings["linewidth"])
 
         palette = QtGui.QPalette(self.pbSelectColour.palette())
@@ -256,7 +256,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
     def __del__(self):
         settings = {
-            "filename": str(self.leFile.text()),
+            "filename": str(self.directory_location),
             "linewidth": self.dsbLineWidth.value(),
             "colour": self.get_color()
         }
@@ -293,7 +293,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
         filenames = get_open_filename(
-            self, "Open KML Polygonal File", os.path.dirname(str(self.leFile.text())), "KML Files (*.kml)")
+            self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
         for filename in filenames:
             if not filename:
                 return
@@ -302,7 +302,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
             item.setCheckState(QtCore.Qt.Checked)
             self.listWidget.addItem(item)
-            self.leFile.setText(text)
+            self.directory_location = text
 
     def remove_file(self):
         for index in range(self.listWidget.count()):
@@ -316,11 +316,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
     def load_file(self):
         """
-        Loads a KML file selected by the leFile box and constructs the
-        corresponding patch.
+        Loads multiple KML Files simultaneously and constructs the
+        corresponding patches.
         """
         if self.patch is not None:
-            # print(self.list_kml_patch)
+            logging.debug("List of patches : %s", self.list_kml_patch)
             for patch in self.list_kml_patch:
                 patch.remove()
             self.list_kml_patch = []
