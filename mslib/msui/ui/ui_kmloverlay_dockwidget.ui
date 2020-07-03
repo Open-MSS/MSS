@@ -56,13 +56,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="btLoadFile">
-         <property name="text">
-          <string>Load</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="pushButton_remove">
          <property name="text">
           <string>Remove</string>

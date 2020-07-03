@@ -226,20 +226,23 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.view = view
         self.kml = None
         self.patch = None
-        self.list_kml_patch = []
+        self.list_items = [] # creates list of files being added
+        self.list_kml_patch = [] #creates list of patches being added
 
         # Connect slots and signals.
         self.btSelectFile.clicked.connect(self.select_file)
-        self.btLoadFile.clicked.connect(self.load_file)
         self.pushButton_remove.clicked.connect(self.remove_file)
         self.pushButton_remove_all.clicked.connect(self.remove_all_files)
         self.pbSelectColour.clicked.connect(self.select_colour)
         self.cbOverlay.stateChanged.connect(self.update_settings)
+
         # self.dsbLineWidth.valueChanged.connect(self.update_settings)
         # self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.dialog = CustomizeKMLWidget(self)
         self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
+
+        self.listWidget.itemChanged.connect(self.load_file)
 
         self.cbOverlay.setChecked(True)
         self.cbOverlay.setEnabled(False)  # dimmed
@@ -305,21 +308,30 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             if not filename:
                 return
             text = filename
-            item = QtWidgets.QListWidgetItem(text)
-            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-            item.setCheckState(QtCore.Qt.Checked)
-            self.listWidget.addItem(item)
-            self.directory_location = text
+            if text not in self.list_items:
+                self.list_items.append(text)
+                item = QtWidgets.QListWidgetItem(text)
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                item.setCheckState(QtCore.Qt.Checked)
+                self.listWidget.addItem(item)
+                self.directory_location = text
+            else:
+                logging.info("%s file already added", text)
+        self.load_file()
 
     def remove_file(self):
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                self.list_items.remove(self.listWidget.item(index).text())
                 self.listWidget.takeItem(index)
                 self.remove_file()
+        self.load_file()
 
     def remove_all_files(self):
-        self.listWidget.clear()
+        self.listWidget.clear() 
+        self.load_file()
+        self.list_items = []
 
     def load_file(self):
         """
@@ -333,7 +345,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.list_kml_patch = []
             self.cbOverlay.setEnabled(False)
             self.view.plot_kml(None)
-                 
+                
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
