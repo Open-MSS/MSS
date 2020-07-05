@@ -74,6 +74,11 @@ class ChatManager(object):
                             }, messages))
         return messages
 
+    def edit_message(self, message_id, new_message_text):
+        message = Message.query.filter_by(id=message_id).first()
+        message.text = new_message_text
+        db.session.commit()
+
     def delete_message(self, message_id):
         Message.query.filter(Message.id == message_id).delete()
         db.session.commit()

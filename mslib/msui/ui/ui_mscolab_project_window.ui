@@ -189,12 +189,19 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="deleteMessageBtn">
+                 <widget class="QPushButton" name="editMessageBtn">
+                  <property name="text">
+                   <string>Edit</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="cancelEditBtn">
                   <property name="enabled">
-                   <bool>false</bool>
+                   <bool>true</bool>
                   </property>
                   <property name="text">
-                   <string>Delete</string>
+                   <string>Cancel</string>
                   </property>
                  </widget>
                 </item>

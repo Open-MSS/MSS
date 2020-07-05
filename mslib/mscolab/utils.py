@@ -37,3 +37,15 @@ def get_session_id(sockets, u_id):
         if ss["u_id"] == u_id:
             s_id = ss["s_id"]
     return s_id
+
+
+def get_message_dict(message, user):
+    message = {
+        "id": message.id,
+        "u_id": user.id,
+        "username": user.username,
+        "text": message.text,
+        "system_message": message.system_message,
+        "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+    }
+    return message
