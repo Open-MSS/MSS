@@ -286,17 +286,22 @@ class MessageItem(QtWidgets.QWidget):
         self.setLayout(self.containerLayout)
 
     def open_context_menu(self, pos):
-        if self.chat_window.user["username"] == self.username and self.system_message is False:
-            context_menu = QtWidgets.QMenu(self)
-            edit_action = context_menu.addAction("Edit Message")
-            delete_action = context_menu.addAction("Delete Message")
-            action = context_menu.exec_(self.messageTextEdit.mapToGlobal(pos))
-            if action == edit_action:
-                self.chat_window.start_message_edit(self.message_text, self.id)
-            elif action == delete_action:
-                # disable edit message section if it's active before deleting
-                self.chat_window.cancel_message_edit()
-                self.chat_window.conn.delete_message(self.id, self.chat_window.p_id)
+        context_menu = QtWidgets.QMenu(self)
+        copy_action = context_menu.addAction("Copy Markdown")
+        edit_action = context_menu.addAction("Edit")
+        delete_action = context_menu.addAction("Delete")
+        if self.username != self.chat_window.user["username"] or self.system_message is True:
+            edit_action.setVisible(False)
+            delete_action.setVisible(False)
+        action = context_menu.exec_(self.messageTextEdit.mapToGlobal(pos))
+        if action == copy_action:
+            Qt.QApplication.clipboard().setText(self.message_text)
+        elif action == edit_action:
+            self.chat_window.start_message_edit(self.message_text, self.id)
+        elif action == delete_action:
+            # disable edit message section if it's active before deleting
+            self.chat_window.cancel_message_edit()
+            self.chat_window.conn.delete_message(self.id, self.chat_window.p_id)
 
     def update_text(self, message_text):
         self.message_text = message_text
