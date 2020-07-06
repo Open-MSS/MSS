@@ -30,9 +30,9 @@
 """
 import json
 import logging
+
 import fs
 import requests
-
 from fs import open_fs, path
 from requests.auth import HTTPBasicAuth
 
@@ -43,7 +43,6 @@ from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
-from mslib.msui.icons import icons
 from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, get_open_filename, get_save_filename
 from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
 from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
@@ -74,7 +73,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         super(MSSMscolabWindow, self).__init__(parent)
         self.setupUi(self)
         self.loggedInWidget.hide()
-        self.setWindowIcon(QtGui.QIcon(icons('64x64')))
         # if token is None, not authorized, else authorized
         self.token = None
         self.loginButton.clicked.connect(self.authorize)

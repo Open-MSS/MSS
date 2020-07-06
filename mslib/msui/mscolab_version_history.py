@@ -38,7 +38,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     """Derives QMainWindow to provide some common functionality to all
        MSUI view windows.
     """
-    name = "MSColab Change History Window"
+    name = "MSColab Version History Window"
     identifier = None
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")

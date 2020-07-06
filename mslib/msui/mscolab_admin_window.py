@@ -24,8 +24,8 @@
     limitations under the License.
 """
 import json
-import requests
 
+import requests
 from werkzeug.urls import url_join
 
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default

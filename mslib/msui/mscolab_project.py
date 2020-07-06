@@ -25,8 +25,8 @@
 """
 import datetime
 import json
-import requests
 
+import requests
 from markdown import Markdown
 from markdown.extensions import Extension
 from werkzeug.urls import url_join
