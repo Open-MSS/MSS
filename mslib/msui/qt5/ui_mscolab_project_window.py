@@ -130,7 +130,7 @@ class Ui_MscolabProject(object):
         self.previewBtn.setText(_translate("MscolabProject", "Preview"))
         self.messageText.setPlaceholderText(_translate("MscolabProject", "Enter Message"))
         self.sendMessageBtn.setText(_translate("MscolabProject", "send"))
-        self.editMessageBtn.setText(_translate("MscolabProject", "Edit"))
+        self.editMessageBtn.setText(_translate("MscolabProject", "Update"))
         self.cancelEditBtn.setText(_translate("MscolabProject", "Cancel"))
         self.actionCloseWindow.setText(_translate("MscolabProject", "CloseWindow"))
         self.actionCloseWindow.setShortcut(_translate("MscolabProject", "Ctrl+W"))

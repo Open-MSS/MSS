@@ -191,7 +191,7 @@
                 <item>
                  <widget class="QPushButton" name="editMessageBtn">
                   <property name="text">
-                   <string>Edit</string>
+                   <string>Update</string>
                   </property>
                  </widget>
                 </item>

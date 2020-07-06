@@ -244,74 +244,98 @@ class MessageItem(QtWidgets.QWidget):
         self.system_message = message["system_message"]
         self.time = message["time"]
         self.chat_window = chat_window
-        self.messageTextEdit = QtWidgets.QTextBrowser()
+        self.messageTextBox = QtWidgets.QTextBrowser()
+        self.context_menu = QtWidgets.QMenu(self)
+        self.textArea = QtWidgets.QWidget()
+        self.setup_message_box()
+        self.setup_message_box_layout()
+        self.setup_context_menu()
+
+    def setup_message_box(self):
         html = self.chat_window.markdown.convert(self.message_text)
-        self.messageTextEdit.setHtml(html)
-        self.messageTextEdit.setOpenLinks(False)
-        self.messageTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.messageTextEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.messageTextEdit.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        self.messageTextEdit.setAttribute(103)
-        self.messageTextEdit.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.messageTextEdit.customContextMenuRequested.connect(self.open_context_menu)
-        self.messageTextEdit.anchorClicked.connect(self.on_link_click)
-        self.messageTextEdit.show()
-        self.messageTextEdit.setFixedHeight(
-            self.messageTextEdit.document().size().height() + self.messageTextEdit.contentsMargins().top() * 2
+        self.messageTextBox.setHtml(html)
+        self.messageTextBox.setOpenLinks(False)
+        self.messageTextBox.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.messageTextBox.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.messageTextBox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.messageTextBox.setAttribute(103)
+        self.messageTextBox.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.messageTextBox.customContextMenuRequested.connect(self.open_context_menu)
+        self.messageTextBox.anchorClicked.connect(self.on_link_click)
+        self.messageTextBox.show()
+        self.messageTextBox.setFixedHeight(
+            self.messageTextBox.document().size().height() + self.messageTextBox.contentsMargins().top() * 2
         )
-        self.containerLayout = QtWidgets.QHBoxLayout()
+
+    def setup_message_box_layout(self):
+        container_layout = QtWidgets.QHBoxLayout()
+        text_area_layout = QtWidgets.QVBoxLayout()
         if self.chat_window.user["username"] == self.username:
             if self.system_message:
-                self.messageTextEdit.setStyleSheet("background: #a9d3e0")
+                self.messageTextBox.setStyleSheet("background: #a9d3e0")
             else:
-                self.messageTextEdit.setStyleSheet("background: #dcf8c6")
-            self.containerLayout.addStretch()
-            self.containerLayout.addWidget(self.messageTextEdit)
+                self.messageTextBox.setStyleSheet("background: #dcf8c6")
+            text_area_layout.addWidget(self.messageTextBox)
+            self.textArea.setLayout(text_area_layout)
+            container_layout.addStretch()
+            container_layout.addWidget(self.textArea)
         else:
-            self.textArea = QtWidgets.QWidget()
-            self.textAreaLayout = QtWidgets.QVBoxLayout()
-            self.usernameLabel = QtWidgets.QLabel(f"{self.username}:")
-            self.textAreaLayout.addWidget(self.usernameLabel)
-            self.textAreaLayout.addWidget(self.messageTextEdit)
-            self.textArea.setLayout(self.textAreaLayout)
-            self.messageTextEdit.setStyleSheet("background: transparent; border: none;")
+            username_label = QtWidgets.QLabel(f"{self.username}")
+            username_label.setContentsMargins(2, 5, 5, 0)
+            label_font = QtGui.QFont()
+            label_font.setBold(True)
+            username_label.setFont(label_font)
+            text_area_layout.addWidget(username_label)
+            text_area_layout.addWidget(self.messageTextBox)
+            self.textArea.setLayout(text_area_layout)
+            self.messageTextBox.setStyleSheet("background: transparent; border: none;")
             if self.system_message:
                 self.textArea.setStyleSheet("background: #a9d3e0")
             else:
                 self.textArea.setStyleSheet("background: #eff0f1")
-            self.containerLayout.addWidget(self.textArea)
-            self.containerLayout.addStretch()
-        self.containerLayout.setSpacing(0)
-        self.containerLayout.setContentsMargins(5, 5, 5, 5)
-        self.setLayout(self.containerLayout)
+            container_layout.addWidget(self.textArea)
+            container_layout.addStretch()
+        self.textArea.layout().setSpacing(0)
+        self.textArea.layout().setContentsMargins(5, 0, 5, 0)
+        container_layout.setSpacing(0)
+        container_layout.setContentsMargins(5, 5, 5, 5)
+        self.setLayout(container_layout)
 
-    def open_context_menu(self, pos):
-        context_menu = QtWidgets.QMenu(self)
-        copy_action = context_menu.addAction("Copy Markdown")
-        edit_action = context_menu.addAction("Edit")
-        delete_action = context_menu.addAction("Delete")
+    def setup_context_menu(self):
+        copy_action = self.context_menu.addAction("Copy")
+        edit_action = self.context_menu.addAction("Edit")
+        delete_action = self.context_menu.addAction("Delete")
+        copy_action.triggered.connect(self.handle_copy_action)
+        edit_action.triggered.connect(self.handle_edit_action)
+        delete_action.triggered.connect(self.handle_delete_action)
         if self.username != self.chat_window.user["username"] or self.system_message is True:
+            if self.system_message is True:
+                copy_action.setVisible(False)
             edit_action.setVisible(False)
             delete_action.setVisible(False)
-        action = context_menu.exec_(self.messageTextEdit.mapToGlobal(pos))
-        if action == copy_action:
-            Qt.QApplication.clipboard().setText(self.message_text)
-        elif action == edit_action:
-            self.chat_window.start_message_edit(self.message_text, self.id)
-        elif action == delete_action:
-            # disable edit message section if it's active before deleting
-            self.chat_window.cancel_message_edit()
-            self.chat_window.conn.delete_message(self.id, self.chat_window.p_id)
+
+    def open_context_menu(self, pos):
+        self.context_menu.exec_(self.messageTextBox.mapToGlobal(pos))
+
+    def handle_copy_action(self):
+        Qt.QApplication.clipboard().setText(self.message_text)
+
+    def handle_edit_action(self):
+        self.chat_window.start_message_edit(self.message_text, self.id)
+
+    def handle_delete_action(self):
+        # disable edit message section if it's active before deleting
+        self.chat_window.cancel_message_edit()
+        self.chat_window.conn.delete_message(self.id, self.chat_window.p_id)
 
     def update_text(self, message_text):
         self.message_text = message_text
         html = self.chat_window.markdown.convert(self.message_text)
-        self.messageTextEdit.setHtml(html)
-        self.messageTextEdit.setFixedHeight(
-            self.messageTextEdit.document().size().height() + self.messageTextEdit.contentsMargins().top() * 2
+        self.messageTextBox.setHtml(html)
+        self.messageTextBox.setFixedHeight(
+            self.messageTextBox.document().size().height() + self.messageTextBox.contentsMargins().top() * 2
         )
-        if self.username != self.chat_window.user["username"]:
-            self.textArea.adjustSize()
+        self.textArea.adjustSize()
 
     def on_link_click(self, url):
         if url.scheme() == "":

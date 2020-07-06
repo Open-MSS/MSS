@@ -33,10 +33,17 @@ from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
 from mslib.mscolab.server import APP, db, initialize_managers
-from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
+from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets, Qt
+
+
+class Actions(object):
+    COPY = 0
+    EDIT = 1
+    DELETE = 2
 
 
 class Test_MscolabProject(object):
+
     def setup(self):
         # start mscolab server
         self.app = APP
@@ -74,18 +81,31 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
 
     def test_send_message(self):
-        self.chat_window.messageText.setPlainText('some - message')
+        self.chat_window.messageText.setPlainText('**test message**')
         QtTest.QTest.mouseClick(self.chat_window.sendMessageBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        # delete message from db here
         # wait till server processes the change
         time.sleep(1)
         with self.app.app_context():
-            assert Message.query.filter_by(text='some - message').count() == 1
-            Message.query.filter_by(text='some - message').delete()
-            db.session.commit()
+            assert Message.query.filter_by(text='**test message**').count() == 1
 
-    # TODO: Add test for delete message
+    def test_copy_message(self):
+        self._activate_context_menu_action(Actions.COPY)
+        assert Qt.QApplication.clipboard().text() == "**test message**"
+
+    def test_edit_message(self):
+        self._activate_context_menu_action(Actions.EDIT)
+        self.chat_window.messageText.setPlainText('test edit')
+        QtTest.QTest.mouseClick(self.chat_window.editMessageBtn, QtCore.Qt.LeftButton)
+        time.sleep(1)
+        with self.app.app_context():
+            assert Message.query.filter_by(text='test edit').count() == 1
+
+    def test_delete_message(self):
+        self._activate_context_menu_action(Actions.DELETE)
+        time.sleep(1)
+        with self.app.app_context():
+            assert Message.query.filter_by(text='test edit').count() == 0
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")
@@ -107,3 +127,8 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
+
+    def _activate_context_menu_action(self, action_index):
+        item = self.chat_window.messageList.item(self.chat_window.messageList.count() - 1)
+        message_widget = self.chat_window.messageList.itemWidget(item)
+        message_widget.context_menu.actions()[action_index].trigger()
