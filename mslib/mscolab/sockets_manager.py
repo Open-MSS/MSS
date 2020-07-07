@@ -24,15 +24,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-from flask_socketio import SocketIO, join_room, leave_room
-from flask import request
-import logging
 import json
+import logging
+from flask import request
+from flask_socketio import SocketIO, join_room, leave_room
 
-from mslib.mscolab.models import Permission, User
 from mslib.mscolab.chat_manager import ChatManager
 from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.models import Permission, User
+from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.utils import get_session_id
 
 socketio = SocketIO()
@@ -131,10 +131,31 @@ class SocketsManager(object):
         user = User.verify_auth_token(_json['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         if perm:
-            self.cm.add_message(user, _json['message_text'], str(p_id))
-            socketio.emit('chat-message-client', json.dumps({'user': user.username,
-                                                            'message_text': _json['message_text']}),
-                          room=str(p_id))
+            new_message = self.cm.add_message(user, _json['message_text'], str(p_id))
+            new_message_dict = get_message_dict(new_message, user)
+            socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+
+    def handle_message_edit(self, socket_message):
+        message_id = socket_message["message_id"]
+        p_id = socket_message["p_id"]
+        new_message_text = socket_message["new_message_text"]
+        user = User.verify_auth_token(socket_message["token"])
+        perm = self.permission_check_emit(user.id, int(p_id))
+        if perm:
+            self.cm.edit_message(message_id, new_message_text)
+            socketio.emit('edit-message-client', json.dumps({
+                "message_id": message_id,
+                "new_message_text": new_message_text
+            }), room=str(p_id))
+
+    def handle_message_delete(self, socket_message):
+        message_id = socket_message["message_id"]
+        p_id = socket_message["p_id"]
+        user = User.verify_auth_token(socket_message['token'])
+        perm = self.permission_check_emit(user.id, int(p_id))
+        if perm:
+            self.cm.delete_message(message_id)
+            socketio.emit('delete-message-client', json.dumps({"message_id": message_id}), room=str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
         """
@@ -177,10 +198,9 @@ class SocketsManager(object):
         if perm and self.fm.save_file(int(p_id), content, user, comment):
             # send service message
             message_ = "[service message] saved changes"
-            self.cm.add_message(user, message_, str(p_id))
-            socketio.emit('chat-message-client', json.dumps({'user': user.username,
-                                                            'message_text': message_}),
-                          room=str(p_id))
+            new_message = self.cm.add_message(user, message_, str(p_id), system_message=True)
+            new_message_dict = get_message_dict(new_message, user)
+            socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
             # emit file-changed event to trigger reload of flight track
             socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
 
@@ -246,6 +266,8 @@ def setup_managers(app):
     socketio.on_event('start', sm.handle_start_event)
     socketio.on_event('disconnect', sm.handle_disconnect)
     socketio.on_event('chat-message', sm.handle_message)
+    socketio.on_event('edit-message', sm.handle_message_edit)
+    socketio.on_event('delete-message', sm.handle_message_delete)
     socketio.on_event('file-save', sm.handle_file_save)
     socketio.on_event('autosave', sm.handle_autosave_enable)
     socketio.on_event('add-user-to-room', sm.join_creator_to_room)

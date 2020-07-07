@@ -52,7 +52,7 @@ class User(db.Model):
         self.hash_password(password)
 
     def __repr__(self):
-        return('<User %r>' % self.username)
+        return f'<User {self.username}>'
 
     def hash_password(self, password):
         self.password = pwd_context.encrypt(password)
@@ -94,7 +94,7 @@ class Connection(db.Model):
         self.s_id = s_id
 
     def __repr__(self):
-        return('<Connection %s %s>'.format(self.s_id, self.u_id))
+        return f'<Connection s_id: {self.s_id}, u_id: {self.u_id}>'
 
 
 class Permission(db.Model):
@@ -116,7 +116,7 @@ class Permission(db.Model):
         self.access_level = access_level
 
     def __repr__(self):
-        return('<Permission user %s project %s access level %s>'.format(self.u_id, self.p_id, str(self.access_level)))
+        return f'<Permission u_id: {self.u_id}, p_id:{self.p_id}, access_level: {str(self.access_level)}>'
 
 
 class Project(db.Model):
@@ -139,7 +139,7 @@ class Project(db.Model):
         self.autosave = autosave
 
     def __repr__(self):
-        return('<Project path %s desc %s>'.format(self.path, self.description))
+        return f'<Project path: {self.path}, desc: {self.description}>'
 
 
 class Message(db.Model):
@@ -149,15 +149,17 @@ class Message(db.Model):
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
+    system_message = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    def __init__(self, p_id, u_id, text):
+    def __init__(self, p_id, u_id, text, system_message=False):
         self.p_id = p_id
         self.u_id = u_id
         self.text = text
+        self.system_message = system_message
 
     def __repr__(self):
-        return('<Message %s user %s in %s>'.format(self.text, self.u_id, self.p_id))
+        return f'<Message text: {self.text}, user: {self.u_id}, project: {self.p_id}>'
 
 
 class Change(db.Model):

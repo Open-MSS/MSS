@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import datetime
+
 from mslib.mscolab.models import db, Message, User
 
 
@@ -33,34 +35,50 @@ class ChatManager(object):
     def __init__(self):
         pass
 
-    def add_message(self, user, text, roomname):
+    def add_message(self, user, text, roomname, system_message=False):
         """
         text: message to be emitted to room and saved to db
         roomname: room-name(p_id) to which message is emitted,
         user: User object, one which emits the message
+        system_message: whether the message is a save alert or normal text message
         """
-        message = Message(roomname, user.id, text)
+        message = Message(roomname, user.id, text, system_message)
         db.session.add(message)
         db.session.commit()
         return message
 
-    def get_messages(self, p_id, last_timestamp=None):
+    def get_messages(self, p_id, timestamp=None):
         """
         p_id: project id
-        last_timestamp:  if provided, messages only after this time stamp is provided
+        timestamp:  if provided, messages only after this time stamp is provided
         """
-        messages = Message.query.filter_by(p_id=p_id)
-        if last_timestamp:
-            messages = messages.filter(Message.created_at > last_timestamp)
-        messages = messages.all()
+        if timestamp is None:
+            timestamp = datetime.datetime(1970, 1, 1)
+        else:
+            timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d, %H:%M:%S")
+        messages = Message.query \
+            .outerjoin(User, Message.u_id == User.id) \
+            .add_columns(User.username, Message.id, Message.u_id, Message.text,
+                         Message.system_message, Message.created_at) \
+            .filter(Message.p_id == p_id) \
+            .filter(Message.created_at > timestamp) \
+            .all()
 
-        messages = list(map(lambda x:
-                        {'user': x.u_id,
-                         'time': x.created_at.strftime("%m %d %Y, %H:%M:%S"),
-                         'text': x.text,
-                         'username': self.get_user_from_id(x.u_id).username}, messages))
+        messages = list(map(lambda message: {
+                            'id': message.id,
+                            'u_id': message.u_id,
+                            'username': message.username,
+                            'text': message.text,
+                            'system_message': message.system_message,
+                            'time': message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+                            }, messages))
         return messages
 
-    # refactor to utils
-    def get_user_from_id(self, id):
-        return User.query.filter_by(id=id).first()
+    def edit_message(self, message_id, new_message_text):
+        message = Message.query.filter_by(id=message_id).first()
+        message.text = new_message_text
+        db.session.commit()
+
+    def delete_message(self, message_id):
+        Message.query.filter(Message.id == message_id).delete()
+        db.session.commit()

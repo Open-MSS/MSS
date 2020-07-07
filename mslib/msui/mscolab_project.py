@@ -25,8 +25,8 @@
 """
 import datetime
 import json
-import requests
 
+import requests
 from markdown import Markdown
 from markdown.extensions import Extension
 from werkzeug.urls import url_join
@@ -71,21 +71,24 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.access_level = access_level
         self.text = ""
         self.messages = []
+        self.active_edit_id = None
         self.markdown = Markdown(extensions=['nl2br', 'sane_lists', DeregisterSyntax()])
 
         # Signals
-        self.sendMessage.clicked.connect(self.send_message)
         self.previewBtn.clicked.connect(self.toggle_preview)
-
+        self.sendMessageBtn.clicked.connect(self.send_message)
+        self.editMessageBtn.clicked.connect(self.edit_message)
+        self.cancelEditBtn.clicked.connect(self.cancel_message_edit)
         # Socket Connection handlers
-        self.conn.signal_message_receive.connect(self.render_new_message)
-
+        self.conn.signal_message_receive.connect(self.handle_incoming_message)
+        self.conn.signal_message_edited.connect(self.handle_message_edited)
+        self.conn.signal_message_deleted.connect(self.handle_deleted_message)
         # Set Label text
         self.set_label_text()
-
+        # Hide Edit Message section
+        self.cancel_message_edit()
         # load all users
         self.load_users()
-
         # load messages
         self.load_all_messages()
 
@@ -95,15 +98,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.proj_info.setText(f"Project: {self.project_name}")
 
     # Signal Slots
-
-    def send_message(self):
-        """
-        send message through connection
-        """
-        message_text = self.messageText.toPlainText()
-        self.conn.send_message(message_text, self.p_id)
-        self.messageText.clear()
-
     def toggle_preview(self):
         # Go Back to text box
         if self.messageText.isReadOnly():
@@ -119,6 +113,40 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             self.messageText.setHtml(html)
             self.messageText.setReadOnly(True)
             self.previewBtn.setDefault(True)
+
+    def send_message(self):
+        """
+        send message through connection
+        """
+        message_text = self.messageText.toPlainText()
+        if message_text == "":
+            return
+        self.conn.send_message(message_text, self.p_id)
+        self.messageText.clear()
+
+    def start_message_edit(self, message_text, message_id):
+        self.active_edit_id = message_id
+        self.messageText.setText(message_text)
+        self.messageText.setFocus()
+        self.messageText.moveCursor(Qt.QTextCursor.End)
+        self.editMessageBtn.setVisible(True)
+        self.cancelEditBtn.setVisible(True)
+        self.sendMessageBtn.setVisible(False)
+
+    def cancel_message_edit(self):
+        self.active_edit_id = None
+        self.messageText.clear()
+        self.editMessageBtn.setVisible(False)
+        self.cancelEditBtn.setVisible(False)
+        self.sendMessageBtn.setVisible(True)
+
+    def edit_message(self):
+        new_message_text = self.messageText.toPlainText()
+        if new_message_text == "":
+            self.conn.delete_message(self.active_edit_id, self.p_id)
+        else:
+            self.conn.edit_message(self.active_edit_id, new_message_text, self.p_id)
+        self.cancel_message_edit()
 
     # API REQUESTS
 
@@ -150,78 +178,164 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         data = {
             "token": self.token,
             "p_id": self.p_id,
-            "timestamp": datetime.datetime(1970, 1, 1).strftime("%m %d %Y, %H:%M:%S")
+            "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
         }
         # returns an array of messages
-        url = url_join(self.mscolab_server_url, 'messages')
-        r = requests.post(url, data=data)
-        response = json.loads(r.text)
-        messages = response["messages"]
+        url = url_join(self.mscolab_server_url, "messages")
+        res = requests.get(url, data=data).json()
+        messages = res["messages"]
         # clear message box
         for message in messages:
-            username = message["username"]
-            message_text = message["text"]
-            self.render_new_message(username, message_text, False)
+            self.render_new_message(message, scroll=False)
         self.messageList.scrollToBottom()
 
-    # SOCKET HANDLERS
-
-    @QtCore.Slot(str, str)
-    def render_new_message(self, username, message, scroll=True):
-        message_item = MessageItem(username, message, self.user["username"], self.markdown)
+    def render_new_message(self, message, scroll=True):
+        message_item = MessageItem(message, self)
         list_widget_item = QtWidgets.QListWidgetItem(self.messageList)
         list_widget_item.setSizeHint(message_item.sizeHint())
         self.messageList.addItem(list_widget_item)
         self.messageList.setItemWidget(list_widget_item, message_item)
-        self.messages.append(message_item)
         if scroll:
             self.messageList.scrollToBottom()
+
+    # SOCKET HANDLERS
+    @QtCore.Slot(str)
+    def handle_incoming_message(self, message):
+        message = json.loads(message)
+        self.render_new_message(message)
+
+    @QtCore.Slot(str)
+    def handle_message_edited(self, message):
+        message = json.loads(message)
+        message_id = message["message_id"]
+        new_message_text = message["new_message_text"]
+        # Loop backwards because it's more likely the message is new than old
+        for i in range(self.messageList.count() - 1, -1, -1):
+            item = self.messageList.item(i)
+            message_widget = self.messageList.itemWidget(item)
+            if message_widget.id == message_id:
+                message_widget.update_text(new_message_text)
+                item.setSizeHint(message_widget.sizeHint())
+                break
+
+    @QtCore.Slot(str)
+    def handle_deleted_message(self, message):
+        message = json.loads(message)
+        message_id = message["message_id"]
+        # Loop backwards because it's more likely the message is new than old
+        for i in range(self.messageList.count() - 1, -1, -1):
+            item = self.messageList.item(i)
+            message_widget = self.messageList.itemWidget(item)
+            if message_widget.id == message_id:
+                self.messageList.takeItem(i)
+                break
 
     def closeEvent(self, event):
         self.viewCloses.emit()
 
 
 class MessageItem(QtWidgets.QWidget):
-    def __init__(self, username, message_text, current_username, markdown_helper):
+    def __init__(self, message, chat_window):
         super(MessageItem, self).__init__()
-        self.username = username
-        self.message_text = message_text
-        self.current_username = current_username
-        self.messageTextEdit = QtWidgets.QTextBrowser()
-        html = markdown_helper.convert(self.message_text)
-        self.messageTextEdit.setHtml(html)
-        self.messageTextEdit.setOpenLinks(False)
-        self.messageTextEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.messageTextEdit.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.messageTextEdit.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        self.messageTextEdit.setAttribute(103)
-        self.messageTextEdit.anchorClicked.connect(self.on_link_click)
-        self.messageTextEdit.show()
-        self.messageTextEdit.setFixedHeight(
-            self.messageTextEdit.document().size().height() + self.messageTextEdit.contentsMargins().top() * 2
+        self.id = message["id"]
+        self.u_id = message["u_id"]
+        self.username = message["username"]
+        self.message_text = message["text"]
+        self.system_message = message["system_message"]
+        self.time = message["time"]
+        self.chat_window = chat_window
+        self.messageTextBox = QtWidgets.QTextBrowser()
+        self.context_menu = QtWidgets.QMenu(self)
+        self.textArea = QtWidgets.QWidget()
+        self.setup_message_box()
+        self.setup_message_box_layout()
+        self.setup_context_menu()
+
+    def setup_message_box(self):
+        html = self.chat_window.markdown.convert(self.message_text)
+        self.messageTextBox.setHtml(html)
+        self.messageTextBox.setOpenLinks(False)
+        self.messageTextBox.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.messageTextBox.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.messageTextBox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        self.messageTextBox.setAttribute(103)
+        self.messageTextBox.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.messageTextBox.customContextMenuRequested.connect(self.open_context_menu)
+        self.messageTextBox.anchorClicked.connect(self.on_link_click)
+        self.messageTextBox.show()
+        self.messageTextBox.setFixedHeight(
+            self.messageTextBox.document().size().height() + self.messageTextBox.contentsMargins().top() * 2
         )
-        self.containerLayout = QtWidgets.QHBoxLayout()
 
-        if current_username == username:
-            self.messageTextEdit.setStyleSheet("background: #dcf8c6")
-            self.containerLayout.addStretch()
-            self.containerLayout.addWidget(self.messageTextEdit)
-
+    def setup_message_box_layout(self):
+        container_layout = QtWidgets.QHBoxLayout()
+        text_area_layout = QtWidgets.QVBoxLayout()
+        if self.chat_window.user["username"] == self.username:
+            if self.system_message:
+                self.messageTextBox.setStyleSheet("background: #a9d3e0")
+            else:
+                self.messageTextBox.setStyleSheet("background: #dcf8c6")
+            text_area_layout.addWidget(self.messageTextBox)
+            self.textArea.setLayout(text_area_layout)
+            container_layout.addStretch()
+            container_layout.addWidget(self.textArea)
         else:
-            self.messageTextEdit.setStyleSheet("background: transparent; border: none;")
-            self.textArea = QtWidgets.QWidget()
-            self.textAreaLayout = QtWidgets.QVBoxLayout()
-            self.usernameLabel = QtWidgets.QLabel(f"{self.username}:")
-            self.textAreaLayout.addWidget(self.usernameLabel)
-            self.textAreaLayout.addWidget(self.messageTextEdit)
-            self.textArea.setLayout(self.textAreaLayout)
-            self.textArea.setStyleSheet("background: #eff0f1")
-            self.containerLayout.addWidget(self.textArea)
-            self.containerLayout.addStretch()
+            username_label = QtWidgets.QLabel(f"{self.username}")
+            username_label.setContentsMargins(2, 5, 5, 0)
+            label_font = QtGui.QFont()
+            label_font.setBold(True)
+            username_label.setFont(label_font)
+            text_area_layout.addWidget(username_label)
+            text_area_layout.addWidget(self.messageTextBox)
+            self.textArea.setLayout(text_area_layout)
+            self.messageTextBox.setStyleSheet("background: transparent; border: none;")
+            if self.system_message:
+                self.textArea.setStyleSheet("background: #a9d3e0")
+            else:
+                self.textArea.setStyleSheet("background: #eff0f1")
+            container_layout.addWidget(self.textArea)
+            container_layout.addStretch()
+        self.textArea.layout().setSpacing(0)
+        self.textArea.layout().setContentsMargins(5, 0, 5, 0)
+        container_layout.setSpacing(0)
+        container_layout.setContentsMargins(5, 5, 5, 5)
+        self.setLayout(container_layout)
 
-        self.containerLayout.setSpacing(0)
-        self.containerLayout.setContentsMargins(5, 5, 5, 5)
-        self.setLayout(self.containerLayout)
+    def setup_context_menu(self):
+        copy_action = self.context_menu.addAction("Copy")
+        edit_action = self.context_menu.addAction("Edit")
+        delete_action = self.context_menu.addAction("Delete")
+        copy_action.triggered.connect(self.handle_copy_action)
+        edit_action.triggered.connect(self.handle_edit_action)
+        delete_action.triggered.connect(self.handle_delete_action)
+        if self.username != self.chat_window.user["username"] or self.system_message is True:
+            if self.system_message is True:
+                copy_action.setVisible(False)
+            edit_action.setVisible(False)
+            delete_action.setVisible(False)
+
+    def open_context_menu(self, pos):
+        self.context_menu.exec_(self.messageTextBox.mapToGlobal(pos))
+
+    def handle_copy_action(self):
+        Qt.QApplication.clipboard().setText(self.message_text)
+
+    def handle_edit_action(self):
+        self.chat_window.start_message_edit(self.message_text, self.id)
+
+    def handle_delete_action(self):
+        # disable edit message section if it's active before deleting
+        self.chat_window.cancel_message_edit()
+        self.chat_window.conn.delete_message(self.id, self.chat_window.p_id)
+
+    def update_text(self, message_text):
+        self.message_text = message_text
+        html = self.chat_window.markdown.convert(self.message_text)
+        self.messageTextBox.setHtml(html)
+        self.messageTextBox.setFixedHeight(
+            self.messageTextBox.document().size().height() + self.messageTextBox.contentsMargins().top() * 2
+        )
+        self.textArea.adjustSize()
 
     def on_link_click(self, url):
         if url.scheme() == "":

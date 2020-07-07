@@ -27,7 +27,6 @@
 
 from flask import Flask, request, g, jsonify
 from flask_httpauth import HTTPBasicAuth
-import datetime
 import functools
 import json
 import logging
@@ -194,13 +193,13 @@ def delete_user():
 
 
 # Chat related routes
-@APP.route("/messages", methods=['POST'])
+@APP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
-    p_id = request.form.get('p_id', None)
-    messages = cm.get_messages(p_id, last_timestamp=timestamp)
-    return json.dumps({'messages': messages})
+    timestamp = request.form.get("timestamp", "1970-01-01, 00:00:00")
+    p_id = request.form.get("p_id", None)
+    chat_messages = cm.get_messages(p_id, timestamp)
+    return jsonify({"messages": chat_messages})
 
 
 # File related routes
