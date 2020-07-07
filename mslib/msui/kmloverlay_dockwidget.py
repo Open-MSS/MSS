@@ -303,7 +303,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         filenames = get_open_filename(
             self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
         for filename in filenames:
-            if filename is not None:
+            if filename is None:
                 return
             text = filename
             if text not in self.list_items:
