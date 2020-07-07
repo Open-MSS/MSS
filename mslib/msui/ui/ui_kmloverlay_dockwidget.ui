@@ -29,6 +29,9 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string>KML Files; double click specific file to customize</string>
+         </property>
          <property name="sizeAdjustPolicy">
           <enum>QAbstractScrollArea::AdjustToContents</enum>
          </property>
@@ -42,14 +45,10 @@
         <enum>QLayout::SetMinimumSize</enum>
        </property>
        <item>
-        <widget class="QCheckBox" name="cbOverlay">
-         <property name="text">
-          <string>KML Overlay</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="btSelectFile">
+         <property name="toolTip">
+          <string>Add multiple KML Files</string>
+         </property>
          <property name="text">
           <string>Add KML File</string>
          </property>
@@ -57,6 +56,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_remove">
+         <property name="toolTip">
+          <string>Remove Checked KML Files </string>
+         </property>
          <property name="text">
           <string>Remove</string>
          </property>
@@ -64,6 +66,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_remove_all">
+         <property name="toolTip">
+          <string>Remove All KML Files</string>
+         </property>
          <property name="text">
           <string>Remove All</string>
          </property>
@@ -116,6 +121,9 @@
    </item>
    <item>
     <widget class="QPushButton" name="pushButton_merge">
+     <property name="toolTip">
+      <string>Merge multiple KML Files into one</string>
+     </property>
      <property name="text">
       <string>Merge and Export KML File</string>
      </property>

@@ -32,9 +32,6 @@ class Ui_KMLOverlayDockWidget(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.cbOverlay = QtWidgets.QCheckBox(KMLOverlayDockWidget)
-        self.cbOverlay.setObjectName("cbOverlay")
-        self.verticalLayout.addWidget(self.cbOverlay)
         self.btSelectFile = QtWidgets.QPushButton(KMLOverlayDockWidget)
         self.btSelectFile.setObjectName("btSelectFile")
         self.verticalLayout.addWidget(self.btSelectFile)
@@ -73,12 +70,16 @@ class Ui_KMLOverlayDockWidget(object):
     def retranslateUi(self, KMLOverlayDockWidget):
         _translate = QtCore.QCoreApplication.translate
         KMLOverlayDockWidget.setWindowTitle(_translate("KMLOverlayDockWidget", "KML Overlay"))
-        self.cbOverlay.setText(_translate("KMLOverlayDockWidget", "KML Overlay"))
+        self.listWidget.setToolTip(_translate("KMLOverlayDockWidget", "KML Files; double click specific file to customize"))
+        self.btSelectFile.setToolTip(_translate("KMLOverlayDockWidget", "Add multiple KML Files"))
         self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "Add KML File"))
+        self.pushButton_remove.setToolTip(_translate("KMLOverlayDockWidget", "Remove Checked KML Files "))
         self.pushButton_remove.setText(_translate("KMLOverlayDockWidget", "Remove"))
+        self.pushButton_remove_all.setToolTip(_translate("KMLOverlayDockWidget", "Remove All KML Files"))
         self.pushButton_remove_all.setText(_translate("KMLOverlayDockWidget", "Remove All"))
         self.cbManualStyle.setText(_translate("KMLOverlayDockWidget", "Manual Style"))
         self.pbSelectColour.setText(_translate("KMLOverlayDockWidget", "Colour"))
         self.label_2.setText(_translate("KMLOverlayDockWidget", "line width"))
+        self.pushButton_merge.setToolTip(_translate("KMLOverlayDockWidget", "Merge multiple KML Files into one"))
         self.pushButton_merge.setText(_translate("KMLOverlayDockWidget", "Merge and Export KML File"))
 

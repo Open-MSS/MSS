@@ -24,7 +24,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="pushButton_colour">
        <property name="text">
         <string>Change Colour</string>
        </property>
@@ -42,7 +42,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="pushButton_linewidth">
        <property name="text">
         <string>Change LineWidth</string>
        </property>
