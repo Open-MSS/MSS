@@ -36,6 +36,26 @@ from mslib.msui.mss_qt import Qt, QtCore, QtGui, QtWidgets, ui_mscolab_project_w
 from mslib.utils import config_loader
 
 
+# We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.
+class MessageTextEdit(QtWidgets.QTextEdit):
+    def keyPressEvent(self, event):
+        # Shift + Enter for new line
+        if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter) and event.modifiers() & QtCore.Qt.ShiftModifier:
+            cursor = self.textCursor()
+            cursor.insertText("\n")
+            self.setTextCursor(cursor)
+            return
+        # Only Enter for send/edit message
+        elif event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
+            chat_window = self.parent().parent().parent()
+            if chat_window.active_edit_id is None:
+                chat_window.send_message()
+            else:
+                chat_window.edit_message()
+            return
+        super().keyPressEvent(event)
+
+
 class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     """Derives QMainWindow to provide some common functionality to all
        MSUI view windows.
@@ -73,7 +93,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.messages = []
         self.active_edit_id = None
         self.markdown = Markdown(extensions=['nl2br', 'sane_lists', DeregisterSyntax()])
-
+        self.messageText = MessageTextEdit(self.centralwidget)
+        self.setup_message_text()
         # Signals
         self.previewBtn.clicked.connect(self.toggle_preview)
         self.sendMessageBtn.clicked.connect(self.send_message)
@@ -93,6 +114,20 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.load_all_messages()
 
     # UI SET UP METHODS
+    def setup_message_text(self):
+        self.messageText.setAcceptRichText(False)
+        self.messageText.setTextInteractionFlags(
+            QtCore.Qt.LinksAccessibleByKeyboard | QtCore.Qt.LinksAccessibleByMouse | QtCore.Qt.TextBrowserInteraction |
+            QtCore.Qt.TextEditable | QtCore.Qt.TextEditorInteraction | QtCore.Qt.TextSelectableByKeyboard |
+            QtCore.Qt.TextSelectableByMouse)
+        self.messageText.setPlaceholderText("Enter message here.\nPress enter to send.\nShift+Enter to add a new line.")
+        self.messageText.setObjectName("messageText")
+        vbox_layout = QtWidgets.QVBoxLayout()
+        vbox_layout.addWidget(self.messageText)
+        vbox_layout.setSpacing(0)
+        vbox_layout.setContentsMargins(0, 0, 0, 0)
+        self.messageTextContainer.setLayout(vbox_layout)
+
     def set_label_text(self):
         self.user_info.setText(f"Logged in: {self.user['username']}")
         self.proj_info.setText(f"Project: {self.project_name}")
@@ -121,6 +156,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         message_text = self.messageText.toPlainText()
         if message_text == "":
             return
+        message_text = message_text.strip()
         self.conn.send_message(message_text, self.p_id)
         self.messageText.clear()
 
@@ -145,6 +181,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         if new_message_text == "":
             self.conn.delete_message(self.active_edit_id, self.p_id)
         else:
+            new_message_text = new_message_text.strip()
             self.conn.edit_message(self.active_edit_id, new_message_text, self.p_id)
         self.cancel_message_edit()
 
@@ -152,7 +189,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
 
     def load_users(self):
         # load users to side-tab here
-
         # make request to get users
         data = {
             "token": self.token,
@@ -271,10 +307,6 @@ class MessageItem(QtWidgets.QWidget):
         container_layout = QtWidgets.QHBoxLayout()
         text_area_layout = QtWidgets.QVBoxLayout()
         if self.chat_window.user["username"] == self.username:
-            if self.system_message:
-                self.messageTextBox.setStyleSheet("background: #a9d3e0")
-            else:
-                self.messageTextBox.setStyleSheet("background: #dcf8c6")
             text_area_layout.addWidget(self.messageTextBox)
             self.textArea.setLayout(text_area_layout)
             container_layout.addStretch()
@@ -288,18 +320,29 @@ class MessageItem(QtWidgets.QWidget):
             text_area_layout.addWidget(username_label)
             text_area_layout.addWidget(self.messageTextBox)
             self.textArea.setLayout(text_area_layout)
-            self.messageTextBox.setStyleSheet("background: transparent; border: none;")
-            if self.system_message:
-                self.textArea.setStyleSheet("background: #a9d3e0")
-            else:
-                self.textArea.setStyleSheet("background: #eff0f1")
             container_layout.addWidget(self.textArea)
             container_layout.addStretch()
         self.textArea.layout().setSpacing(0)
         self.textArea.layout().setContentsMargins(5, 0, 5, 0)
         container_layout.setSpacing(0)
         container_layout.setContentsMargins(5, 5, 5, 5)
+        self.set_message_style()
         self.setLayout(container_layout)
+
+    def set_message_style(self):
+        sent_msg_color = "#dcf8c6"
+        recv_msg_color = "#eff0f1"
+        system_msg_color = "#a9d3e0"
+        if self.chat_window.user["username"] == self.username:
+            border = "border-top-left-radius: 5px; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px"
+            color = sent_msg_color
+        else:
+            border = "border-top-right-radius: 5px; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px"
+            color = recv_msg_color
+        if self.system_message:
+            color = system_msg_color
+        self.messageTextBox.setStyleSheet("background: transparent; border: none;")
+        self.textArea.setStyleSheet(f"background: {color}; {border}")
 
     def setup_context_menu(self):
         copy_action = self.context_menu.addAction("Copy")
