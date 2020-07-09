@@ -140,14 +140,18 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             self.messageText.setText(self.text)
             self.messageText.moveCursor(QtGui.QTextCursor.End)
             self.messageText.setReadOnly(False)
+            self.messageText.setStyleSheet("")
             self.previewBtn.setDefault(False)
+            self.previewBtn.setText("Preview")
         # Show preview
         else:
             self.text = self.messageText.toPlainText()
             html = self.markdown.convert(self.text)
             self.messageText.setHtml(html)
             self.messageText.setReadOnly(True)
+            self.messageText.setStyleSheet("background: #eff0f1")
             self.previewBtn.setDefault(True)
+            self.previewBtn.setText("Write")
 
     def send_message(self):
         """
