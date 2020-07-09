@@ -159,22 +159,12 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout">
+             <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,0">
               <property name="spacing">
                <number>0</number>
               </property>
               <item>
-               <widget class="QTextEdit" name="messageText">
-                <property name="acceptRichText">
-                 <bool>false</bool>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextEditable|Qt::TextEditorInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-                </property>
-                <property name="placeholderText">
-                 <string>Enter Message</string>
-                </property>
-               </widget>
+               <widget class="QWidget" name="messageTextContainer" native="true"/>
               </item>
               <item>
                <layout class="QVBoxLayout" name="verticalLayout">
