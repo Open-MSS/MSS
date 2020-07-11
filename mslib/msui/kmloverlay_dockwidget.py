@@ -226,21 +226,20 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.view = view  #  canvas
         self.kml = None
         self.patch = None
-        self.list_items = []  # creates list of files being added
+        self.list_items = {}  # creates dictionary of files being added
         self.list_kml_patch = []   # creates list of patches being added
 
         # Connect slots and signals.
         self.btSelectFile.clicked.connect(self.select_file)
         self.pushButton_remove.clicked.connect(self.remove_file)
         self.pushButton_remove_all.clicked.connect(self.remove_all_files)
-        self.pbSelectColour.clicked.connect(self.select_colour)
-        # self.update_settings
 
-        # self.dsbLineWidth.valueChanged.connect(self.update_settings)
+        self.dsbLineWidth.valueChanged.connect(self.update_settings)
         # self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.dialog = CustomizeKMLWidget(self)
         self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
+        self.dialog.pushButton_colour.clicked.connect(self.select_colour)
 
         self.listWidget.itemChanged.connect(self.load_file)
 
@@ -253,16 +252,16 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.directory_location = settings["filename"]
         self.dsbLineWidth.setValue(settings["linewidth"])
 
-        palette = QtGui.QPalette(self.pbSelectColour.palette())
+        palette = QtGui.QPalette(self.dialog.pushButton_colour.palette())
         colour = QtGui.QColor()
         colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
-        self.pbSelectColour.setPalette(palette)
+        self.dialog.pushButton_colour.setPalette(palette) # sets the last colour
 
     def open_customize_kml_dialog(self):
         self.dialog.show()
 
-    def __del__(self):
+    def __del__(self):  # destructor
         settings = {
             "filename": str(self.directory_location),
             "linewidth": self.dsbLineWidth.value(),
@@ -271,23 +270,24 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         save_settings_qsettings(self.settings_tag, settings)
 
     def get_color(self):
-        button = self.pbSelectColour
+        button = self.dialog.pushButton_colour
         return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button).getRgbF()
 
-    def update_settings(self):
+    def update_settings(self, file):
         """
         Called when the visibility checkbox is toggled and hides/shows
         the overlay if loaded.
         """
-        if self.view is not None and self.cbOverlay.isChecked() and self.patch is not None:
-            self.view.plot_kml(self.patch)
-            self.patch.update(self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
-        elif self.patch is not None:
-            logging.debug(self.patch)
-            # self.view.plot_kml(None)
+        if self.view is not None and self.patch is not None:
+            if file in self.list_items:
+                self.list_items[file]["color"] = self.get_color()
+                # self.patch.update(self.cbManualStyle.isChecked(), self.list_items[file]["color"], self.dsbLineWidth.value())
+        # print(self.list_items)
+        # changing colour of last patch
 
     def select_colour(self):
-        button = self.pbSelectColour
+        file = self.listWidget.currentItem().text()
+        button = self.dialog.pushButton_colour
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
@@ -295,7 +295,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if colour.isValid():
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
-        self.update_settings()
+        self.update_settings(file)
 
     def select_file(self):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
@@ -307,7 +307,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 return
             text = filename
             if text not in self.list_items:
-                self.list_items.append(text)
+                self.list_items[text] = {}
+                self.list_items[text]["patch"] = None
+                self.list_items[text]["color"] = None
+                self.list_items[text]["linewidth"] = None
                 item = QtWidgets.QListWidgetItem(text)
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
                 item.setCheckState(QtCore.Qt.Checked)
@@ -321,15 +324,18 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                self.list_items.remove(self.listWidget.item(index).text())
+                self.list_items[self.listWidget.item(index).text()]["patch"].remove() # remove object
+                del self.list_items[self.listWidget.item(index).text()]
                 self.listWidget.takeItem(index)
                 self.remove_file()
         self.load_file()
 
     def remove_all_files(self):
-        self.listWidget.clear() 
-        self.load_file()
-        self.list_items = []
+        self.listWidget.clear()
+        for filename in self.list_items:
+            self.list_items[filename]["patch"].remove()
+        self.list_items = {}
+        self.load_file()      
 
     def load_file(self):
         """
@@ -337,10 +343,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         corresponding patches.
         """
         if self.patch is not None:
-            logging.debug("List of patches : %s", self.list_kml_patch)
-            for patch in self.list_kml_patch:
-                patch.remove()
-            self.list_kml_patch = []
+            for filename in self.list_items:
+                if self.list_items[filename]["patch"] is not None: #  None because newly initialised files will have patch : None
+                    self.list_items[filename]["patch"].remove()
                 
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
@@ -354,11 +359,14 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         self.patch = KMLPatch(self.view.map, self.kml,
                                               self.cbManualStyle.isChecked(),
                                               self.get_color(), self.dsbLineWidth.value())
-                        self.list_kml_patch.append(self.patch)
+                        if self.listWidget.item(index).text() in self.list_items:
+                            self.list_items[self.listWidget.item(index).text()]["patch"] = self.patch
+                        
                 except IOError as ex:
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+        logging.info(self.list_items)
 
 
 class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDialog):

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>425</width>
-    <height>109</height>
+    <height>110</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,11 +42,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_linewidth">
-       <property name="text">
-        <string>Change LineWidth</string>
-       </property>
-      </widget>
+      <widget class="QDoubleSpinBox" name="dsb_linewidth"/>
      </item>
     </layout>
    </item>

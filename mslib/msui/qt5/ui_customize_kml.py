@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_CustomizeKMLDialog(object):
     def setupUi(self, CustomizeKMLDialog):
         CustomizeKMLDialog.setObjectName("CustomizeKMLDialog")
-        CustomizeKMLDialog.resize(425, 109)
+        CustomizeKMLDialog.resize(425, 110)
         self.verticalLayout = QtWidgets.QVBoxLayout(CustomizeKMLDialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -28,9 +28,9 @@ class Ui_CustomizeKMLDialog(object):
         self.label_2 = QtWidgets.QLabel(CustomizeKMLDialog)
         self.label_2.setObjectName("label_2")
         self.horizontalLayout_2.addWidget(self.label_2)
-        self.pushButton_linewidth = QtWidgets.QPushButton(CustomizeKMLDialog)
-        self.pushButton_linewidth.setObjectName("pushButton_linewidth")
-        self.horizontalLayout_2.addWidget(self.pushButton_linewidth)
+        self.dsb_linewidth = QtWidgets.QDoubleSpinBox(CustomizeKMLDialog)
+        self.dsb_linewidth.setObjectName("dsb_linewidth")
+        self.horizontalLayout_2.addWidget(self.dsb_linewidth)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.buttonBox = QtWidgets.QDialogButtonBox(CustomizeKMLDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
@@ -49,5 +49,4 @@ class Ui_CustomizeKMLDialog(object):
         self.label.setText(_translate("CustomizeKMLDialog", "Placemark Colour"))
         self.pushButton_colour.setText(_translate("CustomizeKMLDialog", "Change Colour"))
         self.label_2.setText(_translate("CustomizeKMLDialog", "LineWidth "))
-        self.pushButton_linewidth.setText(_translate("CustomizeKMLDialog", "Change LineWidth"))
 
