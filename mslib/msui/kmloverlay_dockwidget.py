@@ -233,8 +233,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.pushButton_remove.clicked.connect(self.remove_file)
         self.pushButton_remove_all.clicked.connect(self.remove_all_files)
 
-        # self.cbManualStyle.stateChanged.connect(self.update_settings)
-
         self.dialog = CustomizeKMLWidget(self)
         self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
         self.dialog.pushButton_colour.clicked.connect(self.select_colour)
@@ -242,6 +240,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.listWidget.itemChanged.connect(self.load_file)
 
         self.cbManualStyle.setChecked(False)
+        # self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(

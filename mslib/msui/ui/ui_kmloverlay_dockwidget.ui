@@ -45,6 +45,16 @@
         <enum>QLayout::SetMinimumSize</enum>
        </property>
        <item>
+        <widget class="QCheckBox" name="cbManualStyle">
+         <property name="toolTip">
+          <string>Overwrites KML Files with the modified attributes</string>
+         </property>
+         <property name="text">
+          <string>Manual Style</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btSelectFile">
          <property name="toolTip">
           <string>Add multiple KML Files</string>
@@ -79,45 +89,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QCheckBox" name="cbManualStyle">
-       <property name="text">
-        <string>Manual Style</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pbSelectColour">
-       <property name="text">
-        <string>Colour</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>line width</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="dsbLineWidth"/>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
+    <layout class="QHBoxLayout" name="horizontalLayout_2"/>
    </item>
    <item>
     <widget class="QPushButton" name="pushButton_merge">
