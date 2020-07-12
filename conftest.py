@@ -95,7 +95,7 @@ root_fs.makedir('colabTestData')
 DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
 BASE_DIR = ROOT_DIR
 SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
-UPLOAD_DIR = os.path.join(DATA_DIR, 'upload')
+UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
 
 SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
 
