@@ -43,6 +43,7 @@ class Test_Chat(object):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['UPLOAD_DIR'] = mscolab_settings.UPLOAD_DIR
         self.app, _, cm, _ = initialize_managers(self.app)
         self.cm = cm
         db.init_app(self.app)

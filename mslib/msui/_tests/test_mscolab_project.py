@@ -37,9 +37,10 @@ from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets, Qt
 
 
 class Actions(object):
-    COPY = 0
-    EDIT = 1
-    DELETE = 2
+    DOWNLOAD = 0
+    COPY = 1
+    EDIT = 2
+    DELETE = 3
 
 
 class Test_MscolabProject(object):
@@ -49,6 +50,7 @@ class Test_MscolabProject(object):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['UPLOAD_DIR'] = mscolab_settings.UPLOAD_DIR
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm

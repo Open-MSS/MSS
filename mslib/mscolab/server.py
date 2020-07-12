@@ -24,25 +24,30 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-from flask import Flask, request, g, jsonify
-from flask_httpauth import HTTPBasicAuth
 import functools
 import json
 import logging
-from validate_email import validate_email
-import socketio
+import os
+import time
 
-from mslib.mscolab.models import User, db, Change
+import socketio
+from flask import Flask, g, jsonify, request
+from flask_httpauth import HTTPBasicAuth
+from validate_email import validate_email
+from werkzeug.utils import secure_filename
+
 from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
+from mslib.mscolab.utils import get_message_dict
 from mslib.utils import conditional_decorator
 
 # set the project root directory as the static folder
 
-APP = Flask(__name__, static_url_path='')
+APP = Flask(__name__, static_folder=mscolab_settings.UPLOAD_DIR)
 APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+APP.config['UPLOAD_DIR'] = mscolab_settings.UPLOAD_DIR
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 
 auth = HTTPBasicAuth()
@@ -84,7 +89,7 @@ def initialize_managers(app):
     app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
     db.init_app(app)
-    return (app, sockio, cm, fm)
+    return app, sockio, cm, fm
 
 
 _app, sockio, cm, fm = initialize_managers(APP)
@@ -200,6 +205,31 @@ def messages():
     p_id = request.form.get("p_id", None)
     chat_messages = cm.get_messages(p_id, timestamp)
     return jsonify({"messages": chat_messages})
+
+
+@APP.route("/message_attachment", methods=["POST"])
+@verify_user
+def message_attachment():
+    file = request.files['file']
+    p_id = request.form.get("p_id", None)
+    message_type = MessageType(int(request.form.get("message_type")))
+    user = g.user
+    if file:
+        file_dir = os.path.join(APP.config['UPLOAD_DIR'], p_id)
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)
+        file_name, file_ext = file.filename.rsplit('.', 1)
+        file_name = file_name + time.strftime("%Y%m%dT%H%M%S") + "." + file_ext
+        file_name = secure_filename(file_name)
+        file_path = os.path.join(file_dir, file_name)
+        file.save(file_path)
+        static_dir = os.path.split(APP.config['UPLOAD_DIR'])[1]
+        static_file_path = os.path.join(static_dir, p_id, file_name)
+        new_message = cm.add_message(user, static_file_path, p_id, message_type)
+        new_message_dict = get_message_dict(new_message, user)
+        sockio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+        return jsonify({"success": True})
+    return jsonify({"success": False})
 
 
 # File related routes

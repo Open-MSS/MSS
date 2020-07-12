@@ -25,14 +25,15 @@
     limitations under the License.
 """
 
-from flask_sqlalchemy import SQLAlchemy
-from passlib.apps import custom_app_context as pwd_context
-from itsdangerous import (TimedJSONWebSignatureSerializer
-                          as Serializer, BadSignature, SignatureExpired)
-from mslib.mscolab.conf import mscolab_settings
-
-import logging
 import datetime
+import enum
+import logging
+
+from flask_sqlalchemy import SQLAlchemy
+from itsdangerous import (BadSignature, SignatureExpired, TimedJSONWebSignatureSerializer as Serializer)
+from passlib.apps import custom_app_context as pwd_context
+
+from mslib.mscolab.conf import mscolab_settings
 
 db = SQLAlchemy()
 
@@ -142,6 +143,13 @@ class Project(db.Model):
         return f'<Project path: {self.path}, desc: {self.description}>'
 
 
+class MessageType(enum.IntEnum):
+    TEXT = 0
+    SYSTEM_MESSAGE = 1
+    IMAGE = 2
+    DOCUMENT = 3
+
+
 class Message(db.Model):
 
     __tablename__ = "messages"
@@ -149,17 +157,17 @@ class Message(db.Model):
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
-    system_message = db.Column(db.Boolean, default=False)
+    message_type = db.Column(db.Enum(MessageType), default=MessageType.TEXT)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    def __init__(self, p_id, u_id, text, system_message=False):
+    def __init__(self, p_id, u_id, text, message_type=MessageType.TEXT):
         self.p_id = p_id
         self.u_id = u_id
         self.text = text
-        self.system_message = system_message
+        self.message_type = message_type
 
     def __repr__(self):
-        return f'<Message text: {self.text}, user: {self.u_id}, project: {self.p_id}>'
+        return f'<Message text: {self.text}, u_id: {self.u_id}, p_id: {self.p_id}>, message_type: {self.message_type}'
 
 
 class Change(db.Model):
