@@ -180,6 +180,8 @@ class KMLPatch(object):
         """
         # Plot satellite track.
         self.styles = {}
+        if self.overwrite:
+            kml_doc = list(self.kml.features())[0]  # All kml files are enclosed in a single root < > and </ >
         if not self.overwrite:
             kml_doc = list(self.kml.features())[0]  # All kml files are enclosed in a single root < > and </ >
             self.parse_styles(kml_doc)
@@ -238,7 +240,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.listWidget.itemChanged.connect(self.load_file)  # list of files in ListWidget
 
         self.cbManualStyle.setChecked(False)
-        # self.cbManualStyle.stateChanged.connect(self.update_settings)
+        self.cbManualStyle.setEnabled(False)
+        self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
@@ -360,6 +363,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 del self.list_items[self.listWidget.item(index).text()]  # del the checked files from dictionary
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
+        # self.load_file() # not sure to keep this or not, works either ways
+        if self.listWidget.count() == 0:  # no files in listWidget
+            self.cbManualStyle.setEnabled(False)
 
     def remove_all_files(self):  # removes all files (checked or unchecked both)
         self.listWidget.clear()  # clears List of files in ListWidget
@@ -367,14 +373,15 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.list_items[filename]["patch"].remove()  # removes patch object
         self.list_items = {}  # initialize dictionary again
         self.patch = None  # initialize self.patch to None
+        self.cbManualStyle.setEnabled(False)
 
     def load_file(self):
         """
         Loads multiple KML Files simultaneously and constructs the
         corresponding patches.
         """
-        if self.patch is not None:  # removes all patches from map, but not from list_items
-            for filename in self.list_items:
+        if self.patch is not None:  # --> self.patch has been initialized before
+            for filename in self.list_items:  # removes all patches from map, but not from list_items
                 if self.list_items[filename]["patch"] is not None:  # since newly initialized files will have patch:None
                     self.list_items[filename]["patch"].remove()
 
@@ -383,6 +390,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
                 _fs = open_fs(_dirname)
+                self.cbManualStyle.setEnabled(True)
                 try:
                     with _fs.open(_name, 'r') as kmlf:
                         self.kml = kml.KML()  # creates fastkml object
