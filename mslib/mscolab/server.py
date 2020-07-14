@@ -27,9 +27,9 @@
 import functools
 import json
 import logging
-import os
 import time
 
+import fs
 import socketio
 from flask import Flask, g, jsonify, request
 from flask_httpauth import HTTPBasicAuth
@@ -44,10 +44,11 @@ from mslib.utils import conditional_decorator
 
 # set the project root directory as the static folder
 
-APP = Flask(__name__, static_folder=mscolab_settings.UPLOAD_DIR)
+APP = Flask(__name__, static_folder=mscolab_settings.UPLOAD_FOLDER)
 APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-APP.config['UPLOAD_DIR'] = mscolab_settings.UPLOAD_DIR
+APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 
 auth = HTTPBasicAuth()
@@ -214,22 +215,30 @@ def message_attachment():
     p_id = request.form.get("p_id", None)
     message_type = MessageType(int(request.form.get("message_type")))
     user = g.user
-    if file:
-        file_dir = os.path.join(APP.config['UPLOAD_DIR'], p_id)
-        if not os.path.exists(file_dir):
-            os.makedirs(file_dir)
-        file_name, file_ext = file.filename.rsplit('.', 1)
-        file_name = file_name + time.strftime("%Y%m%dT%H%M%S") + "." + file_ext
-        file_name = secure_filename(file_name)
-        file_path = os.path.join(file_dir, file_name)
-        file.save(file_path)
-        static_dir = os.path.split(APP.config['UPLOAD_DIR'])[1]
-        static_file_path = os.path.join(static_dir, p_id, file_name)
+    if file is not None:
+        with fs.open_fs('/') as home_fs:
+            file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], p_id)
+            if not home_fs.exists(file_dir):
+                home_fs.makedirs(file_dir)
+            file_name, file_ext = file.filename.rsplit('.', 1)
+            file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}.{file_ext}'
+            file_name = secure_filename(file_name)
+            file_path = fs.path.join(file_dir, file_name)
+            file.save(file_path)
+            static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
+            static_file_path = fs.path.join(static_dir, p_id, file_name)
         new_message = cm.add_message(user, static_file_path, p_id, message_type)
         new_message_dict = get_message_dict(new_message, user)
         sockio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
         return jsonify({"success": True})
-    return jsonify({"success": False})
+    return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
+
+
+# 413: Payload Too Large
+@APP.errorhandler(413)
+def error413(error):
+    return jsonify({"success": False, "message": f"File size too large. Upload limit is "
+                                                 f"{APP.config['MAX_CONTENT_LENGTH'] / 1024 / 1024}MB"}), 413
 
 
 # File related routes

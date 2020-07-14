@@ -25,8 +25,8 @@
 """
 import datetime
 import json
-import os
 
+import fs
 import requests
 from markdown import Markdown
 from markdown.extensions import Extension
@@ -210,11 +210,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         file_path, file_type = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "", file_filter)
         if file_path == "":
             return
-        SIZE_LIMIT = 5242880  # 5 MB
-        file_size = os.path.getsize(file_path)
-        if file_size > SIZE_LIMIT:
-            self.show_popup("Error", "File Size should be under 5MB")
-            return
         self.attachment = file_path
         if file_type == img_type:
             self.attachment_type = MessageType.IMAGE
@@ -245,8 +240,12 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
                 "message_type": int(self.attachment_type)
             }
             url = url_join(self.mscolab_server_url, 'message_attachment')
-            requests.post(url, data=data, files=files).json()
-            self.send_message_state()
+            try:
+                requests.post(url, data=data, files=files)
+            except requests.exceptions.ConnectionError:
+                self.show_popup("Error", "File size too large")
+            finally:
+                self.send_message_state()
 
     def start_message_edit(self, message_text, message_id):
         self.active_edit_id = message_id
@@ -402,9 +401,8 @@ class MessageItem(QtWidgets.QWidget):
     def setup_text_message_box(self):
         self.messageBox = QtWidgets.QTextBrowser()
         if self.message_type == MessageType.DOCUMENT:
-            print("here...")
             img_url = url_join(self.chat_window.mscolab_server_url, self.message_text)
-            file_name = os.path.split(self.message_text)[1]
+            file_name = fs.path.basename(self.message_text)
             html = f"Document: <a href={img_url}>{file_name}</a>"
         else:
             html = self.chat_window.markdown.convert(self.message_text)
@@ -421,7 +419,6 @@ class MessageItem(QtWidgets.QWidget):
         )
 
     def setup_message_box(self):
-        print(self.message_type)
         if self.message_type == MessageType.IMAGE:
             self.setup_image_message_box()
         else:
@@ -498,17 +495,18 @@ class MessageItem(QtWidgets.QWidget):
         Qt.QApplication.clipboard().setText(self.message_text)
 
     def handle_download_action(self):
-        # TODO: FIND BETTER WAY TO GET FORMAT
-        file_format = self.message_text.rsplit(".", 1)[1]
+        file_name = fs.path.basename(self.message_text)
+        file_name, file_ext = fs.path.splitext(file_name)
         if self.message_type == MessageType.DOCUMENT:
-            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Document", "", f"Document (*.{file_format})")
+            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Document", file_name,
+                                                               f"Document (*{file_ext})")
             file_path = file_tuple[0]
             if file_path != "":
                 file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.message_text)).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:
-            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image", "", f"Image (*.{file_format})")
+            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image", file_name, f"Image (*{file_ext})")
             file_path = file_tuple[0]
             if file_path != "":
                 self.message_image.save(file_path)

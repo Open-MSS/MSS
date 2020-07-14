@@ -25,7 +25,8 @@
     limitations under the License.
 """
 import datetime
-import os
+
+import fs
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, Message, User, MessageType
@@ -42,7 +43,7 @@ class ChatManager(object):
         text: message to be emitted to room and saved to db
         roomname: room-name(p_id) to which message is emitted,
         user: User object, one which emits the message
-        message_type: text, system_message, Image
+        message_type: Enum of type MessageType. values: TEXT, SYSTEM_MESSAGE, IMAGE, DOCUMENT
         """
         message = Message(roomname, user.id, text, message_type)
         db.session.add(message)
@@ -84,7 +85,8 @@ class ChatManager(object):
     def delete_message(self, message_id):
         message = Message.query.filter(Message.id == message_id).first()
         if message.message_type == MessageType.IMAGE or message.message_type == MessageType.DOCUMENT:
-            file_name = os.path.split(message.text)[1]
-            os.remove(os.path.join(mscolab_settings.UPLOAD_DIR, str(message.p_id), file_name))
+            file_name = fs.path.basename(message.text)
+            with fs.open_fs(mscolab_settings.UPLOAD_FOLDER) as upload_dir:
+                upload_dir.remove(fs.path.join(str(message.p_id), file_name))
         db.session.delete(message)
         db.session.commit()

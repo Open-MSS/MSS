@@ -38,10 +38,12 @@ except ImportError as ex:
         # dir where mss output files are stored
         DATA_DIR = os.path.expanduser("~/mss/colabdata")
         BASE_DIR = os.path.expanduser("~/mss")
-        UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
         SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
-
         SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
+
+        # mscolab file upload settings
+        UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
+        MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
         # used to generate and parse tokens
         SECRET_KEY = 'secretkEyu'
