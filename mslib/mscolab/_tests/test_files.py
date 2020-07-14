@@ -45,6 +45,7 @@ class Test_Files(object):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm

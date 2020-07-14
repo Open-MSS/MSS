@@ -31,7 +31,7 @@ from flask_socketio import SocketIO, join_room, leave_room
 
 from mslib.mscolab.chat_manager import ChatManager
 from mslib.mscolab.file_manager import FileManager
-from mslib.mscolab.models import Permission, User
+from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.utils import get_session_id
 
@@ -198,7 +198,7 @@ class SocketsManager(object):
         if perm and self.fm.save_file(int(p_id), content, user, comment):
             # send service message
             message_ = "[service message] saved changes"
-            new_message = self.cm.add_message(user, message_, str(p_id), system_message=True)
+            new_message = self.cm.add_message(user, message_, str(p_id), message_type=MessageType.SYSTEM_MESSAGE)
             new_message_dict = get_message_dict(new_message, user)
             socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
             # emit file-changed event to trigger reload of flight track
@@ -272,4 +272,4 @@ def setup_managers(app):
     socketio.on_event('autosave', sm.handle_autosave_enable)
     socketio.on_event('add-user-to-room', sm.join_creator_to_room)
     socketio.sm = sm
-    return (socketio, cm, fm)
+    return socketio, cm, fm

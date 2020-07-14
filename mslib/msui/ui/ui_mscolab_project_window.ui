@@ -179,6 +179,13 @@
                  </widget>
                 </item>
                 <item>
+                 <widget class="QPushButton" name="uploadBtn">
+                  <property name="text">
+                   <string>Upload</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QPushButton" name="editMessageBtn">
                   <property name="text">
                    <string>Update</string>
@@ -186,7 +193,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="cancelEditBtn">
+                 <widget class="QPushButton" name="cancelBtn">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>

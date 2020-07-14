@@ -45,7 +45,7 @@ def get_message_dict(message, user):
         "u_id": user.id,
         "username": user.username,
         "text": message.text,
-        "system_message": message.system_message,
+        "message_type": message.message_type,
         "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
     }
     return message

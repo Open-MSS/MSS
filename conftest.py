@@ -95,8 +95,11 @@ root_fs.makedir('colabTestData')
 DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
 BASE_DIR = ROOT_DIR
 SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
-
 SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
+
+# mscolab file upload settings
+UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
+MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
 # used to generate and parse tokens
 # details of database connections
@@ -174,6 +177,7 @@ def start_mscolab_server(request):
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
     _app, sockio, cm, fm = initialize_managers(_app)
     global process
     process = multiprocessing.Process(
