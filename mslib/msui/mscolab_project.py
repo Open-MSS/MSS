@@ -92,14 +92,17 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.conn = conn
         self.access_level = access_level
         self.text = ""
-        self.messages = []
         self.attachment = None
         self.attachment_type = None
         self.active_edit_id = None
+        self.current_search_index = None
         self.markdown = Markdown(extensions=['nl2br', 'sane_lists', DeregisterSyntax()])
         self.messageText = MessageTextEdit(self.centralwidget)
         self.setup_message_text()
         # Signals
+        self.searchMessageLineEdit.textChanged.connect(self.handle_search_text_changed)
+        self.searchPrevBtn.clicked.connect(self.handle_prev_message_search)
+        self.searchNextBtn.clicked.connect(self.handle_next_message_search)
         self.previewBtn.clicked.connect(self.toggle_preview)
         self.sendMessageBtn.clicked.connect(self.send_message)
         self.uploadBtn.clicked.connect(self.handle_upload)
@@ -184,6 +187,37 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             QtWidgets.QMessageBox.information(self, title, message)
 
     # Signal Slots
+    def handle_search_text_changed(self):
+        self.current_search_index = None
+
+    def handle_prev_message_search(self):
+        if self.current_search_index is None:
+            self.handle_message_search(self.messageList.count() - 1, -1, -1)
+        else:
+            self.handle_message_search(self.current_search_index - 1, -1, -1)
+
+    def handle_next_message_search(self):
+        if self.current_search_index is None:
+            self.handle_message_search(self.messageList.count() - 1, -1, -1)
+        else:
+            self.handle_message_search(self.current_search_index + 1, self.messageList.count())
+
+    def handle_message_search(self, start_index, end_index, step=1):
+        text = self.searchMessageLineEdit.text()
+        if text == "":
+            return
+        for row in range(start_index, end_index, step):
+            item = self.messageList.item(row)
+            message_widget = self.messageList.itemWidget(item)
+            if message_widget.message_type in (MessageType.TEXT, MessageType.DOCUMENT):
+                if text.lower() in message_widget.message_text.lower():
+                    self.messageList.scrollToItem(item, QtWidgets.QAbstractItemView.PositionAtCenter)
+                    item.setSelected(True)
+                    self.current_search_index = row
+                    return
+        if self.current_search_index is None:
+            self.show_popup("Alert", "No message found!", 1)
+
     def toggle_preview(self):
         # Go Back to text box
         if self.messageText.isReadOnly():
@@ -371,12 +405,17 @@ class MessageItem(QtWidgets.QWidget):
         self.id = message["id"]
         self.u_id = message["u_id"]
         self.username = message["username"]
-        self.message_text = message["text"]
+        self.message_text = None
+        self.attachment_path = None
         self.message_type = message["message_type"]
         self.time = message["time"]
         self.chat_window = chat_window
         self.message_image = None
         self.messageBox = None
+        if self.message_type in (MessageType.TEXT, MessageType.SYSTEM_MESSAGE):
+            self.message_text = message["text"]
+        else:
+            self.attachment_path = message["text"]
         self.context_menu = QtWidgets.QMenu(self)
         self.textArea = QtWidgets.QWidget()
         self.setup_message_box()
@@ -386,7 +425,7 @@ class MessageItem(QtWidgets.QWidget):
     def setup_image_message_box(self):
         MAX_WIDTH = MAX_HEIGHT = 300
         self.messageBox = QtWidgets.QLabel()
-        img_url = url_join(self.chat_window.mscolab_server_url, self.message_text)
+        img_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
         data = requests.get(img_url).content
         image = QtGui.QImage()
         image.loadFromData(data)
@@ -403,11 +442,10 @@ class MessageItem(QtWidgets.QWidget):
     def setup_text_message_box(self):
         self.messageBox = QtWidgets.QTextBrowser()
         if self.message_type == MessageType.DOCUMENT:
-            img_url = url_join(self.chat_window.mscolab_server_url, self.message_text)
-            file_name = fs.path.basename(self.message_text)
-            html = f"Document: <a href={img_url}>{file_name}</a>"
-        else:
-            html = self.chat_window.markdown.convert(self.message_text)
+            doc_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
+            file_name = fs.path.basename(self.attachment_path)
+            self.message_text = f"Document: [{file_name}]({doc_url})"
+        html = self.chat_window.markdown.convert(self.message_text)
         self.messageBox.setHtml(html)
         self.messageBox.setOpenLinks(False)
         self.messageBox.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -497,14 +535,14 @@ class MessageItem(QtWidgets.QWidget):
         Qt.QApplication.clipboard().setText(self.message_text)
 
     def handle_download_action(self):
-        file_name = fs.path.basename(self.message_text)
+        file_name = fs.path.basename(self.attachment_path)
         file_name, file_ext = fs.path.splitext(file_name)
         if self.message_type == MessageType.DOCUMENT:
             file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Document", file_name,
                                                                f"Document (*{file_ext})")
             file_path = file_tuple[0]
             if file_path != "":
-                file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.message_text)).content
+                file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.attachment_path)).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:
