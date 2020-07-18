@@ -106,6 +106,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.editMessageBtn.clicked.connect(self.edit_message)
         self.cancelBtn.clicked.connect(self.send_message_state)
         # Socket Connection handlers
+        self.conn.signal_project_permissions_updated.connect(self.handle_permissions_updated)
         self.conn.signal_message_receive.connect(self.handle_incoming_message)
         self.conn.signal_message_edited.connect(self.handle_message_edited)
         self.conn.signal_message_deleted.connect(self.handle_deleted_message)
@@ -290,16 +291,13 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         url = url_join(self.mscolab_server_url, 'authorized_users')
         r = requests.get(url, data=data)
         if r.text == "False":
-            # show QMessageBox errors here
-            pass
+            self.show_popup("Error", "Some error occurred while fetching users!")
         else:
             self.collaboratorsList.clear()
-            users = json.loads(r.text)["users"]
+            users = r.json()["users"]
             for user in users:
-                item = QtWidgets.QListWidgetItem("{} - {}".format(user["username"],
-                                                                  user["access_level"]),
+                item = QtWidgets.QListWidgetItem(f'{user["username"]} - {user["access_level"]}',
                                                  parent=self.collaboratorsList)
-                item.username = user["username"]
                 self.collaboratorsList.addItem(item)
 
     def load_all_messages(self):
@@ -328,6 +326,10 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             self.messageList.scrollToBottom()
 
     # SOCKET HANDLERS
+    @QtCore.Slot(int)
+    def handle_permissions_updated(self, _):
+        self.load_users()
+
     @QtCore.Slot(str)
     def handle_incoming_message(self, message):
         message = json.loads(message)
