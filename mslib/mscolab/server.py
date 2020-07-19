@@ -230,15 +230,15 @@ def message_attachment():
         new_message = cm.add_message(user, static_file_path, p_id, message_type)
         new_message_dict = get_message_dict(new_message, user)
         sockio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
-        return jsonify({"success": True})
+        return jsonify({"success": True, "path": static_file_path})
     return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
 
 
 # 413: Payload Too Large
 @APP.errorhandler(413)
 def error413(error):
-    return jsonify({"success": False, "message": f"File size too large. Upload limit is "
-                                                 f"{APP.config['MAX_CONTENT_LENGTH'] / 1024 / 1024}MB"}), 413
+    upload_limit = APP.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
+    return jsonify({"success": False, "message": f"File size too large. Upload limit is {upload_limit}MB"}), 413
 
 
 # File related routes

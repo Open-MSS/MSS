@@ -24,16 +24,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import socketio
-import requests
-import json
 import datetime
+import json
+
+import fs
+import requests
+import socketio
 from werkzeug.urls import url_join
 
-from mslib.mscolab.models import Message
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import db, APP, initialize_managers
+from mslib.mscolab.models import Message, MessageType
+from mslib.mscolab.server import APP, db, initialize_managers
+from mslib.msui.icons import icons
 
 
 class Test_Chat(object):
@@ -209,6 +212,33 @@ class Test_Chat(object):
         assert deleted_messages[0]["message_id"] == message.id
         with self.app.app_context():
             assert Message.query.filter_by(text="delete this message").count() == 0
+
+    def test_upload_file(self):
+        response = self._login()
+        token = response["token"]
+        sio = socketio.Client()
+        message_recv = []
+
+        def handle_incoming_message(msg):
+            msg = json.loads(msg)
+            message_recv.append(msg)
+
+        sio.on('chat-message-client', handler=handle_incoming_message)
+        sio.connect(MSCOLAB_URL_TEST)
+        sio.emit('start', response)
+        sio.sleep(2)
+        self.sockets.append(sio)
+        files = {'file': open(icons('16x16'), 'rb')}
+        data = {
+            "token": token,
+            "p_id": 1,
+            "message_type": int(MessageType.IMAGE)
+        }
+        url = url_join(MSCOLAB_URL_TEST, 'message_attachment')
+        requests.post(url, data=data, files=files)
+        sio.sleep(2)
+        assert len(message_recv) == 1
+        assert fs.path.join("uploads", "1", "mss-logo") in message_recv[0]["text"]
 
     def _login(self):
         url = url_join(MSCOLAB_URL_TEST, 'token')

@@ -83,13 +83,25 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
 
     def test_send_message(self):
-        self.chat_window.messageText.setPlainText('**test message**')
-        QtTest.QTest.mouseClick(self.chat_window.sendMessageBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
+        self._send_message("**test message**")
+        self._send_message("**test message**")
         # wait till server processes the change
         time.sleep(1)
         with self.app.app_context():
-            assert Message.query.filter_by(text='**test message**').count() == 1
+            assert Message.query.filter_by(text='**test message**').count() == 2
+
+    def test_search_message(self):
+        message_index = self.chat_window.messageList.count() - 1
+        self.chat_window.searchMessageLineEdit.setText("test message")
+        QtTest.QTest.mouseClick(self.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert self.chat_window.messageList.item(message_index).isSelected() is True
+        QtTest.QTest.mouseClick(self.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert self.chat_window.messageList.item(message_index - 1).isSelected() is True
+        QtTest.QTest.mouseClick(self.chat_window.searchNextBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert self.chat_window.messageList.item(message_index).isSelected() is True
 
     def test_copy_message(self):
         self._activate_context_menu_action(Actions.COPY)
@@ -134,3 +146,8 @@ class Test_MscolabProject(object):
         item = self.chat_window.messageList.item(self.chat_window.messageList.count() - 1)
         message_widget = self.chat_window.messageList.itemWidget(item)
         message_widget.context_menu.actions()[action_index].trigger()
+
+    def _send_message(self, text):
+        self.chat_window.messageText.setPlainText(text)
+        QtTest.QTest.mouseClick(self.chat_window.sendMessageBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
