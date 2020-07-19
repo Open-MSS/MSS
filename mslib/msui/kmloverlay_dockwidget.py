@@ -29,6 +29,7 @@ import copy
 from fs import open_fs
 import logging
 from fastkml import kml, geometry, styles
+from lxml import etree as et, objectify
 import os
 from matplotlib import patheffects
 
@@ -421,7 +422,52 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
         logging.info(self.dict_files)
 
+    def merge_file(self):
+        element = []
+        for index in range(self.listWidget.count()):
+            if hasattr(self.listWidget.item(index), "checkState") and (
+                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                _dirname, _name = os.path.split(self.listWidget.item(index).text())
+                _fs = open_fs(_dirname)
+                with _fs.open(_name, 'r') as kmlf:
+                    tree = et.parse(kmlf)
+                    root = tree.getroot()
+                    self.remove_ns(root)
+                    element.append(copy.deepcopy(root[0]))
+                    if index == 0:
+                        super_root = et.Element("Folder")
+                        super_root.insert(0, element[0])
+                        continue
+                    sub_root = et.Element("Folder")
+                    sub_root.insert(0, element[index])
+                    element[0].append(sub_root)
 
+        logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
+        newkml = et.Element("kml")
+        newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'
+        newkml.insert(0, super_root)
+        logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+        with _fs.open('output.kml', 'w') as output:
+            output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+
+    def remove_ns(self, root):
+        """
+        Removes namespace prefixes, passed on during deepcopy
+        """
+        try: 
+            for elem in root.getiterator():
+                elem.tag = et.QName(elem).localname
+            et.cleanup_namespaces(root)
+        except Exception as e:
+            for elem in root.getiterator():
+                if not hasattr(elem.tag, 'find'):
+                    continue
+                i = elem.tag.find('}')
+                if i >= 0:
+                    elem.tag = elem.tag[i+1:]
+            objectify.deannotate(root, cleanup_namespaces=True)
+
+    
 class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDialog):
     """
     This class provides the interface for customizing individual KML Files with respect to
