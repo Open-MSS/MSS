@@ -29,7 +29,8 @@ import datetime
 import fs
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, Message, User, MessageType
+from mslib.mscolab.models import db, Message, MessageType
+from mslib.mscolab.utils import get_message_dict
 
 
 class ChatManager(object):
@@ -38,14 +39,16 @@ class ChatManager(object):
     def __init__(self):
         pass
 
-    def add_message(self, user, text, roomname, message_type=MessageType.TEXT):
+    def add_message(self, user, text, roomname, message_type=MessageType.TEXT, reply_id=None):
         """
         text: message to be emitted to room and saved to db
         roomname: room-name(p_id) to which message is emitted,
         user: User object, one which emits the message
         message_type: Enum of type MessageType. values: TEXT, SYSTEM_MESSAGE, IMAGE, DOCUMENT
         """
-        message = Message(roomname, user.id, text, message_type)
+        if reply_id == -1:
+            reply_id = None
+        message = Message(roomname, user.id, text, message_type, reply_id)
         db.session.add(message)
         db.session.commit()
         return message
@@ -60,22 +63,22 @@ class ChatManager(object):
         else:
             timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d, %H:%M:%S")
         messages = Message.query \
-            .outerjoin(User, Message.u_id == User.id) \
-            .add_columns(User.username, Message.id, Message.u_id, Message.text,
-                         Message.message_type, Message.created_at) \
             .filter(Message.p_id == p_id) \
+            .filter(Message.reply_id.is_(None)) \
             .filter(Message.created_at > timestamp) \
             .all()
 
-        messages = list(map(lambda message: {
-                            'id': message.id,
-                            'u_id': message.u_id,
-                            'username': message.username,
-                            'text': message.text,
-                            'message_type': message.message_type,
-                            'time': message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
-                            }, messages))
-        return messages
+        message_list = []
+        for message in messages:
+            replies_list = []
+            for reply in message.replies:
+                reply_dict = get_message_dict(reply)
+                replies_list.append(reply_dict)
+            message_dict = get_message_dict(message)
+            message_dict["replies"] = replies_list
+            message_list.append(message_dict)
+
+        return message_list
 
     def edit_message(self, message_id, new_message_text):
         message = Message.query.filter_by(id=message_id).first()

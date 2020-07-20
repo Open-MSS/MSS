@@ -228,7 +228,7 @@ def message_attachment():
             static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
             static_file_path = fs.path.join(static_dir, p_id, file_name)
         new_message = cm.add_message(user, static_file_path, p_id, message_type)
-        new_message_dict = get_message_dict(new_message, user)
+        new_message_dict = get_message_dict(new_message)
         sockio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
         return jsonify({"success": True, "path": static_file_path})
     return jsonify({"success": False, "message": "Could not send message. No file uploaded."})

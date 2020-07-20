@@ -128,12 +128,16 @@ class SocketsManager(object):
         json is a dictionary version of data sent to back-end
         """
         p_id = _json['p_id']
+        reply_id = int(_json["reply_id"])
         user = User.verify_auth_token(_json['token'])
         perm = self.permission_check_emit(user.id, int(p_id))
         if perm:
-            new_message = self.cm.add_message(user, _json['message_text'], str(p_id))
-            new_message_dict = get_message_dict(new_message, user)
-            socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+            new_message = self.cm.add_message(user, _json['message_text'], str(p_id), reply_id=reply_id)
+            new_message_dict = get_message_dict(new_message)
+            if reply_id == -1:
+                socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+            else:
+                socketio.emit('chat-message-reply-client', json.dumps(new_message_dict), room=str(p_id))
 
     def handle_message_edit(self, socket_message):
         message_id = socket_message["message_id"]
@@ -199,7 +203,7 @@ class SocketsManager(object):
             # send service message
             message_ = "[service message] saved changes"
             new_message = self.cm.add_message(user, message_, str(p_id), message_type=MessageType.SYSTEM_MESSAGE)
-            new_message_dict = get_message_dict(new_message, user)
+            new_message_dict = get_message_dict(new_message)
             socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
             # emit file-changed event to trigger reload of flight track
             socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
