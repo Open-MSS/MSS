@@ -37,6 +37,7 @@ class ConnectionManager(QtCore.QObject):
     signal_reload = QtCore.Signal(int, name="reload_wps")
     signal_autosave = QtCore.Signal(int, int, name="autosave en/db")
     signal_message_receive = QtCore.Signal(str, name="message rcv")
+    signal_message_reply_receive = QtCore.Signal(str, name="message reply")
     signal_message_edited = QtCore.Signal(str, name="message editted")
     signal_message_deleted = QtCore.Signal(str, name="message deleted")
     signal_new_permission = QtCore.Signal(int, int, name="new permission")
@@ -53,6 +54,7 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('autosave-client-db', handler=self.handle_autosave_disable)
         # on chat message recive
         self.sio.on('chat-message-client', handler=self.handle_incoming_message)
+        self.sio.on('chat-message-reply-client', handler=self.handle_incoming_message_reply)
         # on message edit
         self.sio.on('edit-message-client', handler=self.handle_message_edited)
         # on message delete
@@ -110,6 +112,9 @@ class ConnectionManager(QtCore.QObject):
         # emit signal
         self.signal_message_receive.emit(message)
 
+    def handle_incoming_message_reply(self, message):
+        self.signal_message_reply_receive.emit(message)
+
     def handle_message_edited(self, message):
         self.signal_message_edited.emit(message)
 
@@ -126,12 +131,13 @@ class ConnectionManager(QtCore.QObject):
                       "p_id": p_id,
                       "token": self.token})
 
-    def send_message(self, message_text, p_id):
+    def send_message(self, message_text, p_id, reply_id):
         logging.debug("sending message")
         self.sio.emit('chat-message', {
                       "p_id": p_id,
                       "token": self.token,
-                      "message_text": message_text})
+                      "message_text": message_text,
+                      "reply_id": reply_id})
 
     def edit_message(self, message_id, new_message_text, p_id):
         self.sio.emit('edit-message', {

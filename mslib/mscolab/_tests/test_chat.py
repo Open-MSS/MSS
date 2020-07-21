@@ -66,17 +66,19 @@ class Test_Chat(object):
         sio.sleep(2)
         self.sockets.append(sio)
         sio.emit("chat-message", {
-                 "p_id": 1,
-                 "token": response['token'],
-                 "message_text": "message from 1"
-                 })
+            "p_id": 1,
+            "token": response['token'],
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
         sio.sleep(2)
         # testing non-ascii message
         sio.emit("chat-message", {
-                 "p_id": 1,
-                 "token": response['token'],
-                 "message_text": "® non ascii"
-                 })
+            "p_id": 1,
+            "token": response['token'],
+            "message_text": "® non ascii",
+            "reply_id": -1
+        })
         sio.sleep(2)
         assert messages[0]["text"] == "message from 1"
         assert messages[1]["text"] == "® non ascii"
@@ -99,15 +101,17 @@ class Test_Chat(object):
         sio.sleep(2)
         self.sockets.append(sio)
         sio.emit("chat-message", {
-                 "p_id": 1,
-                 "token": response['token'],
-                 "message_text": "message from 1"
-                 })
+            "p_id": 1,
+            "token": response['token'],
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
         sio.emit("chat-message", {
-                 "p_id": 1,
-                 "token": response['token'],
-                 "message_text": "message from 1"
-                 })
+            "p_id": 1,
+            "token": response['token'],
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
         sio.sleep(2)
         with self.app.app_context():
             messages = self.cm.get_messages(1)
@@ -158,10 +162,11 @@ class Test_Chat(object):
         sio.sleep(2)
         self.sockets.append(sio)
         sio.emit("chat-message", {
-                 "p_id": 1,
-                 "token": response['token'],
-                 "message_text": "Edit this message"
-                 })
+            "p_id": 1,
+            "token": response['token'],
+            "message_text": "Edit this message",
+            "reply_id": -1
+        })
         sio.sleep(2)
         with self.app.app_context():
             message = Message.query.filter_by(text="Edit this message").first()
@@ -197,7 +202,8 @@ class Test_Chat(object):
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
-            "message_text": "delete this message"
+            "message_text": "delete this message",
+            "reply_id": -1
         })
         sio.sleep(2)
         with self.app.app_context():

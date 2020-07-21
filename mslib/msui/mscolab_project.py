@@ -95,6 +95,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.attachment = None
         self.attachment_type = None
         self.active_edit_id = None
+        self.active_message_reply = None
         self.current_search_index = None
         self.markdown = Markdown(extensions=['nl2br', 'sane_lists', DeregisterSyntax()])
         self.messageText = MessageTextEdit(self.centralwidget)
@@ -111,6 +112,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         # Socket Connection handlers
         self.conn.signal_project_permissions_updated.connect(self.handle_permissions_updated)
         self.conn.signal_message_receive.connect(self.handle_incoming_message)
+        self.conn.signal_message_reply_receive.connect(self.handle_incoming_message_reply)
         self.conn.signal_message_edited.connect(self.handle_message_edited)
         self.conn.signal_message_deleted.connect(self.handle_deleted_message)
         # Set Label text
@@ -261,12 +263,14 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         send message through connection
         """
         if self.attachment is None:
+            reply_id = -1
+            if self.active_message_reply is not None:
+                reply_id = self.active_message_reply.id
             message_text = self.messageText.toPlainText()
             if message_text == "":
                 return
             message_text = message_text.strip()
-            self.conn.send_message(message_text, self.p_id)
-            self.messageText.clear()
+            self.conn.send_message(message_text, self.p_id, reply_id)
         else:
             files = {"file": open(self.attachment, 'rb')}
             data = {
@@ -279,12 +283,18 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
                 requests.post(url, data=data, files=files)
             except requests.exceptions.ConnectionError:
                 self.show_popup("Error", "File size too large")
-            finally:
-                self.send_message_state()
+        self.send_message_state()
+
+    def start_message_reply(self, message_item):
+        self.send_message_state()
+        self.active_message_reply = message_item
+        self.active_message_reply.set_selected(True)
+        self.uploadBtn.setVisible(False)
+        self.cancelBtn.setVisible(True)
 
     def start_message_edit(self, message_text, message_id):
+        self.send_message_state()
         self.active_edit_id = message_id
-        self.messageText.setReadOnly(False)
         self.messageText.setText(message_text)
         self.messageText.setFocus()
         self.messageText.moveCursor(Qt.QTextCursor.End)
@@ -296,8 +306,12 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     def send_message_state(self):
         self.active_edit_id = None
         self.attachment = None
+        if self.active_message_reply is not None:
+            self.active_message_reply.set_selected(False)
+            self.active_message_reply = None
         self.messageText.clear()
         self.messageText.setReadOnly(False)
+        self.messageText.setFocus()
         self.editMessageBtn.setVisible(False)
         self.cancelBtn.setVisible(False)
         self.sendMessageBtn.setVisible(True)
@@ -314,7 +328,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.send_message_state()
 
     # API REQUESTS
-
     def load_users(self):
         # load users to side-tab here
         # make request to get users
@@ -370,6 +383,32 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.render_new_message(message)
 
     @QtCore.Slot(str)
+    def handle_incoming_message_reply(self, reply):
+        reply = json.loads(reply)
+        for i in range(self.messageList.count() - 1, -1, -1):
+            item = self.messageList.item(i)
+            message_widget = self.messageList.itemWidget(item)
+            if message_widget.id == reply["reply_id"]:
+                # TODO: Hacky Approach. Add UI update function in the widget later instead of creating a new widget
+                message_widget.replies.append(reply)
+                message = {
+                    "id": message_widget.id,
+                    "u_id": message_widget.u_id,
+                    "username": message_widget.username,
+                    "replies": message_widget.replies,
+                    "message_type": message_widget.message_type,
+                    "time": message_widget.time
+                }
+                if message_widget.message_type in (MessageType.TEXT, MessageType.SYSTEM_MESSAGE):
+                    message["text"] = message_widget.message_text
+                else:
+                    message["text"] = message_widget.attachment_path
+                new_message_item = MessageItem(message, self)
+                item.setSizeHint(new_message_item.sizeHint())
+                self.messageList.setItemWidget(item, new_message_item)
+                break
+
+    @QtCore.Slot(str)
     def handle_message_edited(self, message):
         message = json.loads(message)
         message_id = message["message_id"]
@@ -405,11 +444,12 @@ class MessageItem(QtWidgets.QWidget):
         self.id = message["id"]
         self.u_id = message["u_id"]
         self.username = message["username"]
-        self.message_text = None
-        self.attachment_path = None
         self.message_type = message["message_type"]
+        self.replies = message["replies"]
         self.time = message["time"]
         self.chat_window = chat_window
+        self.message_text = None
+        self.attachment_path = None
         self.message_image = None
         self.messageBox = None
         if self.message_type in (MessageType.TEXT, MessageType.SYSTEM_MESSAGE):
@@ -418,6 +458,8 @@ class MessageItem(QtWidgets.QWidget):
             self.attachment_path = message["text"]
         self.context_menu = QtWidgets.QMenu(self)
         self.textArea = QtWidgets.QWidget()
+        self.replyArea = None
+        self.replyScroll = QtWidgets.QScrollArea()
         self.setup_message_box()
         self.setup_message_box_layout()
         self.setup_context_menu()
@@ -439,24 +481,28 @@ class MessageItem(QtWidgets.QWidget):
         self.messageBox.setContentsMargins(0, 5, 0, 5)
         self.messageBox.show()
 
+    def get_text_browser(self, text):
+        text_browser = QtWidgets.QTextBrowser()
+        html = self.chat_window.markdown.convert(text)
+        text_browser.setHtml(html)
+        text_browser.setOpenLinks(False)
+        text_browser.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        text_browser.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        text_browser.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        text_browser.setAttribute(103)
+        text_browser.anchorClicked.connect(self.on_link_click)
+        text_browser.show()
+        text_browser.setFixedHeight(
+            text_browser.document().size().height() + text_browser.contentsMargins().top() * 2
+        )
+        return text_browser
+
     def setup_text_message_box(self):
-        self.messageBox = QtWidgets.QTextBrowser()
         if self.message_type == MessageType.DOCUMENT:
             doc_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
             file_name = fs.path.basename(self.attachment_path)
             self.message_text = f"Document: [{file_name}]({doc_url})"
-        html = self.chat_window.markdown.convert(self.message_text)
-        self.messageBox.setHtml(html)
-        self.messageBox.setOpenLinks(False)
-        self.messageBox.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.messageBox.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.messageBox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        self.messageBox.setAttribute(103)
-        self.messageBox.anchorClicked.connect(self.on_link_click)
-        self.messageBox.show()
-        self.messageBox.setFixedHeight(
-            self.messageBox.document().size().height() + self.messageBox.contentsMargins().top() * 2
-        )
+        self.messageBox = self.get_text_browser(self.message_text)
 
     def setup_message_box(self):
         if self.message_type == MessageType.IMAGE:
@@ -476,7 +522,7 @@ class MessageItem(QtWidgets.QWidget):
             container_layout.addWidget(self.textArea)
         else:
             username_label = QtWidgets.QLabel(f"{self.username}")
-            username_label.setContentsMargins(2, 5, 5, 0)
+            username_label.setContentsMargins(5, 5, 5, 0)
             label_font = QtGui.QFont()
             label_font.setBold(True)
             username_label.setFont(label_font)
@@ -485,17 +531,20 @@ class MessageItem(QtWidgets.QWidget):
             self.textArea.setLayout(text_area_layout)
             container_layout.addWidget(self.textArea)
             container_layout.addStretch()
+        for reply in self.replies:
+            self.add_message_reply(reply)
         self.textArea.layout().setSpacing(0)
-        self.textArea.layout().setContentsMargins(5, 0, 5, 0)
+        self.textArea.layout().setContentsMargins(0, 0, 0, 0)
         container_layout.setSpacing(0)
         container_layout.setContentsMargins(5, 5, 5, 5)
         self.set_message_style()
         self.setLayout(container_layout)
 
-    def set_message_style(self):
+    def set_message_style(self, selected=False):
         sent_msg_color = "#dcf8c6"
         recv_msg_color = "#eff0f1"
         system_msg_color = "#a9d3e0"
+        message_selected = "#70bbed"
         if self.chat_window.user["username"] == self.username:
             border = "border-top-left-radius: 5px; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px"
             color = sent_msg_color
@@ -504,25 +553,64 @@ class MessageItem(QtWidgets.QWidget):
             color = recv_msg_color
         if self.message_type == MessageType.SYSTEM_MESSAGE:
             color = system_msg_color
+        if selected is True:
+            color = message_selected
         self.messageBox.setStyleSheet("background: transparent; border: none;")
         self.textArea.setStyleSheet(f"background: {color}; {border}")
+
+    def insert_reply_area(self):
+        self.replyArea = QtWidgets.QGroupBox()
+        reply_area_layout = QtWidgets.QFormLayout()
+        reply_area_layout.setSpacing(0)
+        reply_area_layout.setContentsMargins(5, 0, 0, 0)
+        self.replyArea.setLayout(reply_area_layout)
+        self.replyScroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.replyScroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.replyScroll.setMaximumHeight(150)
+        self.replyScroll.setWidgetResizable(True)
+        self.replyScroll.setWidget(self.replyArea)
+        self.replyScroll.setContentsMargins(0, 0, 0, 0)
+        self.textArea.layout().addWidget(self.replyScroll)
+        if self.username == self.chat_window.user["username"]:
+            color = "#c3f39e"
+        else:
+            color = "#e2e3e5"
+        self.messageBox.setStyleSheet("background: transparent; border-bottom: 1px solid black;")
+        self.replyScroll.setStyleSheet(f"background: {color}")
+
+    def add_message_reply(self, reply):
+        if self.replyArea is None:
+            self.insert_reply_area()
+        reply_username_label = QtWidgets.QLabel(f'{reply["username"]}:')
+        label_font = QtGui.QFont()
+        label_font.setBold(True)
+        reply_username_label.setFont(label_font)
+        reply_message_box = self.get_text_browser(reply["text"])
+        self.replyArea.layout().addRow(reply_username_label, reply_message_box)
 
     def setup_context_menu(self):
         download_action = self.context_menu.addAction("Download")
         copy_action = self.context_menu.addAction("Copy")
+        reply_action = self.context_menu.addAction("Reply")
         edit_action = self.context_menu.addAction("Edit")
         delete_action = self.context_menu.addAction("Delete")
-        copy_action.triggered.connect(self.handle_copy_action)
         download_action.triggered.connect(self.handle_download_action)
+        copy_action.triggered.connect(self.handle_copy_action)
+        reply_action.triggered.connect(self.handle_reply_action)
         edit_action.triggered.connect(self.handle_edit_action)
         delete_action.triggered.connect(self.handle_delete_action)
-        if self.username != self.chat_window.user["username"] or self.message_type == MessageType.SYSTEM_MESSAGE:
-            if self.message_type == MessageType.SYSTEM_MESSAGE:
-                download_action.setVisible(False)
-                copy_action.setVisible(False)
+        # Enabling/Disabling actions based on who sent the message
+        if self.username != self.chat_window.user["username"]:
             edit_action.setVisible(False)
             delete_action.setVisible(False)
-        if self.message_type == MessageType.TEXT:
+        # Enabling/Disabling actions based on the type of message
+        if self.message_type == MessageType.SYSTEM_MESSAGE:
+            download_action.setVisible(False)
+            copy_action.setVisible(False)
+            reply_action.setVisible(False)
+            edit_action.setVisible(False)
+            delete_action.setVisible(False)
+        elif self.message_type == MessageType.TEXT:
             download_action.setVisible(False)
         elif self.message_type == MessageType.IMAGE or self.message_type == MessageType.DOCUMENT:
             copy_action.setVisible(False)
@@ -551,6 +639,9 @@ class MessageItem(QtWidgets.QWidget):
             if file_path != "":
                 self.message_image.save(file_path)
 
+    def handle_reply_action(self):
+        self.chat_window.start_message_reply(self)
+
     def handle_edit_action(self):
         self.chat_window.start_message_edit(self.message_text, self.id)
 
@@ -567,6 +658,12 @@ class MessageItem(QtWidgets.QWidget):
             self.messageBox.document().size().height() + self.messageBox.contentsMargins().top() * 2
         )
         self.textArea.adjustSize()
+
+    def set_selected(self, selected):
+        if selected is True:
+            self.set_message_style(selected=True)
+        else:
+            self.set_message_style()
 
     def on_link_click(self, url):
         if url.scheme() == "":

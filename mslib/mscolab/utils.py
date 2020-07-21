@@ -39,13 +39,14 @@ def get_session_id(sockets, u_id):
     return s_id
 
 
-def get_message_dict(message, user):
-    message = {
+def get_message_dict(message):
+    return {
         "id": message.id,
-        "u_id": user.id,
-        "username": user.username,
+        "u_id": message.u_id,
+        "username": message.user.username,
         "text": message.text,
         "message_type": message.message_type,
+        "reply_id": message.reply_id,
+        "replies": [],
         "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
     }
-    return message

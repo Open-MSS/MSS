@@ -39,8 +39,9 @@ from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets, Qt
 class Actions(object):
     DOWNLOAD = 0
     COPY = 1
-    EDIT = 2
-    DELETE = 3
+    REPLY = 2
+    EDIT = 3
+    DELETE = 4
 
 
 class Test_MscolabProject(object):
@@ -107,6 +108,17 @@ class Test_MscolabProject(object):
         self._activate_context_menu_action(Actions.COPY)
         assert Qt.QApplication.clipboard().text() == "**test message**"
 
+    def test_reply_message(self):
+        parent_message_id = self._get_message_id(self.chat_window.messageList.count() - 1)
+        self._activate_context_menu_action(Actions.REPLY)
+        self.chat_window.messageText.setPlainText('test reply')
+        QtTest.QTest.mouseClick(self.chat_window.sendMessageBtn, QtCore.Qt.LeftButton)
+        time.sleep(1)
+        with self.app.app_context():
+            message = Message.query.filter_by(text='test reply')
+            assert message.count() == 1
+            assert message.first().reply_id == parent_message_id
+
     def test_edit_message(self):
         self._activate_context_menu_action(Actions.EDIT)
         self.chat_window.messageText.setPlainText('test edit')
@@ -151,3 +163,8 @@ class Test_MscolabProject(object):
         self.chat_window.messageText.setPlainText(text)
         QtTest.QTest.mouseClick(self.chat_window.sendMessageBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+
+    def _get_message_id(self, index):
+        item = self.chat_window.messageList.item(index)
+        message_widget = self.chat_window.messageList.itemWidget(item)
+        return message_widget.id

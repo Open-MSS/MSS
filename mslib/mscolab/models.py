@@ -158,13 +158,17 @@ class Message(db.Model):
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
     message_type = db.Column(db.Enum(MessageType), default=MessageType.TEXT)
+    reply_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    user = db.relationship('User')
+    replies = db.relationship('Message', cascade='all,delete,delete-orphan', single_parent=True)
 
-    def __init__(self, p_id, u_id, text, message_type=MessageType.TEXT):
+    def __init__(self, p_id, u_id, text, message_type=MessageType.TEXT, reply_id=None):
         self.p_id = p_id
         self.u_id = u_id
         self.text = text
         self.message_type = message_type
+        self.reply_id = reply_id
 
     def __repr__(self):
         return f'<Message text: {self.text}, u_id: {self.u_id}, p_id: {self.p_id}>, message_type: {self.message_type}'
