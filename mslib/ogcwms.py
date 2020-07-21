@@ -76,7 +76,9 @@ from mslib.utils import config_loader
 
 
 def openURL(url_base, data=None, method='Get', cookies=None,
-            username=None, password=None, timeout=30, headers=None, proxies=None):
+            username=None, password=None,
+            timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
+            headers=None, proxies=None):
     # (mss) added proxies
     """
     Function to open URLs.
