@@ -108,6 +108,9 @@ class MissionSupportSystemDefaultConfig(object):
         "http://localhost:8083",
     ]
 
+    # timeout of Url request
+    WMS_request_timeout = 30
+
     # WMS image cache settings:
     wms_cache = os.path.join(tempfile.gettempdir(), "msui_wms_cache")
 
