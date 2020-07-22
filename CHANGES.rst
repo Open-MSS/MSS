@@ -1,6 +1,17 @@
 Changelog
 =========
 
+
+Version 1.9.4
+-------------
+
+Bug Fixes:
+  - rename in rtfd docs env into envs, #565
+  - mss performance ceiling altitude feature not properly documented, #557
+
+Other Changes:
+  - enable configurable timeout of openUrl, #567
+
 Version 1.9.3
 -------------
 
