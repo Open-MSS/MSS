@@ -29,19 +29,19 @@ import copy
 from fs import open_fs
 import logging
 from fastkml import kml, geometry, styles
+from lxml import etree as et, objectify
 import os
 from matplotlib import patheffects
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, get_open_filename
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filenames
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
+from mslib.msui.mss_qt import ui_customize_kml
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
 
 
 class KMLPatch(object):
     """
     Represents a KML overlay.
-
-    KML overlay implementation is currently very crude and basic and most features are not supported.
     """
 
     def __init__(self, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
@@ -181,8 +181,10 @@ class KMLPatch(object):
         """
         # Plot satellite track.
         self.styles = {}
+        if self.overwrite:
+            kml_doc = list(self.kml.features())[0]  # All kml files are enclosed in a single root < > and </ >
         if not self.overwrite:
-            kml_doc = list(self.kml.features())[0]  # All kml files start with the first <Document>
+            kml_doc = list(self.kml.features())[0]  # All kml files are enclosed in a single root < > and </ >
             self.parse_styles(kml_doc)
         kml_features = list(kml_doc.features())
         self.parse_placemarks(kml_features)
@@ -215,67 +217,65 @@ class KMLPatch(object):
 
 class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     """
-    This class provides the interface for accessing KML files and
+    This class provides the interface for accessing Multiple KML files and
     adding the appropriate patches to the TopView canvas.
     """
 
     def __init__(self, parent=None, view=None):
         super(KMLOverlayControlWidget, self).__init__(parent)
         self.setupUi(self)
-        self.view = view
+        self.view = view  # canvas
         self.kml = None
-        self.patch = None
+        self.patch = None  # patch refers to plottings on the map
+        self.dict_files = {}  # Dictionary of files added; key : patch , color , linewidth
 
         # Connect slots and signals.
         self.btSelectFile.clicked.connect(self.select_file)
-        self.btLoadFile.clicked.connect(self.load_file)
-        self.pbSelectColour.clicked.connect(self.select_colour)
-        self.cbOverlay.stateChanged.connect(self.update_settings)
-        self.dsbLineWidth.valueChanged.connect(self.update_settings)
-        self.cbManualStyle.stateChanged.connect(self.update_settings)
+        self.pushButton_remove.clicked.connect(self.remove_file)
+        self.pushButton_remove_all.clicked.connect(self.remove_all_files)
+        self.pushButton_merge.clicked.connect(self.merge_file)
 
-        self.cbOverlay.setChecked(True)
-        self.cbOverlay.setEnabled(False)
+        self.dialog = CustomizeKMLWidget(self)  # create object of dialog UI Box
+        self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
+        self.dialog.pushButton_colour.clicked.connect(self.select_color)
+
+        self.listWidget.itemChanged.connect(self.load_file)  # list of files in ListWidget
+
         self.cbManualStyle.setChecked(False)
+        self.cbManualStyle.setEnabled(False)
+        self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
-            self.settings_tag, {"filename": "", "linewidth": 1, "colour": (0, 0, 0, 1)})
+            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (0, 0, 0, 1)})  # initial settings
 
-        self.leFile.setText(settings["filename"])
-        self.dsbLineWidth.setValue(settings["linewidth"])
+        self.directory_location = settings["filename"]
+        self.dialog.dsb_linewidth.setValue(settings["linewidth"])
 
-        palette = QtGui.QPalette(self.pbSelectColour.palette())
+        palette = QtGui.QPalette(self.dialog.pushButton_colour.palette())
         colour = QtGui.QColor()
         colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
-        self.pbSelectColour.setPalette(palette)
+        self.dialog.pushButton_colour.setPalette(palette)  # sets the last colour
+        self.dialog.dsb_linewidth.valueChanged.connect(self.select_linewidth)
 
-    def __del__(self):
+    def open_customize_kml_dialog(self):
+        self.dialog.show()
+
+    def __del__(self):  # destructor
         settings = {
-            "filename": str(self.leFile.text()),
-            "linewidth": self.dsbLineWidth.value(),
+            "filename": str(self.directory_location),
+            "linewidth": self.dialog.dsb_linewidth.value(),
             "colour": self.get_color()
         }
         save_settings_qsettings(self.settings_tag, settings)
 
-    def get_color(self):
-        button = self.pbSelectColour
-        return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button).getRgbF()
-
-    def update_settings(self):
+    def select_color(self):
         """
-        Called when the visibility checkbox is toggled and hides/shows
-        the overlay if loaded.
+        Stores current selected file; select colour using Palette
         """
-        if self.view is not None and self.cbOverlay.isChecked() and self.patch is not None:
-            self.view.plot_kml(self.patch)
-            self.patch.update(self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
-        elif self.patch is not None:
-            self.view.plot_kml(None)
-
-    def select_colour(self):
-        button = self.pbSelectColour
+        file = self.listWidget.currentItem().text()
+        button = self.dialog.pushButton_colour
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
@@ -283,40 +283,196 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if colour.isValid():
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
+        self.set_attribute_color(file)
+
+    def get_color(self):
+        """
+        Returns the colour of the 'pushButton_colour' Button
+        """
+        button = self.dialog.pushButton_colour
+        return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button).getRgbF()
+
+    def set_color(self, file):
+        """
+        Returns the respective colour of a given file
+        """
+        return self.dict_files[file]["color"]
+
+    def set_attribute_color(self, file):
+        """
+        Assigns colour to given file; calls update_settings
+        """
+        if file in self.dict_files:
+            self.dict_files[file]["color"] = self.get_color()
         self.update_settings()
 
-    def select_file(self):
-        """Slot that opens a file dialog to choose a kml file
+    def select_linewidth(self):
         """
-        filename = get_open_filename(
-            self, "Open KML Polygonal File", os.path.dirname(str(self.leFile.text())), "KML Files (*.kml)")
-        if not filename:
-            return
-        self.leFile.setText(filename)
+        Stores current selected file; calls set_attribute_linewidth
+        """
+        file = self.listWidget.currentItem().text()
+        self.set_attribute_linewidth(file)
+
+    def set_linewidth(self, file):
+        """
+        Returns the respective linewidth of a given file
+        """
+        return self.dict_files[file]["linewidth"]
+
+    def set_attribute_linewidth(self, file):
+        """
+        Assigns linewidth to given file; calls update_settings
+        """
+        if file in self.dict_files:
+            self.dict_files[file]["linewidth"] = self.dialog.dsb_linewidth.value()
+        self.update_settings()
+
+    def update_settings(self):
+        """
+        Updates the new values of linewidth and colour for individual files
+        """
+        if self.view is not None and self.patch is not None:
+            for filename in self.dict_files:
+                if self.dict_files[filename]["patch"] is not None:
+                    self.dict_files[filename]["patch"].update(self.cbManualStyle.isChecked(),
+                                                              self.dict_files[filename]["color"],
+                                                              self.dict_files[filename]["linewidth"])
+
+    def select_file(self):
+        """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
+        """
+        filenames = get_open_filenames(
+            self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
+        for filename in filenames:
+            if filename is None:
+                return
+            text = filename
+            if text not in self.dict_files:  # prevents same file being added twice
+                # initializing the nested dictionary dict_files
+                self.dict_files[text] = {}
+                self.dict_files[text]["patch"] = None
+                self.dict_files[text]["color"] = self.get_color()
+                self.dict_files[text]["linewidth"] = self.dialog.dsb_linewidth.value()
+                # PyQt5 method : Add items in list and add checkbox functionality
+                item = QtWidgets.QListWidgetItem(text)
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                item.setCheckState(QtCore.Qt.Checked)
+                self.listWidget.addItem(item)
+                self.directory_location = text  # Saves location of directory to open
+            else:
+                logging.info("%s file already added", text)
+        self.load_file()
+
+    def remove_file(self):  # removes checked files
+        for index in range(self.listWidget.count()):  # list of files in ListWidget
+            if hasattr(self.listWidget.item(index), "checkState") and (
+                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
+                self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
+                del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
+                self.listWidget.takeItem(index)  # remove file item from ListWidget
+                self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
+        # self.load_file() # not sure to keep this or not, works either ways
+        if self.listWidget.count() == 0:  # no files in listWidget
+            self.cbManualStyle.setEnabled(False)
+
+    def remove_all_files(self):  # removes all files (checked or unchecked both)
+        self.listWidget.clear()  # clears List of files in ListWidget
+        for filename in self.dict_files:
+            self.dict_files[filename]["patch"].remove()  # removes patch object
+        self.dict_files = {}  # initialize dictionary again
+        self.patch = None  # initialize self.patch to None
+        self.cbManualStyle.setEnabled(False)
 
     def load_file(self):
         """
-        Loads a KML file selected by the leFile box and constructs the
-        corresponding patch.
+        Loads multiple KML Files simultaneously and constructs the
+        corresponding patches.
         """
-        _dirname, _name = os.path.split(self.leFile.text())
-        _fs = open_fs(_dirname)
-        if self.patch is not None:
-            self.patch.remove()
-            self.view.plot_kml(None)
-            self.patch = None
-            self.cbOverlay.setEnabled(False)
-        try:
-            with _fs.open(_name, 'r') as kmlf:
+        if self.patch is not None:  # --> self.patch has been initialized before
+            for filename in self.dict_files:  # removes all patches from map, but not from dict_files
+                if self.dict_files[filename]["patch"] is not None:  # since newly initialized files will have patch:None
+                    self.dict_files[filename]["patch"].remove()
 
-                self.kml = kml.KML()
-                self.kml.from_string(kmlf.read().encode('utf-8'))
-                self.patch = KMLPatch(self.view.map, self.kml,
-                                      self.cbManualStyle.isChecked(), self.get_color(), self.dsbLineWidth.value())
-            self.cbOverlay.setEnabled(True)
-            if self.view is not None and self.cbOverlay.isChecked():
-                self.view.plot_kml(self.patch)
-        except IOError as ex:
-            logging.error("KML Overlay - %s: %s", type(ex), ex)
-            QtWidgets.QMessageBox.critical(
-                self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))                         
+        for index in range(self.listWidget.count()):
+            if hasattr(self.listWidget.item(index), "checkState") and (
+                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                _dirname, _name = os.path.split(self.listWidget.item(index).text())
+                _fs = open_fs(_dirname)
+                self.cbManualStyle.setEnabled(True)
+                try:
+                    with _fs.open(_name, 'r') as kmlf:
+                        self.kml = kml.KML()  # creates fastkml object
+                        self.kml.from_string(kmlf.read().encode('utf-8'))
+                        if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
+                            if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # if added before
+                                self.patch = KMLPatch(self.view.map, self.kml,
+                                                      self.cbManualStyle.isChecked(),
+                                                      self.set_color(self.listWidget.item(index).text()),
+                                                      self.set_linewidth(self.listWidget.item(index).text()))
+                            else:  # if new file is being added
+                                self.patch = KMLPatch(self.view.map, self.kml,
+                                                      self.cbManualStyle.isChecked(),
+                                                      self.dict_files[self.listWidget.item(index).text()]["color"],
+                                                      self.dict_files[self.listWidget.item(index).text()]["linewidth"])
+                            self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
+
+                except IOError as ex:
+                    logging.error("KML Overlay - %s: %s", type(ex), ex)
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+        logging.info(self.dict_files)
+
+    def merge_file(self):
+        element = []
+        for index in range(self.listWidget.count()):
+            if hasattr(self.listWidget.item(index), "checkState") and (
+                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                _dirname, _name = os.path.split(self.listWidget.item(index).text())
+                _fs = open_fs(_dirname)
+                with _fs.open(_name, 'r') as kmlf:
+                    tree = et.parse(kmlf)
+                    root = tree.getroot()
+                    self.remove_ns(root)
+                    element.append(copy.deepcopy(root[0]))
+                    if index == 0:
+                        super_root = et.Element("Folder")
+                        super_root.insert(0, element[0])
+                        continue
+                    sub_root = et.Element("Folder")
+                    sub_root.insert(0, element[index])
+                    element[0].append(sub_root)
+
+        logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
+        newkml = et.Element("kml")
+        newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'
+        newkml.insert(0, super_root)
+        logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+        with _fs.open('output.kml', 'w') as output:
+            output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+
+    def remove_ns(self, root):
+        """
+        Removes namespace prefixes, passed on during deepcopy
+        """
+        try: 
+            for elem in root.getiterator():
+                elem.tag = et.QName(elem).localname
+            et.cleanup_namespaces(root)
+        except Exception as e:
+            for elem in root.getiterator():
+                if not hasattr(elem.tag, 'find'):
+                    continue
+                i = elem.tag.find('}')
+                if i >= 0:
+                    elem.tag = elem.tag[i+1:]
+            objectify.deannotate(root, cleanup_namespaces=True)
+
+    
+class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDialog):
+    """
+    This class provides the interface for customizing individual KML Files with respect to
+    linewidth and colour.
+    """
+    def __init__(self, parent=None):
+        super(CustomizeKMLWidget, self).__init__(parent)
+        self.setupUi(self)
