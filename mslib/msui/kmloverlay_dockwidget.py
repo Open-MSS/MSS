@@ -33,7 +33,7 @@ from lxml import etree as et, objectify
 import os
 from matplotlib import patheffects
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filename
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filenames
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mss_qt import ui_customize_kml
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
@@ -341,7 +341,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     def select_file(self):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
-        filenames = get_open_filename(
+        filenames = get_open_filenames(
             self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
         for filename in filenames:
             if filename is None:

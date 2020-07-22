@@ -41,6 +41,13 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
 def get_open_filename_qt(*args):
+    filename = QtWidgets.QFileDialog.getOpenFileName(*args)
+    return filename[0] if isinstance(filename, tuple) else str(filename)
+
+def get_open_filenames_qt(*args):
+    """
+    To select multiple files simultaneously
+    """
     filenames = QtWidgets.QFileDialog.getOpenFileNames(*args)
     return filenames[0] if isinstance(filenames, tuple) else str(filenames)
 
@@ -71,6 +78,21 @@ def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=N
         filename = getOpenFileName(parent, dirname, filt, title="Import Flight Track")
     elif pickertype in ["qt", "default"]:
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
+    else:
+        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+    logging.debug("Selected '%s'", filename)
+    if filename == "":
+        filename = None
+    return filename
+
+def get_open_filenames(parent, title, dirname, filt, pickertag=None, pickertype=None):
+    """ 
+    Opens multiple files simultaneously
+    Currently implemented only in kmloverlay_dockwidget.py
+    """
+    pickertype = get_pickertype(pickertag, pickertype)
+    if pickertype in ["qt", "default"]:
+        filename = get_open_filenames_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
         raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
     logging.debug("Selected '%s'", filename)
