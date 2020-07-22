@@ -80,6 +80,7 @@ def openURL(url_base, data=None, method='Get', cookies=None,
             timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
             headers=None, proxies=None):
     # (mss) added proxies
+    # (mss) timeout default of 30secs set by the config_loader
     """
     Function to open URLs.
 
