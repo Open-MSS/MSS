@@ -279,16 +279,23 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="workLocallyCheckBox">
+             <property name="text">
+              <string>Work Locally</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="save_ft">
              <property name="text">
-              <string>save</string>
+              <string>Save To Server</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QPushButton" name="fetch_ft">
              <property name="text">
-              <string>fetch</string>
+              <string>Fetch From Server</string>
              </property>
             </widget>
            </item>
