@@ -60,7 +60,7 @@
             <item>
              <widget class="QPushButton" name="connectMscolab">
               <property name="text">
-               <string>connect</string>
+               <string>Connect</string>
               </property>
              </widget>
             </item>
@@ -78,7 +78,7 @@
             <item>
              <widget class="QPushButton" name="disconnectMscolab">
               <property name="text">
-               <string>disconnect</string>
+               <string>Disconnect</string>
               </property>
              </widget>
             </item>
@@ -127,14 +127,8 @@
           </item>
           <item>
            <widget class="QPushButton" name="logoutButton">
-            <property name="maximumSize">
-             <size>
-              <width>60</width>
-              <height>16777215</height>
-             </size>
-            </property>
             <property name="text">
-             <string>logout</string>
+             <string>Logout</string>
             </property>
            </widget>
           </item>
@@ -149,6 +143,9 @@
            <spacer name="horizontalSpacer">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Expanding</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -175,7 +172,7 @@
             <item>
              <widget class="QLineEdit" name="emailid">
               <property name="placeholderText">
-               <string>emailid</string>
+               <string>Email ID</string>
               </property>
              </widget>
             </item>
@@ -185,14 +182,14 @@
                <enum>QLineEdit::PasswordEchoOnEdit</enum>
               </property>
               <property name="placeholderText">
-               <string>password</string>
+               <string>Password</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="loginButton">
               <property name="text">
-               <string>login</string>
+               <string>Login</string>
               </property>
              </widget>
             </item>
@@ -220,7 +217,7 @@
              </size>
             </property>
             <property name="text">
-             <string>add user</string>
+             <string>Add User</string>
             </property>
            </widget>
           </item>
@@ -253,14 +250,14 @@
            <item>
             <widget class="QPushButton" name="addProject">
              <property name="text">
-              <string>add project</string>
+              <string>Add Project</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QPushButton" name="export_2">
              <property name="text">
-              <string>export</string>
+              <string>Export</string>
              </property>
             </widget>
            </item>
@@ -274,7 +271,21 @@
            <item>
             <widget class="QCheckBox" name="autoSave">
              <property name="text">
-              <string>autosave</string>
+              <string>Autosave</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="autosaveStatus">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="Line" name="line_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
              </property>
             </widget>
            </item>
@@ -296,13 +307,6 @@
             <widget class="QPushButton" name="fetch_ft">
              <property name="text">
               <string>Fetch From Server</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="autosaveStatus">
-             <property name="text">
-              <string/>
              </property>
             </widget>
            </item>
@@ -368,7 +372,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>tableview</string>
+            <string>Table View</string>
            </property>
           </widget>
          </item>
@@ -381,7 +385,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>sideview</string>
+            <string>Side View</string>
            </property>
           </widget>
          </item>
@@ -394,7 +398,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>topview</string>
+            <string>Top View</string>
            </property>
           </widget>
          </item>
