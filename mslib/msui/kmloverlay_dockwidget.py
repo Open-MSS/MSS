@@ -230,7 +230,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dict_files = {}  # Dictionary of files added; key : patch , color , linewidth
 
         # Connect slots and signals.
-        self.btSelectFile.clicked.connect(self.select_file)
+        self.btSelectFile.clicked.connect(self.get_file)
         self.pushButton_remove.clicked.connect(self.remove_file)
         self.pushButton_remove_all.clicked.connect(self.remove_all_files)
         self.pushButton_merge.clicked.connect(self.merge_file)
@@ -337,12 +337,17 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     self.dict_files[filename]["patch"].update(self.cbManualStyle.isChecked(),
                                                               self.dict_files[filename]["color"],
                                                               self.dict_files[filename]["linewidth"])
-
-    def select_file(self):
+    
+    def get_file(self):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
         filenames = get_open_filenames(
             self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
+        self.select_file(filenames)
+
+    def select_file(self, filenames):
+        """Initializes selected file/ files and adds List Item UI Element
+        """
         for filename in filenames:
             if filename is None:
                 return
@@ -416,7 +421,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                                       self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
 
-                except IOError as ex:
+                except (IOError, et.XMLSyntaxError) as ex:
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))

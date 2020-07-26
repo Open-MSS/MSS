@@ -52,6 +52,16 @@ class Test_KmlOverlayDockWidget(object):
         del self.window
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_load_file(self, mockbox):
+        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml"]:
+            path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", sample)
+            filename = (path,)  # converted to tuple
+            self.window.select_file(filename)
+            # QtTest.QTest.qWait(5000)
+            QtWidgets.QApplication.processEvents()
+            assert mockbox.critical.call_count == 0
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_load_error(self, mockbox):
         """
         Test that program mitigates loading a non-existing file
@@ -59,35 +69,7 @@ class Test_KmlOverlayDockWidget(object):
         # load a non existing path
         path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
                             "samples", "satellite_tracks", "satellite_predictor.txt")
-        self.window.leFile.setText(path)
-        QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
+        filename = (path,)  # converted to tuple
+        self.window.select_file(filename)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 1
-
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    def test_load(self, mockbox):
-        """
-        Test for flawless loading of parsing of KML files
-        """
-        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml"]:
-            path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", sample)
-            self.window.leFile.setText(path)
-            QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
-            QtWidgets.QApplication.processEvents()
-            assert mockbox.critical.call_count == 0
-
-    def test_styles(self):
-        """
-        Test for changing styles and toggling visibility
-        """
-        self.test_load()
-        # disable/enable overlay
-        QtTest.QTest.mouseClick(self.window.cbOverlay, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.cbOverlay, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        # disable/enable styles
-        QtTest.QTest.mouseClick(self.window.cbManualStyle, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.cbManualStyle, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
