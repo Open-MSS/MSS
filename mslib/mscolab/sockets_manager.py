@@ -211,26 +211,6 @@ class SocketsManager(object):
     def emit_file_change(self, p_id):
         socketio.emit('file-changed', json.dumps({"p_id": p_id}), room=str(p_id))
 
-    def handle_autosave_enable(self, json_req):
-        """
-        json_req: {
-            "p_id": process id
-            "enable": boolean to enable or disable autosave
-        }
-        """
-        p_id = json_req['p_id']
-        enable = json_req['enable']
-        user = User.verify_auth_token(json_req['token'])
-        # save to project database
-        if not self.permission_check_admin(user.id, p_id):
-            return
-        if enable:
-            self.fm.update_project(int(p_id), 'autosave', 1, user)
-            socketio.emit('autosave-client-en', json.dumps({"p_id": p_id}))
-        else:
-            self.fm.update_project(int(p_id), 'autosave', 0, user)
-            socketio.emit('autosave-client-db', json.dumps({"p_id": p_id}))
-
     def emit_new_permission(self, u_id, p_id):
         """
         to refresh project list of u_id
@@ -273,7 +253,6 @@ def setup_managers(app):
     socketio.on_event('edit-message', sm.handle_message_edit)
     socketio.on_event('delete-message', sm.handle_message_delete)
     socketio.on_event('file-save', sm.handle_file_save)
-    socketio.on_event('autosave', sm.handle_autosave_enable)
     socketio.on_event('add-user-to-room', sm.join_creator_to_room)
     socketio.sm = sm
     return socketio, cm, fm

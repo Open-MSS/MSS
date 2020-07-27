@@ -51,7 +51,7 @@ class FileManager(object):
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
             return False
-        project = Project(path, description, False)
+        project = Project(path, description)
         db.session.add(project)
         db.session.flush()
         project_id = project.id
@@ -78,11 +78,11 @@ class FileManager(object):
         user: authenticated user
         """
         project = Project.query.filter_by(id=p_id).first()
-        project = {"id": project.id,
-                   "path": project.path,
-                   "description": project.description,
-                   "autosave": project.autosave
-                   }
+        project = {
+            "id": project.id,
+            "path": project.path,
+            "description": project.description
+        }
         return project
 
     def list_projects(self, user):
@@ -94,11 +94,11 @@ class FileManager(object):
         for permission in permissions:
             project = Project.query.filter_by(id=permission.p_id).first()
             projects.append({
-                            "p_id": permission.p_id,
-                            "access_level": permission.access_level,
-                            "path": project.path,
-                            "description": project.description,
-                            "autosave": project.autosave})
+                "p_id": permission.p_id,
+                "access_level": permission.access_level,
+                "path": project.path,
+                "description": project.description
+            })
         return projects
 
     def is_admin(self, u_id, p_id):
@@ -207,15 +207,13 @@ class FileManager(object):
             project_path = fs.path.combine(self.data_dir, project.path)
             repo = git.Repo(project_path)
             repo.index.add(['main.ftml'])
-            # hack used, ToDo fix it
-            if comment == "" or comment is False or comment is None:
-                comment = "committing change"
-            cm = repo.index.commit(comment)
+            cm = repo.index.commit("committing changes")
             # change db table
-            change = Change(p_id, user.id, diff_content, cm.hexsha, comment)
+            change = Change(p_id, user.id, cm.hexsha)
             db.session.add(change)
             db.session.commit()
-        return True
+            return True
+        return False
 
     def get_file(self, p_id, user):
         """
@@ -232,7 +230,7 @@ class FileManager(object):
         project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
         return project_file.read()
 
-    def get_changes(self, p_id, user):
+    def get_all_changes(self, p_id, user, named_version):
         """
         p_id: project-id
         user: user of this request
@@ -243,17 +241,29 @@ class FileManager(object):
         perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
         if not perm:
             return False
-        changes = Change.query.filter_by(p_id=p_id).all()
-        return list(map(lambda change: {'content': change.content,
-                                        'comment': change.comment,
-                                        'u_id': change.u_id,
-                                        'username': self.get_user_from_id(change.u_id).username,
-                                        'id': change.id}, changes,))
+        # Get all changes
+        if named_version is None:
+            changes = Change.query.\
+                filter_by(p_id=p_id)\
+                .order_by(Change.created_at.desc())\
+                .all()
+        # Get only named versions
+        else:
+            changes = Change.query\
+                .filter(Change.p_id == p_id)\
+                .filter(~Change.version_name.is_(None))\
+                .order_by(Change.created_at.desc())\
+                .all()
 
-    def get_user_from_id(self, id):
-        return User.query.filter_by(id=id).first()
+        return list(map(lambda change: {
+            'id': change.id,
+            'comment': change.comment,
+            'version_name': change.version_name,
+            'username': change.user.username,
+            'created_at': change.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+        }, changes))
 
-    def get_change_by_id(self, ch_id, user):
+    def get_change_content(self, ch_id):
         """
         ch_id: change id
         user: user of this request
@@ -263,10 +273,20 @@ class FileManager(object):
         change = Change.query.filter_by(id=ch_id).first()
         if not change:
             return False
-        perm = Permission.query.filter_by(u_id=user.id, p_id=change.p_id).first()
-        if not perm:
+        project = Project.query.filter_by(id=change.p_id).first()
+        project_path = fs.path.combine(self.data_dir, project.path)
+        repo = git.Repo(project_path)
+        change_content = repo.git.show(f'{change.commit_hash}:main.ftml')
+        return change_content
+
+    def set_version_name(self, ch_id, p_id, u_id, version_name):
+        if not self.is_admin(u_id, p_id):
             return False
-        return {'content': change.content, 'comment': change.comment, 'u_id': change.u_id}
+        Change.query\
+            .filter(Change.id == ch_id)\
+            .update({Change.version_name: version_name}, synchronize_session=False)
+        db.session.commit()
+        return True
 
     def undo(self, ch_id, user):
         """
@@ -292,6 +312,7 @@ class FileManager(object):
         project_path = fs.path.combine(self.data_dir, project.path)
         repo = git.Repo(project_path)
         try:
+            # TODO CHECK IF CURRENT FILE AND CHECKOUT HAVE ANY DIFF
             file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))
 
             content_lines = file_content.splitlines()
@@ -302,10 +323,8 @@ class FileManager(object):
             proj_fs.writetext('main.ftml', file_content)
             proj_fs.close()
             repo.index.add(['main.ftml'])
-            cm = repo.index.commit("checkout to {}".format(ch.commit_hash))
-
-            change = Change(ch.p_id, user.id, diff_content, cm.hexsha,
-                            "checkout to {}".format(ch.commit_hash))
+            cm = repo.index.commit(f"checkout to {ch.commit_hash}")
+            change = Change(ch.p_id, user.id, cm.hexsha)
             db.session.add(change)
             db.session.commit()
 

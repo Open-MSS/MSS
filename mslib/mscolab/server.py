@@ -263,26 +263,40 @@ def get_project():
     return json.dumps({"content": result})
 
 
-@APP.route('/get_changes', methods=['GET'])
+@APP.route('/get_all_changes', methods=['GET'])
 @verify_user
-def get_changes():
+def get_all_changes():
     p_id = request.values.get('p_id', None)
+    named_version = request.args.get('named_version')
     user = g.user
-    result = fm.get_changes(int(p_id), user)
+    result = fm.get_all_changes(int(p_id), user, named_version)
     if result is False:
-        return "False"
-    return json.dumps({"changes": result})
+        jsonify({"success": False, "message": "Some error occurred!"})
+    return jsonify({"success": True, "changes": result})
 
 
-@APP.route('/get_change_id', methods=['GET'])
+@APP.route('/get_change_content', methods=['GET'])
 @verify_user
-def get_change_by_id():
-    ch_id = request.values.get('ch_id', None)
-    user = g.user
-    result = fm.get_change_by_id(int(ch_id), user)
+def get_change_content():
+    ch_id = int(request.values.get('ch_id', 0))
+    result = fm.get_change_content(ch_id)
     if result is False:
         return "False"
-    return json.dumps({"change": result})
+    return jsonify({"content": result})
+
+
+@APP.route('/set_version_name', methods=['POST'])
+@verify_user
+def set_version_name():
+    ch_id = int(request.form.get('ch_id', 0))
+    p_id = int(request.form.get('p_id', 0))
+    version_name = request.form.get('version_name', None)
+    u_id = g.user.id
+    success = fm.set_version_name(ch_id, p_id, u_id, version_name)
+    if success is False:
+        return jsonify({"success": False, "message": "Some error occurred!"})
+
+    return jsonify({"success": True, "message": "Successfully set version name"})
 
 
 @APP.route('/authorized_users', methods=['GET'])

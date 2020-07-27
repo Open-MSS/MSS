@@ -269,27 +269,6 @@
             </widget>
            </item>
            <item>
-            <widget class="QCheckBox" name="autoSave">
-             <property name="text">
-              <string>Autosave</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="autosaveStatus">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="Line" name="line_3">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QCheckBox" name="workLocallyCheckBox">
              <property name="text">
               <string>Work Locally</string>

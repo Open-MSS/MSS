@@ -85,7 +85,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # Project related signals
         self.addProject.clicked.connect(self.add_project_handler)
         self.export_2.clicked.connect(self.handle_export)
-        self.autoSave.stateChanged.connect(self.autosave_emit)
         self.workLocallyCheckBox.stateChanged.connect(self.handle_work_locally_toggle)
         self.save_ft.clicked.connect(self.save_wp_mscolab)
         self.fetch_ft.clicked.connect(self.fetch_wp_mscolab)
@@ -122,13 +121,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.admin_window = None
         # Version History Window
         self.version_window = None
-        self.disable_action_buttons()
         # set data dir, uri
         self.data_dir = data_dir
         self.mscolab_server_url = None
-        # autosave status
-        self.autosave_status = None
-
+        self.disable_action_buttons()
         # disabling login, add user button. they are enabled when url is connected
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
@@ -195,7 +191,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.show_info("Invalid url, please try again!")
 
     def handle_export(self):
-        # ToDo when autosave mode gets upgraded, have to fetch from remote
         file_path = get_save_filename(
             self, "Save fight track", "", "Flight Track Files (*.ftml)")
         if file_path is not None:
@@ -211,7 +206,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.setEnabled(False)
         self.sideview.setEnabled(False)
         self.tableview.setEnabled(False)
-        self.autoSave.setEnabled(False)
         self.workLocallyCheckBox.setEnabled(False)
         self.export_2.setEnabled(False)
         self.chatWindowBtn.setEnabled(False)
@@ -369,19 +363,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                                                         mscolab_server_url=self.mscolab_server_url)
         self.version_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.version_window.viewCloses.connect(self.close_version_history_window)
+        self.version_window.reloadWindows.connect(self.reload_windows_slot)
         self.version_window.show()
 
     def close_version_history_window(self):
         self.version_window = None
-
-    def autosave_emit(self):
-        # emit signal to server to enable or disable
-        if self.active_pid is None:
-            return
-        if self.autoSave.isChecked():
-            self.conn.emit_autosave(self.token, self.active_pid, 1)
-        else:
-            self.conn.emit_autosave(self.token, self.active_pid, 0)
 
     def create_local_project_file(self):
         with open_fs(self.data_dir) as mss_dir:
@@ -390,14 +376,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if mss_dir.exists(rel_file_path) is True:
                 return
             mss_dir.makedirs(path.dirname(rel_file_path))
-            server_data = mss_dir.readtext(path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
+            server_data = self.waypoints_model.get_xml_content()
             mss_dir.writetext(rel_file_path, server_data)
 
     def handle_work_locally_toggle(self):
         if self.workLocallyCheckBox.isChecked():
             self.create_local_project_file()
             self.local_ftml_file = path.join(self.data_dir, 'local_mscolab_data',
-                                  self.user['username'], self.active_project_name, 'mscolab_project.ftml')
+                                             self.user['username'], self.active_project_name, 'mscolab_project.ftml')
             self.save_ft.setEnabled(True)
             self.fetch_ft.setEnabled(True)
             self.reload_local_wp()
@@ -436,7 +422,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             pass
         else:
             # remove the login modal and put text there
-            print(r.text)
             _json = json.loads(r.text)
             self.token = _json["token"]
             self.user = _json["user"]
@@ -449,7 +434,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # create socket connection here
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
             self.conn.signal_reload.connect(self.reload_window)
-            self.conn.signal_autosave.connect(self.autosave_toggle)
             self.conn.signal_new_permission.connect(self.render_new_permission)
             self.conn.signal_update_permission.connect(self.handle_update_permission)
             self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
@@ -514,51 +498,26 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # close all hanging window
             for window in self.active_windows:
                 window.close()
-            # show autosave button, and empty autosaveStatus
-            self.autoSave.setVisible(True)
-            self.autosaveStatus.setText("")
+            # Turn off work locally toggle
+            self.workLocallyCheckBox.blockSignals(True)
+            self.workLocallyCheckBox.setChecked(False)
+            self.workLocallyCheckBox.blockSignals(False)
+            self.save_ft.setEnabled(False)
+            self.fetch_ft.setEnabled(False)
+
         # set active_pid here
         self.active_pid = item.p_id
         self.access_level = item.access_level
         self.active_project_name = item.text().split("-")[0].strip()
         # set active flightpath here
         self.load_wps_from_server()
-
         # enable project specific buttons
-        self.save_ft.setEnabled(True)
-        self.fetch_ft.setEnabled(True)
+        self.export_2.setEnabled(True)
         self.topview.setEnabled(True)
         self.sideview.setEnabled(True)
         self.tableview.setEnabled(True)
-        self.autoSave.setEnabled(True)
-        self.export_2.setEnabled(True)
-        # configuring autosave button
-        data = {
-            "token": self.token,
-            "p_id": self.active_pid
-        }
-        r = requests.get(self.mscolab_server_url + '/project_details', data=data)
-        _json = json.loads(r.text)
-        self.autosave_status = _json["autosave"]
+        self.workLocallyCheckBox.setEnabled(True)
 
-        if _json["autosave"] is True:
-            # one time activate
-            self.autoSave.blockSignals(True)
-            self.autoSave.setChecked(True)
-            self.autoSave.blockSignals(False)
-            # enable autosave
-            self.autosave_status = True
-            self.workLocallyCheckBox.setChecked(False)
-            self.workLocallyCheckBox.setEnabled(True)
-        else:
-            self.autoSave.blockSignals(True)
-            self.autoSave.setChecked(False)
-            self.autoSave.blockSignals(False)
-            self.workLocallyCheckBox.setChecked(True)
-            self.workLocallyCheckBox.setEnabled(False)
-            self.autosave_status = False
-
-        # hide autosave and admin window btn if access_level is non-admin
         if self.access_level == "viewer" or self.access_level == "collaborator":
             if self.access_level == "viewer":
                 self.chatWindowBtn.setEnabled(False)
@@ -566,15 +525,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.chatWindowBtn.setEnabled(True)
             self.adminWindowBtn.setEnabled(False)
             self.versionHistoryBtn.setEnabled(False)
-            self.autoSave.setVisible(False)
-            # set autosave status
-            if _json["autosave"]:
-                self.autosaveStatus.setText("Autosave is enabled")
-            else:
-                self.autosaveStatus.setText("Autosave is disabled")
         else:
-            self.autosaveStatus.setText("")
-            self.autoSave.setVisible(True)
             self.adminWindowBtn.setEnabled(True)
             self.chatWindowBtn.setEnabled(True)
             self.versionHistoryBtn.setEnabled(True)
@@ -597,28 +548,21 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if hasattr(window, 'mpl'):
                 window.mpl.canvas.waypoints_interactor.redraw_figure()
 
-    def load_wps_from_server(self):
+    def request_wps_from_server(self):
         data = {
             "token": self.token,
             "p_id": self.active_pid
         }
         r = requests.get(self.mscolab_server_url + '/get_project', data=data)
-        ftml = json.loads(r.text)["content"]
+        xml_content = json.loads(r.text)["content"]
+        return xml_content
 
-        try:
-            data_dir = open_fs(self.data_dir)
-            data_dir.makedirs(self.user['username'])
-        # ToDo Remove exception when deleting of a temporary directory is implemented.
-        except fs.errors.DirectoryExists as e:
-            logging.debug(e)
-            data_dir = open_fs(self.data_dir)
-        data_dir.writetext(path.combine(self.user['username'], 'tempfile_mscolab.ftml'), ftml)
-        if not self.workLocallyCheckBox.isChecked():
-            self.local_ftml_file = path.combine(self.data_dir, path.combine(self.user['username'],
-                                                                            'tempfile_mscolab.ftml'))
-            self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
-            # connect change events viewwindow HERE to emit file-save
-            self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
+    def load_wps_from_server(self):
+        if self.workLocallyCheckBox.isChecked():
+            return
+        xml_content = self.request_wps_from_server()
+        self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+        self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
 
     def open_topview(self):
         # showing dummy info dialog
@@ -707,17 +651,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window.btInvertDirection.setEnabled(True)
 
     def logout(self):
-        # check if autosave is enabled
-        # ToDo for non-admins who will get autosave hidden
-        self.w = QtWidgets.QWidget()
-        if (not self.autoSave.isChecked()) and (self.active_pid is not None):
-            qm = QtWidgets.QMessageBox
-            reply = qm.question(self.w, 'Continue?',
-                                'Autosave is disabled, save your changes locally before continuing!',
-                                qm.Yes,
-                                qm.No)
-            if reply == QtWidgets.QMessageBox.No:
-                return
         self.clean_up_window()
 
     def delete_account(self):
@@ -763,9 +696,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.admin_window.close()
         if self.version_window is not None:
             self.version_window.close()
-        # show autosave button, and empty autosaveStatus
-        self.autoSave.setVisible(True)
-        self.autosaveStatus.setText("")
         self.disable_action_buttons()
 
         # delete mscolab http_auth settings for the url
@@ -774,14 +704,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         save_settings_qsettings('mscolab', self.settings)
 
     def handle_mscolab_autosave(self):
-        self.waypoints_model.save_to_ftml(self.local_ftml_file)
-        xml_text = self.waypoints_model.save_to_mscolab(self.local_ftml_file)
-        self.conn.save_file(self.token, self.active_pid, xml_text, comment=None)
+        xml_content = self.waypoints_model.get_xml_content()
+        self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
 
     def save_wp_mscolab(self, comment=None):
         # TODO: OPEN DIALOG BOX TO HANDLE MERGE CONFLICT HERE LATER
-        xml_text = self.waypoints_model.save_to_mscolab(self.local_ftml_file)
-        self.conn.save_file(self.token, self.active_pid, xml_text, comment=comment)
+        xml_content = self.waypoints_model.get_xml_content()
+        self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
 
     def handle_local_data_changed(self):
         self.waypoints_model.save_to_ftml(self.local_ftml_file)
@@ -796,12 +725,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def fetch_wp_mscolab(self):
         # Fetch the latest changes from the server
-        self.load_wps_from_server()
+        xml_content = self.request_wps_from_server()
         # Over write the local file with the fetched data
         with open_fs(self.data_dir) as mss_dir:
-            server_data = mss_dir.readtext(path.combine(self.user['username'], 'tempfile_mscolab.ftml'))
             relative_file_path = path.relativefrom(self.data_dir, self.local_ftml_file)
-            mss_dir.writetext(relative_file_path, server_data)
+            mss_dir.writetext(relative_file_path, xml_content)
             self.reload_local_wp()
 
     @QtCore.Slot(int, int, str)
@@ -845,7 +773,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.chat_window.close()
             else:
                 self.chatWindowBtn.setEnabled(True)
-
             # update view window nav elements if open
             for window in self.active_windows:
                 _type = window.view_type
@@ -853,27 +780,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.disable_navbar_action_buttons(_type, window)
                 else:
                     self.enable_navbar_action_buttons(_type, window)
-            # update autosave stats
-            if self.access_level == "admin" or self.access_level == "creator":
-                # enable autosave set it to checked status
-                self.autoSave.setVisible(True)
-                if self.autosave_status is True:
-                    self.autoSave.blockSignals(True)
-                    self.autoSave.setChecked(True)
-                    self.autoSave.blockSignals(False)
-                else:
-                    self.autoSave.blockSignals(True)
-                    self.autoSave.setChecked(False)
-                    self.autoSave.blockSignals(False)
-                self.autosaveStatus.setText("")
-            else:
-                # disable autosave, set status text
-                self.autoSave.setVisible(False)
-                if self.autosave_status is True:
-                    self.autosaveStatus.setText("Autosave is enabled!")
-                else:
-                    self.autosaveStatus.setText("Autosave is enabled!")
-
         # update project window if open
         if self.chat_window is not None:
             self.chat_window.load_users()
@@ -924,7 +830,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         _json = json.loads(r.text)
         if _json['user']['id'] == u_id:
             project = self.get_recent_project()
-            project_desc = '{} - {}'.format(project['path'], project["access_level"])
+            project_desc = f'{project["path"]} - {project["access_level"]}'
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
             widgetItem.p_id = project["p_id"]
             widgetItem.access_level = project["access_level"]
@@ -934,15 +840,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     @QtCore.Slot(int)
     def reload_window(self, value):
-        if self.active_pid != value or self.autosave_status is False:
+        if self.active_pid != value or self.workLocallyCheckBox.isChecked():
             return
-        logging.debug("reloading window")
-        # ask the user in dialog if he wants the change, only for autosave mode
-        # toDo preview of the change
         self.reload_wps_from_server()
-        # reload changes in project window if it exists
-        if self.version_window is not None:
-            self.version_window.load_all_changes()
 
     @QtCore.Slot(int)
     def handle_view_close(self, value):
@@ -950,33 +850,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for index, window in enumerate(self.active_windows):
             if window._id == value:
                 del self.active_windows[index]
-
-    @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex)
-    def handle_data_change(self, index1, index2):
-        if self.autoSave.isChecked():
-            self.save_wp_mscolab()
-
-    @QtCore.Slot(int, int)
-    def autosave_toggle(self, enable, p_id):
-        # return if it's for a different process
-        if p_id != self.active_pid:
-            return
-        if enable:
-            # enable autosave, disable save button
-            self.autosave_status = True
-            self.workLocallyCheckBox.setEnabled(True)
-            # reload window
-            self.reload_wps_from_server()
-            self.autosaveStatus.setText("Autosave is enabled")
-
-        else:
-            self.autosave_status = False
-            if not self.workLocallyCheckBox.isChecked():
-                self.waypoints_model.dataChanged.disconnect()
-            self.workLocallyCheckBox.setChecked(True)
-            self.workLocallyCheckBox.setEnabled(False)
-            # connect change events viewwindow HERE to emit file-save
-            self.autosaveStatus.setText("Autosave is disabled")
 
     def setIdentifier(self, identifier):
         self.identifier = identifier

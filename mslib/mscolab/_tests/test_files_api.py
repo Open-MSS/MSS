@@ -254,7 +254,8 @@ class Test_Files(object):
         """
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
-            ch = Change(int(p_id), 8, 'some content', "", 'some comment')
+            ch = Change(int(p_id), 8, "", "Version1", "some comment")
+
             db.session.add(ch)
             db.session.commit()
         data = {
@@ -262,7 +263,7 @@ class Test_Files(object):
             "p_id": p_id
         }
         # test 'get all changes' request
-        r = requests.get(MSCOLAB_URL_TEST + '/get_changes', data=data)
+        r = requests.get(MSCOLAB_URL_TEST + '/get_all_changes', data=data)
         changes = json.loads(r.text)["changes"]
         assert len(changes) == 1
         assert changes[0]["comment"] == "some comment"
@@ -271,10 +272,12 @@ class Test_Files(object):
             "token": self.token,
             "ch_id": changes[0]["id"]
         }
-        # test 'get single change' request
-        r = requests.get(MSCOLAB_URL_TEST + '/get_change_id', data=data)
-        change = json.loads(r.text)["change"]
-        assert change["content"] == "some content"
+        # test 'get change content' request
+        url = url_join(MSCOLAB_URL_TEST, 'get_change_content')
+        r = requests.post(url, data=data)
+        # TODO: FIX THIS TEST
+        change_content = json.loads(r.text)["content"]
+        assert ["content"] == "some content"
 
         data["p_id"] = 123
         data["ch_id"] = 123
