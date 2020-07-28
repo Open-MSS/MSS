@@ -26,6 +26,7 @@
 """
 
 import os
+import fs
 import sys
 import mock
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
@@ -33,6 +34,7 @@ import mslib.msui.kmloverlay_dockwidget as kd
 
 
 class Test_KmlOverlayDockWidget(object):
+    sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples")
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.view = mock.Mock()
@@ -53,13 +55,20 @@ class Test_KmlOverlayDockWidget(object):
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_load_file(self, mockbox):
+        index = 0
+        assert self.window.listWidget.count() == 0
         for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml"]:
-            path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", sample)
+            path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", sample)
             filename = (path,)  # converted to tuple
             self.window.select_file(filename)
-            # QtTest.QTest.qWait(5000)
             QtWidgets.QApplication.processEvents()
-            assert mockbox.critical.call_count == 0
+            QtTest.QTest.qWait(250)
+            assert self.window.listWidget.item(index).checkState() == QtCore.Qt.Checked
+            index = index + 1
+        assert self.window.directory_location == path
+        assert mockbox.critical.call_count == 0
+        assert self.window.listWidget.count() == index
+        assert len(self.window.dict_files) == index
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_load_error(self, mockbox):
@@ -67,9 +76,39 @@ class Test_KmlOverlayDockWidget(object):
         Test that program mitigates loading a non-existing file
         """
         # load a non existing path
-        path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
+        path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
                             "samples", "satellite_tracks", "satellite_predictor.txt")
         filename = (path,)  # converted to tuple
         self.window.select_file(filename)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 1
+
+    def test_remove_file(self):
+        self.test_load_file()
+        QtWidgets.QApplication.processEvents()
+        self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
+        QtTest.QTest.mouseClick(self.window.pushButton_remove, QtCore.Qt.LeftButton)
+        assert self.window.listWidget.count() == 1
+        assert len(self.window.dict_files) == 1
+
+    def test_remove_all_files(self):
+        self.test_load_file()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listWidget.count() == 5
+        QtTest.QTest.mouseClick(self.window.pushButton_remove_all, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listWidget.count() == 0  # No items in list
+        assert self.window.dict_files == {}  # Dictionary should be empty
+        assert self.window.patch == None   # Patch should be None
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    def test_merge_file(self, mockbox):
+        self.test_load_file()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseClick(self.window.pushButton_merge, QtCore.Qt.LeftButton)
+        path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", "output.kml")
+        filename = (path,)
+        self.window.select_file(filename)
+        QtWidgets.QApplication.processEvents()
+        assert mockbox.critical.call_count == 0
+    
