@@ -381,17 +381,22 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def handle_work_locally_toggle(self):
         if self.workLocallyCheckBox.isChecked():
+            if self.version_window is not None:
+                self.version_window.close()
             self.create_local_project_file()
             self.local_ftml_file = path.join(self.data_dir, 'local_mscolab_data',
                                              self.user['username'], self.active_project_name, 'mscolab_project.ftml')
             self.save_ft.setEnabled(True)
             self.fetch_ft.setEnabled(True)
+            self.versionHistoryBtn.setEnabled(False)
             self.reload_local_wp()
         else:
             self.local_ftml_file = None
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
-            self.waypoints_model.dataChanged.disconnect()
+            if self.access_level == "admin" or self.access_level == "creator":
+                self.versionHistoryBtn.setEnabled(True)
+            self.waypoints_model = None
             self.load_wps_from_server()
 
     def authorize(self):
@@ -493,22 +498,29 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def set_active_pid(self, item):
-        # remove all windows if the current active_pid is not selected p_id
-        if item.p_id != self.active_pid:
+        if item.p_id == self.active_pid:
+            return
             # close all hanging window
-            for window in self.active_windows:
-                window.close()
-            # Turn off work locally toggle
-            self.workLocallyCheckBox.blockSignals(True)
-            self.workLocallyCheckBox.setChecked(False)
-            self.workLocallyCheckBox.blockSignals(False)
-            self.save_ft.setEnabled(False)
-            self.fetch_ft.setEnabled(False)
+        for window in self.active_windows:
+            window.close()
+        if self.version_window is not None:
+            self.version_window.close()
+        if self.chat_window is not None:
+            self.chat_window.close()
+        if self.admin_window is not None:
+            self.admin_window.close()
+        # Turn off work locally toggle
+        self.workLocallyCheckBox.blockSignals(True)
+        self.workLocallyCheckBox.setChecked(False)
+        self.workLocallyCheckBox.blockSignals(False)
+        self.save_ft.setEnabled(False)
+        self.fetch_ft.setEnabled(False)
 
         # set active_pid here
         self.active_pid = item.p_id
         self.access_level = item.access_level
         self.active_project_name = item.text().split("-")[0].strip()
+        self.waypoints_model = None
         # set active flightpath here
         self.load_wps_from_server()
         # enable project specific buttons
@@ -703,7 +715,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
 
-    def handle_mscolab_autosave(self):
+    def handle_mscolab_autosave(self, comment=None):
         xml_content = self.waypoints_model.get_xml_content()
         self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
 

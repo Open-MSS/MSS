@@ -186,21 +186,18 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False
-        data = fs.open_fs(self.data_dir)
-        """
-        old file is read, the diff between old and new is calculated and stored
-        as 'Change' in changes table. comment for each change is optional
-        """
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        old_data = project_file.read()
-        project_file.close()
-        old_data_lines = old_data.splitlines()
-        content_lines = content.splitlines()
-        diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-        diff_content = '\n'.join(list(diff))
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
-        project_file.write(content)
-        project_file.close()
+
+        with fs.open_fs(self.data_dir) as data:
+            """
+            old file is read, the diff between old and new is calculated and stored
+            as 'Change' in changes table. comment for each change is optional
+            """
+            old_data = data.readtext(fs.path.combine(project.path, 'main.ftml'))
+            old_data_lines = old_data.splitlines()
+            content_lines = content.splitlines()
+            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+            diff_content = '\n'.join(list(diff))
+            data.writetext(fs.path.combine(project.path, 'main.ftml'), content)
         # commit changes if comment is not None
         if diff_content != "":
             # commit to git repository
@@ -226,11 +223,12 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False
-        data = fs.open_fs(self.data_dir)
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        return project_file.read()
+        with fs.open_fs(self.data_dir) as data:
+            project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
+            project_data = project_file.read()
+        return project_data
 
-    def get_all_changes(self, p_id, user, named_version):
+    def get_all_changes(self, p_id, user, named_version=None):
         """
         p_id: project-id
         user: user of this request
@@ -303,31 +301,17 @@ class FileManager(object):
         if not ch or not project:
             return False
 
-        data = fs.open_fs(self.data_dir)
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        old_data = project_file.read()
-        project_file.close()
-        old_data_lines = old_data.splitlines()
-
-        project_path = fs.path.combine(self.data_dir, project.path)
+        project_path = fs.path.join(self.data_dir, project.path)
         repo = git.Repo(project_path)
         try:
-            # TODO CHECK IF CURRENT FILE AND CHECKOUT HAVE ANY DIFF
-            file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))
-
-            content_lines = file_content.splitlines()
-            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-            diff_content = '\n'.join(list(diff))
-
-            proj_fs = fs.open_fs(project_path)
-            proj_fs.writetext('main.ftml', file_content)
-            proj_fs.close()
+            file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
+            with fs.open_fs(project_path) as proj_fs:
+                proj_fs.writetext('main.ftml', file_content)
             repo.index.add(['main.ftml'])
             cm = repo.index.commit(f"checkout to {ch.commit_hash}")
             change = Change(ch.p_id, user.id, cm.hexsha)
             db.session.add(change)
             db.session.commit()
-
             return True
         except Exception as ex:
             logging.debug(ex)

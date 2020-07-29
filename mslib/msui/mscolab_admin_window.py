@@ -258,8 +258,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         if self.user["id"] == u_id:
             return
 
-        show_popup(self, 'Alert',
-                        'The permissions for this project were updated! The window is going to refresh.', 1)
+        show_popup(self, 'Alert', 'The permissions for this project were updated! The window is going to refresh.', 1)
         self.load_users_without_permission()
         self.load_users_with_permission()
 

@@ -37,9 +37,10 @@
 import datetime
 import logging
 import os
+
+import fs
 import xml.dom.minidom
 import xml.parsers.expat
-from fs import open_fs, path
 
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float
 from mslib import utils, __version__
@@ -552,10 +553,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             raise ValueError("filename to save flight track cannot be None or empty")
 
         self.filename = filename
-        self.name = os.path.basename(filename.replace(".ftml", "").strip())
+        self.name = fs.path.basename(filename.replace(".ftml", "").strip())
         doc = self.get_xml_doc()
         _dirname, _name = os.path.split(self.filename)
-        _fs = open_fs(_dirname)
+        _fs = fs.open_fs(_dirname)
         with _fs.open(_name, 'w') as file_object:
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
 
@@ -587,7 +588,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """Load a flight track from an XML file at <filename>.
         """
         _dirname, _name = os.path.split(filename)
-        _fs = open_fs(_dirname)
+        _fs = fs.open_fs(_dirname)
         xml_content = _fs.readtext(_name)
         name = os.path.basename(filename.replace(".ftml", "").strip())
         self.load_from_xml_data(xml_content, name)

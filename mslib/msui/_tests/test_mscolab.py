@@ -32,7 +32,6 @@ import mock
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Project
 from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
 
@@ -88,32 +87,11 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.disconnectMscolab, QtCore.Qt.LeftButton)
         assert self.window.mscolab_server_url is None
 
-    def _connect_to_mscolab(self):
-        self.window.url.setEditText("http://localhost:8084")
-        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
-        time.sleep(0.5)
-
-    def _login(self, emailid="a", password="a"):
-        # login
-        self._connect_to_mscolab()
-        self.window.emailid.setText(emailid)
-        self.window.password.setText(password)
-        QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-
     def test_activate_project(self):
         self._login()
         # activate a project
         self._activate_project_at_index(0)
         assert self.window.active_pid is not None
-
-    def _activate_project_at_index(self, index):
-        item = self.window.listProjects.item(index)
-        point = self.window.listProjects.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
 
     def test_view_open(self):
         self._login()
@@ -135,51 +113,59 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert len(self.window.active_windows) == 3
 
-    def test_save_fetch(self):
-
+    def test_work_locally_toggle(self):
         self._login()
         self._activate_project_at_index(0)
-        # change waypoint
-        self.window.waypoints_model.invert_direction()
-        wpdata1 = self.window.waypoints_model.waypoint_data(0)
-        # don't save, fetch
-        QtTest.QTest.mouseClick(self.window.fetch_ft, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.workLocallyCheckBox, QtCore.Qt.LeftButton,
+                                pos=QtCore.QPoint(2, self.window.workLocallyCheckBox.height() / 2))
         QtWidgets.QApplication.processEvents()
-        wpdata2 = self.window.waypoints_model.waypoint_data(0)
-        assert wpdata2.lat != wpdata1.lat
-        # save, fetch
-        self.window.waypoints_model.invert_direction()
-        wpdata1 = self.window.waypoints_model.waypoint_data(0)
-        QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        time.sleep(2)  # for change to take place
-        QtTest.QTest.mouseClick(self.window.fetch_ft, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wpdata2 = self.window.waypoints_model.waypoint_data(0)
-        assert wpdata2.lat == wpdata1.lat
-        # to undo changes
-        self.window.waypoints_model.invert_direction()
-        QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        # to let server process
         time.sleep(2)
+        self.window.waypoints_model.invert_direction()
+        wpdata_local = self.window.waypoints_model.waypoint_data(0)
+        QtTest.QTest.mouseClick(self.window.workLocallyCheckBox, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(2)
+        wpdata_server = self.window.waypoints_model.waypoint_data(0)
+        assert wpdata_local.lat != wpdata_server.lat
 
-    def test_autosave(self):
+    def test_save_to_server(self):
         self._login()
-        self._activate_project_at_index(0)
-        QtTest.QTest.mouseClick(self.window.autoSave, QtCore.Qt.LeftButton,
-                                pos=QtCore.QPoint(2, self.window.autoSave.height() / 2))
+        self._activate_project_at_index(1)
+        wp_server_before = self.window.waypoints_model.waypoint_data(0)
+        QtTest.QTest.mouseClick(self.window.workLocallyCheckBox, QtCore.Qt.LeftButton,
+                                pos=QtCore.QPoint(2, self.window.workLocallyCheckBox.height() / 2))
         QtWidgets.QApplication.processEvents()
-        # sleeping to let server do the change
-        time.sleep(3)
-        with self.app.app_context():
-            project = Project.query.filter_by(id=self.window.active_pid).first()
-        assert project.autosave is self.window.autoSave.isChecked()
-        QtTest.QTest.mouseClick(self.window.autoSave, QtCore.Qt.LeftButton,
-                                pos=QtCore.QPoint(2, self.window.autoSave.height() / 2))
-        QtWidgets.QApplication.processEvents()
-        # top let server process
         time.sleep(2)
+        wp_local = self.window.waypoints_model.waypoint_data(0)
+        assert wp_local.lat == wp_server_before.lat
+        self.window.waypoints_model.invert_direction()
+        wp_local = self.window.waypoints_model.waypoint_data(0)
+        QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(2)
+        QtTest.QTest.mouseClick(self.window.workLocallyCheckBox, QtCore.Qt.LeftButton,
+                                pos=QtCore.QPoint(2, self.window.workLocallyCheckBox.height() / 2))
+        QtWidgets.QApplication.processEvents()
+        time.sleep(2)
+        wp_server_after = self.window.waypoints_model.waypoint_data(0)
+        assert wp_local.lat == wp_server_after.lat
+
+    def test_fetch_from_server(self):
+        self._login()
+        self._activate_project_at_index(1)
+        self.window.waypoints_model.invert_direction()
+        wp_data_server = self.window.waypoints_model.waypoint_data(0)
+        QtTest.QTest.mouseClick(self.window.workLocallyCheckBox, QtCore.Qt.LeftButton,
+                                pos=QtCore.QPoint(2, self.window.workLocallyCheckBox.height() / 2))
+        QtWidgets.QApplication.processEvents()
+        time.sleep(2)
+        wp_data_local = self.window.waypoints_model.waypoint_data(0)
+        assert wp_data_local.lat != wp_data_server.lat
+        QtTest.QTest.mouseClick(self.window.fetch_ft, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(2)
+        wp_data_local = self.window.waypoints_model.waypoint_data(0)
+        assert wp_data_local.lat == wp_data_server.lat
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockbox):
@@ -189,3 +175,23 @@ class Test_Mscolab(object):
         assert len(self.window.listProjects) == 0
         assert self.window.loggedInWidget.isVisible() is False
         assert self.window.loginWidget.isVisible() is True
+
+    def _connect_to_mscolab(self):
+        self.window.url.setEditText("http://localhost:8084")
+        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        time.sleep(0.5)
+
+    def _login(self, emailid="a", password="a"):
+        self._connect_to_mscolab()
+        self.window.emailid.setText(emailid)
+        self.window.password.setText(password)
+        QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+
+    def _activate_project_at_index(self, index):
+        item = self.window.listProjects.item(index)
+        point = self.window.listProjects.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtWidgets.QApplication.processEvents()

@@ -68,6 +68,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         self.mscolab_server_url = mscolab_server_url
 
         # Event handlers
+        self.refreshBtn.clicked.connect(self.handle_refresh)
         self.checkoutBtn.clicked.connect(self.handle_undo)
         self.nameVersionBtn.clicked.connect(self.handle_named_version)
         self.deleteVersionNameBtn.clicked.connect(self.handle_delete_version_name)
@@ -88,12 +89,12 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     def set_change_list_style(self):
         palette = self.changes.palette()
         self.changes.setStyleSheet(f"""
-            QListWidget::item {{ 
+            QListWidget::item {{
                 border-bottom: 1px solid #222;
             }}
-            QListWidget::item:selected {{ 
-                background-color: {palette.highlight().color().name()}; 
-                color: {palette.highlightedText().color().name()}; 
+            QListWidget::item:selected {{
+                background-color: {palette.highlight().color().name()};
+                color: {palette.highlightedText().color().name()};
             }}
         """)
 
@@ -230,6 +231,10 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 self.reloadWindows.emit()
                 self.load_current_waypoints()
                 self.load_all_changes()
+
+    def handle_refresh(self):
+        self.load_current_waypoints()
+        self.load_all_changes()
 
     def closeEvent(self, event):
         self.viewCloses.emit()
