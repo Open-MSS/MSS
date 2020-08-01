@@ -27,17 +27,17 @@
 import sys
 import time
 
+import mock
+
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change
 from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
 
 
 class Test_MscolabVersionHistory(object):
     def setup(self):
-        # start mscolab server
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
@@ -50,6 +50,7 @@ class Test_MscolabVersionHistory(object):
                                        mscolab_server_url=MSCOLAB_URL_TEST)
         self._login()
         self._activate_project_at_index(0)
+        time.sleep(4)
         # activate project window here by clicking button
         QtTest.QTest.mouseClick(self.window.versionHistoryBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
@@ -71,47 +72,70 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
 
     def test_changes(self):
+        self._change_version_filter(1)
         len_prev = self.version_window.changes.count()
-        # make a change
+        # make a changes
         self.window.waypoints_model.invert_direction()
-        # save it with a comment
-        self.window.save_wp_mscolab(comment="dummy save")
         QtWidgets.QApplication.processEvents()
-        # test doesn't work without the sleep, because of delay in adding change and commit
-        time.sleep(2)
-        # change again for db consistency
+        time.sleep(4)
         self.window.waypoints_model.invert_direction()
-        self.window.save_wp_mscolab(comment="dummy save")
         QtWidgets.QApplication.processEvents()
-        time.sleep(2)
-        # fetch wp/chats/project
-        self.window.reload_window(self.window.active_pid)
-        QtWidgets.QApplication.processEvents()
+        time.sleep(4)
         self.version_window.load_all_changes()
         QtWidgets.QApplication.processEvents()
         len_after = self.version_window.changes.count()
-        # test change render
         assert len_prev == (len_after - 2)
 
-    def test_undo(self):
-        old_count = self.version_window.changes.count()
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
+    def test_set_version_name(self, mockbox):
+        self._change_version_filter(1)
         self._activate_change_at_index(0)
         QtWidgets.QApplication.processEvents()
-        self.version_window.request_undo_mscolab(self.version_window.changes.currentIndex())
-        # wait till server emits event to reload
-        time.sleep(2)
-        self.version_window.load_all_changes()
+        QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert self.version_window.changes.count() == old_count + 1
-        # delete the changes
-        with self.app.app_context():
-            Change.query.filter_by(comment="dummy save").delete()
-            db.session.commit()
+        time.sleep(4)
+        assert self.version_window.changes.currentItem().version_name == "MyVersionName"
+
+    def test_version_name_filter(self):
+        assert self.version_window.changes.count() == 1
+
+    def test_version_name_delete(self):
+        self._activate_change_at_index(0)
+        QtTest.QTest.mouseClick(self.version_window.deleteVersionNameBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(4)
+        assert self.version_window.changes.count() == 0
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    def test_undo(self, mockbox):
+        self._change_version_filter(1)
+        changes_count = self.version_window.changes.count()
+        self._activate_change_at_index(1)
+        QtTest.QTest.mouseClick(self.version_window.checkoutBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(4)
+        new_changes_count = self.version_window.changes.count()
+        assert changes_count + 1 == new_changes_count
+
+    def test_refresh(self):
+        self._change_version_filter(1)
+        changes_count = self.version_window.changes.count()
+        self.window.waypoints_model.invert_direction()
+        QtWidgets.QApplication.processEvents()
+        time.sleep(4)
+        self.window.waypoints_model.invert_direction()
+        QtWidgets.QApplication.processEvents()
+        time.sleep(4)
+        QtTest.QTest.mouseClick(self.version_window.refreshBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(4)
+        new_changes_count = self.version_window.changes.count()
+        assert new_changes_count == changes_count + 2
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
-        time.sleep(0.5)
+        time.sleep(1)
 
     def _login(self):
         self._connect_to_mscolab()
@@ -135,3 +159,10 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClick(self.version_window.changes.viewport(), QtCore.Qt.Key_Return)
         QtWidgets.QApplication.processEvents()
+        time.sleep(2)
+
+    def _change_version_filter(self, index):
+        self.version_window.versionFilterCB.setCurrentIndex(index)
+        self.version_window.versionFilterCB.currentIndexChanged.emit(index)
+        QtWidgets.QApplication.processEvents()
+        time.sleep(4)

@@ -35,7 +35,7 @@ from werkzeug.urls import url_join
 from mslib.mscolab.models import MessageType
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import Qt, QtCore, QtGui, QtWidgets, ui_mscolab_project_window as ui
-from mslib.utils import config_loader
+from mslib.utils import config_loader, show_popup
 
 
 # We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.
@@ -177,17 +177,6 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.messageText.setText(f"File Selected: {file_path}")
         self.messageText.setReadOnly(True)
 
-    def show_popup(self, title, message, icon=0):
-        """
-            title: Title of message box
-            message: Display Message
-            icon: 0 = Error Icon, 1 = Information Icon
-        """
-        if icon == 0:
-            QtWidgets.QMessageBox.critical(self, title, message)
-        elif icon == 1:
-            QtWidgets.QMessageBox.information(self, title, message)
-
     # Signal Slots
     def handle_search_text_changed(self):
         self.current_search_index = None
@@ -218,7 +207,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
                     self.current_search_index = row
                     return
         if self.current_search_index is None:
-            self.show_popup("Alert", "No message found!", 1)
+            show_popup(self, "Alert", "No message found!", 1)
 
     def toggle_preview(self):
         # Go Back to text box
@@ -282,7 +271,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             try:
                 requests.post(url, data=data, files=files)
             except requests.exceptions.ConnectionError:
-                self.show_popup("Error", "File size too large")
+                show_popup(self, "Error", "File size too large")
         self.send_message_state()
 
     def start_message_reply(self, message_item):
@@ -338,7 +327,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         url = url_join(self.mscolab_server_url, 'authorized_users')
         r = requests.get(url, data=data)
         if r.text == "False":
-            self.show_popup("Error", "Some error occurred while fetching users!")
+            show_popup(self, "Error", "Some error occurred while fetching users!")
         else:
             self.collaboratorsList.clear()
             users = r.json()["users"]

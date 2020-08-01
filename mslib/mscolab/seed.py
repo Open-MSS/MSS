@@ -91,31 +91,26 @@ def seed_data(db_uri):
         projects = [{
             'id': 1,
             'path': 'one',
-            'description': 'a, b',
-            'autosave': False
+            'description': 'a, b'
         }, {
             'id': 2,
             'path': 'two',
-            'description': 'b, c',
-            'autosave': False
+            'description': 'b, c'
         }, {
             'id': 3,
             'path': 'three',
-            'description': 'a, c',
-            'autosave': False
+            'description': 'a, c'
         }, {
             'id': 4,
             'path': 'four',
-            'description': 'd',
-            'autosave': False
+            'description': 'd'
         }, {
             'id': 5,
             'path': 'Admin_Test',
-            'description': 'Project for testing admin window',
-            'autosave': False
+            'description': 'Project for testing admin window'
         }]
         for project in projects:
-            db_project = Project(project['path'], project['description'], project['autosave'])
+            db_project = Project(project['path'], project['description'])
             db_project.id = project['id']
             db.session.add(db_project)
         db.session.commit()

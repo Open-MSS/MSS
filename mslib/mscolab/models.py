@@ -126,18 +126,14 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     path = db.Column(db.String(255), unique=True)
     description = db.Column(db.String(255))
-    autosave = db.Column(db.Boolean)
 
-    def __init__(self, path, description, autosave):
+    def __init__(self, path, description):
         """
         path: path to the project
-        description: small description of project,
-        autosave: a boolean to show if autosave is enabled or disabled
-            for the project
+        description: small description of project
         """
         self.path = path
         self.description = description
-        self.autosave = autosave
 
     def __repr__(self):
         return f'<Project path: {self.path}, desc: {self.description}>'
@@ -180,14 +176,15 @@ class Change(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    content = db.Column(db.TEXT)
-    comment = db.Column(db.String(255), default=None)
     commit_hash = db.Column(db.String(255), default=None)
+    version_name = db.Column(db.String(255), default=None)
+    comment = db.Column(db.String(255), default=None)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    user = db.relationship('User')
 
-    def __init__(self, p_id, u_id, content, commit_hash, comment=""):
+    def __init__(self, p_id, u_id, commit_hash, version_name=None, comment=None):
         self.p_id = p_id
         self.u_id = u_id
-        self.content = content
         self.commit_hash = commit_hash
+        self.version_name = version_name
         self.comment = comment

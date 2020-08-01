@@ -45,7 +45,7 @@ except ImportError:
 
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
 
 UR = pint.UnitRegistry()
 UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
@@ -601,6 +601,22 @@ def setup_logging(args):
             fh.setLevel(logging.DEBUG)
             fh.setFormatter(debug_formatter)
             logger.addHandler(fh)
+
+
+def utc_to_local_datetime(utc_datetime):
+    return utc_datetime.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
+
+
+def show_popup(parent, title, message, icon=0):
+    """
+        title: Title of message box
+        message: Display Message
+        icon: 0 = Error Icon, 1 = Information Icon
+    """
+    if icon == 0:
+        QtWidgets.QMessageBox.critical(parent, title, message)
+    elif icon == 1:
+        QtWidgets.QMessageBox.information(parent, title, message)
 
 
 # modified Version from minidom, https://github.com/python/cpython/blob/2.7/Lib/xml/dom/minidom.py

@@ -31,6 +31,8 @@ import os
 from functools import partial
 import time
 
+from werkzeug.urls import url_join
+
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib._tests.constants import MSCOLAB_URL_TEST
@@ -87,15 +89,16 @@ class Test_Files(object):
             assert self.fm.is_admin(u_id, no_perm_p_id) is False
 
     def test_file_save(self):
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'email': 'a',
-                          'password': 'a'
-                          })
+        url = url_join(MSCOLAB_URL_TEST, 'token')
+        r = requests.post(url, data={
+            'email': 'a',
+            'password': 'a'
+        })
         response1 = json.loads(r.text)
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
-                          'email': 'b',
-                          'password': 'b'
-                          })
+        r = requests.post(url, data={
+            'email': 'b',
+            'password': 'b'
+        })
         response2 = json.loads(r.text)
 
         def handle_chat_message(sno, message):
@@ -116,31 +119,31 @@ class Test_Files(object):
             db.session.commit()
             sio1.emit('start', response1)
             sio2.emit('start', response2)
-            time.sleep(4)
+            time.sleep(2)
             sio1.emit('file-save', {
                       "p_id": p_id,
                       "token": response1['token'],
-                      "content": "test"
+                      "content": "file save content 1"
                       })
-            time.sleep(4)
+            time.sleep(2)
             # second file change
             sio1.emit('file-save', {
                       "p_id": p_id,
                       "token": response1['token'],
-                      "content": "no ive changed the file now"
+                      "content": "file save content 2"
                       })
-            time.sleep(4)
+            time.sleep(2)
             # check if there were events triggered related to file-save
             assert self.file_message_counter[0] == 2
             assert self.file_message_counter[1] == 2
             # check if content is saved in file
-            assert self.fm.get_file(p_id, user2) == "no ive changed the file now"
+            assert self.fm.get_file(p_id, user2) == "file save content 2"
             # check if change is saved properly
-            changes = self.fm.get_changes(p_id, self.user)
+            changes = self.fm.get_all_changes(p_id, self.user)
             assert len(changes) == 2
-            change = Change.query.first()
-            change_function_result = self.fm.get_change_by_id(change.id, self.user)
-            assert change.content == change_function_result['content']
+            change = Change.query.order_by(Change.created_at.desc()).first()
+            change_content = self.fm.get_change_content(change.id)
+            assert change_content == "file save content 2"
             perm = Permission.query.filter_by(u_id=9, p_id=p_id).first()
             db.session.delete(perm)
             db.session.commit()
@@ -153,8 +156,8 @@ class Test_Files(object):
             p_id = get_recent_pid(self.fm, self.user)
             changes = Change.query.filter_by(p_id=p_id).all()
             assert self.fm.undo(changes[0].id, self.user) is True
-            assert len(self.fm.get_changes(p_id, self.user)) == 3
-            assert self.fm.get_file(p_id, self.user) == "test"
+            assert len(self.fm.get_all_changes(p_id, self.user)) == 3
+            assert self.fm.get_file(p_id, self.user) == "file save content 1"
 
     def test_get_project(self):
         with self.app.app_context():

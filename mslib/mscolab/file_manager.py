@@ -51,7 +51,7 @@ class FileManager(object):
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
             return False
-        project = Project(path, description, False)
+        project = Project(path, description)
         db.session.add(project)
         db.session.flush()
         project_id = project.id
@@ -78,11 +78,11 @@ class FileManager(object):
         user: authenticated user
         """
         project = Project.query.filter_by(id=p_id).first()
-        project = {"id": project.id,
-                   "path": project.path,
-                   "description": project.description,
-                   "autosave": project.autosave
-                   }
+        project = {
+            "id": project.id,
+            "path": project.path,
+            "description": project.description
+        }
         return project
 
     def list_projects(self, user):
@@ -94,11 +94,11 @@ class FileManager(object):
         for permission in permissions:
             project = Project.query.filter_by(id=permission.p_id).first()
             projects.append({
-                            "p_id": permission.p_id,
-                            "access_level": permission.access_level,
-                            "path": project.path,
-                            "description": project.description,
-                            "autosave": project.autosave})
+                "p_id": permission.p_id,
+                "access_level": permission.access_level,
+                "path": project.path,
+                "description": project.description
+            })
         return projects
 
     def is_admin(self, u_id, p_id):
@@ -186,36 +186,31 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False
-        data = fs.open_fs(self.data_dir)
-        """
-        old file is read, the diff between old and new is calculated and stored
-        as 'Change' in changes table. comment for each change is optional
-        """
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        old_data = project_file.read()
-        project_file.close()
-        old_data_lines = old_data.splitlines()
-        content_lines = content.splitlines()
-        diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-        diff_content = '\n'.join(list(diff))
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
-        project_file.write(content)
-        project_file.close()
+
+        with fs.open_fs(self.data_dir) as data:
+            """
+            old file is read, the diff between old and new is calculated and stored
+            as 'Change' in changes table. comment for each change is optional
+            """
+            old_data = data.readtext(fs.path.combine(project.path, 'main.ftml'))
+            old_data_lines = old_data.splitlines()
+            content_lines = content.splitlines()
+            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+            diff_content = '\n'.join(list(diff))
+            data.writetext(fs.path.combine(project.path, 'main.ftml'), content)
         # commit changes if comment is not None
         if diff_content != "":
             # commit to git repository
             project_path = fs.path.combine(self.data_dir, project.path)
             repo = git.Repo(project_path)
             repo.index.add(['main.ftml'])
-            # hack used, ToDo fix it
-            if comment == "" or comment is False or comment is None:
-                comment = "committing change"
-            cm = repo.index.commit(comment)
+            cm = repo.index.commit("committing changes")
             # change db table
-            change = Change(p_id, user.id, diff_content, cm.hexsha, comment)
+            change = Change(p_id, user.id, cm.hexsha)
             db.session.add(change)
             db.session.commit()
-        return True
+            return True
+        return False
 
     def get_file(self, p_id, user):
         """
@@ -228,11 +223,12 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False
-        data = fs.open_fs(self.data_dir)
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        return project_file.read()
+        with fs.open_fs(self.data_dir) as data:
+            project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
+            project_data = project_file.read()
+        return project_data
 
-    def get_changes(self, p_id, user):
+    def get_all_changes(self, p_id, user, named_version=None):
         """
         p_id: project-id
         user: user of this request
@@ -243,17 +239,29 @@ class FileManager(object):
         perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
         if not perm:
             return False
-        changes = Change.query.filter_by(p_id=p_id).all()
-        return list(map(lambda change: {'content': change.content,
-                                        'comment': change.comment,
-                                        'u_id': change.u_id,
-                                        'username': self.get_user_from_id(change.u_id).username,
-                                        'id': change.id}, changes,))
+        # Get all changes
+        if named_version is None:
+            changes = Change.query.\
+                filter_by(p_id=p_id)\
+                .order_by(Change.created_at.desc())\
+                .all()
+        # Get only named versions
+        else:
+            changes = Change.query\
+                .filter(Change.p_id == p_id)\
+                .filter(~Change.version_name.is_(None))\
+                .order_by(Change.created_at.desc())\
+                .all()
 
-    def get_user_from_id(self, id):
-        return User.query.filter_by(id=id).first()
+        return list(map(lambda change: {
+            'id': change.id,
+            'comment': change.comment,
+            'version_name': change.version_name,
+            'username': change.user.username,
+            'created_at': change.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+        }, changes))
 
-    def get_change_by_id(self, ch_id, user):
+    def get_change_content(self, ch_id):
         """
         ch_id: change id
         user: user of this request
@@ -263,10 +271,20 @@ class FileManager(object):
         change = Change.query.filter_by(id=ch_id).first()
         if not change:
             return False
-        perm = Permission.query.filter_by(u_id=user.id, p_id=change.p_id).first()
-        if not perm:
+        project = Project.query.filter_by(id=change.p_id).first()
+        project_path = fs.path.combine(self.data_dir, project.path)
+        repo = git.Repo(project_path)
+        change_content = repo.git.show(f'{change.commit_hash}:main.ftml')
+        return change_content
+
+    def set_version_name(self, ch_id, p_id, u_id, version_name):
+        if not self.is_admin(u_id, p_id):
             return False
-        return {'content': change.content, 'comment': change.comment, 'u_id': change.u_id}
+        Change.query\
+            .filter(Change.id == ch_id)\
+            .update({Change.version_name: version_name}, synchronize_session=False)
+        db.session.commit()
+        return True
 
     def undo(self, ch_id, user):
         """
@@ -283,32 +301,17 @@ class FileManager(object):
         if not ch or not project:
             return False
 
-        data = fs.open_fs(self.data_dir)
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        old_data = project_file.read()
-        project_file.close()
-        old_data_lines = old_data.splitlines()
-
-        project_path = fs.path.combine(self.data_dir, project.path)
+        project_path = fs.path.join(self.data_dir, project.path)
         repo = git.Repo(project_path)
         try:
-            file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))
-
-            content_lines = file_content.splitlines()
-            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-            diff_content = '\n'.join(list(diff))
-
-            proj_fs = fs.open_fs(project_path)
-            proj_fs.writetext('main.ftml', file_content)
-            proj_fs.close()
+            file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
+            with fs.open_fs(project_path) as proj_fs:
+                proj_fs.writetext('main.ftml', file_content)
             repo.index.add(['main.ftml'])
-            cm = repo.index.commit("checkout to {}".format(ch.commit_hash))
-
-            change = Change(ch.p_id, user.id, diff_content, cm.hexsha,
-                            "checkout to {}".format(ch.commit_hash))
+            cm = repo.index.commit(f"checkout to {ch.commit_hash}")
+            change = Change(ch.p_id, user.id, cm.hexsha)
             db.session.add(change)
             db.session.commit()
-
             return True
         except Exception as ex:
             logging.debug(ex)

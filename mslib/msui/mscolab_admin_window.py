@@ -31,7 +31,7 @@ from werkzeug.urls import url_join
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import QtCore, QtWidgets
 from mslib.msui.mss_qt import ui_mscolab_admin_window as ui
-from mslib.utils import config_loader
+from mslib.utils import config_loader, show_popup
 
 
 class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
@@ -196,7 +196,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             self.load_users_without_permission()
             self.load_users_with_permission()
         else:
-            self.show_popup("Error", res["message"])
+            show_popup(self, "Error", res["message"])
 
     def modify_selected_users(self):
         selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
@@ -251,25 +251,14 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             self.load_users_without_permission()
             self.load_users_with_permission()
         else:
-            self.show_popup("Error", res["message"])
-
-    def show_popup(self, title, message, icon=0):
-        """
-            title: Title of message box
-            message: Display Message
-            icon: 0 = Error Icon, 1 = Information Icon
-        """
-        if icon == 0:
-            QtWidgets.QMessageBox.critical(self, title, message)
-        elif icon == 1:
-            QtWidgets.QMessageBox.information(self, title, message)
+            show_popup(self, "Error", res["message"])
 
     # Socket Events
     def handle_permissions_updated(self, u_id):
         if self.user["id"] == u_id:
             return
 
-        self.show_popup('Alert', 'The permissions for this project were updated! The window is going to refresh.', 1)
+        show_popup(self, 'Alert', 'The permissions for this project were updated! The window is going to refresh.', 1)
         self.load_users_without_permission()
         self.load_users_with_permission()
 
