@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <kml xmlns="http://earth.google.com/kml/2.2">
-<!-- "This KML File displays the following:
--LineString having styleurl "flight" in greenish colour
--3 points in orange colour (2 on flight LineString, and 1 not on LineString)
--LineString having styleurl "wind" in white colour
--Intersecting LineStrings
--Multiple Polygons"-->
 <Document>
 <name>D-ADLR Flight Path for SOUTHTRACK flight adlr_20190909a</name>
 <open>1</open>
