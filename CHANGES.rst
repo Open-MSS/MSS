@@ -2,6 +2,13 @@ Changelog
 =========
 
 
+Version 1.9.5
+-------------
+
+Bug Fixes:
+  - SPDX Identifiers in meta.yaml, #569
+  - AttributeError: 'datetime.timezone' object has no attribute 'localize', #568
+
 Version 1.9.4
 -------------
 
