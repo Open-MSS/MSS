@@ -96,6 +96,41 @@ class KMLPatch(object):
         x, y = self.compute_xy(polygon.geometry.exterior)
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
 
+    def add_multipoint(self, point, style, name):
+        """
+        Plot KML points in a MultiGeometry
+
+        :param point: fastkml object specifying point
+        :param name: name of placemark for annotation
+        """
+        x, y = (point.x, point.y)
+        self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
+        if name is not None:
+            self.patches.append([self.map.ax.annotate(
+                name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
+                path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
+    
+    def add_multiline(self, line, style, name):
+        """
+        Plot KML LineStrings in a MultiGeometry
+
+        :param line: fastkml LineString object
+        """
+        kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
+        x, y = self.compute_xy(line)
+        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+
+    def add_multipolygon(self, polygon, style, _):
+        """
+        Plot KML polygons in a MultiGeometry
+
+        :param polygon: fastkml object specifying a polygon
+        """
+
+        kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
+        x, y = self.compute_xy(polygon.exterior)
+        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+
     def parse_geometries(self, placemark):
         name = placemark.name
         styleurl = placemark.styleUrl
@@ -106,11 +141,20 @@ class KMLPatch(object):
         style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
         if hasattr(placemark, "geometry"):
             if isinstance(placemark.geometry, geometry.Point):
-                self.add_point(placemark, style, placemark.name)
-            if isinstance(placemark.geometry, geometry.LineString):
-                self.add_line(placemark, style, placemark.name)
-            if isinstance(placemark.geometry, geometry.Polygon):
-                self.add_polygon(placemark, style, placemark.name)
+                self.add_point(placemark, style, name)
+            elif isinstance(placemark.geometry, geometry.LineString):
+                self.add_line(placemark, style, name)
+            elif isinstance(placemark.geometry, geometry.Polygon):
+                self.add_polygon(placemark, style, name)
+            elif isinstance(placemark.geometry, geometry.MultiPoint):
+                for geom in placemark.geometry.geoms:
+                    self.add_multipoint(geom, style, name)
+            elif isinstance(placemark.geometry, geometry.MultiLineString):
+                for geom in placemark.geometry.geoms:
+                    self.add_multiline(geom, style, name)
+            elif isinstance(placemark.geometry, geometry.MultiPolygon):
+                for geom in placemark.geometry.geoms:
+                    self.add_multipolygon(geom, style, name)
 
     def parse_placemarks(self, document):
         for feature in document:
@@ -120,7 +164,7 @@ class KMLPatch(object):
         for feature in document:
             if isinstance(feature, kml.Folder):
                 self.parse_placemarks(list(feature.features()))
-            if isinstance(feature, kml.Document):  # Document inside another document
+            if isinstance(feature, kml.Document):  # Document present somewhere inside another doc, not consecutively
                 self.parse_placemarks(list(feature.features()))
 
     def get_style_params(self, style, color=None, linewidth=None):
