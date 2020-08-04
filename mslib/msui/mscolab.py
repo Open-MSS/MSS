@@ -48,6 +48,7 @@ from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
 from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
 from mslib.msui.mss_qt import ui_mscolab_window as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
+from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog
 from mslib.utils import config_loader
 from mslib.utils import load_settings_qsettings, save_settings_qsettings
 
@@ -485,7 +486,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.listProjects.clear()
         selectedProject = None
         for project in projects:
-            project_desc = '{} - {}'.format(project['path'], project["access_level"])
+            project_desc = f'{project["path"]} - {project["access_level"]}'
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
             widgetItem.p_id = project["p_id"]
             widgetItem.access_level = project["access_level"]
@@ -720,9 +721,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
 
     def save_wp_mscolab(self, comment=None):
-        # TODO: OPEN DIALOG BOX TO HANDLE MERGE CONFLICT HERE LATER
-        xml_content = self.waypoints_model.get_xml_content()
-        self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
+        server_xml = self.request_wps_from_server()
+        server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
+        merge_waypoints_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, self)
+        if merge_waypoints_dialog.exec_():
+            xml_content = merge_waypoints_dialog.get_values()
+            if xml_content is not None:
+                self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
+                self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
 
     def handle_local_data_changed(self):
         self.waypoints_model.save_to_ftml(self.local_ftml_file)
@@ -890,3 +898,62 @@ class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
         """
         return (self.leUsername.text(),
                 self.lePassword.text())
+
+
+class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_dialog.Ui_MergeWaypointsDialog):
+    def __init__(self, local_waypoints_model, server_waypoints_model, parent=None):
+        super(MscolabMergeWaypointsDialog, self).__init__(parent)
+        self.setupUi(self)
+
+        self.local_waypoints_model = local_waypoints_model
+        self.server_waypoints_model = server_waypoints_model
+        self.merge_waypoints_model = ft.WaypointsTableModel()
+        self.localWaypointsTable.setModel(self.local_waypoints_model)
+        self.serverWaypointsTable.setModel(self.server_waypoints_model)
+        self.mergedWaypointsTable.setModel(self.merge_waypoints_model)
+
+        self.xml_content = None
+        self.local_waypoints_dict = {}
+        self.server_waypoints_dict = {}
+        self.merge_waypoints_list = []
+
+        # Event Listeners
+        self.overwriteBtn.clicked.connect(lambda: self.save_waypoints(self.local_waypoints_model))
+        self.keepServerBtn.clicked.connect(lambda: self.save_waypoints(self.server_waypoints_model))
+        self.saveBtn.clicked.connect(lambda: self.save_waypoints(self.merge_waypoints_model))
+        self.localWaypointsTable.selectionModel().selectionChanged.connect(
+            lambda selected, deselected:
+            self.handle_selection(selected, deselected, self.local_waypoints_model, self.local_waypoints_dict)
+        )
+        self.serverWaypointsTable.selectionModel().selectionChanged.connect(
+            lambda selected, deselected:
+            self.handle_selection(selected, deselected, self.server_waypoints_model, self.server_waypoints_dict)
+        )
+
+    def handle_selection(self, selected, deselected, wp_model, wp_dict):
+        len_selected = len(selected.indexes())
+        len_deselected = len(deselected.indexes())
+
+        for index in range(0, len_selected, 15):
+            row = selected.indexes()[index].row()
+            waypoint = wp_model.waypoint_data(row)
+            wp_dict[row] = waypoint
+            self.merge_waypoints_list.append(waypoint)
+
+        for index in range(0, len_deselected, 15):
+            row = deselected.indexes()[index].row()
+            delete_waypoint = wp_dict[row]
+            self.merge_waypoints_list.remove(delete_waypoint)
+
+        self.merge_waypoints_model = ft.WaypointsTableModel(waypoints=self.merge_waypoints_list)
+        self.mergedWaypointsTable.setModel(self.merge_waypoints_model)
+
+    def save_waypoints(self, waypoints_model):
+        if waypoints_model.rowCount() == 0:
+            return
+        self.xml_content = waypoints_model.get_xml_content()
+        self.accept()
+
+    def get_values(self):
+        return self.xml_content
+
