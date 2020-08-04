@@ -307,6 +307,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dialog.show()
 
     def __del__(self):  # destructor
+        print('yo')
         settings = {
             "filename": str(self.directory_location),
             "linewidth": self.dialog.dsb_linewidth.value(),
@@ -472,6 +473,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         logging.info(self.dict_files)
 
     def merge_file(self):
+        if self.patch is None:
+            logging.info("No KML File Found. Add Files to Merge.")
+            return
         element = []
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
