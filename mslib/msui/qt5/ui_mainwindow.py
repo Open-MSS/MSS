@@ -53,7 +53,7 @@ class Ui_MSSMainWindow(object):
         self.verticalLayout.addWidget(self.labelStatusbar)
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 442, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 442, 20))
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
