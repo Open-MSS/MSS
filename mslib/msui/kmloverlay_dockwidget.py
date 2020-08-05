@@ -243,12 +243,12 @@ class KMLPatch(object):
         # Plot satellite track.
         self.styles = {}
         if self.overwrite:
-            kml_doc = list(self.kml.features())[0]  # All kml files are enclosed in a single root < > and </ >
+            kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
         if not self.overwrite:
-            kml_doc = list(self.kml.features())[0]  # All kml files are enclosed in a single root < > and </ >
-            self.parse_styles(kml_doc)
-        kml_features = list(kml_doc.features())
-        self.parse_placemarks(kml_features)
+            kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
+            kml_style = kml_doc[0]
+            self.parse_styles(kml_style)
+        self.parse_placemarks(kml_doc)
 
         self.map.ax.figure.canvas.draw()
 
