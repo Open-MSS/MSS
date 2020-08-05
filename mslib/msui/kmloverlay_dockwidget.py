@@ -144,6 +144,8 @@ class KMLPatch(object):
                 self.add_point(placemark, style, name)
             elif isinstance(placemark.geometry, geometry.LineString):
                 self.add_line(placemark, style, name)
+            elif isinstance(placemark.geometry, geometry.LinearRing):
+                self.add_line(placemark, style, name)  # LinearRing can be plotted through LineString
             elif isinstance(placemark.geometry, geometry.Polygon):
                 self.add_polygon(placemark, style, name)
             elif isinstance(placemark.geometry, geometry.MultiPoint):
@@ -155,6 +157,16 @@ class KMLPatch(object):
             elif isinstance(placemark.geometry, geometry.MultiPolygon):
                 for geom in placemark.geometry.geoms:
                     self.add_multipolygon(geom, style, name)
+            elif isinstance(placemark.geometry, geometry.GeometryCollection):
+                for geom in placemark.geometry.geoms:
+                    if geom.geom_type == "Point":
+                        self.add_multipoint(geom, style, name)
+                    elif geom.geom_type == "LineString":
+                        self.add_multiline(geom, style, name)
+                    elif geom.geom_type == "LinearRing":
+                        self.add_multiline(geom, style, name)
+                    elif geom.geom_type == "Polygon":
+                        self.add_multipolygon(geom, style, name)
 
     def parse_placemarks(self, document):
         for feature in document:
@@ -307,7 +319,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dialog.show()
 
     def __del__(self):  # destructor
-        print('yo')
         settings = {
             "filename": str(self.directory_location),
             "linewidth": self.dialog.dsb_linewidth.value(),
@@ -382,7 +393,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     self.dict_files[filename]["patch"].update(self.cbManualStyle.isChecked(),
                                                               self.dict_files[filename]["color"],
                                                               self.dict_files[filename]["linewidth"])
-    
+
     def get_file(self):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
