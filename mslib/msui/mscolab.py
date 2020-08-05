@@ -50,7 +50,7 @@ from mslib.msui.mss_qt import ui_mscolab_window as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog
 from mslib.utils import config_loader
-from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent
+from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 
 MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
 
@@ -199,13 +199,19 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         dir_path, file_name = fs.path.split(file_path)
         with open_fs(dir_path) as file_dir:
             xml_content = file_dir.readtext(file_name)
-        self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+        try:
+            model = ft.WaypointsTableModel(xml_content=xml_content)
+        except SyntaxError:
+            show_popup(self, "Import Failed", f"The file - {file_name}, does not contain valid XML")
+            return
+        self.waypoints_model = model
         if self.workLocallyCheckBox.isChecked():
             self.waypoints_model.save_to_ftml(self.local_ftml_file)
             self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
         else:
             self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
             self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
+        show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
     def handle_export(self):
         file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Flight track", self.active_project_name,
