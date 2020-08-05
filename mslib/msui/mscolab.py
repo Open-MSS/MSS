@@ -30,7 +30,7 @@
 """
 import json
 import logging
-
+import types
 import fs
 import requests
 from fs import open_fs, path
@@ -50,7 +50,7 @@ from mslib.msui.mss_qt import ui_mscolab_window as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog
 from mslib.utils import config_loader
-from mslib.utils import load_settings_qsettings, save_settings_qsettings
+from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent
 
 MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
 
@@ -929,6 +929,8 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
         self.localWaypointsTable.setModel(self.local_waypoints_model)
         self.serverWaypointsTable.setModel(self.server_waypoints_model)
         self.mergedWaypointsTable.setModel(self.merge_waypoints_model)
+        self.mergedWaypointsTable.dropEvent = types.MethodType(dropEvent, self.mergedWaypointsTable)
+        self.mergedWaypointsTable.dragEnterEvent = types.MethodType(dragEnterEvent, self.mergedWaypointsTable)
 
         self.xml_content = None
         self.local_waypoints_dict = {}

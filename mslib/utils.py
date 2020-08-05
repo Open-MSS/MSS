@@ -659,3 +659,23 @@ def conditional_decorator(dec, condition):
             return func
         return dec(func)
     return decorator
+
+
+# TableView drag and drop
+def dropEvent(self, event):
+    target_row = self.indexAt(event.pos()).row()
+    if target_row == -1:
+        target_row = self.model().rowCount() - 1
+    source_row = event.source().currentIndex().row()
+    wps = [self.model().waypoints[source_row]]
+    if target_row > source_row:
+        self.model().insertRows(target_row + 1, 1, waypoints=wps)
+        self.model().removeRows(source_row)
+    elif target_row < source_row:
+        self.model().removeRows(source_row)
+        self.model().insertRows(target_row, 1, waypoints=wps)
+    event.accept()
+
+
+def dragEnterEvent(self, event):
+    event.accept()
