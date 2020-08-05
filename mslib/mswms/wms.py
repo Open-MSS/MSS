@@ -499,10 +499,12 @@ server = WMSServer()
 @app.route('/')
 @conditional_decorator(auth.login_required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
 def application():
+    if request.query_string == b'':
+        res = make_response("", 200)
+        return res
     try:
         # Request info
         query = request.args
-
         # Processing
         # ToDo Refactor
         request_type = query.get('request')
