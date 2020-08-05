@@ -85,7 +85,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.disconnectMscolab.clicked.connect(self.disconnect_handler)
         # Project related signals
         self.addProject.clicked.connect(self.add_project_handler)
-        self.export_2.clicked.connect(self.handle_export)
+        self.importBtn.clicked.connect(self.handle_import)
+        self.exportBtn.clicked.connect(self.handle_export)
         self.workLocallyCheckBox.stateChanged.connect(self.handle_work_locally_toggle)
         self.save_ft.clicked.connect(self.save_wp_mscolab)
         self.fetch_ft.clicked.connect(self.fetch_wp_mscolab)
@@ -191,15 +192,30 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # inform user that url is invalid
         self.show_info("Invalid url, please try again!")
 
+    def handle_import(self):
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "", "Flight track (*.ftml)")
+        if file_path == "":
+            return
+        dir_path, file_name = fs.path.split(file_path)
+        with open_fs(dir_path) as file_dir:
+            xml_content = file_dir.readtext(file_name)
+        self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+        if self.workLocallyCheckBox.isChecked():
+            self.waypoints_model.save_to_ftml(self.local_ftml_file)
+            self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+        else:
+            self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
+            self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
+
     def handle_export(self):
-        file_path = get_save_filename(
-            self, "Save fight track", "", "Flight Track Files (*.ftml)")
-        if file_path is not None:
-            f_name = path.basename(file_path)
-            f_dir = open_fs(path.dirname(file_path))
-            temp_name = 'tempfile_mscolab.ftml'
-            temp_dir = open_fs(self.data_dir)
-            fs.copy.copy_file(temp_dir, temp_name, f_dir, f_name)
+        file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Flight track", self.active_project_name,
+                                                             f"Flight track (*.ftml)")
+        if file_path == "":
+            return
+        xml_doc = self.waypoints_model.get_xml_doc()
+        dir_path, file_name = fs.path.split(file_path)
+        with open_fs(dir_path).open(file_name, 'w') as file:
+            xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
 
     def disable_project_buttons(self):
         self.save_ft.setEnabled(False)
@@ -208,7 +224,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.sideview.setEnabled(False)
         self.tableview.setEnabled(False)
         self.workLocallyCheckBox.setEnabled(False)
-        self.export_2.setEnabled(False)
+        self.importBtn.setEnabled(False)
+        self.exportBtn.setEnabled(False)
         self.chatWindowBtn.setEnabled(False)
         self.adminWindowBtn.setEnabled(False)
         self.versionHistoryBtn.setEnabled(False)
@@ -525,7 +542,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # set active flightpath here
         self.load_wps_from_server()
         # enable project specific buttons
-        self.export_2.setEnabled(True)
+        self.importBtn.setEnabled(True)
+        self.exportBtn.setEnabled(True)
         self.topview.setEnabled(True)
         self.sideview.setEnabled(True)
         self.tableview.setEnabled(True)
