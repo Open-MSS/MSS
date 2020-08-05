@@ -91,10 +91,15 @@ class KMLPatch(object):
 
         :param polygon: fastkml object specifying a polygon
         """
-
+        # Exterior
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(polygon.geometry.exterior)
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+ 
+        # Interior Rings
+        for interior in list(polygon.geometry.interiors):
+            x1, y1 = self.compute_xy(interior)
+            self.patches.append(self.map.plot(x1, y1, "-", zorder=10, **kwargs))
 
     def add_multipoint(self, point, style, name):
         """
@@ -109,7 +114,7 @@ class KMLPatch(object):
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
-    
+   
     def add_multiline(self, line, style, name):
         """
         Plot KML LineStrings in a MultiGeometry
