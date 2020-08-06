@@ -233,16 +233,6 @@ Save a flight track to name it.</string>
     <string>Ctrl+T</string>
    </property>
   </action>
-  <action name="actionTimeSeriesViewTrajectories">
-   <property name="text">
-    <string>T&amp;ime Series View (Trajectories)</string>
-   </property>
-  </action>
-  <action name="actionTrajectoryToolLagranto">
-   <property name="text">
-    <string>&amp;Trajectory Tool (Lagranto)</string>
-   </property>
-  </action>
   <action name="actionAboutMSUI">
    <property name="text">
     <string>&amp;About MSS</string>
