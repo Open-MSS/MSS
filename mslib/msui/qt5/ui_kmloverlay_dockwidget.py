@@ -32,9 +32,6 @@ class Ui_KMLOverlayDockWidget(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.cbManualStyle = QtWidgets.QCheckBox(KMLOverlayDockWidget)
-        self.cbManualStyle.setObjectName("cbManualStyle")
-        self.verticalLayout.addWidget(self.cbManualStyle)
         self.btSelectFile = QtWidgets.QPushButton(KMLOverlayDockWidget)
         self.btSelectFile.setObjectName("btSelectFile")
         self.verticalLayout.addWidget(self.btSelectFile)
@@ -60,8 +57,6 @@ class Ui_KMLOverlayDockWidget(object):
         _translate = QtCore.QCoreApplication.translate
         KMLOverlayDockWidget.setWindowTitle(_translate("KMLOverlayDockWidget", "KML Overlay"))
         self.listWidget.setToolTip(_translate("KMLOverlayDockWidget", "KML Files; double click specific file to customize"))
-        self.cbManualStyle.setToolTip(_translate("KMLOverlayDockWidget", "Overwrites KML Files with the modified attributes"))
-        self.cbManualStyle.setText(_translate("KMLOverlayDockWidget", "Manual Style"))
         self.btSelectFile.setToolTip(_translate("KMLOverlayDockWidget", "Add multiple KML Files"))
         self.btSelectFile.setText(_translate("KMLOverlayDockWidget", "Add KML File"))
         self.pushButton_remove.setToolTip(_translate("KMLOverlayDockWidget", "Remove Checked KML Files "))

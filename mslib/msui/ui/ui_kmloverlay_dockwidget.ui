@@ -45,16 +45,6 @@
         <enum>QLayout::SetMinimumSize</enum>
        </property>
        <item>
-        <widget class="QCheckBox" name="cbManualStyle">
-         <property name="toolTip">
-          <string>Overwrites KML Files with the modified attributes</string>
-         </property>
-         <property name="text">
-          <string>Manual Style</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="btSelectFile">
          <property name="toolTip">
           <string>Add multiple KML Files</string>

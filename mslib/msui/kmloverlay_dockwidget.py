@@ -44,13 +44,12 @@ class KMLPatch(object):
     Represents a KML overlay.
     """
 
-    def __init__(self, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
+    def __init__(self, mapcanvas, kml, color="red", linewidth=1):
         self.map = mapcanvas
         self.kml = kml
         self.patches = []
         self.color = color
         self.linewidth = linewidth
-        self.overwrite = overwrite
         self.draw()
 
     def compute_xy(self, geometry):
@@ -242,23 +241,18 @@ class KMLPatch(object):
         """
         # Plot satellite track.
         self.styles = {}
-        if self.overwrite:
-            kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
-        if not self.overwrite:
-            kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
-            kml_style = kml_doc[0]
-            self.parse_styles(kml_style)
+        kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
+        kml_style = kml_doc[0]
+        self.parse_styles(kml_style)
         self.parse_placemarks(kml_doc)
 
         self.map.ax.figure.canvas.draw()
 
-    def update(self, overwrite=None, color=None, linewidth=None):
+    def update(self, color=None, linewidth=None):
         """Removes the current plot of the patch and redraws the patch.
            This is necessary, for instance, when the map projection and/or
            extent has been changed.
         """
-        if overwrite is not None:
-            self.overwrite = overwrite
         if color is not None:
             self.color = color
         if linewidth is not None:
@@ -301,10 +295,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dialog.pushButton_colour.clicked.connect(self.select_color)
 
         self.listWidget.itemChanged.connect(self.load_file)  # list of files in ListWidget
-
-        self.cbManualStyle.setChecked(False)
-        self.cbManualStyle.setEnabled(False)
-        self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
@@ -395,8 +385,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if self.view is not None and self.patch is not None:
             for filename in self.dict_files:
                 if self.dict_files[filename]["patch"] is not None:
-                    self.dict_files[filename]["patch"].update(self.cbManualStyle.isChecked(),
-                                                              self.dict_files[filename]["color"],
+                    self.dict_files[filename]["patch"].update(self.dict_files[filename]["color"],
                                                               self.dict_files[filename]["linewidth"])
 
     def get_file(self):
@@ -438,8 +427,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
         # self.load_file() # not sure to keep this or not, works either ways
-        if self.listWidget.count() == 0:  # no files in listWidget
-            self.cbManualStyle.setEnabled(False)
 
     def remove_all_files(self):  # removes all files (checked or unchecked both)
         self.listWidget.clear()  # clears List of files in ListWidget
@@ -447,7 +434,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.dict_files[filename]["patch"].remove()  # removes patch object
         self.dict_files = {}  # initialize dictionary again
         self.patch = None  # initialize self.patch to None
-        self.cbManualStyle.setEnabled(False)
 
     def load_file(self):
         """
@@ -464,7 +450,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
                 _fs = open_fs(_dirname)
-                self.cbManualStyle.setEnabled(True)
                 try:
                     with _fs.open(_name, 'r') as kmlf:
                         self.kml = kml.KML()  # creates fastkml object
@@ -472,12 +457,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
                             if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # if added before
                                 self.patch = KMLPatch(self.view.map, self.kml,
-                                                      self.cbManualStyle.isChecked(),
                                                       self.set_color(self.listWidget.item(index).text()),
                                                       self.set_linewidth(self.listWidget.item(index).text()))
                             else:  # if new file is being added
                                 self.patch = KMLPatch(self.view.map, self.kml,
-                                                      self.cbManualStyle.isChecked(),
                                                       self.dict_files[self.listWidget.item(index).text()]["color"],
                                                       self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
