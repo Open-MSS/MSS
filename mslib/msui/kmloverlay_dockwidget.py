@@ -311,6 +311,15 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dialog.dsb_linewidth.valueChanged.connect(self.select_linewidth)
 
     def open_customize_kml_dialog(self):
+        file = self.listWidget.currentItem().text()
+        # Set the colour of the Colour button to the colour of specific KML plot
+        if self.dict_files[file]["color"] is not None:
+            palette = QtGui.QPalette(self.dialog.pushButton_colour.palette())
+            colour = QtGui.QColor()
+            colour.setRgbF(*self.set_color(file))
+            palette.setColor(QtGui.QPalette.Button, colour)
+            self.dialog.pushButton_colour.setPalette(palette)
+
         self.dialog.show()
 
     def __del__(self):  # destructor
@@ -330,10 +339,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
-        colour = QtWidgets.QColorDialog.getColor(colour)
+        colour = QtWidgets.QColorDialog.getColor(colour)  # opens select colour palette
         if colour.isValid():
             palette.setColor(QtGui.QPalette.Button, colour)
-            button.setPalette(palette)
+            button.setPalette(palette)  # finally sets the colour of the button
         self.set_attribute_color(file)
 
     def get_color(self):
