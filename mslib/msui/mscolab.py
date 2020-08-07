@@ -211,6 +211,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         else:
             self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
             self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
+        self.reload_view_windows()
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
     def handle_export(self):
