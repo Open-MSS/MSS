@@ -578,12 +578,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.active_pid is None:
             return
         self.load_wps_from_server()
-        for window in self.active_windows:
-            # set active flight track
-            window.setFlightTrackModel(self.waypoints_model)
-            # redraw figure *only for canvas based window, not tableview*
-            if hasattr(window, 'mpl'):
-                window.mpl.canvas.waypoints_interactor.redraw_figure()
+        self.reload_view_windows()
 
     def request_wps_from_server(self):
         data = {
@@ -620,7 +615,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.create_view_window("tableview")
 
     def create_view_window(self, _type):
-        view_window = None
+        for active_window in self.active_windows:
+            if active_window.view_type == _type:
+                active_window.raise_()
+                active_window.activateWindow()
+                return
+
         if _type == "topview":
             view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
                                                    parent=self.listProjects,
@@ -747,7 +747,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def save_wp_mscolab(self, comment=None):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        merge_waypoints_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, self)
+        merge_waypoints_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
         if merge_waypoints_dialog.exec_():
             xml_content = merge_waypoints_dialog.get_values()
             if xml_content is not None:
@@ -755,26 +755,33 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
                 self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+                self.reload_view_windows()
 
     def handle_local_data_changed(self):
         self.waypoints_model.save_to_ftml(self.local_ftml_file)
 
-    def reload_local_wp(self):
-        self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
-        self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+    def reload_view_windows(self):
         for window in self.active_windows:
             window.setFlightTrackModel(self.waypoints_model)
             if hasattr(window, 'mpl'):
                 window.mpl.canvas.waypoints_interactor.redraw_figure()
 
+    def reload_local_wp(self):
+        self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
+        self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+        self.reload_view_windows()
+
     def fetch_wp_mscolab(self):
-        # Fetch the latest changes from the server
-        xml_content = self.request_wps_from_server()
-        # Over write the local file with the fetched data
-        with open_fs(self.data_dir) as mss_dir:
-            relative_file_path = path.relativefrom(self.data_dir, self.local_ftml_file)
-            mss_dir.writetext(relative_file_path, xml_content)
-            self.reload_local_wp()
+        server_xml = self.request_wps_from_server()
+        server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
+        merge_waypoints_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
+        if merge_waypoints_dialog.exec_():
+            xml_content = merge_waypoints_dialog.get_values()
+            if xml_content is not None:
+                self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+            self.reload_view_windows()
 
     @QtCore.Slot(int, int, str)
     def handle_update_permission(self, p_id, u_id, access_level):
@@ -925,7 +932,7 @@ class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
 
 
 class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_dialog.Ui_MergeWaypointsDialog):
-    def __init__(self, local_waypoints_model, server_waypoints_model, parent=None):
+    def __init__(self, local_waypoints_model, server_waypoints_model, fetch=False, parent=None):
         super(MscolabMergeWaypointsDialog, self).__init__(parent)
         self.setupUi(self)
 
@@ -956,6 +963,13 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
             self.handle_selection(selected, deselected, self.server_waypoints_model, self.server_waypoints_dict)
         )
 
+        if fetch is True:
+            btn_size_policy = self.overwriteBtn.sizePolicy()
+            btn_size_policy.setRetainSizeWhenHidden(True)
+            self.overwriteBtn.setSizePolicy(btn_size_policy)
+            self.overwriteBtn.setVisible(False)
+            self.saveBtn.setText("Save Waypoints To Local File")
+
     def handle_selection(self, selected, deselected, wp_model, wp_dict):
         len_selected = len(selected.indexes())
         len_deselected = len(deselected.indexes())
@@ -982,4 +996,3 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
 
     def get_values(self):
         return self.xml_content
-
