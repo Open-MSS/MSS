@@ -319,6 +319,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             colour.setRgbF(*self.set_color(file))
             palette.setColor(QtGui.QPalette.Button, colour)
             self.dialog.pushButton_colour.setPalette(palette)
+        # Set the linewidth value to the linewidth of specific KML plot
+        if self.dict_files[file]["linewidth"] is not None:
+            self.dialog.dsb_linewidth.setValue(self.set_linewidth(file))
 
         self.dialog.show()
 
