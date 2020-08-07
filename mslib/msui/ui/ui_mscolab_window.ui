@@ -255,7 +255,14 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="export_2">
+            <widget class="QPushButton" name="importBtn">
+             <property name="text">
+              <string>Import</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="exportBtn">
              <property name="text">
               <string>Export</string>
              </property>

@@ -41,30 +41,12 @@ from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSSViewWindow
 from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
 from mslib.msui.icons import icons
+from mslib.utils import dropEvent, dragEnterEvent
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
 except ImportError:
     import pyproj
-
-
-def dropEvent(self, event):
-    target_row = self.indexAt(event.pos()).row()
-    if target_row == -1:
-        target_row = self.model().rowCount() - 1
-    source_row = event.source().currentIndex().row()
-    wps = [self.model().waypoints[source_row]]
-    if target_row > source_row:
-        self.model().insertRows(target_row + 1, 1, waypoints=wps)
-        self.model().removeRows(source_row)
-    elif target_row < source_row:
-        self.model().removeRows(source_row)
-        self.model().insertRows(target_row, 1, waypoints=wps)
-    event.accept()
-
-
-def dragEnterEvent(self, event):
-    event.accept()
 
 
 class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
