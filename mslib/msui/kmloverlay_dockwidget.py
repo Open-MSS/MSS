@@ -356,6 +356,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if file in self.dict_files:
             self.dict_files[file]["color"] = self.get_color()
         self.update_settings()
+        self.checklistitem(file)
 
     def select_linewidth(self):
         """
@@ -377,6 +378,16 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if file in self.dict_files:
             self.dict_files[file]["linewidth"] = self.dialog.dsb_linewidth.value()
         self.update_settings()
+        self.checklistitem(file)
+
+    def checklistitem(self, file):
+        """
+        Checks the file item in ListWidget
+        """
+        item_list = self.listWidget.findItems(file, QtCore.Qt.MatchExactly)
+        for item in item_list:
+            index = self.listWidget.row(item)
+            self.listWidget.item(index).setCheckState(QtCore.Qt.Checked)
 
     def update_settings(self):
         """
@@ -387,6 +398,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 if self.dict_files[filename]["patch"] is not None:
                     self.dict_files[filename]["patch"].update(self.dict_files[filename]["color"],
                                                               self.dict_files[filename]["linewidth"])
+        self.load_file()  # important since changes need to be refreshed
 
     def get_file(self):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
