@@ -756,6 +756,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
                 self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
                 self.reload_view_windows()
+                show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
 
     def handle_local_data_changed(self):
         self.waypoints_model.save_to_ftml(self.local_ftml_file)
@@ -781,7 +782,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
                 self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
-            self.reload_view_windows()
+                self.reload_view_windows()
+                show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
 
     @QtCore.Slot(int, int, str)
     def handle_update_permission(self, p_id, u_id, access_level):
