@@ -257,7 +257,6 @@ class KMLPatch(object):
             self.color = color
         if linewidth is not None:
             self.linewidth = linewidth
-        self.remove()
         self.draw()
 
     def remove(self):
@@ -307,7 +306,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         colour = QtGui.QColor()
         colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
-        self.dialog.pushButton_colour.setPalette(palette)  # sets the last colour
+        self.dialog.pushButton_colour.setPalette(palette)  # sets the last colour before closing KML Overlay
         self.dialog.dsb_linewidth.valueChanged.connect(self.select_linewidth)
 
     def open_customize_kml_dialog(self):
