@@ -522,18 +522,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.listProjects.itemActivated.emit(selectedProject)
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
+    def force_close_view_windows(self):
+        for window in self.active_windows:
+            window.handle_force_close()
+        self.active_windows = []
+
     def set_active_pid(self, item):
         if item.p_id == self.active_pid:
             return
             # close all hanging window
-        for window in self.active_windows:
-            window.close()
-        if self.version_window is not None:
-            self.version_window.close()
-        if self.chat_window is not None:
-            self.chat_window.close()
-        if self.admin_window is not None:
-            self.admin_window.close()
+        self.force_close_view_windows()
+        self.close_external_windows()
         # Turn off work locally toggle
         self.workLocallyCheckBox.blockSignals(True)
         self.workLocallyCheckBox.setChecked(False)
@@ -703,6 +702,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         requests.post(self.mscolab_server_url + '/delete_user', data=data)
         self.clean_up_window()
 
+    def close_external_windows(self):
+        if self.chat_window is not None:
+            self.chat_window.close()
+        if self.admin_window is not None:
+            self.admin_window.close()
+        if self.version_window is not None:
+            self.version_window.close()
+
     def clean_up_window(self):
         # delete token and show login widget-items
         self.token = None
@@ -724,16 +731,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.disconnect()
             self.conn = None
         # close all hanging window
-        for window in self.active_windows:
-            window.close()
-        # close project window if active
-        if self.chat_window is not None:
-            self.chat_window.close()
-        # Close Admin Window if active
-        if self.admin_window is not None:
-            self.admin_window.close()
-        if self.version_window is not None:
-            self.version_window.close()
+        self.force_close_view_windows()
+        self.close_external_windows()
         self.disable_action_buttons()
 
         # delete mscolab http_auth settings for the url
@@ -797,22 +796,28 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         """
         if u_id == self.user["id"]:
             # update table of projects
+            project_name = None
             for i in range(self.listProjects.count()):
                 item = self.listProjects.item(i)
                 if item.p_id == p_id:
                     desc = item.text().split(' - ')
+                    project_name = desc[0]
                     desc[-1] = access_level
                     desc = ' - '.join(desc)
                     item.setText(desc)
-                    item.p_id = p_id
                     item.access_level = access_level
+                    break
+            if project_name is not None:
+                show_popup(self, "Permission Updated",
+                           f"Your access level to project - {project_name} was updated to {access_level}!", 1)
             if p_id != self.active_pid:
                 return
+
             self.access_level = access_level
             # Close mscolab windows based on new access_level and update their buttons
             if self.access_level == "collaborator" or self.access_level == "viewer":
-                self.adminWindowBtn.setEnabled(True)
-                self.versionHistoryBtn.setEnabled(True)
+                self.adminWindowBtn.setEnabled(False)
+                self.versionHistoryBtn.setEnabled(False)
                 if self.admin_window is not None:
                     self.admin_window.close()
                 if self.version_window is not None:
@@ -834,7 +839,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.disable_navbar_action_buttons(_type, window)
                 else:
                     self.enable_navbar_action_buttons(_type, window)
-        # update project window if open
+
+        # update chat window if open
         if self.chat_window is not None:
             self.chat_window.load_users()
 
@@ -843,14 +849,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if u_id == self.user["id"]:
             # Check if the user has opened any windows of revoked project and close them
             if self.active_pid == p_id:
-                for window in self.active_windows:
-                    window.close()
-                if self.chat_window is not None:
-                    self.chat_window.close()
-                if self.admin_window is not None:
-                    self.admin_window.close()
-                if self.version_window is not None:
-                    self.version_window.close()
+                self.force_close_view_windows()
+                self.close_external_windows()
                 self.active_pid = None
                 self.access_level = None
                 self.active_project_name = None
@@ -864,6 +864,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     remove_item = item
             if remove_item is not None:
                 self.listProjects.takeItem(self.listProjects.row(remove_item))
+            project_name = remove_item.text().split(' - ')[0]
+            show_popup(self, "Permission Revoked", f"Your access to project - {project_name} was revoked!", icon=1)
 
     @QtCore.Slot()
     def reload_windows_slot(self):

@@ -57,13 +57,25 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         # emit _id if not none
         logging.debug(_id)
         self._id = _id
+        # Used to force close window without the dialog popping up
+        self.force_close = False
+
+    def handle_force_close(self):
+        self.force_close = True
+        self.close()
 
     def closeEvent(self, event):
-        """Ask user if he/she wants to close the window.
+        """
+        if force_close is True then close window without dialog
+        else ask user if he/she wants to close the window.
 
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
+        if self.force_close is True:
+            event.accept()
+            return
+
         ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
                                             self.tr("Do you want to close this {}?".format(self.name)),
                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
