@@ -44,13 +44,12 @@ class KMLPatch(object):
     Represents a KML overlay.
     """
 
-    def __init__(self, mapcanvas, kml, overwrite=False, color="red", linewidth=1):
+    def __init__(self, mapcanvas, kml, color="red", linewidth=1):
         self.map = mapcanvas
         self.kml = kml
         self.patches = []
         self.color = color
         self.linewidth = linewidth
-        self.overwrite = overwrite
         self.draw()
 
     def compute_xy(self, geometry):
@@ -91,9 +90,49 @@ class KMLPatch(object):
 
         :param polygon: fastkml object specifying a polygon
         """
-
+        # Exterior
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(polygon.geometry.exterior)
+        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+ 
+        # Interior Rings
+        for interior in list(polygon.geometry.interiors):
+            x1, y1 = self.compute_xy(interior)
+            self.patches.append(self.map.plot(x1, y1, "-", zorder=10, **kwargs))
+
+    def add_multipoint(self, point, style, name):
+        """
+        Plot KML points in a MultiGeometry
+
+        :param point: fastkml object specifying point
+        :param name: name of placemark for annotation
+        """
+        x, y = (point.x, point.y)
+        self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
+        if name is not None:
+            self.patches.append([self.map.ax.annotate(
+                name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
+                path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
+   
+    def add_multiline(self, line, style, name):
+        """
+        Plot KML LineStrings in a MultiGeometry
+
+        :param line: fastkml LineString object
+        """
+        kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
+        x, y = self.compute_xy(line)
+        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+
+    def add_multipolygon(self, polygon, style, _):
+        """
+        Plot KML polygons in a MultiGeometry
+
+        :param polygon: fastkml object specifying a polygon
+        """
+
+        kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
+        x, y = self.compute_xy(polygon.exterior)
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
 
     def parse_geometries(self, placemark):
@@ -106,11 +145,32 @@ class KMLPatch(object):
         style = self.parse_local_styles(placemark, self.styles.get(styleurl, {}))
         if hasattr(placemark, "geometry"):
             if isinstance(placemark.geometry, geometry.Point):
-                self.add_point(placemark, style, placemark.name)
-            if isinstance(placemark.geometry, geometry.LineString):
-                self.add_line(placemark, style, placemark.name)
-            if isinstance(placemark.geometry, geometry.Polygon):
-                self.add_polygon(placemark, style, placemark.name)
+                self.add_point(placemark, style, name)
+            elif isinstance(placemark.geometry, geometry.LineString):
+                self.add_line(placemark, style, name)
+            elif isinstance(placemark.geometry, geometry.LinearRing):
+                self.add_line(placemark, style, name)  # LinearRing can be plotted through LineString
+            elif isinstance(placemark.geometry, geometry.Polygon):
+                self.add_polygon(placemark, style, name)
+            elif isinstance(placemark.geometry, geometry.MultiPoint):
+                for geom in placemark.geometry.geoms:
+                    self.add_multipoint(geom, style, name)
+            elif isinstance(placemark.geometry, geometry.MultiLineString):
+                for geom in placemark.geometry.geoms:
+                    self.add_multiline(geom, style, name)
+            elif isinstance(placemark.geometry, geometry.MultiPolygon):
+                for geom in placemark.geometry.geoms:
+                    self.add_multipolygon(geom, style, name)
+            elif isinstance(placemark.geometry, geometry.GeometryCollection):
+                for geom in placemark.geometry.geoms:
+                    if geom.geom_type == "Point":
+                        self.add_multipoint(geom, style, name)
+                    elif geom.geom_type == "LineString":
+                        self.add_multiline(geom, style, name)
+                    elif geom.geom_type == "LinearRing":
+                        self.add_multiline(geom, style, name)
+                    elif geom.geom_type == "Polygon":
+                        self.add_multipolygon(geom, style, name)
 
     def parse_placemarks(self, document):
         for feature in document:
@@ -120,7 +180,7 @@ class KMLPatch(object):
         for feature in document:
             if isinstance(feature, kml.Folder):
                 self.parse_placemarks(list(feature.features()))
-            if isinstance(feature, kml.Document):  # Document inside another document
+            if isinstance(feature, kml.Document):  # Document present somewhere inside another doc, not consecutively
                 self.parse_placemarks(list(feature.features()))
 
     def get_style_params(self, style, color=None, linewidth=None):
@@ -181,28 +241,22 @@ class KMLPatch(object):
         """
         # Plot satellite track.
         self.styles = {}
-        if self.overwrite:
-            kml_doc = list(self.kml.features())[0]  # All kml files are enclosed in a single root < > and </ >
-        if not self.overwrite:
-            kml_doc = list(self.kml.features())[0]  # All kml files are enclosed in a single root < > and </ >
-            self.parse_styles(kml_doc)
-        kml_features = list(kml_doc.features())
-        self.parse_placemarks(kml_features)
+        kml_doc = list(self.kml.features())  # All kml files are enclosed in a single root < > and </ >
+        kml_style = kml_doc[0]
+        self.parse_styles(kml_style)
+        self.parse_placemarks(kml_doc)
 
         self.map.ax.figure.canvas.draw()
 
-    def update(self, overwrite=None, color=None, linewidth=None):
+    def update(self, color=None, linewidth=None):
         """Removes the current plot of the patch and redraws the patch.
            This is necessary, for instance, when the map projection and/or
            extent has been changed.
         """
-        if overwrite is not None:
-            self.overwrite = overwrite
         if color is not None:
             self.color = color
         if linewidth is not None:
             self.linewidth = linewidth
-        self.remove()
         self.draw()
 
     def remove(self):
@@ -230,7 +284,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dict_files = {}  # Dictionary of files added; key : patch , color , linewidth
 
         # Connect slots and signals.
-        self.btSelectFile.clicked.connect(self.select_file)
+        self.btSelectFile.clicked.connect(self.get_file)
         self.pushButton_remove.clicked.connect(self.remove_file)
         self.pushButton_remove_all.clicked.connect(self.remove_all_files)
         self.pushButton_merge.clicked.connect(self.merge_file)
@@ -240,10 +294,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dialog.pushButton_colour.clicked.connect(self.select_color)
 
         self.listWidget.itemChanged.connect(self.load_file)  # list of files in ListWidget
-
-        self.cbManualStyle.setChecked(False)
-        self.cbManualStyle.setEnabled(False)
-        self.cbManualStyle.stateChanged.connect(self.update_settings)
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
@@ -256,10 +306,22 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         colour = QtGui.QColor()
         colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
-        self.dialog.pushButton_colour.setPalette(palette)  # sets the last colour
+        self.dialog.pushButton_colour.setPalette(palette)  # sets the last colour before closing KML Overlay
         self.dialog.dsb_linewidth.valueChanged.connect(self.select_linewidth)
 
     def open_customize_kml_dialog(self):
+        file = self.listWidget.currentItem().text()
+        # Set the colour of the Colour button to the colour of specific KML plot
+        if self.dict_files[file]["color"] is not None:
+            palette = QtGui.QPalette(self.dialog.pushButton_colour.palette())
+            colour = QtGui.QColor()
+            colour.setRgbF(*self.set_color(file))
+            palette.setColor(QtGui.QPalette.Button, colour)
+            self.dialog.pushButton_colour.setPalette(palette)
+        # Set the linewidth value to the linewidth of specific KML plot
+        if self.dict_files[file]["linewidth"] is not None:
+            self.dialog.dsb_linewidth.setValue(self.set_linewidth(file))
+
         self.dialog.show()
 
     def __del__(self):  # destructor
@@ -279,10 +341,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         palette = QtGui.QPalette(button.palette())
         colour = palette.color(QtGui.QPalette.Button)
-        colour = QtWidgets.QColorDialog.getColor(colour)
+        colour = QtWidgets.QColorDialog.getColor(colour)  # opens select colour palette
         if colour.isValid():
             palette.setColor(QtGui.QPalette.Button, colour)
-            button.setPalette(palette)
+            button.setPalette(palette)  # finally sets the colour of the button
         self.set_attribute_color(file)
 
     def get_color(self):
@@ -305,6 +367,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if file in self.dict_files:
             self.dict_files[file]["color"] = self.get_color()
         self.update_settings()
+        self.checklistitem(file)
 
     def select_linewidth(self):
         """
@@ -326,6 +389,16 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if file in self.dict_files:
             self.dict_files[file]["linewidth"] = self.dialog.dsb_linewidth.value()
         self.update_settings()
+        self.checklistitem(file)
+
+    def checklistitem(self, file):
+        """
+        Checks the file item in ListWidget
+        """
+        item_list = self.listWidget.findItems(file, QtCore.Qt.MatchExactly)
+        for item in item_list:
+            index = self.listWidget.row(item)
+            self.listWidget.item(index).setCheckState(QtCore.Qt.Checked)
 
     def update_settings(self):
         """
@@ -334,15 +407,20 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if self.view is not None and self.patch is not None:
             for filename in self.dict_files:
                 if self.dict_files[filename]["patch"] is not None:
-                    self.dict_files[filename]["patch"].update(self.cbManualStyle.isChecked(),
-                                                              self.dict_files[filename]["color"],
+                    self.dict_files[filename]["patch"].update(self.dict_files[filename]["color"],
                                                               self.dict_files[filename]["linewidth"])
+        self.load_file()  # important since changes need to be refreshed
 
-    def select_file(self):
+    def get_file(self):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
         filenames = get_open_filenames(
             self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
+        self.select_file(filenames)
+
+    def select_file(self, filenames):
+        """Initializes selected file/ files and adds List Item UI Element
+        """
         for filename in filenames:
             if filename is None:
                 return
@@ -372,8 +450,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
         # self.load_file() # not sure to keep this or not, works either ways
-        if self.listWidget.count() == 0:  # no files in listWidget
-            self.cbManualStyle.setEnabled(False)
 
     def remove_all_files(self):  # removes all files (checked or unchecked both)
         self.listWidget.clear()  # clears List of files in ListWidget
@@ -381,7 +457,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.dict_files[filename]["patch"].remove()  # removes patch object
         self.dict_files = {}  # initialize dictionary again
         self.patch = None  # initialize self.patch to None
-        self.cbManualStyle.setEnabled(False)
 
     def load_file(self):
         """
@@ -398,7 +473,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
                 _fs = open_fs(_dirname)
-                self.cbManualStyle.setEnabled(True)
                 try:
                     with _fs.open(_name, 'r') as kmlf:
                         self.kml = kml.KML()  # creates fastkml object
@@ -406,23 +480,24 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
                             if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # if added before
                                 self.patch = KMLPatch(self.view.map, self.kml,
-                                                      self.cbManualStyle.isChecked(),
                                                       self.set_color(self.listWidget.item(index).text()),
                                                       self.set_linewidth(self.listWidget.item(index).text()))
                             else:  # if new file is being added
                                 self.patch = KMLPatch(self.view.map, self.kml,
-                                                      self.cbManualStyle.isChecked(),
                                                       self.dict_files[self.listWidget.item(index).text()]["color"],
                                                       self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
 
-                except IOError as ex:
+                except (IOError, et.XMLSyntaxError) as ex:
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
         logging.info(self.dict_files)
 
     def merge_file(self):
+        if self.patch is None:
+            logging.info("No KML File Found. Add Files to Merge.")
+            return
         element = []
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
