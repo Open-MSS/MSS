@@ -72,6 +72,7 @@ class KMLPatch(object):
         if name is not None:
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
+                bbox=dict(boxstyle="round, pad=0.15", fc="w"),
                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
 
     def add_line(self, line, style, name):
