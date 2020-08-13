@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -54,6 +54,7 @@ class Ui_MSSMainWindow(object):
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 442, 22))
+        self.menubar.setNativeMenuBar(False)
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
         self.menu_File.setObjectName("menu_File")
