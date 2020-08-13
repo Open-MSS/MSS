@@ -80,6 +80,11 @@ def seed_data(db_uri):
             'id': 15,
             'password': 'test4',
             'emailid': 'test4'
+        }, {
+            'username': 'mscolab_user',
+            'id': 16,
+            'password': 'password',
+            'emailid': 'mscolab_user'
         }]
         for user in users:
             db_user = User(user['emailid'], user['username'], user['password'])
@@ -108,6 +113,10 @@ def seed_data(db_uri):
             'id': 5,
             'path': 'Admin_Test',
             'description': 'Project for testing admin window'
+        }, {
+            'id': 6,
+            'path': 'test_mscolab',
+            'description': 'Project for testing mscolab main window'
         }]
         for project in projects:
             db_project = Project(project['path'], project['description'])
@@ -176,6 +185,10 @@ def seed_data(db_uri):
             'u_id': 15,
             'p_id': 3,
             'access_level': 'collaborator'
+        }, {
+            'u_id': 16,
+            'p_id': 6,
+            'access_level': 'creator'
         }]
         for perm in permissions:
             db_perm = Permission(perm['u_id'], perm['p_id'], perm['access_level'])

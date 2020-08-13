@@ -43,7 +43,7 @@ from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
-from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, get_open_filename, get_save_filename
+from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
 from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
 from mslib.msui.mss_qt import ui_mscolab_window as ui
@@ -978,14 +978,15 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
     def handle_selection(self, selected, deselected, wp_model, wp_dict):
         len_selected = len(selected.indexes())
         len_deselected = len(deselected.indexes())
+        columns = self.localWaypointsTable.model().columnCount()
 
-        for index in range(0, len_selected, 15):
+        for index in range(0, len_selected, columns):
             row = selected.indexes()[index].row()
             waypoint = wp_model.waypoint_data(row)
             wp_dict[row] = waypoint
             self.merge_waypoints_list.append(waypoint)
 
-        for index in range(0, len_deselected, 15):
+        for index in range(0, len_deselected, columns):
             row = deselected.indexes()[index].row()
             delete_waypoint = wp_dict[row]
             self.merge_waypoints_list.remove(delete_waypoint)

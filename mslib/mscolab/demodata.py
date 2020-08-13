@@ -50,14 +50,12 @@ from mslib.mscolab.seed import seed_data, create_tables
 
 
 def create_test_data():
-    fs_datadir = fs.open_fs(mscolab_settings.BASE_DIR)
-    if fs_datadir.exists('colabTestData'):
-        fs_datadir.removetree('colabTestData')
-    fs_datadir.makedir('colabTestData')
-    fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
+    with fs.open_fs(mscolab_settings.BASE_DIR) as fs_datadir:
+        if fs_datadir.exists('colabTestData'):
+            fs_datadir.removetree('colabTestData')
+        fs_datadir.makedir('colabTestData')
     # creating filedata directory
     create_test_files()
-
     if mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "mysql":
         if ms is None:
             logging.info("""can't complete demodata setup,
@@ -146,22 +144,22 @@ def create_test_data():
 
 
 def create_test_files():
-    fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
-    if not fs_datadir.exists('filedata'):
+    with fs.open_fs(mscolab_settings.DATA_DIR) as fs_datadir:
+        if fs_datadir.exists('filedata'):
+            fs_datadir.removetree('filedata')
         fs_datadir.makedir('filedata')
-        # add files
-        file_dir = fs.open_fs(fs.path.combine(mscolab_settings.DATA_DIR, 'filedata'))
+
+    with fs.open_fs(fs.path.join(mscolab_settings.DATA_DIR, 'filedata')) as file_dir:
         # make directories
-        file_paths = ['one', 'two', 'three', 'four', 'Admin_Test']
+        file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
         for file_path in file_paths:
             file_dir.makedir(file_path)
-            file_dir.writetext('{}/main.ftml'.format(file_path), mscolab_settings.STUB_CODE)
+            file_dir.writetext(f'{file_path}/main.ftml', mscolab_settings.STUB_CODE)
             # initiate git
-            r = git.Repo.init(fs.path.combine(mscolab_settings.BASE_DIR,
-                                              'colabTestData/filedata/{}'.format(file_path)))
+            r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', file_path))
+            r.git.clear_cache()
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")
-        file_dir.close()
 
 
 def create_postgres(seed=False):
@@ -214,24 +212,20 @@ def create_postgres_test():
 
 def create_data():
     create_mssdir()
-    fs_datadir = fs.open_fs(mscolab_settings.BASE_DIR)
-    if not fs_datadir.exists('colabdata'):
-        fs_datadir.makedir('colabdata')
-    fs_datadir = fs.open_fs(mscolab_settings.DATA_DIR)
-    if not fs_datadir.exists('filedata'):
-        fs_datadir.makedir('filedata')
+    with fs.open_fs(mscolab_settings.BASE_DIR) as fs_datadir:
+        if not fs_datadir.exists('colabdata/filedata'):
+            fs_datadir.makedir('colabdata/filedata')
     if mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "sqlite":
-        # path_prepend = os.path.dirname(os.path.abspath(__file__))
         create_tables(mscolab_settings.SQLALCHEMY_DB_URI)
     elif mscolab_settings.SQLALCHEMY_DB_URI.split(':')[0] == "postgresql":
         create_postgres()
 
 
 def create_mssdir():
-    fs_datadir = fs.open_fs('~')
     basename = fs.path.basename(mss_default.mss_dir)
-    if not fs_datadir.exists(basename):
-        fs_datadir.makedir(basename)
+    with fs.open_fs('~') as fs_datadir:
+        if not fs_datadir.exists(basename):
+            fs_datadir.makedir(basename)
 
 
 def delete_test_data(temp_fs):

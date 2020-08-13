@@ -112,9 +112,12 @@ class Ui_MergeWaypointsDialog(object):
         MergeWaypointsDialog.setWindowTitle(_translate("MergeWaypointsDialog", "Save Waypoints to Server"))
         self.label_4.setText(_translate("MergeWaypointsDialog", "Select which waypoints you want to keep"))
         self.label.setText(_translate("MergeWaypointsDialog", "Your Local File Waypoints"))
+        self.overwriteBtn.setToolTip(_translate("MergeWaypointsDialog", "Overwrite server data with local waypoints"))
         self.overwriteBtn.setText(_translate("MergeWaypointsDialog", "Overwrite with local waypoints"))
         self.label_2.setText(_translate("MergeWaypointsDialog", "Waypoints on server"))
+        self.keepServerBtn.setToolTip(_translate("MergeWaypointsDialog", "Keep the server waypoints"))
         self.keepServerBtn.setText(_translate("MergeWaypointsDialog", "Keep Server Waypoints"))
         self.label_3.setText(_translate("MergeWaypointsDialog", "New Waypoints"))
+        self.saveBtn.setToolTip(_translate("MergeWaypointsDialog", "Save the new merged waypoints to the server"))
         self.saveBtn.setText(_translate("MergeWaypointsDialog", "Save new waypoints on server"))
 

@@ -160,6 +160,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="addUsersBtn">
+            <property name="toolTip">
+             <string>Add the selected users to the project</string>
+            </property>
             <property name="text">
              <string>Add</string>
             </property>
@@ -198,6 +201,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="importPermissionsBtn">
+            <property name="toolTip">
+             <string>Import permissions from another project</string>
+            </property>
             <property name="text">
              <string>Import</string>
             </property>
@@ -336,6 +342,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="modifyUsersBtn">
+            <property name="toolTip">
+             <string>Modify access permission of selected users</string>
+            </property>
             <property name="text">
              <string>Modify</string>
             </property>
@@ -343,6 +352,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="deleteUsersBtn">
+            <property name="toolTip">
+             <string>Delete access permission of selected users</string>
+            </property>
             <property name="text">
              <string>Delete</string>
             </property>

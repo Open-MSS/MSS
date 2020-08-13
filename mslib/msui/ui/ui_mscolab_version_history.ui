@@ -193,6 +193,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="deleteVersionNameBtn">
+              <property name="toolTip">
+               <string>Delete the name of the selected version</string>
+              </property>
               <property name="text">
                <string>Delete Version Name</string>
               </property>
@@ -200,6 +203,9 @@
             </item>
             <item>
              <widget class="QPushButton" name="nameVersionBtn">
+              <property name="toolTip">
+               <string>Give name to the selected version</string>
+              </property>
               <property name="text">
                <string>Name Version</string>
               </property>
@@ -207,8 +213,11 @@
             </item>
             <item>
              <widget class="QPushButton" name="checkoutBtn">
+              <property name="toolTip">
+               <string>Checkout to the selected version</string>
+              </property>
               <property name="text">
-               <string>checkout</string>
+               <string>Checkout</string>
               </property>
               <property name="autoDefault">
                <bool>false</bool>
