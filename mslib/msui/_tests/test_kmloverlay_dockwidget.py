@@ -31,10 +31,13 @@ import sys
 import mock
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
 import mslib.msui.kmloverlay_dockwidget as kd
+import mslib.msui.topview as tv
+from mslib.msui.viewwindows import MSSMplViewWindow
 
 
 class Test_KmlOverlayDockWidget(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples")
+
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.view = mock.Mock()
@@ -53,11 +56,27 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         del self.window
 
+    def select_files(self):  # Utility function
+        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml"]:
+            path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", sample)
+            filename = (path,)  # converted to tuple
+            self.window.select_file(filename)
+            QtWidgets.QApplication.processEvents()
+
+    @mock.patch("mslib.msui.kmloverlay_dockwidget.get_open_filenames",
+                return_value=[os.path.join(sample_path, "kml", "line.kml")])
+    def test_get_file(self, mockopen):  # Tests opening of QFileDialog
+        QtTest.QTest.mouseClick(self.window.btSelectFile, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockopen.call_count == 1
+
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    def test_load_file(self, mockbox):
+    def test_select_file(self, mockbox):
         index = 0
         assert self.window.listWidget.count() == 0
-        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml"]:
+        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml",
+                       "geometry_collection.kml", "Multilinestrings.kml", "polygon_inner.kml",
+                       "World_Map.kml"]:
             path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", sample)
             filename = (path,)  # converted to tuple
             self.window.select_file(filename)
@@ -69,9 +88,10 @@ class Test_KmlOverlayDockWidget(object):
         assert mockbox.critical.call_count == 0
         assert self.window.listWidget.count() == index
         assert len(self.window.dict_files) == index
+        assert self.window.patch is not None
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    def test_load_error(self, mockbox):
+    def test_select_file_error(self, mockbox):
         """
         Test that program mitigates loading a non-existing file
         """
@@ -84,7 +104,7 @@ class Test_KmlOverlayDockWidget(object):
         assert mockbox.critical.call_count == 1
 
     def test_remove_file(self):
-        self.test_load_file()
+        self.select_files()
         QtWidgets.QApplication.processEvents()
         self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
         QtTest.QTest.mouseClick(self.window.pushButton_remove, QtCore.Qt.LeftButton)
@@ -92,18 +112,18 @@ class Test_KmlOverlayDockWidget(object):
         assert len(self.window.dict_files) == 1
 
     def test_remove_all_files(self):
-        self.test_load_file()
+        self.select_files()
         QtWidgets.QApplication.processEvents()
         assert self.window.listWidget.count() == 5
         QtTest.QTest.mouseClick(self.window.pushButton_remove_all, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.window.listWidget.count() == 0  # No items in list
         assert self.window.dict_files == {}  # Dictionary should be empty
-        assert self.window.patch == None   # Patch should be None
+        assert self.window.patch is None   # Patch should be None
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_merge_file(self, mockbox):
-        self.test_load_file()
+        self.select_files()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.pushButton_merge, QtCore.Qt.LeftButton)
         path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", "output.kml")
@@ -111,4 +131,3 @@ class Test_KmlOverlayDockWidget(object):
         self.window.select_file(filename)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
-    
