@@ -298,10 +298,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
-            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (0, 0, 0, 1)})  # initial settings
+            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (1, 1, 1, 1), "saved_files": {}})  # initial settings
 
         self.directory_location = settings["filename"]
         self.dialog.dsb_linewidth.setValue(settings["linewidth"])
+        # self.dict_files = settings["saved_files"]
 
         palette = QtGui.QPalette(self.dialog.pushButton_colour.palette())
         colour = QtGui.QColor()
@@ -329,7 +330,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         settings = {
             "filename": str(self.directory_location),
             "linewidth": self.dialog.dsb_linewidth.value(),
-            "colour": self.get_color()
+            "colour": self.get_color(),
+            "saved_files": self.dict_files  # error here
         }
         save_settings_qsettings(self.settings_tag, settings)
 
