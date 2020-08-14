@@ -85,6 +85,11 @@ def seed_data(db_uri):
             'id': 16,
             'password': 'password',
             'emailid': 'mscolab_user'
+        }, {
+            'username': 'merge_waypoints_user',
+            'id': 17,
+            'password': 'password',
+            'emailid': 'merge_waypoints_user'
         }]
         for user in users:
             db_user = User(user['emailid'], user['username'], user['password'])
@@ -189,6 +194,10 @@ def seed_data(db_uri):
             'u_id': 16,
             'p_id': 6,
             'access_level': 'creator'
+        }, {
+            'u_id': 17,
+            'p_id': 6,
+            'access_level': 'admin'
         }]
         for perm in permissions:
             db_perm = Permission(perm['u_id'], perm['p_id'], perm['access_level'])

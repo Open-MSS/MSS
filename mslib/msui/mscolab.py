@@ -123,6 +123,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.admin_window = None
         # Version History Window
         self.version_window = None
+        # Merge waypoints dialog
+        self.merge_dialog = None
         # set data dir, uri
         self.data_dir = data_dir
         self.mscolab_server_url = None
@@ -216,7 +218,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def handle_export(self):
         file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Flight track", self.active_project_name,
-                                                             f"Flight track (*.ftml)")
+                                                             "Flight track (*.ftml)")
         if file_path == "":
             return
         xml_doc = self.waypoints_model.get_xml_doc()
@@ -747,9 +749,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def save_wp_mscolab(self, comment=None):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        merge_waypoints_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
-        if merge_waypoints_dialog.exec_():
-            xml_content = merge_waypoints_dialog.get_values()
+        self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
+        if self.merge_dialog.exec_():
+            xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
                 self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
@@ -757,6 +759,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
                 self.reload_view_windows()
                 show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
+        self.merge_dialog = None
 
     def handle_local_data_changed(self):
         self.waypoints_model.save_to_ftml(self.local_ftml_file)
@@ -775,15 +778,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def fetch_wp_mscolab(self):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        merge_waypoints_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
-        if merge_waypoints_dialog.exec_():
-            xml_content = merge_waypoints_dialog.get_values()
+        self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
+        if self.merge_dialog.exec_():
+            xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
                 self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
                 self.reload_view_windows()
                 show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
+        self.merge_dialog = None
 
     @QtCore.Slot(int, int, str)
     def handle_update_permission(self, p_id, u_id, access_level):
