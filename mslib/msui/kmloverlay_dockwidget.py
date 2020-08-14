@@ -302,7 +302,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         self.directory_location = settings["filename"]
         self.dialog.dsb_linewidth.setValue(settings["linewidth"])
-        # self.dict_files = settings["saved_files"]
+
+        # Restore previously opened files
+        if settings["saved_files"] is not None:
+            self.dict_files = settings["saved_files"]
+            for file in self.dict_files.keys():
+                self.create_list_item(file)
+            self.load_file()
 
         palette = QtGui.QPalette(self.dialog.pushButton_colour.palette())
         colour = QtGui.QColor()
@@ -327,11 +333,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dialog.show()
 
     def __del__(self):  # destructor
+        for x in self.dict_files:
+            self.dict_files[x]["patch"] = None  # patch object has to be deleted
         settings = {
             "filename": str(self.directory_location),
             "linewidth": self.dialog.dsb_linewidth.value(),
             "colour": self.get_color(),
-            "saved_files": self.dict_files  # error here
+            "saved_files": self.dict_files
         }
         save_settings_qsettings(self.settings_tag, settings)
 
@@ -422,7 +430,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.select_file(filenames)
 
     def select_file(self, filenames):
-        """Initializes selected file/ files and adds List Item UI Element
+        """Initializes selected file/ files
         """
         for filename in filenames:
             if filename is None:
@@ -434,15 +442,20 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.dict_files[text]["patch"] = None
                 self.dict_files[text]["color"] = self.get_color()
                 self.dict_files[text]["linewidth"] = self.dialog.dsb_linewidth.value()
-                # PyQt5 method : Add items in list and add checkbox functionality
-                item = QtWidgets.QListWidgetItem(text)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                item.setCheckState(QtCore.Qt.Checked)
-                self.listWidget.addItem(item)
                 self.directory_location = text  # Saves location of directory to open
+                self.create_list_item(text)
             else:
                 logging.info("%s file already added", text)
         self.load_file()
+
+    def create_list_item(self, text):
+        """
+        PyQt5 method : Add items in list and add checkbox functionality
+        """
+        item = QtWidgets.QListWidgetItem(text)
+        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+        item.setCheckState(QtCore.Qt.Checked)
+        self.listWidget.addItem(item)
 
     def remove_file(self):  # removes checked files
         for index in range(self.listWidget.count()):  # list of files in ListWidget
@@ -495,7 +508,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
-        logging.info(self.dict_files)
+        logging.debug(self.dict_files)
 
     def merge_file(self):
         if self.patch is None:
