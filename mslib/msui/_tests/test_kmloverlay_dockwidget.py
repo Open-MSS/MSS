@@ -48,6 +48,7 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         # start load test
+        self.window.remove_all_files()
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
@@ -89,6 +90,7 @@ class Test_KmlOverlayDockWidget(object):
         assert self.window.listWidget.count() == index
         assert len(self.window.dict_files) == index
         assert self.window.patch is not None
+        self.window.remove_all_files()
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_select_file_error(self, mockbox):
@@ -96,12 +98,15 @@ class Test_KmlOverlayDockWidget(object):
         Test that program mitigates loading a non-existing file
         """
         # load a non existing path
+        self.window.remove_all_files()
         path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
                             "samples", "satellite_tracks", "satellite_predictor.txt")
         filename = (path,)  # converted to tuple
         self.window.select_file(filename)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 1
+        self.window.listWidget.clear()
+        self.window.dict_files = {}
 
     def test_remove_file(self):
         self.select_files()
@@ -110,6 +115,7 @@ class Test_KmlOverlayDockWidget(object):
         QtTest.QTest.mouseClick(self.window.pushButton_remove, QtCore.Qt.LeftButton)
         assert self.window.listWidget.count() == 1
         assert len(self.window.dict_files) == 1
+        self.window.remove_all_files()
 
     def test_remove_all_files(self):
         self.select_files()
@@ -131,3 +137,5 @@ class Test_KmlOverlayDockWidget(object):
         self.window.select_file(filename)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
+        self.window.remove_all_files()
+
