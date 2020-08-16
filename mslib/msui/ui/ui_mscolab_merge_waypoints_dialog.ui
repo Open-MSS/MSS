@@ -103,6 +103,9 @@
            <property name="enabled">
             <bool>true</bool>
            </property>
+           <property name="toolTip">
+            <string>Overwrite server data with local waypoints</string>
+           </property>
            <property name="text">
             <string>Overwrite with local waypoints</string>
            </property>
@@ -140,6 +143,9 @@
          </item>
          <item>
           <widget class="QPushButton" name="keepServerBtn">
+           <property name="toolTip">
+            <string>Keep the server waypoints</string>
+           </property>
            <property name="text">
             <string>Keep Server Waypoints</string>
            </property>
@@ -209,6 +215,9 @@
          </item>
          <item>
           <widget class="QPushButton" name="saveBtn">
+           <property name="toolTip">
+            <string>Save the new merged waypoints to the server</string>
+           </property>
            <property name="text">
             <string>Save new waypoints on server</string>
            </property>

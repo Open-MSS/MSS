@@ -43,7 +43,7 @@ from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
-from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, get_open_filename, get_save_filename
+from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, get_open_filename
 from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
 from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
 from mslib.msui.mss_qt import ui_mscolab_window as ui
@@ -123,6 +123,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.admin_window = None
         # Version History Window
         self.version_window = None
+        # Merge waypoints dialog
+        self.merge_dialog = None
         # set data dir, uri
         self.data_dir = data_dir
         self.mscolab_server_url = None
@@ -216,7 +218,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def handle_export(self):
         file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Flight track", self.active_project_name,
-                                                             f"Flight track (*.ftml)")
+                                                             "Flight track (*.ftml)")
         if file_path == "":
             return
         xml_doc = self.waypoints_model.get_xml_doc()
@@ -522,18 +524,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.listProjects.itemActivated.emit(selectedProject)
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
+    def force_close_view_windows(self):
+        for window in self.active_windows:
+            window.handle_force_close()
+        self.active_windows = []
+
     def set_active_pid(self, item):
         if item.p_id == self.active_pid:
             return
             # close all hanging window
-        for window in self.active_windows:
-            window.close()
-        if self.version_window is not None:
-            self.version_window.close()
-        if self.chat_window is not None:
-            self.chat_window.close()
-        if self.admin_window is not None:
-            self.admin_window.close()
+        self.force_close_view_windows()
+        self.close_external_windows()
         # Turn off work locally toggle
         self.workLocallyCheckBox.blockSignals(True)
         self.workLocallyCheckBox.setChecked(False)
@@ -703,6 +704,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         requests.post(self.mscolab_server_url + '/delete_user', data=data)
         self.clean_up_window()
 
+    def close_external_windows(self):
+        if self.chat_window is not None:
+            self.chat_window.close()
+        if self.admin_window is not None:
+            self.admin_window.close()
+        if self.version_window is not None:
+            self.version_window.close()
+
     def clean_up_window(self):
         # delete token and show login widget-items
         self.token = None
@@ -724,16 +733,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.disconnect()
             self.conn = None
         # close all hanging window
-        for window in self.active_windows:
-            window.close()
-        # close project window if active
-        if self.chat_window is not None:
-            self.chat_window.close()
-        # Close Admin Window if active
-        if self.admin_window is not None:
-            self.admin_window.close()
-        if self.version_window is not None:
-            self.version_window.close()
+        self.force_close_view_windows()
+        self.close_external_windows()
         self.disable_action_buttons()
 
         # delete mscolab http_auth settings for the url
@@ -748,9 +749,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def save_wp_mscolab(self, comment=None):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        merge_waypoints_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
-        if merge_waypoints_dialog.exec_():
-            xml_content = merge_waypoints_dialog.get_values()
+        self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
+        if self.merge_dialog.exec_():
+            xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
                 self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
@@ -758,6 +759,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
                 self.reload_view_windows()
                 show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
+        self.merge_dialog = None
 
     def handle_local_data_changed(self):
         self.waypoints_model.save_to_ftml(self.local_ftml_file)
@@ -776,15 +778,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def fetch_wp_mscolab(self):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        merge_waypoints_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
-        if merge_waypoints_dialog.exec_():
-            xml_content = merge_waypoints_dialog.get_values()
+        self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
+        if self.merge_dialog.exec_():
+            xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
                 self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
                 self.reload_view_windows()
                 show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
+        self.merge_dialog = None
 
     @QtCore.Slot(int, int, str)
     def handle_update_permission(self, p_id, u_id, access_level):
@@ -797,22 +800,28 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         """
         if u_id == self.user["id"]:
             # update table of projects
+            project_name = None
             for i in range(self.listProjects.count()):
                 item = self.listProjects.item(i)
                 if item.p_id == p_id:
                     desc = item.text().split(' - ')
+                    project_name = desc[0]
                     desc[-1] = access_level
                     desc = ' - '.join(desc)
                     item.setText(desc)
-                    item.p_id = p_id
                     item.access_level = access_level
+                    break
+            if project_name is not None:
+                show_popup(self, "Permission Updated",
+                           f"Your access level to project - {project_name} was updated to {access_level}!", 1)
             if p_id != self.active_pid:
                 return
+
             self.access_level = access_level
             # Close mscolab windows based on new access_level and update their buttons
             if self.access_level == "collaborator" or self.access_level == "viewer":
-                self.adminWindowBtn.setEnabled(True)
-                self.versionHistoryBtn.setEnabled(True)
+                self.adminWindowBtn.setEnabled(False)
+                self.versionHistoryBtn.setEnabled(False)
                 if self.admin_window is not None:
                     self.admin_window.close()
                 if self.version_window is not None:
@@ -834,7 +843,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.disable_navbar_action_buttons(_type, window)
                 else:
                     self.enable_navbar_action_buttons(_type, window)
-        # update project window if open
+
+        # update chat window if open
         if self.chat_window is not None:
             self.chat_window.load_users()
 
@@ -843,14 +853,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if u_id == self.user["id"]:
             # Check if the user has opened any windows of revoked project and close them
             if self.active_pid == p_id:
-                for window in self.active_windows:
-                    window.close()
-                if self.chat_window is not None:
-                    self.chat_window.close()
-                if self.admin_window is not None:
-                    self.admin_window.close()
-                if self.version_window is not None:
-                    self.version_window.close()
+                self.force_close_view_windows()
+                self.close_external_windows()
                 self.active_pid = None
                 self.access_level = None
                 self.active_project_name = None
@@ -864,6 +868,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     remove_item = item
             if remove_item is not None:
                 self.listProjects.takeItem(self.listProjects.row(remove_item))
+            project_name = remove_item.text().split(' - ')[0]
+            show_popup(self, "Permission Revoked", f"Your access to project - {project_name} was revoked!", icon=1)
 
     @QtCore.Slot()
     def reload_windows_slot(self):
@@ -976,14 +982,15 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
     def handle_selection(self, selected, deselected, wp_model, wp_dict):
         len_selected = len(selected.indexes())
         len_deselected = len(deselected.indexes())
+        columns = self.localWaypointsTable.model().columnCount()
 
-        for index in range(0, len_selected, 15):
+        for index in range(0, len_selected, columns):
             row = selected.indexes()[index].row()
             waypoint = wp_model.waypoint_data(row)
             wp_dict[row] = waypoint
             self.merge_waypoints_list.append(waypoint)
 
-        for index in range(0, len_deselected, 15):
+        for index in range(0, len_deselected, columns):
             row = deselected.indexes()[index].row()
             delete_waypoint = wp_dict[row]
             self.merge_waypoints_list.remove(delete_waypoint)

@@ -169,6 +169,9 @@
              <layout class="QHBoxLayout" name="horizontalLayout_2">
               <item>
                <widget class="QPushButton" name="previewBtn">
+                <property name="toolTip">
+                 <string/>
+                </property>
                 <property name="text">
                  <string>Preview</string>
                 </property>
@@ -220,6 +223,9 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="uploadBtn">
+                  <property name="toolTip">
+                   <string>Upload image or file</string>
+                  </property>
                   <property name="text">
                    <string>Upload</string>
                   </property>
@@ -227,6 +233,9 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="editMessageBtn">
+                  <property name="toolTip">
+                   <string/>
+                  </property>
                   <property name="text">
                    <string>Update</string>
                   </property>

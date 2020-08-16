@@ -144,7 +144,10 @@ class Ui_MscolabVersionHistory(object):
         self.versionFilterCB.setItemText(1, _translate("MscolabVersionHistory", "All Changes"))
         self.label_3.setText(_translate("MscolabVersionHistory", "Current Waypoints:"))
         self.label_2.setText(_translate("MscolabVersionHistory", "Version Preview:"))
+        self.deleteVersionNameBtn.setToolTip(_translate("MscolabVersionHistory", "Delete the name of the selected version"))
         self.deleteVersionNameBtn.setText(_translate("MscolabVersionHistory", "Delete Version Name"))
+        self.nameVersionBtn.setToolTip(_translate("MscolabVersionHistory", "Give name to the selected version"))
         self.nameVersionBtn.setText(_translate("MscolabVersionHistory", "Name Version"))
-        self.checkoutBtn.setText(_translate("MscolabVersionHistory", "checkout"))
+        self.checkoutBtn.setToolTip(_translate("MscolabVersionHistory", "Checkout to the selected version"))
+        self.checkoutBtn.setText(_translate("MscolabVersionHistory", "Checkout"))
 

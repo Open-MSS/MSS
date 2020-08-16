@@ -68,6 +68,7 @@ class FileManager(object):
             project_file.write(mscolab_settings.STUB_CODE)
         project_path = fs.path.combine(self.data_dir, project.path)
         r = git.Repo.init(project_path)
+        r.git.clear_cache()
         r.index.add(['main.ftml'])
         r.index.commit("initial commit")
         return True
@@ -203,6 +204,7 @@ class FileManager(object):
             # commit to git repository
             project_path = fs.path.combine(self.data_dir, project.path)
             repo = git.Repo(project_path)
+            repo.git.clear_cache()
             repo.index.add(['main.ftml'])
             cm = repo.index.commit("committing changes")
             # change db table
@@ -303,6 +305,7 @@ class FileManager(object):
 
         project_path = fs.path.join(self.data_dir, project.path)
         repo = git.Repo(project_path)
+        repo.git.clear_cache()
         try:
             file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
             with fs.open_fs(project_path) as proj_fs:
