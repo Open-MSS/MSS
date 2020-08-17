@@ -159,11 +159,10 @@ class FileManager(object):
         Permission.query.filter_by(p_id=p_id).delete()
         Change.query.filter_by(p_id=p_id).delete()
         Message.query.filter_by(p_id=p_id).delete()
-        Change.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
-        data = fs.open_fs(self.data_dir)
-        data.removetree(project.path)
-        project = Project.query.filter_by(id=p_id).delete()
+        with fs.open_fs(self.data_dir) as project_dir:
+            project_dir.removetree(project.path)
+        db.session.delete(project)
         db.session.commit()
         return True
 

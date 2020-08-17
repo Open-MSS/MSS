@@ -43,6 +43,7 @@ class ConnectionManager(QtCore.QObject):
     signal_update_permission = QtCore.Signal(int, int, str, name="update permission")
     signal_revoke_permission = QtCore.Signal(int, int, name="revoke permission")
     signal_project_permissions_updated = QtCore.Signal(int, name="project permissions updated")
+    signal_project_deleted = QtCore.Signal(int, name="project deleted")
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -68,6 +69,8 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('revoke-permission', handler=self.handle_revoke_permission)
         # on updating project permissions in admin window
         self.sio.on('project-permissions-updated', handler=self.handle_project_permissions_updated)
+        # On Project Delete
+        self.sio.on('project-deleted', handler=self.handle_project_deleted)
 
         self.sio.emit('start', {'token': token})
 
@@ -122,6 +125,10 @@ class ConnectionManager(QtCore.QObject):
     def handle_file_change(self, message):
         message = json.loads(message)
         self.signal_reload.emit(message["p_id"])
+
+    def handle_project_deleted(self, message):
+        p_id = int(json.loads(message)["p_id"])
+        self.signal_project_deleted.emit(p_id)
 
     def handle_new_room(self, p_id):
         logging.debug("adding user to new room")

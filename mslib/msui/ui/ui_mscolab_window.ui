@@ -35,6 +35,9 @@
         <height>500</height>
        </size>
       </property>
+      <property name="styleSheet">
+       <string notr="true">margin-top</string>
+      </property>
       <property name="title">
        <string>Project listing</string>
       </property>
@@ -261,7 +264,13 @@
           </widget>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_2">
+          <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0">
+           <property name="spacing">
+            <number>-1</number>
+           </property>
+           <property name="sizeConstraint">
+            <enum>QLayout::SetDefaultConstraint</enum>
+           </property>
            <item>
             <widget class="QPushButton" name="addProject">
              <property name="toolTip">
@@ -294,6 +303,9 @@
            </item>
            <item>
             <widget class="Line" name="line_2">
+             <property name="styleSheet">
+              <string notr="true">margin-top: 3;</string>
+             </property>
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -331,6 +343,9 @@
            </item>
            <item>
             <widget class="Line" name="line">
+             <property name="styleSheet">
+              <string notr="true">margin-top: 3;</string>
+             </property>
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -373,17 +388,27 @@
             </widget>
            </item>
            <item>
-            <spacer name="verticalSpacer">
+            <widget class="Line" name="line_3">
+             <property name="styleSheet">
+              <string notr="true">margin-top: 3;</string>
+             </property>
              <property name="orientation">
-              <enum>Qt::Vertical</enum>
+              <enum>Qt::Horizontal</enum>
              </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="deleteProjectBtn">
+             <property name="autoFillBackground">
+              <bool>false</bool>
              </property>
-            </spacer>
+             <property name="styleSheet">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string>Delete</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>

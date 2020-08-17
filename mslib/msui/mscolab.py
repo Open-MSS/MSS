@@ -35,6 +35,7 @@ import fs
 import requests
 from fs import open_fs, path
 from requests.auth import HTTPBasicAuth
+from werkzeug.urls import url_join
 
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui import flighttrack as ft
@@ -93,6 +94,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.chatWindowBtn.clicked.connect(self.open_chat_window)
         self.adminWindowBtn.clicked.connect(self.open_admin_window)
         self.versionHistoryBtn.clicked.connect(self.open_version_history_window)
+        self.deleteProjectBtn.clicked.connect(self.handle_delete_project)
         # View related signals
         self.topview.clicked.connect(self.open_topview)
         self.sideview.clicked.connect(self.open_sideview)
@@ -238,6 +240,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.chatWindowBtn.setEnabled(False)
         self.adminWindowBtn.setEnabled(False)
         self.versionHistoryBtn.setEnabled(False)
+        self.deleteProjectBtn.setEnabled(False)
 
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
@@ -336,6 +339,24 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your passwords don\'t match')
+
+    def handle_delete_project(self):
+        ret = QtWidgets.QMessageBox.warning(
+            self, self.tr("Delete Project"),
+            self.tr(f'Do you want to delete project - "{self.active_project_name}"?'),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+
+        if ret == QtWidgets.QMessageBox.Yes:
+            data = {
+                "token": self.token,
+                "p_id": self.active_pid
+            }
+            url = url_join(self.mscolab_server_url, 'delete_project')
+            try:
+                res = requests.post(url, data=data)
+                res.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                show_popup(self, "Error", "Some error occurred! Could not delete project.")
 
     def open_chat_window(self):
         if self.active_pid is None:
@@ -469,6 +490,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.signal_new_permission.connect(self.render_new_permission)
             self.conn.signal_update_permission.connect(self.handle_update_permission)
             self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
+            self.conn.signal_project_deleted.connect(self.handle_project_deleted)
             # activate add project button here
             self.addProject.setEnabled(True)
 
@@ -568,7 +590,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.adminWindowBtn.setEnabled(True)
             self.chatWindowBtn.setEnabled(True)
             self.versionHistoryBtn.setEnabled(True)
-
+        if self.access_level == "creator":
+            self.deleteProjectBtn.setEnabled(True)
+        else:
+            self.deleteProjectBtn.setEnabled(False)
         # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
@@ -695,7 +720,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def delete_account(self):
         w = QtWidgets.QWidget()
         qm = QtWidgets.QMessageBox
-        reply = qm.question(w, 'Continue?', 'You cannot undo this operation!', qm.Yes, qm.No)
+        reply = qm.question(w, self.tr('Continue?'), self.tr('You cannot undo this operation!'), qm.Yes, qm.No)
         if reply == QtWidgets.QMessageBox.No:
             return
         data = {
@@ -848,28 +873,30 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.chat_window is not None:
             self.chat_window.load_users()
 
+    def delete_project_from_list(self, p_id):
+        if self.active_pid == p_id:
+            self.active_pid = None
+            self.access_level = None
+            self.active_project_name = None
+            self.force_close_view_windows()
+            self.close_external_windows()
+            self.disable_project_buttons()
+
+        # Update project list
+        remove_item = None
+        for i in range(self.listProjects.count()):
+            item = self.listProjects.item(i)
+            if item.p_id == p_id:
+                remove_item = item
+        if remove_item is not None:
+            self.listProjects.takeItem(self.listProjects.row(remove_item))
+        return remove_item.text().split(' - ')[0]
+
     @QtCore.Slot(int, int)
     def handle_revoke_permission(self, p_id, u_id):
         if u_id == self.user["id"]:
-            # Check if the user has opened any windows of revoked project and close them
-            if self.active_pid == p_id:
-                self.force_close_view_windows()
-                self.close_external_windows()
-                self.active_pid = None
-                self.access_level = None
-                self.active_project_name = None
-                self.disable_project_buttons()
-
-            # Update project list
-            remove_item = None
-            for i in range(self.listProjects.count()):
-                item = self.listProjects.item(i)
-                if item.p_id == p_id:
-                    remove_item = item
-            if remove_item is not None:
-                self.listProjects.takeItem(self.listProjects.row(remove_item))
-            project_name = remove_item.text().split(' - ')[0]
-            show_popup(self, "Permission Revoked", f"Your access to project - {project_name} was revoked!", icon=1)
+            project_name = self.delete_project_from_list(p_id)
+            show_popup(self, "Permission Revoked", f'Your access to project - "{project_name}" was revoked!', icon=1)
 
     @QtCore.Slot()
     def reload_windows_slot(self):
@@ -897,6 +924,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.listProjects.addItem(widgetItem)
         if self.chat_window is not None:
             self.chat_window.load_users()
+
+    @QtCore.Slot(int)
+    def handle_project_deleted(self, p_id):
+        project_name = self.delete_project_from_list(p_id)
+        show_popup(self, "Success", f'Project "{project_name}" was deleted!', icon=1)
 
     @QtCore.Slot(int)
     def reload_window(self, value):
