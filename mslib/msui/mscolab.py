@@ -972,11 +972,12 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
         )
 
         if fetch is True:
+            self.setWindowTitle(self.tr("Fetch Waypoints From Server"))
             btn_size_policy = self.overwriteBtn.sizePolicy()
             btn_size_policy.setRetainSizeWhenHidden(True)
             self.overwriteBtn.setSizePolicy(btn_size_policy)
             self.overwriteBtn.setVisible(False)
-            self.saveBtn.setText("Save Waypoints To Local File")
+            self.saveBtn.setText(self.tr("Save Waypoints To Local File"))
 
     def handle_selection(self, selected, deselected, wp_model, wp_dict):
         len_selected = len(selected.indexes())
