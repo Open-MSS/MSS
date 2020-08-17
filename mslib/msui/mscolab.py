@@ -915,8 +915,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.identifier = identifier
 
     def closeEvent(self, event):
-        if self.conn:
-            self.conn.disconnect()
+        self.clean_up_window()
         self.viewCloses.emit()
 
 

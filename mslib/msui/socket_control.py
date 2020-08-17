@@ -46,7 +46,12 @@ class ConnectionManager(QtCore.QObject):
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
+        self.token = token
+        self.user = user
+        self.mscolab_server_url = mscolab_server_url
         self.sio = socketio.Client(reconnection_attempts=5)
+        self.sio.connect(self.mscolab_server_url)
+
         self.sio.on('file-changed', handler=self.handle_file_change)
         # on chat message recive
         self.sio.on('chat-message-client', handler=self.handle_incoming_message)
@@ -63,11 +68,8 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('revoke-permission', handler=self.handle_revoke_permission)
         # on updating project permissions in admin window
         self.sio.on('project-permissions-updated', handler=self.handle_project_permissions_updated)
-        self.mscolab_server_url = mscolab_server_url
-        self.sio.connect(self.mscolab_server_url)
+
         self.sio.emit('start', {'token': token})
-        self.token = token
-        self.user = user
 
     def handle_update_permission(self, message):
         """
