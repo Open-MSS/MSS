@@ -184,9 +184,9 @@ widget. An example file is located at
 KML Overlay Docking Widget
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The TopView has a docking widget that allows the visualization of KML files on top of the map. This feature
-currently does not support all features of KML, for example, external resources such as images are not supported.
-Some example KML files are located at :download:`docs/samples/kml/line.kml <samples/kml/line.kml>` and
+The TopView has a docking widget that allows the visualization of KML files on top of the map. Check out kml_guide for 
+more information. Some example KML files are located at :
+:download:`docs/samples/kml/line.kml <samples/kml/line.kml>` and
 :download:`docs/samples/kml/folder.kml <samples/kml/folder.kml>`.
 
 
