@@ -95,7 +95,7 @@ class KMLPatch(object):
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(polygon.geometry.exterior)
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
- 
+
         # Interior Rings
         for interior in list(polygon.geometry.interiors):
             x1, y1 = self.compute_xy(interior)
@@ -114,7 +114,7 @@ class KMLPatch(object):
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
-   
+
     def add_multiline(self, line, style, name):
         """
         Plot KML LineStrings in a MultiGeometry
@@ -298,16 +298,24 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
-            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (1, 1, 1, 1), "saved_files": {}})  # initial settings
+            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (1, 1, 1, 1),
+                                "saved_files": {}})  # initial settings
 
         self.directory_location = settings["filename"]
         self.dialog.dsb_linewidth.setValue(settings["linewidth"])
 
         # Restore previously opened files
         if settings["saved_files"] is not None:
+            delete_files = []  # list to store non-existing files
             self.dict_files = settings["saved_files"]
-            for file in self.dict_files.keys():
-                self.create_list_item(file)
+            for file in self.dict_files:
+                if os.path.isfile(file) is True:
+                    self.create_list_item(file)
+                else:
+                    delete_files.append(file)  # add non-existent files to list
+                    logging.info(file + " does not exist in the directory anymore")
+            for file in delete_files:
+                del self.dict_files[file]  # remove non-existent files from dictionary
             self.load_file()
 
         palette = QtGui.QPalette(self.dialog.pushButton_colour.palette())
@@ -545,7 +553,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         Removes namespace prefixes, passed on during deepcopy
         """
-        try: 
+        try:
             for elem in root.getiterator():
                 elem.tag = et.QName(elem).localname
             et.cleanup_namespaces(root)
@@ -555,10 +563,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     continue
                 i = elem.tag.find('}')
                 if i >= 0:
-                    elem.tag = elem.tag[i+1:]
+                    elem.tag = elem.tag[i + 1:]
             objectify.deannotate(root, cleanup_namespaces=True)
 
-    
+
 class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDialog):
     """
     This class provides the interface for customizing individual KML Files with respect to
