@@ -555,10 +555,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.filename = filename
         self.name = fs.path.basename(filename.replace(".ftml", "").strip())
         doc = self.get_xml_doc()
-        _dirname, _name = os.path.split(self.filename)
-        _fs = fs.open_fs(_dirname)
-        with _fs.open(_name, 'w') as file_object:
+        dirname, name = fs.path.split(self.filename)
+        file_dir = fs.open_fs(dirname)
+        with file_dir.open(name, 'w') as file_object:
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+        file_dir.close()
 
     def get_xml_doc(self):
         doc = xml.dom.minidom.Document()

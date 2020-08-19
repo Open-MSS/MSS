@@ -25,6 +25,7 @@ class Ui_MSSMscolabWindow(object):
         self.groupBox.setSizePolicy(sizePolicy)
         self.groupBox.setMinimumSize(QtCore.QSize(500, 500))
         self.groupBox.setStyleSheet("margin-top")
+        self.groupBox.setTitle("")
         self.groupBox.setFlat(True)
         self.groupBox.setObjectName("groupBox")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.groupBox)
@@ -44,6 +45,7 @@ class Ui_MSSMscolabWindow(object):
         self.connectMscolab = QtWidgets.QPushButton(self.urlWidget)
         self.connectMscolab.setObjectName("connectMscolab")
         self.horizontalLayout_5.addWidget(self.connectMscolab)
+        self.horizontalLayout_5.setStretch(1, 1)
         self.verticalLayout_9.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
@@ -209,6 +211,10 @@ class Ui_MSSMscolabWindow(object):
         self.horizontalLayout.addWidget(self.topview)
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem3)
+        self.horizontalLayout.setStretch(0, 2)
+        self.horizontalLayout.setStretch(1, 2)
+        self.horizontalLayout.setStretch(2, 2)
+        self.horizontalLayout.setStretch(3, 3)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout_4.addWidget(self.groupBox)
         MSSMscolabWindow.setCentralWidget(self.centralwidget)
@@ -222,9 +228,8 @@ class Ui_MSSMscolabWindow(object):
 
     def retranslateUi(self, MSSMscolabWindow):
         _translate = QtCore.QCoreApplication.translate
-        MSSMscolabWindow.setWindowTitle(_translate("MSSMscolabWindow", "Mscolab Create Projects"))
-        self.groupBox.setTitle(_translate("MSSMscolabWindow", "Project listing"))
-        self.label_2.setText(_translate("MSSMscolabWindow", "Mscolab URL"))
+        MSSMscolabWindow.setWindowTitle(_translate("MSSMscolabWindow", "MSColab Main Window"))
+        self.label_2.setText(_translate("MSSMscolabWindow", "MSColab URL:"))
         self.connectMscolab.setToolTip(_translate("MSSMscolabWindow", "Connect to Mscolab server"))
         self.connectMscolab.setWhatsThis(_translate("MSSMscolabWindow", "Connect to mscolab server"))
         self.connectMscolab.setText(_translate("MSSMscolabWindow", "Connect"))

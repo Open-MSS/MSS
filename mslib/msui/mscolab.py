@@ -33,7 +33,7 @@ import logging
 import types
 import fs
 import requests
-from fs import open_fs, path
+from fs import open_fs
 from requests.auth import HTTPBasicAuth
 from werkzeug.urls import url_join
 
@@ -147,9 +147,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
 
         # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None, 'auth': {}})
-        if self.settings['mscolab_url'] is not None:
-            add_mscolab_urls(self.url, [self.settings['mscolab_url']])
+        self.settings = \
+            load_settings_qsettings('mscolab',
+                                    default_settings={'recent_mscolab_urls': [], 'auth': {}, 'server_settings': {}})
+        if len(self.settings['recent_mscolab_urls']) > 0:
+            add_mscolab_urls(self.url, self.settings['recent_mscolab_urls'])
 
     def disconnect_handler(self):
         self.logout()
@@ -171,9 +173,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             r = requests.get(url)
             if r.text == "Mscolab server":
                 # delete mscolab http_auth settings for the url
+                if url not in self.settings["recent_mscolab_urls"]:
+                    self.settings["recent_mscolab_urls"].append(url)
                 if self.mscolab_server_url in self.settings["auth"].keys():
                     del self.settings["auth"][self.mscolab_server_url]
-                save_settings_qsettings('mscolab', self.settings)
                 # assign new url to self.mscolab_server_url
                 self.mscolab_server_url = url
                 self.status.setText("Status: connected")
@@ -182,19 +185,29 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.addUser.setEnabled(True)
                 self.disconnectMscolab.setEnabled(True)
                 self.connectMscolab.setEnabled(False)
-                self.settings["mscolab_url"] = url
+                if self.mscolab_server_url not in self.settings["server_settings"].keys():
+                    self.settings["server_settings"].update({self.mscolab_server_url: {}})
+                try:
+                    recent_email = self.settings["server_settings"][self.mscolab_server_url]["recent_email"]
+                except KeyError:
+                    recent_email = ""
+                self.emailid.setText(recent_email)
                 save_settings_qsettings('mscolab', self.settings)
-                return
+            else:
+                show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.ConnectionError:
-            logging.debug("mscolab server isn't active")
+            logging.debug("MSColab server isn't active")
+            show_popup(self, "Error", "MSColab server isn't active")
         except requests.exceptions.InvalidSchema:
             logging.debug("invalid schema of url")
+            show_popup(self, "Error", "Invalid Url Scheme!")
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
+            show_popup(self, "Error", "Invalid URL")
         except Exception as e:
             logging.debug("Error %s", str(e))
-        # inform user that url is invalid
-        self.show_info("Invalid url, please try again!")
+            show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
+
 
     def handle_import(self):
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "", "Flight track (*.ftml)")
@@ -211,10 +224,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.waypoints_model = model
         if self.workLocallyCheckBox.isChecked():
             self.waypoints_model.save_to_ftml(self.local_ftml_file)
-            self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         else:
             self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
-            self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
@@ -274,16 +287,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         file_path = get_open_filename(
             self, "Open ftml file", "", "Flight Track Files (*.ftml)")
         if file_path is not None:
-            f_name = path.basename(file_path)
-            f_dir = open_fs(path.dirname(file_path))
-            f_content = f_dir.readtext(f_name)
-            self.add_proj_dialog.f_content = f_content
-            self.add_proj_dialog.selectedFile.setText(f_name)
+            file_name = fs.path.basename(file_path)
+            with open_fs(fs.path.dirname(file_path)) as file_dir:
+                file_content = file_dir.readtext(file_name)
+            self.add_proj_dialog.f_content = file_content
+            self.add_proj_dialog.selectedFile.setText(file_name)
 
     def add_project(self):
         path = self.add_proj_dialog.path.text()
         description = self.add_proj_dialog.description.toPlainText()
-        # ToDo if path and description is null alert user
         if not path:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Path can\'t be empty')
@@ -419,11 +431,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def create_local_project_file(self):
         with open_fs(self.data_dir) as mss_dir:
-            rel_file_path = path.join('local_mscolab_data', self.user['username'],
+            rel_file_path = fs.path.join('local_mscolab_data', self.user['username'],
                                       self.active_project_name, 'mscolab_project.ftml')
             if mss_dir.exists(rel_file_path) is True:
                 return
-            mss_dir.makedirs(path.dirname(rel_file_path))
+            mss_dir.makedirs(fs.path.dirname(rel_file_path))
             server_data = self.waypoints_model.get_xml_content()
             mss_dir.writetext(rel_file_path, server_data)
 
@@ -432,7 +444,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if self.version_window is not None:
                 self.version_window.close()
             self.create_local_project_file()
-            self.local_ftml_file = path.join(self.data_dir, 'local_mscolab_data',
+            self.local_ftml_file = fs.path.join(self.data_dir, 'local_mscolab_data',
                                              self.user['username'], self.active_project_name, 'mscolab_project.ftml')
             self.save_ft.setEnabled(True)
             self.fetch_ft.setEnabled(True)
@@ -446,10 +458,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.versionHistoryBtn.setEnabled(True)
             self.waypoints_model = None
             self.load_wps_from_server()
+        self.reload_view_windows()
 
     def authorize(self):
         auth = ('', '')
-        self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}})
         if self.mscolab_server_url in self.settings["auth"].keys():
             auth = self.settings["auth"][self.mscolab_server_url]
         # get mscolab /token http auth credentials from cache
@@ -479,9 +491,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.token = _json["token"]
             self.user = _json["user"]
             self.label.setText("logged in as: " + _json["user"]["username"])
+            self.password.setText("")
             self.loggedInWidget.show()
             self.loginWidget.hide()
-
             self.add_projects()
 
             # create socket connection here
@@ -493,6 +505,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.signal_project_deleted.connect(self.handle_project_deleted)
             # activate add project button here
             self.addProject.setEnabled(True)
+            self.settings['server_settings'][self.mscolab_server_url].update({"recent_email": emailid})
+            save_settings_qsettings('mscolab', self.settings)
 
     def add_projects(self):
         # add projects
@@ -621,7 +635,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             return
         xml_content = self.request_wps_from_server()
         self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
-        self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
+        self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
     def open_topview(self):
         # showing dummy info dialog
@@ -767,10 +781,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
 
-    def handle_mscolab_autosave(self, comment=None):
-        xml_content = self.waypoints_model.get_xml_content()
-        self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
-
     def save_wp_mscolab(self, comment=None):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
@@ -781,13 +791,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                 self.reload_view_windows()
                 show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
         self.merge_dialog = None
 
-    def handle_local_data_changed(self):
-        self.waypoints_model.save_to_ftml(self.local_ftml_file)
+    def handle_waypoints_changed(self):
+        if self.workLocallyCheckBox.isChecked():
+            self.waypoints_model.save_to_ftml(self.local_ftml_file)
+        else:
+            xml_content = self.waypoints_model.get_xml_content()
+            self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
 
     def reload_view_windows(self):
         for window in self.active_windows:
@@ -797,7 +811,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
-        self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+        self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
     def fetch_wp_mscolab(self):
@@ -809,7 +823,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if xml_content is not None:
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                 self.reload_view_windows()
                 show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
         self.merge_dialog = None
