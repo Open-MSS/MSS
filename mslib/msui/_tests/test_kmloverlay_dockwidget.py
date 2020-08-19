@@ -29,7 +29,7 @@ import os
 import fs
 import sys
 import mock
-from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest, QtGui
 import mslib.msui.kmloverlay_dockwidget as kd
 import mslib.msui.topview as tv
 from mslib.msui.viewwindows import MSSMplViewWindow
@@ -44,6 +44,7 @@ class Test_KmlOverlayDockWidget(object):
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])
         self.window = kd.KMLOverlayControlWidget(view=self.view)
+        # self.abc = kd.KMLPatch(self.window)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -56,6 +57,12 @@ class Test_KmlOverlayDockWidget(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         del self.window
+
+    def select_file(self, file):  # Utility function for single file
+        path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "kml", file)
+        filename = (path,)  # converted to tuple
+        self.window.select_file(filename)
+        QtWidgets.QApplication.processEvents()
 
     def select_files(self):  # Utility function
         for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml"]:
@@ -138,4 +145,49 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
         self.window.remove_all_files()
+
+    # def test_check_uncheck(self):
+    #     self.select_file("line.kml")
+    #     assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Checked
+    #     self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
+    #     assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Unchecked
+        
+
+    @mock.patch("mslib.msui.mss_qt.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor().setRgbF(1,1,1,1))
+    def test_customize(self, mock_colour_dialog):
+        self.select_file("line.kml")
+        assert self.window.listWidget.count() == 1
+        item = self.window.listWidget.item(0)
+        rect = self.window.listWidget.visualItemRect(item)
+        QtTest.QTest.mouseClick(self.window.listWidget.viewport(),
+                                QtCore.Qt.LeftButton,
+                                pos=rect.center())  # in testing, need to add mouseclick before double click
+        QtWidgets.QApplication.processEvents()
+        # Double click feature
+        QtTest.QTest.mouseDClick(self.window.listWidget.viewport(),
+                                QtCore.Qt.LeftButton,
+                                pos=rect.center())
+        QtWidgets.QApplication.processEvents()
+        # Clicking on Push Button Colour
+        QtTest.QTest.mouseClick(self.window.dialog.pushButton_colour, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseDClick(self.window.dialog.pushButton_colour, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mock_colour_dialog.call_count == 1
+
+        # Testing the Double Spin Box
+        self.window.dialog.dsb_linewidth.setValue(3)
+        assert self.window.dialog.dsb_linewidth.value() == 3
+        QtTest.QTest.qWait(3000)
+
+        # clicking on OK Button
+        okWidget = self.window.dialog.buttonBox.button(self.window.dialog.buttonBox.Ok)
+        QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(3000)
+        self.window.remove_file()
+        assert self.window.listWidget.count() == 0
+
+
+
 
