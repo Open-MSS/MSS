@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="images">
+    <file>mscolab-help/add-project.png</file>
+    <file>mscolab-help/add-user.png</file>
+    <file>mscolab-help/connect.png</file>
+  </qresource>
+</RCC>
