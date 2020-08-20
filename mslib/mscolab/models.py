@@ -83,21 +83,6 @@ class User(db.Model):
         return user
 
 
-class Connection(db.Model):
-
-    __tablename__ = 'connections'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    s_id = db.Column(db.String(255), unique=True)
-    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-    def __init__(self, u_id, s_id):
-        self.u_id = u_id
-        self.s_id = s_id
-
-    def __repr__(self):
-        return f'<Connection s_id: {self.s_id}, u_id: {self.u_id}>'
-
-
 class Permission(db.Model):
 
     __tablename__ = 'permissions'
