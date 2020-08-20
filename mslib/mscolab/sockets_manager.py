@@ -236,6 +236,7 @@ class SocketsManager(object):
     def emit_project_delete(self, p_id):
         socketio.emit("project-deleted", json.dumps({"p_id": p_id}), room=str(p_id))
 
+
 def setup_managers(app):
     """
     takes app as parameter to extract config data,
