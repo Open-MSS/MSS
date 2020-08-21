@@ -275,8 +275,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.add_proj_dialog.setupUi(self.proj_diag)
         self.add_proj_dialog.f_content = None
         self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
-        # enable accepted only if path and description are not none
-        self.add_proj_dialog.buttonBox.setEnabled(False)
+        self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
         self.add_proj_dialog.path.textChanged.connect(self.check_and_enable_project_accept)
         self.add_proj_dialog.description.textChanged.connect(self.check_and_enable_project_accept)
         self.add_proj_dialog.browse.clicked.connect(self.set_exported_file)
@@ -284,7 +283,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def check_and_enable_project_accept(self):
         if self.add_proj_dialog.path.text() != "" and self.add_proj_dialog.description.toPlainText() != "":
-            self.add_proj_dialog.buttonBox.setEnabled(True)
+            self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
     def set_exported_file(self):
         file_path = get_open_filename(
