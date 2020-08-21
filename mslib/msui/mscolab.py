@@ -370,23 +370,26 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.help_dialog.show()
 
     def handle_delete_project(self):
-        ret = QtWidgets.QMessageBox.warning(
-            self, self.tr("Delete Project"),
-            self.tr(f'Do you want to delete project - "{self.active_project_name}"?'),
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-
-        if ret == QtWidgets.QMessageBox.Yes:
-            data = {
-                "token": self.token,
-                "p_id": self.active_pid
-            }
-            url = url_join(self.mscolab_server_url, 'delete_project')
-            try:
-                res = requests.post(url, data=data)
-                res.raise_for_status()
-            except requests.exceptions.RequestException as e:
-                logging.debug(e)
-                show_popup(self, "Error", "Some error occurred! Could not delete project.")
+        entered_project_name, ok = QtWidgets.QInputDialog.getText(
+            self,
+            self.tr('Delete Project'),
+            self.tr(f"You're about to delete the project - '{self.active_project_name}'. "
+                    f"Enter the project name to confirm: "))
+        if ok:
+            if entered_project_name == self.active_project_name:
+                data = {
+                    "token": self.token,
+                    "p_id": self.active_pid
+                }
+                url = url_join(self.mscolab_server_url, 'delete_project')
+                try:
+                    res = requests.post(url, data=data)
+                    res.raise_for_status()
+                except requests.exceptions.RequestException as e:
+                    logging.debug(e)
+                    show_popup(self, "Error", "Some error occurred! Could not delete project.")
+            else:
+                show_popup(self, "Error", "Entered project name did not match!")
 
     def open_chat_window(self):
         if self.active_pid is None:
