@@ -129,6 +129,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.version_window = None
         # Merge waypoints dialog
         self.merge_dialog = None
+        # Mscolab help dialog
+        self.help_dialog = None
         # set data dir, uri
         self.data_dir = data_dir
         self.mscolab_server_url = None
@@ -353,11 +355,18 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your passwords don\'t match')
 
+    def close_help_dialog(self):
+        self.help_dialog = None
+
     def open_help_dialog(self):
-        help_dialog = msc_help_dialog.Ui_mscolabHelpDialog()
-        dialog = QtWidgets.QDialog()
-        help_dialog.setupUi(dialog)
-        dialog.exec_()
+        if self.help_dialog is not None:
+            self.help_dialog.raise_()
+            self.help_dialog.activateWindow()
+        else:
+            self.help_dialog = MscolabHelpDialog(self)
+            self.help_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.help_dialog.viewCloses.connect(self.close_help_dialog)
+            self.help_dialog.show()
 
     def handle_delete_project(self):
         ret = QtWidgets.QMessageBox.warning(
@@ -752,7 +761,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def delete_account(self):
         w = QtWidgets.QWidget()
         qm = QtWidgets.QMessageBox
-        reply = qm.question(w, self.tr('Continue?'), self.tr('You cannot undo this operation!'), qm.Yes, qm.No)
+        reply = qm.question(w, self.tr('Continue?'),
+                            self.tr("You're about to delete your account. You cannot undo this operation!"),
+                            qm.Yes, qm.No)
         if reply == QtWidgets.QMessageBox.No:
             return
         data = {
@@ -910,6 +921,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.active_pid = None
             self.access_level = None
             self.active_project_name = None
+            self.helperTextLabel.setVisible(False)
             self.force_close_view_windows()
             self.close_external_windows()
             self.disable_project_buttons()
@@ -979,28 +991,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.identifier = identifier
 
     def closeEvent(self, event):
+        if self.help_dialog is not None:
+            self.help_dialog.close()
         self.clean_up_window()
         self.viewCloses.emit()
-
-
-class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
-    """Dialog to ask the user for username/password should this be
-       required by a WMS server.
-    """
-
-    def __init__(self, parent=None):
-        """
-        Arguments:
-        parent -- Qt widget that is parent to this widget.
-        """
-        super(MSCOLAB_AuthenticationDialog, self).__init__(parent)
-        self.setupUi(self)
-
-    def getAuthInfo(self):
-        """Return the entered username and password.
-        """
-        return (self.leUsername.text(),
-                self.lePassword.text())
 
 
 class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_dialog.Ui_MergeWaypointsDialog):
@@ -1070,3 +1064,36 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
 
     def get_values(self):
         return self.xml_content
+
+
+class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
+    """Dialog to ask the user for username/password should this be
+       required by a WMS server.
+    """
+
+    def __init__(self, parent=None):
+        """
+        Arguments:
+        parent -- Qt widget that is parent to this widget.
+        """
+        super(MSCOLAB_AuthenticationDialog, self).__init__(parent)
+        self.setupUi(self)
+
+    def getAuthInfo(self):
+        """Return the entered username and password.
+        """
+        return (self.leUsername.text(),
+                self.lePassword.text())
+
+
+class MscolabHelpDialog(QtWidgets.QDialog, msc_help_dialog.Ui_mscolabHelpDialog):
+
+    viewCloses = QtCore.pyqtSignal(name="viewCloses")
+
+    def __init__(self, parent=None):
+        super(MscolabHelpDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.okayBtn.clicked.connect(lambda: self.close())
+
+    def closeEvent(self, event):
+        self.viewCloses.emit()

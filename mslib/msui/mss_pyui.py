@@ -672,7 +672,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             return("Status : User Configuration '" + tail_filename + "' loaded")
 
 
-def main():
+def start_mss():
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
     except KeyError:
@@ -752,4 +752,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    start_mss()
