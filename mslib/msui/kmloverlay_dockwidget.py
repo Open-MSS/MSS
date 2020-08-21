@@ -131,7 +131,6 @@ class KMLPatch(object):
 
         :param polygon: fastkml object specifying a polygon
         """
-
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(polygon.exterior)
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))

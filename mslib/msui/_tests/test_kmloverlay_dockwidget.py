@@ -31,8 +31,6 @@ import sys
 import mock
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest, QtGui
 import mslib.msui.kmloverlay_dockwidget as kd
-import mslib.msui.topview as tv
-from mslib.msui.viewwindows import MSSMplViewWindow
 
 sample_path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples")
 
@@ -44,6 +42,7 @@ class Test_KmlOverlayDockWidget(object):
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])
+
         self.window = kd.KMLOverlayControlWidget(view=self.view)
         self.window.show()
         QtWidgets.QApplication.processEvents()
@@ -151,7 +150,7 @@ class Test_KmlOverlayDockWidget(object):
         self.select_file("output.kml")
         assert mockbox.critical.call_count == 0
         self.window.remove_all_files()
-        
+
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
     def test_customize_kml(self, mock_colour_dialog):
         """
@@ -193,7 +192,55 @@ class Test_KmlOverlayDockWidget(object):
         self.window.remove_file()
         assert self.window.listWidget.count() == 0
 
+    def test_check_uncheck(self):
+        """
+        Tests 'Displays plot on map when file is checked' and vice versa
+        """
+        self.select_file("line.kml")
+        assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Checked
+        assert len(self.window.patch.patches) == 1
+        self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
+        assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Unchecked
+        assert len(self.window.patch.patches) == 0
+        self.window.remove_all_files()
 
+    # Matplotlib Plots Testing
+    def test_kml_patches(self):
+        """
+        Tests the type of patches plotted by each Test Sample File
+        """
+        self.select_file("line.kml")
+        assert len(self.window.patch.patches) == 1  # 1 LineString Geometry Patch
+        self.window.remove_file()
 
+        self.select_file("folder.kml")
+        assert len(self.window.patch.patches) == 3  # 1 Point, 1 Polygon, 1 Text Patch
+        self.window.remove_file()
 
+        self.select_file("color.kml")
+        assert len(self.window.patch.patches) == 1  # 1 Polygon Patch
+        self.window.remove_file()
 
+        self.select_file("style.kml")
+        assert len(self.window.patch.patches) == 4  # 1 Point, 1 Text, 1 Polygon, 1 LineString Patch
+        self.window.remove_file()
+
+        self.select_file("features.kml")
+        assert len(self.window.patch.patches) == 17  # 3 Points, 11 LineStrings, 3 Polygons Patch
+        self.window.remove_file()
+
+        self.select_file("polygon_inner.kml")
+        assert len(self.window.patch.patches) == 5  # 5 Polygons Patch
+        self.window.remove_file()
+
+        self.select_file("Multilinestrings.kml")
+        assert len(self.window.patch.patches) == 10  # 10 LineStrings Patch
+        self.window.remove_file()
+
+        self.select_file("geometry_collection.kml")
+        assert len(self.window.patch.patches) == 3  # 1 Point, 1 Text, 1 Polygon Patch
+        self.window.remove_file()
+
+        self.select_file("World_Map.kml")
+        assert len(self.window.patch.patches) == 292  # 292 Polygons Patch
+        self.window.remove_file()
