@@ -326,7 +326,6 @@ def delete_project():
     return jsonify({"success": True, "message": "Project was successfully deleted!"})
 
 
-
 @APP.route('/update_project', methods=['POST'])
 @verify_user
 def update_project():

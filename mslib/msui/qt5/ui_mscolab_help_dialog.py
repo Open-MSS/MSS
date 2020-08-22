@@ -362,4 +362,4 @@ class Ui_mscolabHelpDialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.projectWorkTab), _translate("mscolabHelpDialog", "Working on a Project"))
         self.okayBtn.setText(_translate("mscolabHelpDialog", "Okay"))
 
-import resources_rc
+from . import resources_rc
