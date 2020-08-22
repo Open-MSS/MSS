@@ -34,7 +34,8 @@ from werkzeug.urls import url_join
 
 from mslib.mscolab.models import MessageType
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import Qt, QtCore, QtGui, QtWidgets, ui_mscolab_project_window as ui
+from mslib.msui.mss_qt import Qt, QtCore, QtGui, QtWidgets
+from mslib.msui.qt5 import ui_mscolab_project_window as ui
 from mslib.utils import config_loader, show_popup
 
 

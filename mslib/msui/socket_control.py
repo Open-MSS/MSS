@@ -43,10 +43,16 @@ class ConnectionManager(QtCore.QObject):
     signal_update_permission = QtCore.Signal(int, int, str, name="update permission")
     signal_revoke_permission = QtCore.Signal(int, int, name="revoke permission")
     signal_project_permissions_updated = QtCore.Signal(int, name="project permissions updated")
+    signal_project_deleted = QtCore.Signal(int, name="project deleted")
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
+        self.token = token
+        self.user = user
+        self.mscolab_server_url = mscolab_server_url
         self.sio = socketio.Client(reconnection_attempts=5)
+        self.sio.connect(self.mscolab_server_url)
+
         self.sio.on('file-changed', handler=self.handle_file_change)
         # on chat message recive
         self.sio.on('chat-message-client', handler=self.handle_incoming_message)
@@ -63,11 +69,10 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('revoke-permission', handler=self.handle_revoke_permission)
         # on updating project permissions in admin window
         self.sio.on('project-permissions-updated', handler=self.handle_project_permissions_updated)
-        self.mscolab_server_url = mscolab_server_url
-        self.sio.connect(self.mscolab_server_url)
+        # On Project Delete
+        self.sio.on('project-deleted', handler=self.handle_project_deleted)
+
         self.sio.emit('start', {'token': token})
-        self.token = token
-        self.user = user
 
     def handle_update_permission(self, message):
         """
@@ -120,6 +125,10 @@ class ConnectionManager(QtCore.QObject):
     def handle_file_change(self, message):
         message = json.loads(message)
         self.signal_reload.emit(message["p_id"])
+
+    def handle_project_deleted(self, message):
+        p_id = int(json.loads(message)["p_id"])
+        self.signal_project_deleted.emit(p_id)
 
     def handle_new_room(self, p_id):
         logging.debug("adding user to new room")

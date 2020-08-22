@@ -33,8 +33,9 @@ import logging
 import types
 import fs
 import requests
-from fs import open_fs, path
+from fs import open_fs
 from requests.auth import HTTPBasicAuth
+from werkzeug.urls import url_join
 
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui import flighttrack as ft
@@ -44,11 +45,12 @@ from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
 from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, get_open_filename
-from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
-from mslib.msui.mss_qt import ui_add_user_dialog as add_user_ui
-from mslib.msui.mss_qt import ui_mscolab_window as ui
-from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
-from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog
+from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
+from mslib.msui.qt5 import ui_add_project_dialog as add_project_ui
+from mslib.msui.qt5 import ui_add_user_dialog as add_user_ui
+from mslib.msui.qt5 import ui_mscolab_window as ui
+from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
+from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog
 from mslib.utils import config_loader
 from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 
@@ -83,6 +85,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.logoutButton.clicked.connect(self.logout)
         self.deleteAccountButton.clicked.connect(self.delete_account)
         self.disconnectMscolab.clicked.connect(self.disconnect_handler)
+        self.helpBtn.clicked.connect(self.open_help_dialog)
         # Project related signals
         self.addProject.clicked.connect(self.add_project_handler)
         self.importBtn.clicked.connect(self.handle_import)
@@ -93,6 +96,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.chatWindowBtn.clicked.connect(self.open_chat_window)
         self.adminWindowBtn.clicked.connect(self.open_admin_window)
         self.versionHistoryBtn.clicked.connect(self.open_version_history_window)
+        self.deleteProjectBtn.clicked.connect(self.handle_delete_project)
         # View related signals
         self.topview.clicked.connect(self.open_topview)
         self.sideview.clicked.connect(self.open_sideview)
@@ -125,6 +129,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.version_window = None
         # Merge waypoints dialog
         self.merge_dialog = None
+        # Mscolab help dialog
+        self.help_dialog = None
         # set data dir, uri
         self.data_dir = data_dir
         self.mscolab_server_url = None
@@ -133,7 +139,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
         self.disconnectMscolab.setEnabled(False)
-
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
@@ -145,9 +150,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
 
         # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings('mscolab', default_settings={'mscolab_url': None, 'auth': {}})
-        if self.settings['mscolab_url'] is not None:
-            add_mscolab_urls(self.url, [self.settings['mscolab_url']])
+        self.settings = \
+            load_settings_qsettings('mscolab',
+                                    default_settings={'recent_mscolab_urls': [], 'auth': {}, 'server_settings': {}})
+        if len(self.settings['recent_mscolab_urls']) > 0:
+            add_mscolab_urls(self.url, self.settings['recent_mscolab_urls'])
 
     def disconnect_handler(self):
         self.logout()
@@ -169,9 +176,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             r = requests.get(url)
             if r.text == "Mscolab server":
                 # delete mscolab http_auth settings for the url
+                if url not in self.settings["recent_mscolab_urls"]:
+                    self.settings["recent_mscolab_urls"].append(url)
                 if self.mscolab_server_url in self.settings["auth"].keys():
                     del self.settings["auth"][self.mscolab_server_url]
-                save_settings_qsettings('mscolab', self.settings)
                 # assign new url to self.mscolab_server_url
                 self.mscolab_server_url = url
                 self.status.setText("Status: connected")
@@ -180,19 +188,28 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.addUser.setEnabled(True)
                 self.disconnectMscolab.setEnabled(True)
                 self.connectMscolab.setEnabled(False)
-                self.settings["mscolab_url"] = url
+                if self.mscolab_server_url not in self.settings["server_settings"].keys():
+                    self.settings["server_settings"].update({self.mscolab_server_url: {}})
+                try:
+                    recent_email = self.settings["server_settings"][self.mscolab_server_url]["recent_email"]
+                except KeyError:
+                    recent_email = ""
+                self.emailid.setText(recent_email)
                 save_settings_qsettings('mscolab', self.settings)
-                return
+            else:
+                show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.ConnectionError:
-            logging.debug("mscolab server isn't active")
+            logging.debug("MSColab server isn't active")
+            show_popup(self, "Error", "MSColab server isn't active")
         except requests.exceptions.InvalidSchema:
             logging.debug("invalid schema of url")
+            show_popup(self, "Error", "Invalid Url Scheme!")
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
+            show_popup(self, "Error", "Invalid URL")
         except Exception as e:
             logging.debug("Error %s", str(e))
-        # inform user that url is invalid
-        self.show_info("Invalid url, please try again!")
+            show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
 
     def handle_import(self):
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "", "Flight track (*.ftml)")
@@ -209,10 +226,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.waypoints_model = model
         if self.workLocallyCheckBox.isChecked():
             self.waypoints_model.save_to_ftml(self.local_ftml_file)
-            self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         else:
             self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
-            self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
@@ -238,6 +255,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.chatWindowBtn.setEnabled(False)
         self.adminWindowBtn.setEnabled(False)
         self.versionHistoryBtn.setEnabled(False)
+        self.deleteProjectBtn.setEnabled(False)
+        self.helperTextLabel.setVisible(False)
 
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
@@ -256,8 +275,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.add_proj_dialog.setupUi(self.proj_diag)
         self.add_proj_dialog.f_content = None
         self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
-        # enable accepted only if path and description are not none
-        self.add_proj_dialog.buttonBox.setEnabled(False)
+        self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
         self.add_proj_dialog.path.textChanged.connect(self.check_and_enable_project_accept)
         self.add_proj_dialog.description.textChanged.connect(self.check_and_enable_project_accept)
         self.add_proj_dialog.browse.clicked.connect(self.set_exported_file)
@@ -265,22 +283,23 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def check_and_enable_project_accept(self):
         if self.add_proj_dialog.path.text() != "" and self.add_proj_dialog.description.toPlainText() != "":
-            self.add_proj_dialog.buttonBox.setEnabled(True)
+            self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
+        else:
+            self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
     def set_exported_file(self):
         file_path = get_open_filename(
             self, "Open ftml file", "", "Flight Track Files (*.ftml)")
         if file_path is not None:
-            f_name = path.basename(file_path)
-            f_dir = open_fs(path.dirname(file_path))
-            f_content = f_dir.readtext(f_name)
-            self.add_proj_dialog.f_content = f_content
-            self.add_proj_dialog.selectedFile.setText(f_name)
+            file_name = fs.path.basename(file_path)
+            with open_fs(fs.path.dirname(file_path)) as file_dir:
+                file_content = file_dir.readtext(file_name)
+            self.add_proj_dialog.f_content = file_content
+            self.add_proj_dialog.selectedFile.setText(file_name)
 
     def add_project(self):
         path = self.add_proj_dialog.path.text()
         description = self.add_proj_dialog.description.toPlainText()
-        # ToDo if path and description is null alert user
         if not path:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Path can\'t be empty')
@@ -336,6 +355,41 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your passwords don\'t match')
+
+    def close_help_dialog(self):
+        self.help_dialog = None
+
+    def open_help_dialog(self):
+        if self.help_dialog is not None:
+            self.help_dialog.raise_()
+            self.help_dialog.activateWindow()
+        else:
+            self.help_dialog = MscolabHelpDialog(self)
+            self.help_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.help_dialog.viewCloses.connect(self.close_help_dialog)
+            self.help_dialog.show()
+
+    def handle_delete_project(self):
+        entered_project_name, ok = QtWidgets.QInputDialog.getText(
+            self,
+            self.tr('Delete Project'),
+            self.tr(f"You're about to delete the project - '{self.active_project_name}'. "
+                    f"Enter the project name to confirm: "))
+        if ok:
+            if entered_project_name == self.active_project_name:
+                data = {
+                    "token": self.token,
+                    "p_id": self.active_pid
+                }
+                url = url_join(self.mscolab_server_url, 'delete_project')
+                try:
+                    res = requests.post(url, data=data)
+                    res.raise_for_status()
+                except requests.exceptions.RequestException as e:
+                    logging.debug(e)
+                    show_popup(self, "Error", "Some error occurred! Could not delete project.")
+            else:
+                show_popup(self, "Error", "Entered project name did not match!")
 
     def open_chat_window(self):
         if self.active_pid is None:
@@ -398,11 +452,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def create_local_project_file(self):
         with open_fs(self.data_dir) as mss_dir:
-            rel_file_path = path.join('local_mscolab_data', self.user['username'],
-                                      self.active_project_name, 'mscolab_project.ftml')
+            rel_file_path = fs.path.join('local_mscolab_data', self.user['username'],
+                                         self.active_project_name, 'mscolab_project.ftml')
             if mss_dir.exists(rel_file_path) is True:
                 return
-            mss_dir.makedirs(path.dirname(rel_file_path))
+            mss_dir.makedirs(fs.path.dirname(rel_file_path))
             server_data = self.waypoints_model.get_xml_content()
             mss_dir.writetext(rel_file_path, server_data)
 
@@ -411,24 +465,31 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if self.version_window is not None:
                 self.version_window.close()
             self.create_local_project_file()
-            self.local_ftml_file = path.join(self.data_dir, 'local_mscolab_data',
-                                             self.user['username'], self.active_project_name, 'mscolab_project.ftml')
+            self.local_ftml_file = fs.path.join(self.data_dir, 'local_mscolab_data',
+                                                self.user['username'], self.active_project_name, 'mscolab_project.ftml')
+            self.helperTextLabel.setText(
+                self.tr("Working On: Local File. Your changes are only available to you."
+                        "To save your changes with everyone, use the \"Save to Server\" button."))
             self.save_ft.setEnabled(True)
             self.fetch_ft.setEnabled(True)
             self.versionHistoryBtn.setEnabled(False)
             self.reload_local_wp()
+
         else:
             self.local_ftml_file = None
+            self.helperTextLabel.setText(
+                self.tr("Working On: Shared File. All your changes will be shared with everyone."
+                        "Turn on work locally to work on local flight track file"))
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
             if self.access_level == "admin" or self.access_level == "creator":
                 self.versionHistoryBtn.setEnabled(True)
             self.waypoints_model = None
             self.load_wps_from_server()
+        self.reload_view_windows()
 
     def authorize(self):
         auth = ('', '')
-        self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}})
         if self.mscolab_server_url in self.settings["auth"].keys():
             auth = self.settings["auth"][self.mscolab_server_url]
         # get mscolab /token http auth credentials from cache
@@ -457,10 +518,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             _json = json.loads(r.text)
             self.token = _json["token"]
             self.user = _json["user"]
-            self.label.setText("logged in as: " + _json["user"]["username"])
+            self.label.setText(self.tr(f"Welcome, {self.user['username']}"))
+            self.password.setText("")
             self.loggedInWidget.show()
             self.loginWidget.hide()
-
             self.add_projects()
 
             # create socket connection here
@@ -469,8 +530,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.conn.signal_new_permission.connect(self.render_new_permission)
             self.conn.signal_update_permission.connect(self.handle_update_permission)
             self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
+            self.conn.signal_project_deleted.connect(self.handle_project_deleted)
             # activate add project button here
             self.addProject.setEnabled(True)
+            self.settings['server_settings'][self.mscolab_server_url].update({"recent_email": emailid})
+            save_settings_qsettings('mscolab', self.settings)
 
     def add_projects(self):
         # add projects
@@ -550,6 +614,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # set active flightpath here
         self.load_wps_from_server()
         # enable project specific buttons
+        self.helperTextLabel.setVisible(True)
+        self.helperTextLabel.setText(self.tr("Working On: Shared File. All your changes will be shared with everyone."
+                                             "Turn on work locally to work on local flight track file"))
         self.importBtn.setEnabled(True)
         self.exportBtn.setEnabled(True)
         self.topview.setEnabled(True)
@@ -568,7 +635,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.adminWindowBtn.setEnabled(True)
             self.chatWindowBtn.setEnabled(True)
             self.versionHistoryBtn.setEnabled(True)
-
+        if self.access_level == "creator":
+            self.deleteProjectBtn.setEnabled(True)
+        else:
+            self.deleteProjectBtn.setEnabled(False)
         # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
@@ -596,7 +666,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             return
         xml_content = self.request_wps_from_server()
         self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
-        self.waypoints_model.dataChanged.connect(self.handle_mscolab_autosave)
+        self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
     def open_topview(self):
         # showing dummy info dialog
@@ -695,7 +765,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def delete_account(self):
         w = QtWidgets.QWidget()
         qm = QtWidgets.QMessageBox
-        reply = qm.question(w, 'Continue?', 'You cannot undo this operation!', qm.Yes, qm.No)
+        reply = qm.question(w, self.tr('Continue?'),
+                            self.tr("You're about to delete your account. You cannot undo this operation!"),
+                            qm.Yes, qm.No)
         if reply == QtWidgets.QMessageBox.No:
             return
         data = {
@@ -742,10 +814,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
 
-    def handle_mscolab_autosave(self, comment=None):
-        xml_content = self.waypoints_model.get_xml_content()
-        self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
-
     def save_wp_mscolab(self, comment=None):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
@@ -756,13 +824,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                 self.reload_view_windows()
                 show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
         self.merge_dialog = None
 
-    def handle_local_data_changed(self):
-        self.waypoints_model.save_to_ftml(self.local_ftml_file)
+    def handle_waypoints_changed(self):
+        if self.workLocallyCheckBox.isChecked():
+            self.waypoints_model.save_to_ftml(self.local_ftml_file)
+        else:
+            xml_content = self.waypoints_model.get_xml_content()
+            self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
 
     def reload_view_windows(self):
         for window in self.active_windows:
@@ -772,7 +844,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
-        self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+        self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
     def fetch_wp_mscolab(self):
@@ -784,7 +856,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if xml_content is not None:
                 self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_local_data_changed)
+                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                 self.reload_view_windows()
                 show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
         self.merge_dialog = None
@@ -848,28 +920,31 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.chat_window is not None:
             self.chat_window.load_users()
 
+    def delete_project_from_list(self, p_id):
+        if self.active_pid == p_id:
+            self.active_pid = None
+            self.access_level = None
+            self.active_project_name = None
+            self.helperTextLabel.setVisible(False)
+            self.force_close_view_windows()
+            self.close_external_windows()
+            self.disable_project_buttons()
+
+        # Update project list
+        remove_item = None
+        for i in range(self.listProjects.count()):
+            item = self.listProjects.item(i)
+            if item.p_id == p_id:
+                remove_item = item
+        if remove_item is not None:
+            self.listProjects.takeItem(self.listProjects.row(remove_item))
+        return remove_item.text().split(' - ')[0]
+
     @QtCore.Slot(int, int)
     def handle_revoke_permission(self, p_id, u_id):
         if u_id == self.user["id"]:
-            # Check if the user has opened any windows of revoked project and close them
-            if self.active_pid == p_id:
-                self.force_close_view_windows()
-                self.close_external_windows()
-                self.active_pid = None
-                self.access_level = None
-                self.active_project_name = None
-                self.disable_project_buttons()
-
-            # Update project list
-            remove_item = None
-            for i in range(self.listProjects.count()):
-                item = self.listProjects.item(i)
-                if item.p_id == p_id:
-                    remove_item = item
-            if remove_item is not None:
-                self.listProjects.takeItem(self.listProjects.row(remove_item))
-            project_name = remove_item.text().split(' - ')[0]
-            show_popup(self, "Permission Revoked", f"Your access to project - {project_name} was revoked!", icon=1)
+            project_name = self.delete_project_from_list(p_id)
+            show_popup(self, "Permission Revoked", f'Your access to project - "{project_name}" was revoked!', icon=1)
 
     @QtCore.Slot()
     def reload_windows_slot(self):
@@ -899,6 +974,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.chat_window.load_users()
 
     @QtCore.Slot(int)
+    def handle_project_deleted(self, p_id):
+        project_name = self.delete_project_from_list(p_id)
+        show_popup(self, "Success", f'Project "{project_name}" was deleted!', icon=1)
+
+    @QtCore.Slot(int)
     def reload_window(self, value):
         if self.active_pid != value or self.workLocallyCheckBox.isChecked():
             return
@@ -915,29 +995,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.identifier = identifier
 
     def closeEvent(self, event):
-        if self.conn:
-            self.conn.disconnect()
+        if self.help_dialog is not None:
+            self.help_dialog.close()
+        self.clean_up_window()
         self.viewCloses.emit()
-
-
-class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
-    """Dialog to ask the user for username/password should this be
-       required by a WMS server.
-    """
-
-    def __init__(self, parent=None):
-        """
-        Arguments:
-        parent -- Qt widget that is parent to this widget.
-        """
-        super(MSCOLAB_AuthenticationDialog, self).__init__(parent)
-        self.setupUi(self)
-
-    def getAuthInfo(self):
-        """Return the entered username and password.
-        """
-        return (self.leUsername.text(),
-                self.lePassword.text())
 
 
 class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_dialog.Ui_MergeWaypointsDialog):
@@ -973,11 +1034,12 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
         )
 
         if fetch is True:
+            self.setWindowTitle(self.tr("Fetch Waypoints From Server"))
             btn_size_policy = self.overwriteBtn.sizePolicy()
             btn_size_policy.setRetainSizeWhenHidden(True)
             self.overwriteBtn.setSizePolicy(btn_size_policy)
             self.overwriteBtn.setVisible(False)
-            self.saveBtn.setText("Save Waypoints To Local File")
+            self.saveBtn.setText(self.tr("Save Waypoints To Local File"))
 
     def handle_selection(self, selected, deselected, wp_model, wp_dict):
         len_selected = len(selected.indexes())
@@ -1006,3 +1068,36 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
 
     def get_values(self):
         return self.xml_content
+
+
+class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthenticationDialog):
+    """Dialog to ask the user for username/password should this be
+       required by a WMS server.
+    """
+
+    def __init__(self, parent=None):
+        """
+        Arguments:
+        parent -- Qt widget that is parent to this widget.
+        """
+        super(MSCOLAB_AuthenticationDialog, self).__init__(parent)
+        self.setupUi(self)
+
+    def getAuthInfo(self):
+        """Return the entered username and password.
+        """
+        return (self.leUsername.text(),
+                self.lePassword.text())
+
+
+class MscolabHelpDialog(QtWidgets.QDialog, msc_help_dialog.Ui_mscolabHelpDialog):
+
+    viewCloses = QtCore.pyqtSignal(name="viewCloses")
+
+    def __init__(self, parent=None):
+        super(MscolabHelpDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.okayBtn.clicked.connect(lambda: self.close())
+
+    def closeEvent(self, event):
+        self.viewCloses.emit()

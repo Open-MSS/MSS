@@ -316,9 +316,14 @@ def get_projects():
 @APP.route('/delete_project', methods=["POST"])
 @verify_user
 def delete_project():
-    p_id = request.form.get('p_id', None)
+    p_id = int(request.form.get('p_id', 0))
     user = g.user
-    return str(fm.delete_file(int(p_id), user))
+    success = fm.delete_file(p_id, user)
+    if success is False:
+        return jsonify({"success": False, "message": "You don't have access for this operation!"})
+
+    sockio.sm.emit_project_delete(p_id)
+    return jsonify({"success": True, "message": "Project was successfully deleted!"})
 
 
 @APP.route('/update_project', methods=['POST'])

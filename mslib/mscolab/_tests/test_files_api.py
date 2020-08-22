@@ -256,10 +256,8 @@ class Test_Files(object):
             "p_id": p_id
         }
         url = url_join(MSCOLAB_URL_TEST, 'delete_project')
-        r = requests.post(url, data=data)
-        assert r.text == "True"
-        r = requests.post(url, data=data)
-        assert r.text == "False"
+        res = requests.post(url, data=data).json()
+        assert res["success"] is True
 
     def test_change(self):
         """
