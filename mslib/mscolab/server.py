@@ -37,6 +37,7 @@ from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.demodata import create_files
 from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import get_message_dict
@@ -47,6 +48,7 @@ from mslib.utils import conditional_decorator
 APP = Flask(__name__, static_folder=mscolab_settings.UPLOAD_FOLDER)
 APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
 APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
@@ -458,13 +460,11 @@ def import_permissions():
 
 
 def start_server(app, sockio, cm, fm, port=8083):
+    create_files()
     sockio.run(app, port=port)
 
 
 def main():
-    from mslib.mscolab.demodata import create_data
-    # create data if not created
-    create_data()
     start_server(_app, sockio, cm, fm)
 
 

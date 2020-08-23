@@ -33,7 +33,6 @@ import mock
 
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.demodata import create_test_files
 from mslib.mscolab.models import Permission, User
 from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.flighttrack import WaypointsTableModel
@@ -60,7 +59,6 @@ class Test_Mscolab(object):
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
-        create_test_files()
 
     def teardown(self):
         # to disconnect connections, and clear token
