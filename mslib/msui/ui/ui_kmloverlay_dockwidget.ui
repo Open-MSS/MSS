@@ -91,6 +91,13 @@
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QLabel" name="labelStatusBar">
+     <property name="text">
+      <string>Status : </string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

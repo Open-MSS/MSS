@@ -49,6 +49,9 @@ class Ui_KMLOverlayDockWidget(object):
         self.pushButton_merge = QtWidgets.QPushButton(KMLOverlayDockWidget)
         self.pushButton_merge.setObjectName("pushButton_merge")
         self.verticalLayout_2.addWidget(self.pushButton_merge)
+        self.labelStatusBar = QtWidgets.QLabel(KMLOverlayDockWidget)
+        self.labelStatusBar.setObjectName("labelStatusBar")
+        self.verticalLayout_2.addWidget(self.labelStatusBar)
 
         self.retranslateUi(KMLOverlayDockWidget)
         QtCore.QMetaObject.connectSlotsByName(KMLOverlayDockWidget)
@@ -65,4 +68,5 @@ class Ui_KMLOverlayDockWidget(object):
         self.pushButton_remove_all.setText(_translate("KMLOverlayDockWidget", "Remove All"))
         self.pushButton_merge.setToolTip(_translate("KMLOverlayDockWidget", "Merge multiple KML Files into one"))
         self.pushButton_merge.setText(_translate("KMLOverlayDockWidget", "Merge and Export KML File"))
+        self.labelStatusBar.setText(_translate("KMLOverlayDockWidget", "Status : "))
 

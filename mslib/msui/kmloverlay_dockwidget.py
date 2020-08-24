@@ -26,7 +26,7 @@
 """
 
 import copy
-from fs import open_fs
+import fs
 import logging
 from fastkml import kml, geometry, styles
 from lxml import etree as et, objectify
@@ -288,6 +288,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.pushButton_remove.clicked.connect(self.remove_file)
         self.pushButton_remove_all.clicked.connect(self.remove_all_files)
         self.pushButton_merge.clicked.connect(self.merge_file)
+        self.labelStatusBar.setText("Status: Click on Add KML File to get started.")
 
         self.dialog = CustomizeKMLWidget(self)  # create object of dialog UI Box
         self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
@@ -434,6 +435,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         filenames = get_open_filenames(
             self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
+        if not filenames:
+            return
         self.select_file(filenames)
 
     def select_file(self, filenames):
@@ -453,6 +456,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.create_list_item(text)
             else:
                 logging.info("%s file already added", text)
+        self.labelStatusBar.setText("Status: KML Files added")
         self.load_file()
 
     def create_list_item(self, text):
@@ -465,13 +469,16 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.listWidget.addItem(item)
 
     def remove_file(self):  # removes checked files
+        counter = 0
         for index in range(self.listWidget.count()):  # list of files in ListWidget
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
+                counter = counter + 1
                 self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
                 del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
+        self.labelStatusBar.setText("Status: " + str(counter) + " KML Files removed")
         # self.load_file() # not sure to keep this or not, works either ways
 
     def remove_all_files(self):  # removes all files (checked or unchecked both)
@@ -480,6 +487,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.dict_files[filename]["patch"].remove()  # removes patch object
         self.dict_files = {}  # initialize dictionary again
         self.patch = None  # initialize self.patch to None
+        self.labelStatusBar.setText("Status: All KML Files removed. Add a KML File to get started.")
 
     def load_file(self):
         """
@@ -495,7 +503,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                _fs = open_fs(_dirname)
+                _fs = fs.open_fs(_dirname)
                 try:
                     with _fs.open(_name, 'r') as kmlf:
                         self.kml = kml.KML()  # creates fastkml object
@@ -519,14 +527,14 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
     def merge_file(self):
         if self.patch is None:
-            logging.info("No KML File Found. Add Files to Merge.")
+            self.labelStatusBar.setText("Status: No KML File Found. Add Files to Merge.")
             return
         element = []
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                _fs = open_fs(_dirname)
+                _fs = fs.open_fs(_dirname)
                 with _fs.open(_name, 'r') as kmlf:
                     tree = et.parse(kmlf)
                     root = tree.getroot()
@@ -547,6 +555,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
         with _fs.open('output.kml', 'w') as output:
             output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+        path = fs.path.join(self.directory_location, "..")
+        self.labelStatusBar.setText("Status: Merged File 'output.kml' stored at " + path)
 
     def remove_ns(self, root):
         """
