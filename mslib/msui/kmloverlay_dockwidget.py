@@ -72,6 +72,7 @@ class KMLPatch(object):
         if name is not None:
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
+                bbox=dict(boxstyle="round, pad=0.15", fc="w"),
                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
 
     def add_line(self, line, style, name):
@@ -94,7 +95,7 @@ class KMLPatch(object):
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(polygon.geometry.exterior)
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
- 
+
         # Interior Rings
         for interior in list(polygon.geometry.interiors):
             x1, y1 = self.compute_xy(interior)
@@ -113,7 +114,7 @@ class KMLPatch(object):
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
-   
+
     def add_multiline(self, line, style, name):
         """
         Plot KML LineStrings in a MultiGeometry
@@ -130,7 +131,6 @@ class KMLPatch(object):
 
         :param polygon: fastkml object specifying a polygon
         """
-
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(polygon.exterior)
         self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
@@ -297,10 +297,25 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
-            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (0, 0, 0, 1)})  # initial settings
+            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (1, 1, 1, 1),
+                                "saved_files": {}})  # initial settings
 
         self.directory_location = settings["filename"]
         self.dialog.dsb_linewidth.setValue(settings["linewidth"])
+
+        # Restore previously opened files
+        if settings["saved_files"] is not None:
+            delete_files = []  # list to store non-existing files
+            self.dict_files = settings["saved_files"]
+            for file in self.dict_files:
+                if os.path.isfile(file) is True:
+                    self.create_list_item(file)
+                else:
+                    delete_files.append(file)  # add non-existent files to list
+                    logging.info(file + " does not exist in the directory anymore")
+            for file in delete_files:
+                del self.dict_files[file]  # remove non-existent files from dictionary
+            self.load_file()
 
         palette = QtGui.QPalette(self.dialog.pushButton_colour.palette())
         colour = QtGui.QColor()
@@ -325,10 +340,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.dialog.show()
 
     def __del__(self):  # destructor
+        for x in self.dict_files:
+            self.dict_files[x]["patch"] = None  # patch object has to be deleted
         settings = {
             "filename": str(self.directory_location),
             "linewidth": self.dialog.dsb_linewidth.value(),
-            "colour": self.get_color()
+            "colour": self.get_color(),
+            "saved_files": self.dict_files
         }
         save_settings_qsettings(self.settings_tag, settings)
 
@@ -419,7 +437,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.select_file(filenames)
 
     def select_file(self, filenames):
-        """Initializes selected file/ files and adds List Item UI Element
+        """Initializes selected file/ files
         """
         for filename in filenames:
             if filename is None:
@@ -431,15 +449,20 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.dict_files[text]["patch"] = None
                 self.dict_files[text]["color"] = self.get_color()
                 self.dict_files[text]["linewidth"] = self.dialog.dsb_linewidth.value()
-                # PyQt5 method : Add items in list and add checkbox functionality
-                item = QtWidgets.QListWidgetItem(text)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                item.setCheckState(QtCore.Qt.Checked)
-                self.listWidget.addItem(item)
                 self.directory_location = text  # Saves location of directory to open
+                self.create_list_item(text)
             else:
                 logging.info("%s file already added", text)
         self.load_file()
+
+    def create_list_item(self, text):
+        """
+        PyQt5 method : Add items in list and add checkbox functionality
+        """
+        item = QtWidgets.QListWidgetItem(text)
+        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+        item.setCheckState(QtCore.Qt.Checked)
+        self.listWidget.addItem(item)
 
     def remove_file(self):  # removes checked files
         for index in range(self.listWidget.count()):  # list of files in ListWidget
@@ -492,7 +515,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
-        logging.info(self.dict_files)
+        logging.debug(self.dict_files)
 
     def merge_file(self):
         if self.patch is None:
@@ -529,7 +552,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         Removes namespace prefixes, passed on during deepcopy
         """
-        try: 
+        try:
             for elem in root.getiterator():
                 elem.tag = et.QName(elem).localname
             et.cleanup_namespaces(root)
@@ -539,10 +562,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     continue
                 i = elem.tag.find('}')
                 if i >= 0:
-                    elem.tag = elem.tag[i+1:]
+                    elem.tag = elem.tag[i + 1:]
             objectify.deannotate(root, cleanup_namespaces=True)
 
-    
+
 class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDialog):
     """
     This class provides the interface for customizing individual KML Files with respect to
