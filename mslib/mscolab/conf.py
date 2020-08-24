@@ -43,7 +43,7 @@ except ImportError as ex:
         # mscolab data directory
         MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 
-        # MYSQL: "mysql://username:password@localhost/db_name"
+        # MYSQL CONNECTION STRING: "mysql+pymysql://<username>:<password>@<host>:<port>/<db_name>?charset=utf8mb4"
         SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
 
         # mscolab file upload settings
