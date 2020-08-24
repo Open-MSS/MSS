@@ -298,7 +298,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
-            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (1, 1, 1, 1),
+            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (0, 0, 0, 1),
                                 "saved_files": {}})  # initial settings
 
         self.directory_location = settings["filename"]
