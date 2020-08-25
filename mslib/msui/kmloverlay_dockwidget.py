@@ -520,7 +520,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
 
                 except (IOError, et.XMLSyntaxError) as ex:
-                    logging.error("KML Overlay - %s: %s", type(ex), ex)
+                    logging.debug("KML Overlay - %s: %s", type(ex), ex)
+                    self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
+                                                " is either an invalid KML File or has an error. Check Terminal for Traceback Error.")
+                    del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
+                    self.listWidget.takeItem(index)  # remove file item from ListWidget
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
 
