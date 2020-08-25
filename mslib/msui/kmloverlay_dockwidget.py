@@ -553,24 +553,24 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                             _dirname, _name = os.path.split(self.listWidget.item(index).text())
                             _fs = fs.open_fs(_dirname)
                             with _fs.open(_name, 'r') as kmlf:
-                                tree = et.parse(kmlf)
-                                root = tree.getroot()
-                                self.remove_ns(root)
+                                tree = et.parse(kmlf)  # parse kml file
+                                root = tree.getroot()  # get the root of the file
+                                self.remove_ns(root)  # removes <kml> and </kml>
                                 element.append(copy.deepcopy(root[0]))
                                 if index == 0:
                                     super_root = et.Element("Folder")
-                                    super_root.insert(0, element[0])
+                                    super_root.insert(0, element[0])  # adds <Folder> at the top of stripped KML File
                                     continue
                                 sub_root = et.Element("Folder")
                                 sub_root.insert(0, element[index])
                                 element[0].append(sub_root)
 
                     logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
-                    newkml = et.Element("kml")
-                    newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'
+                    newkml = et.Element("kml")  # create new <kml> element
+                    newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'  # add xmlns attribute
                     newkml.insert(0, super_root)
                     logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-                    with _fs.open(file_name, 'w') as output:
+                    with _fs.open(file_name, 'w') as output:  # write file
                         output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
                     path = fs.path.join(self.directory_location, "..")
                     self.labelStatusBar.setText("Status: Merged File " + file_name + " stored at " + path)
