@@ -24,18 +24,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import fs
 from flask import Flask
+import git
 
-from mslib.mscolab.models import User, db, Permission, Project
 from mslib.mscolab.conf import mscolab_settings
-# set the project root directory as the static folder
+from mslib.mscolab.models import User, db, Permission, Project
+
 app = Flask(__name__, static_url_path='')
 
 
 def seed_data(db_uri):
-
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
 
     with app.app_context():
@@ -205,10 +206,13 @@ def seed_data(db_uri):
         db.session.commit()
         db.session.close()
 
-
-def create_tables(db_uri):
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
-    db.init_app(app)
-    with app.app_context():
-        db.create_all()
+    with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
+        file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
+        for file_path in file_paths:
+            file_dir.makedir(file_path)
+            file_dir.writetext(f'{file_path}/main.ftml', mscolab_settings.STUB_CODE)
+            # initiate git
+            r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', file_path))
+            r.git.clear_cache()
+            r.index.add(['main.ftml'])
+            r.index.commit("initial commit")

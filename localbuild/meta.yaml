@@ -60,6 +60,7 @@ requirements:
     - gitpython
     - git
     - psycopg2
+    - PyMySQL >=0.9.3
     - validate_email
     - multidict
     - pint

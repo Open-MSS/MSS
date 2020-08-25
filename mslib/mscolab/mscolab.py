@@ -31,7 +31,6 @@ import sys
 
 from mslib import __version__
 from mslib.utils import setup_logging
-from mslib.mscolab.demodata import create_data
 from mslib.mscolab.server import initialize_managers, start_server, APP
 
 
@@ -58,8 +57,6 @@ def main():
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
     logging.info("Launching user interface...")
 
-    # create data if not created
-    create_data()
     app, sockio, cm, fm = initialize_managers(APP)
     start_server(app, sockio, cm, fm)
 
