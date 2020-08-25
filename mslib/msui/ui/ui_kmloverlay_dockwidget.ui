@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>545</width>
-    <height>234</height>
+    <height>233</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,12 +45,22 @@
         <enum>QLayout::SetMinimumSize</enum>
        </property>
        <item>
+        <widget class="QPushButton" name="pushButton_select_all">
+         <property name="toolTip">
+          <string>Selects (Checks) All the Files </string>
+         </property>
+         <property name="text">
+          <string>Select All Files</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="btSelectFile">
          <property name="toolTip">
           <string>Add multiple KML Files</string>
          </property>
          <property name="text">
-          <string>Add KML File</string>
+          <string>Add KML Files</string>
          </property>
         </widget>
        </item>
@@ -60,17 +70,17 @@
           <string>Remove Checked KML Files </string>
          </property>
          <property name="text">
-          <string>Remove</string>
+          <string>Remove Files</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_remove_all">
+        <widget class="QPushButton" name="pushButton_unselect_all">
          <property name="toolTip">
-          <string>Remove All KML Files</string>
+          <string>Unselects (unchecks) all Files</string>
          </property>
          <property name="text">
-          <string>Remove All</string>
+          <string>Unselect All Files</string>
          </property>
         </widget>
        </item>

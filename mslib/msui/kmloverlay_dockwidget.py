@@ -286,9 +286,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         # Connect slots and signals.
         self.btSelectFile.clicked.connect(self.get_file)
         self.pushButton_remove.clicked.connect(self.remove_file)
-        self.pushButton_remove_all.clicked.connect(self.remove_all_files)
+        self.pushButton_select_all.clicked.connect(self.select_all)
+        self.pushButton_unselect_all.clicked.connect(self.unselect_all)
         self.pushButton_merge.clicked.connect(self.merge_file)
-        self.labelStatusBar.setText("Status: Click on Add KML File to get started.")
+        self.labelStatusBar.setText("Status: Click on Add KML Files to get started.")
 
         self.dialog = CustomizeKMLWidget(self)  # create object of dialog UI Box
         self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
@@ -468,26 +469,32 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         item.setCheckState(QtCore.Qt.Checked)
         self.listWidget.addItem(item)
 
+    def select_all(self):  # selects all files
+        if self.listWidget.count() == 0:
+            self.labelStatusBar.setText("Status: No Files to select. Click on Add KML Files to get started.")
+            return
+        for index in range(self.listWidget.count()):
+            self.listWidget.item(index).setCheckState(QtCore.Qt.Checked)
+        self.labelStatusBar.setText("Status: All Files selected")
+
+    def unselect_all(self):  # unselects all files
+        if self.listWidget.count() == 0:
+            self.labelStatusBar.setText("Status: No Files to unselect. Click on Add KML Files to get started.")
+            return
+        for index in range(self.listWidget.count()):
+            self.listWidget.item(index).setCheckState(QtCore.Qt.Unchecked)
+        self.labelStatusBar.setText("Status: All Files unselected")
+
     def remove_file(self):  # removes checked files
-        counter = 0
         for index in range(self.listWidget.count()):  # list of files in ListWidget
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
-                counter = counter + 1
                 self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
                 del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
-        self.labelStatusBar.setText("Status: " + str(counter) + " KML Files removed")
+        self.labelStatusBar.setText("Status: KML Files removed")
         # self.load_file() # not sure to keep this or not, works either ways
-
-    def remove_all_files(self):  # removes all files (checked or unchecked both)
-        self.listWidget.clear()  # clears List of files in ListWidget
-        for filename in self.dict_files:
-            self.dict_files[filename]["patch"].remove()  # removes patch object
-        self.dict_files = {}  # initialize dictionary again
-        self.patch = None  # initialize self.patch to None
-        self.labelStatusBar.setText("Status: All KML Files removed. Add a KML File to get started.")
 
     def load_file(self):
         """
