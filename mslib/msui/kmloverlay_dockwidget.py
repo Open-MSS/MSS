@@ -33,7 +33,7 @@ from lxml import etree as et, objectify
 import os
 from matplotlib import patheffects
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filenames
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filenames, get_save_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mss_qt import ui_customize_kml
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
@@ -434,7 +434,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
         filenames = get_open_filenames(
-            self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
+            self, "Open KML File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
         if not filenames:
             return
         self.select_file(filenames)
@@ -529,34 +529,47 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if self.patch is None:
             self.labelStatusBar.setText("Status: No KML File Found. Add Files to Merge.")
             return
-        element = []
-        for index in range(self.listWidget.count()):
-            if hasattr(self.listWidget.item(index), "checkState") and (
-                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                _fs = fs.open_fs(_dirname)
-                with _fs.open(_name, 'r') as kmlf:
-                    tree = et.parse(kmlf)
-                    root = tree.getroot()
-                    self.remove_ns(root)
-                    element.append(copy.deepcopy(root[0]))
-                    if index == 0:
-                        super_root = et.Element("Folder")
-                        super_root.insert(0, element[0])
-                        continue
-                    sub_root = et.Element("Folder")
-                    sub_root.insert(0, element[index])
-                    element[0].append(sub_root)
+        default_filename = fs.path.join(self.directory_location, "merged_file" + ".kml")
+        filename = get_save_filename(self, "Merge KML Files", default_filename, "KML Files (*.kml)")
+        if filename:
+            _dirname, file_name = fs.path.split(filename)
+            if filename.endswith('.kml'):
+                try:
+                    element = []
+                    for index in range(self.listWidget.count()):
+                        if hasattr(self.listWidget.item(index), "checkState") and (
+                            self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                            _dirname, _name = os.path.split(self.listWidget.item(index).text())
+                            _fs = fs.open_fs(_dirname)
+                            with _fs.open(_name, 'r') as kmlf:
+                                tree = et.parse(kmlf)
+                                root = tree.getroot()
+                                self.remove_ns(root)
+                                element.append(copy.deepcopy(root[0]))
+                                if index == 0:
+                                    super_root = et.Element("Folder")
+                                    super_root.insert(0, element[0])
+                                    continue
+                                sub_root = et.Element("Folder")
+                                sub_root.insert(0, element[index])
+                                element[0].append(sub_root)
 
-        logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
-        newkml = et.Element("kml")
-        newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'
-        newkml.insert(0, super_root)
-        logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-        with _fs.open('output.kml', 'w') as output:
-            output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-        path = fs.path.join(self.directory_location, "..")
-        self.labelStatusBar.setText("Status: Merged File 'output.kml' stored at " + path)
+                    logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
+                    newkml = et.Element("kml")
+                    newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'
+                    newkml.insert(0, super_root)
+                    logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+                    with _fs.open(file_name, 'w') as output:
+                        output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+                    path = fs.path.join(self.directory_location, "..")
+                    self.labelStatusBar.setText("Status: Merged File " + file_name + " stored at " + path)
+                except (OSError, IOError) as ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("Problem while merging KML Files:"),
+                        self.tr("ERROR: {} {}".format(type(ex), ex)))
+            else:
+                QtWidgets.QMessageBox.warning(self, "Merge KML Files",
+                                              "File extension is not '.kml'!\n{:}".format(filename))
 
     def remove_ns(self, root):
         """
