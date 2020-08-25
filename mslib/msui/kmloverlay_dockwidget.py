@@ -537,33 +537,42 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         logging.debug(self.dict_files)
 
     def merge_file(self):
-        if self.patch is None:
-            self.labelStatusBar.setText("Status: No KML File Found. Add Files to Merge.")
+        checked_files = []  # list of indices of checked files
+        counter = 0
+        for count in range(self.listWidget.count()):
+            if hasattr(self.listWidget.item(count), "checkState") and (
+                self.listWidget.item(count).checkState() == QtCore.Qt.Checked):
+                checked_files.append(count)
+                counter = counter + 1
+        if counter == 0:
+            self.labelStatusBar.setText("Status: No KML File Found or Selected. Add or Select Files to Merge.")
             return
+
         default_filename = fs.path.join(self.directory_location, "merged_file" + ".kml")
         filename = get_save_filename(self, "Merge KML Files", default_filename, "KML Files (*.kml)")
         if filename:
-            _dirname, file_name = fs.path.split(filename)
+            _dir_name, file_name = fs.path.split(filename)
             if filename.endswith('.kml'):
                 try:
                     element = []
-                    for index in range(self.listWidget.count()):
-                        if hasattr(self.listWidget.item(index), "checkState") and (
-                            self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                            _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                            _fs = fs.open_fs(_dirname)
-                            with _fs.open(_name, 'r') as kmlf:
-                                tree = et.parse(kmlf)  # parse kml file
-                                root = tree.getroot()  # get the root of the file
-                                self.remove_ns(root)  # removes <kml> and </kml>
-                                element.append(copy.deepcopy(root[0]))
-                                if index == 0:
-                                    super_root = et.Element("Folder")
-                                    super_root.insert(0, element[0])  # adds <Folder> at the top of stripped KML File
-                                    continue
-                                sub_root = et.Element("Folder")
-                                sub_root.insert(0, element[index])
-                                element[0].append(sub_root)
+                    count = 0  # used to count elements in order; see usage below
+                    for index in checked_files:  # index is the indices of checked files
+                        _dirname, _name = os.path.split(self.listWidget.item(index).text())
+                        _fs = fs.open_fs(_dirname)
+                        with _fs.open(_name, 'r') as kmlf:
+                            tree = et.parse(kmlf)  # parse kml file
+                            root = tree.getroot()  # get the root of the file
+                            self.remove_ns(root)  # removes <kml> and </kml>
+                            element.append(copy.deepcopy(root[0]))
+                            if index == checked_files[0]:  # first checked file becomes the top kml file, everything happens on this base
+                                super_root = et.Element("Folder")
+                                super_root.insert(0, element[0])  # adds <Folder> at the top of stripped KML File
+                                count = count + 1
+                                continue  # since the super root cannot be its own sub root
+                            sub_root = et.Element("Folder")
+                            sub_root.insert(0, element[count])  # count used since its consecutive, not index
+                            element[0].append(sub_root)
+                            count = count + 1
 
                     logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
                     newkml = et.Element("kml")  # create new <kml> element
