@@ -45,7 +45,7 @@ you left it! KML Overlay supports **Saving Open files** so that you can jump bac
 Test Samples
 ------------
 
-Curious to test out some KML Files? We have a sample collection ready just for this!
+Curious to test out some KML Files? We have a vibrant sample collection ready just for this!
 
 Example KML Files are located at : 
 
