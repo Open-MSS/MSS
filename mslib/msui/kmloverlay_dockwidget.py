@@ -494,6 +494,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
         self.labelStatusBar.setText("Status: KML Files removed")
+        if self.listWidget.count() == 0:  # implies no files in ListWidget
+            self.patch = None
         # self.load_file() # not sure to keep this or not, works either ways
 
     def load_file(self):
