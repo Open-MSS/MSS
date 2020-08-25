@@ -24,7 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import traceback
 import copy
 import fs
 import logging
@@ -523,6 +523,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+
+                except Exception:  # file crashing
+                    traceback.print_exc()
+                    self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
+                                                " is either an invalid KML File or has an error. Check Terminal for Traceback Error.")
+                    del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
+                    self.listWidget.takeItem(index)  # remove file item from ListWidget
         logging.debug(self.dict_files)
 
     def merge_file(self):
