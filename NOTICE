@@ -51,3 +51,21 @@ mslib/netCDF4tools.py contains substantial parts taken from the
 netcdf4-python library -- Python/numpy interface to netCDF
 
 https://code.google.com/p/netcdf4-python/
+
+********************************************************************************
+
+Below are links from where certain KML Files have been obtained, which are used 
+as Test Samples in MSS (mss/docs/samples/kml/):
+
+World_Map.kml
+-------------
+
+Link : https://data.nasa.gov/dataset/World-Map/7zbq-j77a
+(Open Data - NASA)
+
+Other Test Samples
+
+Link : https://github.com/googlearchive/kml-samples
+(Google Archive KML Samples)
+
+
