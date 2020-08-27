@@ -78,7 +78,6 @@ Setup demodata
 :ref:`demodata` is provided by executing::
 
    $(mssdev) python mslib/mswms/demodata.py
-   $(mssdev) python mslib/mscolab/demodata.py --init
 
 To use this data add the mss_wms_settings.py in your python path::
 
