@@ -37,10 +37,9 @@ from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.demodata import create_files
 from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
-from mslib.mscolab.utils import get_message_dict
+from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 
 # set the project root directory as the static folder
@@ -56,7 +55,7 @@ APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 auth = HTTPBasicAuth()
 
 try:
-    import mss_mscolab_auth
+    from mss_mscolab_auth import mss_mscolab_auth
 except ImportError as ex:
     logging.warning("Couldn't import mss_mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
 

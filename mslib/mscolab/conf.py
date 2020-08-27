@@ -26,17 +26,17 @@
 """
 import logging
 try:
-    import mscolab_settings
-    logging.info("Using user defined settings from %s", mscolab_settings.__file__)
+    from mscolab_settings import mscolab_settings
+    logging.info("Using user defined settings")
 except ImportError as ex:
-    logging.warning(u"Couldn't import mss_wms_settings (ImportError:'%s'), creating dummy config.", ex)
+    logging.warning(u"Couldn't import mscolab_settings (ImportError:'%s'), using dummy config.", ex)
 
     class mscolab_settings(object):
-        # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
         import os
         import logging
+
         # dir where mss output files are stored
-        BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+        BASE_DIR = os.path.expanduser("~")
 
         DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 
