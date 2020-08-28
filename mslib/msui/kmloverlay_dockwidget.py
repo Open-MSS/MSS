@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import traceback
 import copy
 import fs
 import logging
@@ -489,7 +488,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         for index in range(self.listWidget.count()):  # list of files in ListWidget
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
-                self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
+                if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:
+                    self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
                 del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
@@ -528,21 +528,15 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                                       self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
 
-                except (IOError, et.XMLSyntaxError) as ex:
-                    logging.debug("KML Overlay - %s: %s", type(ex), ex)
+                except (IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError, et.XMLSchemaParseError,
+                        et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
+                    logging.error("KML Overlay - %s: %s", type(ex), ex)
                     self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
-                                                " is either an invalid KML File or has an error. Check Terminal for Traceback Error.")
+                                                " is either an invalid KML File or has an error. Add another file.")
                     del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
                     self.listWidget.takeItem(index)  # remove file item from ListWidget
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
-
-                except Exception:  # file crashing
-                    traceback.print_exc()
-                    self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
-                                                " is either an invalid KML File or has an error. Check Terminal for Traceback Error.")
-                    del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
-                    self.listWidget.takeItem(index)  # remove file item from ListWidget
         logging.debug(self.dict_files)
 
     def merge_file(self):
@@ -626,3 +620,4 @@ class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDial
     def __init__(self, parent=None):
         super(CustomizeKMLWidget, self).__init__(parent)
         self.setupUi(self)
+    
