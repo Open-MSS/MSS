@@ -72,7 +72,7 @@ test:
   commands:
     - mswms -h
     - mss -h
-    - mscolab_demodata -h
+    - mscolab -h
 
 about:
   summary: 'A web service based tool to plan atmospheric research flights.'

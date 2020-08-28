@@ -77,7 +77,8 @@ def handle_db_reset(verbose=True):
     with APP.app_context():
         db.drop_all()
         db.create_all()
-    print("Database has been reset successfully!")
+    if verbose is True:
+        print("Database has been reset successfully!")
 
 
 def handle_db_seed():
