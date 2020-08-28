@@ -34,8 +34,8 @@ from mslib.mscolab.models import User, db, Permission, Project
 app = Flask(__name__, static_url_path='')
 
 
-def seed_data(db_uri):
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+def seed_data():
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
 

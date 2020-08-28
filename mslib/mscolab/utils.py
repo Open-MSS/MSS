@@ -23,6 +23,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+
+from mslib.mscolab.conf import mscolab_settings
 
 
 def get_recent_pid(fm, user):
@@ -50,3 +53,10 @@ def get_message_dict(message):
         "replies": [],
         "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
     }
+
+
+def create_files():
+    if not os.path.exists(mscolab_settings.MSCOLAB_DATA_DIR):
+        os.makedirs(mscolab_settings.MSCOLAB_DATA_DIR)
+    if not os.path.exists(mscolab_settings.UPLOAD_FOLDER):
+        os.makedirs(mscolab_settings.UPLOAD_FOLDER)

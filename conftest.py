@@ -138,8 +138,8 @@ sys.path.insert(0, parent_path)
 
 @pytest.fixture(scope="session", autouse=True)
 def create_data():
-    from mslib.mscolab.demodata import seed_db
-    seed_db()
+    from mslib.mscolab.mscolab import handle_db_seed
+    handle_db_seed()
     yield
     constants.ROOT_FS.clean()
 
