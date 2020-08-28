@@ -25,7 +25,7 @@ The KML Support has been enhanced to parse all legal KML Files without crashing,
 on the map, with the relevant geometries and styles.
 
 The KML Interface now supports display of multiple KML Files simultaneously, with easy to use Buttons such 
-as 'Add KML Files', 'Remove File' and 'Remove All' for the user's benefit.
+as 'Add KML Files', 'Remove File', 'Select/ Unselect All Files' for the user's benefit.
 
 A Check/ Uncheck feature allows users to display/hide individual plots on the map, at the User's leisure.
 
@@ -45,7 +45,7 @@ you left it! KML Overlay supports **Saving Open files** so that you can jump bac
 Test Samples
 ------------
 
-Curious to test out some KML Files? We have a sample collection ready just for this!
+Curious to test out some KML Files? We have a vibrant sample collection ready just for this!
 
 Example KML Files are located at : 
 

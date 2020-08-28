@@ -24,16 +24,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import copy
-from fs import open_fs
+import fs
 import logging
 from fastkml import kml, geometry, styles
 from lxml import etree as et, objectify
 import os
 from matplotlib import patheffects
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filenames
+from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filenames, get_save_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mss_qt import ui_customize_kml
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
@@ -286,8 +285,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         # Connect slots and signals.
         self.btSelectFile.clicked.connect(self.get_file)
         self.pushButton_remove.clicked.connect(self.remove_file)
-        self.pushButton_remove_all.clicked.connect(self.remove_all_files)
+        self.pushButton_select_all.clicked.connect(self.select_all)
+        self.pushButton_unselect_all.clicked.connect(self.unselect_all)
         self.pushButton_merge.clicked.connect(self.merge_file)
+        self.labelStatusBar.setText("Status: Click on Add KML Files to get started.")
 
         self.dialog = CustomizeKMLWidget(self)  # create object of dialog UI Box
         self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
@@ -297,7 +298,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
-            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (1, 1, 1, 1),
+            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (0, 0, 0, 1),
                                 "saved_files": {}})  # initial settings
 
         self.directory_location = settings["filename"]
@@ -433,7 +434,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
         filenames = get_open_filenames(
-            self, "Open KML Polygonal File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
+            self, "Open KML File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
+        if not filenames:
+            return
         self.select_file(filenames)
 
     def select_file(self, filenames):
@@ -453,6 +456,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.create_list_item(text)
             else:
                 logging.info("%s file already added", text)
+        self.labelStatusBar.setText("Status: KML Files added")
         self.load_file()
 
     def create_list_item(self, text):
@@ -464,22 +468,35 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         item.setCheckState(QtCore.Qt.Checked)
         self.listWidget.addItem(item)
 
+    def select_all(self):  # selects all files
+        if self.listWidget.count() == 0:
+            self.labelStatusBar.setText("Status: No Files to select. Click on Add KML Files to get started.")
+            return
+        for index in range(self.listWidget.count()):
+            self.listWidget.item(index).setCheckState(QtCore.Qt.Checked)
+        self.labelStatusBar.setText("Status: All Files selected")
+
+    def unselect_all(self):  # unselects all files
+        if self.listWidget.count() == 0:
+            self.labelStatusBar.setText("Status: No Files to unselect. Click on Add KML Files to get started.")
+            return
+        for index in range(self.listWidget.count()):
+            self.listWidget.item(index).setCheckState(QtCore.Qt.Unchecked)
+        self.labelStatusBar.setText("Status: All Files unselected")
+
     def remove_file(self):  # removes checked files
         for index in range(self.listWidget.count()):  # list of files in ListWidget
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
-                self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
+                if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:
+                    self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
                 del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
+        self.labelStatusBar.setText("Status: KML Files removed")
+        if self.listWidget.count() == 0:  # implies no files in ListWidget
+            self.patch = None
         # self.load_file() # not sure to keep this or not, works either ways
-
-    def remove_all_files(self):  # removes all files (checked or unchecked both)
-        self.listWidget.clear()  # clears List of files in ListWidget
-        for filename in self.dict_files:
-            self.dict_files[filename]["patch"].remove()  # removes patch object
-        self.dict_files = {}  # initialize dictionary again
-        self.patch = None  # initialize self.patch to None
 
     def load_file(self):
         """
@@ -495,7 +512,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             if hasattr(self.listWidget.item(index), "checkState") and (
                 self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                _fs = open_fs(_dirname)
+                _fs = fs.open_fs(_dirname)
                 try:
                     with _fs.open(_name, 'r') as kmlf:
                         self.kml = kml.KML()  # creates fastkml object
@@ -511,42 +528,71 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                                       self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
 
-                except (IOError, et.XMLSyntaxError) as ex:
+                except (IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError, et.XMLSchemaParseError,
+                        et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
+                    self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
+                                                " is either an invalid KML File or has an error.")
+                    del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
+                    self.listWidget.takeItem(index)  # remove file item from ListWidget
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
         logging.debug(self.dict_files)
 
     def merge_file(self):
-        if self.patch is None:
-            logging.info("No KML File Found. Add Files to Merge.")
+        checked_files = []  # list of indices of checked files
+        counter = 0
+        for count in range(self.listWidget.count()):
+            if hasattr(self.listWidget.item(count), "checkState") and (
+                self.listWidget.item(count).checkState() == QtCore.Qt.Checked):
+                checked_files.append(count)
+                counter = counter + 1
+        if counter == 0:
+            self.labelStatusBar.setText("Status: No KML File Found or Selected. Add or Select Files to Merge.")
             return
-        element = []
-        for index in range(self.listWidget.count()):
-            if hasattr(self.listWidget.item(index), "checkState") and (
-                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                _fs = open_fs(_dirname)
-                with _fs.open(_name, 'r') as kmlf:
-                    tree = et.parse(kmlf)
-                    root = tree.getroot()
-                    self.remove_ns(root)
-                    element.append(copy.deepcopy(root[0]))
-                    if index == 0:
-                        super_root = et.Element("Folder")
-                        super_root.insert(0, element[0])
-                        continue
-                    sub_root = et.Element("Folder")
-                    sub_root.insert(0, element[index])
-                    element[0].append(sub_root)
 
-        logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
-        newkml = et.Element("kml")
-        newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'
-        newkml.insert(0, super_root)
-        logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-        with _fs.open('output.kml', 'w') as output:
-            output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+        default_filename = fs.path.join(self.directory_location, "merged_file" + ".kml")
+        filename = get_save_filename(self, "Merge KML Files", default_filename, "KML Files (*.kml)")
+        if filename:
+            _dir_name, file_name = fs.path.split(filename)
+            if filename.endswith('.kml'):
+                try:
+                    element = []
+                    count = 0  # used to count elements in order; see usage below
+                    for index in checked_files:  # index is the indices of checked files
+                        _dirname, _name = os.path.split(self.listWidget.item(index).text())
+                        _fs = fs.open_fs(_dirname)
+                        with _fs.open(_name, 'r') as kmlf:
+                            tree = et.parse(kmlf)  # parse kml file
+                            root = tree.getroot()  # get the root of the file
+                            self.remove_ns(root)  # removes <kml> and </kml>
+                            element.append(copy.deepcopy(root[0]))
+                            if index == checked_files[0]:  # first checked file becomes the top kml file, everything happens on this base
+                                super_root = et.Element("Folder")
+                                super_root.insert(0, element[0])  # adds <Folder> at the top of stripped KML File
+                                count = count + 1
+                                continue  # since the super root cannot be its own sub root
+                            sub_root = et.Element("Folder")
+                            sub_root.insert(0, element[count])  # count used since its consecutive, not index
+                            element[0].append(sub_root)
+                            count = count + 1
+
+                    logging.debug(et.tostring(super_root, encoding='utf-8').decode('UTF-8'))
+                    newkml = et.Element("kml")  # create new <kml> element
+                    newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'  # add xmlns attribute
+                    newkml.insert(0, super_root)
+                    logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+                    with _fs.open(file_name, 'w') as output:  # write file
+                        output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
+                    path = fs.path.join(self.directory_location, "..")
+                    self.labelStatusBar.setText("Status: Merged File " + file_name + " stored at " + path)
+                except (OSError, IOError) as ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("Problem while merging KML Files:"),
+                        self.tr("ERROR: {} {}".format(type(ex), ex)))
+            else:
+                QtWidgets.QMessageBox.warning(self, "Merge KML Files",
+                                              "File extension is not '.kml'!\n{:}".format(filename))
 
     def remove_ns(self, root):
         """
@@ -574,3 +620,4 @@ class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDial
     def __init__(self, parent=None):
         super(CustomizeKMLWidget, self).__init__(parent)
         self.setupUi(self)
+    

@@ -33,7 +33,7 @@ from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest, QtGui
 import mslib.msui.kmloverlay_dockwidget as kd
 
 sample_path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples")
-
+save_kml = os.path.join(sample_path, "kml", "merged_file123.kml")
 
 class Test_KmlOverlayDockWidget(object):
 
@@ -48,7 +48,8 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         # start load test
-        self.window.remove_all_files()
+        self.window.select_all()
+        self.window.remove_file()
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
@@ -97,7 +98,8 @@ class Test_KmlOverlayDockWidget(object):
         assert self.window.listWidget.count() == index
         assert len(self.window.dict_files) == index
         assert self.window.patch is not None
-        self.window.remove_all_files()
+        self.window.select_all()
+        self.window.remove_file()
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
     def test_select_file_error(self, mockbox):
@@ -105,7 +107,8 @@ class Test_KmlOverlayDockWidget(object):
         Test that program mitigates loading a non-existing file
         """
         # load a non existing path
-        self.window.remove_all_files()
+        self.window.select_all()
+        self.window.remove_file()
         path = fs.path.join(sample_path, "satellite_tracks", "satellite_predictor.txt")
         filename = (path,)  # converted to tuple
         self.window.select_file(filename)
@@ -124,7 +127,8 @@ class Test_KmlOverlayDockWidget(object):
         QtTest.QTest.mouseClick(self.window.pushButton_remove, QtCore.Qt.LeftButton)
         assert self.window.listWidget.count() == 1
         assert len(self.window.dict_files) == 1
-        self.window.remove_all_files()
+        self.window.select_all()
+        self.window.remove_file()
 
     def test_remove_all_files(self):
         """
@@ -133,23 +137,29 @@ class Test_KmlOverlayDockWidget(object):
         self.select_files()
         QtWidgets.QApplication.processEvents()
         assert self.window.listWidget.count() == 5
-        QtTest.QTest.mouseClick(self.window.pushButton_remove_all, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.pushButton_remove, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.window.listWidget.count() == 0  # No items in list
         assert self.window.dict_files == {}  # Dictionary should be empty
         assert self.window.patch is None   # Patch should be None
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
-    def test_merge_file(self, mockbox):
+    @mock.patch("mslib.msui.kmloverlay_dockwidget.get_save_filename", return_value=save_kml)
+    def test_merge_file(self, mocksave, mockbox):
         """
         Test merging files into a single file without crashing
         """
         self.select_files()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.pushButton_merge, QtCore.Qt.LeftButton)
-        self.select_file("output.kml")
+        QtWidgets.QApplication.processEvents()
+        assert mocksave.call_count == 1
+        assert os.path.exists(save_kml)
+        self.select_file("merged_file123.kml")
         assert mockbox.critical.call_count == 0
-        self.window.remove_all_files()
+        self.window.select_all()
+        self.window.remove_file()
+        os.remove(save_kml)
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
     def test_customize_kml(self, mock_colour_dialog):
@@ -202,7 +212,8 @@ class Test_KmlOverlayDockWidget(object):
         self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
         assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Unchecked
         assert len(self.window.patch.patches) == 0
-        self.window.remove_all_files()
+        self.window.select_all()
+        self.window.remove_file()
 
     # Matplotlib Plots Testing
     def test_kml_patches(self):
