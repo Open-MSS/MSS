@@ -20,10 +20,10 @@ Description of the variables can be found in comments.
 
 Steps to Run Mscolab Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  - Mscolab server has to be manually installed, the instructions can be found at :ref:`development`
+  - The mscolab server comes included in the MSS python package.
   - Once mss is installed, if you're running the mscolab server for the first time, run the command :code:`mscolab db --init` to initialise your database.
   - To start the server run :code:`mscolab start`.
-  - If you ever want to reset or seed your database you can use the commands :code:`mscolab db --reset` and :code:`mscolab db --seed` respectively.
+  - If you ever want to reset or add dummy data to your database you can use the commands :code:`mscolab db --reset` and :code:`mscolab db --seed` respectively.
 
 
 Steps to Open the Mscolab Application Window

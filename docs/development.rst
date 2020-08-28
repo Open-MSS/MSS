@@ -85,9 +85,19 @@ To use this data add the mss_wms_settings.py in your python path::
    $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
    $(mssdev) python mslib/mswms/mswms.py
 
-Developer documentation of mscolab
+Developer Documentation of Mscolab
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A design documentation of mscolab can be found `here <https://docs.google.com/document/d/1TKanCW7kgNS9Qy1pQZd_Ovt8zZ6tH2RkOJkl2nM1qvs/edit?usp=sharing/>`_.
+The Mscolab server is built using the Flask rest framework which communicates with the PyQt5 frontend of MSS.
+You can view the default configuration of mscolab in the file `mslib/mscolab/conf.py`. If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server" section in :ref:`mscolab`
+
+When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab db --init` to initialise it. The default database is a sqlite3 database.
+You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
+The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
+
+To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the mscolab server on port 8083.
+Going to http://localhost:8083/ should now show "Mscolab server". This means your server has started successfully.
+Now you can use the MSS desktop application to connect to it using the Mscolab window of the application.
+
 
 Running tests
 ~~~~~~~~~~~~~~~~~~~
