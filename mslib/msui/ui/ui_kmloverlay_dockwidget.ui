@@ -6,130 +6,107 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>649</width>
-    <height>120</height>
+    <width>545</width>
+    <height>233</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>KML Overlay</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_5">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetMinimumSize</enum>
+     </property>
      <item>
-      <widget class="QCheckBox" name="cbOverlay">
-       <property name="toolTip">
-        <string>Hide/unhide loaded KML overlay.</string>
-       </property>
-       <property name="text">
-        <string>KML Overlay</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QListWidget" name="listWidget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>KML Files; double click specific file to customize</string>
+         </property>
+         <property name="sizeAdjustPolicy">
+          <enum>QAbstractScrollArea::AdjustToContents</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QLineEdit" name="leFile"/>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btSelectFile">
-       <property name="toolTip">
-        <string>Specify KML file using a file dialog.</string>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetMinimumSize</enum>
        </property>
-       <property name="text">
-        <string>...</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="btLoadFile">
-       <property name="toolTip">
-        <string>Load specified KML file.</string>
-       </property>
-       <property name="text">
-        <string>load</string>
-       </property>
-      </widget>
+       <item>
+        <widget class="QPushButton" name="pushButton_select_all">
+         <property name="toolTip">
+          <string>Selects (Checks) All the Files </string>
+         </property>
+         <property name="text">
+          <string>Select All Files</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btSelectFile">
+         <property name="toolTip">
+          <string>Add multiple KML Files</string>
+         </property>
+         <property name="text">
+          <string>Add KML Files</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_remove">
+         <property name="toolTip">
+          <string>Remove Checked KML Files </string>
+         </property>
+         <property name="text">
+          <string>Remove Files</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_unselect_all">
+         <property name="toolTip">
+          <string>Unselects (unchecks) all Files</string>
+         </property>
+         <property name="text">
+          <string>Unselect All Files</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
-     <item>
-      <widget class="QCheckBox" name="cbManualStyle">
-       <property name="toolTip">
-        <string>Overwrite styles of KML document with colour/linewidth specified to the right.</string>
-       </property>
-       <property name="text">
-        <string>manual style</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pbSelectColour">
-       <property name="toolTip">
-        <string>Colour for KML overlay.</string>
-       </property>
-       <property name="text">
-        <string>Colour</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="toolTip">
-        <string>Line width for KML overlay.</string>
-       </property>
-       <property name="text">
-        <string>line width</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="dsbLineWidth">
-       <property name="singleStep">
-        <double>0.500000000000000</double>
-       </property>
-       <property name="value">
-        <double>1.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
+    <layout class="QHBoxLayout" name="horizontalLayout_2"/>
    </item>
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QPushButton" name="pushButton_merge">
      <property name="toolTip">
-      <string>KML support is experimental. Please communicate important missing features to the MSS issue tracker!</string>
+      <string>Merge multiple KML Files into one</string>
      </property>
      <property name="text">
-      <string>!Experimental Feature! Not all KML files and contained features will work.</string>
+      <string>Merge and Export KML File</string>
      </property>
     </widget>
    </item>
    <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
+    <widget class="QLabel" name="labelStatusBar">
+     <property name="text">
+      <string>Status : </string>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
+    </widget>
    </item>
   </layout>
  </widget>
