@@ -487,7 +487,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     def remove_file(self):  # removes checked files
         for index in range(self.listWidget.count()):  # list of files in ListWidget
             if hasattr(self.listWidget.item(index), "checkState") and (
-                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
+                    self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
                 if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:
                     self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
                 del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
@@ -510,7 +510,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
-                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                    self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
                 _fs = fs.open_fs(_dirname)
                 try:
@@ -518,7 +518,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         self.kml = kml.KML()  # creates fastkml object
                         self.kml.from_string(kmlf.read().encode('utf-8'))
                         if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
-                            if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # if added before
+                            if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # added before
                                 self.patch = KMLPatch(self.view.map, self.kml,
                                                       self.set_color(self.listWidget.item(index).text()),
                                                       self.set_linewidth(self.listWidget.item(index).text()))
@@ -544,7 +544,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         counter = 0
         for count in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(count), "checkState") and (
-                self.listWidget.item(count).checkState() == QtCore.Qt.Checked):
+                    self.listWidget.item(count).checkState() == QtCore.Qt.Checked):
                 checked_files.append(count)
                 counter = counter + 1
         if counter == 0:
@@ -567,7 +567,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                             root = tree.getroot()  # get the root of the file
                             self.remove_ns(root)  # removes <kml> and </kml>
                             element.append(copy.deepcopy(root[0]))
-                            if index == checked_files[0]:  # first checked file becomes the top kml file, everything happens on this base
+                            if index == checked_files[0]:  # first checked file becomes the top kml file i.e. the base
                                 super_root = et.Element("Folder")
                                 super_root.insert(0, element[0])  # adds <Folder> at the top of stripped KML File
                                 count = count + 1
@@ -602,7 +602,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             for elem in root.getiterator():
                 elem.tag = et.QName(elem).localname
             et.cleanup_namespaces(root)
-        except Exception as e:
+        except ValueError as ex:
+            logging.debug("Difficulty in removing namespace %s: %s", type(ex), ex)
             for elem in root.getiterator():
                 if not hasattr(elem.tag, 'find'):
                     continue
@@ -610,6 +611,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 if i >= 0:
                     elem.tag = elem.tag[i + 1:]
             objectify.deannotate(root, cleanup_namespaces=True)
+            logging.debug("namespace removed by objectify.deannotate")
 
 
 class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDialog):
@@ -620,4 +622,3 @@ class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDial
     def __init__(self, parent=None):
         super(CustomizeKMLWidget, self).__init__(parent)
         self.setupUi(self)
-    
