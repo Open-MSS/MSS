@@ -88,7 +88,7 @@ def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=N
 
 
 def get_open_filenames(parent, title, dirname, filt, pickertag=None, pickertype=None):
-    """ 
+    """
     Opens multiple files simultaneously
     Currently implemented only in kmloverlay_dockwidget.py
     """
