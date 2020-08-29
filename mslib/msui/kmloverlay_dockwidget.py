@@ -487,7 +487,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     def remove_file(self):  # removes checked files
         for index in range(self.listWidget.count()):  # list of files in ListWidget
             if hasattr(self.listWidget.item(index), "checkState") and (
-                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
+                    self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
                 if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:
                     self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
                 del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
@@ -510,7 +510,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
-                self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
+                    self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
                 _fs = fs.open_fs(_dirname)
                 try:
@@ -544,7 +544,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         counter = 0
         for count in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(count), "checkState") and (
-                self.listWidget.item(count).checkState() == QtCore.Qt.Checked):
+                    self.listWidget.item(count).checkState() == QtCore.Qt.Checked):
                 checked_files.append(count)
                 counter = counter + 1
         if counter == 0:
