@@ -24,32 +24,38 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-from flask import Flask, request, g, jsonify
-from flask_httpauth import HTTPBasicAuth
-import datetime
 import functools
 import json
 import logging
-from validate_email import validate_email
-import socketio
+import time
 
-from mslib.mscolab.models import User, db, Change
+import fs
+import socketio
+from flask import Flask, g, jsonify, request
+from flask_httpauth import HTTPBasicAuth
+from validate_email import validate_email
+from werkzeug.utils import secure_filename
+
 from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
+from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 
 # set the project root directory as the static folder
 
-APP = Flask(__name__, static_url_path='')
+APP = Flask(__name__, static_folder=mscolab_settings.UPLOAD_FOLDER)
 APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 
 auth = HTTPBasicAuth()
 
 try:
-    import mss_mscolab_auth
+    from mss_mscolab_auth import mss_mscolab_auth
 except ImportError as ex:
     logging.warning("Couldn't import mss_mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
 
@@ -85,7 +91,7 @@ def initialize_managers(app):
     app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
     db.init_app(app)
-    return (app, sockio, cm, fm)
+    return app, sockio, cm, fm
 
 
 _app, sockio, cm, fm = initialize_managers(APP)
@@ -194,13 +200,46 @@ def delete_user():
 
 
 # Chat related routes
-@APP.route("/messages", methods=['POST'])
+@APP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    timestamp = datetime.datetime.strptime(request.form['timestamp'], '%m %d %Y, %H:%M:%S')
-    p_id = request.form.get('p_id', None)
-    messages = cm.get_messages(p_id, last_timestamp=timestamp)
-    return json.dumps({'messages': messages})
+    timestamp = request.form.get("timestamp", "1970-01-01, 00:00:00")
+    p_id = request.form.get("p_id", None)
+    chat_messages = cm.get_messages(p_id, timestamp)
+    return jsonify({"messages": chat_messages})
+
+
+@APP.route("/message_attachment", methods=["POST"])
+@verify_user
+def message_attachment():
+    file = request.files['file']
+    p_id = request.form.get("p_id", None)
+    message_type = MessageType(int(request.form.get("message_type")))
+    user = g.user
+    if file is not None:
+        with fs.open_fs('/') as home_fs:
+            file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], p_id)
+            if not home_fs.exists(file_dir):
+                home_fs.makedirs(file_dir)
+            file_name, file_ext = file.filename.rsplit('.', 1)
+            file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}.{file_ext}'
+            file_name = secure_filename(file_name)
+            file_path = fs.path.join(file_dir, file_name)
+            file.save(file_path)
+            static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
+            static_file_path = fs.path.join(static_dir, p_id, file_name)
+        new_message = cm.add_message(user, static_file_path, p_id, message_type)
+        new_message_dict = get_message_dict(new_message)
+        sockio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+        return jsonify({"success": True, "path": static_file_path})
+    return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
+
+
+# 413: Payload Too Large
+@APP.errorhandler(413)
+def error413(error):
+    upload_limit = APP.config['MAX_CONTENT_LENGTH'] / 1024 / 1024
+    return jsonify({"success": False, "message": f"File size too large. Upload limit is {upload_limit}MB"}), 413
 
 
 # File related routes
@@ -225,26 +264,40 @@ def get_project():
     return json.dumps({"content": result})
 
 
-@APP.route('/get_changes', methods=['GET'])
+@APP.route('/get_all_changes', methods=['GET'])
 @verify_user
-def get_changes():
+def get_all_changes():
     p_id = request.values.get('p_id', None)
+    named_version = request.args.get('named_version')
     user = g.user
-    result = fm.get_changes(int(p_id), user)
+    result = fm.get_all_changes(int(p_id), user, named_version)
     if result is False:
-        return "False"
-    return json.dumps({"changes": result})
+        jsonify({"success": False, "message": "Some error occurred!"})
+    return jsonify({"success": True, "changes": result})
 
 
-@APP.route('/get_change_id', methods=['GET'])
+@APP.route('/get_change_content', methods=['GET'])
 @verify_user
-def get_change_by_id():
-    ch_id = request.values.get('ch_id', None)
-    user = g.user
-    result = fm.get_change_by_id(int(ch_id), user)
+def get_change_content():
+    ch_id = int(request.values.get('ch_id', 0))
+    result = fm.get_change_content(ch_id)
     if result is False:
         return "False"
-    return json.dumps({"change": result})
+    return jsonify({"content": result})
+
+
+@APP.route('/set_version_name', methods=['POST'])
+@verify_user
+def set_version_name():
+    ch_id = int(request.form.get('ch_id', 0))
+    p_id = int(request.form.get('p_id', 0))
+    version_name = request.form.get('version_name', None)
+    u_id = g.user.id
+    success = fm.set_version_name(ch_id, p_id, u_id, version_name)
+    if success is False:
+        return jsonify({"success": False, "message": "Some error occurred!"})
+
+    return jsonify({"success": True, "message": "Successfully set version name"})
 
 
 @APP.route('/authorized_users', methods=['GET'])
@@ -264,67 +317,14 @@ def get_projects():
 @APP.route('/delete_project', methods=["POST"])
 @verify_user
 def delete_project():
-    p_id = request.form.get('p_id', None)
+    p_id = int(request.form.get('p_id', 0))
     user = g.user
-    return str(fm.delete_file(int(p_id), user))
+    success = fm.delete_file(p_id, user)
+    if success is False:
+        return jsonify({"success": False, "message": "You don't have access for this operation!"})
 
-
-@APP.route('/add_permission', methods=['POST'])
-@verify_user
-def add_permission():
-    p_id = request.form.get('p_id', 0)
-    u_id = request.form.get('u_id', 0)
-    username = request.form.get('username', None)
-    access_level = request.form.get('access_level', None)
-    user = g.user
-    if u_id == 0:
-        user_v = User.query.filter((User.username == username) | (User.emailid == username)).first()
-        if user_v is None:
-            return "False"
-        u_id = user_v.id
-    success = str(fm.add_permission(int(p_id), int(u_id), username, access_level, user))
-    if success == "True":
-        sockio.sm.join_collaborator_to_room(int(u_id), int(p_id))
-        sockio.sm.emit_new_permission(int(u_id), int(p_id))
-    return success
-
-
-@APP.route('/revoke_permission', methods=['POST'])
-@verify_user
-def revoke_permission():
-    p_id = request.form.get('p_id', 0)
-    u_id = request.form.get('u_id', 0)
-    username = request.form.get('username', None)
-    user = g.user
-    if u_id == 0:
-        user_v = User.query.filter_by(username=username).first()
-        if user_v is None:
-            return "False"
-        u_id = user_v.id
-    success = str(fm.revoke_permission(int(p_id), int(u_id), username, user))
-    if success:
-        sockio.sm.emit_revoke_permission(int(u_id), int(p_id))
-        sockio.sm.remove_collaborator_from_room(int(u_id), int(p_id))
-    return success
-
-
-@APP.route('/modify_permission', methods=['POST'])
-@verify_user
-def modify_permission():
-    p_id = request.form.get('p_id', 0)
-    u_id = request.form.get('u_id', 0)
-    username = request.form.get('username', None)
-    access_level = request.form.get('access_level', None)
-    user = g.user
-    if u_id == 0:
-        user_v = User.query.filter((User.username == username) | (User.emailid == username)).first()
-        if user_v is None:
-            return "False"
-        u_id = user_v.id
-    success = str(fm.update_access_level(int(p_id), int(u_id), username, access_level, user))
-    if success == "True":
-        sockio.sm.emit_update_permission(u_id, p_id)
-    return success
+    sockio.sm.emit_project_delete(p_id)
+    return jsonify({"success": True, "message": "Project was successfully deleted!"})
 
 
 @APP.route('/update_project', methods=['POST'])
@@ -359,14 +359,111 @@ def undo_ftml():
     return str(result)
 
 
+@APP.route("/users_without_permission", methods=["GET"])
+@verify_user
+def get_users_without_permission():
+    p_id = request.form.get('p_id', None)
+    u_id = g.user.id
+    users = fm.fetch_users_without_permission(int(p_id), u_id)
+    if users is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+
+    return jsonify({"success": True, "users": users}), 200
+
+
+@APP.route("/users_with_permission", methods=["GET"])
+@verify_user
+def get_users_with_permission():
+    p_id = request.form.get('p_id', None)
+    u_id = g.user.id
+    users = fm.fetch_users_with_permission(int(p_id), u_id)
+    if users is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+
+    return jsonify({"success": True, "users": users}), 200
+
+
+@APP.route("/add_bulk_permissions", methods=["POST"])
+@verify_user
+def add_bulk_permissions():
+    p_id = int(request.form.get('p_id'))
+    new_u_ids = json.loads(request.form.get('selected_userids', []))
+    access_level = request.form.get('selected_access_level')
+    user = g.user
+    success = fm.add_bulk_permission(p_id, user, new_u_ids, access_level)
+    if success:
+        for u_id in new_u_ids:
+            sockio.sm.join_collaborator_to_room(u_id, p_id)
+            sockio.sm.emit_new_permission(u_id, p_id)
+        sockio.sm.emit_project_permissions_updated(user.id, p_id)
+        return jsonify({"success": True, "message": "Users successfully added!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
+@APP.route("/modify_bulk_permissions", methods=["POST"])
+@verify_user
+def modify_bulk_permissions():
+    p_id = int(request.form.get('p_id'))
+    u_ids = json.loads(request.form.get('selected_userids', []))
+    new_access_level = request.form.get('selected_access_level')
+    user = g.user
+    success = fm.modify_bulk_permission(p_id, user, u_ids, new_access_level)
+    if success:
+        for u_id in u_ids:
+            sockio.sm.emit_update_permission(u_id, p_id)
+        sockio.sm.emit_project_permissions_updated(user.id, p_id)
+        return jsonify({"success": True, "message": "User permissions successfully updated!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
+@APP.route("/delete_bulk_permissions", methods=["POST"])
+@verify_user
+def delete_bulk_permissions():
+    p_id = int(request.form.get('p_id'))
+    u_ids = json.loads(request.form.get('selected_userids', []))
+    user = g.user
+    success = fm.delete_bulk_permission(p_id, user, u_ids)
+    if success:
+        for u_id in u_ids:
+            sockio.sm.emit_revoke_permission(u_id, p_id)
+            sockio.sm.remove_collaborator_from_room(u_id, p_id)
+        sockio.sm.emit_project_permissions_updated(user.id, p_id)
+        return jsonify({"success": True, "message": "User permissions successfully deleted!"})
+
+    return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+
+@APP.route('/import_permissions', methods=['POST'])
+@verify_user
+def import_permissions():
+    import_p_id = int(request.form.get('import_p_id'))
+    current_p_id = int(request.form.get('current_p_id'))
+    user = g.user
+    success, users = fm.import_permissions(import_p_id, current_p_id, user.id)
+    if success:
+        for u_id in users["add_users"]:
+            sockio.sm.join_collaborator_to_room(u_id, current_p_id)
+            sockio.sm.emit_new_permission(u_id, current_p_id)
+        for u_id in users["modify_users"]:
+            sockio.sm.emit_update_permission(u_id, current_p_id)
+        for u_id in users["delete_users"]:
+            sockio.sm.emit_revoke_permission(u_id, current_p_id)
+            sockio.sm.remove_collaborator_from_room(u_id, current_p_id)
+        sockio.sm.emit_project_permissions_updated(user.id, current_p_id)
+        return jsonify({"success": True})
+
+    return jsonify({"success": False,
+                    "message": "Some error occurred! Could not import permissions. Please try again."})
+
+
 def start_server(app, sockio, cm, fm, port=8083):
+    create_files()
     sockio.run(app, port=port)
 
 
 def main():
-    from mslib.mscolab.demodata import create_data
-    # create data if not created
-    create_data()
     start_server(_app, sockio, cm, fm)
 
 

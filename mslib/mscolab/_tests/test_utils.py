@@ -35,6 +35,7 @@ class Test_Utils(object):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
@@ -45,7 +46,7 @@ class Test_Utils(object):
     def test_get_recent_pid(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
-        assert p_id == 3
+        assert p_id == 4
 
     def teardown(self):
         pass

@@ -17,7 +17,6 @@ build:
     - mswms = mslib.mswms.mswms:main
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
-    - mscolab_demodata = mslib.mscolab.demodata:main
     - mscolab_add_permissions = mslib.mscolab.add_bulk_permissions:main
 
 requirements:
@@ -60,10 +59,12 @@ requirements:
     - gitpython
     - git
     - psycopg2
+    - PyMySQL >=0.9.3
     - validate_email
     - multidict
     - pint
     - python-socketio >=4.4.0
+    - markdown >=3.1.1
 
 test:
   imports:
@@ -71,7 +72,7 @@ test:
   commands:
     - mswms -h
     - mss -h
-    - mscolab_demodata -h
+    - mscolab -h
 
 about:
   summary: 'A web service based tool to plan atmospheric research flights.'

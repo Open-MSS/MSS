@@ -25,14 +25,15 @@
     limitations under the License.
 """
 
-from flask_sqlalchemy import SQLAlchemy
-from passlib.apps import custom_app_context as pwd_context
-from itsdangerous import (TimedJSONWebSignatureSerializer
-                          as Serializer, BadSignature, SignatureExpired)
-from mslib.mscolab.conf import mscolab_settings
-
-import logging
 import datetime
+import enum
+import logging
+
+from flask_sqlalchemy import SQLAlchemy
+from itsdangerous import (BadSignature, SignatureExpired, TimedJSONWebSignatureSerializer as Serializer)
+from passlib.apps import custom_app_context as pwd_context
+
+from mslib.mscolab.conf import mscolab_settings
 
 db = SQLAlchemy()
 
@@ -52,7 +53,7 @@ class User(db.Model):
         self.hash_password(password)
 
     def __repr__(self):
-        return('<User %r>' % self.username)
+        return f'<User {self.username}>'
 
     def hash_password(self, password):
         self.password = pwd_context.encrypt(password)
@@ -82,21 +83,6 @@ class User(db.Model):
         return user
 
 
-class Connection(db.Model):
-
-    __tablename__ = 'connections'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    s_id = db.Column(db.String(255), unique=True)
-    u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-    def __init__(self, u_id, s_id):
-        self.u_id = u_id
-        self.s_id = s_id
-
-    def __repr__(self):
-        return('<Connection %s %s>'.format(self.s_id, self.u_id))
-
-
 class Permission(db.Model):
 
     __tablename__ = 'permissions'
@@ -116,7 +102,7 @@ class Permission(db.Model):
         self.access_level = access_level
 
     def __repr__(self):
-        return('<Permission user %s project %s access level %s>'.format(self.u_id, self.p_id, str(self.access_level)))
+        return f'<Permission u_id: {self.u_id}, p_id:{self.p_id}, access_level: {str(self.access_level)}>'
 
 
 class Project(db.Model):
@@ -125,21 +111,24 @@ class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     path = db.Column(db.String(255), unique=True)
     description = db.Column(db.String(255))
-    autosave = db.Column(db.Boolean)
 
-    def __init__(self, path, description, autosave):
+    def __init__(self, path, description):
         """
         path: path to the project
-        description: small description of project,
-        autosave: a boolean to show if autosave is enabled or disabled
-            for the project
+        description: small description of project
         """
         self.path = path
         self.description = description
-        self.autosave = autosave
 
     def __repr__(self):
-        return('<Project path %s desc %s>'.format(self.path, self.description))
+        return f'<Project path: {self.path}, desc: {self.description}>'
+
+
+class MessageType(enum.IntEnum):
+    TEXT = 0
+    SYSTEM_MESSAGE = 1
+    IMAGE = 2
+    DOCUMENT = 3
 
 
 class Message(db.Model):
@@ -149,15 +138,21 @@ class Message(db.Model):
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
+    message_type = db.Column(db.Enum(MessageType), default=MessageType.TEXT)
+    reply_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    user = db.relationship('User')
+    replies = db.relationship('Message', cascade='all,delete,delete-orphan', single_parent=True)
 
-    def __init__(self, p_id, u_id, text):
+    def __init__(self, p_id, u_id, text, message_type=MessageType.TEXT, reply_id=None):
         self.p_id = p_id
         self.u_id = u_id
         self.text = text
+        self.message_type = message_type
+        self.reply_id = reply_id
 
     def __repr__(self):
-        return('<Message %s user %s in %s>'.format(self.text, self.u_id, self.p_id))
+        return f'<Message text: {self.text}, u_id: {self.u_id}, p_id: {self.p_id}>, message_type: {self.message_type}'
 
 
 class Change(db.Model):
@@ -166,14 +161,15 @@ class Change(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    content = db.Column(db.TEXT)
-    comment = db.Column(db.String(255), default=None)
     commit_hash = db.Column(db.String(255), default=None)
+    version_name = db.Column(db.String(255), default=None)
+    comment = db.Column(db.String(255), default=None)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    user = db.relationship('User')
 
-    def __init__(self, p_id, u_id, content, commit_hash, comment=""):
+    def __init__(self, p_id, u_id, commit_hash, version_name=None, comment=None):
         self.p_id = p_id
         self.u_id = u_id
-        self.content = content
         self.commit_hash = commit_hash
+        self.version_name = version_name
         self.comment = comment

@@ -37,9 +37,10 @@
 import datetime
 import logging
 import os
+
+import fs
 import xml.dom.minidom
 import xml.parsers.expat
-from fs import open_fs, path
 
 from mslib.msui.mss_qt import QtGui, QtCore, QtWidgets, variant_to_string, variant_to_float
 from mslib import utils, __version__
@@ -141,7 +142,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     flight performance calculations.
     """
 
-    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir):
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
+                 xml_content=None):
         super(WaypointsTableModel, self).__init__()
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
@@ -161,6 +163,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 self.load_from_ftml(filename)
             else:
                 logging.debug("No known file extension! '%s'", filename)
+
+        # If xml string is passed to constructor, load data from that
+        elif xml_content is not None:
+            self.load_from_xml_data(xml_content)
 
         if waypoints:
             self.replace_waypoints(waypoints)
@@ -535,15 +541,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.waypoints = []
         self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints)
 
-    def save_to_mscolab(self, username):
-        # note p_id can be a member of this class
-        logging.debug("saving to mscolab")
-        fname_temp = path.combine(self.data_dir, path.combine(username, 'tempfile_mscolab.ftml'))
-        self.save_to_ftml(filename=fname_temp)
-        _fs = open_fs(self.data_dir)
-        content = _fs.readtext(path.combine(username, 'tempfile_mscolab.ftml'))
-        return content
-
     def save_to_ftml(self, filename=None):
         """Save the flight track to an XML file.
 
@@ -556,17 +553,22 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             raise ValueError("filename to save flight track cannot be None or empty")
 
         self.filename = filename
-        self.name = os.path.basename(filename.replace(".ftml", "").strip())
+        self.name = fs.path.basename(filename.replace(".ftml", "").strip())
+        doc = self.get_xml_doc()
+        dirname, name = fs.path.split(self.filename)
+        file_dir = fs.open_fs(dirname)
+        with file_dir.open(name, 'w') as file_object:
+            doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+        file_dir.close()
 
+    def get_xml_doc(self):
         doc = xml.dom.minidom.Document()
-
         ft_el = doc.createElement("FlightTrack")
         ft_el.setAttribute("version", __version__)
         doc.appendChild(ft_el)
         # The list of waypoint elements.
         wp_el = doc.createElement("ListOfWaypoints")
         ft_el.appendChild(wp_el)
-
         for wp in self.waypoints:
             element = doc.createElement("Waypoint")
             wp_el.appendChild(element)
@@ -577,26 +579,30 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             comments = doc.createElement("Comments")
             comments.appendChild(doc.createTextNode(str(wp.comments)))
             element.appendChild(comments)
+        return doc
 
-        _dirname, _name = os.path.split(self.filename)
-        _fs = open_fs(_dirname)
-        with _fs.open(_name, 'w') as file_object:
-            doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+    def get_xml_content(self):
+        doc = self.get_xml_doc()
+        return doc.toprettyxml(indent="  ", newl="\n")
 
     def load_from_ftml(self, filename):
         """Load a flight track from an XML file at <filename>.
         """
         _dirname, _name = os.path.split(filename)
-        _fs = open_fs(_dirname)
-        datasource = _fs.open(_name)
+        _fs = fs.open_fs(_dirname)
+        xml_content = _fs.readtext(_name)
+        name = os.path.basename(filename.replace(".ftml", "").strip())
+        self.load_from_xml_data(xml_content, name)
+
+    def load_from_xml_data(self, xml_content, name="Flight track"):
         try:
-            doc = xml.dom.minidom.parse(datasource)
+            doc = xml.dom.minidom.parseString(xml_content)
         except xml.parsers.expat.ExpatError as ex:
             raise SyntaxError(str(ex))
 
         ft_el = doc.getElementsByTagName("FlightTrack")[0]
 
-        self.name = os.path.basename(filename.replace(".ftml", "").strip())
+        self.name = name
 
         waypoints_list = []
         for wp_el in ft_el.getElementsByTagName("Waypoint"):

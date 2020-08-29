@@ -66,10 +66,11 @@ class Test_Sockets(object):
         sio.sleep(2)
         self.sockets.append(sio)
         sio.emit("chat-message", {
-                 "p_id": 1,
-                 "token": response['token'],
-                 "message_text": "message from 1"
-                 })
+            "p_id": 1,
+            "token": response['token'],
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
         sio.sleep(2)
         assert self.chat_messages_counter_a == 1
 
@@ -109,22 +110,25 @@ class Test_Sockets(object):
         sio3.emit('start', response3)
         time.sleep(5)
         sio1.emit('chat-message', {
-                  "p_id": 1,
-                  "token": response1['token'],
-                  "message_text": "message from 1"
-                  })
+            "p_id": 1,
+            "token": response1['token'],
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
 
         sio3.emit('chat-message', {
-                  "p_id": 1,
-                  "token": response3['token'],
-                  "message_text": "message from 3 - 1"
-                  })
+            "p_id": 1,
+            "token": response3['token'],
+            "message_text": "message from 3 - 1",
+            "reply_id": -1
+        })
 
         sio3.emit('chat-message', {
-                  "p_id": 3,
-                  "token": response3['token'],
-                  "message_text": "message from 3 - 2"
-                  })
+            "p_id": 3,
+            "token": response3['token'],
+            "message_text": "message from 3 - 2",
+            "reply_id": -1
+        })
 
         sio1.sleep(1)
         sio2.sleep(1)
