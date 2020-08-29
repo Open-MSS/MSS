@@ -602,7 +602,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             for elem in root.getiterator():
                 elem.tag = et.QName(elem).localname
             et.cleanup_namespaces(root)
-        except Exception:
+        except ValueError as ex:
+            logging.debug("Difficulty in removing namespace %s: %s", type(ex), ex)
             for elem in root.getiterator():
                 if not hasattr(elem.tag, 'find'):
                     continue
@@ -610,6 +611,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 if i >= 0:
                     elem.tag = elem.tag[i + 1:]
             objectify.deannotate(root, cleanup_namespaces=True)
+            logging.debug("namespace removed by objectify.deannotate")
 
 
 class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDialog):
