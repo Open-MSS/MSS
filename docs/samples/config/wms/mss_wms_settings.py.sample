@@ -37,7 +37,7 @@ import sys
 # stuff you see below, you don't need to do a1) and a2).
 
 # a1) Path of the directory where the mss code package is located.
-# sys.path.insert(0, '/home/mss/INSTANCE/miniconda3/lib/python3.X/site-packages')
+# sys.path.insert(0, '/home/mss/miniconda3/envs/instance/lib/python3.X/site-packages')
 
 # a2) Path of the directory where mss_wms_settings.py is located
 MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))

@@ -43,7 +43,7 @@ setup(
     maintainer_email="rb.proj@gmail.com",
     author="Marc Rautenahaus",
     author_email="wxmetvis@posteo.de",
-    license="Apache 2.0",
+    license="Apache-2.0",
     url="https://bitbucket.org/wxmetvis/mss",
     platforms="any",
     packages=find_packages(),

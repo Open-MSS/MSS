@@ -23,6 +23,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+
+from mslib.mscolab.conf import mscolab_settings
 
 
 def get_recent_pid(fm, user):
@@ -37,3 +40,23 @@ def get_session_id(sockets, u_id):
         if ss["u_id"] == u_id:
             s_id = ss["s_id"]
     return s_id
+
+
+def get_message_dict(message):
+    return {
+        "id": message.id,
+        "u_id": message.u_id,
+        "username": message.user.username,
+        "text": message.text,
+        "message_type": message.message_type,
+        "reply_id": message.reply_id,
+        "replies": [],
+        "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+    }
+
+
+def create_files():
+    if not os.path.exists(mscolab_settings.MSCOLAB_DATA_DIR):
+        os.makedirs(mscolab_settings.MSCOLAB_DATA_DIR)
+    if not os.path.exists(mscolab_settings.UPLOAD_FOLDER):
+        os.makedirs(mscolab_settings.UPLOAD_FOLDER)

@@ -53,6 +53,7 @@
 
    "new_flighttrack_template": ["Kiruna", "Ny-Alesund"],
    "new_flighttrack_flightlevel": 250,
+   "WMS_request_timeout": 30,
 
    "default_WMS": ["http://www.your-server.de/forecasts"],
    "default_VSEC_WMS": ["http://www.your-server.de/forecasts"],

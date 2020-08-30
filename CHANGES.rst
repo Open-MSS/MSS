@@ -1,6 +1,25 @@
 Changelog
 =========
 
+
+Version 1.9.5
+-------------
+
+Bug Fixes:
+  - SPDX Identifiers in meta.yaml, #569
+  - AttributeError: 'datetime.timezone' object has no attribute 'localize', #568
+
+Version 1.9.4
+-------------
+
+Bug Fixes:
+  - AttributeError: 'datetime.timezone' object has no attribute 'localize', #568
+  - rename in rtfd docs env into envs, #565
+  - mss performance ceiling altitude feature not properly documented, #557
+
+Other Changes:
+  - enable configurable timeout of openUrl, #567
+
 Version 1.9.3
 -------------
 

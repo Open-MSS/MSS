@@ -24,18 +24,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import fs
 from flask import Flask
+import git
 
-from mslib.mscolab.models import User, db, Permission, Project
 from mslib.mscolab.conf import mscolab_settings
-# set the project root directory as the static folder
+from mslib.mscolab.models import User, db, Permission, Project
+
 app = Flask(__name__, static_url_path='')
 
 
-def seed_data(db_uri):
-
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
+def seed_data():
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
 
     with app.app_context():
@@ -60,6 +61,36 @@ def seed_data(db_uri):
             'id': 11,
             'password': 'd',
             'emailid': 'd'
+        }, {
+            'username': 'test1',
+            'id': 12,
+            'password': 'test1',
+            'emailid': 'test1'
+        }, {
+            'username': 'test2',
+            'id': 13,
+            'password': 'test2',
+            'emailid': 'test2'
+        }, {
+            'username': 'test3',
+            'id': 14,
+            'password': 'test3',
+            'emailid': 'test3'
+        }, {
+            'username': 'test4',
+            'id': 15,
+            'password': 'test4',
+            'emailid': 'test4'
+        }, {
+            'username': 'mscolab_user',
+            'id': 16,
+            'password': 'password',
+            'emailid': 'mscolab_user'
+        }, {
+            'username': 'merge_waypoints_user',
+            'id': 17,
+            'password': 'password',
+            'emailid': 'merge_waypoints_user'
         }]
         for user in users:
             db_user = User(user['emailid'], user['username'], user['password'])
@@ -71,26 +102,30 @@ def seed_data(db_uri):
         projects = [{
             'id': 1,
             'path': 'one',
-            'description': 'a, b',
-            'autosave': False
+            'description': 'a, b'
         }, {
             'id': 2,
             'path': 'two',
-            'description': 'b, c',
-            'autosave': False
+            'description': 'b, c'
         }, {
             'id': 3,
             'path': 'three',
-            'description': 'a, c',
-            'autosave': False
+            'description': 'a, c'
         }, {
             'id': 4,
             'path': 'four',
-            'description': 'd',
-            'autosave': False
+            'description': 'd'
+        }, {
+            'id': 5,
+            'path': 'Admin_Test',
+            'description': 'Project for testing admin window'
+        }, {
+            'id': 6,
+            'path': 'test_mscolab',
+            'description': 'Project for testing mscolab main window'
         }]
         for project in projects:
-            db_project = Project(project['path'], project['description'], project['autosave'])
+            db_project = Project(project['path'], project['description'])
             db_project.id = project['id']
             db.session.add(db_project)
         db.session.commit()
@@ -128,6 +163,42 @@ def seed_data(db_uri):
             'u_id': 11,
             'p_id': 4,
             'access_level': 'creator'
+        }, {
+            'u_id': 8,
+            'p_id': 4,
+            'access_level': 'admin'
+        }, {
+            'u_id': 13,
+            'p_id': 3,
+            'access_level': 'viewer'
+        }, {
+            'u_id': 12,
+            'p_id': 5,
+            'access_level': 'creator'
+        }, {
+            'u_id': 12,
+            'p_id': 3,
+            'access_level': 'collaborator'
+        }, {
+            'u_id': 15,
+            'p_id': 5,
+            'access_level': 'viewer'
+        }, {
+            'u_id': 14,
+            'p_id': 3,
+            'access_level': 'collaborator'
+        }, {
+            'u_id': 15,
+            'p_id': 3,
+            'access_level': 'collaborator'
+        }, {
+            'u_id': 16,
+            'p_id': 6,
+            'access_level': 'creator'
+        }, {
+            'u_id': 17,
+            'p_id': 6,
+            'access_level': 'admin'
         }]
         for perm in permissions:
             db_perm = Permission(perm['u_id'], perm['p_id'], perm['access_level'])
@@ -135,10 +206,13 @@ def seed_data(db_uri):
         db.session.commit()
         db.session.close()
 
-
-def create_tables(db_uri):
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
-    db.init_app(app)
-    with app.app_context():
-        db.create_all()
+    with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
+        file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
+        for file_path in file_paths:
+            file_dir.makedir(file_path)
+            file_dir.writetext(f'{file_path}/main.ftml', mscolab_settings.STUB_CODE)
+            # initiate git
+            r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', file_path))
+            r.git.clear_cache()
+            r.index.add(['main.ftml'])
+            r.index.commit("initial commit")

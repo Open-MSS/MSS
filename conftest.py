@@ -92,24 +92,20 @@ ROOT_DIR = '{constants.ROOT_DIR}'
 # directory where mss output files are stored
 root_fs = fs.open_fs(ROOT_DIR)
 root_fs.makedir('colabTestData')
-DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
 BASE_DIR = ROOT_DIR
-SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
-
-SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
-
-# used to generate and parse tokens
-# details of database connections
-SECRET_KEY = 'secretkEyu'
-DB_HOST = '127.0.0.1'
-DB_USER = 'user'
-DB_PASSWORD = 'pass'
-DB_NAME = 'test_1'
-
-# SQLALCHEMY_DB_URI = 'postgresql://{{}}:{{}}@{{}}/{{}}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
-
+DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
 MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+
+# used to generate and parse tokens
+SECRET_KEY = 'secretkEyu'
+
+SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+
+# mscolab file upload settings
+UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
+MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
+
 # text to be written in new mscolab based ftml files.
 STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 <FlightTrack version="1.7.6">
@@ -128,9 +124,8 @@ enable_basic_http_authentication = False
     ROOT_FS = fs.open_fs(constants.ROOT_DIR)
     if not ROOT_FS.exists('mscolab'):
         ROOT_FS.makedir('mscolab')
-    mscolab_fs = fs.open_fs(os.path.join(constants.ROOT_DIR, "mscolab"))
-    mscolab_fs.writetext('mscolab_settings.py', config_string)
-    mscolab_fs.close()
+    with fs.open_fs(os.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
+        mscolab_fs.writetext('mscolab_settings.py', config_string)
     path = os.path.join(constants.ROOT_DIR, 'mscolab', 'mscolab_settings.py')
     parent_path = os.path.join(constants.ROOT_DIR, 'mscolab')
 
@@ -143,10 +138,10 @@ sys.path.insert(0, parent_path)
 
 @pytest.fixture(scope="session", autouse=True)
 def create_data():
-    from mslib.mscolab.demodata import create_test_data, delete_test_data
-    create_test_data()
+    from mslib.mscolab.mscolab import handle_db_seed
+    handle_db_seed()
     yield
-    delete_test_data(constants.ROOT_FS)
+    constants.ROOT_FS.clean()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -174,6 +169,7 @@ def start_mscolab_server(request):
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
     _app, sockio, cm, fm = initialize_managers(_app)
     global process
     process = multiprocessing.Process(
