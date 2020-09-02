@@ -108,7 +108,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         return obs_azi_p, obs_ele
 
     def compute_body_angle(self, body, jsec, lon, lat):
-        t = self.timescale.utc(utc.localize(jsec_to_datetime(jsec)))
+        t = self.timescale.utc(jsec_to_datetime(jsec).replace(tzinfo=utc))
         loc = self.planets["earth"] + Topos(lat, lon)
         astrometric = loc.at(t).observe(self.planets[body])
         alt, az, d = astrometric.apparent().altaz()

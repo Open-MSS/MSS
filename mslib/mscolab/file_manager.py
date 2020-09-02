@@ -28,6 +28,7 @@ import fs
 import difflib
 import logging
 import git
+from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.models import db, Project, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
@@ -50,7 +51,7 @@ class FileManager(object):
         proj_available = Project.query.filter_by(path=path).first()
         if proj_available:
             return False
-        project = Project(path, description, False)
+        project = Project(path, description)
         db.session.add(project)
         db.session.flush()
         project_id = project.id
@@ -67,6 +68,7 @@ class FileManager(object):
             project_file.write(mscolab_settings.STUB_CODE)
         project_path = fs.path.combine(self.data_dir, project.path)
         r = git.Repo.init(project_path)
+        r.git.clear_cache()
         r.index.add(['main.ftml'])
         r.index.commit("initial commit")
         return True
@@ -77,64 +79,12 @@ class FileManager(object):
         user: authenticated user
         """
         project = Project.query.filter_by(id=p_id).first()
-        project = {"id": project.id,
-                   "path": project.path,
-                   "description": project.description,
-                   "autosave": project.autosave
-                   }
+        project = {
+            "id": project.id,
+            "path": project.path,
+            "description": project.description
+        }
         return project
-
-    def add_permission(self, p_id, u_id, username, access_level, user):
-        """
-        p_id: project id
-        u_id: user-id who is being given permission
-        access_level: the access level given to user
-        user: authorized user, making this request
-        """
-        if not self.is_admin(user.id, p_id):
-            return False
-        if username:
-            user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
-            if not user_victim:
-                return False
-            u_id = user_victim.id
-        perm_old = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-        if perm_old or (access_level == "creator"):
-            return False
-        perm_new = Permission(u_id, p_id, access_level)
-        db.session.add(perm_new)
-        db.session.commit()
-        return True
-
-    def revoke_permission(self, p_id, u_id, username, user):
-        """
-        p_id: project id
-        u_id: user-id
-        username: to identify victim user
-        user: logged in user
-        """
-        deleted = None
-        if user.id == u_id:
-            return False
-        if not self.is_admin(user.id, p_id):
-            return False
-        else:
-            if username:
-                user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
-                if not user_victim:
-                    return False
-                u_id = user_victim.id
-            perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-            if perm is None:
-                return False
-            if perm.access_level == "creator":
-                return False
-            deleted = Permission.query.filter_by(u_id=u_id, p_id=p_id).delete()
-            db.session.commit()
-        if deleted:
-            return True
-        else:
-            return False
 
     def list_projects(self, user):
         """
@@ -145,11 +95,11 @@ class FileManager(object):
         for permission in permissions:
             project = Project.query.filter_by(id=permission.p_id).first()
             projects.append({
-                            "p_id": permission.p_id,
-                            "access_level": permission.access_level,
-                            "path": project.path,
-                            "description": project.description,
-                            "autosave": project.autosave})
+                "p_id": permission.p_id,
+                "access_level": permission.access_level,
+                "path": project.path,
+                "description": project.description
+            })
         return projects
 
     def is_admin(self, u_id, p_id):
@@ -199,23 +149,6 @@ class FileManager(object):
         db.session.commit()
         return True
 
-    def update_access_level(self, p_id, u_id, username, access_level, user):
-        if not self.is_admin(user.id, p_id):
-            return False
-        if username:
-            user_victim = User.query.filter((User.username == username) | (User.emailid == username)).first()
-            if not user_victim:
-                return False
-            u_id = user_victim.id
-        if u_id is None or u_id == user.id:
-            return
-        perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
-        if not perm or perm.access_level == "creator":
-            return False
-        perm.access_level = access_level
-        db.session.commit()
-        return True
-
     def delete_file(self, p_id, user):
         """
         p_id: project id
@@ -226,11 +159,10 @@ class FileManager(object):
         Permission.query.filter_by(p_id=p_id).delete()
         Change.query.filter_by(p_id=p_id).delete()
         Message.query.filter_by(p_id=p_id).delete()
-        Change.query.filter_by(p_id=p_id).delete()
         project = Project.query.filter_by(id=p_id).first()
-        data = fs.open_fs(self.data_dir)
-        data.removetree(project.path)
-        project = Project.query.filter_by(id=p_id).delete()
+        with fs.open_fs(self.data_dir) as project_dir:
+            project_dir.removetree(project.path)
+        db.session.delete(project)
         db.session.commit()
         return True
 
@@ -254,36 +186,32 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False
-        data = fs.open_fs(self.data_dir)
-        """
-        old file is read, the diff between old and new is calculated and stored
-        as 'Change' in changes table. comment for each change is optional
-        """
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        old_data = project_file.read()
-        project_file.close()
-        old_data_lines = old_data.splitlines()
-        content_lines = content.splitlines()
-        diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-        diff_content = '\n'.join(list(diff))
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'w')
-        project_file.write(content)
-        project_file.close()
+
+        with fs.open_fs(self.data_dir) as data:
+            """
+            old file is read, the diff between old and new is calculated and stored
+            as 'Change' in changes table. comment for each change is optional
+            """
+            old_data = data.readtext(fs.path.combine(project.path, 'main.ftml'))
+            old_data_lines = old_data.splitlines()
+            content_lines = content.splitlines()
+            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+            diff_content = '\n'.join(list(diff))
+            data.writetext(fs.path.combine(project.path, 'main.ftml'), content)
         # commit changes if comment is not None
         if diff_content != "":
             # commit to git repository
             project_path = fs.path.combine(self.data_dir, project.path)
             repo = git.Repo(project_path)
+            repo.git.clear_cache()
             repo.index.add(['main.ftml'])
-            # hack used, ToDo fix it
-            if comment == "" or comment is False or comment is None:
-                comment = "committing change"
-            cm = repo.index.commit(comment)
+            cm = repo.index.commit("committing changes")
             # change db table
-            change = Change(p_id, user.id, diff_content, cm.hexsha, comment)
+            change = Change(p_id, user.id, cm.hexsha)
             db.session.add(change)
             db.session.commit()
-        return True
+            return True
+        return False
 
     def get_file(self, p_id, user):
         """
@@ -296,11 +224,12 @@ class FileManager(object):
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False
-        data = fs.open_fs(self.data_dir)
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        return project_file.read()
+        with fs.open_fs(self.data_dir) as data:
+            project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
+            project_data = project_file.read()
+        return project_data
 
-    def get_changes(self, p_id, user):
+    def get_all_changes(self, p_id, user, named_version=None):
         """
         p_id: project-id
         user: user of this request
@@ -311,17 +240,29 @@ class FileManager(object):
         perm = Permission.query.filter_by(u_id=user.id, p_id=p_id).first()
         if not perm:
             return False
-        changes = Change.query.filter_by(p_id=p_id).all()
-        return list(map(lambda change: {'content': change.content,
-                                        'comment': change.comment,
-                                        'u_id': change.u_id,
-                                        'username': self.get_user_from_id(change.u_id).username,
-                                        'id': change.id}, changes,))
+        # Get all changes
+        if named_version is None:
+            changes = Change.query.\
+                filter_by(p_id=p_id)\
+                .order_by(Change.created_at.desc())\
+                .all()
+        # Get only named versions
+        else:
+            changes = Change.query\
+                .filter(Change.p_id == p_id)\
+                .filter(~Change.version_name.is_(None))\
+                .order_by(Change.created_at.desc())\
+                .all()
 
-    def get_user_from_id(self, id):
-        return User.query.filter_by(id=id).first()
+        return list(map(lambda change: {
+            'id': change.id,
+            'comment': change.comment,
+            'version_name': change.version_name,
+            'username': change.user.username,
+            'created_at': change.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+        }, changes))
 
-    def get_change_by_id(self, ch_id, user):
+    def get_change_content(self, ch_id):
         """
         ch_id: change id
         user: user of this request
@@ -331,10 +272,20 @@ class FileManager(object):
         change = Change.query.filter_by(id=ch_id).first()
         if not change:
             return False
-        perm = Permission.query.filter_by(u_id=user.id, p_id=change.p_id).first()
-        if not perm:
+        project = Project.query.filter_by(id=change.p_id).first()
+        project_path = fs.path.combine(self.data_dir, project.path)
+        repo = git.Repo(project_path)
+        change_content = repo.git.show(f'{change.commit_hash}:main.ftml')
+        return change_content
+
+    def set_version_name(self, ch_id, p_id, u_id, version_name):
+        if not self.is_admin(u_id, p_id):
             return False
-        return {'content': change.content, 'comment': change.comment, 'u_id': change.u_id}
+        Change.query\
+            .filter(Change.id == ch_id)\
+            .update({Change.version_name: version_name}, synchronize_session=False)
+        db.session.commit()
+        return True
 
     def undo(self, ch_id, user):
         """
@@ -351,33 +302,139 @@ class FileManager(object):
         if not ch or not project:
             return False
 
-        data = fs.open_fs(self.data_dir)
-        project_file = data.open(fs.path.combine(project.path, 'main.ftml'), 'r')
-        old_data = project_file.read()
-        project_file.close()
-        old_data_lines = old_data.splitlines()
-
-        project_path = fs.path.combine(self.data_dir, project.path)
+        project_path = fs.path.join(self.data_dir, project.path)
         repo = git.Repo(project_path)
+        repo.git.clear_cache()
         try:
-            file_content = repo.git.show('{}:{}'.format(ch.commit_hash, 'main.ftml'))
-
-            content_lines = file_content.splitlines()
-            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-            diff_content = '\n'.join(list(diff))
-
-            proj_fs = fs.open_fs(project_path)
-            proj_fs.writetext('main.ftml', file_content)
-            proj_fs.close()
+            file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
+            with fs.open_fs(project_path) as proj_fs:
+                proj_fs.writetext('main.ftml', file_content)
             repo.index.add(['main.ftml'])
-            cm = repo.index.commit("checkout to {}".format(ch.commit_hash))
-
-            change = Change(ch.p_id, user.id, diff_content, cm.hexsha,
-                            "checkout to {}".format(ch.commit_hash))
+            cm = repo.index.commit(f"checkout to {ch.commit_hash}")
+            change = Change(ch.p_id, user.id, cm.hexsha)
             db.session.add(change)
             db.session.commit()
-
             return True
         except Exception as ex:
             logging.debug(ex)
             return False
+
+    def fetch_users_without_permission(self, p_id, u_id):
+        if not self.is_admin(u_id, p_id):
+            return False
+
+        user_list = User.query\
+            .join(Permission, (User.id == Permission.u_id) & (Permission.p_id == p_id), isouter=True) \
+            .add_columns(User.id, User.username, User.emailid) \
+            .filter(Permission.u_id.is_(None))
+
+        users = [[user.username, user.emailid, user.id] for user in user_list]
+        return users
+
+    def fetch_users_with_permission(self, p_id, u_id):
+        if not self.is_admin(u_id, p_id):
+            return False
+
+        user_list = User.query\
+            .join(Permission, User.id == Permission.u_id)\
+            .add_columns(User.id, User.username, User.emailid, Permission.access_level) \
+            .filter(Permission.p_id == p_id) \
+            .filter((User.id != u_id) & (Permission.access_level != 'creator'))
+
+        users = [[user.username, user.emailid, user.access_level, user.id] for user in user_list]
+        return users
+
+    def add_bulk_permission(self, p_id, user, new_u_ids, access_level):
+        if not self.is_admin(user.id, p_id):
+            return False
+
+        new_permissions = []
+        for u_id in new_u_ids:
+            new_permissions.append(Permission(u_id, p_id, access_level))
+        db.session.add_all(new_permissions)
+        try:
+            db.session.commit()
+            return True
+        except IntegrityError:
+            db.session.rollback()
+            return False
+
+    def modify_bulk_permission(self, p_id, user, u_ids, new_access_level):
+        if not self.is_admin(user.id, p_id):
+            return False
+
+        # TODO: Check whether we need synchronize_session False Or Fetch
+        Permission.query\
+            .filter(Permission.p_id == p_id)\
+            .filter(Permission.u_id.in_(u_ids))\
+            .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
+
+        try:
+            db.session.commit()
+            return True
+        except IntegrityError:
+            db.session.rollback()
+            return False
+
+    def delete_bulk_permission(self, p_id, user, u_ids):
+        if not self.is_admin(user.id, p_id):
+            return False
+
+        Permission.query \
+            .filter(Permission.p_id == p_id) \
+            .filter(Permission.u_id.in_(u_ids)) \
+            .delete(synchronize_session='fetch')
+
+        db.session.commit()
+        return True
+
+    def import_permissions(self, import_p_id, current_p_id, u_id):
+        if not self.is_admin(u_id, current_p_id):
+            return False, None
+
+        perm = Permission.query.filter_by(u_id=u_id, p_id=import_p_id).first()
+        if not perm:
+            return False, None
+
+        existing_perms = Permission.query \
+            .filter(Permission.p_id == current_p_id) \
+            .filter((Permission.u_id != u_id) & (Permission.access_level != 'creator')) \
+            .all()
+
+        current_project_creator = Permission.query.filter_by(p_id=current_p_id, access_level="creator").first()
+        import_perms = Permission.query\
+            .filter(Permission.p_id == import_p_id)\
+            .filter((Permission.u_id != u_id) & (Permission.u_id != current_project_creator.u_id))\
+            .all()
+
+        # We Delete all the existing permissions
+        existing_users = []
+        for perm in existing_perms:
+            existing_users.append(perm.u_id)
+            db.session.delete(perm)
+
+        db.session.flush()
+
+        # Then add the permissions of the imported project
+        new_users = []
+        for perm in import_perms:
+            access_level = perm.access_level
+            if perm.access_level == "creator":
+                access_level = "admin"
+            new_users.append(perm.u_id)
+            db.session.add(Permission(perm.u_id, current_p_id, access_level))
+
+        # Set Difference of lists new_users - existing users
+        add_users = [u_id for u_id in new_users if u_id not in existing_users]
+        # Intersection of lists existing_users and new_users
+        modify_users = [u_id for u_id in existing_users if u_id in new_users]
+        # Set Difference of lists existing users - new_users
+        delete_users = [u_id for u_id in new_users if u_id in existing_users]
+
+        try:
+            db.session.commit()
+            return True, {"add_users": add_users, "modify_users": modify_users, "delete_users": delete_users}
+
+        except IntegrityError:
+            db.session.rollback()
+            return False, None

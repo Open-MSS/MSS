@@ -157,7 +157,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def __init__(self, *args):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon(icons('64x64')))
+        self.setWindowIcon(QtGui.QIcon(icons('32x32')))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
         # instead of the default Icon of python/pythonw
         try:
@@ -415,11 +415,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listFlightTracks.clear()
             # cleanup mscolab window
             if self.mscolab_window is not None:
-                # disconnect sockets
-                if self.mscolab_window.conn is not None:
-                    self.mscolab_window.conn.disconnect()
-                # delete the reference to QWidget
-                self.mscolab_window = None
+                self.mscolab_window.close()
             event.accept()
         else:
             event.ignore()
@@ -476,7 +472,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def activate_mscolab_window(self):
         # initiate mscolab window
         if self.mscolab_window is None:
-            self.mscolab_window = mscolab.MSSMscolabWindow(parent=self.menu_Mscolab)
+            self.mscolab_window = mscolab.MSSMscolabWindow(parent=self)
             self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             self.mscolab_window.viewCloses.connect(self.close_mscolab_window)
             self.mscolab_window.show()
@@ -747,6 +743,8 @@ def main():
     logging.info("Launching user interface...")
 
     application = QtWidgets.QApplication(sys.argv)
+    application.setWindowIcon(QtGui.QIcon(icons('128x128')))
+    application.setApplicationDisplayName("MSS")
     mainwindow = MSSMainWindow()
     mainwindow.create_new_flight_track()
     mainwindow.show()

@@ -26,33 +26,33 @@
 """
 import logging
 try:
-    import mscolab_settings
-    logging.info("Using user defined settings from %s", mscolab_settings.__file__)
+    from mscolab_settings import mscolab_settings
+    logging.info("Using user defined settings")
 except ImportError as ex:
-    logging.warning(u"Couldn't import mss_wms_settings (ImportError:'%s'), creating dummy config.", ex)
+    logging.warning(u"Couldn't import mscolab_settings (ImportError:'%s'), using dummy config.", ex)
 
     class mscolab_settings(object):
-        # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
         import os
         import logging
+
         # dir where mss output files are stored
-        DATA_DIR = os.path.expanduser("~/mss/colabdata")
-        BASE_DIR = os.path.expanduser("~/mss")
-        SQLITE_FILE_PATH = os.path.join(DATA_DIR, 'mscolab.db')
+        BASE_DIR = os.path.expanduser("~")
 
-        SQLALCHEMY_DB_URI = 'sqlite:///' + SQLITE_FILE_PATH
-
-        # used to generate and parse tokens
-        SECRET_KEY = 'secretkEyu'
-        DB_HOST = '127.0.0.1'
-        DB_USER = 'user'
-        DB_PASSWORD = 'pass'
-        DB_NAME = 'test_1'
-
-        # SQLALCHEMY_DB_URI = 'postgresql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
+        DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 
         # mscolab data directory
         MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+
+        # MYSQL CONNECTION STRING: "mysql+pymysql://<username>:<password>@<host>:<port>/<db_name>?charset=utf8mb4"
+        SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+
+        # mscolab file upload settings
+        UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
+        MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
+
+        # used to generate and parse tokens
+        SECRET_KEY = 'MySecretKey'
+
         STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
         <FlightTrack version="1.7.6">
           <ListOfWaypoints>
