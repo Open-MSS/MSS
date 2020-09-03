@@ -174,7 +174,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
+        QtTest.QTest.qWait(3000)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(6000)
         assert mockbox.critical.call_count == 0

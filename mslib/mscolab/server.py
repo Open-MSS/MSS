@@ -43,7 +43,7 @@ from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 
 # set the project root directory as the static folder
-
+# ToDo needs refactoring on a route without using of static folder
 APP = Flask(__name__, static_folder=mscolab_settings.UPLOAD_FOLDER)
 APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
@@ -139,6 +139,7 @@ def verify_user(func):
 
 # ToDo setup codes in return statements
 @APP.route("/")
+@APP.route("/status")
 def hello():
     return "Mscolab server"
 

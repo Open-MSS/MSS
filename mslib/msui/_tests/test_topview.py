@@ -276,7 +276,7 @@ class Test_TopViewWMS(object):
         self.query_server("http://127.0.0.1:8082")
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        QtTest.QTest.qWait(3000)
         QtWidgets.QApplication.processEvents()
         self.window.mpl.canvas.redraw_map()
         assert mockbox.critical.call_count == 0

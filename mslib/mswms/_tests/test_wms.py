@@ -44,6 +44,16 @@ def callback_ok_html(status, response_headers):
     assert response_headers[0] == ('Content-Type', 'text/html; charset=utf-8')
 
 
+def callback_200_plain(status, response_headers):
+    assert status == "200 OK"
+    assert response_headers[0] == ('Content-type', 'text/plain')
+
+
+def callback_200_html(status, response_headers):
+    assert status == "200 OK"
+    assert response_headers[0] == ('Content-Type', 'text/html; charset=utf-8')
+
+
 def callback_404_plain(status, response_headers):
     assert status == "404 NOT FOUND"
     assert response_headers[0] == ('Content-type', 'text/plain')
@@ -247,7 +257,7 @@ class Test_WMS(object):
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_html(result.status, result.headers)
         assert isinstance(result.data, bytes), result
-        assert result.data.count(b"") == 1, result
+        assert result.data.count(b"") > 1, result
 
     def test_application_unkown_request(self):
         environ = {
