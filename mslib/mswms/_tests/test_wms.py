@@ -31,12 +31,12 @@ import mslib.mswms.mswms as mswms
 
 def callback_ok_image(status, response_headers):
     assert status == "200 OK"
-    assert response_headers[0] == ('Content-type', 'image/png')
+    assert response_headers[0] == ('Content-Type', 'image/png')
 
 
 def callback_ok_xml(status, response_headers):
     assert status == "200 OK"
-    assert response_headers[0] == ('Content-type', 'text/xml')
+    assert response_headers[0] == ('Content-Type', 'text/xml')
 
 
 def callback_ok_html(status, response_headers):
@@ -46,7 +46,7 @@ def callback_ok_html(status, response_headers):
 
 def callback_200_plain(status, response_headers):
     assert status == "200 OK"
-    assert response_headers[0] == ('Content-type', 'text/plain')
+    assert response_headers[0] == ('Content-Type', 'text/plain')
 
 
 def callback_200_html(status, response_headers):
@@ -56,7 +56,7 @@ def callback_200_html(status, response_headers):
 
 def callback_404_plain(status, response_headers):
     assert status == "404 NOT FOUND"
-    assert response_headers[0] == ('Content-type', 'text/plain')
+    assert response_headers[0] == ('Content-Type', 'text/plain')
 
 
 class Test_WMS(object):

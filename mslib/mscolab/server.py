@@ -31,7 +31,8 @@ import time
 
 import fs
 import socketio
-from flask import Flask, g, jsonify, request
+from flask import g, jsonify, request, redirect
+from flask import send_from_directory, abort
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
 from werkzeug.utils import secure_filename
@@ -41,10 +42,11 @@ from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
+from mslib.index import APP
 
 # set the project root directory as the static folder
 # ToDo needs refactoring on a route without using of static folder
-APP = Flask(__name__, static_folder=mscolab_settings.UPLOAD_FOLDER)
+
 APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
 APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -139,12 +141,13 @@ def verify_user(func):
 
 # ToDo setup codes in return statements
 @APP.route("/")
+def url_index():
+    return redirect("index", code=200)
+
+
 @APP.route("/status")
 def hello():
     return "Mscolab server"
-
-
-# User related routes
 
 
 @APP.route('/token', methods=["POST"])
@@ -234,6 +237,18 @@ def message_attachment():
         sockio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
         return jsonify({"success": True, "path": static_file_path})
     return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
+
+
+@APP.route('/uploads/<name>/<path:filename>')
+# We need verify user here, otherwise one could fetch by url data
+# @verify_user
+def uploads(name=None, filename=None):
+    base_path = mscolab_settings.UPLOAD_FOLDER
+    if name is None:
+        abort(404)
+    if filename is None:
+        abort(404)
+    return send_from_directory(fs.path.join(base_path, name), filename)
 
 
 # 413: Payload Too Large

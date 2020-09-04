@@ -63,7 +63,6 @@ def _xstatic(name):
 def files(name, filename):
 
     base_path = _xstatic(name)
-    print(base_path, name, filename)
     if base_path is None:
         abort(404)
     if not filename:
@@ -134,4 +133,3 @@ def favions():
 def logo():
     base_path = icons("64x64", "mss-logo.png")
     return send_file(base_path)
-
