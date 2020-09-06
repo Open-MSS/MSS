@@ -57,7 +57,7 @@ def _xstatic(name):
 
 
 def app_loader(name):
-    APP = Flask(name)
+    APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'templates'))
 
     @APP.route('/xstatic/<name>/', defaults=dict(filename=''))
     @APP.route('/xstatic/<name>/<path:filename>')
