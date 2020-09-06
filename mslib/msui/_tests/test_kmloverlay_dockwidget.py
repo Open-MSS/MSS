@@ -57,7 +57,7 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        del self.window
+        self.window.close()
 
     def select_file(self, file):  # Utility function for single file
         path = fs.path.join(sample_path, "kml", file)
