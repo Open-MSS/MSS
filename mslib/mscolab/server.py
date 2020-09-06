@@ -42,7 +42,9 @@ from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
-from mslib.index import APP
+from mslib.index import app_loader
+
+APP = app_loader(__name__)
 
 # set the project root directory as the static folder
 # ToDo needs refactoring on a route without using of static folder

@@ -51,19 +51,19 @@ import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
 
-from flask import request, make_response, redirect
+from flask import request, make_response
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
-from mslib.index import APP as app
+from mslib.index import app_loader
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
 
+app = app_loader(__name__)
 auth = HTTPBasicAuth()
 
-# app = Flask(__name__)
 realm = 'Mission Support Web Map Service'
 app.config['realm'] = realm
 
@@ -500,9 +500,6 @@ server = WMSServer()
 @app.route('/')
 @conditional_decorator(auth.login_required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
 def application():
-    if not request.args:
-        # ToDo code should be 303
-        return redirect("index", code=200)
     if request.query_string == b'':
         res = make_response("", 200)
         return res
@@ -530,7 +527,6 @@ def application():
         else:
             logging.debug("Request type '%s' is not valid.", request)
             raise RuntimeError("Request type is not valid.")
-            # return redirect("index", code=404)
 
         res = make_response(return_data, 200)
         response_headers = [('Content-type', return_format), ('Content-Length', str(len(return_data)))]

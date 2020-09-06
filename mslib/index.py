@@ -38,8 +38,6 @@ from mslib.msui.icons import icons
 # set the project root directory as the static folder
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(__file__))
 
-APP = Flask(__name__)
-
 
 def _xstatic(name):
     mod_names = [
@@ -58,78 +56,74 @@ def _xstatic(name):
         return None
 
 
-@APP.route('/xstatic/<name>/', defaults=dict(filename=''))
-@APP.route('/xstatic/<name>/<path:filename>')
-def files(name, filename):
+def app_loader(name):
+    APP = Flask(name)
 
-    base_path = _xstatic(name)
-    if base_path is None:
-        abort(404)
-    if not filename:
-        abort(404)
-    return send_from_directory(base_path, filename)
+    @APP.route('/xstatic/<name>/', defaults=dict(filename=''))
+    @APP.route('/xstatic/<name>/<path:filename>')
+    def files(name, filename):
 
+        base_path = _xstatic(name)
+        if base_path is None:
+            abort(404)
+        if not filename:
+            abort(404)
+        return send_from_directory(base_path, filename)
 
-def get_topmenu():
-    menu = [
-        ('/mss', 'Mission Support System',
-         (('/mss/about', 'About'),
-          ('/mss/install', 'Install'),
-          ('/mss/help', 'Help'),
-          )),
-    ]
-    return menu
+    def get_topmenu():
+        menu = [
+            ('/mss', 'Mission Support System',
+             (('/mss/about', 'About'),
+              ('/mss/install', 'Install'),
+              ('/mss/help', 'Help'),
+              )),
+        ]
+        return menu
 
+    APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
-APP.jinja_env.globals.update(get_topmenu=get_topmenu)
+    def get_content(filename, overrides=None):
+        content = ""
+        if os.path.isfile(filename):
+            with codecs.open(filename, 'r', 'utf-8') as f:
+                rst_data = f.read()
+            img_location = 'https://mss.readthedocs.io/en/stable/_images/wise12_overview.png'
+            rst_data = rst_data.replace('mss_theme/img/wise12_overview.png', img_location)
 
+            content = publish_parts(rst_data, writer_name='html', settings_overrides=overrides)['html_body']
+        return content
 
-def get_content(filename, overrides=None):
-    content = ""
-    if os.path.isfile(filename):
-        with codecs.open(filename, 'r', 'utf-8') as f:
-            rst_data = f.read()
-        img_location = 'https://mss.readthedocs.io/en/stable/_images/wise12_overview.png'
-        rst_data = rst_data.replace('mss_theme/img/wise12_overview.png', img_location)
+    @APP.route("/index")
+    def index():
+        return render_template("/index.html")
 
-        content = publish_parts(rst_data, writer_name='html', settings_overrides=overrides)['html_body']
-    return content
+    @APP.route("/mss/about")
+    @APP.route("/mss")
+    def about():
+        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'about.rst')
+        content = get_content(_file)
+        return render_template("/content.html", act="about", content=content)
 
+    @APP.route("/mss/install")
+    def install():
+        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'installation.rst')
+        content = get_content(_file)
+        return render_template("/content.html", act="install", content=content)
 
-@APP.route("/index")
-def index():
-    return render_template("/index.html")
+    @APP.route("/mss/help")
+    def help():
+        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'help.rst')
+        content = get_content(_file)
+        return render_template("/content.html", act="help", content=content)
 
+    @APP.route('/mss/favicon.ico')
+    def favions():
+        base_path = icons("16x16", "favicon.ico")
+        return send_file(base_path)
 
-@APP.route("/mss/about")
-@APP.route("/mss")
-def about():
-    _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'about.rst')
-    content = get_content(_file)
-    return render_template("/content.html", act="about", content=content)
+    @APP.route('/mss/logo.png')
+    def logo():
+        base_path = icons("64x64", "mss-logo.png")
+        return send_file(base_path)
 
-
-@APP.route("/mss/install")
-def install():
-    _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'installation.rst')
-    content = get_content(_file)
-    return render_template("/content.html", act="install", content=content)
-
-
-@APP.route("/mss/help")
-def help():
-    _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'help.rst')
-    content = get_content(_file)
-    return render_template("/content.html", act="help", content=content)
-
-
-@APP.route('/mss/favicon.ico')
-def favions():
-    base_path = icons("16x16", "favicon.ico")
-    return send_file(base_path)
-
-
-@APP.route('/mss/logo.png')
-def logo():
-    base_path = icons("64x64", "mss-logo.png")
-    return send_file(base_path)
+    return APP
