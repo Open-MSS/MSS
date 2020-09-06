@@ -31,12 +31,12 @@ import mslib.mswms.mswms as mswms
 
 def callback_ok_image(status, response_headers):
     assert status == "200 OK"
-    assert response_headers[0] == ('Content-Type', 'image/png')
+    assert response_headers[0] == ('Content-type', 'image/png')
 
 
 def callback_ok_xml(status, response_headers):
     assert status == "200 OK"
-    assert response_headers[0] == ('Content-Type', 'text/xml')
+    assert response_headers[0] == ('Content-type', 'text/xml')
 
 
 def callback_ok_html(status, response_headers):
@@ -56,7 +56,7 @@ def callback_200_html(status, response_headers):
 
 def callback_404_plain(status, response_headers):
     assert status == "404 NOT FOUND"
-    assert response_headers[0] == ('Content-Type', 'text/plain')
+    assert response_headers[0] == ('Content-type', 'text/plain')
 
 
 class Test_WMS(object):
@@ -257,7 +257,7 @@ class Test_WMS(object):
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_html(result.status, result.headers)
         assert isinstance(result.data, bytes), result
-        assert result.data.count(b"") > 1, result
+        assert result.data.count(b"") == 1, result
 
     def test_application_unkown_request(self):
         environ = {
