@@ -641,44 +641,28 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
-
         base_url = self.cbWMS_URL.currentText()
-        try:
-            request = requests.get(base_url)
-        except (requests.exceptions.TooManyRedirects,
-                requests.exceptions.ConnectionError,
-                requests.exceptions.InvalidURL,
-                requests.exceptions.InvalidSchema,
-                requests.exceptions.MissingSchema) as ex:
-            logging.error("Cannot load capabilities document.\n"
-                          "No layers can be used in this view.")
-            QtWidgets.QMessageBox.critical(
-                self, self.tr("Web Map Service"),
-                self.tr("ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
-        else:
-            logging.debug("requesting capabilities from %s", request.url)
-            wms = self.initialise_wms(request.url)
-            if wms is not None:
+        wms = self.initialise_wms(base_url)
+        if wms is not None:
+            # update the combo box, if entry requires change/insertion
+            found = False
+            for count in range(self.cbWMS_URL.count()):
+                if self.cbWMS_URL.itemText(count) == base_url:
+                    self.cbWMS_URL.setItemText(count, base_url)
+                    self.cbWMS_URL.setCurrentIndex(count)
+                    found = True
+                    break
+                if self.cbWMS_URL.itemText(count) == base_url:
+                    self.cbWMS_URL.setCurrentIndex(count)
+                    found = True
+            if not found:
+                logging.debug("inserting URL: %s", base_url)
+                add_wms_urls(self.cbWMS_URL, [base_url])
+                self.cbWMS_URL.setEditText(base_url)
+                save_settings_qsettings('wms', {'recent_wms_url': base_url})
 
-                # update the combo box, if entry requires change/insertion
-                found = False
-                for count in range(self.cbWMS_URL.count()):
-                    if self.cbWMS_URL.itemText(count) == base_url:
-                        self.cbWMS_URL.setItemText(count, request.url)
-                        self.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                        break
-                    if self.cbWMS_URL.itemText(count) == request.url:
-                        self.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                if not found:
-                    logging.debug("inserting URL: %s", request.url)
-                    add_wms_urls(self.cbWMS_URL, [request.url])
-                    self.cbWMS_URL.setEditText(request.url)
-                    save_settings_qsettings('wms', {'recent_wms_url': request.url})
-
-                self.activate_wms(wms)
-                WMS_SERVICE_CACHE[wms.url] = wms
+            self.activate_wms(wms)
+            WMS_SERVICE_CACHE[wms.url] = wms
 
     def activate_wms(self, wms):
         # Clear layer and style combo boxes. First disconnect the layerChanged

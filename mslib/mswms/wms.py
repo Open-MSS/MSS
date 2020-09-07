@@ -51,7 +51,7 @@ import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
 
-from flask import request, make_response
+from flask import request, make_response, redirect
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
@@ -501,7 +501,7 @@ server = WMSServer()
 @conditional_decorator(auth.login_required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
 def application():
     if request.query_string == b'':
-        res = make_response("", 200)
+        res = redirect("index", 307)
         return res
     try:
         # Request info
