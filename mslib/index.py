@@ -48,6 +48,7 @@ def _xstatic(name):
 
     for mod_name in mod_names:
         mod = getattr(pkg, mod_name)
+        # ToDo protocol should become configurable
         xs = XStatic(mod, root_url='/static', provider='local', protocol='http')
         serve_files[xs.name] = xs.base_dir
     try:
@@ -89,7 +90,7 @@ def app_loader(name):
                 rst_data = f.read()
             img_location = 'https://mss.readthedocs.io/en/stable/_images/wise12_overview.png'
             rst_data = rst_data.replace('mss_theme/img/wise12_overview.png', img_location)
-            rst_data = rst_data.replace(':ref:','')
+            rst_data = rst_data.replace(':ref:', '')
 
             content = publish_parts(rst_data, writer_name='html', settings_overrides=overrides)['html_body']
         return content
