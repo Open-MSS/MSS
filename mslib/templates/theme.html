@@ -10,7 +10,7 @@
 <link rel='shortcut icon' type='image/x-icon' href='/mss/favicon.ico' />
 
 
-<title>Welcome to the Mission Support Demo Site</title>
+<title>Mission Support System Colaboration Platform</title>
 
 <!-- Bootstrap core CSS -->
 <link href="{{ url_for('files', name='bootstrap', filename='css/bootstrap.css') }}" rel="stylesheet">
@@ -23,7 +23,7 @@
 
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
-    <a class="navbar-brand" ><img src="/mss/logo.png" title="Mission Support System" alt="logo Mission Support System" /></a>
+    <a class="navbar-brand" href="/index"><img src="/mss/logo.png" title="Mission Support System" alt="logo Mission Support System" /></a>
       <li class="nav-item dropdown">
 
             {% for href, caption, submenu in get_topmenu(): %}
@@ -44,13 +44,15 @@
                   {% endif %}
                {% endfor %}
         </div>
-
     </ul>
+    <!--
     <form class="form-inline my-2 my-lg-0">
       <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
       <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
     </form>
+    !-->
   </div>
+
 </nav>
 
 
