@@ -500,9 +500,6 @@ server = WMSServer()
 @app.route('/')
 @conditional_decorator(auth.login_required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
 def application():
-    if request.query_string == b'':
-        res = redirect("index", 307)
-        return res
     try:
         # Request info
         query = request.args
@@ -538,10 +535,4 @@ def application():
     except Exception as ex:
         error_message = "{}: {}\n".format(type(ex), ex)
         logging.error("Unexpected error: %s", error_message)
-        error_message = error_message.encode("utf-8")
-
-        response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
-        res = make_response(error_message, 404)
-        for response_header in response_headers:
-            res.headers[response_header[0]] = response_header[1]
-        return res
+        return redirect('/index', 307)

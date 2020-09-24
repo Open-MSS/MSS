@@ -142,9 +142,9 @@ def verify_user(func):
 
 
 # ToDo setup codes in return statements
-@APP.route("/")
-def url_index():
-    return redirect("/index", code=307)
+#@APP.route("/")
+#def url_index():
+#    return redirect("/index", code=307)
 
 
 @APP.route("/status")
