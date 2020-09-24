@@ -174,7 +174,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(3000)
+        QtTest.QTest.qWait(1000)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(6000)
         assert mockbox.critical.call_count == 0
@@ -237,7 +237,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
         mockbox.reset_mock()
-        QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_8)
         QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_2)
         QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Slash)
         QtWidgets.QApplication.processEvents()

@@ -31,7 +31,7 @@ import time
 
 import fs
 import socketio
-from flask import g, jsonify, request, redirect
+from flask import g, jsonify, request
 from flask import send_from_directory, abort
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
@@ -142,11 +142,6 @@ def verify_user(func):
 
 
 # ToDo setup codes in return statements
-#@APP.route("/")
-#def url_index():
-#    return redirect("/index", code=307)
-
-
 @APP.route("/status")
 def hello():
     return "Mscolab server"
