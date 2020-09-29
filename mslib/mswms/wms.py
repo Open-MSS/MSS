@@ -51,16 +51,17 @@ import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
 
-from flask import Flask, request, make_response
+from flask import request, make_response, redirect
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
+from mslib.index import app_loader
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
 
-app = Flask(__name__)
+app = app_loader(__name__)
 auth = HTTPBasicAuth()
 
 realm = 'Mission Support Web Map Service'
@@ -499,9 +500,6 @@ server = WMSServer()
 @app.route('/')
 @conditional_decorator(auth.login_required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
 def application():
-    if request.query_string == b'':
-        res = make_response("", 200)
-        return res
     try:
         # Request info
         query = request.args
@@ -537,10 +535,4 @@ def application():
     except Exception as ex:
         error_message = "{}: {}\n".format(type(ex), ex)
         logging.error("Unexpected error: %s", error_message)
-        error_message = error_message.encode("utf-8")
-
-        response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
-        res = make_response(error_message, 404)
-        for response_header in response_headers:
-            res.headers[response_header[0]] = response_header[1]
-        return res
+        return redirect('/index', 307)

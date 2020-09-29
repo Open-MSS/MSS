@@ -173,7 +173,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def connect_handler(self):
         try:
             url = str(self.url.currentText())
-            r = requests.get(url)
+            r = requests.get(url_join(url, 'status'))
             if r.text == "Mscolab server":
                 # delete mscolab http_auth settings for the url
                 if url not in self.settings["recent_mscolab_urls"]:

@@ -8,3 +8,5 @@ Components
    deployment
    mscolab
    demodata
+   mswms
+   docker_based_installation

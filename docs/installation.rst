@@ -57,10 +57,10 @@ to update all packages in this environment. ::
 
 For further details :ref:`mss-configuration`
 
-Server based installation using miniconda
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Server based installation
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For a wms server setup you may want to have a dedicated user running mswms or the apache2 wsgi script.
+For a wms server setup or mscolab setup you may want to have a dedicated user for the apache2 wsgi script.
 We suggest to create a mss user.
 
 * create a mss user on your system
@@ -74,40 +74,15 @@ We suggest to create a mss user.
 * python --version should tell Python 3.X.X
 * conda install -c conda-forge mss
 
-For a simple test you could start the builtin standalone server by *mswms*.
-It should tell::
+For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
 
- serving on http://127.0.0.1:8081
+   $ mswms &
+   $ mscolab start
 
-Pointing a browser to
+Point a browser for the verification of both servers installed on  `<http://127.0.0.1:8083/status>`_ or
 `<http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
-shows the generated XML data the mss app will use.
-
-If you want to look on some data, we provide a demo data set by the program :ref:`demodata`.
-
-For further configuration see :ref:`apache-deployment` or :ref:`mswms-deployment`.
 
 
-Installation based on Docker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Further details in the components section on `<http://mss.rtfd.io>`_
 
-Since 1.7.4 mss is on the `docker hub <https://hub.docker.com/r/dreimark/mss/>`_.
-
-Build settings are based on the stable branch. Our latest is any update in the stable repo.
-
-You can start server and client by loading the image ::
-
- $ xhost +local:docker
- $ docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest  /bin/bash
- $ /opt/conda/envs/mssenv/bin/mss &
- $ /opt/conda/envs/mssenv/bin/mswms --port 80 &
- $ /opt/conda/envs/mssenv/bin/mscolab &
- $ curl http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1
- $ curl http://localhost:8083
-
-One component can be called by ::
-
- $  xhost +local:docker
- $  docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest \
-   /opt/conda/envs/mssenv/bin/mss
 
