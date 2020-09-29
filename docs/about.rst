@@ -47,6 +47,6 @@ and Forschungszentrum Jülich. Improving the software will improve the quality o
 will also enable its use for other scientific areas, e.g. planning of ship routes.
 
 
- * `Getting started <https://bitbucket.org/wxmetvis/mss/wikiGettingStarted>`_
+ * `Getting started <https://bitbucket.org/wxmetvis/mss/wiki/GSOC2020/Getting%20Started>`_
  * `Simple issues <https://bitbucket.org/wxmetvis/mss/wiki/issues%20to%20start%20with>`_
  * `Contact <https://bitbucket.org/wxmetvis/mss/wiki/Contact>`_

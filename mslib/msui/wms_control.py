@@ -641,10 +641,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
-
         base_url = self.cbWMS_URL.currentText()
+        params = {'service': 'WMS',
+                  'request': 'GetCapabilities',
+                  'version': '1.1.1'}
         try:
-            request = requests.get(base_url)
+            request = requests.get(base_url, params=params)
         except (requests.exceptions.TooManyRedirects,
                 requests.exceptions.ConnectionError,
                 requests.exceptions.InvalidURL,
@@ -656,26 +658,29 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 self, self.tr("Web Map Service"),
                 self.tr("ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
         else:
-            logging.debug("requesting capabilities from %s", request.url)
-            wms = self.initialise_wms(request.url)
+            # url shortener url translated
+            url = request.url
+            url = url.replace('?service=WMS&request=GetCapabilities&version=1.1.1', '')
+            logging.debug("requesting capabilities from %s", url)
+            wms = self.initialise_wms(url)
             if wms is not None:
 
                 # update the combo box, if entry requires change/insertion
                 found = False
                 for count in range(self.cbWMS_URL.count()):
                     if self.cbWMS_URL.itemText(count) == base_url:
-                        self.cbWMS_URL.setItemText(count, request.url)
+                        self.cbWMS_URL.setItemText(count, url)
                         self.cbWMS_URL.setCurrentIndex(count)
                         found = True
                         break
-                    if self.cbWMS_URL.itemText(count) == request.url:
+                    if self.cbWMS_URL.itemText(count) == url:
                         self.cbWMS_URL.setCurrentIndex(count)
                         found = True
                 if not found:
-                    logging.debug("inserting URL: %s", request.url)
-                    add_wms_urls(self.cbWMS_URL, [request.url])
-                    self.cbWMS_URL.setEditText(request.url)
-                    save_settings_qsettings('wms', {'recent_wms_url': request.url})
+                    logging.debug("inserting URL: %s", url)
+                    add_wms_urls(self.cbWMS_URL, [url])
+                    self.cbWMS_URL.setEditText(url)
+                    save_settings_qsettings('wms', {'recent_wms_url': url})
 
                 self.activate_wms(wms)
                 WMS_SERVICE_CACHE[wms.url] = wms
