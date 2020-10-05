@@ -28,10 +28,10 @@ import functools
 import json
 import logging
 import time
-
+import secrets
 import fs
 import socketio
-from flask import g, jsonify, request
+from flask import g, jsonify, request, redirect
 from flask import send_from_directory, abort
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
@@ -131,7 +131,11 @@ def register_user(email, password, username):
 def verify_user(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        user = User.verify_auth_token(request.form.get('token', False))
+        try:
+            user = User.verify_auth_token(request.form.get('token', False))
+        except TypeError:
+            logging.debug("no token in request form")
+            abort(404)
         if not user:
             return "False"
         else:
@@ -139,6 +143,12 @@ def verify_user(func):
             g.user = user
             return func(*args, **kwargs)
     return wrapper
+
+
+@APP.route('/')
+# currently we do use same redirect as on wms server
+def home():
+    return redirect('/index', 307)
 
 
 # ToDo setup codes in return statements
@@ -213,6 +223,7 @@ def messages():
 @APP.route("/message_attachment", methods=["POST"])
 @verify_user
 def message_attachment():
+    file_token = secrets.token_urlsafe(16)
     file = request.files['file']
     p_id = request.form.get("p_id", None)
     message_type = MessageType(int(request.form.get("message_type")))
@@ -223,7 +234,7 @@ def message_attachment():
             if not home_fs.exists(file_dir):
                 home_fs.makedirs(file_dir)
             file_name, file_ext = file.filename.rsplit('.', 1)
-            file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}.{file_ext}'
+            file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
             file_name = secure_filename(file_name)
             file_path = fs.path.join(file_dir, file_name)
             file.save(file_path)
@@ -236,9 +247,7 @@ def message_attachment():
     return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
 
 
-@APP.route('/uploads/<name>/<path:filename>')
-# We need verify user here, otherwise one could fetch by url data
-# @verify_user
+@APP.route('/uploads/<name>/<path:filename>', methods=["GET"])
 def uploads(name=None, filename=None):
     base_path = mscolab_settings.UPLOAD_FOLDER
     if name is None:
