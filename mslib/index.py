@@ -26,6 +26,7 @@
 
 import os
 import codecs
+import mslib
 
 from flask import render_template
 from flask import Flask
@@ -36,7 +37,7 @@ from xstatic.main import XStatic
 from mslib.msui.icons import icons
 
 # set the project root directory as the static folder
-DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(__file__))
+DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
 
 
 def _xstatic(name):
@@ -71,6 +72,14 @@ def app_loader(name):
             abort(404)
         return send_from_directory(base_path, filename)
 
+    @APP.route('/mss_theme/<name>/', defaults=dict(filename=''))
+    @APP.route('/mss_theme/<name>/<path:filename>')
+    def mss_theme(name, filename):
+        if name != 'img':
+            abort(404)
+        base_path =  os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'mss_theme', 'img')
+        return send_from_directory(base_path, filename)
+
     def get_topmenu():
         menu = [
             ('/mss', 'Mission Support System',
@@ -88,10 +97,7 @@ def app_loader(name):
         if os.path.isfile(filename):
             with codecs.open(filename, 'r', 'utf-8') as f:
                 rst_data = f.read()
-            img_location = 'https://mss.readthedocs.io/en/stable/_images/wise12_overview.png'
-            rst_data = rst_data.replace('mss_theme/img/wise12_overview.png', img_location)
             rst_data = rst_data.replace(':ref:', '')
-
             content = publish_parts(rst_data, writer_name='html', settings_overrides=overrides)['html_body']
         return content
 
