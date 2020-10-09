@@ -24,11 +24,20 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import pytest
+import os
 import datetime
 from mslib import utils
 import multidict
 import werkzeug
+
+
+class TestParseTime(object):
+    def test_parse_iso_datetime(self):
+        assert utils.parse_iso_datetime("2009-05-28T16:15:00") == datetime.datetime(2009, 5, 28, 16, 15)
+
+    def test_parse_iso_duration(self):
+        assert utils.parse_iso_duration('P01W') == datetime.timedelta(days=7)
 
 
 class TestSettingsSave(object):
@@ -74,6 +83,19 @@ class TestConfigLoader(object):
         data = utils.config_loader(config_file="foo.json", default={"foo": "123"})
         assert data == {"foo": "123"}
 
+    def test_sample_config_file(self):
+        utils_path = os.path.dirname(os.path.abspath(utils.__file__))
+        config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss', 'mss_settings.json.sample')
+        data = utils.config_loader(config_file=config_file, dataset="new_flighttrack_flightlevel")
+        assert data == 250
+        with pytest.raises(KeyError):
+            utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+        assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9) == 9
+        with pytest.raises(IOError):
+            config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss',
+                                       'not_existing_mss_settings.json.sample')
+            _ = utils.config_loader(config_file=config_file)
+
 
 class TestGetDistance(object):
     """
@@ -86,6 +108,21 @@ class TestGetDistance(object):
                                 ((-5.135943, -42.792442), (4.606085, 120.028077), 18130)]
         for coord1, coord2, distance in coordinates_distance:
             assert int(utils.get_distance(coord1, coord2)) == distance
+
+    def test_find_location(self):
+        assert utils.find_location(50.92, 6.36) == ((50.92, 6.36), 'Juelich')
+        assert utils.find_location(50.9200002, 6.36) == ((50.92, 6.36), 'Juelich')
+
+
+class TestProjections(object):
+    def test_get_projection_params(self):
+        assert utils.get_projection_params("epsg:4839") == {'basemap': {'epsg': '4839'}, 'bbox': 'meter(10.5,51)'}
+        with pytest.raises(ValueError):
+            utils.get_projection_params('auto2:42005')
+        with pytest.raises(ValueError):
+            utils.get_projection_params('auto:42001')
+        with pytest.raises(ValueError):
+            utils.get_projection_params('crs:84')
 
 
 class TestTimes(object):
@@ -122,6 +159,7 @@ class TestAngles(object):
         assert utils.fix_angle(-90) == 270
         assert utils.fix_angle(-180) == 180
         assert utils.fix_angle(-181) == 179
+        assert utils.fix_angle(420) == 60
 
     def test_rotate_point(self):
         assert utils.rotate_point([0, 0], 0) == (0.0, 0.0)
@@ -134,6 +172,11 @@ class TestConverter(object):
     def test_convert_pressure_to_altitude(self):
         assert utils.convertHPAToKM(1013.25) == 0
         assert int(utils.convertHPAToKM(25) * 1000) == 22415
+
+    def test_convert_pressure_to_vertical_axis_measure(self):
+        assert utils.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100
+        assert utils.convert_pressure_to_vertical_axis_measure('flightlevel', 400) == 400
+        assert utils.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == 2.4668986099864068
 
 
 class TestLatLonPoints(object):
