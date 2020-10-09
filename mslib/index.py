@@ -77,7 +77,7 @@ def app_loader(name):
     def mss_theme(name, filename):
         if name != 'img':
             abort(404)
-        base_path =  os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'mss_theme', 'img')
+        base_path = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'mss_theme', 'img')
         return send_from_directory(base_path, filename)
 
     def get_topmenu():
