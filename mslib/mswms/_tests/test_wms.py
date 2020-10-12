@@ -27,26 +27,7 @@
 """
 
 import mslib.mswms.mswms as mswms
-
-
-def callback_ok_image(status, response_headers):
-    assert status == "200 OK"
-    assert response_headers[0] == ('Content-type', 'image/png')
-
-
-def callback_ok_xml(status, response_headers):
-    assert status == "200 OK"
-    assert response_headers[0] == ('Content-type', 'text/xml')
-
-
-def callback_404_plain(status, response_headers):
-    assert status == "404 NOT FOUND"
-    assert response_headers[0] == ('Content-type', 'text/plain')
-
-
-def callback_307_html(status, response_headers):
-    assert status == "307 TEMPORARY REDIRECT"
-    assert response_headers[0] == ('Content-Type', 'text/html; charset=utf-8')
+from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_307_html
 
 
 class Test_WMS(object):
