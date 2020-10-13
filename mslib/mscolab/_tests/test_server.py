@@ -63,6 +63,7 @@ class Test_Server(object):
             mscolab_delete_all_projects(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
             User.query.filter_by(emailid='alpha@alpha.org').delete()
             User.query.filter_by(emailid='user2@example.com').delete()
+            User.query.filter_by(emailid='delta@delta.org').delete()
             server.db.session.commit()
 
     def test_check_login(self):
@@ -560,3 +561,51 @@ class Test_Server(object):
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
             assert response["success"] is True
+
+    def test_uniqueness_of_user_id(self):
+        """
+        creates a user, creates a project, removes the user
+        creates a different new user, checks for projects
+        should not find anything
+        """
+        with self.app.app_context():
+            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            assert response.status == '200 OK'
+            data = json.loads(response.get_data(as_text=True))
+            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='owns_alpha')
+            assert response.status == '200 OK'
+            User.query.filter_by(emailid='alpha@alpha.org').delete()
+            server.db.session.commit()
+            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'delta@delta.org', 'abcdef', 'delta')
+            assert response.status == '200 OK'
+            data = json.loads(response.get_data(as_text=True))
+            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            response = self.app.test_client().get(url, data=data)
+            response = json.loads(response.get_data(as_text=True))
+            assert len(response['projects']) == 0
+            assert 'owns_alpha' not in response['projects'][0]['path']
+
+    def test_token_dependency_to_project(self):
+        """
+        creates a user, creates a project, checks that there is only 1 project
+        fetches a valid token from an other user
+        replaces the token by keeping the user information
+        finds only projects related to the changed token
+        """
+        with self.app.app_context():
+            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            assert response.status == '200 OK'
+            data_alpha = json.loads(response.get_data(as_text=True))
+            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data_alpha, path_name='owns_alpha')
+            assert response.status == '200 OK
+            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            response = self.app.test_client().get(url, data=data_alpha)
+            response = json.loads(response.get_data(as_text=True))
+            assert len(response['projects']) == 1
+            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'a', 'a', 'a')
+            data_a = json.loads(response.get_data(as_text=True))
+            data_alpha['token'] = data_a['token']
+            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            response = self.app.test_client().get(url, data=data_alpha)
+            response = json.loads(response.get_data(as_text=True))
+            assert len(response['projects']) == 3
