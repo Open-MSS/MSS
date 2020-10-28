@@ -142,7 +142,7 @@ class FileManager(object):
             if data.exists(value):
                 return False
             # will be move when projects are introduced
-            # make a directory, else movedir fails
+            # make a directory, else movedir
             data.makedir(value)
             data.movedir(project.path, value)
         setattr(project, attribute, value)
