@@ -1,2 +1,2 @@
 [run]
-omit = *_tests*, *tests*
+omit = *_tests*, *tests*, *ui_*
