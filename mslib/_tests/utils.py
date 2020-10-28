@@ -105,3 +105,23 @@ def mscolab_delete_all_projects(app, msc_url, email, password, username):
         data['p_id'] = p['p_id']
         url = url_join(msc_url, 'delete_project')
         response = app.test_client().post(url, data=data)
+
+
+def mscolab_create_project(app, msc_url, response, path='f', description='description'):
+    data = json.loads(response.get_data(as_text=True))
+    data["path"] = path
+    data['description'] = description
+    url = url_join(msc_url, 'create_project')
+    response = app.test_client().post(url, data=data)
+    return data, response
+
+
+def mscolab_get_project_id(app, msc_url, email, password, username, path):
+    response = mscolab_register_and_login(app, msc_url, email, password, username)
+    data = json.loads(response.get_data(as_text=True))
+    url = url_join(msc_url, 'projects')
+    response = app.test_client().get(url, data=data)
+    response = json.loads(response.get_data(as_text=True))
+    for p in response['projects']:
+        if p['path'] == path:
+            return p['p_id']

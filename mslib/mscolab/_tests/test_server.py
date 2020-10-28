@@ -33,7 +33,8 @@ from mslib.mscolab import server
 from mslib.mscolab.models import User
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib._tests.utils import (callback_307_html, mscolab_register_user,
-                                mscolab_register_and_login, mscolab_create_content, mscolab_delete_all_projects)
+                                mscolab_register_and_login, mscolab_create_content,
+                                mscolab_create_project, mscolab_delete_all_projects)
 
 
 class Test_Init_Server(object):
@@ -191,11 +192,8 @@ class Test_Server(object):
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            data["path"] = 'f3'
-            data['description'] = 'f3 test example'
-            url = url_join(MSCOLAB_URL_TEST, 'create_project')
-            response = self.app.test_client().post(url, data=data)
+            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+                                                    path='f3', description='f3 test example')
             assert response.status == '200 OK'
             url = url_join(MSCOLAB_URL_TEST, 'projects')
             response = self.app.test_client().get(url, data=data)
@@ -222,11 +220,8 @@ class Test_Server(object):
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            data["path"] = 'f4'
-            data['description'] = 'f4 test example'
-            url = url_join(MSCOLAB_URL_TEST, 'create_project')
-            response = self.app.test_client().post(url, data=data)
+            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+                                                    path='f4', description='f4 test example')
             assert response.status == '200 OK'
             url = url_join(MSCOLAB_URL_TEST, 'projects')
             response = self.app.test_client().get(url, data=data)
@@ -263,11 +258,8 @@ class Test_Server(object):
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            data["path"] = 'f1'
-            data['description'] = 'f1 test example'
-            url = url_join(MSCOLAB_URL_TEST, 'create_project')
-            response = self.app.test_client().post(url, data=data)
+            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+                                                    path='f1', description='f1 test example')
             assert response.status == '200 OK'
             data = response.get_data(as_text=True)
             assert data == 'True'
@@ -597,7 +589,7 @@ class Test_Server(object):
             assert response.status == '200 OK'
             data_alpha = json.loads(response.get_data(as_text=True))
             response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data_alpha, path_name='owns_alpha')
-            assert response.status == '200 OK
+            assert response.status == '200 OK'
             url = url_join(MSCOLAB_URL_TEST, 'projects')
             response = self.app.test_client().get(url, data=data_alpha)
             response = json.loads(response.get_data(as_text=True))
