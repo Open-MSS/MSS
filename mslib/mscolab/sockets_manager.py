@@ -54,17 +54,17 @@ class SocketsManager(object):
     def handle_connect(self):
         logging.debug(request.sid)
 
-    def join_creator_to_room(self, json):
+    def join_creator_to_room(self, json_config):
         """
-        json has:
+        json_config has:
             - token: authentication token
             - p_id: project id
         """
-        token = json['token']
+        token = json_config['token']
         user = User.verify_auth_token(token)
         if not user:
             return
-        p_id = json['p_id']
+        p_id = json_config['p_id']
         join_room(str(p_id))
 
     def join_collaborator_to_room(self, u_id, p_id):
