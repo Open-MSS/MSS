@@ -87,18 +87,20 @@ if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
 import os
 import logging
 import fs
+import secrets
 
 ROOT_DIR = '{constants.ROOT_DIR}'
 # directory where mss output files are stored
 root_fs = fs.open_fs(ROOT_DIR)
-root_fs.makedir('colabTestData')
+if not root_fs.exists('colabTestData'):
+    root_fs.makedir('colabTestData')
 BASE_DIR = ROOT_DIR
 DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
 MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 
 # used to generate and parse tokens
-SECRET_KEY = 'secretkEyu'
+SECRET_KEY = secrets.token_urlsafe(16)
 
 SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
 
