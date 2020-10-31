@@ -39,7 +39,7 @@ from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
-from mslib._tests.utils import mscolab_delete_all_projects
+from mslib._tests.utils import mscolab_delete_all_projects, mscolab_delete_user
 
 
 class Test_Mscolab(object):
@@ -68,11 +68,11 @@ class Test_Mscolab(object):
             email = [("something@something.org", "something"),
                      ("other@something.org", "other"),
                      ("anton@something.org", "anton"),
-                     ("berta@something.org", "berta")
+                     ("berta@something.org", "berta"),
                     ]
             for em, username in email:
                 mscolab_delete_all_projects(self.app, MSCOLAB_URL_TEST, em, "something", username)
-                User.query.filter_by(emailid=em).delete()
+                mscolab_delete_user(self.app, MSCOLAB_URL_TEST, em, "something")
 
         # to disconnect connections, and clear token
         self.window.disconnect_handler()
@@ -289,7 +289,7 @@ class Test_Mscolab(object):
         assert self.window.listProjects.model().rowCount() == 0
         self._create_project("flight2", "Description flight2")
         # ToDo fix number after cleanup initial data
-        assert self.window.get_recent_pid() == 7
+        assert self.window.get_recent_pid() == 8
 
     def test_get_recent_project(self):
         self._connect_to_mscolab()

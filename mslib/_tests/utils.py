@@ -51,6 +51,7 @@ def callback_307_html(status, response_headers):
 
 
 def mscolab_register_user(app, msc_url, email, password, username):
+    # Duplicate of imported register_user
     data = {
         'email': email,
         'password': password,
@@ -61,8 +62,8 @@ def mscolab_register_user(app, msc_url, email, password, username):
     return response
 
 
-def mscolab_register_and_login(app, msc_url, email, password, usernamen):
-    register_user(email, password, usernamen)
+def mscolab_register_and_login(app, msc_url, email, password, username):
+    register_user(email, password, username)
     data = {
         'email': email,
         'password': password
@@ -70,6 +71,29 @@ def mscolab_register_and_login(app, msc_url, email, password, usernamen):
     url = url_join(msc_url, 'token')
     response = app.test_client().post(url, data=data)
     return response
+
+
+def mscolab_login(app, msc_url, email, password):
+    data = {
+        'email': email,
+        'password': password
+    }
+    url = url_join(msc_url, 'token')
+    response = app.test_client().post(url, data=data)
+    return response
+
+
+def mscolab_delete_user(app, msc_url, email, password):
+    with app.app_context():
+        response = mscolab_login(app, msc_url, email, password)
+        if response.status == '200 OK':
+            data = json.loads(response.get_data(as_text=True))
+            url = url_join(msc_url, 'delete_user')
+            response = app.test_client().post(url, data=data)
+            if response.status == '200 OK':
+                data = json.loads(response.get_data(as_text=True))
+                return data["success"]
+        return False
 
 
 def mscolab_create_content(app, msc_url, data, path_name='example', content=None):
