@@ -44,6 +44,7 @@ from mslib._tests.utils import mscolab_delete_all_projects, mscolab_delete_user
 
 class Test_Mscolab(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
+
     def setup(self):
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
@@ -218,7 +219,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         self.window.add_proj_dialog.description.setText(str("example"))
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.add_proj_dialog.browse,  QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.add_proj_dialog.browse, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         okWidget = self.window.add_proj_dialog.buttonBox.button(self.window.add_proj_dialog.buttonBox.Ok)
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
@@ -249,7 +250,7 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         self.window.close()
-        assert self.window.help_dialog is  None
+        assert self.window.help_dialog is None
 
     def test_open_help_dialog(self):
         QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
@@ -324,7 +325,7 @@ class Test_Mscolab(object):
 
     def test_delete_project_from_list(self):
         self._connect_to_mscolab()
-        self._create_user("other","other@something.org", "something")
+        self._create_user("other", "other@something.org", "something")
         self._login("other@something.org", "something")
         assert self.window.loggedInWidget.isVisible() is True
         assert self.window.listProjects.model().rowCount() == 0
@@ -348,7 +349,6 @@ class Test_Mscolab(object):
 
     def test_setIdentifier(self):
         pass
-
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")
@@ -450,5 +450,3 @@ class Test_MscolabHelpDialog(object):
 
     def test_closeEvent(self):
         pass
-
-

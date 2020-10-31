@@ -70,8 +70,8 @@ class Test_Server(object):
                            ('otheruser@other.org', 'other'),
                            ('user@alpha.org', 'user')
                            ]:
-                            server.register_user(em, pw, 'test')
-                            mscolab_delete_user(self.app, MSCOLAB_URL_TEST, em, pw)
+                server.register_user(em, pw, 'test')
+                mscolab_delete_user(self.app, MSCOLAB_URL_TEST, em, pw)
             server.db.session.commit()
 
     def test_check_login(self):
