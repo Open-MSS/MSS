@@ -943,7 +943,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.listProjects.takeItem(self.listProjects.row(remove_item))
                 return remove_item.text().split(' - ')[0]
 
-
     @QtCore.Slot(int, int)
     def handle_revoke_permission(self, p_id, u_id):
         if u_id == self.user["id"]:
