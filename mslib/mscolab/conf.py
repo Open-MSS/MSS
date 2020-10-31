@@ -25,8 +25,10 @@
     limitations under the License.
 """
 import logging
+import secrets
+
 try:
-    from mscolab_settings import mscolab_settings
+    import mscolab_settings
     logging.info("Using user defined settings")
 except ImportError as ex:
     logging.warning(u"Couldn't import mscolab_settings (ImportError:'%s'), using dummy config.", ex)
@@ -51,7 +53,7 @@ except ImportError as ex:
         MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
         # used to generate and parse tokens
-        SECRET_KEY = 'MySecretKey'
+        SECRET_KEY = secrets.token_urlsafe(16)
 
         STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
         <FlightTrack version="1.7.6">
