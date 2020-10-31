@@ -33,7 +33,9 @@ from mslib.mscolab import server
 from mslib.mscolab.models import User
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib._tests.utils import (callback_307_html, mscolab_register_user,
-                                mscolab_register_and_login, mscolab_create_content, mscolab_delete_all_projects)
+                                mscolab_register_and_login, mscolab_create_content,
+                                mscolab_create_project, mscolab_delete_all_projects,
+                                mscolab_delete_user, mscolab_login)
 
 
 class Test_Init_Server(object):
@@ -61,9 +63,15 @@ class Test_Server(object):
     def teardown(self):
         with self.app.app_context():
             mscolab_delete_all_projects(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
-            User.query.filter_by(emailid='alpha@alpha.org').delete()
-            User.query.filter_by(emailid='user2@example.com').delete()
-            User.query.filter_by(emailid='delta@delta.org').delete()
+            mscolab_delete_all_projects(self.app, MSCOLAB_URL_TEST, 'user@alpha.org', 'user', 'user')
+            for em, pw in [('alpha@alpha.org', 'abcdef'),
+                           ('user2@example.com', 'user2'),
+                           ('delta@delta.org', 'abcdef'),
+                           ('otheruser@other.org', 'other'),
+                           ('user@alpha.org', 'user')
+                           ]:
+                            server.register_user(em, pw, 'test')
+                            mscolab_delete_user(self.app, MSCOLAB_URL_TEST, em, pw)
             server.db.session.commit()
 
     def test_check_login(self):
@@ -191,11 +199,8 @@ class Test_Server(object):
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            data["path"] = 'f3'
-            data['description'] = 'f3 test example'
-            url = url_join(MSCOLAB_URL_TEST, 'create_project')
-            response = self.app.test_client().post(url, data=data)
+            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+                                                    path='f3', description='f3 test example')
             assert response.status == '200 OK'
             url = url_join(MSCOLAB_URL_TEST, 'projects')
             response = self.app.test_client().get(url, data=data)
@@ -222,11 +227,8 @@ class Test_Server(object):
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            data["path"] = 'f4'
-            data['description'] = 'f4 test example'
-            url = url_join(MSCOLAB_URL_TEST, 'create_project')
-            response = self.app.test_client().post(url, data=data)
+            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+                                                    path='f4', description='f4 test example')
             assert response.status == '200 OK'
             url = url_join(MSCOLAB_URL_TEST, 'projects')
             response = self.app.test_client().get(url, data=data)
@@ -263,11 +265,8 @@ class Test_Server(object):
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            data["path"] = 'f1'
-            data['description'] = 'f1 test example'
-            url = url_join(MSCOLAB_URL_TEST, 'create_project')
-            response = self.app.test_client().post(url, data=data)
+            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+                                                    path='f1', description='f1 test example')
             assert response.status == '200 OK'
             data = response.get_data(as_text=True)
             assert data == 'True'
@@ -574,8 +573,7 @@ class Test_Server(object):
             data = json.loads(response.get_data(as_text=True))
             response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='owns_alpha')
             assert response.status == '200 OK'
-            User.query.filter_by(emailid='alpha@alpha.org').delete()
-            server.db.session.commit()
+            mscolab_delete_user(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef')
             response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'delta@delta.org', 'abcdef', 'delta')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
@@ -583,7 +581,6 @@ class Test_Server(object):
             response = self.app.test_client().get(url, data=data)
             response = json.loads(response.get_data(as_text=True))
             assert len(response['projects']) == 0
-            assert 'owns_alpha' not in response['projects'][0]['path']
 
     def test_token_dependency_to_project(self):
         """
@@ -593,19 +590,20 @@ class Test_Server(object):
         finds only projects related to the changed token
         """
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'user@alpha.org', 'user', 'user')
             assert response.status == '200 OK'
-            data_alpha = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data_alpha, path_name='owns_alpha')
-            assert response.status == '200 OK
+            data_1 = json.loads(response.get_data(as_text=True))
+            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data_1, path_name='data_1')
+            assert response.status == '200 OK'
             url = url_join(MSCOLAB_URL_TEST, 'projects')
-            response = self.app.test_client().get(url, data=data_alpha)
+            response = self.app.test_client().get(url, data=data_1)
+            assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
             assert len(response['projects']) == 1
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'a', 'a', 'a')
+            response = mscolab_login(self.app, MSCOLAB_URL_TEST, 'a', 'a')
             data_a = json.loads(response.get_data(as_text=True))
-            data_alpha['token'] = data_a['token']
+            data_1['token'] = data_a['token']
             url = url_join(MSCOLAB_URL_TEST, 'projects')
-            response = self.app.test_client().get(url, data=data_alpha)
+            response = self.app.test_client().get(url, data=data_1)
             response = json.loads(response.get_data(as_text=True))
             assert len(response['projects']) == 3

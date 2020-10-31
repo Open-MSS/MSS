@@ -51,6 +51,7 @@ def callback_307_html(status, response_headers):
 
 
 def mscolab_register_user(app, msc_url, email, password, username):
+    # Duplicate of imported register_user
     data = {
         'email': email,
         'password': password,
@@ -61,8 +62,8 @@ def mscolab_register_user(app, msc_url, email, password, username):
     return response
 
 
-def mscolab_register_and_login(app, msc_url, email, password, usernamen):
-    register_user(email, password, usernamen)
+def mscolab_register_and_login(app, msc_url, email, password, username):
+    register_user(email, password, username)
     data = {
         'email': email,
         'password': password
@@ -70,6 +71,29 @@ def mscolab_register_and_login(app, msc_url, email, password, usernamen):
     url = url_join(msc_url, 'token')
     response = app.test_client().post(url, data=data)
     return response
+
+
+def mscolab_login(app, msc_url, email, password):
+    data = {
+        'email': email,
+        'password': password
+    }
+    url = url_join(msc_url, 'token')
+    response = app.test_client().post(url, data=data)
+    return response
+
+
+def mscolab_delete_user(app, msc_url, email, password):
+    with app.app_context():
+        response = mscolab_login(app, msc_url, email, password)
+        if response.status == '200 OK':
+            data = json.loads(response.get_data(as_text=True))
+            url = url_join(msc_url, 'delete_user')
+            response = app.test_client().post(url, data=data)
+            if response.status == '200 OK':
+                data = json.loads(response.get_data(as_text=True))
+                return data["success"]
+        return False
 
 
 def mscolab_create_content(app, msc_url, data, path_name='example', content=None):
@@ -105,3 +129,23 @@ def mscolab_delete_all_projects(app, msc_url, email, password, username):
         data['p_id'] = p['p_id']
         url = url_join(msc_url, 'delete_project')
         response = app.test_client().post(url, data=data)
+
+
+def mscolab_create_project(app, msc_url, response, path='f', description='description'):
+    data = json.loads(response.get_data(as_text=True))
+    data["path"] = path
+    data['description'] = description
+    url = url_join(msc_url, 'create_project')
+    response = app.test_client().post(url, data=data)
+    return data, response
+
+
+def mscolab_get_project_id(app, msc_url, email, password, username, path):
+    response = mscolab_register_and_login(app, msc_url, email, password, username)
+    data = json.loads(response.get_data(as_text=True))
+    url = url_join(msc_url, 'projects')
+    response = app.test_client().get(url, data=data)
+    response = json.loads(response.get_data(as_text=True))
+    for p in response['projects']:
+        if p['path'] == path:
+            return p['p_id']
