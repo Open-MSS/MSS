@@ -204,8 +204,9 @@ class Test_Mscolab(object):
     def test_check_an_enable_project_accept(self):
         pass
 
+    @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
-    def test_set_exported_file(self, mockopen):
+    def test_set_exported_file(self, mockopen, mockmessage):
         # name is misleading
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
@@ -361,7 +362,8 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    def _create_user(self, username, email, password):
+    @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
+    def _create_user(self, username, email, password, mockbox):
         QtTest.QTest.mouseClick(self.window.addUser, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         self.window.add_user_dialog.username.setText(str(username))
@@ -377,7 +379,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         # ToDo get rid of that QMessageBox
 
-    @mock.patch("mslib.msui.mscolab.QtWidgets.QMessageBox.Yes", return_value=True)
+    @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     def _create_project(self, path, description, mockbox):
         QtTest.QTest.mouseClick(self.window.addProject, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
