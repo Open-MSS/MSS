@@ -69,6 +69,7 @@ requirements:
     - xstatic
     - xstatic-jquery
     - xstatic-bootstrap
+    - pyperclib
 
 test:
   imports:
