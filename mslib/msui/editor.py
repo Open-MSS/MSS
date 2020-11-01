@@ -33,6 +33,7 @@ from mslib.msui.mss_qt import QtCore
 from PyQt5 import QtPrintSupport
 from mslib.msui import constants
 from mslib.msui.constants import MSS_CONFIG_PATH
+from mslib.msui.icons import icons
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -66,25 +67,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(file_toolbar)
         file_menu = self.menuBar().addMenu("&File")
 
-        open_file_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Folder-new.svg')), "Open file...", self)
+        open_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Folder-new.svg')), "Open file...", self)
         open_file_action.setStatusTip("Open file")
         open_file_action.triggered.connect(self.file_open)
         file_menu.addAction(open_file_action)
         file_toolbar.addAction(open_file_action)
 
-        save_file_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Document-save.svg')), "Save", self)
+        save_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Document-save.svg')), "Save", self)
         save_file_action.setStatusTip("Save current page")
         save_file_action.triggered.connect(self.file_save)
         file_menu.addAction(save_file_action)
         file_toolbar.addAction(save_file_action)
 
-        saveas_file_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Document-save-as.svg')), "Save As...", self)
+        saveas_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Document-save-as.svg')), "Save As...", self)
         saveas_file_action.setStatusTip("Save current page to specified file")
         saveas_file_action.triggered.connect(self.file_saveas)
         file_menu.addAction(saveas_file_action)
         file_toolbar.addAction(saveas_file_action)
 
-        print_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Document-print.svg')), "Print...", self)
+        print_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Document-print.svg')), "Print...", self)
         print_action.setStatusTip("Print current page")
         print_action.triggered.connect(self.file_print)
         file_menu.addAction(print_action)
@@ -95,12 +96,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(edit_toolbar)
         edit_menu = self.menuBar().addMenu("&Edit")
 
-        undo_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-undo.svg')), "Undo", self)
+        undo_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-undo.svg')), "Undo", self)
         undo_action.setStatusTip("Undo last change")
         undo_action.triggered.connect(self.editor.undo)
         edit_menu.addAction(undo_action)
 
-        redo_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-redo.svg')), "Redo", self)
+        redo_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-redo.svg')), "Redo", self)
         redo_action.setStatusTip("Redo last change")
         redo_action.triggered.connect(self.editor.redo)
         edit_toolbar.addAction(redo_action)
@@ -108,32 +109,32 @@ class MainWindow(QtWidgets.QMainWindow):
 
         edit_menu.addSeparator()
 
-        cut_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-cut.svg')), "Cut", self)
+        cut_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-cut.svg')), "Cut", self)
         cut_action.setStatusTip("Cut selected text")
         cut_action.triggered.connect(self.editor.cut)
         edit_toolbar.addAction(cut_action)
         edit_menu.addAction(cut_action)
 
-        copy_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-copy.svg')), "Copy", self)
+        copy_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-copy.svg')), "Copy", self)
         copy_action.setStatusTip("Copy selected text")
         copy_action.triggered.connect(self.editor.copy)
         edit_toolbar.addAction(copy_action)
         edit_menu.addAction(copy_action)
 
-        paste_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-paste.svg')), "Paste", self)
+        paste_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-paste.svg')), "Paste", self)
         paste_action.setStatusTip("Paste from clipboard")
         paste_action.triggered.connect(self.editor.paste)
         edit_toolbar.addAction(paste_action)
         edit_menu.addAction(paste_action)
 
-        select_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-select-all.svg')), "Select all", self)
+        select_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-select-all.svg')), "Select all", self)
         select_action.setStatusTip("Select all text")
         select_action.triggered.connect(self.editor.selectAll)
         edit_menu.addAction(select_action)
 
         edit_menu.addSeparator()
 
-        wrap_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Go-next.svg')), "Wrap text to window", self)
+        wrap_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Go-next.svg')), "Wrap text to window", self)
         wrap_action.setStatusTip("Toggle wrap text to window")
         wrap_action.setCheckable(True)
         wrap_action.setChecked(True)
