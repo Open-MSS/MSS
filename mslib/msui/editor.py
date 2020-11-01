@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import fs
+import logging
 
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.mss_qt import QtWidgets
@@ -36,12 +37,16 @@ from mslib.msui.constants import MSS_CONFIG_PATH
 from mslib.msui.icons import icons
 
 
-class MainWindow(QtWidgets.QMainWindow):
+class EditorMainWindow(QtWidgets.QMainWindow):
+    name = "MSSEditor"
+    identifier = None
 
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
+    def __init__(self, parent=None):
+        super(EditorMainWindow, self).__init__(parent)
+        self.path = None
 
-        layout = QtWidgets.QVBoxLayout()
+        self.file_content = None
+        self.layout = QtWidgets.QVBoxLayout()
         self.editor = QtWidgets.QPlainTextEdit()  # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
 
         # Setup the QTextEdit editor configuration
@@ -52,94 +57,104 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.path holds the path of the currently open file.
         # If none, we haven't got a file open yet (or creating new).
         self.path = constants.MSS_CONFIG_PATH
+        self.layout.addWidget(self.editor)
 
-        layout.addWidget(self.editor)
-
-        container = QtWidgets.QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
+        self.container = QtWidgets.QWidget()
+        self.container.setLayout(self.layout)
+        self.setCentralWidget(self.container)
 
         self.status = QtWidgets.QStatusBar()
         self.setStatusBar(self.status)
 
-        file_toolbar = QtWidgets.QToolBar("File")
-        file_toolbar.setIconSize(QtCore.QSize(14, 14))
-        self.addToolBar(file_toolbar)
-        file_menu = self.menuBar().addMenu("&File")
+        self.file_toolbar = QtWidgets.QToolBar("File")
+        self.file_toolbar.setIconSize(QtCore.QSize(14, 14))
+        self.addToolBar(self.file_toolbar)
+        self.file_menu = self.menuBar().addMenu("&File")
 
-        open_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Folder-new.svg')), "Open file...", self)
-        open_file_action.setStatusTip("Open file")
-        open_file_action.triggered.connect(self.file_open)
-        file_menu.addAction(open_file_action)
-        file_toolbar.addAction(open_file_action)
+        self.open_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                                    'Folder-new.svg')), "Open file...", self)
+        self.open_file_action.setStatusTip("Open file")
+        self.open_file_action.triggered.connect(self.file_open)
+        self.file_menu.addAction(self.open_file_action)
+        self.file_toolbar.addAction(self.open_file_action)
 
-        save_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Document-save.svg')), "Save", self)
-        save_file_action.setStatusTip("Save current page")
-        save_file_action.triggered.connect(self.file_save)
-        file_menu.addAction(save_file_action)
-        file_toolbar.addAction(save_file_action)
+        self.save_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                                    'Document-save.svg')), "Save", self)
+        self.save_file_action.setStatusTip("Save current page")
+        self.save_file_action.triggered.connect(self.file_save)
+        self.file_menu.addAction(self.save_file_action)
+        self.file_toolbar.addAction(self.save_file_action)
 
-        saveas_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Document-save-as.svg')), "Save As...", self)
-        saveas_file_action.setStatusTip("Save current page to specified file")
-        saveas_file_action.triggered.connect(self.file_saveas)
-        file_menu.addAction(saveas_file_action)
-        file_toolbar.addAction(saveas_file_action)
+        self.saveas_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                                      'Document-save-as.svg')), "Save As...", self)
+        self.saveas_file_action.setStatusTip("Save current page to specified file")
+        self.saveas_file_action.triggered.connect(self.file_saveas)
+        self.file_menu.addAction(self.saveas_file_action)
+        self.file_toolbar.addAction(self.saveas_file_action)
 
-        print_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Document-print.svg')), "Print...", self)
-        print_action.setStatusTip("Print current page")
-        print_action.triggered.connect(self.file_print)
-        file_menu.addAction(print_action)
-        file_toolbar.addAction(print_action)
+        self.print_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                                'Document-print.svg')), "Print...", self)
+        self.print_action.setStatusTip("Print current page")
+        self.print_action.triggered.connect(self.file_print)
+        self.file_menu.addAction(self.print_action)
+        self.file_toolbar.addAction(self.print_action)
 
-        edit_toolbar = QtWidgets.QToolBar("Edit")
-        edit_toolbar.setIconSize(QtCore.QSize(16, 16))
-        self.addToolBar(edit_toolbar)
-        edit_menu = self.menuBar().addMenu("&Edit")
+        self.edit_toolbar = QtWidgets.QToolBar("Edit")
+        self.edit_toolbar.setIconSize(QtCore.QSize(16, 16))
+        self.addToolBar(self.edit_toolbar)
+        self.edit_menu = self.menuBar().addMenu("&Edit")
 
-        undo_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-undo.svg')), "Undo", self)
-        undo_action.setStatusTip("Undo last change")
-        undo_action.triggered.connect(self.editor.undo)
-        edit_menu.addAction(undo_action)
+        self.undo_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                               'Edit-undo.svg')), "Undo", self)
+        self.undo_action.setStatusTip("Undo last change")
+        self.undo_action.triggered.connect(self.editor.undo)
+        self.edit_menu.addAction(self.undo_action)
 
-        redo_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-redo.svg')), "Redo", self)
-        redo_action.setStatusTip("Redo last change")
-        redo_action.triggered.connect(self.editor.redo)
-        edit_toolbar.addAction(redo_action)
-        edit_menu.addAction(redo_action)
+        self.redo_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                               'Edit-redo.svg')), "Redo", self)
+        self.redo_action.setStatusTip("Redo last change")
+        self.redo_action.triggered.connect(self.editor.redo)
+        self.edit_toolbar.addAction(self.redo_action)
+        self.edit_menu.addAction(self.redo_action)
 
-        edit_menu.addSeparator()
+        self.edit_menu.addSeparator()
 
-        cut_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-cut.svg')), "Cut", self)
-        cut_action.setStatusTip("Cut selected text")
-        cut_action.triggered.connect(self.editor.cut)
-        edit_toolbar.addAction(cut_action)
-        edit_menu.addAction(cut_action)
+        self.cut_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                              'Edit-cut.svg')), "Cut", self)
+        self.cut_action.setStatusTip("Cut selected text")
+        self.cut_action.triggered.connect(self.editor.cut)
+        self.edit_toolbar.addAction(self.cut_action)
+        self.edit_menu.addAction(self.cut_action)
 
-        copy_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-copy.svg')), "Copy", self)
-        copy_action.setStatusTip("Copy selected text")
-        copy_action.triggered.connect(self.editor.copy)
-        edit_toolbar.addAction(copy_action)
-        edit_menu.addAction(copy_action)
+        self.copy_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                               'Edit-copy.svg')), "Copy", self)
+        self.copy_action.setStatusTip("Copy selected text")
+        self.copy_action.triggered.connect(self.editor.copy)
+        self.edit_toolbar.addAction(self.copy_action)
+        self.edit_menu.addAction(self.copy_action)
 
-        paste_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-paste.svg')), "Paste", self)
-        paste_action.setStatusTip("Paste from clipboard")
-        paste_action.triggered.connect(self.editor.paste)
-        edit_toolbar.addAction(paste_action)
-        edit_menu.addAction(paste_action)
+        self.paste_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                                'Edit-paste.svg')), "Paste", self)
+        self.paste_action.setStatusTip("Paste from clipboard")
+        self.paste_action.triggered.connect(self.editor.paste)
+        self.edit_toolbar.addAction(self.paste_action)
+        self.edit_menu.addAction(self.paste_action)
 
-        select_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Edit-select-all.svg')), "Select all", self)
-        select_action.setStatusTip("Select all text")
-        select_action.triggered.connect(self.editor.selectAll)
-        edit_menu.addAction(select_action)
+        self.select_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                                 'Edit-select-all.svg')), "Select all", self)
+        self.select_action.setStatusTip("Select all text")
+        self.select_action.triggered.connect(self.editor.selectAll)
+        self.edit_menu.addAction(self.select_action)
 
-        edit_menu.addSeparator()
+        self.edit_menu.addSeparator()
 
-        wrap_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor', 'Go-next.svg')), "Wrap text to window", self)
-        wrap_action.setStatusTip("Toggle wrap text to window")
-        wrap_action.setCheckable(True)
-        wrap_action.setChecked(True)
-        wrap_action.triggered.connect(self.edit_toggle_wrap)
-        edit_menu.addAction(wrap_action)
+        self.wrap_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
+                                                               'Go-next.svg')), "Wrap text to window", self)
+        self.wrap_action.setStatusTip("Toggle wrap text to window")
+        self.wrap_action.setCheckable(True)
+        self.wrap_action.setChecked(True)
+        self.wrap_action.triggered.connect(self.edit_toggle_wrap)
+        self.edit_menu.addAction(self.wrap_action)
         self.update_title()
         self.show()
 
@@ -154,32 +169,32 @@ class MainWindow(QtWidgets.QMainWindow):
         if file_path is not None:
             file_name = fs.path.basename(file_path)
             with fs.open_fs(fs.path.dirname(file_path)) as file_dir:
-                file_content = file_dir.readtext(file_name)
+                self.file_content = file_dir.readtext(file_name)
                 self.path = file_path
-                self.editor.setPlainText(file_content)
+                self.editor.setPlainText(self.file_content)
                 self.update_title()
 
     def file_save(self):
         if self.path is None:
             # If we do not have a path, we need to use Save As.
             return self.file_saveas()
-        self._save_to_path(self.path)
+        self._save_to_path()
 
     def file_saveas(self):
         default_filename = fs.path.join(MSS_CONFIG_PATH, "mss_settings" + ".json")
-        path = get_save_filename(self, "Save file", default_filename, "Text documents (*.json)")
-        if not path:
+        self.path = get_save_filename(self, "Save file", default_filename, "Text documents (*.json)")
+        if not self.path:
             # If dialog is cancelled, will return ''
             return
-        self._save_to_path(path)
+        self._save_to_path()
 
-    def _save_to_path(self, path):
+    def _save_to_path(self):
+        logging.debug("save config file to: %s" % self.path)
         text = self.editor.toPlainText()
-        dir_name, file_name = fs.path.split(path)
+        dir_name, file_name = fs.path.split(self.path)
         if file_name.endswith('.json'):
             with fs.open_fs(dir_name) as _fs:
                 _fs.writetext(file_name, text)
-        self.path = path
         self.update_title()
 
     def file_print(self):

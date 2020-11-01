@@ -172,6 +172,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
         self.mscolab_window = None
+        self.config_editor = None
 
         # Connect Qt SIGNALs:
         # ===================
@@ -537,7 +538,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.tr("Opening a config file will reset application. Continue?"),
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
-            text_editor = editor.MainWindow(self)
+            self.config_editor = editor.EditorMainWindow(parent=self)
 
     def open_flight_track(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
