@@ -24,27 +24,27 @@
     limitations under the License.
 """
 
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtPrintSupport import *
-from mslib.msui import constants 
+from mslib.msui.mss_qt import get_open_filename, get_save_filename
+from mslib.msui.mss_qt import QtWidgets
+from mslib.msui.mss_qt import QtGui
+from mslib.msui.mss_qt import QtCore
+from PyQt5 import QtPrintSupport
+from mslib.msui import constants
+from mslib.msui.constants import MSS_CONFIG_PATH
 
 import os
-import sys
 
 
-class MainWindow(QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        layout = QVBoxLayout()
-        self.editor = QPlainTextEdit()  # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
-
+        layout = QtWidgets.QVBoxLayout()
+        self.editor = QtWidgets.QPlainTextEdit()  # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
 
         # Setup the QTextEdit editor configuration
-        fixedfont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        fixedfont = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
         fixedfont.setPointSize(12)
         self.editor.setFont(fixedfont)
 
@@ -54,53 +54,53 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.editor)
 
-        container = QWidget()
+        container = QtWidgets.QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
 
-        self.status = QStatusBar()
+        self.status = QtWidgets.QStatusBar()
         self.setStatusBar(self.status)
 
-        file_toolbar = QToolBar("File")
-        file_toolbar.setIconSize(QSize(14, 14))
+        file_toolbar = QtWidgets.QToolBar("File")
+        file_toolbar.setIconSize(QtCore.QSize(14, 14))
         self.addToolBar(file_toolbar)
         file_menu = self.menuBar().addMenu("&File")
 
-        open_file_action = QAction(QIcon(os.path.join('images', 'Folder-new.svg')), "Open file...", self)
+        open_file_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Folder-new.svg')), "Open file...", self)
         open_file_action.setStatusTip("Open file")
         open_file_action.triggered.connect(self.file_open)
         file_menu.addAction(open_file_action)
         file_toolbar.addAction(open_file_action)
 
-        save_file_action = QAction(QIcon(os.path.join('images', 'Document-save.svg')), "Save", self)
+        save_file_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Document-save.svg')), "Save", self)
         save_file_action.setStatusTip("Save current page")
         save_file_action.triggered.connect(self.file_save)
         file_menu.addAction(save_file_action)
         file_toolbar.addAction(save_file_action)
 
-        saveas_file_action = QAction(QIcon(os.path.join('images', 'Document-save-as.svg')), "Save As...", self)
+        saveas_file_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Document-save-as.svg')), "Save As...", self)
         saveas_file_action.setStatusTip("Save current page to specified file")
         saveas_file_action.triggered.connect(self.file_saveas)
         file_menu.addAction(saveas_file_action)
         file_toolbar.addAction(saveas_file_action)
 
-        print_action = QAction(QIcon(os.path.join('images', 'Document-print.svg')), "Print...", self)
+        print_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Document-print.svg')), "Print...", self)
         print_action.setStatusTip("Print current page")
         print_action.triggered.connect(self.file_print)
         file_menu.addAction(print_action)
         file_toolbar.addAction(print_action)
 
-        edit_toolbar = QToolBar("Edit")
-        edit_toolbar.setIconSize(QSize(16, 16))
+        edit_toolbar = QtWidgets.QToolBar("Edit")
+        edit_toolbar.setIconSize(QtCore.QSize(16, 16))
         self.addToolBar(edit_toolbar)
         edit_menu = self.menuBar().addMenu("&Edit")
 
-        undo_action = QAction(QIcon(os.path.join('images', 'Edit-undo.svg')), "Undo", self)
+        undo_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-undo.svg')), "Undo", self)
         undo_action.setStatusTip("Undo last change")
         undo_action.triggered.connect(self.editor.undo)
         edit_menu.addAction(undo_action)
 
-        redo_action = QAction(QIcon(os.path.join('images', 'Edit-redo.svg')), "Redo", self)
+        redo_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-redo.svg')), "Redo", self)
         redo_action.setStatusTip("Redo last change")
         redo_action.triggered.connect(self.editor.redo)
         edit_toolbar.addAction(redo_action)
@@ -108,32 +108,32 @@ class MainWindow(QMainWindow):
 
         edit_menu.addSeparator()
 
-        cut_action = QAction(QIcon(os.path.join('images', 'Edit-cut.svg')), "Cut", self)
+        cut_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-cut.svg')), "Cut", self)
         cut_action.setStatusTip("Cut selected text")
         cut_action.triggered.connect(self.editor.cut)
         edit_toolbar.addAction(cut_action)
         edit_menu.addAction(cut_action)
 
-        copy_action = QAction(QIcon(os.path.join('images', 'Edit-copy.svg')), "Copy", self)
+        copy_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-copy.svg')), "Copy", self)
         copy_action.setStatusTip("Copy selected text")
         copy_action.triggered.connect(self.editor.copy)
         edit_toolbar.addAction(copy_action)
         edit_menu.addAction(copy_action)
 
-        paste_action = QAction(QIcon(os.path.join('images', 'Edit-paste.svg')), "Paste", self)
+        paste_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-paste.svg')), "Paste", self)
         paste_action.setStatusTip("Paste from clipboard")
         paste_action.triggered.connect(self.editor.paste)
         edit_toolbar.addAction(paste_action)
         edit_menu.addAction(paste_action)
 
-        select_action = QAction(QIcon(os.path.join('images', 'Edit-select-all.svg')), "Select all", self)
+        select_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Edit-select-all.svg')), "Select all", self)
         select_action.setStatusTip("Select all text")
         select_action.triggered.connect(self.editor.selectAll)
         edit_menu.addAction(select_action)
 
         edit_menu.addSeparator()
 
-        wrap_action = QAction(QIcon(os.path.join('images', 'Go-next.svg')), "Wrap text to window", self)
+        wrap_action = QtWidgets.QAction(QtGui.QIcon(os.path.join('images', 'Go-next.svg')), "Wrap text to window", self)
         wrap_action.setStatusTip("Toggle wrap text to window")
         wrap_action.setCheckable(True)
         wrap_action.setChecked(True)
@@ -144,20 +144,20 @@ class MainWindow(QMainWindow):
         self.show()
 
     def dialog_critical(self, s):
-        dlg = QMessageBox(self)
+        dlg = QtWidgets.QMessageBox(self)
         dlg.setText(s)
-        dlg.setIcon(QMessageBox.Critical)
+        dlg.setIcon(QtWidgets.QMessageBox.Critical)
         dlg.show()
 
     def file_open(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Open file", "", "Text documents (*.txt);All files (*.*)")
+        path = get_open_filename(self, "Open file", MSS_CONFIG_PATH, "Text documents (*.json)")
 
         if path:
             try:
                 with open(path, 'rU') as f:
                     text = f.read()
 
-            except Exception as e:
+            except IOError as e:
                 self.dialog_critical(str(e))
 
             else:
@@ -173,7 +173,7 @@ class MainWindow(QMainWindow):
         self._save_to_path(self.path)
 
     def file_saveas(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Text documents (*.txt);All files (*.*)")
+        path = get_save_filename(self, "Save file", MSS_CONFIG_PATH, "Text documents (*.json)")
 
         if not path:
             # If dialog is cancelled, will return ''
@@ -187,7 +187,7 @@ class MainWindow(QMainWindow):
             with open(path, 'w') as f:
                 f.write(text)
 
-        except Exception as e:
+        except TypeError as e:
             self.dialog_critical(str(e))
 
         else:
@@ -195,7 +195,7 @@ class MainWindow(QMainWindow):
             self.update_title()
 
     def file_print(self):
-        dlg = QPrintDialog()
+        dlg = QtPrintSupport.QPrintDialog()
         if dlg.exec_():
             self.editor.print_(dlg.printer())
 
@@ -206,4 +206,4 @@ class MainWindow(QMainWindow):
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
 
     def closeEvent(self, event):
-        print("User has clicked the red x on the main window")
+        pass
