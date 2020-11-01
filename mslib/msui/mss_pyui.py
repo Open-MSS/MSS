@@ -51,6 +51,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import tableview
 from mslib.msui import topview
 from mslib.msui import sideview
+from mslib.msui import editor
 from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
@@ -171,6 +172,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
         self.mscolab_window = None
+        self.config_editor = None
 
         # Connect Qt SIGNALs:
         # ===================
@@ -195,8 +197,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
 
-        # Load Config
-        self.actionLoad_Configuration.triggered.connect(self.open_config_file)
+        # Config
+        self.actionConfiguration.triggered.connect(self.open_config_file)
 
         # Flight Tracks.
         self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
@@ -536,17 +538,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.tr("Opening a config file will reset application. Continue?"),
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
-            filename = get_open_filename(
-                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)",
-                pickertag="filepicker_config")
-            if filename is not None:
-                self.listViews.clear()
-                self.listTools.clear()
-                self.remove_plugins()
-                constants.CACHED_CONFIG_FILE = filename
-                head_filename, tail_filename = os.path.split(filename)
-                self.labelStatusbar.setText("Status : User Configuration '" + tail_filename + "' loaded")
-                self.add_plugins()
+            self.config_editor = editor.EditorMainWindow(parent=self)
 
     def open_flight_track(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
