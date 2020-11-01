@@ -4,11 +4,12 @@
     mslib.msui.editor
     ~~~~~~~~~~~~~~~~~~~~~~
 
-    config ediror for mss_settings.jscon.
+    config editor for mss_settings.json.
 
     This file is part of mss.
 
-    :copyright: Copyright 2019 Vaibhav Mehra <veb7vmehra@gmail.com>
+    :copyright: Copyright 2020 Vaibhav Mehra <veb7vmehra@gmail.com>
+    :copyright: Copyright 2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import fs
 
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
@@ -188,7 +188,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.editor.print_(dlg.printer())
 
     def update_title(self):
-        self.setWindowTitle("%s - Config-Settings" % (os.path.basename(self.path) if self.path else "Untitled"))
+        self.setWindowTitle("%s - Config-Settings" % (fs.path.basename(self.path) if self.path else "Untitled"))
 
     def edit_toggle_wrap(self):
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
