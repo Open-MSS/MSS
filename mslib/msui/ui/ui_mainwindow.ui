@@ -137,7 +137,7 @@ Save a flight track to name it.</string>
     <addaction name="menuImport_Flight_Track"/>
     <addaction name="menuExport_Active_Flight_Track"/>
     <addaction name="separator"/>
-    <addaction name="actionLoad_Configuration"/>
+    <addaction name="actionConfiguration"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
    </widget>
@@ -241,9 +241,9 @@ Save a flight track to name it.</string>
     <string>&amp;About MSS</string>
    </property>
   </action>
-  <action name="actionLoad_Configuration">
+  <action name="actionConfiguration">
    <property name="text">
-    <string>Load Configuration</string>
+    <string>Configuration</string>
    </property>
   </action>
   <action name="actionOnlineHelp">
