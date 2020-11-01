@@ -23,6 +23,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import fs
 
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.mss_qt import QtWidgets
@@ -31,8 +33,6 @@ from mslib.msui.mss_qt import QtCore
 from PyQt5 import QtPrintSupport
 from mslib.msui import constants
 from mslib.msui.constants import MSS_CONFIG_PATH
-
-import os
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -139,7 +139,6 @@ class MainWindow(QtWidgets.QMainWindow):
         wrap_action.setChecked(True)
         wrap_action.triggered.connect(self.edit_toggle_wrap)
         edit_menu.addAction(wrap_action)
-
         self.update_title()
         self.show()
 
@@ -150,49 +149,37 @@ class MainWindow(QtWidgets.QMainWindow):
         dlg.show()
 
     def file_open(self):
-        path = get_open_filename(self, "Open file", MSS_CONFIG_PATH, "Text documents (*.json)")
-
-        if path:
-            try:
-                with open(path, 'rU') as f:
-                    text = f.read()
-
-            except IOError as e:
-                self.dialog_critical(str(e))
-
-            else:
-                self.path = path
-                self.editor.setPlainText(text)
+        file_path = get_open_filename(self, "Open file", MSS_CONFIG_PATH, "Text documents (*.json)")
+        if file_path is not None:
+            file_name = fs.path.basename(file_path)
+            with fs.open_fs(fs.path.dirname(file_path)) as file_dir:
+                file_content = file_dir.readtext(file_name)
+                self.path = file_path
+                self.editor.setPlainText(file_content)
                 self.update_title()
 
     def file_save(self):
         if self.path is None:
             # If we do not have a path, we need to use Save As.
             return self.file_saveas()
-
         self._save_to_path(self.path)
 
     def file_saveas(self):
-        path = get_save_filename(self, "Save file", MSS_CONFIG_PATH, "Text documents (*.json)")
-
+        default_filename = fs.path.join(MSS_CONFIG_PATH, "mss_settings" + ".json")
+        path = get_save_filename(self, "Save file", default_filename, "Text documents (*.json)")
         if not path:
             # If dialog is cancelled, will return ''
             return
-
         self._save_to_path(path)
 
     def _save_to_path(self, path):
         text = self.editor.toPlainText()
-        try:
-            with open(path, 'w') as f:
-                f.write(text)
-
-        except TypeError as e:
-            self.dialog_critical(str(e))
-
-        else:
-            self.path = path
-            self.update_title()
+        dir_name, file_name = fs.path.split(path)
+        if file_name.endswith('.json'):
+            with fs.open_fs(dir_name) as _fs:
+                _fs.writetext(file_name, text)
+        self.path = path
+        self.update_title()
 
     def file_print(self):
         dlg = QtPrintSupport.QPrintDialog()
@@ -206,4 +193,4 @@ class MainWindow(QtWidgets.QMainWindow):
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
 
     def closeEvent(self, event):
-        pass
+        self.dialog_critical("If you changed the mss_settings.json please restart the gui")
