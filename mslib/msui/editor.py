@@ -47,7 +47,8 @@ class EditorMainWindow(QtWidgets.QMainWindow):
 
         self.file_content = None
         self.layout = QtWidgets.QVBoxLayout()
-        self.editor = QtWidgets.QPlainTextEdit()  # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
+        # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
+        self.editor = QtWidgets.QPlainTextEdit()
 
         # Setup the QTextEdit editor configuration
         fixedfont = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
@@ -206,7 +207,7 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("%s - Config-Settings" % (fs.path.basename(self.path) if self.path else "Untitled"))
 
     def edit_toggle_wrap(self):
-        self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
+        self.editor.setLineWrapMode(1 if self.editor.lineWrapMode() == 0 else 0)
 
     def closeEvent(self, event):
         self.dialog_critical("If you changed the mss_settings.json please restart the gui")
