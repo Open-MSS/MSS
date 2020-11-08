@@ -30,6 +30,7 @@
 # 'Matplotlib for Python Developers'.
 
 from datetime import datetime
+import enum
 import os
 import six
 import logging
@@ -39,6 +40,7 @@ from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
 from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
+import matplotlib.backend_bases
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -215,6 +217,28 @@ def save_figure(self, *args):
 NavigationToolbar2QT.save_figure = save_figure
 
 
+class _Mode(str, enum.Enum):
+    """
+    Override _Mode of backend_base to include our tools.
+    """
+    NONE = ""
+    PAN = "pan/zoom"
+    ZOOM = "zoom rect"
+    INSERT_WP = "insert waypoint"
+    DELETE_WP = "delete waypoint"
+    MOVE_WP = "move waypoint"
+
+    def __str__(self):
+        return self.value
+
+    @property
+    def _navigate_mode(self):
+        return self.name if self is not _Mode.NONE else None
+
+
+matplotlib.backend_bases._Mode = _Mode
+
+
 class NavigationToolbar(NavigationToolbar2QT):
     """
     parts of this class have been copied from the NavigationToolbar2QT class.
@@ -228,166 +252,128 @@ class NavigationToolbar(NavigationToolbar2QT):
     update all plots and elements in case the pan or zoom elements were
     triggered by the user.
     """
-
     def __init__(self, canvas, parent, sideview=False, coordinates=True):
+        self.sideview = sideview
+
         if sideview:
             self.toolitems = [
-                _x for _x in NavigationToolbar2QT.toolitems if _x[0] in ('Save',)]
+                _x for _x in self.toolitems if _x[0] in ('Save',)]
             self.set_history_buttons = lambda: None
         else:
             self.toolitems = [
-                _x for _x in NavigationToolbar2QT.toolitems if
-                _x[0] in ('Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save') or _x[0] is None]
+                _x for _x in self.toolitems if
+                _x[0] in (None, 'Home', 'Back', 'Forward', 'Pan', 'Zoom', 'Save')]
 
-        self.sideview = sideview
+        self.toolitems.extend([
+            (None, None, None, None),
+            ('Mv WP', 'Move waypoints', "wp_move", 'move_wp'),
+            ('Ins WP', 'Insert waypoints', "wp_insert", 'insert_wp'),
+            ('Del WP', 'Delete waypoints', "wp_delete", 'delete_wp'),
+        ])
         super(NavigationToolbar, self).__init__(canvas, parent, coordinates)
+        self._actions["move_wp"].setCheckable(True)
+        self._actions["insert_wp"].setCheckable(True)
+        self._actions["delete_wp"].setCheckable(True)
+
+        self.setIconSize(QtCore.QSize(24, 24))
+        self.layout().setSpacing(12)
         self.canvas = canvas
-        self._idMotion = None
+
+    def _icon(self, name, *args):
+        """
+        wrapper around base method to inject our own icons.
+        """
+        myname = icons("32x32", name)
+        if os.path.exists(myname):
+            return QtGui.QIcon(myname)
+        else:
+            return super(NavigationToolbar, self)._icon(name, *args)
+
+    def _zoom_pan_handler(self, event):
+        """
+        extend zoom_pan_handler of base class with our own tools
+        """
+        super(NavigationToolbar, self)._zoom_pan_handler(event)
+        if event.name == "button_press_event":
+            if self.mode in (_Mode.INSERT_WP, _Mode.MOVE_WP, _Mode.DELETE_WP):
+                self.canvas.waypoints_interactor.button_press_callback(event)
+        elif event.name == "button_release_event":
+            if self.mode == _Mode.INSERT_WP:
+                self.canvas.waypoints_interactor.button_release_insert_callback(event)
+            elif self.mode == _Mode.MOVE_WP:
+                self.canvas.waypoints_interactor.button_release_move_callback(event)
+            elif self.mode == _Mode.DELETE_WP:
+                self.canvas.waypoints_interactor.button_release_delete_callback(event)
 
     def insert_wp(self, *args):
-        """Activate the pan/zoom tool. pan with left button, zoom with right"""
-        # set the pointer icon and button press funcs to the
-        # appropriate callbacks
-
-        # testing path_points
-        # x = [[10.1, 10.1, datetime(2012, 7, 1, 10, 30)], [13.0, 13.1, datetime(2012, 7, 1, 10, 30)]]
-        # y = path_points(x)
-        # logging.debug(y)
-        if self._active == 'INSERT_WP':
-            self._active = None
-        else:
-            self._active = 'INSERT_WP'
-
-        if self._idPress is not None:
-            self._idPress = self.canvas.mpl_disconnect(self._idPress)
-            self.mode = ''
-
-        if self._idRelease is not None:
-            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
-            self.mode = ''
-
-        if self._idMotion is not None:
-            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
-
-        if self._active:
-            self._idPress = self.canvas.mpl_connect(
-                'button_press_event', self.press_wp)
-            self._idRelease = self.canvas.mpl_connect(
-                'button_release_event', self.canvas.waypoints_interactor.button_release_insert_callback)
-            self.mode = 'insert waypoint'
-            self.canvas.widgetlock(self)
-        else:
+        """
+        activate insert_wp tool
+        """
+        if self.mode == _Mode.INSERT_WP:
+            self.mode = _Mode.NONE
             self.canvas.widgetlock.release(self)
+        else:
+            self.mode = _Mode.INSERT_WP
+            self.canvas.widgetlock(self)
+        for a in self.canvas.figure.get_axes():
+            a.set_navigate_mode(self.mode._navigate_mode)
         self.set_message(self.mode)
         self._update_buttons_checked()
 
     def delete_wp(self, *args):
-        """Activate the pan/zoom tool. pan with left button, zoom with right"""
-        # set the pointer icon and button press funcs to the
-        # appropriate callbacks
-
-        if self._active == 'DELETE_WP':
-            self._active = None
-        else:
-            self._active = 'DELETE_WP'
-        if self._idPress is not None:
-            self._idPress = self.canvas.mpl_disconnect(self._idPress)
-            self.mode = ''
-
-        if self._idRelease is not None:
-            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
-            self.mode = ''
-
-        if self._idMotion is not None:
-            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
-
-        if self._active:
-            self._idPress = self.canvas.mpl_connect(
-                'button_press_event', self.press_wp)
-            self._idRelease = self.canvas.mpl_connect(
-                'button_release_event', self.canvas.waypoints_interactor.button_release_delete_callback)
-            self.mode = 'delete waypoint'
-            self.canvas.widgetlock(self)
-        else:
+        """
+        activate delete_wp tool
+        """
+        if self.mode == _Mode.DELETE_WP:
+            self.mode = _Mode.NONE
             self.canvas.widgetlock.release(self)
-
+        else:
+            self.mode = _Mode.DELETE_WP
+            self.canvas.widgetlock(self)
         for a in self.canvas.figure.get_axes():
-            a.set_navigate_mode(self._active)
-
+            a.set_navigate_mode(self.mode._navigate_mode)
         self.set_message(self.mode)
         self._update_buttons_checked()
 
     def move_wp(self, *args):
-        """Activate the pan/zoom tool. pan with left button, zoom with right"""
-        # set the pointer icon and button press funcs to the
-        # appropriate callbacks
-
-        if self._active == 'MOVE_WP':
-            self._active = None
-        else:
-            self._active = 'MOVE_WP'
-
-        if self._idPress is not None:
-            self._idPress = self.canvas.mpl_disconnect(self._idPress)
-            self.mode = ''
-
-        if self._idRelease is not None:
-            self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
-            self.mode = ''
-
-        if self._idMotion is not None:
-            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
-
-        if self._active:
-            self._idPress = self.canvas.mpl_connect(
-                'button_press_event', self.press_wp)
-            self._idRelease = self.canvas.mpl_connect(
-                'button_release_event', self.canvas.waypoints_interactor.button_release_move_callback)
-            self._idMotion = self.canvas.mpl_connect(
-                'motion_notify_event', self.motion_wp)
-
-            self.mode = 'move waypoint'
-            self.canvas.widgetlock(self)
-        else:
+        """
+        activate move_wp tool
+        """
+        if self.mode == _Mode.MOVE_WP:
+            self.mode = _Mode.NONE
             self.canvas.widgetlock.release(self)
-
+        else:
+            self.mode = _Mode.MOVE_WP
+            self.canvas.widgetlock(self)
+        for a in self.canvas.figure.get_axes():
+            a.set_navigate_mode(self.mode._navigate_mode)
         self.set_message(self.mode)
         self._update_buttons_checked()
 
-    def pan(self, *args):
-        if self._idMotion is not None:
-            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
-        NavigationToolbar2QT.pan(self, *args)
-
-    def zoom(self, *args):
-        if self._idMotion is not None:
-            self._idMotion = self.canvas.mpl_disconnect(self._idMotion)
-        NavigationToolbar2QT.zoom(self, *args)
-
     def release_zoom(self, event):
-        NavigationToolbar2QT.release_zoom(self, event)
+        super(NavigationToolbar, self).release_zoom(event)
         self.canvas.redraw_map()
 
     def release_pan(self, event):
-        NavigationToolbar2QT.release_pan(self, event)
+        super(NavigationToolbar, self).release_pan(event)
         self.canvas.redraw_map()
 
-    def motion_wp(self, event):
-        self.canvas.waypoints_interactor.motion_notify_callback(event)
-
-    def press_wp(self, event):
-        self.canvas.waypoints_interactor.button_press_callback(event)
-
     def mouse_move(self, event):
+        """
+        overwrite mouse_move to print lon/lat instead of x/y coordinates.
+        """
+        if self.mode == _Mode.MOVE_WP:
+            self.canvas.waypoints_interactor.motion_notify_callback(event)
         if not self.sideview:
-            self._set_cursor(event)
+            self._update_cursor(event)
+
             if event.inaxes and event.inaxes.get_navigate():
                 try:
                     lat, lon = self.canvas.waypoints_interactor.get_lat_lon(event)
                 except (ValueError, OverflowError) as ex:
                     logging.error("%s", ex)
                 else:
-                    s = "lat={:6.2f}, lon={:7.2f}".format(lat, lon)
+                    s = f"lat={lat:6.2f}, lon={lon:7.2f}"
                     artists = [a for a in event.inaxes._mouseover_set
                                if a.contains(event)[0] and a.get_visible()]
                     if artists:
@@ -398,7 +384,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                                 data_str = a.format_cursor_data(data)
                                 if data_str is not None:
                                     s += " " + data_str
-                    if len(self.mode):
+                    if self.mode:
                         s = self.mode + ", " + s
                     self.set_message(s)
             else:
@@ -413,66 +399,14 @@ class NavigationToolbar(NavigationToolbar2QT):
                 self.set_message("{} lat={:6.2f} lon={:7.2f} altitude={:.2f}".format(
                     self.mode, lat, lon, y_value))
 
-    def _init_toolbar(self):
-        self.basedir = os.path.join(matplotlib.rcParams['datapath'], 'images')
-        for text, tooltip_text, image_file, callback in self.toolitems:
-            if text is None:
-                self.addSeparator()
-            else:
-                a = self.addAction(self._icon(image_file + '.png'),
-                                   text, getattr(self, callback))
-                self._actions[callback] = a
-                if callback in ['zoom', 'pan']:
-                    a.setCheckable(True)
-                if tooltip_text is not None:
-                    a.setToolTip(tooltip_text)
-                if text == 'Subplots':
-                    a = self.addAction(self._icon("qt4_editor_options.png"),
-                                       'Customize', self.edit_parameters)
-                    a.setToolTip('Edit axis, curve and image parameters')
-        wp_tools = [
-            ('Mv WP', icons("32x32", "wp_move.png"), 'Move waypoints', 'move_wp'),
-            ('Ins WP', icons("32x32", "wp_insert.png"), 'Insert waypoints', 'insert_wp'),
-            ('Del WP', icons("32x32", "wp_delete.png"), 'Delete waypoints', 'delete_wp'),
-        ]
-        self.addSeparator()
-        for text, img, tooltip_text, callback in wp_tools:
-            a = self.addAction(QtGui.QIcon(img), text, getattr(self, callback))
-            self._actions[callback] = a
-            a.setCheckable(True)
-            a.setToolTip(tooltip_text)
-
-        # Add the x,y location widget at the right side of the toolbar
-        # The stretch factor is 1 which means any resizing of the toolbar
-        # will resize this label instead of the buttons.
-        if self.coordinates:
-            self.locLabel = QtWidgets.QLabel("", self)
-            self.locLabel.setAlignment(
-                QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
-            self.locLabel.setSizePolicy(
-                QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding,
-                                      QtWidgets.QSizePolicy.Ignored))
-            labelAction = self.addWidget(self.locLabel)
-            labelAction.setVisible(True)
-
-        # Esthetic adjustments - we need to set these explicitly in PyQt5
-        # otherwise the layout looks different - but we don't want to set it if
-        # not using HiDPI icons otherwise they look worse than before.
-
-        self.setIconSize(QtCore.QSize(24, 24))
-        self.layout().setSpacing(12)
-
     def _update_buttons_checked(self):
-        # sync button checkstates to match active mode
-        if 'pan' in self._actions:
-            self._actions['pan'].setChecked(self._active == 'PAN')
-        if 'zoom' in self._actions:
-            self._actions['zoom'].setChecked(self._active == 'ZOOM')
-        if 'insert_wp' in self._actions:
-            self._actions['insert_wp'].setChecked(self._active == 'INSERT_WP')
-        if 'delete_wp' in self._actions:
-            self._actions['delete_wp'].setChecked(self._active == 'DELETE_WP')
-        self._actions['move_wp'].setChecked(self._active == 'MOVE_WP')
+        super(NavigationToolbar, self)._update_buttons_checked()
+        if "insert_wp" in self._actions:
+            self._actions['insert_wp'].setChecked(self.mode.name == 'INSERT_WP')
+        if "delete_wp" in self._actions:
+            self._actions['delete_wp'].setChecked(self.mode.name == 'DELETE_WP')
+        if "move_wp" in self._actions:
+            self._actions['move_wp'].setChecked(self.mode.name == 'MOVE_WP')
 
 
 class MplNavBarWidget(QtWidgets.QWidget):
