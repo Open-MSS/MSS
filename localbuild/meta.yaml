@@ -28,7 +28,7 @@ requirements:
     - python
     - defusedxml
     - menuinst  # [win]
-    - basemap >=1.2.2
+    - basemap >1.2.0
     - chameleon
     - execnet
     - fastkml
@@ -36,7 +36,7 @@ requirements:
     - lxml
     - netcdf4
     - hdf4
-    - pillow >=7.2.0
+    - pillow
     - pytz
     - pyqt >=5,<6
     - pygeoif
@@ -65,11 +65,12 @@ requirements:
     - multidict
     - pint
     - python-socketio >=4.4.0
-    - markdown >=3.1.1
+    - markdown
     - xstatic
     - xstatic-jquery
     - xstatic-bootstrap
-    - pyperclib
+    - pyperclip
+    - docutils
 
 test:
   imports:
