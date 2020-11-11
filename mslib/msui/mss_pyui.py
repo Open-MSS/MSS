@@ -150,7 +150,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
 
 class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     """MSUI main window class. Provides user interface elements for managing
-       flight tracks, views, and tools.
+       flight tracks and views.
     """
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
@@ -205,9 +205,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         # Views.
         self.listViews.itemActivated.connect(self.activate_sub_window)
-
-        # Tools.
-        self.listTools.itemActivated.connect(self.activate_sub_window)
 
         self.add_import_filter("CSV", "csv", load_from_csv, pickertag="filepicker_flightrack")
         self.add_export_filter("CSV", "csv", save_to_csv, pickertag="filepicker_flightrack")
@@ -413,7 +410,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
             self.listViews.clear()
-            self.listTools.clear()
             self.listFlightTracks.clear()
             # cleanup mscolab window
             if self.mscolab_window is not None:
