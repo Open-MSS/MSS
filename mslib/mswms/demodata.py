@@ -28,6 +28,7 @@
 
 import argparse
 import os
+import sys
 import netCDF4 as nc
 import numpy as np
 import fs
@@ -1193,27 +1194,29 @@ def main():
     """
     creates various test data files and also the server configuration
     """
-    root_fs = fs.open_fs("~/")
-    if not root_fs.exists("mss/testdata"):
-        root_fs.makedirs("mss/testdata")
-
-    examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
-                         server_config_fs=fs.open_fs("~/mss"))
-    examples.create_server_config(detailed_information=True)
-    examples.create_data()
-    print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
-
-
-if __name__ == '__main__':
-    print("mswms demodata")
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
+    parser.add_argument("-c", "--create", help="creates demodata for the mswms server",
+                        action="store_true", default=False)
     args = parser.parse_args()
-    if args:
+    if args.version:
         print("***********************************************************************")
         print("\n            Mission Support System (mss)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
+    if args.create:
+        root_fs = fs.open_fs("~/")
+        if not root_fs.exists("mss/testdata"):
+            root_fs.makedirs("mss/testdata")
+
+        examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
+                             server_config_fs=fs.open_fs("~/mss"))
+        examples.create_server_config(detailed_information=True)
+        examples.create_data()
+        print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
+
+
+if __name__ == '__main__':
     main()
