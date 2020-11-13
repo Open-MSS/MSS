@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MSSMainWindow(object):
     def setupUi(self, MSSMainWindow):
@@ -37,23 +39,13 @@ class Ui_MSSMainWindow(object):
         self.listViews.setObjectName("listViews")
         self.verticalLayout_4.addWidget(self.listViews)
         self.verticalLayout.addWidget(self.groupBox)
-        self.groupBox_2 = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_2.setFlat(True)
-        self.groupBox_2.setCheckable(False)
-        self.groupBox_2.setObjectName("groupBox_2")
-        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.groupBox_2)
-        self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.listTools = QtWidgets.QListWidget(self.groupBox_2)
-        self.listTools.setObjectName("listTools")
-        self.verticalLayout_5.addWidget(self.listTools)
-        self.verticalLayout.addWidget(self.groupBox_2)
         self.labelStatusbar = QtWidgets.QLabel(self.centralwidget)
         self.labelStatusbar.setScaledContents(False)
         self.labelStatusbar.setObjectName("labelStatusbar")
         self.verticalLayout.addWidget(self.labelStatusbar)
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 442, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 442, 20))
         self.menubar.setNativeMenuBar(False)
         self.menubar.setObjectName("menubar")
         self.menu_File = QtWidgets.QMenu(self.menubar)
@@ -139,8 +131,6 @@ class Ui_MSSMainWindow(object):
 "Save a flight track to name it."))
         self.groupBox.setTitle(_translate("MSSMainWindow", "Open Views:"))
         self.listViews.setToolTip(_translate("MSSMainWindow", "Double-click a view to bring it to the front."))
-        self.groupBox_2.setTitle(_translate("MSSMainWindow", "Open Tools:"))
-        self.listTools.setToolTip(_translate("MSSMainWindow", "Double-click a tool to bring it to the front."))
         self.labelStatusbar.setText(_translate("MSSMainWindow", "Status : "))
         self.menu_File.setTitle(_translate("MSSMainWindow", "&File"))
         self.menuImport_Flight_Track.setTitle(_translate("MSSMainWindow", "Import Flight Track"))
@@ -169,4 +159,3 @@ class Ui_MSSMainWindow(object):
         self.actionOnlineHelp.setText(_translate("MSSMainWindow", "Online &Help"))
         self.actionActivateSelectedFlightTrack.setText(_translate("MSSMainWindow", "Activate Selected Flight Track"))
         self.actionMscolabProjects.setText(_translate("MSSMainWindow", "Mscolab projects"))
-
