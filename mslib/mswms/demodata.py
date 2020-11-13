@@ -26,11 +26,12 @@
     limitations under the License.
 """
 
-
+import argparse
 import os
 import netCDF4 as nc
 import numpy as np
 import fs
+from mslib import __version__
 
 
 _SURFACE_TEXT = """\
@@ -1204,4 +1205,15 @@ def main():
 
 
 if __name__ == '__main__':
+    print("mswms demodata")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
+    args = parser.parse_args()
+    if args:
+        print("***********************************************************************")
+        print("\n            Mission Support System (mss)\n")
+        print("***********************************************************************")
+        print("Documentation: http://mss.rtfd.io")
+        print("Version:", __version__)
+        sys.exit()
     main()
