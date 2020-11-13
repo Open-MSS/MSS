@@ -65,28 +65,6 @@ Save a flight track to name it.</string>
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="groupBox_2">
-      <property name="title">
-       <string>Open Tools:</string>
-      </property>
-      <property name="flat">
-       <bool>true</bool>
-      </property>
-      <property name="checkable">
-       <bool>false</bool>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
-       <item>
-        <widget class="QListWidget" name="listTools">
-         <property name="toolTip">
-          <string>Double-click a tool to bring it to the front.</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
      <widget class="QLabel" name="labelStatusbar">
       <property name="text">
        <string>Status : </string>
@@ -104,7 +82,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>442</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
