@@ -32,7 +32,7 @@ from flask import render_template
 from flask import Flask
 from flask import send_from_directory, send_file
 from flask import abort
-from docutils.core import publish_parts
+from markdown import Markdown
 from xstatic.main import XStatic
 from mslib.msui.icons import icons
 
@@ -93,12 +93,13 @@ def app_loader(name):
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
     def get_content(filename, overrides=None):
+        markdown = Markdown()
         content = ""
         if os.path.isfile(filename):
             with codecs.open(filename, 'r', 'utf-8') as f:
-                rst_data = f.read()
-            rst_data = rst_data.replace(':ref:', '')
-            content = publish_parts(rst_data, writer_name='html', settings_overrides=overrides)['html_body']
+                md_data = f.read()
+            md_data = md_data.replace(':ref:', '')
+            content = markdown.convert(md_data)
         return content
 
     @APP.route("/index")
@@ -108,19 +109,19 @@ def app_loader(name):
     @APP.route("/mss/about")
     @APP.route("/mss")
     def about():
-        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'about.rst')
+        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'index', 'about.md')
         content = get_content(_file)
         return render_template("/content.html", act="about", content=content)
 
     @APP.route("/mss/install")
     def install():
-        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'installation.rst')
+        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'index', 'installation.md')
         content = get_content(_file)
         return render_template("/content.html", act="install", content=content)
 
     @APP.route("/mss/help")
     def help():
-        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'help.rst')
+        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'index', 'help.md')
         content = get_content(_file)
         return render_template("/content.html", act="help", content=content)
 
