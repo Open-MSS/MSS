@@ -15,9 +15,11 @@ Mission Support System's Documentation
    about
    dependencies
    installation
+   docker_based_installation
    components
    development
    authors
+   help
 
 
 Indices and tables

@@ -52,12 +52,14 @@ Your content of the .condarc config file should have defaults on top::
 
 Create an environment and install the whole mss package dependencies then remove the mss package::
 
-  $ conda create -n mssdev mss
+  $ conda create -n mssdev python=3
   $ conda activate mssdev
+  $ conda install mamba
+  $ mamba install mss
   $ conda remove mss --force
 
 
-You can also first create the environment and then install mss.
+You can also use conda to install mss, but mamba is a way faster.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
 
 Add the path of your local cloned mss directory to $PYTHONPATH.
@@ -66,7 +68,8 @@ For developer we provide additional packages for running tests, activate your en
 
   $ conda install --file requirements.d/development.txt
 
-On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager. This is used to run tests on a virtual display.
+On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager.
+This is used to run tests on a virtual display.
 If you don't want tests redirected to the xvfb display just setup an environment variable::
 
  $ export TESTS_VISIBLE=TRUE
@@ -77,7 +80,7 @@ Setup demodata
 
 :ref:`demodata` is provided by executing::
 
-   $(mssdev) python mslib/mswms/demodata.py
+   $(mssdev) python mslib/mswms/demodata.py --create
 
 To use this data add the mss_wms_settings.py in your python path::
 
@@ -88,7 +91,9 @@ To use this data add the mss_wms_settings.py in your python path::
 Developer Documentation of Mscolab
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The Mscolab server is built using the Flask rest framework which communicates with the PyQt5 frontend of MSS.
-You can view the default configuration of mscolab in the file `mslib/mscolab/conf.py`. If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server" section in :ref:`mscolab`
+You can view the default configuration of mscolab in the file `mslib/mscolab/conf.py`.
+If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server"
+section in :ref:`mscolab`
 
 When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab db --init` to initialise it. The default database is a sqlite3 database.
 You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
@@ -237,9 +242,10 @@ Publish on Conda Forge
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * update a fork of the `mss-feedstock <https://github.com/conda-forge/mss-feedstock>`_
- - set version string
- - set sha256 checksum of the tagged release
- - update dependencies
+  - set version string
+  - set sha256 checksum of the tagged release
+  - update dependencies
+
 * rerender the feedstock by conda smithy
 * send a pull request
 * maintainer will merge if there is no error
