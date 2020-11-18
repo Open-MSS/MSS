@@ -28,7 +28,7 @@ requirements:
     - python
     - defusedxml
     - menuinst  # [win]
-    - basemap >1.2.0
+    - basemap  >1.2.1
     - chameleon
     - execnet
     - fastkml
@@ -49,8 +49,7 @@ requirements:
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
-    - matplotlib >=3.3.0
-    - proj4 <6
+    - matplotlib >=3.3.2
     - flask
     - flask-httpauth
     - werkzeug
@@ -77,6 +76,7 @@ test:
     - mslib
   commands:
     - mswms -h
+    - mswms_demodata -h
     - mss -h
     - mscolab -h
 
