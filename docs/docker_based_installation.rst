@@ -15,8 +15,10 @@ You can start server and client by loading the image ::
  $ curl http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1
  $ curl http://localhost:8083
 
-One component can be called by ::
+The userinterface and both servers can be started by ::
 
  $  xhost +local:docker
  $  docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix dreimark/mss:latest \
    /opt/conda/envs/mssenv/bin/mss
+ $ docker exec replace_by_container /bin/sh -c "/scripts/script.sh"
+
