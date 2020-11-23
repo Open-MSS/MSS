@@ -7,6 +7,7 @@
 # xhost +local:docker
 # docker container run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix \
 # --name mss missionsupportsystem:latest /opt/conda/envs/mssenv/bin/mss
+# docker exec replace_by_container /bin/sh -c "/scripts/script.sh"
 #
 # --- Read Capabilities ---
 # curl "http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1"
@@ -67,10 +68,14 @@ RUN conda create -n mssenv mss -y
 ENV PYTHONPATH="/srv/mss:/root/mss"
 ENV PROJ_LIB="/opt/conda/envs/mssenv/share/proj"
 
-# Run mswms and mscolab demodata
+# In the script is an initialisation of demodata and
+# the mswms and mscolab server is started
 # server based on demodata until you mount a data volume on /srv/mss
 # also you can replace the data in the demodata dir /root/mss.
-RUN /opt/conda/envs/mssenv/bin/mswms_demodata
-RUN /opt/conda/envs/mssenv/bin/mscolab_demodata --init
+RUN mkdir -p /scripts
+COPY script.sh /scripts
+WORKDIR /scripts
+RUN chmod +x script.sh
+RUN /scripts/script.sh
 
-EXPOSE 80 8083
+EXPOSE 8081 8083
