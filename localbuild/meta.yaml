@@ -69,7 +69,6 @@ requirements:
     - xstatic-jquery
     - xstatic-bootstrap
     - pyperclip
-    - docutils
 
 test:
   imports:

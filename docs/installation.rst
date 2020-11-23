@@ -1,13 +1,9 @@
 Installation
 =================
 
-Current Releases of mss is based on  *python 3*.
 
 .. image:: https://anaconda.org/conda-forge/mss/badges/installer/conda.svg
 
-
-
-mss-1.7.6 was the last version with python2* support.
 
 
 Install distributed version by conda
@@ -43,9 +39,10 @@ You must install mss into a new environment to ensure the most recent
 versions for dependencies (On the Anaconda Prompt on Windows, you have to 
 leave out the 'source' here and below). ::
 
-   $ conda create -n mssenv mss python=3
-   $ conda activate mssenv
-   $ mss
+    $ conda create -n mssenv python=3
+    $ conda activate mssenv
+    $ conda install mamba
+    $ mamba install mss
 
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If an existing environment shall be updated, it is important
@@ -71,18 +68,22 @@ We suggest to create a mss user.
 * set execute bit on install script
 * execute script, enable environment in .bashrc
 * login again or export PATH="/home/mss/miniconda3/bin:$PATH"
-* python --version should tell Python 3.X.X
-* conda install -c conda-forge mss
+* conda create -n mssenv python=3
+* conda activate mssenv
+* conda install mamba
+* mamba install mss
 
 For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
 
    $ mswms &
    $ mscolab start
 
-Point a browser for the verification of both servers installed on  `<http://127.0.0.1:8083/status>`_ or
-`<http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
+Point a browser for the verification of both servers installed on
 
+  - <http://127.0.0.1:8083/status>
+  - <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>
 
 Further details in the components section on `<http://mss.rtfd.io>`_
+
 
 
