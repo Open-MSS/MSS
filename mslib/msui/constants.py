@@ -38,6 +38,8 @@ if not os.path.exists(MSS_CONFIG_PATH):
 MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
 
 WMS_LOGIN_CACHE = {}
+MSC_LOGIN_CACHE = {}
+
 CACHED_CONFIG_FILE = None
 
 if os.path.exists(MSS_SETTINGS):

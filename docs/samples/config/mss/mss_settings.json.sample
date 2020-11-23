@@ -61,6 +61,9 @@
    "WMS_login": {
                   "http://www.your-server.de/forecasts" : ["youruser", "yourpassword"]
                  },
+   "MSC_login": {
+                 "http://www.your-mscolab-server.de" : ["youruser", "yourpassword"]
+                },
    "num_interpolation_points": 201,
    "num_labels": 10,
 
