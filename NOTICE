@@ -54,43 +54,51 @@ https://code.google.com/p/netcdf4-python/
 
 ********************************************************************************
 
+
+KML Examples
+-------------
+
 Below are links from where certain KML Files have been obtained, which are used 
 as Test Samples in MSS (mss/docs/samples/kml/):
 
 World_Map.kml (mss/docs/samples/kml/World_Map.kml)
--------------
+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Link : https://data.nasa.gov/dataset/World-Map/7zbq-j77a
 Download Link: https://data.nasa.gov/api/geospatial/7zbq-j77a?method=export&format=KML
 (Open Data - NASA)
 
 Other Test Samples have been taken from Google Archive KML Samples
-------------------------------------------------------------------
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Link : https://github.com/googlearchive/kml-samples
 
 
 
 style.kml  (mss/docs/samples/kml/style.kml)
--------------------------------------------
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 Link : https://github.com/googlearchive/kml-samples/blob/gh-pages/morekml/Styles/Styles.Style_Merging.kml
 
 geometry_collection.kml  (mss/docs/samples/kml/geometry_collection.kml)
------------------------------------------------------------------------
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 Link : https://github.com/googlearchive/kml-samples/blob/gh-pages/kml/MultiGeometry/polygon-point.kml
 
 Multilinestrings.kml  (mss/docs/samples/kml/Multilinestrings.kml)
------------------------------------------------------------------
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 Link : https://github.com/googlearchive/kml-samples/blob/gh-pages/kml/MultiGeometry/multi-linestrings.kml
 
 polygon_inner.kml  (mss/docs/samples/kml/polygon_inner.kml)
---------------------------------------------------
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 Link : https://github.com/googlearchive/kml-samples/blob/gh-pages/kml/Polygon/polyInnerBoundaries.kml
 
 
 
 Icons
-~~~~~
+------
 
 We use icons in mslib.mui.editor from the tango-icon-library
 Author: Jakub Steiner jimmac@gmail.com

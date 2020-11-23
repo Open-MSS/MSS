@@ -32,7 +32,7 @@ from the command line.
 
 
 Syntax for PyFilesystem2 Urls
-------------------------~----
+-----------------------------
 
 We have internally implemented `PyFilesystem2 <http://pyfilesystem2.readthedocs.io>`__
 
