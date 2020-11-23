@@ -28,7 +28,7 @@ import logging
 import secrets
 
 try:
-    import mscolab_settings
+    from mscolab_settings import mscolab_settings
     logging.info("Using user defined settings")
 except ImportError as ex:
     logging.warning(u"Couldn't import mscolab_settings (ImportError:'%s'), using dummy config.", ex)
