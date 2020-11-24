@@ -266,6 +266,23 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.addProject.setEnabled(False)
         self.disable_project_buttons()
 
+    def authenticate(self, data, r, url):
+        counter = 0
+        while r.status_code == 401 and counter < 5:
+            dlg = MSCOLAB_AuthenticationDialog(parent=self)
+            dlg.setModal(True)
+            if dlg.exec_() == QtWidgets.QDialog.Accepted:
+                username, password = dlg.getAuthInfo()
+                self.settings["auth"][self.mscolab_server_url] = (username, password)
+                # save to cache
+                save_settings_qsettings('mscolab', self.settings)
+                s = requests.Session()
+                s.auth = (username, password)
+                s.headers.update({'x-test': 'true'})
+                r = s.post(url, data=data)
+                counter += 1
+        return r
+
     def add_project_handler(self):
         if self.token is None:
             self.error_dialog = QtWidgets.QErrorMessage()
@@ -338,6 +355,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.user_diag.show()
 
     def add_user(self):
+        for key, value in config_loader(dataset="MSC_login", default={}).items():
+            if key not in constants.MSC_LOGIN_CACHE:
+                constants.MSC_LOGIN_CACHE[key] = value
+        auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
+
         emailid = self.add_user_dialog.emailid.text()
         password = self.add_user_dialog.password.text()
         re_password = self.add_user_dialog.rePassword.text()
@@ -348,16 +370,26 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 "password": password,
                 "username": username
             }
-            r = requests.post('{}/register'.format(self.mscolab_server_url), data=data).json()
-            if r["success"]:
+            s = requests.Session()
+            s.auth = (auth[0], auth[1])
+            s.headers.update({'x-test': 'true'})
+            url = '{}/register'.format(self.mscolab_server_url)
+            r = s.post(url, data=data)
+            if r.status_code == 401:
+                r = self.authenticate(data, r, url)
+                if r.status_code == 201:
+                    constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (username, password)
+            if r.status_code == 201:
                 self.error_dialog = QtWidgets.QErrorMessage()
                 self.error_dialog.showMessage('You are registered, you can now log in.')
             else:
                 self.error_dialog = QtWidgets.QErrorMessage()
-                self.error_dialog.showMessage(r["message"])
+                self.error_dialog.showMessage(r.json()["message"])
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your passwords don\'t match')
+
+
 
     def close_help_dialog(self):
         self.help_dialog = None
@@ -506,30 +538,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         s = requests.Session()
         s.auth = (auth[0], auth[1])
         s.headers.update({'x-test': 'true'})
-        r = s.post(self.mscolab_server_url + '/token', data=data)
+        url = self.mscolab_server_url + '/token'
+        r = s.post(url, data=data)
         if r.status_code == 401:
-            counter = 0
-            while r.status_code == 401 and counter < 5:
-                dlg = MSCOLAB_AuthenticationDialog(parent=self)
-                dlg.setModal(True)
-                if dlg.exec_() == QtWidgets.QDialog.Accepted:
-                    username, password = dlg.getAuthInfo()
-                    self.settings["auth"][self.mscolab_server_url] = (username, password)
-                    # save to cache
-                    save_settings_qsettings('mscolab', self.settings)
-                    s = requests.Session()
-                    s.auth = (username, password)
-                    s.headers.update({'x-test': 'true'})
-                    r = s.post(self.mscolab_server_url + '/token', data=data)
-                    counter += 1
-                    if r.status_code == 200:
-                        constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (username, password)
-                        self.after_authorize(emailid, r)
+            r = self.authenticate(data, r, url)
+            if r.status_code == 200:
+                constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (auth[0], auth[1])
+                self.after_authorize(emailid, r)
         elif r.text == "False":
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
-            pass
         else:
             # remove the login modal and put text there
             self.after_authorize(emailid, r)

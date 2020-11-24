@@ -108,7 +108,7 @@ def check_login(emailid, password):
             return user
     return False
 
-
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def register_user(email, password, username):
     user = User(email, username, password)
     is_valid_username = True if username.find("@") == -1 else False
@@ -190,9 +190,12 @@ def user_register_handler():
     username = request.form['username']
     result = register_user(email, password, username)
     status_code = 200
-    if result["success"]:
-        status_code = 201
-    return jsonify(result), status_code
+    try:
+        if result["success"]:
+            status_code = 201
+        return jsonify(result), status_code
+    except TypeError:
+        return jsonify({"success": False}), 401
 
 
 @APP.route('/user', methods=["GET"])
