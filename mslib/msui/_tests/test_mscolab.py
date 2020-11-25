@@ -399,19 +399,6 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
 
-    def _projects_by_user(self, token):
-        data = {
-            "token": token
-        }
-        r = requests.get(self.mscolab_server_url + '/projects', data=data)
-        _json = json.loads(r.text)
-        return _json["projects"]
-
-    def _select_waypoints(self, table):
-        for row in range(table.model().rowCount()):
-            table.selectRow(row)
-            QtWidgets.QApplication.processEvents()
-
 
 class Test_MscolabMergeWaypointsDialog(object):
     def setup(self):

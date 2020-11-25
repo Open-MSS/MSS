@@ -19,6 +19,14 @@ Description of the variables can be found in comments.
 
 .. _configuration-mscolab:
 
+Protecting Login
+~~~~~~~~~~~~~~~~
+The login to the mscolab server can be protected by an additional auth method.
+
+**mss_mscolab_auth.py**
+
+ .. literalinclude:: samples/config/mscolab/mss_mscolab_auth.py.sample
+
 Steps to Run Mscolab Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
   - The mscolab server comes included in the MSS python package.
