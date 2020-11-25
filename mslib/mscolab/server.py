@@ -108,6 +108,7 @@ def check_login(emailid, password):
             return user
     return False
 
+
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def register_user(email, password, username):
     user = User(email, username, password)
