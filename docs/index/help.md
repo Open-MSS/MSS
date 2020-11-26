@@ -12,12 +12,12 @@ Some videos about the Mission Support System Colaboration Platform
 
 This video shows the new interface for collaboration we introduced with 2.0. 
 You can use it for simulataneously editing of flight pathes. 
-<iframe width="560" height="315" src="http://www.youtube.com/embed/eDBnULXvo7M?rel=0" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/eDBnULXvo7M?rel=0" frameborder="0" allowfullscreen></iframe>
 
 
 ## KML Docking Widget
 
 
 This video shows the kml docking widget and some of its options. 
-<iframe width="560" height="315" src="http://www.youtube.com/embed/G4aPIRLBz9U?rel=0" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/G4aPIRLBz9U?rel=0" frameborder="0" allowfullscreen></iframe>
 
