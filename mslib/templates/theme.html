@@ -1,75 +1,65 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<meta name="description" content="Mission Support System">
-<meta name="keywords" content="MSS, MSCOLAB">
-<meta name="author" content="authors of MSS">
-<link rel='shortcut icon' type='image/x-icon' href='/mss/favicon.ico' />
-
-
-<title>Mission Support System Colaboration Platform</title>
-
-<!-- Bootstrap core CSS -->
-<link href="{{ url_for('files', name='bootstrap', filename='css/bootstrap.css') }}" rel="stylesheet">
-    </head>
-    <body>
-      <div id="wrap">
-        <header>
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
-
-
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-    <a class="navbar-brand" href="/index"><img src="/mss/logo.png" title="Mission Support System" alt="logo Mission Support System" /></a>
-      <li class="nav-item dropdown">
-
-            {% for href, caption, submenu in get_topmenu(): %}
-                  {% if submenu[0] %}
-                      <li class="dropdown">
-
-                       <a  href="{{ href }}" data-toggle="dropdown" class="nav-link dropdown-toggle">{{ caption }} <b class="caret"></b></a>
-
-                       <ul class="dropdown-menu">
-                       {% for href, caption in submenu: %}
-                           <li><a  class="dropdown-item" href="{{ href }}"> {{ caption }}</a></li>
-                       {% endfor %}
-                       </ul>
-                  </li>
-                  {% else %}
-                  {%- if href[1:] == act -%}
-                     <li class="active">{% else %} <li>{% endif %}<a href="{{ href }}" >{{ caption }}</a></li>
-                  {% endif %}
-               {% endfor %}
-        </div>
-    </ul>
-    <!--
+<html lang="en">
+<head>
+  <meta name="generator" content="HTML Tidy for HTML5 for Linux version 5.2.0">
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Mission Support System">
+  <meta name="keywords" content="MSS, MSCOLAB">
+  <meta name="author" content="authors of MSS">
+  <link rel='shortcut icon' type='image/x-icon' href='/mss/favicon.ico'>
+  <title>Mission Support System Colaboration Platform</title><!-- Bootstrap core CSS -->
+  <link href="{{ url_for('files', name='bootstrap', filename='css/bootstrap.css') }}" rel="stylesheet">
+</head>
+<body>
+  <div id="wrap">
+    <header>
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li style="list-style: none; display: inline">
+              <a class="navbar-brand" href="/index"><img src="/mss/logo.png" title="Mission Support System" alt="logo Mission Support System"></a>
+            </li>
+            <li class="nav-item dropdown">{% for href, caption, submenu in get_topmenu(): %} {% if submenu[0] %}</li>
+            <li class="dropdown">
+              <a href="{{ href }}" data-toggle="dropdown" class="nav-link dropdown-toggle">{{ caption }}</a>
+              <ul class="dropdown-menu">
+                <li style="list-style: none">{% for href, caption in submenu: %}</li>
+                <li>
+                  <a class="dropdown-item" href="{{ href }}">{{ caption }}</a>
+                </li>
+                <li style="list-style: none">{% endfor %}</li>
+              </ul>
+            </li>
+            <li style="list-style: none">{% else %} {%- if href[1:] == act -%}</li>
+            <li class="active">{% else %}</li>
+            <li>{% endif %}<a href="{{ href }}">{{ caption }}</a>
+            </li>
+            <li style="list-style: none">{% endif %} {% endfor %}</li>
+          </ul>
+        </div><!--
     <form class="form-inline my-2 my-lg-0">
       <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
       <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
     </form>
     !-->
+      </nav>
+    </header>
   </div>
-
-</nav>
-
-
-
-    <div id="main">
-      {% block body %}{% endblock %}
-
-    </div><!-- /main -->
-  </div> <!-- /wrap -->
-  {% include "footer.html" %}
- <!-- Bootstrap core JavaScript
+  <div id="main">
+    {% block body %}{% endblock %}
+  </div><!-- /main -->
+  <!-- /wrap -->
+  {% include "footer.html" %} <!-- Bootstrap core JavaScript
     ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="{{ url_for('files', name='jquery', filename='jquery.min.js') }}"></script>
-    <script src="{{ url_for('files', name='bootstrap', filename='js/bootstrap.js') }}"></script>
+   <!-- Placed at the end of the document so the pages load faster -->
 
-     <script type="text/javascript">
+  <script src="{{ url_for('files', name='jquery', filename='jquery.min.js') }}">
+  </script> 
+  <script src="{{ url_for('files', name='bootstrap', filename='js/bootstrap.js') }}">
+  </script> 
+  <script type="text/javascript">
       $(document).ready(function() {
       $('#myCarousel').carousel({
       interval: 5000
@@ -78,7 +68,6 @@
       //alert("slid");
       });
       });
-    </script>
-
+  </script>
   </body>
-  </html>
+</html>
