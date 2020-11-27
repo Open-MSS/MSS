@@ -83,45 +83,47 @@ if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
-import os
-import logging
-import fs
-import secrets
+class mscolab_settings(object):
 
-ROOT_DIR = '{constants.ROOT_DIR}'
-# directory where mss output files are stored
-root_fs = fs.open_fs(ROOT_DIR)
-if not root_fs.exists('colabTestData'):
-    root_fs.makedir('colabTestData')
-BASE_DIR = ROOT_DIR
-DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
-# mscolab data directory
-MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+    # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+    import os
+    import logging
+    import fs
+    import secrets
 
-# used to generate and parse tokens
-SECRET_KEY = secrets.token_urlsafe(16)
+    ROOT_DIR = '{constants.ROOT_DIR}'
+    # directory where mss output files are stored
+    root_fs = fs.open_fs(ROOT_DIR)
+    if not root_fs.exists('colabTestData'):
+        root_fs.makedir('colabTestData')
+    BASE_DIR = ROOT_DIR
+    DATA_DIR = os.path.join(ROOT_DIR, 'colabTestData')
+    # mscolab data directory
+    MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 
-SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+    # used to generate and parse tokens
+    SECRET_KEY = secrets.token_urlsafe(16)
 
-# mscolab file upload settings
-UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
-MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
+    SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
 
-# text to be written in new mscolab based ftml files.
-STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-<FlightTrack version="1.7.6">
-  <ListOfWaypoints>
-    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-      <Comments></Comments>
-    </Waypoint>
-    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-      <Comments></Comments>
-    </Waypoint>
-  </ListOfWaypoints>
-</FlightTrack>
-"""
-enable_basic_http_authentication = False
+    # mscolab file upload settings
+    UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
+    MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
+
+    # text to be written in new mscolab based ftml files.
+    STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
+    <FlightTrack version="1.7.6">
+      <ListOfWaypoints>
+        <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
+          <Comments></Comments>
+        </Waypoint>
+        <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
+          <Comments></Comments>
+        </Waypoint>
+      </ListOfWaypoints>
+    </FlightTrack>
+    """
+    enable_basic_http_authentication = False
     '''
     ROOT_FS = fs.open_fs(constants.ROOT_DIR)
     if not ROOT_FS.exists('mscolab'):
@@ -195,3 +197,5 @@ def stop_server(request):
 def testdata_exists():
     if not constants.ROOT_FS.exists(u'mss'):
         pytest.skip("testdata not existing")
+
+assert sys.path[0].startswith('/tmp')
