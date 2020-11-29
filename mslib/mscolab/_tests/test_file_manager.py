@@ -23,19 +23,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import requests
 import json
+from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import file_manager
 from mslib.mscolab.models import User, Project
 from mslib.mscolab.server import db, APP
-# Todo use defined test settings
-from mslib.mscolab.conf import mscolab_settings
 from mslib._tests.constants import MSCOLAB_URL_TEST
 
 
 class Test_FileManager(object):
     def setup(self):
+        assert 'tmp' in mscolab_settings.MSCOLAB_DATA_DIR
         self.sockets = []
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
