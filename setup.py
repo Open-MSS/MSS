@@ -34,7 +34,7 @@ execfile('mslib/version.py')
 
 setup(
     name="mss",
-    version=__version__,
+    version=__version__,  # noqa
     description="MSS - Mission Support System",
     long_description=long_description,
     classifiers="Development Status :: 5 - Production/Stable",
