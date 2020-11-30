@@ -198,4 +198,5 @@ def testdata_exists():
     if not constants.ROOT_FS.exists(u'mss'):
         pytest.skip("testdata not existing")
 
+
 assert sys.path[0].startswith('/tmp')

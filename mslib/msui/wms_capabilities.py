@@ -76,7 +76,6 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
                     "<b>Keywords:</b> {keywords}<br>\n"
                     "<b>Access constraints:</b> {accessconstraints}<br>\n"
                     "<b>Fees:</b> {fees}").format(
-                url=provider.url,
                 type=identification.type,
                 version=identification.version,
                 title=identification.title,

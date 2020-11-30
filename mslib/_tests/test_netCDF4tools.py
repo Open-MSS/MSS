@@ -29,7 +29,7 @@ import os
 import pytest
 import datetime
 from netCDF4 import Dataset
-from mslib.netCDF4tools import (identify_variable, identify_CF_lonlat, hybrid_orientation,
+from mslib.netCDF4tools import (identify_variable, identify_CF_lonlat,
                                 identify_vertical_axis, identify_CF_time, num2date, get_latlon_data
                                 )
 

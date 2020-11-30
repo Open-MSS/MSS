@@ -28,7 +28,7 @@
 import mock
 import os
 import sys
-from mslib.msui.mss_qt import QtWidgets, QtTest
+from mslib.msui.mss_qt import QtWidgets
 from mslib.msui import editor
 from mslib._tests.constants import ROOT_DIR
 
