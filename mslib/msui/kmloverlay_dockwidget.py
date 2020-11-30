@@ -582,10 +582,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'  # add xmlns attribute
                     newkml.insert(0, super_root)
                     logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-                    with _fs.open(file_name, 'w') as output:  # write file
+                    _dirname, _name = os.path.split(filename)
+                    _fs = fs.open_fs(_dirname)
+                    with _fs.open(_name, 'w') as output:  # write file
                         output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-                    path = fs.path.join(self.directory_location, "..")
-                    self.labelStatusBar.setText("Status: Merged File " + file_name + " stored at " + path)
+                    self.labelStatusBar.setText("Status: Merged File " + file_name + " stored at " + _dirname)
                 except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while merging KML Files:"),

@@ -193,11 +193,11 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # Return the image as png embedded in a StringIO stream.
             canvas = FigureCanvas(self.fig)
             output = io.BytesIO()
-            canvas.print_png(output, bbox_inches='tight')
+            canvas.print_png(output)
 
             if show:
                 logging.debug("saving figure to mpl_vsec.png ..")
-                canvas.print_png("mpl_vsec.png", bbox_inches='tight')
+                canvas.print_png("mpl_vsec.png")
 
             # Convert the image to an 8bit palette image with a significantly
             # smaller file size (~factor 4, from RGBA to one 8bit value, plus the
