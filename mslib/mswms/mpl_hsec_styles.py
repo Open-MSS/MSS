@@ -351,10 +351,6 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         data = self.data
 
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        if self.style == "PCOL":
-            # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
-            lonmesh_ = lonmesh_ - ((self.lons[1] - self.lons[0]) / 2.)
-            latmesh_ = latmesh_ - ((self.lats[1] - self.lats[0]) / 2.)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
         ice = data['sea_ice_area_fraction']
@@ -364,10 +360,10 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Filled contour plot.
         if self.style == "PCOL":
-            scs = bm.pcolor(lonmesh, latmesh, ice,
-                            cmap=plt.cm.Blues,
-                            norm=matplotlib.colors.Normalize(vmin=0.1, vmax=1.0),
-                            edgecolors='none')
+            scs = bm.pcolormesh(lonmesh, latmesh, ice,
+                                cmap=plt.cm.Blues,
+                                norm=matplotlib.colors.Normalize(vmin=0.1, vmax=1.0),
+                                shading="nearest", edgecolors='none')
         else:
             scs = bm.contourf(lonmesh, latmesh, ice,
                               np.arange(0.1, 1.1, .1), cmap=plt.cm.Blues)
@@ -513,7 +509,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
 
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
-                                     norm=norm, label=cbar_label, format=cbar_format, ticks=ticks)
+                                     label=cbar_label, format=cbar_format, ticks=ticks)
             cbar.set_ticks(clevs)
             cbar.set_ticklabels(clevs)
         else:
@@ -1138,17 +1134,12 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh_ = lonmesh_ - ((self.lons[1] - self.lons[0]) / 2.)
-        latmesh_ = latmesh_ - ((self.lats[1] - self.lats[0]) / 2.)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
-        tc = bm.pcolor(lonmesh, latmesh, tracer,
-                       cmap=plt.cm.hot_r,
-                       norm=matplotlib.colors.LogNorm(vmin=1., vmax=100.),
-                       edgecolors='none')
-
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
+        tc = bm.pcolormesh(lonmesh, latmesh, tracer,
+                           cmap=plt.cm.hot_r,
+                           norm=matplotlib.colors.LogNorm(vmin=1., vmax=100.),
+                           shading='nearest', edgecolors='none')
 
         ac = bm.contour(lonmesh, latmesh, tracer,
                         np.arange(1, 101, 1)[::2],
@@ -1212,17 +1203,12 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         # EMAC's latitudes. The error, however, is small, thus we neglect it
         # here.
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh_ -= ((self.lons[1] - self.lons[0]) / 2.)
-        latmesh_ -= ((self.lats[1] - self.lats[0]) / 2.)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
-        tc = bm.pcolor(lonmesh, latmesh, tracer,
-                       cmap=plt.cm.hot_r,
-                       norm=matplotlib.colors.LogNorm(vmin=0.05, vmax=0.5),
-                       edgecolors='none')
-
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
+        tc = bm.pcolormesh(lonmesh, latmesh, tracer,
+                           cmap=plt.cm.hot_r,
+                           norm=matplotlib.colors.LogNorm(vmin=0.05, vmax=0.5),
+                           shading="nearest", edgecolors='none')
 
         ac = bm.contour(lonmesh, latmesh, tracer,
                         np.arange(0.05, 0.55, 0.05),

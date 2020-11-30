@@ -126,5 +126,5 @@ def test_geop_thickness():
 
     # Compute geopotential difference and layer thickness. Layer thickness
     # should be similar to the actual altitude given above.
-    geopd = tl.geop_difference(p, t, method='cumtrapz')
-    geopt = tl.geop_thickness(p, t, cumulative=True)
+    geopd = tl.geop_difference(p, t, method='cumtrapz')  # noqa
+    geopt = tl.geop_thickness(p, t, cumulative=True)  # noqa
