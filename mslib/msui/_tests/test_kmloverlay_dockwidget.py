@@ -30,10 +30,11 @@ import fs
 import sys
 import mock
 from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest, QtGui
+from mslib._tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
 
 sample_path = fs.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples")
-save_kml = os.path.join(sample_path, "kml", "merged_file123.kml")
+save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 
 
 class Test_KmlOverlayDockWidget(object):
