@@ -125,6 +125,12 @@ def app_loader(name):
         content = get_content(_file)
         return render_template("/content.html", act="help", content=content)
 
+    @APP.route("/mss/imprint")
+    def imprint():
+        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'index', 'imprint.md')
+        content = get_content(_file)
+        return render_template("/content.html", act="imprint", content=content)
+
     @APP.route('/mss/favicon.ico')
     def favions():
         base_path = icons("16x16", "favicon.ico")
