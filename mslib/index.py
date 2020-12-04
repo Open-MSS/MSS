@@ -59,7 +59,7 @@ def _xstatic(name):
 
 
 def app_loader(name):
-    APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'templates'))
+    APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'))
 
     @APP.route('/xstatic/<name>/', defaults=dict(filename=''))
     @APP.route('/xstatic/<name>/<path:filename>')
@@ -77,7 +77,7 @@ def app_loader(name):
     def mss_theme(name, filename):
         if name != 'img':
             abort(404)
-        base_path = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'mss_theme', 'img')
+        base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img')
         return send_from_directory(base_path, filename)
 
     def get_topmenu():
@@ -109,25 +109,25 @@ def app_loader(name):
     @APP.route("/mss/about")
     @APP.route("/mss")
     def about():
-        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'index', 'about.md')
+        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'about.md')
         content = get_content(_file)
         return render_template("/content.html", act="about", content=content)
 
     @APP.route("/mss/install")
     def install():
-        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'index', 'installation.md')
+        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'installation.md')
         content = get_content(_file)
         return render_template("/content.html", act="install", content=content)
 
     @APP.route("/mss/help")
     def help():
-        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'index', 'help.md')
+        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'help.md')
         content = get_content(_file)
         return render_template("/content.html", act="help", content=content)
 
     @APP.route("/mss/imprint")
     def imprint():
-        _file = os.path.join(DOCS_SERVER_PATH, '..', 'docs', 'index', 'imprint.md')
+        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'imprint.md')
         content = get_content(_file)
         return render_template("/content.html", act="imprint", content=content)
 
