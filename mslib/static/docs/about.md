@@ -62,9 +62,6 @@ Jülich. Improving the software will improve the quality of the research
 flights and will also enable its use for other scientific areas, e.g.
 planning of ship routes.
 
-> -   [Getting
->     started](https://bitbucket.org/wxmetvis/mss/wiki/GSOC2020/Getting%20Started)
-> -   [Simple
->     issues](https://bitbucket.org/wxmetvis/mss/wiki/issues%20to%20start%20with)
-> -   [Contact](https://bitbucket.org/wxmetvis/mss/wiki/Contact)
+> -   [Getting started](https://github.com/Open-MSS/MSS/wiki/Getting-Started)
+> -   [Contact](https://github.com/Open-MSS/MSS/wiki/Contact)
 
