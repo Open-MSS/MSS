@@ -1,6 +1,21 @@
 Changelog
 =========
 
+Version 2.0.0
+-------------
+
+Shivashis Padhi created the fundament for a collaboration server in the
+MSS project in google summer of code 2019.
+Tanish Grover continued this work in the google summer of code 2020 and
+overworked our user interface. In addition to the mswms server the project now
+has a mscolab server for editing a flight path.
+
+Vaibhav Mehra has integrated an editor for the MSS setting file.
+
+The KML docking widget was improved in google summer of code 2020 by Aryan Gupta
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/7
 
 Version 1.9.5
 -------------
