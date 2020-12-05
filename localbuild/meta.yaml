@@ -82,7 +82,7 @@ test:
 
 about:
   summary: 'A web service based tool to plan atmospheric research flights.'
-  home: https://bitbucket.org/wxmetvis/mss
+  home: https://github.com/Open-MSS/MSS
   license: Apache-2.0
   license_file: LICENSE
   description: |

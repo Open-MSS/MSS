@@ -129,7 +129,7 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_style = 'css/mss.css'
 else:
     html_context = {
-        'display_bitbucket': False, # Add 'Edit on Bitbucket' link instead of 'View page source'
+        'display_github': False, # Add 'Edit on Bitbucket' link instead of 'View page source'
         'last_updated': True,
         'commit': False,
         'css_files': [

@@ -199,7 +199,7 @@ p, li { white-space: pre-wrap; }
        <property name="text">
         <string>Copyright 2008-2014: Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
 Copyright 2011-2014: Marc Rautenhaus
-Copyright 2016-2019: by the mss team, see AUTHORS</string>
+Copyright 2016-2020: by the mss team, see AUTHORS</string>
        </property>
       </widget>
      </item>
@@ -222,7 +222,7 @@ Copyright 2016-2019: by the mss team, see AUTHORS</string>
      <item>
       <widget class="QLabel" name="lblLinks">
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;See &lt;a href=&quot;http://mss.rtfd.io&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://mss.rtfd.io&lt;/span&gt;&lt;/a&gt; for detailed information and documentation.&lt;br&gt;Report bugs or feature requests at &lt;a href=&quot;https://bitbucket.org/wxmetvis/mss&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://bitbucket.org/wxmetvis/mss&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;See &lt;a href=&quot;http://mss.rtfd.io&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://mss.rtfd.io&lt;/span&gt;&lt;/a&gt; for detailed information and documentation.&lt;br&gt;Report bugs or feature requests at &lt;a href=&quot;https://github.com/Open-MSS/MSS&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://github.com/Open-MSS/MSS&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="openExternalLinks">
         <bool>true</bool>
