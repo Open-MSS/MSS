@@ -11,7 +11,7 @@ MSS is written in Python.
 Once a stable release is published we do only bug fixes in stable and release regulary
 new minor versions. If a fix needs a API change or it is likly more a new feature you have
 to make a pull request to the develop branch. Documentation of changes is done by using our
-`issue tracker <https://bitbucket.org/wxmetvis/mss/issues>`_.
+`issue tracker <https://github.com/Open-MSS/MSS/issues>`_.
 
 When it is ready the developer version becomes the next stable.
 
@@ -33,7 +33,7 @@ warning for warnings, error for errors, critical for critical errors/states).
 Setup a development environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to contribute make a fork on bitbucket of `mss <https://bitbucket.org/wxmetvis/mss>`_.
+If you want to contribute make a fork on github of `MSS <https://github.com/Open-MSS/MSS>`_.
 
 In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
 mss repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
@@ -185,7 +185,7 @@ Update local stable branch
 If you don't have a stable branch, create one first or change to that branch::
 
    git checkout [-b] stable
-   git pull git@bitbucket.org:wxmetvis/mss.git stable
+   git pull git@github.com:Open-MSS/MSS.git stable
    git push
 
 

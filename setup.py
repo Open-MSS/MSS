@@ -44,7 +44,7 @@ setup(
     author="Marc Rautenahaus",
     author_email="wxmetvis@posteo.de",
     license="Apache-2.0",
-    url="https://bitbucket.org/wxmetvis/mss",
+    url="https://github.com/Open-MSS/MSS",
     platforms="any",
     packages=find_packages(),
     namespace_packages=[],

@@ -208,7 +208,7 @@ def excepthook(type_, value, traceback_):
             "Fatal error in MSS {} on {}\n"
             "Python {}\n"
             "\n"
-            "Please report bugs in MSS to https://bitbucket.org/wxmetvis/mss\n"
+            "Please report bugs in MSS to https://github.com/Open-MSS/MSS\n"
             "\n"
             "Information about the fatal error:\n"
             "\n"
