@@ -1,3 +1,12 @@
+Mission Support System Usage Guidelines
+=======================================
+
+Welcome to the Mission Support System software for planning
+atmospheric research flights. This document is intended to point you
+into the right direction in order to get the software working on your
+computer.
+
+
 Installing MSS
 ==============
 
@@ -28,13 +37,9 @@ Current release info
 | [![Conda Recipe](https://img.shields.io/badge/recipe-mss-green.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) |
 
 
-Mission Support System Usage Guidelines
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Welcome to the Mission Support System software for planning
-atmospheric research flights. This document is intended to point you
-into the right direction in order to get the software working on your
-computer.
+Publications
+============
 
 Please read the reference documentation
 
