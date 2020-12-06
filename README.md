@@ -28,3 +28,33 @@ in the same directory as this README file.
    presentations, reports, etc. that you create. Thank you very much.
 
 ***************************************************************************
+
+
+Current release info
+====================
+
+| Name | Downloads | Version | Platforms |
+| --- | --- | --- | --- |
+| [![Conda Recipe](https://img.shields.io/badge/recipe-mss-green.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) |
+
+Installing mss
+==============
+
+Installing `mss` from the `conda-forge` channel can be achieved by adding `conda-forge` to your channels with:
+
+```
+conda config --add channels conda-forge
+```
+
+Once the `conda-forge` channel has been enabled, `mss` can be installed with:
+
+```
+conda install mss
+```
+
+It is possible to list all of the versions of `mss` available on your platform with:
+
+```
+conda search mss --channel conda-forge
+```
+
