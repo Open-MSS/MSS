@@ -7,12 +7,14 @@ Version 2.0.0
 Shivashis Padhi created the fundament for a collaboration server in the
 MSS project in google summer of code 2019.
 Tanish Grover continued this work in the google summer of code 2020 and
-overworked our user interface. In addition to the mswms server the project now
-has a mscolab server for editing a flight path.
+overworked our user interface. The initial idea of mscolab stems from Reimar Bauer.
+GSoC mentors were Reimar Bauer and Jörn Ungermann.
+In addition to the mswms server the project now has a mscolab server for editing a flight path.
 
 Vaibhav Mehra has integrated an editor for the MSS setting file.
 
-The KML docking widget was improved in google summer of code 2020 by Aryan Gupta
+The KML docking widget was improved in google summer of code 2020 by Aryan Gupta.
+GSoC mentors were Jörn Ungermann and Christian Rolf. Initial idea of the project by Jörn Ungermann.
 
 All changes:
 https://github.com/Open-MSS/MSS/milestone/7
