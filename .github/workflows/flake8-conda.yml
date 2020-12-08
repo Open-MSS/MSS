@@ -9,7 +9,9 @@ jobs:
       max-parallel: 5
 
     steps:
-    - uses: actions/checkout@develop
+    - uses: actions/checkout@v2
+      with:
+        ref: develop
     - name: Set up Python 3.8
       uses: actions/setup-python@develop
       with:
