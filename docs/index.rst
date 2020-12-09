@@ -6,8 +6,11 @@ Mission Support System's Documentation
 
 .. image:: https://anaconda.org/conda-forge/mss/badges/version.svg
 
-.. include:: ../README
+.. include:: publications.rst
 
+
+Topics
+======
 
 .. toctree::
    :maxdepth: 2
