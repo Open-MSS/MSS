@@ -34,10 +34,8 @@ import types
 import fs
 import requests
 from fs import open_fs
-from requests.auth import HTTPBasicAuth
 from werkzeug.urls import url_join
 
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_project as mp
@@ -51,7 +49,6 @@ from mslib.msui.qt5 import ui_add_user_dialog as add_user_ui
 from mslib.msui.qt5 import ui_mscolab_window as ui
 from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog
-from mslib.utils import config_loader
 from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 from mslib.msui import constants
 from mslib.utils import config_loader
