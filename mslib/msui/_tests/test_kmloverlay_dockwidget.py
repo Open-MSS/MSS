@@ -59,6 +59,8 @@ class Test_KmlOverlayDockWidget(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.window.close()
+        if os.path.exists(save_kml):
+            os.remove(save_kml)
 
     def select_file(self, file):  # Utility function for single file
         path = fs.path.join(sample_path, "kml", file)
@@ -157,11 +159,6 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         assert mocksave.call_count == 1
         assert os.path.exists(save_kml)
-        self.select_file("merged_file123.kml")
-        assert mockbox.critical.call_count == 0
-        self.window.select_all()
-        self.window.remove_file()
-        os.remove(save_kml)
 
     @mock.patch("mslib.msui.mss_qt.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
     def test_customize_kml(self, mock_colour_dialog):
