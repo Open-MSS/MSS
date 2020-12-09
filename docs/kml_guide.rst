@@ -12,7 +12,8 @@ This feature supports all *essential* elements of KML relevant to MSS' usage nam
 
 * Placemarks (*present in Folder/ Document or otherwise*)
 * Style (LineStyle & PolyStyle)
-* Geometries defined in KML such as :  
+* Geometries defined in KML such as
+
    - Point
    - LineString
    - LinearRing
@@ -49,32 +50,16 @@ Curious to test out some KML Files? We have a vibrant sample collection ready ju
 
 Example KML Files are located at : 
 
-* Displays LineString
-:download: `docs/samples/kml/line.kml <samples/kml/line.kml>`
+* Displays LineString :download:`docs/samples/kml/line.kml <samples/kml/line.kml>`
+* Displays Point & Polygon :download:`docs/samples/kml/folder.kml <samples/kml/folder.kml>`
+* Displays Polygon :download:`docs/samples/kml/color.kml <samples/kml/color.kml>`
+* Displays Style (*The green blob with the Airport*) :download:`docs/samples/kml/style.kml <samples/kml/style.kml>`
+* Displays Area in South America (*Points, LineStrings, Polygons*) :download:`docs/samples/kml/features.kml <samples/kml/features.kml>`
+* Displays the World Map (*MultiPolygon*) :download:`docs/samples/kml/World_Map.kml <samples/kml/World_Map.kml>`
+* Displays Square Fractal plot in North America (*Polygon Rings*) :download:`docs/samples/kml/polygon_inner.kml <samples/kml/polygon_inner.kml>`
+* Displays Fork like pattern in Ireland (*MultiLineStrings*) :download:`docs/samples/kml/Multilinestrings.kml <samples/kml/Multilinestrings.kml>`
+* Displays Geometry Collection in Adelaide, Australia  :download:`docs/samples/kml/geometry_collection.kml <samples/kml/geometry_collection.kml>`
 
-* Displays Point & Polygon
-:download: `docs/samples/kml/folder.kml <samples/kml/folder.kml>`
-
-* Displays Polygon
-:download: `docs/samples/kml/color.kml <samples/kml/color.kml>`
-
-* Displays Style (*The green blob with the Airport*)
-:download: `docs/samples/kml/style.kml <samples/kml/style.kml>`
-
-* Displays Area in South America (*Points, LineStrings, Polygons*)
-:download: `docs/samples/kml/features.kml <samples/kml/features.kml>`
-
-* Displays the World Map (*MultiPolygon*)
-:download: `docs/samples/kml/World_Map.kml <samples/kml/World_Map.kml>`
-
-* Displays Square Fractal plot in North America (*Polygon Rings*)
-:download: `docs/samples/kml/polygon_inner.kml <samples/kml/polygon_inner.kml>`
-
-* Displays Fork like pattern in Ireland (*MultiLineStrings*)
-:download: `docs/samples/kml/Multilinestrings.kml <samples/kml/Multilinestrings.kml>`
-
-* Displays Geometry Collection in Adelaide, Australia
-:download: `docs/samples/kml/geometry_collection.kml <samples/kml/geometry_collection.kml>`
 
 
 
