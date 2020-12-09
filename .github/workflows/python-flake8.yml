@@ -5,13 +5,9 @@ name: flake8
 
 on:
   push:
-    branches:
-      - develop
-      - stable
+    branches: [ develop ]
   pull_request:
-    branches:
-      - develop
-      - stable
+    branches: [ develop ]
 jobs:
   lint:
     runs-on: ubuntu-latest
