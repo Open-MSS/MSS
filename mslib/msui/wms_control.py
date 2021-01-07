@@ -40,7 +40,7 @@ import urllib.parse
 import defusedxml.ElementTree as etree
 from mslib.utils import config_loader
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import mslib.ogcwms
 import owslib.util

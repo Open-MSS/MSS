@@ -33,7 +33,7 @@ from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, db, initialize_managers
-from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
+from PyQt5 import QtCore, QtTest, QtWidgets
 
 
 class Test_MscolabVersionHistory(object):
@@ -86,7 +86,7 @@ class Test_MscolabVersionHistory(object):
         len_after = self.version_window.changes.count()
         assert len_prev == (len_after - 2)
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
     def test_set_version_name(self, mockbox):
         self._change_version_filter(1)
         self._activate_change_at_index(0)
@@ -106,7 +106,7 @@ class Test_MscolabVersionHistory(object):
         time.sleep(4)
         assert self.version_window.changes.count() == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_undo(self, mockbox):
         self._change_version_filter(1)
         changes_count = self.version_window.changes.count()

@@ -25,7 +25,8 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtCore, QtWidgets, get_open_filename
+from mslib.msui.mss_qt import get_open_filename
+from PyQt5 import QtCore, QtWidgets
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import aircrafts
 from mslib.msui import constants

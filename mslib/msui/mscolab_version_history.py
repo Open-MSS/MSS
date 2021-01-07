@@ -32,7 +32,7 @@ from werkzeug.urls import url_encode, url_join
 
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.qt5 import ui_mscolab_version_history as ui
 from mslib.utils import config_loader, show_popup, utc_to_local_datetime
 

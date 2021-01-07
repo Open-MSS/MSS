@@ -29,7 +29,7 @@ import os
 import fs
 import sys
 import mock
-from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest, QtGui
+from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from mslib._tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
 
@@ -83,7 +83,7 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_select_file(self, mockbox):
         """
         Test All geometries and styles are being parsed without crashing
@@ -105,7 +105,7 @@ class Test_KmlOverlayDockWidget(object):
         self.window.select_all()
         self.window.remove_file()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_select_file_error(self, mockbox):
         """
         Test that program mitigates loading a non-existing file
@@ -147,7 +147,7 @@ class Test_KmlOverlayDockWidget(object):
         assert self.window.dict_files == {}  # Dictionary should be empty
         assert self.window.patch is None   # Patch should be None
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.kmloverlay_dockwidget.get_save_filename", return_value=save_kml)
     def test_merge_file(self, mocksave, mockbox):
         """
@@ -160,7 +160,7 @@ class Test_KmlOverlayDockWidget(object):
         assert mocksave.call_count == 1
         assert os.path.exists(save_kml)
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
+    @mock.patch("PyQt5.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
     def test_customize_kml(self, mock_colour_dialog):
         """
         Test opening Customize KML Dialogue and checking specific file gets

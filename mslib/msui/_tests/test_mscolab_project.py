@@ -33,7 +33,7 @@ from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
 from mslib.mscolab.server import APP, db, initialize_managers
-from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets, Qt
+from PyQt5 import QtCore, QtTest, QtWidgets, Qt
 
 
 class Actions(object):

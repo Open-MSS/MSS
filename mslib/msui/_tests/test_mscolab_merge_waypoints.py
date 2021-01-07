@@ -9,7 +9,7 @@ from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.mscolab import MSSMscolabWindow
-from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
+from PyQt5 import QtCore, QtTest, QtWidgets
 
 
 # TODO: FIX THESE TESTS
@@ -46,7 +46,7 @@ class Test_Mscolab(object):
         # QtWidgets.QApplication.processEvents()
 
     @pytest.mark.skip(reason="Need to fix test for dialog")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_overwrite_to_server(self, mockbox):
         self._login()
         self._activate_project_at_index(0)
@@ -78,7 +78,7 @@ class Test_Mscolab(object):
         assert wp_local_before.lat == new_server_wp.lat
 
     @pytest.mark.skip(reason="Need to fix test for dialog")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_keep_server_points(self, mockbox):
         self._login()
         self._activate_project_at_index(0)
@@ -112,7 +112,7 @@ class Test_Mscolab(object):
         assert wp_server_before.lat == new_server_wp.lat
 
     @pytest.mark.skip(reason="Need to fix test for dialog")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_merge_points(self, mockbox):
         self._login()
         self._activate_project_at_index(0)
@@ -149,7 +149,7 @@ class Test_Mscolab(object):
             assert new_server_wp.waypoint_data(wp_index).lat == merge_waypoints_model.waypoint_data(wp_index).lat
 
     @pytest.mark.skip(reason="Need to fix test for dialog")
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_fetch_from_server(self, mockbox):
         self._login()
         self._activate_project_at_index(0)

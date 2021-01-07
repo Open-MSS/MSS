@@ -29,7 +29,7 @@ import requests
 from werkzeug.urls import url_join
 
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
 from mslib.utils import config_loader, show_popup
 

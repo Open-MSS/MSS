@@ -32,9 +32,10 @@ from lxml import etree as et, objectify
 import os
 from matplotlib import patheffects
 
-from mslib.msui.mss_qt import QtGui, QtWidgets, QtCore, get_open_filenames, get_save_filename
+from mslib.msui.mss_qt import get_open_filenames, get_save_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from mslib.msui.mss_qt import ui_customize_kml
+from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
 
 

@@ -42,7 +42,8 @@ from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
-from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, get_open_filename
+from mslib.msui.mss_qt import get_open_filename
+from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_add_project_dialog as add_project_ui
 from mslib.msui.qt5 import ui_add_user_dialog as add_user_ui

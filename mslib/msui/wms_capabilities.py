@@ -28,7 +28,7 @@
 
 import collections
 
-from mslib.msui.mss_qt import QtWidgets
+from PyQt5 import QtWidgets
 from mslib.msui.mss_qt import ui_wms_capabilities as ui
 
 

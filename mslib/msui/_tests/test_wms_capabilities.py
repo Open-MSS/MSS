@@ -28,7 +28,7 @@
 import sys
 import mock
 
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
+from PyQt5 import QtWidgets, QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
 
 
@@ -63,18 +63,18 @@ class Test_WMSCapabilities(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_window_start(self, mockbox):
         self.start_window()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_window_contact_none(self, mockbox):
         self.capabilities.provider.contact = None
         self.start_window()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_switch_view(self, mockbox):
         self.start_window()
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)

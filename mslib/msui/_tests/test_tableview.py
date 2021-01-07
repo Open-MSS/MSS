@@ -29,7 +29,7 @@ import mock
 import pytest
 import sys
 
-from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
@@ -70,7 +70,7 @@ class Test_TableView(object):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
     def test_insertremove_hexagon(self, mockbox):
         """
@@ -144,7 +144,7 @@ class Test_TableView(object):
         assert all(_x == _y for _x, _y in zip(wps[:3], wps2[:3])), (wps, wps2)
         assert all(_x == _y for _x, _y in zip(wps[3:], wps2[4:])), (wps, wps2)
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
     def test_remove_point(self, mockbox):
         """
