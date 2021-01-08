@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/ui_topview_window.ui'
+# Form implementation generated from reading ui file 'ui_topview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -45,6 +45,11 @@ class Ui_TopViewWindow(object):
         self.horizontalLayout.addWidget(self.btSettings)
         spacerItem1 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
+        self.btRoundtrip = QtWidgets.QPushButton(self.centralwidget)
+        self.btRoundtrip.setObjectName("btRoundtrip")
+        self.horizontalLayout.addWidget(self.btRoundtrip)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem2)
         self.cbTools = QtWidgets.QComboBox(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -55,8 +60,8 @@ class Ui_TopViewWindow(object):
         self.cbTools.addItem("")
         self.cbTools.addItem("")
         self.horizontalLayout.addWidget(self.cbTools)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem2)
+        spacerItem3 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem3)
         self.cbChangeMapSection = QtWidgets.QComboBox(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -73,8 +78,8 @@ class Ui_TopViewWindow(object):
         self.cbChangeMapSection.addItem("")
         self.cbChangeMapSection.addItem("")
         self.horizontalLayout.addWidget(self.cbChangeMapSection)
-        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem3)
+        spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem4)
         self.verticalLayout.addLayout(self.horizontalLayout)
         TopViewWindow.setCentralWidget(self.centralwidget)
         self.actionCloseWindow = QtWidgets.QAction(TopViewWindow)
@@ -91,6 +96,7 @@ class Ui_TopViewWindow(object):
         self.btMapRedraw.setText(_translate("TopViewWindow", "&REDRAW"))
         self.btMapRedraw.setShortcut(_translate("TopViewWindow", "R"))
         self.btSettings.setText(_translate("TopViewWindow", "options"))
+        self.btRoundtrip.setText(_translate("TopViewWindow", "make roundtrip"))
         self.cbTools.setItemText(0, _translate("TopViewWindow", "(select to open tool)"))
         self.cbTools.setItemText(1, _translate("TopViewWindow", "WMS"))
         self.cbChangeMapSection.setItemText(0, _translate("TopViewWindow", "to reset map select a region"))
@@ -104,3 +110,13 @@ class Ui_TopViewWindow(object):
         self.actionCloseWindow.setShortcut(_translate("TopViewWindow", "Ctrl+W"))
 
 from mslib.msui.mpl_qtwidget import MplTopViewWidget
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    TopViewWindow = QtWidgets.QMainWindow()
+    ui = Ui_TopViewWindow()
+    ui.setupUi(TopViewWindow)
+    TopViewWindow.show()
+    sys.exit(app.exec_())
+

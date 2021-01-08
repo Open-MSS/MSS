@@ -203,3 +203,32 @@ class Test_TableView(object):
         assert len(self.window.waypoints_model.waypoints) == 5
         wps_after = list(self.window.waypoints_model.waypoints)
         assert wps_before != wps_after, (wps_before, wps_after)
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_roundtrip(self, mockbox):
+        """
+        Test connecting the last and first point
+        Test connecting the first point to itself
+        """
+        count = len(self.window.waypoints_model.waypoints)
+
+        # Test if the last waypoint connects to the first
+        self.window.update_roundtrip_enabled()
+        assert self.window.is_roundtrip_possible()
+        self.window.make_roundtrip()
+        assert len(self.window.waypoints_model.waypoints) == count + 1
+        first = self.window.waypoints_model.waypoints[0]
+        dupe = self.window.waypoints_model.waypoints[-1]
+        assert first.lat == dupe.lat and first.lon == dupe.lon
+
+        # Check if roundtrip is disabled if the last and first point are equal
+        self.window.update_roundtrip_enabled()
+        assert not self.window.is_roundtrip_possible()
+        assert not self.window.btRoundtrip.isEnabled()
+        self.window.make_roundtrip()
+        assert len(self.window.waypoints_model.waypoints) == count + 1
+
+        # Remove connection
+        self.window.waypoints_model.removeRows(count, 1)
+        assert len(self.window.waypoints_model.waypoints) == count
+        assert mockbox.critical.call_count == 0

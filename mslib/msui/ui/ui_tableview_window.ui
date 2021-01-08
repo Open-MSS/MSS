@@ -161,6 +161,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="btRoundtrip">
+        <property name="text">
+         <string>make roundtrip</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>

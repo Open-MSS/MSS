@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_tableview_window.ui'
+# Form implementation generated from reading ui file 'ui_tableview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -68,6 +68,9 @@ class Ui_TableViewWindow(object):
         self.btInvertDirection.setMinimumSize(QtCore.QSize(100, 0))
         self.btInvertDirection.setObjectName("btInvertDirection")
         self.horizontalLayout.addWidget(self.btInvertDirection)
+        self.btRoundtrip = QtWidgets.QPushButton(self.centralwidget)
+        self.btRoundtrip.setObjectName("btRoundtrip")
+        self.horizontalLayout.addWidget(self.btRoundtrip)
         self.verticalLayout.addLayout(self.horizontalLayout)
         TableViewWindow.setCentralWidget(self.centralwidget)
         self.actionCloseWindow = QtWidgets.QAction(TableViewWindow)
@@ -88,6 +91,17 @@ class Ui_TableViewWindow(object):
         self.btCloneWaypoint.setText(_translate("TableViewWindow", "clone"))
         self.btDeleteWayPoint.setText(_translate("TableViewWindow", "delete selected"))
         self.btInvertDirection.setText(_translate("TableViewWindow", "reverse"))
+        self.btRoundtrip.setText(_translate("TableViewWindow", "make roundtrip"))
         self.actionCloseWindow.setText(_translate("TableViewWindow", "Close Window"))
         self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+W"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    TableViewWindow = QtWidgets.QMainWindow()
+    ui = Ui_TableViewWindow()
+    ui.setupUi(TableViewWindow)
+    TableViewWindow.show()
+    sys.exit(app.exec_())
 
