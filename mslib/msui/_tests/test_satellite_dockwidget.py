@@ -28,7 +28,7 @@
 import os
 import sys
 import mock
-from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from PyQt5 import QtWidgets, QtCore, QtTest
 import mslib.msui.satellite_dockwidget as sd
 
 

@@ -38,7 +38,7 @@ from mslib.mscolab.models import Permission, User
 from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui.mscolab import MSSMscolabWindow
-from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
+from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib._tests.utils import mscolab_delete_all_projects, mscolab_delete_user
 
 
@@ -133,7 +133,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert len(self.window.active_windows) == 3
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getSaveFileName",
+    @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
     def test_handle_export(self, mockbox):
         self._login()
@@ -146,11 +146,11 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.waypoints_model.waypoint_data(i).lat
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getSaveFileName",
+    @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QFileDialog.getOpenFileName",
+    @mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockExport, mockImport, mockMessage):
         self._login()
         self._activate_project_at_index(0)
@@ -187,7 +187,7 @@ class Test_Mscolab(object):
         wpdata_server = self.window.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):
         self._login()
         QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)

@@ -26,56 +26,57 @@
 """
 
 import mslib.msui.mss_qt as mqt
+import PyQt5 as pqt
 
 
 def test_variant():
     for test_val in [-12.2, 2, 0, 12.2]:
-        var = mqt.QtCore.QVariant(test_val)
+        var = pqt.QtCore.QVariant(test_val)
         val = var.value()
         assert isinstance(val, (int, float))
         assert abs(val - test_val) < 1e-6
 
     for test_val in ["-12.2", "2", "0", u"12.2", "abc", u"aöc"]:
-        var = mqt.QtCore.QVariant(test_val)
+        var = pqt.QtCore.QVariant(test_val)
         val = var.value()
         assert val == test_val
 
 
 def test_localized_conversion():
-    value, ok = mqt.QtCore.QLocale(mqt.QtCore.QLocale.English).toDouble("12.2")
+    value, ok = pqt.QtCore.QLocale(pqt.QtCore.QLocale.English).toDouble("12.2")
     assert ok is True
     assert value == 12.2
-    value, ok = mqt.QtCore.QLocale(mqt.QtCore.QLocale.German).toDouble("12,2")
+    value, ok = pqt.QtCore.QLocale(pqt.QtCore.QLocale.German).toDouble("12,2")
     assert ok is True
     assert value == 12.2
-    value, ok = mqt.QtCore.QLocale(mqt.QtCore.QLocale.German).toDouble("1.200")
+    value, ok = pqt.QtCore.QLocale(pqt.QtCore.QLocale.German).toDouble("1.200")
     assert ok is True
     assert value == 1200
-    value, ok = mqt.QtCore.QLocale(mqt.QtCore.QLocale.French).toDouble("12,2")
+    value, ok = pqt.QtCore.QLocale(pqt.QtCore.QLocale.French).toDouble("12,2")
     assert ok is True
     assert value == 12.2
 
 
 def test_variant_to_string():
     for value, variant in [("5", "5"), ("5", "5"), (u"öäü", u"öäü"), ("abc", "abc")]:
-        conv_value = mqt.variant_to_string(mqt.QtCore.QVariant(variant))
+        conv_value = mqt.variant_to_string(pqt.QtCore.QVariant(variant))
         assert value == conv_value
 
 
 def test_variant_to_float():
     for value, variant in [(5, "5"), (5, 5), (5.5, 5.5), (-5.5, -5.5)]:
-        conv_value = mqt.variant_to_float(mqt.QtCore.QVariant(variant))
+        conv_value = mqt.variant_to_float(pqt.QtCore.QVariant(variant))
         assert value == conv_value
 
-    german_locale = mqt.QtCore.QLocale(mqt.QtCore.QLocale.German)
+    german_locale = pqt.QtCore.QLocale(pqt.QtCore.QLocale.German)
     for value, string in [(5, "5"), (5.5, "5,5"), (1000, "1.000")]:
-        conv_value = mqt.variant_to_float(mqt.QtCore.QVariant(string), locale=german_locale)
+        conv_value = mqt.variant_to_float(pqt.QtCore.QVariant(string), locale=german_locale)
         assert conv_value == value
-    french_locale = mqt.QtCore.QLocale(mqt.QtCore.QLocale.French)
+    french_locale = pqt.QtCore.QLocale(pqt.QtCore.QLocale.French)
     for value, string in [(5, "5"), (5.5, "5,5"), (1000, "1 000")]:
-        conv_value = mqt.variant_to_float(mqt.QtCore.QVariant(string), locale=french_locale)
+        conv_value = mqt.variant_to_float(pqt.QtCore.QVariant(string), locale=french_locale)
         assert conv_value == value
-    english_locale = mqt.QtCore.QLocale(mqt.QtCore.QLocale.English)
+    english_locale = pqt.QtCore.QLocale(pqt.QtCore.QLocale.English)
     for value, string in [(5, "5"), (5.5, "5.5"), (1000, "1,000")]:
-        conv_value = mqt.variant_to_float(mqt.QtCore.QVariant(string), locale=english_locale)
+        conv_value = mqt.variant_to_float(pqt.QtCore.QVariant(string), locale=english_locale)
         assert conv_value == value

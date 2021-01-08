@@ -29,7 +29,7 @@
 
 from abc import abstractmethod
 
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 import logging
 
 

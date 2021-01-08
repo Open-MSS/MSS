@@ -34,7 +34,7 @@ import sys
 import multiprocessing
 import tempfile
 from mslib.mswms.mswms import application
-from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 
@@ -54,11 +54,11 @@ class Test_MSS_TV_MapAppearanceDialog(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_show(self, mockcrit):
         assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_get(self, mockcrit):
         assert mockcrit.critical.call_count == 0
         self.window.get_settings()
@@ -84,19 +84,19 @@ class Test_MSSTopViewWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_wms(self, mockbox):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_sat(self, mockbox):
         self.window.cbTools.currentIndexChanged.emit(2)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_rs(self, mockcrit):
         self.window.cbTools.currentIndexChanged.emit(3)
         QtWidgets.QApplication.processEvents()
@@ -112,13 +112,13 @@ class Test_MSSTopViewWindow(object):
         rsdock.cbShowSolarAngle.setChecked(True)
         assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_kml(self, mockbox):
         self.window.cbTools.currentIndexChanged.emit(4)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_insert_point(self, mockbox):
         """
         Test inserting a point inside and outside the canvas
@@ -138,9 +138,9 @@ class Test_MSSTopViewWindow(object):
         assert len(self.window.waypoints_model.waypoints) == 5
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.critical")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
     def test_remove_point_yes(self, mockcrit, mockbox):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
@@ -157,9 +157,9 @@ class Test_MSSTopViewWindow(object):
         assert len(self.window.waypoints_model.waypoints) == 3
         assert mockbox.call_count == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.No)
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.critical")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
     def test_remove_point_no(self, mockcrit, mockbox):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
@@ -180,7 +180,7 @@ class Test_MSSTopViewWindow(object):
         assert len(self.window.waypoints_model.waypoints) == 4
         assert mockcrit.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_move_point(self, mockbox):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
@@ -203,7 +203,7 @@ class Test_MSSTopViewWindow(object):
         assert len(self.window.waypoints_model.waypoints) == 4
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_map_options(self, mockbox):
         self.window.mpl.canvas.map.set_graticule_visible(True)
         QtWidgets.QApplication.processEvents()
@@ -268,7 +268,7 @@ class Test_TopViewWMS(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image

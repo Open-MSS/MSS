@@ -31,7 +31,7 @@ from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, db, initialize_managers
-from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
+from PyQt5 import QtCore, QtTest, QtWidgets
 
 
 class Test_MscolabAdminWindow(object):

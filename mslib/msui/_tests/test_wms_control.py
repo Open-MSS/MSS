@@ -33,7 +33,7 @@ import tempfile
 import pytest
 import multiprocessing
 from mslib.mswms.mswms import application
-from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
 
@@ -106,7 +106,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     def setup(self):
         self._setup("hsec")
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_no_server(self, mockbox):
         """
         assert that a message box informs about server troubles
@@ -114,7 +114,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server("http://127.0.0.1:8083")
         assert mockbox.critical.call_count == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_no_schema(self, mockbox):
         """
         assert that a message box informs about server troubles
@@ -122,7 +122,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server("127.0.0.1:8082")
         assert mockbox.critical.call_count == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_invalid_schema(self, mockbox):
         """
         assert that a message box informs about server troubles
@@ -130,7 +130,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server("hppd://127.0.0.1:8082")
         assert mockbox.critical.call_count == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_invalid_url(self, mockbox):
         """
         assert that a message box informs about server troubles
@@ -138,7 +138,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server("http://???127.0.0.1:8082")
         assert mockbox.critical.call_count == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_connection_error(self, mockbox):
         if sys.version_info.major == 3:
             pytest.skip("problem in urllib3")
@@ -165,7 +165,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 0
         self.view.reset_mock()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image
@@ -184,7 +184,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 1
         self.view.reset_mock()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap_cached(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image
@@ -219,7 +219,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_service_cache(self, mockbox):
         """
         assert that changing between servers still allows image retrieval
@@ -260,7 +260,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     def setup(self):
         self._setup("vsec")
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image
@@ -554,7 +554,7 @@ class TestWMSControlWidgetSetupSimple(object):
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
             ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_xml_time_error(self, mockbox):
         dimext_time_error = """
             <Dimension name="TIME" units="ISO8610"> </Dimension>

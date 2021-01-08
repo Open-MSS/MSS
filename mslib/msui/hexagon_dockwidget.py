@@ -27,7 +27,7 @@
 import numpy as np
 import logging
 
-from mslib.msui.mss_qt import QtWidgets
+from PyQt5 import QtWidgets
 from mslib.msui.mss_qt import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default

@@ -33,7 +33,7 @@ import sys
 import traceback
 
 from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
-from PyQt5 import QtGui, QtCore, QtWidgets, QtTest, Qt  # noqa
+from PyQt5 import QtCore, QtWidgets  # noqa
 
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
