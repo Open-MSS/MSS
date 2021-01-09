@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_tableview_window.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_tableview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -94,14 +94,4 @@ class Ui_TableViewWindow(object):
         self.btRoundtrip.setText(_translate("TableViewWindow", "make roundtrip"))
         self.actionCloseWindow.setText(_translate("TableViewWindow", "Close Window"))
         self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+W"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    TableViewWindow = QtWidgets.QMainWindow()
-    ui = Ui_TableViewWindow()
-    ui.setupUi(TableViewWindow)
-    TableViewWindow.show()
-    sys.exit(app.exec_())
 

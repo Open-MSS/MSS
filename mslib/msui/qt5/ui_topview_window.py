@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_topview_window.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_topview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -110,13 +110,3 @@ class Ui_TopViewWindow(object):
         self.actionCloseWindow.setShortcut(_translate("TopViewWindow", "Ctrl+W"))
 
 from mslib.msui.mpl_qtwidget import MplTopViewWidget
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    TopViewWindow = QtWidgets.QMainWindow()
-    ui = Ui_TopViewWindow()
-    ui.setupUi(TopViewWindow)
-    TopViewWindow.show()
-    sys.exit(app.exec_())
-
