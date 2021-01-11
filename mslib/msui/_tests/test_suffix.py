@@ -28,7 +28,7 @@
 """
 
 import sys
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
+from PyQt5 import QtWidgets, QtTest, QtCore
 import mslib.msui.sideview as tv
 
 

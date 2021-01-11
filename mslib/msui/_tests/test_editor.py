@@ -28,7 +28,7 @@
 import mock
 import os
 import sys
-from mslib.msui.mss_qt import QtWidgets
+from PyQt5 import QtWidgets
 from mslib.msui import editor
 from mslib._tests.constants import ROOT_DIR
 
@@ -39,7 +39,7 @@ class Test_Editor(object):
 
     save_file_name = os.path.join(ROOT_DIR, "testeditor_save.json")
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
     def setup(self, mockmessage):
         self.application = QtWidgets.QApplication(sys.argv)
 

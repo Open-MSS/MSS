@@ -33,7 +33,7 @@ import numpy as np
 from skyfield.api import Loader, Topos, utc
 
 from mslib.msui.constants import MSS_CONFIG_PATH
-from mslib.msui.mss_qt import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
 from mslib.utils import jsec_to_datetime, datetime_to_jsec, get_distance, rotate_point, fix_angle
 

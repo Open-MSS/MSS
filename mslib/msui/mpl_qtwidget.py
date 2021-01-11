@@ -44,11 +44,10 @@ import matplotlib.backend_bases
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtGui
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui.icons import icons
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.utils import convert_pressure_to_vertical_axis_measure
 
 PIL_IMAGE_ORIGIN = "upper"

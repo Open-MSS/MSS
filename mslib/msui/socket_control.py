@@ -28,7 +28,7 @@ import socketio
 import json
 import logging
 
-from mslib.msui.mss_qt import QtCore
+from PyQt5 import QtCore
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
