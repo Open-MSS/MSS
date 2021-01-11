@@ -1,0 +1,35 @@
+name: Pytest MSS
+
+on: [ push, pull_request ]
+
+jobs:
+  Test-MSS:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory, action
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Setup Conda
+      run: |
+        conda config --add channels conda-forge
+        conda config --add channels defaults
+        conda create -n mssenv python=3
+
+    - name: Install MSS
+      run: |
+        source ${CONDA}/bin/activate mssenv
+        conda install mamba
+        mamba install --only-deps mss
+        conda install --file requirements.d/development.txt
+
+    - name: Test with pytest
+      run: |
+        source ${CONDA}/bin/activate mssenv
+        xvfb-run pytest mslib
