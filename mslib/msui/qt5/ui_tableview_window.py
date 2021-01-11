@@ -68,6 +68,9 @@ class Ui_TableViewWindow(object):
         self.btInvertDirection.setMinimumSize(QtCore.QSize(100, 0))
         self.btInvertDirection.setObjectName("btInvertDirection")
         self.horizontalLayout.addWidget(self.btInvertDirection)
+        self.btRoundtrip = QtWidgets.QPushButton(self.centralwidget)
+        self.btRoundtrip.setObjectName("btRoundtrip")
+        self.horizontalLayout.addWidget(self.btRoundtrip)
         self.verticalLayout.addLayout(self.horizontalLayout)
         TableViewWindow.setCentralWidget(self.centralwidget)
         self.actionCloseWindow = QtWidgets.QAction(TableViewWindow)
@@ -88,6 +91,7 @@ class Ui_TableViewWindow(object):
         self.btCloneWaypoint.setText(_translate("TableViewWindow", "clone"))
         self.btDeleteWayPoint.setText(_translate("TableViewWindow", "delete selected"))
         self.btInvertDirection.setText(_translate("TableViewWindow", "reverse"))
+        self.btRoundtrip.setText(_translate("TableViewWindow", "make roundtrip"))
         self.actionCloseWindow.setText(_translate("TableViewWindow", "Close Window"))
         self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+W"))
 

@@ -41,6 +41,7 @@ from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui.icons import icons
+from mslib.msui.flighttrack import Waypoint
 
 # Dock window indices.
 WMS = 0
@@ -190,6 +191,9 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Settings
         self.btSettings.clicked.connect(self.settings_dialogue)
 
+        # Roundtrip
+        self.btRoundtrip.clicked.connect(self.make_roundtrip)
+
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
@@ -212,6 +216,10 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         kwargs = self.changeMapSection(only_kwargs=True)
         self.mpl.canvas.init_map(**kwargs)
         self.setFlightTrackModel(self.waypoints_model)
+
+        # Automatically enable or disable roundtrip when data changes
+        self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
+        self.update_roundtrip_enabled()
 
     def update_predefined_maps(self, extra=None):
         self.cbChangeMapSection.clear()
@@ -312,3 +320,37 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         settings = load_settings_qsettings(self.settings_tag, {})
         self.getView().set_map_appearance(settings)
+
+    def make_roundtrip(self):
+        """
+        Copies the first waypoint and inserts it at the back of the list again
+        Essentially creating a roundtrip
+        """
+        # This case should never be True for users, but might be for developers at some point
+        if not self.is_roundtrip_possible():
+            return
+
+        first_waypoint = self.waypoints_model.waypoint_data(0)
+        last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
+
+        self.waypoints_model.insertRows(self.waypoints_model.rowCount(), rows=1, waypoints=[
+            Waypoint(lat=first_waypoint.lat, lon=first_waypoint.lon, flightlevel=first_waypoint.flightlevel,
+                     location=first_waypoint.location)])
+
+    def is_roundtrip_possible(self):
+        """
+        Checks if there are at least 2 waypoints, and the first and last are not the same
+        """
+        condition = self.waypoints_model.rowCount() > 1
+
+        if condition:
+            first_waypoint = self.waypoints_model.waypoint_data(0)
+            last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
+
+            condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
+                        first_waypoint.flightlevel != last_waypoint.flightlevel
+
+        return condition
+
+    def update_roundtrip_enabled(self):
+        self.btRoundtrip.setEnabled(self.is_roundtrip_possible())

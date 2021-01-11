@@ -79,6 +79,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.btCloneWaypoint.clicked.connect(self.cloneWaypoint)
         self.btDeleteWayPoint.clicked.connect(self.removeWayPoint)
         self.btInvertDirection.clicked.connect(self.invertDirection)
+        self.btRoundtrip.clicked.connect(self.make_roundtrip)
         self.btViewPerformance.clicked.connect(self.settingsDlg)
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
@@ -203,6 +204,40 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         if self.confirm_delete_waypoint(row):
             self.waypoints_model.removeRows(row)
 
+    def make_roundtrip(self):
+        """
+        Copies the first waypoint and inserts it at the back of the list again
+        Essentially creating a roundtrip
+        """
+        # This case should never be True for users, but might be for developers at some point
+        if not self.is_roundtrip_possible():
+            return
+
+        first_waypoint = self.waypoints_model.waypoint_data(0)
+        last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
+
+        self.waypoints_model.insertRows(self.waypoints_model.rowCount(), rows=1, waypoints=[
+            ft.Waypoint(lat=first_waypoint.lat, lon=first_waypoint.lon, flightlevel=first_waypoint.flightlevel,
+                        location=first_waypoint.location)])
+
+    def is_roundtrip_possible(self):
+        """
+        Checks if there are at least 2 waypoints, and the first and last are not the same
+        """
+        condition = self.waypoints_model.rowCount() > 1
+
+        if condition:
+            first_waypoint = self.waypoints_model.waypoint_data(0)
+            last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
+
+            condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
+                        first_waypoint.flightlevel != last_waypoint.flightlevel
+
+        return condition
+
+    def update_roundtrip_enabled(self):
+        self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
     def resizeColumns(self):
         for column in range(self.waypoints_model.columnCount()):
             self.tableWayPoints.resizeColumnToContents(column)
@@ -212,6 +247,10 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         super(MSSTableViewWindow, self).setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
+
+        # Automatically enable or disable roundtrip when data changes
+        self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
+        self.update_roundtrip_enabled()
 
     def viewPerformance(self):
         """Slot to toggle the view mode of the table between 'USER' and
