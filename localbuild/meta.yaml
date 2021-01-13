@@ -54,7 +54,7 @@ requirements:
     - flask
     - flask-httpauth
     - werkzeug
-    - flask-socketio
+    - flask-socketio >=4.3.1, <5
     - flask-sqlalchemy
     - passlib
     - gitpython
@@ -64,7 +64,8 @@ requirements:
     - validate_email
     - multidict
     - pint
-    - python-socketio >=4.4.0
+    - python-socketio >=4.4.0, <5
+    - python-engineio >=3.13.2, <4
     - markdown
     - xstatic
     - xstatic-jquery
