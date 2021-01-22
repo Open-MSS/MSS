@@ -1,35 +1,51 @@
 name: Pytest MSS
 
 on: [ push, pull_request ]
+env:
+  PAT: ${{ secrets.PAT }}
 
 jobs:
   Test-MSS:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
+    
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      image: yourmss/mss-test:latest
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Add conda to system path
+        
+    - name: Update dependencies if changed
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory, action
-        echo $CONDA/bin >> $GITHUB_PATH
+        cmp -s /meta.yaml localbuild/meta.yaml || (echo Dependencies differ \
+        && cat localbuild/meta.yaml \
+        | sed -n '/^requirements:/,/^test:/p' \
+        | sed -e "s/.*- //" \
+        | sed -e "s/menuinst.*//" \
+        | sed -e "s/.*://" > reqs.txt \
+        && conda install -n mssenv --file reqs.txt --force-reinstall)
 
-    - name: Setup Conda
+    - name: Run tests
+      timeout-minutes: 25
       run: |
-        conda config --add channels conda-forge
-        conda config --add channels defaults
-        conda create -n mssenv python=3
-
-    - name: Install MSS
-      run: |
-        source ${CONDA}/bin/activate mssenv
-        conda install mamba
-        mamba install --only-deps mss
-        conda install --file requirements.d/development.txt
-
-    - name: Test with pytest
-      run: |
-        source ${CONDA}/bin/activate mssenv
+        source /opt/conda/bin/activate mssenv
+        cd $GITHUB_WORKSPACE
         xvfb-run pytest mslib
+    
+  Update-Images:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: [Test-MSS]
+    
+    steps:
+      - if: env.PAT != ''
+        name: Invoke dockerhub image creation
+        uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
+        with:
+          workflow: Update all images
+          repo: Open-MSS/dockerhub
+          ref: stable
+          token: ${{ secrets.PAT }}
