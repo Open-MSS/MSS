@@ -164,13 +164,13 @@ def main():
             bbox = params['basemap']
             req = requests.get(
                 url, auth=tuple(config["WMS_login"][url]),
-                params={"version": "1.1.1", "request": "GetMap", "format": "image/png",
-                        "exceptions": "application/vnd.ogc.se_xml",
-                        "srs": config["predefined_map_sections"][section]["CRS"],
+                params={"version": "1.3.0", "request": "GetMap", "format": "image/png",
+                        "exceptions": "XML",
+                        "crs": config["predefined_map_sections"][section]["CRS"],
                         "layers": layer, "styles": style, "elevation": elevation,
                         "dim_init_time": init_time, "time": time,
                         "width": width, "height": height,
-                        "bbox": f"{bbox['llcrnrlon']},{bbox['llcrnrlat']},{bbox['urcrnrlon']},{bbox['urcrnrlat']}"})
+                        "bbox": f"{bbox['llcrnrlat']},{bbox['llcrnrlon']},{bbox['urcrnrlat']},{bbox['urcrnrlon']}"})
             if req.headers['Content-Type'] == "text/xml":
                 print(flight, section, vertical, filename, init_time, time)
                 print(url, layer, style, elevation)
@@ -246,9 +246,9 @@ def main():
             width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
             req = requests.get(
                 url, auth=tuple(config["WMS_login"][url]),
-                params={"version": "1.1.1", "request": "GetMap", "format": "image/png",
-                        "exceptions": "application/vnd.ogc.se_xml",
-                        "srs": "VERT:LOGP", "layers": layer, "styles": style,
+                params={"version": "1.3.0", "request": "GetMap", "format": "image/png",
+                        "exceptions": "XML",
+                        "crs": "VERT:LOGP", "layers": layer, "styles": style,
                         "dim_init_time": init_time, "time": time,
                         "width": width, "height": height,
                         "path": ",".join(f"{wp[0]:.2f},{wp[1]:.2f}" for wp in wps),

@@ -54,7 +54,7 @@
 """
 API for Web Map Service (WMS) methods and metadata.
 
-Currently supports only version 1.1.1 of the WMS protocol.
+Currently supports only versions 1.1.1/1.3.0 of the WMS protocol.
 """
 
 from future import standard_library
@@ -69,7 +69,7 @@ from urllib.parse import urlencode
 from owslib.util import ServiceException
 from collections import OrderedDict
 from owslib.etree import ParseError
-from owslib.map import wms111
+from owslib.map import wms111, wms130
 from owslib.util import ResponseWrapper
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
@@ -172,7 +172,7 @@ class WebMapService(object):
         else:
             raise KeyError("No content named %s" % name)
 
-    def __init__(self, url, version='1.1.1', xml=None, username=None, password=None):
+    def __init__(self, url, version='1.3.0', xml=None, username=None, password=None):
         """Initialize."""
         self.url = url
         self.username = username
@@ -189,6 +189,9 @@ class WebMapService(object):
             # read from server
             self._capabilities = reader.read(self.url)
 
+        # Remove {*} namespaces before element names
+        removeXMLNamespace(self._capabilities)
+
         # (mss) Store capabilities document.
         self.capabilities_document = reader.capabilities_document
         # (mss)
@@ -199,7 +202,8 @@ class WebMapService(object):
     def _getcapproperty(self):
         if not self._capabilities:
             reader = WMSCapabilitiesReader(self.version, url=self.url, un=self.username, pw=self.password)
-            self._capabilities = wms111.ServiceMetadata(reader.read(self.url))
+            self._capabilities = wms130.ServiceMetadata(reader.read(self.url))
+            removeXMLNamespace(self._capabilities)
             # (mss) Store capabilities document.
             self.capabilities_document = reader.capabilities_document
             # (mss)
@@ -213,7 +217,7 @@ class WebMapService(object):
         self.identification = ServiceIdentification(serviceelem, self.version)
 
         # serviceProvider metadata
-        self.provider = wms111.ServiceProvider(serviceelem)
+        self.provider = wms130.ServiceProvider(serviceelem)
 
         # serviceOperations metadata
         self.operations = []
@@ -253,6 +257,7 @@ class WebMapService(object):
         if u.info().gettype() == 'application/vnd.ogc.se_xml':
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
+            removeXMLNamespace(se_tree)
             err_message = str(se_tree.find('ServiceException').text).strip()
             raise ServiceException(err_message, se_xml)
         return u
@@ -260,7 +265,7 @@ class WebMapService(object):
     def getmap(self, layers=None, styles=None, srs=None, bbox=None,
                format=None, size=None, time=None, transparent=False,
                bgcolor='#FFFFFF',
-               exceptions='application/vnd.ogc.se_xml',
+               exceptions='XML',
                method='Get'
                ):
         """Request and return an image from the WMS as a file-like object.
@@ -305,6 +310,9 @@ class WebMapService(object):
         base_url = self.getOperationByName('GetMap').methods[method]['url']
         request = {'version': self.version, 'request': 'GetMap'}
 
+        if self.version != "1.3.0":
+            exceptions = "application/vnd.ogc.se_xml"
+
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
@@ -318,7 +326,7 @@ class WebMapService(object):
         request['width'] = str(size[0])
         request['height'] = str(size[1])
 
-        request['srs'] = str(srs)
+        request['srs' if self.version != "1.3.0" else "crs"] = str(srs)
         request['bbox'] = ','.join([str(x) for x in bbox])
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
@@ -410,7 +418,10 @@ class ContentMetadata(object):
         self.boundingBox = None
         if b is not None:
             try:  # sometimes the SRS attribute is (wrongly) not provided
-                srs = b.attrib['SRS']
+                if "CRS" in b.attrib:
+                    srs = b.attrib['CRS']
+                else:
+                    srs = b.attrib["SRS"]
             except KeyError:
                 srs = None
                 self.boundingBox = (
@@ -438,8 +449,16 @@ class ContentMetadata(object):
                 self.attribution['logo_size'] = (int(logo.attrib['width']), int(logo.attrib['height']))
                 self.attribution['logo_url'] = logo.find('OnlineResource').attrib['{http://www.w3.org/1999/xlink}href']
 
-        b = elem.find('LatLonBoundingBox')
+        b = elem.find('EX_GeographicBoundingBox')
         if b is not None:
+            self.boundingBoxWGS84 = (
+                float(b.find('westBoundLongitude').text),
+                float(b.find('southBoundLatitude').text),
+                float(b.find('eastBoundLongitude').text),
+                float(b.find('northBoundLatitude').text),
+            )
+        elif elem.find("LatLonBoundingBox") is not None:
+            b = elem.find("LatLonBoundingBox")
             self.boundingBoxWGS84 = (
                 float(b.attrib['minx']),
                 float(b.attrib['miny']),
@@ -460,12 +479,13 @@ class ContentMetadata(object):
             if self.parent.crsOptions:
                 self.crsOptions = list(self.parent.crsOptions)
 
-        # Look for SRS option attached to this layer
-        if elem.find('SRS') is not None:
+        # Look for CRS option attached to this layer
+        is_crs = elem.find("CRS") is not None
+        if elem.find('CRS' if is_crs else "SRS") is not None:
             # some servers found in the wild use a single SRS
             # tag containing a whitespace separated list of SRIDs
             # instead of several SRS tags. hence the inner loop
-            for srslist in [x.text for x in elem.findall('SRS')]:
+            for srslist in [x.text for x in elem.findall('CRS' if is_crs else "SRS")]:
                 if srslist:
                     for srs in srslist.split():
                         self.crsOptions.append(srs)
@@ -552,7 +572,7 @@ class WMSCapabilitiesReader(object):
     """Read and parse capabilities document into a lxml.etree infoset
     """
 
-    def __init__(self, version='1.1.1', url=None, un=None, pw=None):
+    def __init__(self, version='1.3.0', url=None, un=None, pw=None):
         """Initialize"""
         self.version = version
         self._infoset = None
@@ -621,3 +641,9 @@ class WMSCapabilitiesReader(object):
         if not isinstance(st, str):
             raise ValueError("String must be of type string, not %s" % type(st))
         return etree.fromstring(st)
+
+
+def removeXMLNamespace(tree):
+    for elem in tree.iter():
+        if elem.tag.startswith("{"):
+            elem.tag = elem.tag.split("}")[-1]

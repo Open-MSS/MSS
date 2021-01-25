@@ -6,9 +6,9 @@
 
     WSGI module for MSS WMS server that provides access to ECMWF forecast data.
 
-    The module implements a Web Map Service 1.1.1 interface to provide forecast data
+    The module implements a Web Map Service 1.1.1/1.3.0 interface to provide forecast data
     from numerical weather predictions to the Mission Support User Interface.
-    Supported operations are GetCapabilities and GetMap for (WMS 1.1.1 compliant)
+    Supported operations are GetCapabilities and GetMap for (WMS 1.1.1/1.3.0 compliant)
     maps and (non-compliant) vertical sections.
 
     1) Configure the WMS server by modifying the settings in mss_wms_settings.py
@@ -50,6 +50,7 @@ import logging
 import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
+from owslib.crs import axisorder_yx
 
 from flask import request, make_response, redirect
 from flask_httpauth import HTTPBasicAuth
@@ -231,7 +232,7 @@ class WMSServer(object):
         template = templates['service_exception.pt']
         return template(code=code, text=text).encode("utf-8"), "text/xml"
 
-    def get_capabilities(self, server_url=None):
+    def get_capabilities(self, server_url=None, version="1.3.0"):
         # ToDo find a more elegant method to do the same
         # Preferable we don't want a seperate data_access module to be configured
         data_access_dict = mss_wms_settings.data
@@ -239,7 +240,7 @@ class WMSServer(object):
         for key in data_access_dict:
             data_access_dict[key].setup()
 
-        template = templates['get_capabilities.pt']
+        template = templates['get_capabilities130.pt' if version == "1.3.0" else 'get_capabilities.pt']
         logging.debug("server-url '%s'", server_url)
 
         # Horizontal Layers
@@ -345,7 +346,10 @@ class WMSServer(object):
         logging.debug("  requested (valid) time = '%s'", valid_time)
 
         # Coordinate reference system.
-        crs = query.get('SRS', 'EPSG:4326').lower()
+        version = query.get("VERSION", "1.3.0")
+        crs = query.get("CRS" if version == "1.3.0" else "SRS", 'EPSG:4326').lower()
+        is_yx = version == "1.3.0" and crs.startswith("epsg") and int(crs[5:]) in axisorder_yx
+
         # Allow to request vertical sections via GetMap, if the specified CRS is of type "VERT:??".
         msg = None
         if crs.startswith('vert:logp'):
@@ -401,7 +405,12 @@ class WMSServer(object):
 
             # Bounding box.
             try:
-                bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
+                if is_yx:
+                    bbox = [float(v) for v in query.get('BBOX', '-90,-180,90,180').split(',')]
+                    bbox = (bbox[1], bbox[0], bbox[3], bbox[2])
+                else:
+                    bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
+
             except ValueError:
                 return self.create_service_exception(text="Invalid BBOX: {}".format(query.get("BBOX")))
 
@@ -517,9 +526,10 @@ def application():
         server_url = urllib.parse.urljoin(url, urllib.parse.urlparse(url).path)
 
         if (request_type in ('getcapabilities', 'capabilities') and
-                request_service == 'wms' and request_version in ('1.1.1', '')):
-            return_data, return_format = server.get_capabilities(server_url)
-        elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', ''):
+                request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
+            return_data, return_format = server.get_capabilities(server_url,
+                                                                 request_version if request_version != "" else "1.3.0")
+        elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', '1.3.0', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:
             logging.debug("Request type '%s' is not valid.", request)

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE WMS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd">
+<WMS_Capabilities version="1.3.0" updateSequence="0">
+    <Service>
+        <Name>${ service_name }</Name>
+        <Title>${ service_title }</Title>
+        <Abstract>${ service_abstract }</Abstract>
+        <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }"/>
+        <ContactInformation>
+            <ContactPersonPrimary>
+                <ContactPerson>${ service_contact_person }</ContactPerson>
+                <ContactOrganization>${ service_contact_organisation }</ContactOrganization>
+            </ContactPersonPrimary>
+            <ContactPosition>${ service_contact_position }</ContactPosition>
+            <ContactAddress>
+                <AddressType>${ service_address_type }</AddressType>
+                <Address>${ service_address }</Address>
+                <City>${ service_city }</City>
+                <StateOrProvince>${ service_state_or_province }</StateOrProvince>
+                <PostCode>${ service_post_code }</PostCode>
+                <Country>${ service_country }</Country>
+            </ContactAddress>
+            <ContactElectronicMailAddress>${ service_email }</ContactElectronicMailAddress>
+        </ContactInformation>
+        <Fees>${ service_fees }</Fees>
+        <AccessConstraints>${ service_access_constraints }</AccessConstraints>
+    </Service>
+    <Capability>
+        <Request>
+            <GetCapabilities>
+                <Format>text/xml</Format>
+                <DCPType>
+                    <HTTP>
+                        <Get>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }?"/>
+                        </Get>
+                    </HTTP>
+                </DCPType>
+            </GetCapabilities>
+            <GetMap>
+                <Format>image/png</Format>
+                <DCPType>
+                    <HTTP>
+                        <Get>
+                            <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="${ server_url }?"/>
+                        </Get>
+                    </HTTP>
+                </DCPType>
+            </GetMap>
+        </Request>
+        <Exception>
+            <Format>XML</Format>
+        </Exception>
+        <Layer>
+            <Title>Mission Support WMS Server</Title>
+            <Abstract>Mission Support WMS Server</Abstract>
+            <Layer tal:repeat="(dataset, layer) hsec_layers" tal:attributes="queryable '0' if layer.queryable else None">
+                <Name>${ "%s.%s" % (dataset, layer.name) }</Name>
+                <Title tal:condition="layer.title"> ${ layer.title.strip() } </Title>
+                <Abstract tal:condition="layer.abstract"> ${ layer.abstract.strip() } </Abstract>
+                <CRS tal:repeat="crs layer.supported_crs()"> ${ crs } </CRS>
+                <EX_GeographicBoundingBox>
+                    <westBoundLongitude>-180</westBoundLongitude>
+                    <eastBoundLongitude>180</eastBoundLongitude>
+                    <southBoundLatitude>-90</southBoundLatitude>
+                    <northBoundLatitude>90</northBoundLatitude>
+                </EX_GeographicBoundingBox>
+                <Dimension tal:condition="layer.uses_validtime_dimension()" name="TIME" units="ISO8610"> </Dimension>
+                <Dimension tal:condition="layer.uses_inittime_dimension()" name="INIT_TIME" units="ISO8610"> </Dimension>
+                <Dimension tal:condition="layer.uses_elevation_dimension()" name="ELEVATION" units="${layer.get_elevation_units()}"> </Dimension>
+                <Extent tal:condition="layer.uses_validtime_dimension()" name="TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_all_valid_times()]) } </Extent>
+                <Extent tal:condition="layer.uses_inittime_dimension()" name="INIT_TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_init_times()]) } </Extent>
+                <Extent tal:condition="layer.uses_elevation_dimension()" name="ELEVATION" default="${layer.get_elevations()[-1]}"> ${ ",".join(layer.get_elevations()) } </Extent>
+                <Style tal:condition="type(layer.styles) is list" tal:repeat="(style_name, style_title) layer.styles">
+                    <Name> ${ style_name } </Name>
+                    <Title> ${ style_title } </Title>
+                </Style>
+            </Layer>
+        </Layer>
+
+        <Layer tal:condition="len(vsec_layers) > 0">
+            <Title> Vertical Sections of Forecasts. </Title>
+            <Layer tal:repeat="(dataset, layer) vsec_layers" tal:attributes="queryable '1' if layer.queryable else None">
+                <Name>${ "%s.%s" % (dataset, layer.name) }</Name>
+                <Title tal:condition="layer.title"> ${ layer.title.strip() } </Title>
+                <Abstract tal:condition="layer.abstract"> ${ layer.abstract.strip() } </Abstract>
+                <CRS tal:repeat="crs layer.supported_crs()"> ${ crs } </CRS>
+                <EX_GeographicBoundingBox>
+                    <westBoundLongitude>-180</westBoundLongitude>
+                    <eastBoundLongitude>180</eastBoundLongitude>
+                    <southBoundLatitude>-90</southBoundLatitude>
+                    <northBoundLatitude>90</northBoundLatitude>
+                </EX_GeographicBoundingBox>
+                <Dimension tal:condition="layer.uses_validtime_dimension()" name="TIME" units="ISO8610"> </Dimension>
+                <Dimension tal:condition="layer.uses_inittime_dimension()" name="INIT_TIME" units="ISO8610"> </Dimension>
+                <Extent tal:condition="layer.uses_validtime_dimension()" name="TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_all_valid_times()]) } </Extent>
+                <Extent tal:condition="layer.uses_inittime_dimension()" name="INIT_TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_init_times()]) } </Extent>
+                <Style tal:condition="type(layer.styles) is list" tal:repeat="(style_name, style_title) layer.styles">
+                    <Name> ${ style_name } </Name>
+                    <Title> ${ style_title } </Title>
+                </Style>
+            </Layer>
+        </Layer>
+    </Capability>
+</WMS_Capabilities>
+
