@@ -210,4 +210,15 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.editor.setLineWrapMode(1 if self.editor.lineWrapMode() == 0 else 0)
 
     def closeEvent(self, event):
-        self.dialog_critical("If you changed the mss_settings.json please restart the gui")
+        # self.dialog_critical("If you changed the mss_settings.json please restart the gui")
+        ret = QtWidgets.QMessageBox.critical(
+            self, self.tr("Do you want to save the changes?"),
+            self.tr("If you changed the mss_settings.json please restart the gui"),
+            QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Ignore, QtWidgets.QMessageBox.Save)
+
+        if ret == QtWidgets.QMessageBox.Save:
+            self.file_save()
+            print("File saved")
+            event.accept()
+        else:
+            event.accept()

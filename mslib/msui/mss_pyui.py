@@ -414,6 +414,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # cleanup mscolab window
             if self.mscolab_window is not None:
                 self.mscolab_window.close()
+            if self.config_editor is not None:
+                self.config_editor.close()
             event.accept()
         else:
             event.ignore()
@@ -529,12 +531,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         Returns:
 
         """
-        ret = QtWidgets.QMessageBox.warning(
-            self, self.tr("Mission Support System"),
-            self.tr("Opening a config file will reset application. Continue?"),
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-        if ret == QtWidgets.QMessageBox.Yes:
-            self.config_editor = editor.EditorMainWindow(parent=self)
+        self.config_editor = editor.EditorMainWindow(parent=self)
 
     def open_flight_track(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
