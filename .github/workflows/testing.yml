@@ -1,0 +1,51 @@
+name: Pytest MSS
+
+on: [ push, pull_request ]
+env:
+  PAT: ${{ secrets.PAT }}
+
+jobs:
+  Test-MSS:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      image: yourmss/mss-test:latest
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: Update dependencies if changed
+      run: |
+        cmp -s /meta.yaml localbuild/meta.yaml || (echo Dependencies differ \
+        && cat localbuild/meta.yaml \
+        | sed -n '/^requirements:/,/^test:/p' \
+        | sed -e "s/.*- //" \
+        | sed -e "s/menuinst.*//" \
+        | sed -e "s/.*://" > reqs.txt \
+        && conda install -n mssenv --file reqs.txt --force-reinstall)
+
+    - name: Run tests
+      timeout-minutes: 25
+      run: |
+        source /opt/conda/bin/activate mssenv
+        cd $GITHUB_WORKSPACE
+        xvfb-run pytest mslib
+    
+  Update-Images:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: [Test-MSS]
+    
+    steps:
+      - if: env.PAT != ''
+        name: Invoke dockerhub image creation
+        uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
+        with:
+          workflow: Update all images
+          repo: Open-MSS/dockerhub
+          ref: stable
+          token: ${{ secrets.PAT }}
