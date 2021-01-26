@@ -50,6 +50,10 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
         self.editor = QtWidgets.QPlainTextEdit()
 
+        # Load existing mss_settings.json
+        readMe = open(MSS_CONFIG_PATH + "/mss_settings.json", 'r').read()
+        self.editor.insertPlainText(readMe)
+
         # Setup the QTextEdit editor configuration
         fixedfont = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
         fixedfont.setPointSize(12)
