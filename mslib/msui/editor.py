@@ -35,7 +35,7 @@ from PyQt5 import QtPrintSupport
 from mslib.msui import constants
 from mslib.msui.constants import MSS_CONFIG_PATH
 from mslib.msui.icons import icons
-import os.path
+# import os.path
 
 
 class EditorMainWindow(QtWidgets.QMainWindow):
@@ -51,11 +51,14 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
         self.editor = QtWidgets.QPlainTextEdit()
 
-        # Load existing mss_settings.json
-        self.mss_path = MSS_CONFIG_PATH + "/mss_settings.json"
-        if os.path.exists(self.mss_path):
-            readMe = open(self.mss_path, 'r').read()
-            self.editor.insertPlainText(readMe)
+        # Load mss_settings.json (if already exists)
+        self.mss_path = fs.path.join(MSS_CONFIG_PATH, "mss_settings" + ".json")
+        if self.mss_path is not None:
+            file_name = fs.path.basename(self.mss_path)
+            with fs.open_fs(fs.path.dirname(self.mss_path)) as file_dir:
+                self.file_content = file_dir.readtext(file_name)
+                self.editor.setPlainText(self.file_content)
+                self.update_title()
 
         # Setup the QTextEdit editor configuration
         fixedfont = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
