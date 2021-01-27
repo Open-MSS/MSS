@@ -1,4 +1,4 @@
-# Contributor Covenant Code of Conduct
+# Contributor Mission Support System Code of Conduct
 
 ## Our Pledge
 
