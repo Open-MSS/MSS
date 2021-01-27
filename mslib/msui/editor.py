@@ -35,6 +35,7 @@ from PyQt5 import QtPrintSupport
 from mslib.msui import constants
 from mslib.msui.constants import MSS_CONFIG_PATH
 from mslib.msui.icons import icons
+import os.path
 
 
 class EditorMainWindow(QtWidgets.QMainWindow):
@@ -51,8 +52,10 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.editor = QtWidgets.QPlainTextEdit()
 
         # Load existing mss_settings.json
-        readMe = open(MSS_CONFIG_PATH + "/mss_settings.json", 'r').read()
-        self.editor.insertPlainText(readMe)
+        self.mss_path = MSS_CONFIG_PATH + "/mss_settings.json"
+        if os.path.exists(self.mss_path):
+            readMe = open(self.mss_path, 'r').read()
+            self.editor.insertPlainText(readMe)
 
         # Setup the QTextEdit editor configuration
         fixedfont = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
@@ -215,7 +218,7 @@ class EditorMainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         ret = QtWidgets.QMessageBox.critical(
-            self, self.tr("Do you want to save the changes?"),
+            self, self.tr("Save changes to mss_settings.json?"),
             self.tr("If you changed the mss_settings.json please restart the gui"),
             QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Ignore, QtWidgets.QMessageBox.Save)
 
