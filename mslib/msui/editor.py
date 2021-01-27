@@ -35,7 +35,6 @@ from PyQt5 import QtPrintSupport
 from mslib.msui import constants
 from mslib.msui.constants import MSS_CONFIG_PATH
 from mslib.msui.icons import icons
-# import os.path
 
 
 class EditorMainWindow(QtWidgets.QMainWindow):
