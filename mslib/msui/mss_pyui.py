@@ -44,6 +44,8 @@ import sys
 import types
 import fs
 
+from owslib.map.common import WMSCapabilitiesReader
+
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
@@ -243,7 +245,14 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 request = requests.get(base_url)
                 if pdlg.wasCanceled():
                     break
-                wms = wms_control.MSSWebMapService(request.url, version='1.3.0',
+
+                # Take the default version of the server, or 1.3.0 if not supported
+                tree = WMSCapabilitiesReader().readString(request.content)
+                version = tree.attrib["version"]
+                if version not in ["1.1.1", "1.3.0"]:
+                    version = "1.3.0"
+
+                wms = wms_control.MSSWebMapService(request.url, version=version,
                                                    username=username, password=password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
                 logging.info("Stored WMS info for '%s'", wms.url)
