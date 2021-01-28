@@ -44,6 +44,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import mslib.ogcwms
 import owslib.util
+from owslib.map.common import WMSCapabilitiesReader
 from owslib.crs import axisorder_yx
 import PIL.Image
 
@@ -666,7 +667,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             url = request.url
 
             # Take the default version of the server, or 1.3.0 if not supported
-            version = request.text.split("MS_Capabilities version=\"")[-1].split("\"")[0]
+            tree = WMSCapabilitiesReader().readString(request.content)
+            version = tree.attrib["version"]
             if version not in ["1.1.1", "1.3.0"]:
                 version = "1.3.0"
 
