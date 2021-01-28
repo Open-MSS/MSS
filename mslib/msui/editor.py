@@ -52,7 +52,7 @@ class EditorMainWindow(QtWidgets.QMainWindow):
 
         # Load mss_settings.json (if already exists)
         self.mss_path = fs.path.join(MSS_CONFIG_PATH, "mss_settings" + ".json")
-        if self.mss_path is not None:
+        if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             file_name = fs.path.basename(self.mss_path)
             with fs.open_fs(fs.path.dirname(self.mss_path)) as file_dir:
                 self.file_content = file_dir.readtext(file_name)
