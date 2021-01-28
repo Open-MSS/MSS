@@ -545,7 +545,7 @@ def application():
         if (request_type in ('getcapabilities', 'capabilities') and
                 request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
             return_data, return_format = server.get_capabilities(server_url,
-                                                                 request_version if request_version != "" else "1.3.0")
+                                                                 request_version if request_version != "" else "1.1.1")
         elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', '1.3.0', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:

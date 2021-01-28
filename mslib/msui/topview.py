@@ -331,6 +331,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             return
 
         first_waypoint = self.waypoints_model.waypoint_data(0)
+        last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
 
         self.waypoints_model.insertRows(self.waypoints_model.rowCount(), rows=1, waypoints=[
             Waypoint(lat=first_waypoint.lat, lon=first_waypoint.lon, flightlevel=first_waypoint.flightlevel,
@@ -346,10 +347,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             first_waypoint = self.waypoints_model.waypoint_data(0)
             last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
 
-            condition = \
-                first_waypoint.lat != last_waypoint.lat or \
-                first_waypoint.lon != last_waypoint.lon or \
-                first_waypoint.flightlevel != last_waypoint.flightlevel
+            condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
+                        first_waypoint.flightlevel != last_waypoint.flightlevel
 
         return condition
 
