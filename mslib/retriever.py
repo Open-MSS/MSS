@@ -153,7 +153,7 @@ def main():
                     color="blue", marker="o", linewidth=2, markerfacecolor="red",
                     latlon=True, markersize=4, zorder=100)
             for i, (lon, lat, loc) in enumerate(zip(wp_lons, wp_lats, wp_locs)):
-                textlabel = "{:}   ".format(loc if loc else str(i))
+                textlabel = f"{loc if loc else str(i)}   "
                 x, y = bm(lon, lat)
                 plt.text(x, y, textlabel, **TEXT_CONFIG)
             plt.tight_layout()
@@ -237,7 +237,7 @@ def main():
                     color="blue", marker="o", linewidth=2, markerfacecolor="red",
                     markersize=4)
             for i, (idx, press, loc) in enumerate(zip(intermediate_indexes, wp_presss, wp_locs)):
-                textlabel = "{:} ".format(loc if loc else str(i))
+                textlabel = f"{loc if loc else str(i)} "
                 plt.text(idx + 1, press, textlabel, rotation=90, **TEXT_CONFIG)
             plt.tight_layout()
 
