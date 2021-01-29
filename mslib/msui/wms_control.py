@@ -203,7 +203,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         proxies = config_loader(dataset="proxies", default=mss_default.proxies)
 
         u = openURL(base_url, data, method,
-                    username=self.username, password=self.password, proxies=proxies)
+                    username=self.auth.username, password=self.auth.password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file

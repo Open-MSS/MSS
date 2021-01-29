@@ -60,17 +60,14 @@ Currently supports only versions 1.1.1/1.3.0 of the WMS protocol.
 from future import standard_library
 standard_library.install_aliases()
 
-import cgi
 import defusedxml.ElementTree as etree
 import requests
 import logging
 
-from urllib.parse import urlencode
 from owslib.util import ServiceException
-from collections import OrderedDict
 from owslib.etree import ParseError
-from owslib.map import wms111, wms130
-from owslib.util import ResponseWrapper
+from owslib.map import wms111, wms130, common
+from owslib.util import ResponseWrapper, Authentication, strip_bom
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
 
@@ -78,7 +75,7 @@ from mslib.utils import config_loader
 def openURL(url_base, data=None, method='Get', cookies=None,
             username=None, password=None,
             timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
-            headers=None, proxies=None):
+            headers=None, verify=None, cert=None, auth=None, proxies=None):
     # (mss) added proxies
     # (mss) timeout default of 30secs set by the config_loader
     """
@@ -92,11 +89,20 @@ def openURL(url_base, data=None, method='Get', cookies=None,
 
     rkwargs['timeout'] = timeout
 
-    auth = None
-    if username and password:
-        auth = (username, password)
-
-    rkwargs['auth'] = auth
+    if auth:
+        if username:
+            auth.username = username
+        if password:
+            auth.password = password
+        if cert:
+            auth.cert = cert
+        verify = verify and auth.verify
+    else:
+        auth = Authentication(username, password, cert, verify)
+    if auth.username and auth.password:
+        rkwargs['auth'] = (auth.username, auth.password)
+    rkwargs['cert'] = auth.cert
+    rkwargs['verify'] = verify
 
     # FIXUP for WFS in particular, remove xml style namespace
     # @TODO does this belong here?
@@ -154,96 +160,119 @@ def openURL(url_base, data=None, method='Get', cookies=None,
             if serviceException is not None:
                 # and we need to deal with some message nesting
                 raise ServiceException(
-                    '\n'.join([str(t).strip() for t in serviceException.itertext() if str(t).strip()]))
+                    '\n'.join([str(t).strip() for t in serviceException.itertext() if t.strip()]))
 
     return ResponseWrapper(req)
 
 
-class WebMapService(object):
+class WebMapService(wms111.WebMapService_1_1_1):
     """Abstraction for OGC Web Map Service (WMS).
 
     Implements IWebMapService.
     """
 
-    def __getitem__(self, name):
-        ''' check contents dictionary to allow dict like access to service layers'''
-        if name in list(self.__getattribute__('contents').keys()):
-            return self.__getattribute__('contents')[name]
-        else:
-            raise KeyError("No content named %s" % name)
-
-    def __init__(self, url, version='1.3.0', xml=None, username=None, password=None):
+    def __init__(self, url, version='1.3.0', xml=None, username=None, password=None,
+                 parse_remote_metadata=False, headers=None,
+                 timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
+                 auth=None):
         """Initialize."""
+        self.WMS_NAMESPACE = "{http://www.opengis.net/wms}" if version == "1.3.0" else ""
+        self.OGC_NAMESPACE = "{http://www.opengis.net/ogc}" if version == "1.3.0" else ""
+
+        if auth:
+            if username:
+                auth.username = username
+            if password:
+                auth.password = password
         self.url = url
-        self.username = username
-        self.password = password
         self.version = version
+        self.timeout = timeout
+        self.headers = headers
         self._capabilities = None
+        self.auth = auth or Authentication(username, password)
 
         # Authentication handled by Reader
-        reader = WMSCapabilitiesReader(self.version, url=self.url, un=self.username, pw=self.password)
+        reader = WMSCapabilitiesReader(self.version, url=self.url, headers=headers, auth=self.auth)
         if xml:
             # read from stored xml
             self._capabilities = reader.readString(xml)
         else:
             # read from server
-            self._capabilities = reader.read(self.url)
+            self._capabilities = reader.read(self.url, timeout=self.timeout)
 
-        # Remove {*} namespaces before element names
-        removeXMLNamespace(self._capabilities)
+        self.request = reader.request
+
+        # avoid building capabilities metadata if the
+        # response is a ServiceExceptionReport
+        se = self._capabilities.find('ServiceException')
+        if se is not None:
+            err_message = str(se.text).strip()
+            raise ServiceException(err_message)
 
         # (mss) Store capabilities document.
         self.capabilities_document = reader.capabilities_document
         # (mss)
 
         # build metadata objects
-        self._buildMetadata()
+        self._buildMetadata(parse_remote_metadata)
 
     def _getcapproperty(self):
         if not self._capabilities:
-            reader = WMSCapabilitiesReader(self.version, url=self.url, un=self.username, pw=self.password)
-            self._capabilities = wms130.ServiceMetadata(reader.read(self.url))
+            reader = WMSCapabilitiesReader(self.version, url=self.url, un=self.auth.username, pw=self.auth.password)
+            self._capabilities = (wms130 if self.version == "1.3.0" else wms111).ServiceMetadata(reader.read(self.url))
             removeXMLNamespace(self._capabilities)
             # (mss) Store capabilities document.
             self.capabilities_document = reader.capabilities_document
             # (mss)
         return self._capabilities
 
-    def _buildMetadata(self):
+    def _buildMetadata(self, parse_remote_metadata=False):
         ''' set up capabilities metadata objects '''
 
         # serviceIdentification metadata
-        serviceelem = self._capabilities.find('Service')
-        self.identification = ServiceIdentification(serviceelem, self.version)
+        serviceelem = self._capabilities.find(f'{self.WMS_NAMESPACE}Service')
+        self.identification = (wms130 if self.version == "1.3.0" else wms111)\
+            .ServiceIdentification(serviceelem, self.version)
 
         # serviceProvider metadata
         self.provider = wms130.ServiceProvider(serviceelem)
 
         # serviceOperations metadata
         self.operations = []
-        for elem in self._capabilities.find('Capability/Request')[:]:
-            self.operations.append(wms111.OperationMetadata(elem))
+        for elem in self._capabilities.find(f'{self.WMS_NAMESPACE}Capability/{self.WMS_NAMESPACE}Request')[:]:
+            self.operations.append((wms130 if self.version == "1.3.0" else wms111).OperationMetadata(elem))
 
         # serviceContents metadata: our assumption is that services use a top-level
         # layer as a metadata organizer, nothing more.
         self.contents = {}
-        caps = self._capabilities.find('Capability')
-        for elem in caps.findall('Layer'):
-            cm = ContentMetadata(elem)
-            self.contents[cm.id] = cm
-            for subelem in elem.findall('Layer'):
-                subcm = ContentMetadata(subelem, cm)
-                self.contents[subcm.id] = subcm
+        caps = self._capabilities.find(f'{self.WMS_NAMESPACE}Capability')
+
+        def gather_layers(parent_elem, parent_metadata):
+            layers = []
+            for index, elem in enumerate(parent_elem.findall(f'{self.WMS_NAMESPACE}Layer')):
+                cm = ContentMetadata(elem, parent=parent_metadata,
+                                     index=index + 1,
+                                     parse_remote_metadata=parse_remote_metadata,
+                                     version=self.version)
+                if cm.id:
+                    if cm.id in self.contents:
+                        logging.debug('Content metadata for layer "%s" already exists. Using child layer' % cm.id)
+                    layers.append(cm)
+                    self.contents[cm.id] = cm
+                cm.children = gather_layers(elem, cm)
+            return layers
+        gather_layers(caps, None)
+
+        #for elem in caps.findall(f'{self.WMS_NAMESPACE}Layer'):
+        #    cm = ContentMetadata(elem, version=self.version)
+        #    self.contents[cm.id] = cm
+        #    for subelem in elem.findall(f'{self.WMS_NAMESPACE}Layer'):
+        #        subcm = ContentMetadata(subelem, cm, version=self.version)
+        #        self.contents[subcm.id] = subcm
 
         # exceptions
-        self.exceptions = [f.text for f in self._capabilities.findall('Capability/Exception/Format')]
-
-    def items(self):
-        '''supports dict-like items() access'''
-        items = []
-        for item in self.contents:
-            items.append((item, self.contents[item]))
-        return items
+        self.exceptions = [f.text for f in self._capabilities.findall(
+            f'{self.WMS_NAMESPACE}Capability/{self.WMS_NAMESPACE}Exception/{self.WMS_NAMESPACE}Format')]
 
     @property
     def getcapabilities(self):
@@ -251,369 +280,79 @@ class WebMapService(object):
             file-like object.
             NOTE: this is effectively redundant now
         """
-        reader = WMSCapabilitiesReader(self.version, url=self.url, un=self.username, pw=self.password)
+        reader = WMSCapabilitiesReader(self.version, url=self.url, auth=self.auth)
         u = self._open(reader.capabilities_url(self.url))
-        # check for service exceptions, and return
-        if u.info().gettype() == 'application/vnd.ogc.se_xml':
-            se_xml = u.read()
-            se_tree = etree.fromstring(se_xml)
-            removeXMLNamespace(se_tree)
-            err_message = str(se_tree.find('ServiceException').text).strip()
-            raise ServiceException(err_message, se_xml)
-        return u
-
-    def getmap(self, layers=None, styles=None, srs=None, bbox=None,
-               format=None, size=None, time=None, transparent=False,
-               bgcolor='#FFFFFF',
-               exceptions='XML',
-               method='Get'
-               ):
-        """Request and return an image from the WMS as a file-like object.
-
-        Parameters
-        ----------
-        layers : list
-            List of content layer names.
-        styles : list
-            Optional list of named styles, must be the same length as the
-            layers list.
-        srs : string
-            A spatial reference system identifier.
-        bbox : tuple
-            (left, bottom, right, top) in srs units.
-        format : string
-            Output image format such as 'image/jpeg'.
-        size : tuple
-            (width, height) in pixels.
-        transparent : bool
-            Optional. Transparent background if True.
-        bgcolor : string
-            Optional. Image background color.
-        method : string
-            Optional. HTTP DCP method name: Get or Post.
-
-        Example
-        -------
-            >>> img = wms.getmap(layers=['global_mosaic'],
-            ...                  styles=['visual'],
-            ...                  srs='EPSG:4326',
-            ...                  bbox=(-112,36,-106,41),
-            ...                  format='image/jpeg',
-            ...                  size=(300,250),
-            ...                  transparent=True,
-            ...                  )
-            >>> out = open('example.jpg', 'wb')
-            >>> out.write(img.read())
-            >>> out.close()
-
-        """
-        base_url = self.getOperationByName('GetMap').methods[method]['url']
-        request = {'version': self.version, 'request': 'GetMap'}
-
-        if self.version != "1.3.0":
-            exceptions = "application/vnd.ogc.se_xml"
-
-        # check layers and styles
-        assert len(layers) > 0
-        request['layers'] = ','.join(layers)
-        if styles:
-            assert len(styles) == len(layers)
-            request['styles'] = ','.join(styles)
-        else:
-            request['styles'] = ''
-
-        # size
-        request['width'] = str(size[0])
-        request['height'] = str(size[1])
-
-        request['srs' if self.version != "1.3.0" else "crs"] = str(srs)
-        request['bbox'] = ','.join([str(x) for x in bbox])
-        request['format'] = str(format)
-        request['transparent'] = str(transparent).upper()
-        request['bgcolor'] = '0x' + bgcolor[1:7]
-        request['exceptions'] = str(exceptions)
-
-        if time is not None:
-            request['time'] = str(time)
-
-        data = urlencode(request)
-        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
-        u = openURL(base_url, data, method, username=self.username, password=self.password, proxies=proxies)
-
         # check for service exceptions, and return
         if u.info()['Content-Type'] == 'application/vnd.ogc.se_xml':
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
-            err_message = str(se_tree.find('ServiceException').text).strip()
+            err_message = str(se_tree.find(f'{self.OGC_NAMESPACE}ServiceException').text).strip()
             raise ServiceException(err_message, se_xml)
         return u
-
-    def getServiceXML(self):
-        xml = None
-        if self._capabilities:
-            xml = etree.tostring(self._capabilities)
-        return xml
 
     def getfeatureinfo(self):
         raise NotImplementedError
 
-    def getOperationByName(self, name):
-        """Return a named content item."""
-        for item in self.operations:
-            if item.name == name:
-                return item
-        raise KeyError("No operation named %s" % name)
 
+def ContentMetadata(elem, parent=None, children=None, index=0,
+                    parse_remote_metadata=False,
+                    timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
+                    auth=None, version="1.3.0"):
+    WMS_NAMESPACE = "{http://www.opengis.net/wms}" if version == "1.3.0" else ""
 
-class ServiceIdentification(object):
-    ''' Implements IServiceIdentificationMetadata '''
+    if version == "1.3.0":
+        metadata = wms130.ContentMetadata(elem, parent=parent, children=children, index=index,
+                                          parse_remote_metadata=parse_remote_metadata, timeout=timeout, auth=auth)
+    else:
+        metadata = wms111.ContentMetadata(elem, parent=parent, children=children, index=index,
+                                          parse_remote_metadata=parse_remote_metadata, timeout=timeout, auth=auth)
 
-    def __init__(self, infoset, version):
-        self._root = infoset
-        self.type = self._root.find('Name').text
-        self.version = version
-        self.title = self._root.find('Title').text
-        abstract = self._root.find('Abstract')
-        if abstract is not None:
-            self.abstract = abstract.text
+    # (mss) Parse dimensions and their extents.
+    metadata.dimensions = {}
+    metadata.extents = {}
+    for dim in elem.findall(f'{WMS_NAMESPACE}Dimension'):
+        dimname = dim.attrib.get("name").lower()
+        metadata.dimensions[dimname] = dim.attrib
+    for extent in elem.findall(f'{WMS_NAMESPACE}Extent'):
+        extname = extent.attrib.get("name").lower()
+        metadata.extents[extname] = extent.attrib
+        if extent.text is not None:
+            metadata.extents[extname]["values"] = extent.text.strip().split(",")
         else:
-            self.abstract = None
-        self.keywords = [f.text for f in self._root.findall('KeywordList/Keyword')]
-        # (mss) Always set a default value similar to abstract.
-        self.accessconstraints = self._root.find('AccessConstraints')
-        if self.accessconstraints is not None:
-            self.accessconstraints = self.accessconstraints.text
-        # (mss)
-        fees = self._root.find('Fees')
-        if fees is not None:
-            self.fees = fees.text
-        # (mss) Always set a default value similar to abstract.
+            metadata.extents[extname]["values"] = []
+    # (mss)
+
+    # (mss) Added "Abstract".
+    for key in ('Name', 'Title', 'Abstract'):
+        val = elem.find(WMS_NAMESPACE + key)
+        # (mss) Added " and val.text is not None".
+        if val is not None and val.text is not None:
+            setattr(metadata, key.lower(), val.text.strip())
         else:
-            self.fees = None
-        # (mss)
+            setattr(metadata, key.lower(), None)
+        metadata.id = metadata.name  # conform to new interface
+
+    # (mss) Replace owslib ContentMetadata children with ogcwms ContentMetadata
+    metadata.layers = []
+    for child in elem.findall('Layer'):
+        metadata.layers.append(ContentMetadata(child, metadata))
+
+    return metadata
 
 
-class ContentMetadata(object):
-    """
-    Abstraction for WMS layer metadata.
-
-    Implements IContentMetadata.
-    """
-
-    def __init__(self, elem, parent=None):
-        self.parent = parent
-        if elem.tag != 'Layer':
-            raise ValueError('%s should be a Layer' % (elem,))
-        # (mss) Added "Abstract".
-        for key in ('Name', 'Title', 'Abstract'):
-            val = elem.find(key)
-            # (mss) Added " and val.text is not None".
-            if val is not None and val.text is not None:
-                setattr(self, key.lower(), val.text.strip())
-            else:
-                setattr(self, key.lower(), None)
-            self.id = self.name  # conform to new interface
-        # bboxes
-        b = elem.find('BoundingBox')
-        self.boundingBox = None
-        if b is not None:
-            try:  # sometimes the SRS attribute is (wrongly) not provided
-                if "CRS" in b.attrib:
-                    srs = b.attrib['CRS']
-                else:
-                    srs = b.attrib["SRS"]
-            except KeyError:
-                srs = None
-                self.boundingBox = (
-                    float(b.attrib['minx']),
-                    float(b.attrib['miny']),
-                    float(b.attrib['maxx']),
-                    float(b.attrib['maxy']),
-                    srs,
-                )
-        elif self.parent:
-            if hasattr(self.parent, 'boundingBox'):
-                self.boundingBox = self.parent.boundingBox
-
-        attribution = elem.find('Attribution')
-        if attribution is not None:
-            self.attribution = dict()
-            title = attribution.find('Title')
-            url = attribution.find('OnlineResource')
-            logo = attribution.find('LogoURL')
-            if title is not None:
-                self.attribution['title'] = title.text
-            if url is not None:
-                self.attribution['url'] = url.attrib['{http://www.w3.org/1999/xlink}href']
-            if logo is not None:
-                self.attribution['logo_size'] = (int(logo.attrib['width']), int(logo.attrib['height']))
-                self.attribution['logo_url'] = logo.find('OnlineResource').attrib['{http://www.w3.org/1999/xlink}href']
-
-        b = elem.find('EX_GeographicBoundingBox')
-        if b is not None:
-            self.boundingBoxWGS84 = (
-                float(b.find('westBoundLongitude').text),
-                float(b.find('southBoundLatitude').text),
-                float(b.find('eastBoundLongitude').text),
-                float(b.find('northBoundLatitude').text),
-            )
-        elif elem.find("LatLonBoundingBox") is not None:
-            b = elem.find("LatLonBoundingBox")
-            self.boundingBoxWGS84 = (
-                float(b.attrib['minx']),
-                float(b.attrib['miny']),
-                float(b.attrib['maxx']),
-                float(b.attrib['maxy']),
-            )
-        elif self.parent:
-            self.boundingBoxWGS84 = self.parent.boundingBoxWGS84
-        else:
-            self.boundingBoxWGS84 = None
-
-        # SRS options
-        self.crsOptions = []
-
-        # Copy any parent SRS options (they are inheritable properties)
-        if self.parent:
-            # (mss) Copy parent SRS only if it has been defined (some WMS do not!).
-            if self.parent.crsOptions:
-                self.crsOptions = list(self.parent.crsOptions)
-
-        # Look for CRS option attached to this layer
-        is_crs = elem.find("CRS") is not None
-        if elem.find('CRS' if is_crs else "SRS") is not None:
-            # some servers found in the wild use a single SRS
-            # tag containing a whitespace separated list of SRIDs
-            # instead of several SRS tags. hence the inner loop
-            for srslist in [x.text for x in elem.findall('CRS' if is_crs else "SRS")]:
-                if srslist:
-                    for srs in srslist.split():
-                        self.crsOptions.append(srs)
-
-        # Get rid of duplicate entries
-        self.crsOptions = list(set(self.crsOptions))
-
-        # Set self.crsOptions to None if the layer (and parents) had no SRS options
-        if len(self.crsOptions) == 0:
-            # raise ValueError('%s no SRS available!?' % (elem,))
-            # Comment by D Lowe.
-            # Do not raise ValueError as it is possible that a layer is purely
-            # a parent layer and does not have SRS specified. Instead set crsOptions to None
-            self.crsOptions = None
-
-        # Styles
-        self.styles = OrderedDict()
-
-        # Copy any parent styles (they are inheritable properties)
-        if self.parent:
-            self.styles = self.parent.styles.copy()
-
-        # Get the styles for this layer (items with the same name are replaced)
-        for s in elem.findall('Style'):
-
-            name = s.find('Name')
-            title = s.find('Title')
-            if name is None or title is None:
-                raise ValueError('%s missing name or title' % (s,))
-                #             style = { 'title' : title.text }
-                #             # legend url
-                #             legend = s.find('LegendURL/OnlineResource')
-                #             if legend is not None:
-                #                 style['legend'] = legend.attrib['{http://www.w3.org/1999/xlink}href']
-                #             self.styles[name.text] = style
-                #            # (mss) fixed style strip() problem.
-            else:
-                style_name = name.text.strip() if isinstance(name.text, str) else name.text
-                style_title = title.text.strip() if isinstance(title.text, str) else title.text
-            style = {'title': style_title}
-            legend = s.find('LegendURL/OnlineResource')
-            if legend is not None:
-                style['legend'] = legend.attrib['{http://www.w3.org/1999/xlink}href']
-            self.styles[style_name] = style
-            # (mss)
-
-        # keywords
-        self.keywords = [f.text for f in elem.findall('KeywordList/Keyword')]
-
-        # timepositions - times for which data is available.
-        self.timepositions = None
-        for extent in elem.findall('Extent'):
-            if extent.attrib.get("name").lower() == 'time':
-                # (mss) inserted test for text attribute, as extent tags don't
-                # have to contain text.
-                if extent.text is not None:
-                    self.timepositions = extent.text.split(',')
-                    break
-
-        # (mss) Parse dimensions and their extents.
-        self.dimensions = {}
-        self.extents = {}
-        for dim in elem.findall('Dimension'):
-            dimname = dim.attrib.get("name").lower()
-            self.dimensions[dimname] = dim.attrib
-        for extent in elem.findall('Extent'):
-            extname = extent.attrib.get("name").lower()
-            self.extents[extname] = extent.attrib
-            if extent.text is not None:
-                self.extents[extname]["values"] = extent.text.strip().split(",")
-            else:
-                self.extents[extname]["values"] = []
-        # (mss)
-
-        self.layers = []
-        for child in elem.findall('Layer'):
-            self.layers.append(ContentMetadata(child, self))
-
-    def __str__(self):
-        return 'Layer Name: %s Title: %s' % (self.name, self.title)
-
-
-class WMSCapabilitiesReader(object):
+class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
     """Read and parse capabilities document into a lxml.etree infoset
     """
 
-    def __init__(self, version='1.3.0', url=None, un=None, pw=None):
+    def __init__(self, version='1.3.0', url=None, un=None, pw=None, headers=None, auth=None):
         """Initialize"""
-        self.version = version
-        self._infoset = None
-        self.url = url
-        self.username = un
-        self.password = pw
+        super().__init__(version, url, un, pw, headers, auth)
         # (mss) Store capabilities document.
         self.capabilities_document = None
         # (mss)
-        """
-        # if self.username and self.password:
-            # Provide login information in order to use the WMS server
-            # Create an OpenerDirector with support for Basic HTTP
-            # Authentication...
-            # passman = HTTPPasswordMgrWithDefaultRealm()
-            # passman.add_password(None, self.url, self.username, self.password)
-            # auth_handler = HTTPBasicAuthHandler(passman)
-            # opener = build_opener(auth_handler)
-            # self._open = opener.open
-        """
 
-    def capabilities_url(self, service_url):
-        """Return a capabilities url
-        """
-        qs = []
-        if service_url.find('?') != -1:
-            qs = cgi.parse_qsl(service_url.split('?')[1])
-
-        params = [x[0] for x in qs]
-
-        if 'service' not in params:
-            qs.append(('service', 'WMS'))
-        if 'request' not in params:
-            qs.append(('request', 'GetCapabilities'))
-        if 'version' not in params:
-            qs.append(('version', self.version))
-
-        urlqs = urlencode(tuple(qs))
-        return service_url.split('?')[0] + '?' + urlqs
-
-    def read(self, service_url):
+    def read(self, service_url,
+             timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout)):
         """Get and parse a WMS capabilities document, returning an
         elementtree instance
 
@@ -626,18 +365,17 @@ class WMSCapabilitiesReader(object):
 
         # now split it up again to use the generic openURL function...
         spliturl = getcaprequest.split('?')
-        u = openURL(spliturl[0], spliturl[1], method='Get',
-                    username=self.username, password=self.password, proxies=proxies)
+        u = openURL(spliturl[0], spliturl[1], method='Get', auth=self.auth, proxies=proxies)
+
         # (mss) Store capabilities document.
-        self.capabilities_document = u.read()
+        self.capabilities_document = strip_bom(u.read())
         return etree.fromstring(self.capabilities_document)
         # (mss)
 
     def readString(self, st):
         """Parse a WMS capabilities document, returning an elementtree instance
-
-        string should be an XML capabilities document
-        """
+                string should be an XML capabilities document
+                """
         if not isinstance(st, str):
             raise ValueError("String must be of type string, not %s" % type(st))
         return etree.fromstring(st)
