@@ -1196,7 +1196,7 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
-    parser.add_argument("-c", "--create", help="creates demodata for the mswms server",
+    parser.add_argument("-s", "--seed", help="creates demodata for the mswms server",
                         action="store_true", default=False)
     args = parser.parse_args()
     if args.version:
