@@ -1,7 +1,7 @@
 Help
 ====
 
-Some videos about the Mission Support System Colaboration Platform
+Some videos about the Mission Support System Collaboration Platform
 
 
 MSCOLAB
