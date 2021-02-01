@@ -6,7 +6,7 @@ scientists in the field of atmospheric science. The purpose is to have a
 tool that simplifies the process for planning a scientific flight.
 
 
-Some videos about the Mission Support System Colaboration Platform
+Some videos about the Mission Support System Collaboration Platform
 
 ## MSCOLAB
 
