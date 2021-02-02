@@ -1206,7 +1206,7 @@ def main():
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
-    if args.create:
+    if args.seed:
         root_fs = fs.open_fs("~/")
         if not root_fs.exists("mss/testdata"):
             root_fs.makedirs("mss/testdata")
