@@ -123,7 +123,7 @@ def config_loader(config_file=None, dataset=None, default=None):
             return default
         raise IOError("MSS config File not found")
     except ValueError as ex:
-        error_message = "MSS config File '{:}' has a syntax error:\n\n'{}'".format(config_file, ex)
+        error_message = f"MSS config File '{config_file}' has a syntax error:\n\n'{ex}'"
         raise FatalUserError(error_message)
     if dataset:
         try:
@@ -289,15 +289,15 @@ def get_projection_params(proj):
         if projid == "42001":
             proj_params = {
                 "basemap": {"projection": "tmerc", "lon_0": lon0, "lat_0": lat0},
-                "bbox": "meter({},{})".format(lon0, lat0)}
+                "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42002":
             proj_params = {
                 "basemap": {"projection": "tmerc", "lon_0": lon0, "lat_0": lat0},
-                "bbox": "meter({},{})".format(lon0, lat0)}
+                "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42003":
             proj_params = {
                 "basemap": {"projection": "ortho", "lon_0": lon0, "lat_0": lat0},
-                "bbox": "meter({},{})".format(lon0, lat0)}
+                "bbox": f"meter({lon0},{lat0})"}
         else:
             raise ValueError("unspecified AUTO code: '%s'", proj)
 
@@ -308,19 +308,19 @@ def get_projection_params(proj):
         if projid == "42001":
             proj_params = {
                 "basemap": {"projection": "tmerc", "lon_0": lon0, "lat_0": lat0},
-                "bbox": "meter({},{})".format(lon0, lat0)}
+                "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42002":
             proj_params = {
                 "basemap": {"projection": "tmerc", "lon_0": lon0, "lat_0": lat0},
-                "bbox": "meter({},{})".format(lon0, lat0)}
+                "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42003":
             proj_params = {
                 "basemap": {"projection": "ortho", "lon_0": lon0, "lat_0": lat0},
-                "bbox": "meter({},{})".format(lon0, lat0)}
+                "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42004":
             proj_params = {
                 "basemap": {"projection": "cyl"},
-                "bbox": "meter({},{})".format(lon0, lat0)}
+                "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42005":
             proj_params = {
                 "basemap": {"projection": "moll", "lon_0": lon0, "lat_0": lat0},
