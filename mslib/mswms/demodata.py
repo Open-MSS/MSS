@@ -1196,7 +1196,7 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
-    parser.add_argument("-c", "--create", help="creates demodata for the mswms server",
+    parser.add_argument("-s", "--seed", help="creates demodata for the mswms server",
                         action="store_true", default=False)
     args = parser.parse_args()
     if args.version:
@@ -1206,7 +1206,7 @@ def main():
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
-    if args.create:
+    if args.seed:
         root_fs = fs.open_fs("~/")
         if not root_fs.exists("mss/testdata"):
             root_fs.makedirs("mss/testdata")
