@@ -234,13 +234,28 @@ class WMSServer(object):
         template = templates['service_exception.pt' if version == "1.1.1" else "service_exception130.pt"]
         return template(code=code, text=text).encode("utf-8"), "text/xml"
 
-    def get_capabilities(self, server_url=None, version="1.3.0"):
+    def get_capabilities(self, query, server_url=None):
         # ToDo find a more elegant method to do the same
         # Preferable we don't want a seperate data_access module to be configured
         data_access_dict = mss_wms_settings.data
 
         for key in data_access_dict:
             data_access_dict[key].setup()
+
+        version = query.get("VERSION", "1.1.1")
+
+        # Handle update sequence exceptions
+        sequence = query.get("UPDATESEQUENCE")
+        if sequence and int(sequence) == 0:
+            return self.create_service_exception(
+                code="CurrentUpdateSequence",
+                text="Requested update sequence is the current",
+                version=version)
+        elif sequence and int(sequence) > 0:
+            return self.create_service_exception(
+                code="InvalidUpdateSequence",
+                text="Requested update sequence is higher than current",
+                version=version)
 
         template = templates['get_capabilities130.pt' if version == "1.3.0" else 'get_capabilities.pt']
         logging.debug("server-url '%s'", server_url)
@@ -301,16 +316,15 @@ class WMSServer(object):
         """
         logging.debug("GetMap/GetVSec request. Interpreting parameters..")
 
-        # 1) Make query parameters Case Insensitive
-        # =========================================
-        query = CIMultiDict(query)
-        # 2) Evaluate query parameters:
+        # Evaluate query parameters:
         # =============================
 
-        version = query.get("VERSION", "1.3.0")
+        version = query.get("VERSION", "1.1.1")
 
         # Image size.
-        figsize = float(query.get('WIDTH', 900)), float(query.get('HEIGHT', 600))
+        width = query.get('WIDTH', 900)
+        height = query.get('HEIGHT', 600)
+        figsize = float(width if width != "" else 900), float(height if height != "" else 600)
         logging.debug("  requested image size = %sx%s", figsize[0], figsize[1])
 
         # Requested layers.
@@ -528,7 +542,7 @@ server = WMSServer()
 def application():
     try:
         # Request info
-        query = request.args
+        query = CIMultiDict(request.args)
         # Processing
         # ToDo Refactor
         request_type = query.get('request')
@@ -544,8 +558,7 @@ def application():
 
         if (request_type in ('getcapabilities', 'capabilities') and
                 request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
-            return_data, return_format = server.get_capabilities(server_url,
-                                                                 request_version if request_version != "" else "1.1.1")
+            return_data, return_format = server.get_capabilities(query, server_url)
         elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', '1.3.0', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:

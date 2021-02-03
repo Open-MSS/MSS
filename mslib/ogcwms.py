@@ -313,13 +313,17 @@ def ContentMetadata(elem, parent=None, children=None, index=0,
     for dim in elem.findall(f'{WMS_NAMESPACE}Dimension'):
         dimname = dim.attrib.get("name").lower()
         metadata.dimensions[dimname] = dim.attrib
-    for extent in elem.findall(f'{WMS_NAMESPACE}Extent'):
-        extname = extent.attrib.get("name").lower()
-        metadata.extents[extname] = extent.attrib
-        if extent.text is not None:
-            metadata.extents[extname]["values"] = extent.text.strip().split(",")
-        else:
-            metadata.extents[extname]["values"] = []
+        if version == "1.3.0":
+            metadata.extents[dimname] = dim.attrib
+            metadata.extents[dimname]["values"] = dim.text.strip().split(",")
+    if version == "1.1.1":
+        for extent in elem.findall(f'{WMS_NAMESPACE}Extent'):
+            extname = extent.attrib.get("name").lower()
+            metadata.extents[extname] = extent.attrib
+            if extent.text:
+                metadata.extents[extname]["values"] = extent.text.strip().split(",")
+            else:
+                metadata.extents[extname]["values"] = []
     # (mss)
 
     # (mss) Added "Abstract".
