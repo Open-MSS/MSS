@@ -116,7 +116,7 @@ def openURL(url_base, data=None, method='Get', cookies=None,
         rkwargs['params'] = data
 
     else:
-        raise ValueError("Unknown method ('{}'), expected 'get' or 'post'".format(method))
+        raise ValueError(f"Unknown method ('{method}'), expected 'get' or 'post'")
 
     if cookies is not None:
         rkwargs['cookies'] = cookies
