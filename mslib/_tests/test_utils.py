@@ -26,10 +26,12 @@
 """
 import pytest
 import os
+import fs
 import datetime
 from mslib import utils
 import multidict
 import werkzeug
+from mslib._tests.constants import MSS_CONFIG_PATH
 
 
 class TestParseTime(object):
@@ -95,6 +97,14 @@ class TestConfigLoader(object):
             config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss',
                                        'not_existing_mss_settings.json.sample')
             _ = utils.config_loader(config_file=config_file)
+
+    def test_existing_empty_config_file(self):
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
+        data = utils.config_loader(config_file=config_file)
+        assert isinstance(data, dict)
+        assert data["num_labels"] == 10
 
 
 class TestGetDistance(object):
