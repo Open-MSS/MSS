@@ -32,6 +32,7 @@ from mslib import utils
 import multidict
 import werkzeug
 from mslib._tests.constants import MSS_CONFIG_PATH
+from mslib._tests.utils import create_mss_settings_file
 
 
 class TestParseTime(object):
@@ -63,6 +64,9 @@ class TestConfigLoader(object):
     """
     tests config file for client
     """
+    def teardown(self):
+         if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
 
     def test_default_config(self):
         data = utils.config_loader()
@@ -101,11 +105,9 @@ class TestConfigLoader(object):
 
     def test_existing_empty_config_file(self):
         """
-        pytest -k  test_existing_empty_config_file --mss_settings {}
-
         on a user defined empty mss_settings_json this test should return the default value for num_labels
-
         """
+        create_mss_settings_file('{ }')
         if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             pytest.skip('undefined test mss_settings.json')
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
@@ -126,10 +128,9 @@ class TestConfigLoader(object):
 
     def test_existing_config_file_different_parameters(self):
         """
-        pytest -k test_existing_config_file_different_parameters --mss_settings '{"num_interpolation_points": 201 }'
-
         on a user defined mss_settings_json without a defined num_labels this test should return its default value
         """
+        create_mss_settings_file('{"num_interpolation_points": 201 }')
         if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             pytest.skip('undefined test mss_settings.json')
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
@@ -147,11 +148,9 @@ class TestConfigLoader(object):
 
     def test_existing_config_file_defined_parameters(self):
         """
-        pytest -k test_existing_config_file_defined_parameters --mss_settings \
-        '{"num_interpolation_points": 201, "num_labels": 10 }'
-
         on a user defined mss_settings_json without a defined num_labels this test should return its default value
         """
+        create_mss_settings_file('{"num_interpolation_points": 201, "num_labels": 10 }')
         if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             pytest.skip('undefined test mss_settings.json')
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
