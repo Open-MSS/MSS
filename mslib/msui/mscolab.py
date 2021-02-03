@@ -164,7 +164,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.addUser.setEnabled(False)
         self.connectMscolab.setEnabled(True)
         self.url.setEnabled(True)
-        self.url.setEditable(True)
         # set mscolab_server_url to None
         self.mscolab_server_url = None
 
@@ -188,7 +187,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # enable and disable right buttons
                 self.loginButton.setEnabled(True)
                 self.addUser.setEnabled(True)
-                self.url.setEditable(False)
                 self.url.setEnabled(False)
                 self.disconnectMscolab.setEnabled(True)
                 self.connectMscolab.setEnabled(False)
