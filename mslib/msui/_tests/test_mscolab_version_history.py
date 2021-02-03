@@ -134,7 +134,7 @@ class Test_MscolabVersionHistory(object):
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")
-        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         time.sleep(1)
 
     def _login(self):

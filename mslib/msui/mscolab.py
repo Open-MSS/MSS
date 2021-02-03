@@ -80,7 +80,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # if token is None, not authorized, else authorized
         self.token = None
         # User related signals
-        self.connectMscolab.clicked.connect(self.connect_handler)
+        self.toggleConnectionBtn.clicked.connect(self.connect_handler)
         self.addUser.clicked.connect(self.add_user_handler)
         self.loginButton.clicked.connect(self.authorize)
         self.logoutButton.clicked.connect(self.logout)
@@ -157,11 +157,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def disconnect_handler(self):
         self.logout()
+        self.status.setText("Status: disconnected")
         # enable and disable right buttons
-        self.connectMscolab.setText('Connect')
-        self.connectMscolab.clicked.connect(self.connect_handler)
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
+        # toggle to connect button
+        self.toggleConnectionBtn.setText('Connect')
+        self.toggleConnectionBtn.clicked.connect(self.connect_handler)
         # set mscolab_server_url to None
         self.mscolab_server_url = None
 
@@ -185,8 +187,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # enable and disable right buttons
                 self.loginButton.setEnabled(True)
                 self.addUser.setEnabled(True)
-                self.connectMscolab.setText('Disconnect')
-                self.connectMscolab.clicked.connect(self.disconnect_handler)
+                # toggle to disconnect button
+                self.toggleConnectionBtn.setText('Disconnect')
+                self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
                 try:

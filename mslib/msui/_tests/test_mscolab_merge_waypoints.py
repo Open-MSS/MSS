@@ -181,7 +181,7 @@ class Test_Mscolab(object):
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")
-        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
     def _login(self, emailid="merge_waypoints_user", password="password"):

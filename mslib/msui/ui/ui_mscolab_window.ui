@@ -87,12 +87,12 @@
                <widget class="QComboBox" name="url"/>
               </item>
               <item>
-               <widget class="QPushButton" name="connectMscolab">
+               <widget class="QPushButton" name="toggleConnectionBtn">
                 <property name="toolTip">
-                 <string>Connect to Mscolab server</string>
+                 <string>Connect to or disconnect from Mscolab server</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Connect to mscolab server</string>
+                 <string>Connect to or disconnect from Mscolab server</string>
                 </property>
                 <property name="text">
                  <string>Connect</string>
@@ -107,16 +107,6 @@
                <widget class="QLabel" name="status">
                 <property name="text">
                  <string>Status: Disconnected</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="disconnectMscolab">
-                <property name="toolTip">
-                 <string>Disconnect from mscolab server</string>
-                </property>
-                <property name="text">
-                 <string>Disconnect</string>
                 </property>
                </widget>
               </item>
@@ -366,7 +356,7 @@
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0">
              <property name="spacing">
-              <number>-1</number>
+              <number>6</number>
              </property>
              <property name="sizeConstraint">
               <enum>QLayout::SetDefaultConstraint</enum>
