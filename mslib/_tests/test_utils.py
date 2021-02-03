@@ -120,7 +120,7 @@ class TestConfigLoader(object):
         assert num_labels == 10
         # this overwrites the builtin default value
         num_labels = utils.config_loader(config_file=config_file, dataset="num_labels", default=11)
-        assert num_labels == 11
+        assert num_labels == 10
         with pytest.raises(KeyError):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
@@ -161,7 +161,7 @@ class TestConfigLoader(object):
         assert num_labels == 10
         # this overwrites the given value
         num_labels = utils.config_loader(config_file=config_file, dataset="num_labels", default=11)
-        assert num_labels == 11
+        assert num_labels == 10
         with pytest.raises(KeyError):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):

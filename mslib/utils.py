@@ -125,7 +125,7 @@ def config_loader(config_file=None, dataset=None, default=None):
                     if dataset not in default_config:
                         raise KeyError("requested dataset not in defaults or config_file")
                     if dataset in default_config and default is not None:
-                        return default
+                        return default_config[dataset]
                 else:
                      return default_config
             else:
@@ -139,6 +139,8 @@ def config_loader(config_file=None, dataset=None, default=None):
                     if dataset in default_config and default is None:
                         return default_config[dataset]
                     if dataset in default_config and default is not None:
+                        if dataset in data:
+                            return data[dataset]
                         return default
                     if dataset not in default_config:
                         raise KeyError("requested dataset not in defaults or config_file")
