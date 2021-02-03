@@ -101,7 +101,7 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
 
             except KeyError as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr("JSON File missing '{}' entry".format(ex)))
+                                               self.tr(f"JSON File missing '{ex}' entry"))
             except (FatalUserError, ValueError) as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr("JSON File has Syntax Problems:\n{}".format(ex)))
+                                               self.tr(f"JSON File has Syntax Problems:\n{ex}"))

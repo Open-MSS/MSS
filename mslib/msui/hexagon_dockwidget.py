@@ -104,7 +104,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         for i, point in enumerate(points):
             waypoints.append(
                 ft.Waypoint(lon=float(point[1]), lat=float(point[0]),
-                            flightlevel=float(flightlevel), comments="Hexagon {:d}".format(i + 1)))
+                            flightlevel=float(flightlevel), comments=f"Hexagon {(i + 1):d}"))
         waypoints_model.insertRows(row, rows=len(waypoints), waypoints=waypoints)
         index = waypoints_model.index(row, 0)
         table_view.setCurrentIndex(index)
@@ -130,20 +130,20 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                 row_max = row + (7 - idx)
                 if row_min < 0 or row_max > len(waypoints_model.all_waypoint_data()):
                     raise HexagonException("Cannot remove hexagon, hexagon is not complete "
-                                           "(min, max = {:d}, {:d})".format(row_min, row_max))
+                                           f"(min, max = {row_min:d}, {row_max:d})")
                 else:
                     found_one = False
                     for i in range(0, row_max - row_min):
-                        if str(waypoints_model.waypoint_data(row_min + i).comments) != "Hexagon {:d}".format(i + 1):
+                        if str(waypoints_model.waypoint_data(row_min + i).comments) != f"Hexagon {(i + 1):d}":
                             found_one = True
                             break
                     if found_one:
                         raise HexagonException("Cannot remove hexagon, hexagon comments are not found in all "
-                                               "points (min, max = {:d}, {:d})".format(row_min, row_max))
+                                               f"points (min, max = {row_min:d}, {row_max:d})")
                     else:
                         sel = QtWidgets.QMessageBox.question(
                             None, "Remove hexagon",
-                            "This will remove waypoints {:d}-{:d}. Continue?".format(row_min, row_max),
+                            f"This will remove waypoints {row_min:d}-{row_max:d}. Continue?",
                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                         if sel == QtWidgets.QMessageBox.Yes:
                             waypoints_model.removeRows(row_min, rows=7)

@@ -588,7 +588,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                           "no layers can be used in this view.")
             QtWidgets.QMessageBox.critical(
                 self, self.tr("Web Map Service"),
-                self.tr("ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
+                self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
         return wms
 
     def wms_url_changed(self, text):
@@ -618,7 +618,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.error("ERROR: %s %s", type(ex), ex)
         logging.debug("%s", traceback.format_exc())
         QtWidgets.QMessageBox.critical(
-            self, self.tr("Web Map Service"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+            self, self.tr("Web Map Service"), self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
 
     @QtCore.pyqtSlot()
     def display_progress_dialog(self):
@@ -656,7 +656,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                           "No layers can be used in this view.")
             QtWidgets.QMessageBox.critical(
                 self, self.tr("Web Map Service"),
-                self.tr("ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
+                self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
         else:
             # url shortener url translated
             url = request.url
@@ -713,7 +713,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if len(layer.layers) > 0:
                 stack.extend(layer.layers)
             elif self.is_layer_aligned(layer):
-                cb_string = "{} | {}".format(layer.title, layer.name)
+                cb_string = f"{layer.title} | {layer.name}"
                 filtered_layers.add(cb_string)
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
@@ -833,7 +833,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         styles = layerobj.styles
         self.cbStyle.clear()
-        self.cbStyle.addItems(["{} | {}".format(s, styles[s]["title"]) for s in styles])
+        self.cbStyle.addItems([f'{s} | {styles[s]["title"]}' for s in styles])
         self.cbStyle.setEnabled(self.cbStyle.count() > 1)
 
         abstract_text = layerobj.abstract if layerobj.abstract else ""
@@ -883,7 +883,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         enable_elevation = False
         if "elevation" in extents:
             units = dimensions["elevation"]["units"]
-            elev_list = ["{} ({})".format(e.strip(), units) for e in
+            elev_list = [f"{e.strip()} ({units})" for e in
                          extents["elevation"]["values"]]
             self.cbLevel.addItems(elev_list)
             if self.save_level in elev_list:
@@ -909,7 +909,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 msg = "cannot determine init time format."
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr("ERROR: {}".format(msg)))
+                    self, self.tr("Web Map Service"), self.tr(f"ERROR: {msg}"))
 
         # ~~~~ C) Valid/forecast time. ~~~~~~~~~~~~~~~~~~~~~~~~~
         try:
@@ -939,7 +939,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 msg = "cannot determine valid time format."
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr("ERROR: {}".format(msg)))
+                    self, self.tr("Web Map Service"), self.tr(f"ERROR: {msg}"))
 
         self.enable_level_elements(enable_elevation)
         self.enable_valid_time_elements(enable_valid_time)
@@ -991,7 +991,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             return 86400 * int(timestep_string.split(" days")[0])
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-            raise ValueError("cannot convert '{}' to seconds: wrong format.".format(timestep_string))
+            raise ValueError(f"cannot convert '{timestep_string}' to seconds: wrong format.")
 
     def init_time_back_click(self):
         """Slot for the tbInitTime_back button.
@@ -1310,9 +1310,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.check_for_allowed_crs and normalize_crs(crs) not in self.allowed_crs:
             ret = QtWidgets.QMessageBox.warning(
                 self, self.tr("Web Map Service"),
-                self.tr("WARNING: Selected CRS '{}' not contained in allowed list of supported CRS for this WMS\n"
-                        "({})\n"
-                        "Continue ?".format(crs, self.allowed_crs)),
+                self.tr(f"WARNING: Selected CRS '{crs}' not contained in allowed list of supported CRS for this WMS\n"
+                        f"({self.allowed_crs})\n"
+                        "Continue ?"),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Ignore | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Ignore:
@@ -1461,7 +1461,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     for f in cached_files:
                         os.remove(os.path.join(self.wms_cache, f))
                 except (IOError, OSError) as ex:
-                    msg = "ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
+                    msg = f"ERROR: Cannot delete file '{f}'. ({type(ex)}: {ex})"
                     logging.error(msg)
                     QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
                 else:
@@ -1504,7 +1504,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     os.remove(f)
                     removed_files += 1
         except (IOError, OSError) as ex:
-            msg = "ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
+            msg = f"ERROR: Cannot delete file '{f}'. ({type(ex)}: {ex})"
             logging.error(msg)
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
         logging.debug("cache has been cleaned (%i files removed).", removed_files)
@@ -1554,7 +1554,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         # Get lat/lon coordinates of flight track and convert to string for URL.
         path_string = ""
         for waypoint in self.waypoints_model.all_waypoint_data():
-            path_string += "{:.2f},{:.2f},".format(waypoint.lat, waypoint.lon)
+            path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},"
         path_string = path_string[:-1]
 
         # Determine the current size of the vertical section plot on the

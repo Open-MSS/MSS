@@ -334,7 +334,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        r = requests.post('{}/create_project'.format(self.mscolab_server_url), data=data)
+        r = requests.post(f'{self.mscolab_server_url}/create_project', data=data)
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your project was created successfully')
@@ -371,7 +371,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             s = requests.Session()
             s.auth = (auth[0], auth[1])
             s.headers.update({'x-test': 'true'})
-            url = '{}/register'.format(self.mscolab_server_url)
+            url = f'{self.mscolab_server_url}/register'
             r = s.post(url, data=data)
             if r.status_code == 401:
                 r = self.authenticate(data, r, url)
