@@ -85,7 +85,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.loginButton.clicked.connect(self.authorize)
         self.logoutButton.clicked.connect(self.logout)
         self.deleteAccountButton.clicked.connect(self.delete_account)
-        self.disconnectMscolab.clicked.connect(self.disconnect_handler)
         self.helpBtn.clicked.connect(self.open_help_dialog)
         # Project related signals
         self.addProject.clicked.connect(self.add_project_handler)
@@ -139,7 +138,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # disabling login, add user button. they are enabled when url is connected
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
-        self.disconnectMscolab.setEnabled(False)
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
@@ -160,10 +158,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def disconnect_handler(self):
         self.logout()
         # enable and disable right buttons
-        self.disconnectMscolab.setEnabled(False)
+        self.connectMscolab.setText('Connect')
+        self.connectMscolab.clicked.connect(self.connect_handler)
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
-        self.connectMscolab.setEnabled(True)
         # set mscolab_server_url to None
         self.mscolab_server_url = None
 
@@ -187,8 +185,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # enable and disable right buttons
                 self.loginButton.setEnabled(True)
                 self.addUser.setEnabled(True)
-                self.disconnectMscolab.setEnabled(True)
-                self.connectMscolab.setEnabled(False)
+                self.connectMscolab.setText('Disconnect')
+                self.connectMscolab.clicked.connect(self.disconnect_handler)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
                 try:
