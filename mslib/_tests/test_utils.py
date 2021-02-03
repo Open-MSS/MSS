@@ -99,11 +99,35 @@ class TestConfigLoader(object):
             _ = utils.config_loader(config_file=config_file)
 
     def test_existing_empty_config_file(self):
+        """
+        pytest -k  test_existing_empty_config_file --mss_settings {}
+
+        on a user defined empty mss_settings_json this test should return the default value for num_labels
+
+        """
         if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             pytest.skip('undefined test mss_settings.json')
         config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
         data = utils.config_loader(config_file=config_file)
         assert isinstance(data, dict)
+        assert len(data) == 0
+        assert data["num_labels"] == 10
+
+    def test_existing_config_file_different_parameters(self):
+        """
+        pytest -k test_existing_config_file_different_parameters --mss_settings '{"num_interpolation_points": 201 }'
+
+        on a user defined mss_settings_json without a defined num_labels this test should return its default value
+        """
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("mss_settings.json")
+        assert "num_labels" not in file_content
+        config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
+        data = utils.config_loader(config_file=config_file)
+        assert isinstance(data, dict)
+        assert len(data) > 0
         assert data["num_labels"] == 10
 
 
