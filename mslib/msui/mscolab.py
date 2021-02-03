@@ -164,6 +164,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # toggle to connect button
         self.toggleConnectionBtn.setText('Connect')
         self.toggleConnectionBtn.clicked.connect(self.connect_handler)
+        self.url.setEnabled(True)
         # set mscolab_server_url to None
         self.mscolab_server_url = None
 
@@ -190,6 +191,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # toggle to disconnect button
                 self.toggleConnectionBtn.setText('Disconnect')
                 self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
+                self.url.setEnabled(False)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
                 try:
