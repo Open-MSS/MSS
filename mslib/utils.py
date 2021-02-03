@@ -98,6 +98,7 @@ def config_loader(config_file=None, dataset=None, default=None):
     Returns: a dictionary
 
     """
+    # ToDo Refactor this soon
     if config_file is None:
         config_file = constants.CACHED_CONFIG_FILE
     if config_file is None:
@@ -117,6 +118,33 @@ def config_loader(config_file=None, dataset=None, default=None):
     try:
         with _fs.open(_name, 'r') as source:
             data = json.load(source)
+            if len(data) == 0:
+                # user defined empty dictionary, fallback to defaults
+                default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
+                if dataset is not None:
+                    if dataset not in default_config:
+                        raise KeyError("requested dataset not in defaults or config_file")
+                    if dataset in default_config and default is not None:
+                        return default
+                else:
+                     return default_config
+            else:
+                default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
+                for key in data:
+                    try:
+                        default_config[key] = data[key]
+                    except KeyError:
+                        logging.debug("'%s' Key(s) are not defined!", key)
+                if dataset is not None:
+                    if dataset in default_config and default is None:
+                        return default_config[dataset]
+                    if dataset in default_config and default is not None:
+                        return default
+                    if dataset not in default_config:
+                        raise KeyError("requested dataset not in defaults or config_file")
+                return default_config
+
+
     except (AttributeError, IOError, TypeError, errors.ResourceNotFound) as ex:
         logging.error("MSS config File error '%s' - '%s' - '%s'", config_file, type(ex), ex)
         if default is not None:
@@ -133,6 +161,12 @@ def config_loader(config_file=None, dataset=None, default=None):
             logging.debug("Key not defined in config_file! '%s'", dataset)
             if default is not None:
                 return default
+            default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
+            try:
+                return default_config[dataset]
+            except KeyError:
+                logging.debug("Key not defined in config_file! '%s' and not in defaults", dataset)
+                raise KeyError("requested dataset not in defaults or config_file")
             raise KeyError("default value for key not set")
 
     return data

@@ -92,7 +92,8 @@ class TestConfigLoader(object):
         assert data == 250
         with pytest.raises(KeyError):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
-        assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9) == 9
+        with pytest.raises(KeyError):
+            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9)
         with pytest.raises(IOError):
             config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss',
                                        'not_existing_mss_settings.json.sample')
@@ -107,11 +108,21 @@ class TestConfigLoader(object):
         """
         if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             pytest.skip('undefined test mss_settings.json')
+        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("mss_settings.json")
+        assert ":" not in file_content
         config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
         data = utils.config_loader(config_file=config_file)
-        assert isinstance(data, dict)
-        assert len(data) == 0
         assert data["num_labels"] == 10
+        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
+        assert num_labels == 10
+        # this overwrites the builtin default value
+        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels", default=11)
+        assert num_labels == 11
+        with pytest.raises(KeyError):
+            utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+        with pytest.raises(KeyError):
+            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9)
 
     def test_existing_config_file_different_parameters(self):
         """
@@ -126,10 +137,36 @@ class TestConfigLoader(object):
         assert "num_labels" not in file_content
         config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
         data = utils.config_loader(config_file=config_file)
-        assert isinstance(data, dict)
-        assert len(data) > 0
         assert data["num_labels"] == 10
+        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
+        assert num_labels == 10
+        with pytest.raises(KeyError):
+            utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+        with pytest.raises(KeyError):
+            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9)
 
+    def test_existing_config_file_defined_parameters(self):
+        """
+        pytest -k test_existing_config_file_defined_parameters --mss_settings \
+        '{"num_interpolation_points": 201, "num_labels": 10 }'
+
+        on a user defined mss_settings_json without a defined num_labels this test should return its default value
+        """
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("mss_settings.json")
+        assert "num_labels" in file_content
+        config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
+        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
+        assert num_labels == 10
+        # this overwrites the given value
+        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels", default=11)
+        assert num_labels == 11
+        with pytest.raises(KeyError):
+            utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+        with pytest.raises(KeyError):
+            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9)
 
 class TestGetDistance(object):
     """
