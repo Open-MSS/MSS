@@ -26,6 +26,8 @@ jobs:
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
+        && conda config --add channels conda-forge \
+        && conda config --add channels defaults \
         && conda install -n mssenv --file reqs.txt --force-reinstall)
 
     - name: Run tests
