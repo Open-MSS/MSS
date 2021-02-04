@@ -666,11 +666,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # url shortener url translated
             url = request.url
 
-            # Take the default version of the server, or 1.3.0 if not supported
-            tree = WMSCapabilitiesReader().readString(request.content)
-            version = tree.attrib["version"]
-            if version not in ["1.1.1", "1.3.0"]:
-                version = "1.3.0"
+            # Take the default version of the server, or 1.1.1 if not supported
+            try:
+                tree = WMSCapabilitiesReader().readString(request.content)
+                version = tree.attrib["version"]
+                if version not in ["1.1.1", "1.3.0"]:
+                    version = "1.1.1"
+            except Exception as ex:
+                version = "1.1.1"
 
             url = url.replace('?service=WMS&request=GetCapabilities', '')
             logging.debug("requesting capabilities from %s", url)
