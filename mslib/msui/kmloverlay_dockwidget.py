@@ -31,6 +31,8 @@ from fastkml import kml, geometry, styles
 from lxml import etree as et, objectify
 import os
 from matplotlib import patheffects
+import numpy as np
+import cartopy.crs as ccrs
 
 from mslib.msui.mss_qt import get_open_filenames, get_save_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
@@ -58,7 +60,8 @@ class KMLPatch(object):
         for coordinates in geometry.coords:
             lons.append(coordinates[0])
             lats.append(coordinates[1])
-        return self.map(lons, lats)
+        return self.map.ax.projection.transform_points(
+            ccrs.PlateCarree(), np.asarray(lons), np.asarray(lats))
 
     def add_point(self, point, style, name):
         """
@@ -68,7 +71,7 @@ class KMLPatch(object):
         :param name: name of placemark for annotation
         """
         x, y = (point.geometry.x, point.geometry.y)
-        self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
+        self.patches.append(self.map.ax.plot(x, y, "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
@@ -83,7 +86,7 @@ class KMLPatch(object):
         """
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(line.geometry)
-        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+        self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
     def add_polygon(self, polygon, style, _):
         """
@@ -94,12 +97,12 @@ class KMLPatch(object):
         # Exterior
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(polygon.geometry.exterior)
-        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+        self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
         # Interior Rings
         for interior in list(polygon.geometry.interiors):
             x1, y1 = self.compute_xy(interior)
-            self.patches.append(self.map.plot(x1, y1, "-", zorder=10, **kwargs))
+            self.patches.append(self.map.ax.plot(x1, y1, "-", zorder=10, **kwargs))
 
     def add_multipoint(self, point, style, name):
         """
@@ -109,7 +112,7 @@ class KMLPatch(object):
         :param name: name of placemark for annotation
         """
         x, y = (point.x, point.y)
-        self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
+        self.patches.append(self.map.ax.plot(x, y, "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
                 name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
@@ -123,7 +126,7 @@ class KMLPatch(object):
         """
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(line)
-        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+        self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
     def add_multipolygon(self, polygon, style, _):
         """
@@ -133,7 +136,7 @@ class KMLPatch(object):
         """
         kwargs = style.get("LineStyle", {"linewidth": self.linewidth, "color": self.color})
         x, y = self.compute_xy(polygon.exterior)
-        self.patches.append(self.map.plot(x, y, "-", zorder=10, **kwargs))
+        self.patches.append(self.map.ax.plot(x, y, "-", zorder=10, **kwargs))
 
     def parse_geometries(self, placemark):
         name = placemark.name
@@ -623,4 +626,3 @@ class CustomizeKMLWidget(QtWidgets.QDialog, ui_customize_kml.Ui_CustomizeKMLDial
     """
     def __init__(self, parent=None):
         super(CustomizeKMLWidget, self).__init__(parent)
-        self.setupUi(self)

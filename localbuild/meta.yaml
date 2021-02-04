@@ -29,7 +29,7 @@ requirements:
     - python
     - defusedxml
     - menuinst  # [win]
-    - basemap  >1.2.1
+    - cartopy >= 0.17.0
     - chameleon
     - execnet
     - fastkml

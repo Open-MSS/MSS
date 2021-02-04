@@ -36,6 +36,7 @@ from mslib.msui.constants import MSS_CONFIG_PATH
 from PyQt5 import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
 from mslib.utils import jsec_to_datetime, datetime_to_jsec, get_distance, rotate_point, fix_angle
+import cartopy.crs as ccrs
 
 
 EARTH_RADIUS = 6371.
@@ -154,7 +155,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         Returns: LineCollection of dotted lines at tangent point locations
         """
         x, y = list(zip(*wp_vertices))
-        wp_lons, wp_lats = bmap(x, y, inverse=True)
+        wp_xy = ccrs.PlateCarree().transform_points(bmap.ax.projection, np.asarray(x), np.asarray(y))
+        wp_lons, wp_lats = wp_xy[:, 0], wp_xy[:, 1]
         fine_lines = [bmap.gcpoints2(
                       wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], del_s=10., map_coords=False)
                       for i in range(len(wp_lons) - 1)]
@@ -168,7 +170,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         lines = tplines + dirlines
         for i, line in enumerate(lines):
             for j, (lon, lat) in enumerate(line):
-                line[j] = bmap(lon, lat)
+                line[j] = bmap.ax.projection.transform_point(lon, lat, ccrs.PlateCarree())
             lines[i] = line
         return LineCollection(
             lines,
@@ -195,7 +197,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
         x, y = list(zip(*wp_vertices))
-        wp_lons, wp_lats = bmap(x, y, inverse=True)
+        wp_xy = ccrs.PlateCarree().transform_points(bmap.ax.projection, np.asarray(x), np.asarray(y))
+        wp_lons, wp_lats = wp_xy[:, 0], wp_xy[:, 1]
 
         fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], map_coords=False) for i in
                       range(len(wp_lons) - 1)]
@@ -245,7 +248,9 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
 
         # convert lon, lat to map points
         for i in range(len(points)):
-            points[i][0][0], points[i][0][1] = bmap(points[i][0][0], points[i][0][1])
+            points[i][0][0], points[i][0][1] = bmap.ax.projection.transform_point(points[i][0][0],
+                                                                                  points[i][0][1],
+                                                                                  ccrs.PlateCarree())
         points = np.concatenate([points[:-1], points[1:]], axis=1)
         # plot
         solar_lines = LineCollection(points, cmap=self.solar_cmap, norm=self.solar_norm,

@@ -151,7 +151,7 @@ class Test_HSec(object):
     @pytest.mark.parametrize("crs", [
         "EPSG:4326",
         "EPSG:77890010", "EPSG:77790010",
-        "MSS:stere,20,40,40", "MSS:lcc,20,0,40,20", "MSS:cass,20,40", "MSS:merc,40"])
+        "MSS:stere,20,40,40", "MSS:lcc,20,0,40,20", "MSS:merc,40"])
     def test_degree_crs_codes(self, crs):
         img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs)
         assert img is not None

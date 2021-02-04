@@ -37,11 +37,9 @@ import os
 import pint
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
+import cartopy.geodesic as gd
+import cartopy.crs as ccrs
 
-try:
-    import mpl_toolkits.basemap.pyproj as pyproj
-except ImportError:
-    import pyproj
 
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
@@ -143,13 +141,13 @@ def get_distance(coord0, coord1):
     Computes the distance between two points on the Earth surface
     Args:
         coord0: coordinate(lat/lon) of first point
-        coord1: coordinate(lat/lon) of second point
+        coord1: coordinate(lat/lon) of second pointet
 
     Returns:
         length of distance in km
     """
-    pr = pyproj.Geod(ellps='WGS84')
-    return (pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.)
+    pr = gd.Geodesic()
+    return (pr.inverse([coord0[1], coord0[0]], [coord1[1], coord1[0]]).base[0, 0] / 1000.)
 
 
 def find_location(lat, lon, tolerance=5):
@@ -277,7 +275,7 @@ def get_projection_params(proj):
         projid = proj[4:]
         if projid == "84":
             proj_params = {
-                "basemap": {"projection": "cyl"},
+                "basemap": {"projection": ccrs.PlateCarree()},
                 "bbox": "degree"}
         else:
             raise ValueError("unsupported CRS code: '%s'", proj)
@@ -288,15 +286,15 @@ def get_projection_params(proj):
         projid, unitsid, lon0, lat0 = proj[5:].split(",")
         if projid == "42001":
             proj_params = {
-                "basemap": {"projection": "tmerc", "lon_0": lon0, "lat_0": lat0},
+                "basemap": {"projection": ccrs.UTM()},
                 "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42002":
             proj_params = {
-                "basemap": {"projection": "tmerc", "lon_0": lon0, "lat_0": lat0},
+                "basemap": {"projection": ccrs.TransverseMercator(central_longitude=lon0, central_latitude=lat0)},
                 "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42003":
             proj_params = {
-                "basemap": {"projection": "ortho", "lon_0": lon0, "lat_0": lat0},
+                "basemap": {"projection": ccrs.Orthographic(central_longitude=lon0, central_latitude=lat0)},
                 "bbox": f"meter({lon0},{lat0})"}
         else:
             raise ValueError("unspecified AUTO code: '%s'", proj)
@@ -307,23 +305,23 @@ def get_projection_params(proj):
         projid, factor, lon0, lat0 = proj[6:].split(",")
         if projid == "42001":
             proj_params = {
-                "basemap": {"projection": "tmerc", "lon_0": lon0, "lat_0": lat0},
+                "basemap": {"projection": ccrs.TransverseMercator(central_longitude=lon0, central_latitude=lat0)},
                 "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42002":
             proj_params = {
-                "basemap": {"projection": "tmerc", "lon_0": lon0, "lat_0": lat0},
+                "basemap": {"projection": ccrs.TransverseMercator(central_longitude=lon0, central_latitude=lat0)},
                 "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42003":
             proj_params = {
-                "basemap": {"projection": "ortho", "lon_0": lon0, "lat_0": lat0},
+                "basemap": {"projection": ccrs.Orthographic(central_longitude=lon0, central_latitude=lat0)},
                 "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42004":
             proj_params = {
-                "basemap": {"projection": "cyl"},
+                "basemap": {"projection": ccrs.PlateCarree(central_longitude=lon0)},
                 "bbox": f"meter({lon0},{lat0})"}
         elif projid == "42005":
             proj_params = {
-                "basemap": {"projection": "moll", "lon_0": lon0, "lat_0": lat0},
+                "basemap": {"projection": ccrs.Mollweide(central_longitude=lon0)},
                 "bbox": "meter???"}
         else:
             raise ValueError("unspecified AUTO2 code: '%s'", proj)
@@ -334,30 +332,46 @@ def get_projection_params(proj):
             logging.warning("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
-                "basemap": {"projection": "stere", "lat_0": lat_0, "lon_0": lon_0},
-                "bbox": "degree"}
+                "basemap": {"projection": ccrs.Stereographic(central_latitude=lat_0, central_longitude=lon_0)},
+                "bbox": "degree", "fixed": False}
         elif epsg.startswith("778") and len(epsg) == 8:  # user defined MSS code. deprecated.
             logging.warning("Using deprecated MSS-specific EPSG code. Switch to 'MSS:stere' instead.")
             lat_0, lon_0 = int(epsg[3:5]), int(epsg[5:])
             proj_params = {
-                "basemap": {"projection": "stere", "lat_0": -lat_0, "lon_0": lon_0},
-                "bbox": "degree"}
-        elif epsg in ("4258", "4326"):
-            proj_params = {"basemap": {"epsg": epsg}, "bbox": "degree"}
-        elif epsg in ("3031", "3412"):
-            proj_params = {"basemap": {"epsg": epsg}, "bbox": "meter(0,-90)"}
-        elif epsg in ("3411", "3413", "3575", "3995"):
-            proj_params = {"basemap": {"epsg": epsg}, "bbox": "meter(0,90)"}
+                "basemap": {"projection": ccrs.Stereographic(central_latitude=-lat_0, central_longitude=lon_0)},
+                "bbox": "degree", "fixed": False}
+        elif epsg in ("4326"):
+            proj_params = {"basemap": {"projection": ccrs.PlateCarree()}, "bbox": "degree", "fixed": False}
+        elif epsg in ("4258"):
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "degree", "fixed": True}
+        elif epsg in ("3031", "3412", "32761"):
+            proj4_params = ccrs.epsg(epsg).proj4_params
+            lat_0, lon_0, lat_ts = proj4_params['lat_0'], proj4_params['lon_0'], proj4_params['lat_ts']
+            proj_params = {"basemap": {"projection": ccrs.Stereographic(
+                           central_latitude=lat_0, central_longitude=lon_0, true_scale_latitude=lat_ts)},
+                           "bbox": "meter", "fixed": True}
+        elif epsg in ("3995", "3996", "32661"):
+            proj4_params = ccrs.epsg(epsg).proj4_params
+            lat_0, lon_0, lat_ts = proj4_params['lat_0'], proj4_params['lon_0'], proj4_params['lat_ts']
+            proj_params = {"basemap": {"projection": ccrs.Stereographic(
+                           central_latitude=lat_0, central_longitude=lon_0, true_scale_latitude=lat_ts)},
+                           "bbox": "meter", "fixed": True}
+        elif epsg in ("3411", "3413", "3575"):
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         elif epsg in ("3395", "3857"):
-            proj_params = {"basemap": {"epsg": epsg}, "bbox": "meter(0,0)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": False}
         elif epsg in ("4839"):
-            proj_params = {"basemap": {"epsg": epsg}, "bbox": "meter(10.5,51)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         elif epsg in ("31467"):
-            proj_params = {"basemap": {"epsg": epsg}, "bbox": "meter(-20.9631343,0.0037502)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         elif epsg in ("31468"):
-            proj_params = {"basemap": {"epsg": epsg}, "bbox": "meter(-25.4097892,0.0037466)"}
+            proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
         else:
-            raise ValueError("EPSG code not supported by basemap module: '%s'", proj)
+            try:
+                proj_params = {"basemap": {"projection": ccrs.epsg(epsg)}, "bbox": "meter", "fixed": True}
+            except Exception as e:
+                print("EPSG not supported by cartopy module!")
+                raise e
 
     elif proj.startswith("mss:"):
         # some MSS-specific codes
@@ -366,22 +380,18 @@ def get_projection_params(proj):
         if name == "stere":
             lon0, lat0, lat_ts = params[1:]
             proj_params = {
-                "basemap": {"projection": name, "lat_0": lat0, "lon_0": lon0, "lat_ts": lat_ts},
-                "bbox": "degree"}
-        elif name == "cass":
-            lon0, lat0 = params[1:]
-            proj_params = {
-                "basemap": {"projection": name, "lon_0": lon0, "lat_0": lat0},
+                "basemap": {"projection": ccrs.Stereographic(
+                    central_longitude=lon0, central_latitude=lat0, true_scale_latitude=lat_ts)},
                 "bbox": "degree"}
         elif name == "lcc":
             lon0, lat0, lat1, lat2 = params[1:]
             proj_params = {
-                "basemap": {"projection": name, "lon_0": lon0, "lat_0": lat0, "lat_1": lat1, "lat_2": lat2},
+                "basemap": {"projection": ccrs.LambertConformal(standard_parallels=(float(lat1), float(lat2)))},
                 "bbox": "degree"}
         elif name == "merc":
             lat_ts = params[1]
             proj_params = {
-                "basemap": {"projection": name, "lat_ts": lat_ts},
+                "basemap": {"projection": ccrs.Mercator(latitude_true_scale=lat_ts)},
                 "bbox": "degree"}
         else:
             raise ValueError("unknown MSS projection: '%s'", proj)
@@ -446,8 +456,7 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
         lons = np.linspace(p1[LON], p2[LON], numpoints)
     elif connection == 'greatcircle':
         if numpoints > 2:
-            gc = pyproj.Geod(ellps="WGS84")
-            pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints - 2)
+            pts = npts_cartopy((p1[LON], p1[LAT]), (p2[LON], p2[LAT]), numpoints - 2)
             lats = np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]])
             lons = np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]])
         else:
@@ -679,3 +688,15 @@ def dropEvent(self, event):
 
 def dragEnterEvent(self, event):
     event.accept()
+
+
+def npts_cartopy(coord1, coord2, numpoints):
+    assert -90 <= coord1[1] <= 90
+    assert -90 <= coord2[1] <= 90
+    distance = get_distance((coord1[1], coord1[0]), (coord2[1], coord2[0])) / (numpoints - 1)
+    new_geo = gd.Geodesic()
+    all_distance = [distance * i * 1000 for i in range(numpoints)]
+    initial_azimuth = new_geo.inverse(coord1, coord2).base[0, 1]
+    coords = new_geo.direct(coord1, initial_azimuth, all_distance)
+    points = list(zip(coords[:, 0], coords[:, 1]))
+    return points
