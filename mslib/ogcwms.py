@@ -216,16 +216,6 @@ class WebMapService(wms111.WebMapService_1_1_1):
         # build metadata objects
         self._buildMetadata(parse_remote_metadata)
 
-    def _getcapproperty(self):
-        if not self._capabilities:
-            reader = WMSCapabilitiesReader(self.version, url=self.url, un=self.auth.username, pw=self.auth.password)
-            self._capabilities = (wms130 if self.version == "1.3.0" else wms111).ServiceMetadata(reader.read(self.url))
-            removeXMLNamespace(self._capabilities)
-            # (mss) Store capabilities document.
-            self.capabilities_document = reader.capabilities_document
-            # (mss)
-        return self._capabilities
-
     def _buildMetadata(self, parse_remote_metadata=False):
         ''' set up capabilities metadata objects '''
 

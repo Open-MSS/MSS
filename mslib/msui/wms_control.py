@@ -229,6 +229,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         if hasattr(u, "info") and 'application/vnd.ogc.se_xml' in u.info()['Content-Type']:
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
+            # Remove namespaces in the response, otherwise this code might fail
             removeXMLNamespace(se_tree)
             err_message = str(se_tree.find('ServiceException').text).strip()
             raise owslib.util.ServiceException(err_message, se_xml)
