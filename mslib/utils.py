@@ -123,23 +123,28 @@ def config_loader(config_file=None, dataset=None):
 
     """
     default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
-    if config_file is None and dataset is None:
-        return default_config
     if dataset is not None and dataset not in default_config:
         raise KeyError(f"requested dataset '{dataset}' not in defaults or config_file")
-    if config_file is None and dataset is not None:
-        return default_config[dataset]
+    if config_file is None:
+        if dataset is None:
+            return default_config
+        else:
+            return default_config[dataset]
     user_config = read_config_file(config_file)
-    if len(user_config) == 0 and dataset is None:
+    if dataset is not None:
+        if dataset not in user_config:
+            return default_config[dataset]
+        else:
+            return user_config[dataset]
+    else:
+        for key in user_config:
+            default_config[key] = user_config[key]
         return default_config
-    if len(user_config) == 0 and dataset is not None:
-        return default_config[dataset]
-    if dataset in user_config:
-        return user_config[dataset]
-    if dataset is not None and dataset not in user_config:
-        return default_config[dataset]
-    if dataset is None:
-        return default_config
+    if len(user_config) == 0:
+        if dataset is None:
+            return default_config
+        else:
+            return default_config[dataset]
 
 
 def get_distance(coord0, coord1):

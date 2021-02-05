@@ -123,11 +123,11 @@ class TestConfigLoader(object):
         with pytest.raises(KeyError):
             assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
 
-    def test_existing_config_file_different_parameters(self):
+    def  test_existing_config_file_different_parameters(self):
         """
         on a user defined mss_settings_json without a defined num_labels this test should return its default value
         """
-        create_mss_settings_file('{"num_interpolation_points": 201 }')
+        create_mss_settings_file('{"num_interpolation_points": 20 }')
         if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             pytest.skip('undefined test mss_settings.json')
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
@@ -138,6 +138,10 @@ class TestConfigLoader(object):
         assert data["num_labels"] == 10
         num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
+        num_interpolation_points = utils.config_loader(config_file=config_file, dataset="num_interpolation_points")
+        assert num_interpolation_points == 20
+        data = utils.config_loader(config_file=config_file)
+        assert data["num_interpolation_points"] == 20
         with pytest.raises(KeyError):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
