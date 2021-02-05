@@ -61,7 +61,7 @@ def identify_variable(ncfile, standard_names, check=False):
             return var_name, variable
     if check:
         raise IOError("cannot identify NetCDF variable "
-                      "specified by {}".format(standard_names))
+                      f"specified by {standard_names}")
     return None, None
 
 
@@ -116,7 +116,7 @@ def identify_vertical_axis(dataset):
     if len(result) == 0:
         return None, None, None, None, "sfc"
     if len(result) > 1:
-        raise IOError("Identified more than one vertical axis: {}".format(result))
+        raise IOError(f"Identified more than one vertical axis: {result}")
     return result[0]
 
 
@@ -255,7 +255,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # Check that each dimension has a coordinate dimension
         for dimName in masterDims:
             if dimName not in cdfm.variables:
-                raise IOError("dimension '{}' has no coordinate variable in master '{}'".format(dimName, master))
+                raise IOError(f"dimension '{dimName}' has no coordinate variable in master '{master}'")
 
         # Create the following:
         #   cdf       list of Dataset instances
@@ -270,7 +270,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
             cdfVar[vName] = v
             cdfOrigin[vName] = (master, cdfm)
         if len(cdfVar) == 0:
-            raise IOError("master dataset '{}' does not have any variable".format(master))
+            raise IOError(f"master dataset '{master}' does not have any variable")
 
         # Open each remaining file in read-only mode.
         # Make sure each file defines the same record variables as the master
@@ -282,18 +282,18 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                 # (..except those that shall not be tested..)
                 if dimName not in skip_dim_check:
                     if dimName not in masterDims:
-                        raise IOError("dimension '{}' not defined in master '{}'".format(dimName, master))
+                        raise IOError(f"dimension '{dimName}' not defined in master '{master}'")
                     if dimName not in part.variables:
-                        raise IOError("dimension '{}' has no coordinate variable in file '{}'".format(dimName, f))
+                        raise IOError(f"dimension '{dimName}' has no coordinate variable in file '{f}'")
                     if len(part.dimensions[dimName]) != len(cdfm.dimensions[dimName]) or \
                             (part.variables[dimName][:] != cdfm.variables[dimName][:]).any():
-                        raise IOError("dimension '{}' differs in master '{}' and "
-                                      "file '{}'".format(dimName, master, f))
+                        raise IOError(f"dimension '{dimName}' differs in master '{master}' and "
+                                      f"file '{f}'")
 
             if require_dim_num:
                 if len(part.dimensions) != len(masterDims):
                     raise IOError("number of dimensions not consistent in master "
-                                  "'{}' and '{}'".format(master, f))
+                                  f"'{master}' and '{f}'")
 
             for vName, v in part.variables.items():
                 # Exclude dimension variables.
