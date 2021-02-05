@@ -86,6 +86,31 @@ class FatalUserError(Exception):
         logging.debug("%s", error_string)
 
 
+def read_config_file(config_file=None):
+    """
+    reads a config file
+
+    Args:
+        config_file: name of config file
+
+    Returns: a dictionary
+    """
+    user_config = {}
+    if config_file is not None:
+        _dirname, _name = os.path.split(config_file)
+        _fs = open_fs(_dirname)
+        try:
+            with _fs.open(_name, 'r') as source:
+                user_config = json.load(source)
+        except errors.ResourceNotFound:
+            error_message = f"MSS config File '{config_file}' not found"
+            raise FatalUserError(error_message)
+        except ValueError as ex:
+            error_message = f"MSS config File '{config_file}' has a syntax error:\n\n'{ex}'"
+            raise FatalUserError(error_message)
+    return user_config
+
+
 def config_loader(config_file=None, dataset=None):
     """
     Function for loading json config data
@@ -94,7 +119,7 @@ def config_loader(config_file=None, dataset=None):
         config_file: json file, parameters for initializing mss,
         dataset: section to pull from json file
 
-    Returns: a dictionary
+    Returns: a the dataset value or the config as dictionary
 
     """
     default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
@@ -104,28 +129,18 @@ def config_loader(config_file=None, dataset=None):
         raise KeyError(f"requested dataset '{dataset}' not in defaults or config_file")
     if config_file is None and dataset is not None:
         return default_config[dataset]
-    if config_file is not None:
-        _dirname, _name = os.path.split(config_file)
-        _fs = open_fs(_dirname)
-        try:
-            with _fs.open(_name, 'r') as source:
-                data = json.load(source)
-        except errors.ResourceNotFound:
-            error_message = f"MSS config File '{config_file}' not found"
-            raise FatalUserError(error_message)
-        except ValueError as ex:
-            error_message = f"MSS config File '{config_file}' has a syntax error:\n\n'{ex}'"
-            raise FatalUserError(error_message)
-        if len(data) == 0 and dataset is None:
-            return default_config
-        if len(data) == 0 and dataset is not None:
-            return default_config[dataset]
-        if dataset in data:
-            return data[dataset]
-        if dataset is not None and dataset not in data:
-            return default_config[dataset]
-        if dataset is None:
-            return default_config
+    user_config = read_config_file(config_file)
+    if len(user_config) == 0 and dataset is None:
+        return default_config
+    if len(user_config) == 0 and dataset is not None:
+        return default_config[dataset]
+    if dataset in user_config:
+        return user_config[dataset]
+    if dataset is not None and dataset not in user_config:
+        return default_config[dataset]
+    if dataset is None:
+        return default_config
+
 
 def get_distance(coord0, coord1):
     """
