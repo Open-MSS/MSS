@@ -47,6 +47,15 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
         self.editor = QtWidgets.QPlainTextEdit()
 
+        # Load mss_settings.json (if already exists)
+        self.mss_path = fs.path.join(MSS_CONFIG_PATH, "mss_settings" + ".json")
+        if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            file_name = fs.path.basename(self.mss_path)
+            with fs.open_fs(fs.path.dirname(self.mss_path)) as file_dir:
+                self.file_content = file_dir.readtext(file_name)
+                self.editor.setPlainText(self.file_content)
+                self.update_title()
+
         # Setup the QTextEdit editor configuration
         fixedfont = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
         fixedfont.setPointSize(12)
@@ -207,4 +216,13 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.editor.setLineWrapMode(1 if self.editor.lineWrapMode() == 0 else 0)
 
     def closeEvent(self, event):
-        self.dialog_critical("If you changed the mss_settings.json please restart the gui")
+        ret = QtWidgets.QMessageBox.critical(
+            self, self.tr("Save changes to mss_settings.json?"),
+            self.tr("If you changed the mss_settings.json please restart the gui"),
+            QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Ignore, QtWidgets.QMessageBox.Save)
+
+        if ret == QtWidgets.QMessageBox.Save:
+            self.file_save()
+            event.accept()
+        else:
+            event.accept()

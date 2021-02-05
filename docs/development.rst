@@ -80,7 +80,7 @@ Setup demodata
 
 :ref:`demodata` is provided by executing::
 
-   $(mssdev) python mslib/mswms/demodata.py --create
+   $(mssdev) python mslib/mswms/demodata.py --seed
 
 To use this data add the mss_wms_settings.py in your python path::
 
