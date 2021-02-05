@@ -108,8 +108,13 @@ class MissionSupportSystemDefaultConfig(object):
         "http://localhost:8083",
     ]
 
+    # mail address to sign in
     MSCOLAB_mailid = ""
+
+    # password to sign in
     MSCOLAB_password = ""
+
+    # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")]
     MSC_login = {}
 
     # timeout of Url request
@@ -117,6 +122,7 @@ class MissionSupportSystemDefaultConfig(object):
 
     WMS_preload = []
 
+    # dictionary of WMS servers {"http://www.your-wms-server.de" : ("youruser", "yourpassword")]
     WMS_login = {}
 
     # WMS image cache settings:
@@ -124,6 +130,7 @@ class MissionSupportSystemDefaultConfig(object):
 
     # Maximum size of the cache in bytes.
     wms_cache_max_size_bytes = 20 * 1024 * 1024
+
     # Maximum age of a cached file in seconds.
     wms_cache_max_age_seconds = 5 * 86400
 
@@ -175,6 +182,8 @@ class MissionSupportSystemDefaultConfig(object):
     # mss dir
     mss_dir = "~/mss"
 
-
+    # dictionary for export plugins, e.g.  {"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"] }
     export_plugins = {}
+
+    # dictionary for import plugins, e.g. { "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"] }
     import_plugins = {}
