@@ -244,12 +244,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 if pdlg.wasCanceled():
                     break
 
-                # Take the default version of the server, or 1.1.1 if not supported
-                version = wms_control.determine_wms_version(request.content)
-                if not version:
-                    version = "1.1.1"
-
-                wms = wms_control.MSSWebMapService(request.url, version=version,
+                wms = wms_control.MSSWebMapService(request.url, version=None,
                                                    username=username, password=password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
                 logging.info("Stored WMS info for '%s'", wms.url)

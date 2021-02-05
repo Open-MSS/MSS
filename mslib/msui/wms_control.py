@@ -44,7 +44,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import mslib.ogcwms
 import owslib.util
-from owslib.map.common import WMSCapabilitiesReader
 from owslib.crs import axisorder_yx
 import PIL.Image
 
@@ -64,20 +63,6 @@ def add_wms_urls(combo_box, url_list):
     combo_box_urls = [combo_box.itemText(_i) for _i in range(combo_box.count())]
     for url in (_url for _url in url_list if _url not in combo_box_urls):
         combo_box.addItem(url)
-
-
-def determine_wms_version(content):
-    """
-    Parses the version out of a GetCapabilities response
-    If parsing causes an error, return None for further investigation
-    """
-    try:
-        version = WMSCapabilitiesReader().readString(content).attrib["version"]
-        if version not in ["1.1.1", "1.3.0"]:
-            version = "1.1.1"
-        return version
-    except Exception as ex:
-        return None
 
 
 class MSSWebMapService(mslib.ogcwms.WebMapService):
@@ -577,12 +562,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             str(base_url)  # to provoke early Unicode Error
             while wms is None:
                 try:
-                    # Version could not be detected without authentication
-                    if not version:
-                        response = openURL(base_url, "service=WMS&request=GetCapabilities",
-                                          username=username, password=password)
-                        version = determine_wms_version(response.read())
-
                     wms = MSSWebMapService(base_url, version=version,
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
@@ -687,12 +666,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # url shortener url translated
             url = request.url
 
-            # Take the default version of the server, 1.1.1 if not supported, None to determine on initialise_wms
-            version = determine_wms_version(request.content)
-
-            url = url.replace('?service=WMS&request=GetCapabilities', '')
+            url = url.replace("?service=WMS", "").replace("&service=WMS", "") \
+                     .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
             logging.debug("requesting capabilities from %s", url)
-            wms = self.initialise_wms(url, version)
+            wms = self.initialise_wms(url, None)
             if wms is not None:
 
                 # update the combo box, if entry requires change/insertion

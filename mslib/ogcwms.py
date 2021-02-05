@@ -171,13 +171,11 @@ class WebMapService(wms111.WebMapService_1_1_1):
     Implements IWebMapService.
     """
 
-    def __init__(self, url, version='1.3.0', xml=None, username=None, password=None,
+    def __init__(self, url, version=None, xml=None, username=None, password=None,
                  parse_remote_metadata=False, headers=None,
                  timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
                  auth=None):
         """Initialize."""
-        self.WMS_NAMESPACE = "{http://www.opengis.net/wms}" if version == "1.3.0" else ""
-        self.OGC_NAMESPACE = "{http://www.opengis.net/ogc}" if version == "1.3.0" else ""
 
         if auth:
             if username:
@@ -201,6 +199,14 @@ class WebMapService(wms111.WebMapService_1_1_1):
             self._capabilities = reader.read(self.url, timeout=self.timeout)
 
         self.request = reader.request
+        if not self.version:
+            self.version = self._capabilities.attrib["version"]
+            if self.version not in ["1.1.1", "1.3.0"]:
+                self.version = "1.1.1"
+            reader.version = self.version
+
+        self.WMS_NAMESPACE = "{http://www.opengis.net/wms}" if self.version == "1.3.0" else ""
+        self.OGC_NAMESPACE = "{http://www.opengis.net/ogc}" if self.version == "1.3.0" else ""
 
         # avoid building capabilities metadata if the
         # response is a ServiceExceptionReport
@@ -354,6 +360,9 @@ class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
         version, and request parameters
         """
         getcaprequest = self.capabilities_url(service_url)
+
+        # Don't specify a version if it is to be determined
+        getcaprequest = getcaprequest.replace("&version=None", "").replace("?version=None", "")
 
         proxies = config_loader(dataset="proxies", default=mss_default.proxies)
 
