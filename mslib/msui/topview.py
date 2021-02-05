@@ -224,7 +224,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
     def update_predefined_maps(self, extra=None):
         self.cbChangeMapSection.clear()
         predefined_map_sections = config_loader(
-            dataset="predefined_map_sections", default=mss_default.predefined_map_sections)
+            dataset="predefined_map_sections")
         self.cbChangeMapSection.addItems(sorted(predefined_map_sections.keys()))
         if extra is not None and len(extra) > 0:
             self.cbChangeMapSection.insertSeparator(self.cbChangeMapSection.count())
@@ -239,9 +239,9 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
                 # Create a new WMSDockWidget.
                 title = "Web Map Service (Top View)"
                 widget = wc.HSecWMSControlWidget(
-                    default_WMS=config_loader(dataset="default_WMS", default=mss_default.default_WMS),
+                    default_WMS=config_loader(dataset="default_WMS"),
                     view=self.mpl.canvas,
-                    wms_cache=config_loader(dataset="wms_cache", default=mss_default.wms_cache))
+                    wms_cache=config_loader(dataset="wms_cache"))
                 widget.signal_disable_cbs.connect(self.disable_cbs)
                 widget.signal_enable_cbs.connect(self.enable_cbs)
             elif index == SATELLITE:
@@ -273,7 +273,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Get the initial projection parameters from the tables in mss_settings.
         current_map_key = self.cbChangeMapSection.currentText()
         predefined_map_sections = config_loader(
-            dataset="predefined_map_sections", default=mss_default.predefined_map_sections)
+            dataset="predefined_map_sections")
         current_map = predefined_map_sections.get(
             current_map_key, {"CRS": current_map_key, "map": {}})
         proj_params = get_projection_params(current_map["CRS"])

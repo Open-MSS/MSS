@@ -63,12 +63,12 @@ def get_existing_directory_qt(*args):
 
 
 def get_pickertype(tag, typ):
-    default = config_loader(dataset="filepicker_default", default=mss_default.filepicker_default)
+    default = config_loader(dataset="filepicker_default")
     if typ is None:
         if tag is None:
             typ = default
         else:
-            typ = config_loader(dataset=tag, default=default)
+            typ = config_loader(dataset=tag)
     return typ
 
 

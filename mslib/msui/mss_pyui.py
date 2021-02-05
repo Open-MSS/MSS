@@ -170,7 +170,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Reference to the flight track that is currently displayed in the
         # views.
         self.active_flight_track = None
-        self.last_save_directory = config_loader(dataset="data_dir", default=mss_default.data_dir)
+        self.last_save_directory = config_loader(dataset="data_dir")
         self.mscolab_window = None
         self.config_editor = None
 
@@ -206,13 +206,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Views.
         self.listViews.itemActivated.connect(self.activate_sub_window)
 
-        self.add_import_filter("CSV", "csv", load_from_csv, pickertag="filepicker_flightrack")
-        self.add_export_filter("CSV", "csv", save_to_csv, pickertag="filepicker_flightrack")
+        self.add_import_filter("CSV", "csv", load_from_csv, pickertag="filepicker_default")
+        self.add_export_filter("CSV", "csv", save_to_csv, pickertag="filepicker_default")
 
         self._imported_plugins, self._exported_plugins = {}, {}
         self.add_plugins()
 
-        preload_urls = config_loader(dataset="WMS_preload", default=[])
+        preload_urls = config_loader(dataset="WMS_preload")
         self.preload_wms(preload_urls)
 
         # Status Bar
@@ -234,7 +234,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             pdlg.setValue(i)
             QtWidgets.QApplication.processEvents()
             # initialize login cache from config file, but do not overwrite existing keys
-            for key, value in config_loader(dataset="WMS_login", default={}).items():
+            for key, value in config_loader(dataset="WMS_login").items():
                 if key not in constants.WMS_LOGIN_CACHE:
                     constants.WMS_LOGIN_CACHE[key] = value
             username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
@@ -256,9 +256,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
     def add_plugins(self):
         picker_default = config_loader(
-            dataset="filepicker_default", default=mss_default.filepicker_default)
+            dataset="filepicker_default")
 
-        self._imported_plugins = config_loader(dataset="import_plugins", default={})
+        self._imported_plugins = config_loader(dataset="import_plugins")
         for name in self._imported_plugins:
             extension, module, function = self._imported_plugins[name][:3]
             picker_type = picker_default
@@ -285,7 +285,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                         self._imported_plugins, type(ex), ex)))
                 continue
 
-        self._exported_plugins = config_loader(dataset="export_plugins", default={})
+        self._exported_plugins = config_loader(dataset="export_plugins")
         for name in self._exported_plugins:
             extension, module, function = self._exported_plugins[name][:3]
             picker_type = picker_default
@@ -425,7 +425,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
         """
-        layout = config_loader(dataset="layout", default=mss_default.layout)
+        layout = config_loader(dataset="layout")
         view_window = None
         if self.sender() == self.actionTopView:
             # Top view.
@@ -495,9 +495,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         if template is None:
             template = []
-            waypoints = config_loader(dataset="new_flighttrack_template", default=mss_default.new_flighttrack_template)
-            default_flightlevel = config_loader(dataset="new_flighttrack_flightlevel",
-                                                default=mss_default.new_flighttrack_flightlevel)
+            waypoints = config_loader(dataset="new_flighttrack_template")
+            default_flightlevel = config_loader(dataset="new_flighttrack_flightlevel")
             for wp in waypoints:
                 template.append(ft.Waypoint(flightlevel=default_flightlevel, location=wp))
             if len(template) < 2:
@@ -539,7 +538,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         filename = get_open_filename(
             self, "Open Flight Track", self.last_save_directory, "Flight Track Files (*.ftml)",
-            pickertag="filepicker_flightrack")
+            pickertag="filepicker_default")
         if filename is not None:
             try:
                 if filename.endswith('.ftml'):
@@ -603,7 +602,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         filename = get_save_filename(
-            self, "Save Flight Track", default_filename, "Flight Track (*.ftml)", pickertag="filepicker_flightrack")
+            self, "Save Flight Track", default_filename, "Flight Track (*.ftml)", pickertag="filepicker_default")
         logging.debug("filename : '%s'", filename)
         if filename:
             self.last_save_directory = fs.path.dirname(filename)

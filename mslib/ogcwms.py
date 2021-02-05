@@ -77,7 +77,7 @@ from mslib.utils import config_loader
 
 def openURL(url_base, data=None, method='Get', cookies=None,
             username=None, password=None,
-            timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
+            timeout=config_loader(dataset="WMS_request_timeout"),
             headers=None, proxies=None):
     # (mss) added proxies
     # (mss) timeout default of 30secs set by the config_loader
@@ -329,7 +329,7 @@ class WebMapService(object):
             request['time'] = str(time)
 
         data = urlencode(request)
-        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+        proxies = config_loader(dataset="proxies")
         u = openURL(base_url, data, method, username=self.username, password=self.password, proxies=proxies)
 
         # check for service exceptions, and return
@@ -602,7 +602,7 @@ class WMSCapabilitiesReader(object):
         """
         getcaprequest = self.capabilities_url(service_url)
 
-        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+        proxies = config_loader(dataset="proxies")
 
         # now split it up again to use the generic openURL function...
         spliturl = getcaprequest.split('?')

@@ -78,16 +78,13 @@ class TestConfigLoader(object):
         data = utils.config_loader(dataset="num_labels")
         assert data == 10
         # defined value and not a default one
-        data = utils.config_loader(dataset="num_labels", default=5)
+        data = utils.config_loader(dataset="num_labels")
         assert data == 10
-        # default for non existing entry
-        data = utils.config_loader(dataset="foobar", default=5)
-        assert data == 5
 
     def test_default_config_wrong_file(self):
         # return default if no access to config file given
-        data = utils.config_loader(config_file="foo.json", default={"foo": "123"})
-        assert data == {"foo": "123"}
+        with pytest.raises(utils.FatalUserError):
+            data = utils.config_loader(config_file="foo.json")
 
     def test_sample_config_file(self):
         utils_path = os.path.dirname(os.path.abspath(utils.__file__))
@@ -97,8 +94,8 @@ class TestConfigLoader(object):
         with pytest.raises(KeyError):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9)
-        with pytest.raises(IOError):
+            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+        with pytest.raises(utils.FatalUserError):
             config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss',
                                        'not_existing_mss_settings.json.sample')
             _ = utils.config_loader(config_file=config_file)
@@ -119,12 +116,12 @@ class TestConfigLoader(object):
         num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         # this overwrites the builtin default value
-        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels", default=11)
+        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         with pytest.raises(KeyError):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9)
+            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
 
     def test_existing_config_file_different_parameters(self):
         """
@@ -144,7 +141,7 @@ class TestConfigLoader(object):
         with pytest.raises(KeyError):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9)
+            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
 
     def test_existing_config_file_defined_parameters(self):
         """
@@ -160,12 +157,12 @@ class TestConfigLoader(object):
         num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         # this overwrites the given value
-        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels", default=11)
+        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         with pytest.raises(KeyError):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED", default=9)
+            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
 
 class TestGetDistance(object):
     """

@@ -108,8 +108,16 @@ class MissionSupportSystemDefaultConfig(object):
         "http://localhost:8083",
     ]
 
+    MSCOLAB_mailid = ""
+    MSCOLAB_password = ""
+    MSC_login = {}
+
     # timeout of Url request
     WMS_request_timeout = 30
+
+    WMS_preload = []
+
+    WMS_login = {}
 
     # WMS image cache settings:
     wms_cache = os.path.join(tempfile.gettempdir(), "msui_wms_cache")
@@ -166,3 +174,7 @@ class MissionSupportSystemDefaultConfig(object):
     # ToDo refactor to rename this to data_dir/mss_data_dir
     # mss dir
     mss_dir = "~/mss"
+
+
+    export_plugins = {}
+    import_plugins = {}
