@@ -289,12 +289,10 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
                 # Open a WMS control widget.
                 title = "Web Service Plot Control"
                 widget = wms.VSecWMSControlWidget(
-                    default_WMS=config_loader(dataset="default_VSEC_WMS",
-                                              default=mss_default.default_VSEC_WMS),
+                    default_WMS=config_loader(dataset="default_VSEC_WMS"),
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
-                    wms_cache=config_loader(dataset="wms_cache",
-                                            default=mss_default.wms_cache))
+                    wms_cache=config_loader(dataset="wms_cache"))
                 self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
             else:
                 raise IndexError("invalid control index")
