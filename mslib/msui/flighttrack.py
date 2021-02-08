@@ -97,7 +97,7 @@ class Waypoint(object):
 
     def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
         self.location = location
-        locations = config_loader(dataset='locations', default=mss_default.locations)
+        locations = config_loader(dataset='locations')
         if location in locations:
             self.lat, self.lon = locations[location]
         else:
@@ -661,7 +661,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         """
         if index.column() == LOCATION:
             combobox = QtWidgets.QComboBox(parent)
-            locations = config_loader(dataset='locations', default=mss_default.locations)
+            locations = config_loader(dataset='locations')
             adds = list(locations.keys())
             if self.parent() is not None:
                 for loc in [wp.location for wp in self.parent().waypoints_model.all_waypoint_data() if
@@ -692,7 +692,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         """
         if index.column() == LOCATION:
             loc = editor.currentText()
-            locations = config_loader(dataset='locations', default=mss_default.locations)
+            locations = config_loader(dataset='locations')
             if loc in locations:
                 lat, lon = locations[loc]
                 # Don't update distances and flight performance twice, hence

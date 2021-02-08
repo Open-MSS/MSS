@@ -39,7 +39,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
     def __init__(self, token, p_id, user, project_name, projects, conn, parent=None,
-                 mscolab_server_url=config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)):
+                 mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
         """
         token: access token
         p_id: project id

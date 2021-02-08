@@ -51,7 +51,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.utils import convert_pressure_to_vertical_axis_measure
 
 PIL_IMAGE_ORIGIN = "upper"
-LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
+LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
 
 matplotlib.rcParams['savefig.directory'] = LAST_SAVE_DIRECTORY
 
@@ -168,10 +168,7 @@ save_figure_original = NavigationToolbar2QT.save_figure
 
 
 def save_figure(self, *args):
-    picker_default = config_loader(dataset="filepicker_default",
-                                   default=mss_default.filepicker_default)
-    picker_type = config_loader(dataset="filepicker_matplotlib",
-                                default=picker_default)
+    picker_type = config_loader(dataset="filepicker_default")
     if picker_type in ["default", "qt"]:
         save_figure_original(self, *args)
     elif picker_type == "fs":
@@ -450,7 +447,7 @@ class MplSideViewCanvas(MplCanvas):
         model -- WaypointsTableModel defining the vertical section.
         """
         if numlabels is None:
-            numlabels = config_loader(dataset='num_labels', default=mss_default.num_labels)
+            numlabels = config_loader(dataset='num_labels')
         super(MplSideViewCanvas, self).__init__()
 
         # Default settings.
@@ -503,8 +500,7 @@ class MplSideViewCanvas(MplCanvas):
             # itself to the change() signals of the flight track data model.
             self.waypoints_interactor = mpl_pi.VPathInteractor(
                 self.ax, self.waypoints_model,
-                numintpoints=config_loader(dataset="num_interpolation_points",
-                                           default=mss_default.num_interpolation_points),
+                numintpoints=config_loader(dataset="num_interpolation_points"),
                 redraw_xaxis=self.redraw_xaxis, clear_figure=self.clear_figure
             )
 

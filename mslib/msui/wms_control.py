@@ -195,7 +195,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
-        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+        proxies = config_loader(dataset="proxies")
 
         u = openURL(base_url, data, method,
                     username=self.username, password=self.password, proxies=proxies)
@@ -547,7 +547,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         wms = None
         # initialize login cache fomr config file, but do not overwrite existing keys
-        for key, value in config_loader(dataset="WMS_login", default={}).items():
+        for key, value in config_loader(dataset="WMS_login").items():
             if key not in constants.WMS_LOGIN_CACHE:
                 constants.WMS_LOGIN_CACHE[key] = value
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
@@ -1377,7 +1377,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # If caching is enabled, get the URL and check the image cache
             # directory for the suitable image file.
             if self.caching_enabled():
-                prefetch_config = config_loader(dataset="wms_prefetch", default=mss_default.wms_prefetch)
+                prefetch_config = config_loader(dataset="wms_prefetch")
                 prefetch_entries = ["validtime_fwd", "validtime_bck", "level_up", "level_down"]
                 for _x in prefetch_entries:
                     if _x in prefetch_config:
@@ -1497,10 +1497,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         try:
             for f, fsize, fage in files:
                 cum_size_bytes += fsize
-                if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes",
-                                                   default=mss_default.wms_cache_max_size_bytes) or
-                        fage > config_loader(dataset="wms_cache_max_age_seconds",
-                                             default=mss_default.wms_cache_max_age_seconds)):
+                if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes") or
+                        fage > config_loader(dataset="wms_cache_max_age_seconds")):
                     os.remove(f)
                     removed_files += 1
         except (IOError, OSError) as ex:
