@@ -73,7 +73,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
         tick_index_step = max(1, len(self.lat_inds) // int(self.numlabels))
         ax.set_xticks(self.lat_inds[::tick_index_step])
-        ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
+        ax.set_xticklabels([f"{d[0]:2.1f}, {d[1]:2.1f}"
                             for d in zip(self.lats[::tick_index_step],
                                          self.lons[::tick_index_step])],
                            rotation=25, fontsize=10, horizontalalignment='right')
@@ -96,8 +96,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
         minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
-        labels = ["{}".format(int(x / 100.)) if (x / 100.) - int(x / 100.) == 0
-                  else "{}".format(float(x / 100.))
+        labels = [f"{int(x / 100.)}" if (x / 100.) - int(x / 100.) == 0
+                  else f"{float(x / 100.)}"
                   for x in major_ticks]
         if len(labels) > 20:
             labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
@@ -115,13 +115,11 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax.grid(b=True)
 
         # Plot title (either in image axes or above).
-        titlestring = "{} [{:.0f}..{:.0f} hPa]\nValid: {}".format(
-            titlestring, self.p_bot / 100., self.p_top / 100.,
-            self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+        titlestring = f"{titlestring} [{self.p_bot / 100.:.0f}..{self.p_top / 100.:.0f} hPa]" \
+                      f"\nValid: {self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC')}"
         if self.uses_inittime_dimension():
-            titlestring += " (step {:.0f} hrs from {})".format(
-                (self.valid_time - self.init_time).total_seconds() / 3600,
-                self.init_time.strftime("%a %Y-%m-%d %H:%M UTC"))
+            titlestring += f" (step {(self.valid_time - self.init_time).total_seconds() / 3600:.0f} " \
+                           f"hrs from {self.init_time.strftime('%a %Y-%m-%d %H:%M UTC')})"
 
     @abstractmethod
     def _plot_style(self):
@@ -141,7 +139,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.data_units = self.driver.data_units.copy()
         for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
-                raise KeyError("required data field '{}' not found".format(dataitem))
+                raise KeyError(f"required data field '{dataitem}' not found")
             origunit = self.driver.data_units[dataitem]
             if dataunit is not None:
                 data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
@@ -265,7 +263,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             # Longitude data.
             node = xmldoc.createElement("Longitude")
-            node.setAttribute("num_waypoints", "{}".format(len(self.lons)))
+            node.setAttribute("num_waypoints", f"{len(self.lons)}")
 
             data_str = ""
             for value in self.lons:
@@ -277,7 +275,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             # Latitude data.
             node = xmldoc.createElement("Latitude")
-            node.setAttribute("num_waypoints", "{}".format(len(self.lats)))
+            node.setAttribute("num_waypoints", f"{len(self.lats)}")
 
             data_str = ""
             for value in self.lats:
@@ -293,8 +291,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             for var in self.data:
                 node = xmldoc.createElement(var)
                 data_shape = self.data[var].shape
-                node.setAttribute("num_levels", "{}".format(data_shape[0]))
-                node.setAttribute("num_waypoints", "{}".format(data_shape[1]))
+                node.setAttribute("num_levels", f"{data_shape[0]}")
+                node.setAttribute("num_waypoints", f"{data_shape[1]}")
 
                 data_str = ""
                 for data_row in self.data[var]:
