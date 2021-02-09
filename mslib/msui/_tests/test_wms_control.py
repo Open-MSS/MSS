@@ -255,6 +255,41 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_server_multilayers_creation(self, mockbox):
+        """
+        assert that multilayers get created properly
+        """
+        self.query_server("http://127.0.0.1:8082")
+        server = self.window.listLayers.findItems("http://127.0.0.1:8082/", QtCore.Qt.MatchFixedString)[0]
+        assert server is not None
+        assert "header" in self.window.multilayers.layers["http://127.0.0.1:8082/"]
+        assert "wms" in self.window.multilayers.layers["http://127.0.0.1:8082/"]
+
+        for i in range(0, server.childCount()):
+            layer_widget = server.child(i)
+            assert layer_widget.checkState(0) == 0
+
+        server.setExpanded(True)
+        server.child(0).setCheckState(0, QtCore.Qt.Checked)
+        server.child(2).setCheckState(0, QtCore.Qt.Checked)
+        previous_layer = self.window.lLayerName.text()
+        self.window.multilayers.multilayer_clicked(server.child(0))
+        assert previous_layer != self.window.lLayerName.text()
+        assert self.window.listLayers.itemWidget(server.child(0), 1) is not None
+        assert self.window.listLayers.itemWidget(server.child(2), 1) is not None
+        assert self.window.listLayers.itemWidget(server.child(1), 1) is None
+        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(1000)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(6000)
+
+        assert mockbox.critical.call_count == 0
+        assert self.view.draw_image.call_count == 1
+        assert self.view.draw_legend.call_count == 1
+        assert self.view.draw_metadata.call_count == 1
+
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     def setup(self):

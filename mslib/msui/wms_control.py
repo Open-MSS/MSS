@@ -53,6 +53,7 @@ from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings
 from mslib.ogcwms import openURL, removeXMLNamespace
+from mslib.msui.multilayers import Multilayers
 
 
 WMS_SERVICE_CACHE = {}
@@ -265,9 +266,10 @@ class WMSMapFetcher(QtCore.QObject):
 
     def __init__(self, wms, wms_cache, parent=None):
         super(WMSMapFetcher, self).__init__(parent)
-        self.wms = wms
         self.wms_cache = wms_cache
         self.maps = []
+        self.map_imgs = []
+        self.legend_imgs = []
         self.process.connect(self.process_map, QtCore.Qt.QueuedConnection)
         self.long_request = False
 
@@ -288,25 +290,30 @@ class WMSMapFetcher(QtCore.QObject):
         """
         if len(self.maps) == 0:
             return
-        kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
+        layer, kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
         self.maps = self.maps[1:]
         self.long_request = False
         try:
-            map_img = self.fetch_map(kwargs, use_cache, md5_filename)
-            legend_img = self.fetch_legend(use_cache=use_cache, **legend_kwargs)
+            self.map_imgs.append(self.fetch_map(layer, kwargs, use_cache, md5_filename))
+            self.legend_imgs.append(self.fetch_legend(use_cache=use_cache, **legend_kwargs))
         except Exception as ex:
             logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
             # emit finished so progress dialog will be closed
             self.finished.emit(None, None, None, None, None, None, md5_filename)
             self.exception.emit(ex)
+            self.map_imgs = []
+            self.legend_imgs = []
         else:
             if len(self.maps) > 0:
                 self.process.emit()
-            self.finished.emit(
-                map_img, legend_img, kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"], kwargs["time"],
-                md5_filename)
+            else:
+                self.finished.emit(
+                    self.map_imgs, self.legend_imgs, kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"],
+                    kwargs["time"], md5_filename)
+                self.map_imgs = []
+                self.legend_imgs = []
 
-    def fetch_map(self, kwargs, use_cache, md5_filename):
+    def fetch_map(self, layer, kwargs, use_cache, md5_filename):
         """
         Retrieves a WMS map from a server or reads it from a cache if allowed
         """
@@ -319,7 +326,7 @@ class WMSMapFetcher(QtCore.QObject):
         else:
             self.started_request.emit()
             self.long_request = True
-            urlobject = self.wms.getmap(**kwargs)
+            urlobject = layer.get_wms().getmap(**kwargs)
             image_io = io.BytesIO(urlobject.read())
             img = PIL.Image.open(image_io)
             # Check if the image is stored as indexed palette
@@ -419,8 +426,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.save_level = None
 
         # Initialise GUI elements that control WMS parameters.
-        self.cbLayer.clear()
-        self.cbLayer.setEnabled(False)
         self.cbStyle.clear()
         self.cbStyle.setEnabled(False)
         self.cbLevel.clear()
@@ -444,6 +449,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pbViewCapabilities.setEnabled(False)
 
         self.cbTransparent.setChecked(False)
+
+        # Multilayering things
+        self.multilayers = Multilayers(self)
+        self.allow_auto_update = True
 
         # Check for WMS image cache directory, create if necessary.
         if wms_cache is not None:
@@ -473,19 +482,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         self.btClearMap.clicked.connect(self.clear_map)
 
-        self.cbLayer.currentIndexChanged.connect(self.layer_changed)
-        self.cbStyle.currentIndexChanged.connect(self.style_changed)
         self.cbLevel.currentIndexChanged.connect(self.level_changed)
-
-        # Connecting both activated() and currentIndexChanged() signals leads
-        # to **TimeChanged() being called twice when the user selects a new
-        # item in the combobox. However, currentIndexChanged alone doesn't
-        # trigger the event when the user selects the currently active item
-        # (e.g. to confirm the time). activated() doesn't trigger the event
-        # if the index has been changed programmatically (e.g. through the
-        # back/forward buttons).
-        self.cbInitTime.activated.connect(self.init_time_changed)
-        self.cbValidTime.activated.connect(self.valid_time_changed)
+        self.cbInitTime.currentIndexChanged.connect(self.init_time_changed)
+        self.cbValidTime.currentIndexChanged.connect(self.valid_time_changed)
+        self.cbStyle.currentIndexChanged.connect(self.style_changed)
+        self.multilayers.needs_repopulate.connect(self.populate_ui)
 
         self.tbInitTime_back.clicked.connect(self.init_time_back_click)
         self.tbInitTime_fwd.clicked.connect(self.init_time_fwd_click)
@@ -605,13 +606,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.wms = None
             self.btGetMap.setEnabled(False)
 
-            self.cbLayer.clear()
             self.cbLevel.clear()
             self.cbStyle.clear()
             self.cbInitTime.clear()
             self.cbValidTime.clear()
 
-            self.cbLayer.setEnabled(False)
             self.cbStyle.setEnabled(False)
             self.enable_level_elements(False)
             self.enable_valid_time_elements(False)
@@ -696,15 +695,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Clear layer and style combo boxes. First disconnect the layerChanged
         # slot to avoid calls to this function.
         self.btGetMap.setEnabled(False)
-        self.cbLayer.currentIndexChanged.disconnect(self.layer_changed)
-        self.cbLayer.clear()
         self.cbStyle.clear()
         self.cbLevel.clear()
         self.cbStyle.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
 
-        self.cbLayer.setEnabled(False)
         self.cbStyle.setEnabled(False)
         self.enable_level_elements(False)
         self.enable_valid_time_elements(False)
@@ -725,10 +721,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
-        self.cbLayer.addItems(filtered_layers)
-        self.cbLayer.setEnabled(self.cbLayer.count() > 1)
         self.wms = wms
-        self.layer_changed(0)
+        for layer in filtered_layers:
+            self.multilayers.add_multilayer(layer, wms)
+        self.multilayers.filter_multilayers()
+        self.populate_ui()
         self.pbViewCapabilities.setEnabled(True)
 
         if self.prefetcher is not None:
@@ -762,7 +759,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.valid_time_changed()
 
         # Reconnect layerChanged.
-        self.cbLayer.currentIndexChanged.connect(self.layer_changed)
         if len(filtered_layers) > 0:
             self.btGetMap.setEnabled(True)
 
@@ -827,133 +823,46 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 logging.error("Can't understand time string '%s'. Please check the implementation.", time_item)
         return times
 
-    def layer_changed(self, index):
-        """Slot that updates the <cbStyle> and <teLayerAbstract> GUI elements
-           when the user selects a new layer in <cbLayer>.
+    def populate_ui(self):
         """
-        layer = self.get_layer()
-        if not self.wms or layer == '':
-            # Do not execute this method if no WMS has been registered or no
-            # layer is available (layer will be an empty string then).
-            return
-        self.layerChangeInProgress = True  # Flag for autoUpdate()
-        layerobj = self.get_layer_object(layer)
-        styles = layerobj.styles
-        self.cbStyle.clear()
-        self.cbStyle.addItems(["{} | {}".format(s, styles[s]["title"]) for s in styles])
-        self.cbStyle.setEnabled(self.cbStyle.count() > 1)
-
-        abstract_text = layerobj.abstract if layerobj.abstract else ""
-        abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
-        self.teLayerAbstract.setText(abstract_text)
-
-        # Handle dimensions:
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        if self.cbLevel.isEnabled():
-            self.save_level = self.cbLevel.currentText()
-        save_init_time = self.dteInitTime.dateTime()
-        save_valid_time = self.dteValidTime.dateTime()
-
+        Adds the values of the current layer to the UI comboboxes
+        """
+        self.multilayers.save_data = False
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
+        self.cbStyle.clear()
 
-        # Gather dimensions and extents. Dimensions must be declared at one place only, extents may be
-        # overwritten by leafs.
-        dimensions, extents = {}, {}
-        self.allowed_crs = None
-        lobj = layerobj
-        while lobj is not None:
-            dimensions.update(lobj.dimensions)
-            for key in lobj.extents:
-                if key not in extents:
-                    extents[key] = lobj.extents[key]
-            if self.allowed_crs is None:
-                self.allowed_crs = getattr(lobj, "crsOptions", None)
-            lobj = lobj.parent
+        layer = self.multilayers.current_layer
+        self.lLayerName.setText(layer.text(0))
+        if layer.is_synced:
+            synced_layers = self.multilayers.get_active_layers(True)
+            if len(synced_layers) > 1:
+                self.lLayerName.setText(self.lLayerName.text() + f" (and {len(synced_layers) - 1} more)")
 
-        if self.allowed_crs is not None and \
-                self.parent() is not None and \
-                self.parent().parent() is not None:
-            logging.debug("Layer offers '%s' projections.", self.allowed_crs)
-            extra = [_code for _code in self.allowed_crs if _code.startswith("EPSG")]
-            extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
-            logging.debug("Selected '%s' for Combobox.", extra)
+        styles = layer.styles
+        levels, itimes, vtimes = layer.get_levels(), layer.get_itimes(), layer.get_vtimes()
 
-            self.parent().parent().update_predefined_maps(extra)
+        if levels:
+            self.cbLevel.addItems(levels)
+            self.cbLevel.setCurrentIndex(self.cbLevel.findText(layer.get_level()))
+        self.enable_level_elements(len(levels) > 0)
 
-        for key in [_x for _x in extents.keys() if _x not in dimensions]:
-            logging.error("extent '%s' not in dimensions!", key)
-            del extents[key]
+        if itimes:
+            self.cbInitTime.addItems(itimes)
+            self.cbInitTime.setCurrentIndex(self.cbInitTime.findText(layer.get_itime()))
+        self.enable_init_time_elements(len(itimes) > 0)
 
-        # ~~~~ A) Elevation. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        enable_elevation = False
-        if "elevation" in extents:
-            units = dimensions["elevation"]["units"]
-            elev_list = ["{} ({})".format(e.strip(), units) for e in
-                         extents["elevation"]["values"]]
-            self.cbLevel.addItems(elev_list)
-            if self.save_level in elev_list:
-                idx = elev_list.index(self.save_level)
-                self.cbLevel.setCurrentIndex(idx)
-            enable_elevation = True
+        if vtimes:
+            self.cbValidTime.addItems(vtimes)
+            self.cbValidTime.setCurrentIndex(self.cbValidTime.findText(layer.get_vtime()))
+        self.enable_valid_time_elements(len(vtimes) > 0)
 
-        # ~~~~ B) Initialisation time. ~~~~~~~~~~~~~~~~~~~~~~~~
-        try:
-            self.init_time_name = [x for x in ["init_time", "reference_time", "run"] if x in extents][0]
-            enable_init_time = True
-        except IndexError:
-            logging.debug("Index Error encountered due to FAILURE of initialisation.")
-            enable_init_time = False
+        if styles:
+            self.cbStyle.addItems(styles)
+            self.cbStyle.setCurrentIndex(self.cbStyle.findText(layer.style))
+        self.cbStyle.setEnabled(len(styles) > 0)
 
-        # Both time dimension and time extent tags were found. Try to determine the
-        # format of the date/time strings.
-        if enable_init_time:
-            self.allowed_init_times = self.parse_time_extent(
-                extents[self.init_time_name]["values"])
-            self.cbInitTime.addItems([_time.isoformat() + "Z" for _time in self.allowed_init_times])
-            if len(self.allowed_init_times) == 0:
-                msg = "cannot determine init time format."
-                logging.error(msg)
-                QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr("ERROR: {}".format(msg)))
-
-        # ~~~~ C) Valid/forecast time. ~~~~~~~~~~~~~~~~~~~~~~~~~
-        try:
-            self.valid_time_name = [x for x in ["time", "forecast"] if x in extents][0]
-            enable_valid_time = True
-        except IndexError:
-            logging.debug("Index Error Encountered due to invalid time.")
-            enable_valid_time = False
-
-        # TODO Relic from the past: Is this really necessary or even correct??
-        vtime_no_extent = False
-        if not enable_valid_time and "time" in dimensions:
-            self.valid_time_name = "time"
-            enable_valid_time = True
-            vtime_no_extent = True
-            self.allowed_valid_times = []
-
-        # Both time dimension and time extent tags were found. Try to determine the
-        # format of the date/time strings.
-        if enable_valid_time and not vtime_no_extent:
-            self.allowed_valid_times = self.parse_time_extent(
-                extents[self.valid_time_name]["values"])
-            self.cbValidTime.addItems(
-                [_time.isoformat() + "Z" for _time in self.allowed_valid_times])
-
-            if len(self.allowed_valid_times) == 0:
-                msg = "cannot determine valid time format."
-                logging.error(msg)
-                QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr("ERROR: {}".format(msg)))
-
-        self.enable_level_elements(enable_elevation)
-        self.enable_valid_time_elements(enable_valid_time)
-        self.enable_init_time_elements(enable_init_time)
-
-        # Check whether dimension strings can be interpreted. If not, disable
-        # the sync to the date/time elements.
         if not self.init_time_changed():
             self.disable_dteInitTime_elements()
         if not self.valid_time_changed():
@@ -962,19 +871,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.disable_cbInitTime_elements()
         if self.cbValidTime.count() == 0:
             self.disable_cbValidTime_elements()
-
-        # Try to restore previous time settings. Setting the date/time edits
-        # triggers a signal to calls check_(init/valid)_time(), however, the
-        # method is only called if the date actually changes (i.e. the layer
-        # has provided time values, these were inserted into the combobox,
-        # and via the combobox-signal the datetime edit was changed). This
-        # can lead to a strike through font if the new layer does not provide
-        # time values. Therefore the additional call to check_*_time().
-        self.dteInitTime.setDateTime(save_init_time)
-        self.check_init_time(save_init_time)
-        self.dteValidTime.setDateTime(save_valid_time)
-        self.check_valid_time(save_valid_time)
-        self.layerChangeInProgress = False
+        self.multilayers.save_data = True
 
     @staticmethod
     def secs_from_timestep(timestep_string):
@@ -1086,7 +983,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         performed (lock mechanism to prevent erroneous requests during
         a layer change).
         """
-        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress \
+                and self.allow_auto_update:
             self.btGetMap.click()
 
     def check_init_time(self, dt):
@@ -1099,7 +997,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         font = self.dteInitTime.font()
         pydt = dt.toPyDateTime()
-        init_time_available = pydt in self.allowed_init_times
+        init_time_available = pydt in self.multilayers.current_layer.allowed_init_times
         font.setStrikeOut(not init_time_available)
         self.dteInitTime.setFont(font)
         if init_time_available:
@@ -1111,8 +1009,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         valid_time_available = True
         pydt = dt.toPyDateTime()
-        if self.allowed_valid_times:
-            if pydt in self.allowed_valid_times:
+        if self.multilayers.current_layer.allowed_valid_times:
+            if pydt in self.multilayers.current_layer.allowed_valid_times:
                 index = self.cbValidTime.findText(pydt.isoformat() + "Z")
                 # setCurrentIndex also sets the date/time edit via signal.
                 self.cbValidTime.setCurrentIndex(index)
@@ -1132,6 +1030,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             init_time = parse_iso_datetime(init_time)
             if init_time is not None:
                 self.dteInitTime.setDateTime(init_time)
+
+        if self.multilayers.save_data:
+            self.multilayers.current_layer.set_itime(self.cbInitTime.currentText())
+
         self.auto_update()
         return init_time == "" or init_time is not None
 
@@ -1143,20 +1045,28 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             valid_time = parse_iso_datetime(valid_time)
             if valid_time is not None:
                 self.dteValidTime.setDateTime(valid_time)
+
+        if self.multilayers.save_data:
+            self.multilayers.current_layer.set_vtime(self.cbValidTime.currentText())
+
         self.auto_update()
         return valid_time == "" or valid_time is not None
 
     def level_changed(self):
+        if self.multilayers.save_data:
+            self.multilayers.current_layer.set_level(self.cbLevel.currentText())
         self.auto_update()
 
     def style_changed(self, index):
+        if self.multilayers.save_data:
+            self.multilayers.current_layer.style = self.cbStyle.currentText()
+
         self.auto_update()
 
     def enable_level_elements(self, enable):
         """Enable or disable the GUI elements allowing vertical elevation
            level control.
         """
-        self.cbLevelOn.setChecked(enable)
         self.cbLevel.setEnabled(enable and self.cbLevel.count() > 1)
         self.tbLevel_back.setEnabled(enable)
         self.tbLevel_fwd.setEnabled(enable)
@@ -1165,7 +1075,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """Enables or disables the GUI elements allowing initialisation time
            control.
         """
-        self.cbInitialisationOn.setChecked(enable)
         self.cbInitTime.setEnabled(enable)
         self.dteInitTime.setEnabled(enable)
         self.tbInitTime_back.setEnabled(enable)
@@ -1178,7 +1087,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """Enables or disables the GUI elements allowing valid time
            control.
         """
-        self.cbValidOn.setChecked(enable)
         self.cbValidTime.setEnabled(enable)
         self.dteValidTime.setEnabled(enable)
         self.tbValidTime_back.setEnabled(enable)
@@ -1222,16 +1130,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbValidTime_cbfwd.setEnabled(enable)
 
     def get_layer(self):
-        return self.cbLayer.currentText().split(" | ")[-1]
+        return self.multilayers.current_layer.get_layer()
 
     def get_style(self):
-        return self.cbStyle.currentText().split(" |")[0]
+        return self.multilayers.current_layer.get_style()
 
     def get_level(self):
-        if self.cbLevelOn.isChecked():
-            return self.cbLevel.currentText().split(" (")[0]
-        else:
-            return None
+        return self.multilayers.current_layer.get_level_name()
 
     def get_init_time(self):
         """Get the initialisation time from the GUI elements.
@@ -1245,7 +1150,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if self.dteInitTime.isEnabled():
                 return self.dteInitTime.dateTime().toPyDateTime()
             else:
-                itime_str = self.cbInitTime.currentText()
+                itime_str = self.multilayers.current_layer.get_itime()
                 return itime_str
         else:
             return None
@@ -1257,7 +1162,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if self.dteValidTime.isEnabled():
                 return self.dteValidTime.dateTime().toPyDateTime()
             else:
-                vtime_str = self.cbValidTime.currentText()
+                vtime_str = self.multilayers.current_layer.get_vtime()
                 return vtime_str
         else:
             return None
@@ -1267,24 +1172,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         return self.wms_cache is not None and self.cbCacheEnabled.isChecked()
 
-    def get_legend_url(self):
-        layer = self.get_layer()
-        style = self.get_style()
-        layerobj = self.get_layer_object(layer)
-        urlstr = None
-        if style != "" and "legend" in layerobj.styles[style]:
-            urlstr = layerobj.styles[style]["legend"]
-
-        return urlstr
-
-    def get_md5_filename(self, kwargs):
-        urlstr = self.wms.getmap(return_only_url=True, **kwargs)
-        if not self.wms.url.startswith(self.cbWMS_URL.currentText()):
-            raise RuntimeError("WMS URL does not match, use get capabilities first.")
+    def get_md5_filename(self, layer, kwargs):
+        urlstr = layer.get_wms().getmap(return_only_url=True, **kwargs)
         return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
 
-    def retrieve_image(self, crs="EPSG:4326", bbox=None, path_string=None,
-                       width=800, height=400):
+    def retrieve_image(self, layer=None, crs="EPSG:4326", bbox=None, path_string=None,
+                       width=800, height=400, transparent=False):
         """Retrieve an image of the layer currently selected in the
            GUI elements from the current WMS provider. If caching is
            enabled, first check the cache for the requested image. If
@@ -1292,7 +1185,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            store the image into the cache.
            If a legend graphic is available for the layer, this image
            is also retrieved.
-
         Arguments:
         crs -- coordinate reference system as a string passed to the WMS
         path_string -- string of waypoints that resemble a vertical
@@ -1300,26 +1192,26 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                        sections.
         bbox -- bounding box as list of four floats
         width, height -- width and height of requested image in pixels
-
         """
-
         # Get layer and style names.
-        layer = self.get_layer()
-        style = self.get_style()
-        level = self.get_level()
-        transparent = self.cbTransparent.isChecked()
+        if not layer:
+            layer = self.multilayers.current_layer
+
+        layer_name = layer.get_layer()
+        style = layer.get_style()
+        level = layer.get_level_name()
 
         def normalize_crs(crs):
             if any(crs.startswith(_prefix) for _prefix in ("MSS", "AUTO")):
                 return crs.split(",")[0]
             return crs
 
-        if self.check_for_allowed_crs and normalize_crs(crs) not in self.allowed_crs:
+        if self.check_for_allowed_crs and normalize_crs(crs) not in layer.allowed_crs:
             ret = QtWidgets.QMessageBox.warning(
                 self, self.tr("Web Map Service"),
                 self.tr("WARNING: Selected CRS '{}' not contained in allowed list of supported CRS for this WMS\n"
                         "({})\n"
-                        "Continue ?".format(crs, self.allowed_crs)),
+                        "Continue ?".format(crs, layer.allowed_crs)),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Ignore | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Ignore:
@@ -1330,21 +1222,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # get...Time() will return None if the corresponding checkboxes are
         # disabled. <None> objects passed to wms.getmap will not be included
         # in the query URL that is send to the server.
-        init_time = self.get_init_time()
-        if init_time is not None and init_time not in self.allowed_init_times:
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR: Invalid init time chosen\n"
-                                                   "(watch out for the strikethrough)!"))
-            return
-
-        valid_time = self.get_valid_time()
-        if (valid_time is not None and
-                self.allowed_valid_times is not None and
-                valid_time not in self.allowed_valid_times):
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR: Invalid valid time chosen!\n"
-                                                   "(watch out for the strikethrough)!"))
-            return
+        init_time = layer.get_itime()
+        valid_time = layer.get_vtime()
 
         logging.debug("fetching layer '%s'; style '%s', width %d, height %d",
                       layer, style, width, height)
@@ -1363,7 +1242,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             #                threading-in-a-pyqt-application-use-qt-threads-or-python-threads
             # b) To retrieve the return value of getmap, a Queue is used.
             #    See: http://stackoverflow.com/questions/1886090/return-value-from-thread
-            kwargs = {"layers": [layer],
+            kwargs = {"layers": [layer_name],
                       "styles": [style],
                       "srs": crs,
                       "bbox": bbox,
@@ -1371,12 +1250,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "time": valid_time,
                       "init_time": init_time,
                       "level": level,
-                      "time_name": self.valid_time_name,
-                      "init_time_name": self.init_time_name,
+                      "time_name": self.multilayers.current_layer.vtime_name,
+                      "init_time_name": self.multilayers.current_layer.itime_name,
                       "size": (width, height),
                       "format": 'image/png',
                       "transparent": transparent}
-            legend_kwargs = {"urlstr": self.get_legend_url(), "md5_filename": None}
+            legend_kwargs = {"urlstr": layer.get_legend_url(), "md5_filename": None}
             if legend_kwargs["urlstr"] is not None:
                 legend_kwargs["md5_filename"] = os.path.join(
                     self.wms_cache, hashlib.md5(legend_kwargs["urlstr"].encode('utf-8')).hexdigest() + ".png")
@@ -1391,7 +1270,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         try:
                             value = int(prefetch_config[_x])
                         except ValueError as ex:
-                            logging.error("ERROR: %s %s", type(ex), ex)
+                            logging.error("ERRORasd: %s %s", type(ex), ex)
                             value = 0
                         prefetch_config[_x] = max(0, value)
                     else:
@@ -1399,7 +1278,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 fetch_nr = sum([prefetch_config[_x] for _x in prefetch_entries])
                 if fetch_nr > 0:
                     pre_tfwd, pre_tbck, pre_lfwd, pre_lbck = [prefetch_config[_x] for _x in prefetch_entries]
-
                     ci_time, ci_level = self.cbValidTime.currentIndex(), self.cbLevel.currentIndex()
                     prefetch_key_values = \
                         [("time", self.cbValidTime.itemText(ci_p))
@@ -1409,18 +1287,17 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         [("level", self.cbLevel.itemText(ci_p).split(" (")[0])
                          for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)
                          if ci_p != ci_level and 0 <= ci_p < self.cbLevel.count()]
-
                     prefetch_maps = []
                     for key, value in prefetch_key_values:
                         kwargs_new = kwargs.copy()
                         kwargs_new[key] = value
-                        prefetch_maps.append((kwargs_new, self.get_md5_filename(kwargs_new), True, {}))
+                        prefetch_maps.append((kwargs_new, self.get_md5_filename(layer, kwargs_new), True, {}))
                     self.prefetch.emit(prefetch_maps)
 
-            md5_filename = self.get_md5_filename(kwargs)
+            md5_filename = self.get_md5_filename(layer, kwargs)
             self.expected_img = md5_filename
             self.pdlg.reset()
-            self.fetch.emit([(kwargs, md5_filename, self.caching_enabled(), legend_kwargs)])
+            return [(layer, kwargs, md5_filename, self.caching_enabled(), legend_kwargs)]
 
         except Exception as ex:
             self.display_exception(ex)
@@ -1516,7 +1393,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         ################################################################################
 
-
 #
 # CLASS VSecWMSControlWidget
 #
@@ -1532,7 +1408,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         super(VSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
-        self.btGetMap.clicked.connect(self.get_vsec)
+        self.btGetMap.clicked.connect(lambda: self.get_vsec(self.multilayers.get_active_layers()))
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance from which the waypoints
@@ -1545,10 +1421,10 @@ class VSecWMSControlWidget(WMSControlWidget):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.btGetMap.click()
 
-    def get_vsec(self):
+    def get_vsec(self, layers=None):
         """Slot that retrieves the vertical section and passes the image
-           to the view.
-        """
+                   to the view.
+                """
         # Specify the coordinate reference system for the request. We will
         # use the non-standard "VERT:LOGP" to query the MSS WMS Server for
         # a vertical section. The vertical extent of the plot is specified
@@ -1567,12 +1443,20 @@ class VSecWMSControlWidget(WMSControlWidget):
         width, height = self.view.get_plot_size_in_px()
 
         # Retrieve the image.
-        self.retrieve_image(crs, bbox, path_string, width, height)
+        if not layers:
+            layers = [self.multilayers.current_layer]
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
 
-    def display_retrieved_image(self, img, legend_img, layer, style, init_time, valid_time, level):
+        args = []
+        for layer in layers:
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height))
+
+        self.fetch.emit(args)
+
+    def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
-        self.view.draw_image(img)
-        self.view.draw_legend(legend_img)
+        self.view.draw_image(imgs[0])
+        self.view.draw_legend(legend_imgs[0])
         if style != "":
             style_title = self.get_layer_object(layer).styles[style]["title"]
         else:
@@ -1599,19 +1483,13 @@ class HSecWMSControlWidget(WMSControlWidget):
     def __init__(self, parent=None, default_WMS=None, view=None, wms_cache=None):
         super(HSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
-        self.btGetMap.clicked.connect(self.get_map)
+        self.btGetMap.clicked.connect(lambda: self.get_map(self.multilayers.get_active_layers()))
 
     def level_changed(self):
-        if self.cbLevelOn.isChecked():
-            s = self.cbLevel.currentText()
-            if s == "":
-                return
-            if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
-                self.btGetMap.click()
-            else:
-                self.view.waypoints_interactor.update()
+        super().level_changed()
+        self.view.waypoints_interactor.update()
 
-    def get_map(self):
+    def get_map(self, layers=None):
         """Slot that retrieves the map and passes the image
            to the view.
         """
@@ -1619,29 +1497,50 @@ class HSecWMSControlWidget(WMSControlWidget):
         # object in the view.
         crs = self.view.get_crs()
         bbox = self.view.getBBOX()
-        if self.wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
-            bbox = (bbox[1], bbox[0], bbox[3], bbox[2])
 
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
         width, height = self.view.get_plot_size_in_px()
-        # Retrieve the image.
-        self.retrieve_image(crs, bbox, None, width, height)
 
-    def display_retrieved_image(self, img, legend_img, layer, style, init_time, valid_time, level):
+        if not layers:
+            layers = [self.multilayers.current_layer]
+
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+
+        args = []
+        for i, layer in enumerate(layers):
+            transparent = self.cbTransparent.isChecked() if i == 0 else True
+            bbox_tmp = tuple(bbox)
+            wms = self.multilayers.layers[layer.wms_name]["wms"]
+            if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
+                bbox_tmp = (bbox[1], bbox[0], bbox[3], bbox[2])
+            args.extend(self.retrieve_image(layer, crs, bbox_tmp, None, width, height, transparent))
+
+        self.fetch.emit(args)
+
+    def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
+        img = self.squash_multiple_images(imgs, None)
+
         # Plot the image on the view canvas.
-        if style != "":
-            style_title = self.get_layer_object(layer).styles[style]["title"]
-        else:
-            style_title = None
-        self.view.draw_metadata(title=self.get_layer_object(layer).title,
+        # ToDo: Display style
+        style_title = None
+        self.view.draw_metadata(title=self.multilayers.current_layer.layerobj.title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 level=level,
                                 style=style_title)
         self.view.draw_image(img)
-        self.view.draw_legend(legend_img)
+        self.view.draw_legend(legend_imgs[0])
         self.view.waypoints_interactor.update()
+        self.allow_auto_update = True
+
+    def squash_multiple_images(self, imgs, legend_imgs):
+        background = imgs[0]
+        if len(imgs) > 1:
+            for foreground in imgs[1:]:
+                background.paste(foreground, (0, 0), foreground.convert("RGBA"))
+
+        return background
 
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
