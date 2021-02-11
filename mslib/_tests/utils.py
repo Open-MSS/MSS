@@ -25,9 +25,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import fs
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
 from flask import json
+from mslib._tests.constants import MSS_CONFIG_PATH
 
 
 def callback_ok_image(status, response_headers):
@@ -149,3 +151,8 @@ def mscolab_get_project_id(app, msc_url, email, password, username, path):
     for p in response['projects']:
         if p['path'] == path:
             return p['p_id']
+
+
+def create_mss_settings_file(content):
+    with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
+        file_dir.writetext("mss_settings.json", content)

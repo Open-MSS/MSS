@@ -95,8 +95,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         index = table_view.currentIndex()
         if not index.isValid():
             row = 0
-            flightlevel = config_loader(dataset="new_flighttrack_flightlevel",
-                                        default=mss_default.new_flighttrack_flightlevel)
+            flightlevel = config_loader(dataset="new_flighttrack_flightlevel")
         else:
             row = index.row() + 1
             flightlevel = waypoints_model.waypoint_data(row - 1).flightlevel

@@ -74,7 +74,7 @@ from mslib.utils import config_loader
 
 def openURL(url_base, data=None, method='Get', cookies=None,
             username=None, password=None,
-            timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
+            timeout=config_loader(dataset="WMS_request_timeout"),
             headers=None, verify=None, cert=None, auth=None, proxies=None):
     # (mss) added proxies
     # (mss) timeout default of 30secs set by the config_loader
@@ -173,7 +173,7 @@ class WebMapService(wms111.WebMapService_1_1_1):
 
     def __init__(self, url, version=None, xml=None, username=None, password=None,
                  parse_remote_metadata=False, headers=None,
-                 timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
+                 timeout=config_loader(dataset="WMS_request_timeout"),
                  auth=None):
         """Initialize."""
 
@@ -292,7 +292,7 @@ class WebMapService(wms111.WebMapService_1_1_1):
 
 def ContentMetadata(elem, parent=None, children=None, index=0,
                     parse_remote_metadata=False,
-                    timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout),
+                    timeout=config_loader(dataset="WMS_request_timeout"),
                     auth=None, version="1.3.0"):
     WMS_NAMESPACE = "{http://www.opengis.net/wms}" if version == "1.3.0" else ""
 
@@ -352,7 +352,7 @@ class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
         # (mss)
 
     def read(self, service_url,
-             timeout=config_loader(dataset="WMS_request_timeout", default=mss_default.WMS_request_timeout)):
+             timeout=config_loader(dataset="WMS_request_timeout")):
         """Get and parse a WMS capabilities document, returning an
         elementtree instance
 
@@ -364,7 +364,7 @@ class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
         # Don't specify a version if it is to be determined
         getcaprequest = getcaprequest.replace("&version=None", "").replace("?version=None", "")
 
-        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+        proxies = config_loader(dataset="proxies")
 
         # now split it up again to use the generic openURL function...
         spliturl = getcaprequest.split('?')

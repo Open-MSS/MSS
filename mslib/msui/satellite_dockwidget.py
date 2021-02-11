@@ -136,7 +136,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         filename = get_open_filename(
             self, "Open NASA satellite overpass prediction",
             os.path.join(os.path.dirname(self.leFile.text())), "All Files (*)",
-            pickertag="filepicker_satellitetrack")
+            pickertag="filepicker_default")
         if not filename:
             return
         self.leFile.setText(filename)
