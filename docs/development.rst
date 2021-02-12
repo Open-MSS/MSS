@@ -22,7 +22,7 @@ The stable version of MSS is tracked on `BLACK DUCK Open Hub <https://www.openhu
 Style guide
 ~~~~~~~~~~~~~~~~
 
-We generally follow pep8, with 120 columns instead of 79.
+We generally follow flake8, with 120 columns instead of 79.
 
 Output and Logging
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,7 +117,7 @@ in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision
 
 Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
 
-A pep8 only test is done by `py.test --pep8 -m pep8`  or `pytest --pep8 -m pep8`
+A flake8 only test is done by `py.test --flake8 -m flake8`  or `pytest --flake8 -m flake8`
 
 Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
 
