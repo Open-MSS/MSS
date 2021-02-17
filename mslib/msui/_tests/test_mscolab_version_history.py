@@ -133,7 +133,7 @@ class Test_MscolabVersionHistory(object):
         assert new_changes_count == changes_count + 2
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText("http://localhost:8084")
+        self.window.url.setEditText("http://localhost:8083")
         QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         time.sleep(1)
 
