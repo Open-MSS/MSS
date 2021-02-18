@@ -291,6 +291,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.pushButton_merge.clicked.connect(self.merge_file)
         self.labelStatusBar.setText("Status: Click on Add KML Files to get started.")
 
+        self.listWidget.itemClicked.connect(self.show_clr_lw) #Connect slots and signals (Showing color and linewidth of clicked file).
+
         self.dialog = CustomizeKMLWidget(self)  # create object of dialog UI Box
         self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
         self.dialog.pushButton_colour.clicked.connect(self.select_color)
@@ -410,6 +412,28 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.dict_files[file]["linewidth"] = self.dialog.dsb_linewidth.value()
         self.update_settings()
         self.checklistitem(file)
+
+    def show_clr_lw(self):
+
+        """
+        Shows the color(clr) and linewidth(lw) of the given file when file is single clicked.
+        """
+        file = self.listWidget.currentItem().text()
+
+        if file in self.dict_files:
+            self.label_color.setText(" ")
+            clr=self.set_color(file)
+            r = clr[0]*255
+            g = clr[1]*255
+            b = clr[2]*255
+            self.label_color.setStyleSheet(f'background-color: rgb({r},{g},{b})')
+            
+            lw = str(self.dict_files[file]["linewidth"])
+            self.label_linewidth.setText(lw)
+
+        else:
+            self.label_linewidth.setText('Unknown')
+            self.label_color.setText('Unknown')    
 
     def checklistitem(self, file):
         """
