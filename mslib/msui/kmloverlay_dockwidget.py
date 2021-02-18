@@ -523,6 +523,12 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.patch = None
         # self.load_file() # not sure to keep this or not, works either ways
 
+        if self.listWidget.count() == 0: #Shows Unknown for color and linewidth values in absence of any file
+            self.label_color.setText('Unknown')
+            self.label_linewidth.setText('Unknown')
+            self.label_color.setStyleSheet('background-color: #00000000') #makes the background transparent for the color label value
+
+
     def load_file(self):
         """
         Loads multiple KML Files simultaneously and constructs the
