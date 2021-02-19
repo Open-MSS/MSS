@@ -44,7 +44,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import mslib.ogcwms
 import owslib.util
-from owslib.crs import axisorder_yx
 import PIL.Image
 
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
@@ -52,7 +51,7 @@ from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings
-from mslib.ogcwms import openURL, removeXMLNamespace
+from mslib.ogcwms import openURL
 
 
 WMS_SERVICE_CACHE = {}
@@ -80,7 +79,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
                format=None, size=None, time=None, init_time=None,
                path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
                time_name="time", init_time_name="init_time",
-               exceptions='XML', method='Get',
+               exceptions='application/vnd.ogc.se_xml', method='Get',
                return_only_url=False):
         """Request and return an image from the WMS as a file-like object.
 
@@ -124,9 +123,6 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         base_url = self.get_redirect_url(method)
         request = {'version': self.version, 'request': 'GetMap'}
 
-        if self.version != "1.3.0":	
-            exceptions = "application/vnd.ogc.se_xml"	
-
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
@@ -140,7 +136,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         request['width'] = str(size[0])
         request['height'] = str(size[1])
 
-        request['srs' if self.version != "1.3.0" else "crs"] = str(srs)
+        request['srs'] = str(srs)
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
         request['bgcolor'] = '0x' + bgcolor[1:7]
@@ -202,7 +198,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         proxies = config_loader(dataset="proxies")
 
         u = openURL(base_url, data, method,
-                    username=self.auth.username, password=self.auth.password, proxies=proxies)
+                    username=self.username, password=self.password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -214,8 +210,6 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         if hasattr(u, "info") and 'application/vnd.ogc.se_xml' in u.info()['Content-Type']:
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
-            # Remove namespaces in the response, otherwise this code might fail	
-            removeXMLNamespace(se_tree)
             err_message = str(se_tree.find('ServiceException').text).strip()
             raise owslib.util.ServiceException(err_message, se_xml)
         return u
@@ -377,7 +371,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
        is not instantiated directly, see HSecWMSControlWidget and
        VSecWMSControlWidget below.
 
-    NOTE: Currently this class can only handle WMS 1.1.1/1.3.0 servers.
+    NOTE: Currently this class can only handle WMS 1.1.1 servers.
     """
 
     prefetch = QtCore.pyqtSignal([list], name="prefetch")
@@ -536,7 +530,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.thread_fetch.quit()
         self.thread_fetch.wait()
 
-    def initialise_wms(self, base_url, version="1.3.0"):
+    def initialise_wms(self, base_url):
         """Initialises a MSSWebMapService object with the specified base_url.
 
         If the web server returns a '401 Unauthorized', prompt the user for
@@ -562,7 +556,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             str(base_url)  # to provoke early Unicode Error
             while wms is None:
                 try:
-                    wms = MSSWebMapService(base_url, version=version,
+                    wms = MSSWebMapService(base_url, version='1.1.1',
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
                     logging.error("ERROR: %s %s", type(ex), ex)
@@ -649,7 +643,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # the CRS that match the filter of this module.
         base_url = self.cbWMS_URL.currentText()
         params = {'service': 'WMS',
-                  'request': 'GetCapabilities'}
+                  'request': 'GetCapabilities',
+                  'version': '1.1.1'}
         try:
             request = requests.get(base_url, params=params)
         except (requests.exceptions.TooManyRedirects,
@@ -665,11 +660,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         else:
             # url shortener url translated
             url = request.url
-            
-            url = url.replace("?service=WMS", "").replace("&service=WMS", "") \	
-                     .replace("?request=GetCapabilities", 
+            url = url.replace('?service=WMS&request=GetCapabilities&version=1.1.1', '')
             logging.debug("requesting capabilities from %s", url)
-            wms = self.initialise_wms(url, None)
+            wms = self.initialise_wms(url)
             if wms is not None:
 
                 # update the combo box, if entry requires change/insertion
@@ -1619,9 +1612,6 @@ class HSecWMSControlWidget(WMSControlWidget):
         # object in the view.
         crs = self.view.get_crs()
         bbox = self.view.getBBOX()
-        if self.wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
-            bbox = (bbox[1], bbox[0], bbox[3], bbox[2])
-                               
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
         width, height = self.view.get_plot_size_in_px()

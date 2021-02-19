@@ -13,7 +13,7 @@ jobs:
         shell: bash
 
     container:
-      image: openmss/mss-test:latest
+      image: yourmss/mss-test:latest
 
     steps:
     - uses: actions/checkout@v2

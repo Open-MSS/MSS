@@ -71,7 +71,6 @@ requirements:
     - xstatic-jquery
     - xstatic-bootstrap
     - pyperclip
-    - geos <3.9.0
 
 test:
   imports:
