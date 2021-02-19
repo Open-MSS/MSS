@@ -2,13 +2,13 @@ Changelog
 =========
 
 
-Version 2.0.1	
----------------	
+Version 2.0.1
+---------------
 
-Bug Fix release	
+Bug Fix release
 
-All changes:	
-https://github.com/Open-MSS/MSS/milestone/47?closed=1	
+All changes:
+https://github.com/Open-MSS/MSS/milestone/47?closed=1
 
 Version 2.0.0
 -------------
