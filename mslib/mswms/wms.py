@@ -355,7 +355,7 @@ class WMSServer(object):
                 get_projection_params(crs)
             except ValueError:
                 return self.create_service_exception(
-                    code="InvalidSRS", text=f"The requested CRS '{crs}' is not supported.", version=version)
+                    code="InvalidSRS", text="The requested CRS '{}' is not supported.".format(crs))
         logging.debug("  requested coordinate reference system = '%s'", crs)
 
         # Create a frameless figure (WMS) or one with title and legend
@@ -373,8 +373,7 @@ class WMSServer(object):
         if return_format not in ["image/png", "text/xml"]:
             return self.create_service_exception(
                 code="InvalidFORMAT",
-                text=f"unsupported FORMAT: '{return_format}'",
-                version=version)
+                text="unsupported FORMAT: '{}'".format(return_format))
 
         # 3) Check GetMap/GetVSec-specific parameters and produce
         #    the image with the corresponding section driver.
@@ -384,8 +383,7 @@ class WMSServer(object):
             if (dataset not in self.hsec_layer_registry) or (layer not in self.hsec_layer_registry[dataset]):
                 return self.create_service_exception(
                     code="LayerNotDefined",
-                    text=f"Invalid LAYER '{dataset}.{layer}' requested",
-                    version=version)
+                    text="Invalid LAYER '{}.{}' requested".format(dataset, layer))
 
             # Check if the layer requires time information and if they are given.
             if self.hsec_layer_registry[dataset][layer].uses_inittime_dimension() and init_time is None:
@@ -399,14 +397,13 @@ class WMSServer(object):
             if not self.hsec_layer_registry[dataset][layer].support_epsg_code(crs):
                 return self.create_service_exception(
                     code="InvalidSRS",
-                    text=f"The requested CRS '{crs}' is not supported.",
-                    version=version)
+                    text="The requested CRS '{}' is not supported.".format(crs))
 
             # Bounding box.
             try:
                 bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
             except ValueError:
-                return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+                return self.create_service_exception(text="Invalid BBOX: {}".format(query.get("BBOX")))
 
             # Vertical level, if applicable.
             level = query.get('ELEVATION')
@@ -419,8 +416,7 @@ class WMSServer(object):
                     all(_x not in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and \
                     level is not None:
                 return self.create_service_exception(
-                    text=f"ELEVATION argument not applicable for layer '{layer}'. Please omit this argument.",
-                    version=version)
+                    text="ELEVATION argument not applicable for layer '{}'. Please omit this argument.".format(layer))
 
             plot_driver = self.hsec_drivers[dataset]
             try:
@@ -434,8 +430,8 @@ class WMSServer(object):
                 logging.debug("%s", traceback.format_exc())
                 msg = "The data corresponding to your request is not available. Please check the " \
                       "times and/or levels you have specified.\n\n" \
-                      f"Error message: '{ex}'"
-                return self.create_service_exception(text=msg, version=version)
+                      "Error message: '{}'".format(ex)
+                return self.create_service_exception(text=msg)
 
         elif mode == "getvsec":
             # Vertical secton path.
@@ -446,23 +442,21 @@ class WMSServer(object):
                 path = [float(v) for v in path.split(',')]
                 path = [[lat, lon] for lat, lon in zip(path[0::2], path[1::2])]
             except ValueError:
-                return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
+                return self.create_service_exception(text="Invalid PATH: {}".format(path))
             logging.debug("VSEC PATH: %s", path)
 
             # Check requested layers.
             if (dataset not in self.vsec_layer_registry) or (layer not in self.vsec_layer_registry[dataset]):
                 return self.create_service_exception(
                     code="LayerNotDefined",
-                    text=f"Invalid LAYER '{dataset}.{layer}' requested",
-                    version=version)
+                    text="Invalid LAYER '{}.{}' requested".format(dataset, layer))
 
             # Check if the layer requires time information and if they are given.
             if self.vsec_layer_registry[dataset][layer].uses_inittime_dimension():
                 if init_time is None:
                     return self.create_service_exception(
                         code="MissingDimensionValue",
-                        text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)",
-                        version=version)
+                        text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)")
                 if valid_time is None:
                     return self.create_service_exception(code="MissingDimensionValue", text="TIME not specified")
 
@@ -470,7 +464,7 @@ class WMSServer(object):
             try:
                 bbox = [float(v) for v in query.get("BBOX", "101,1050,10,180").split(",")]
             except ValueError:
-                return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+                return self.create_service_exception(text="Invalid BBOX: {}".format(query.get("BBOX")))
 
             plot_driver = self.vsec_drivers[dataset]
             try:
@@ -492,7 +486,7 @@ class WMSServer(object):
                 logging.error("ERROR: %s %s", type(ex), ex)
                 msg = "The data corresponding to your request is not available. Please check the " \
                       "times and/or path you have specified.\n\n" \
-                      f"Error message: {ex}"
+                      "Error message: {}".format(ex)
                 return self.create_service_exception(text=msg)
 
         # 4) Return the produced image.
@@ -539,6 +533,6 @@ def application():
         return res
 
     except Exception as ex:
-        error_message = f"{type(ex)}: {ex}\n"
+        error_message = "{}: {}\n".format(type(ex), ex)
         logging.error("Unexpected error: %s", error_message)
         return redirect('/index', 307)
