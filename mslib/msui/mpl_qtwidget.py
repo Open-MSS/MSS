@@ -776,7 +776,7 @@ class MplSideViewCanvas(MplCanvas):
 
         NOTE: The image is plotted in a separate axes object that is located
         below the axes that display the flight profile. This is necessary
-        because imshow() does not work with logarithmic a  xes.
+        because imshow() does not work with logarithmic axes.
         """
         logging.debug("plotting vertical section image..")
         ix, iy = img.size

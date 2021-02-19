@@ -129,7 +129,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                 row_max = row + (7 - idx)
                 if row_min < 0 or row_max > len(waypoints_model.all_waypoint_data()):
                     raise HexagonException("Cannot remove hexagon, hexagon is not complete "
-                                           f"(min, max = {row_min:d}, {row_max:d})")
+                                           "(min, max = {:d}, {:d})".format(row_min, row_max))
                 else:
                     found_one = False
                     for i in range(0, row_max - row_min):
