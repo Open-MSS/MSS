@@ -30,11 +30,12 @@ from mslib.mscolab.server import db, check_login, register_user, APP, initialize
 from mslib.mscolab.conf import mscolab_settings
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.models import User
-
+from mslib.mscolab.mscolab import handle_db_seed
 
 class Test_UserMethods(object):
 
     def setup(self):
+        handle_db_seed()
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR

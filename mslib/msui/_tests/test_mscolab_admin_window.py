@@ -32,6 +32,7 @@ from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, db, initialize_managers
 from PyQt5 import QtCore, QtTest, QtWidgets
+from mslib.mscolab.mscolab import handle_db_seed
 
 
 class Test_MscolabAdminWindow(object):
@@ -39,6 +40,7 @@ class Test_MscolabAdminWindow(object):
         """
         User being used during test: id = 5, username = test1
         """
+        handle_db_seed()
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
@@ -136,6 +138,10 @@ class Test_MscolabAdminWindow(object):
 
     def test_modify_permissions(self):
         users = ["test2", "test3"]
+        # Select users in the add users table
+        self._select_users(self.admin_window.addUsersTable, users)
+        QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
         # Select users in the modify users table
         self._select_users(self.admin_window.modifyUsersTable, users)
         # Update their permission to viewer
@@ -147,9 +153,14 @@ class Test_MscolabAdminWindow(object):
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
     def test_delete_permissions(self):
+        # Select users in the add users table
+        users = ["test2", "test3"]
+        self._select_users(self.admin_window.addUsersTable, users)
+        QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
-        users = ["test2", "test3"]
+
         # Select users in the modify users table
         self._select_users(self.admin_window.modifyUsersTable, users)
         # Click on delete permissions

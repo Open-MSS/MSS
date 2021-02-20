@@ -39,6 +39,7 @@ from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui.mscolab import MSSMscolabWindow
 from PyQt5 import QtCore, QtTest, QtWidgets
+from mslib.mscolab.mscolab import handle_db_seed
 from mslib._tests.utils import mscolab_delete_all_projects, mscolab_delete_user
 
 
@@ -46,6 +47,7 @@ class Test_Mscolab(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
 
     def setup(self):
+        handle_db_seed()
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
@@ -290,8 +292,11 @@ class Test_Mscolab(object):
         assert self.window.loggedInWidget.isVisible() is True
         assert self.window.listProjects.model().rowCount() == 0
         self._create_project("flight2", "Description flight2")
+        current_pid =  self.window.get_recent_pid()
+        self._create_project("flight3", "Description flight3")
+        self._create_project("flight4", "Description flight4")
         # ToDo fix number after cleanup initial data
-        assert self.window.get_recent_pid() == 8
+        assert self.window.get_recent_pid() == current_pid + 2
 
     def test_get_recent_project(self):
         self._connect_to_mscolab()
