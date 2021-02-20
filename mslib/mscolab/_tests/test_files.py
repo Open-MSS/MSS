@@ -164,7 +164,6 @@ class Test_Files(object):
             assert len(self.fm.get_all_changes(p_id, self.user)) == 3
             assert self.fm.get_file(p_id, self.user) == "file save content 1"
 
-
     def test_get_project(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
@@ -199,6 +198,7 @@ class Test_Files(object):
             user2 = User.query.filter_by(id=9).first()
             assert self.fm.delete_file(p_id, user2) is False
             assert self.fm.delete_file(p_id, self.user) is True
+            assert self.fm.delete_file(p_id, self.user) is False
 
             permissions = Permission.query.filter_by(p_id=p_id).all()
             assert len(permissions) == 0
