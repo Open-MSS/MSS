@@ -36,6 +36,8 @@ from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 
+PORTS = list(range(8084, 8094))
+
 
 class Test_MSS_SV_OptionsDialog(object):
     def setup(self):
@@ -127,13 +129,13 @@ class Test_MSSSideViewWindow(object):
 class Test_SideViewWMS(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-
+        self.port = PORTS.pop()
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
         self.thread = multiprocessing.Process(
             target=application.run,
-            args=("127.0.0.1", 8082))
+            args=("127.0.0.1", self.port))
         self.thread.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
@@ -172,11 +174,10 @@ class Test_SideViewWMS(object):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server("http://127.0.0.1:8082")
+        self.query_server(f"http://127.0.0.1:{self.port}")
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
-        QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
