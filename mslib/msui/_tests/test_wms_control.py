@@ -112,7 +112,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server("http://127.0.0.1:8082")
+        self.query_server("http://127.0.0.1:8882")
         assert mockbox.critical.call_count == 1
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
