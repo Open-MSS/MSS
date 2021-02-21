@@ -28,7 +28,6 @@ import sys
 import time
 
 from mslib.msui.mscolab import MSSMscolabWindow
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, db, initialize_managers
 from PyQt5 import QtCore, QtTest, QtWidgets
@@ -40,18 +39,20 @@ class Test_MscolabAdminWindow(object):
         """
         User being used during test: id = 5, username = test1
         """
+        self.port = 8084
         handle_db_seed()
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app, _, cm, fm = initialize_managers(self.app)
+        self.app, sockio, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
+        self.MSCOLAB_URL_TEST = f"http://localhost:{self.port}"
 
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.MSCOLAB_URL_TEST)
         self._login()
         self._activate_project_at_index(0)
         QtTest.QTest.mouseClick(self.window.adminWindowBtn, QtCore.Qt.LeftButton)
@@ -137,6 +138,9 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_modify_permissions(self):
+        self._connect_to_mscolab()
+        self._login()
+        self._activate_project_at_index(0)
         users = ["test2", "test3"]
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
@@ -153,6 +157,9 @@ class Test_MscolabAdminWindow(object):
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
     def test_delete_permissions(self):
+        self._connect_to_mscolab()
+        self._login()
+        self._activate_project_at_index(0)
         # Select users in the add users table
         users = ["test2", "test3"]
         self._select_users(self.admin_window.addUsersTable, users)
@@ -172,6 +179,9 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_import_permissions(self):
+        self._connect_to_mscolab()
+        self._login()
+        self._activate_project_at_index(0)
         index = self.admin_window.importPermissionsCB.findText("three", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
@@ -180,7 +190,7 @@ class Test_MscolabAdminWindow(object):
         assert self.admin_window.modifyUsersTable.rowCount() == 5
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText("http://localhost:8084")
+        self.window.url.setEditText(self.MSCOLAB_URL_TEST)
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
