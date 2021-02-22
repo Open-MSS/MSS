@@ -32,8 +32,8 @@ from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.models import User
 from mslib.mscolab.mscolab import handle_db_seed
 
-class Test_UserMethods(object):
 
+class Test_UserMethods(object):
     def setup(self):
         handle_db_seed()
         self.app = APP

@@ -104,7 +104,6 @@ class Test_Mscolab(object):
         # assert self.window.label.text() == ""
         assert self.window.conn is None
 
-
     def test_disconnect(self):
         self._connect_to_mscolab()
         QtTest.QTest.mouseClick(self.window.disconnectMscolab, QtCore.Qt.LeftButton)
@@ -279,7 +278,6 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listProjects.model().rowCount() == 0
         assert self.window.active_pid is None
-
 
     def test_close_chat_window(self):
         pass
