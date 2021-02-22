@@ -5,7 +5,7 @@ env:
   PAT: ${{ secrets.PAT }}
 
 jobs:
-  Test-MSS:
+  Selected Tests:
     runs-on: ubuntu-latest
     
     defaults:
