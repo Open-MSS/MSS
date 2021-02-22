@@ -38,7 +38,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
 
 
-PORTS = list(range(8084, 8094))
+PORTS = list(range(8106, 8116))
 
 class HSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="EPSG:4326")

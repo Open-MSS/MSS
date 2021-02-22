@@ -36,7 +36,7 @@ from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 
-PORTS = list(range(8084, 8094))
+PORTS = list(range(8095, 8105))
 
 
 class Test_MSS_SV_OptionsDialog(object):
