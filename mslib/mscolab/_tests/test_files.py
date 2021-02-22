@@ -199,7 +199,6 @@ class Test_Files(object):
             assert self.fm.delete_file(p_id, user2) is False
             assert self.fm.delete_file(p_id, self.user) is True
             assert self.fm.delete_file(p_id, self.user) is False
-
             permissions = Permission.query.filter_by(p_id=p_id).all()
             assert len(permissions) == 0
             projects_db = Project.query.filter_by(id=p_id).all()
