@@ -50,12 +50,12 @@ def save_to_csv(filename, name, waypoints):
                              "Leg dist. (km)", "Cum. dist. (km)", "Comments"])
         for i, wp in enumerate(waypoints):
             loc = str(wp.location)
-            lat = "{:.3f}".format(wp.lat)
-            lon = "{:.3f}".format(wp.lon)
-            lvl = "{:.3f}".format(wp.flightlevel)
-            pre = "{:.3f}".format(wp.pressure / 100.)
-            leg = "{:.3f}".format(wp.distance_to_prev)
-            cum = "{:.3f}".format(wp.distance_total)
+            lat = f"{wp.lat:.3f}"
+            lon = f"{wp.lon:.3f}"
+            lvl = f"{wp.flightlevel:.3f}"
+            pre = f"{wp.pressure / 100.:.3f}"
+            leg = f"{wp.distance_to_prev:.3f}"
+            cum = f"{wp.distance_total:.3f}"
             com = str(wp.comments)
             csv_writer.writerow([i, loc, lat, lon, lvl, pre, leg, cum, com])
 
