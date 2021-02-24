@@ -36,7 +36,6 @@ from werkzeug.urls import url_join
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.server import APP, initialize_managers
 from mslib.mscolab.mscolab import handle_db_seed
 from mslib.mscolab.utils import get_recent_pid
@@ -53,11 +52,16 @@ class Test_Files(object):
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
         self.app, _, cm, fm = initialize_managers(self.app)
+        self.url = self.app.config['URL']
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
+
+    def teardown(self):
+        for socket in self.sockets:
+            socket.disconnect()
 
     def test_create_project(self):
         with self.app.app_context():
@@ -93,7 +97,7 @@ class Test_Files(object):
             assert self.fm.is_admin(u_id, no_perm_p_id) is False
 
     def test_file_save(self):
-        url = url_join(MSCOLAB_URL_TEST, 'token')
+        url = url_join(self.url, 'token')
         r = requests.post(url, data={
             'email': 'a',
             'password': 'a'
@@ -113,8 +117,8 @@ class Test_Files(object):
 
         sio1.on('file-changed', handler=partial(handle_chat_message, 1))
         sio2.on('file-changed', handler=partial(handle_chat_message, 2))
-        sio1.connect(MSCOLAB_URL_TEST)
-        sio2.connect(MSCOLAB_URL_TEST)
+        sio1.connect(self.url)
+        sio2.connect(self.url)
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             user2 = User.query.filter_by(id=9).first()
@@ -207,7 +211,3 @@ class Test_Files(object):
             assert len(changes) == 0
             messages = Message.query.filter_by(p_id=p_id).all()
             assert len(messages) == 0
-
-    def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()

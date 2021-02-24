@@ -29,7 +29,6 @@ import json
 from werkzeug.urls import url_join
 
 from mslib.mscolab.models import User, MessageType, Message
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import db, APP, initialize_managers
 from mslib.mscolab.utils import get_recent_pid
@@ -43,6 +42,7 @@ class Test_Chat_Manager(object):
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, _, fm = initialize_managers(self.app)
+        self.url = self.app.config['URL']
         self.fm = fm
         self.cm = ChatManager()
         self.room_name = "europe"
@@ -51,7 +51,7 @@ class Test_Chat_Manager(object):
             'email': 'a',
             'password': 'a'
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/token', data=data)
         self.token = json.loads(r.text)['token']
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
@@ -61,7 +61,7 @@ class Test_Chat_Manager(object):
             "path": self.room_name,
             "description": "test description"
         }
-        url = url_join(MSCOLAB_URL_TEST, 'create_project')
+        url = url_join(self.url, 'create_project')
         r = requests.post(url, data=data)
 
     def teardown(self):
@@ -96,12 +96,3 @@ class Test_Chat_Manager(object):
             self.cm.delete_message(message.id)
             message = Message.query.filter(Message.id == message.id).first()
             assert message is None
-
-    def _login(self):
-        url = url_join(MSCOLAB_URL_TEST, 'token')
-        r = requests.post(url, data={
-            'email': 'mytestuser@test.com',
-            'password': 'mx'
-        })
-        response = json.loads(r.text)
-        return response

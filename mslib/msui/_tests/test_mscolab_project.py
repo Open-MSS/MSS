@@ -52,15 +52,15 @@ class Test_MscolabProject(object):
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.url = self.app.config['URL']
+        self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
-        self.MSCOLAB_URL_TEST = f"http://localhost:{self.port}"
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.url)
         self._login()
         self._activate_project_at_index(0)
         # activate project window here by clicking button
@@ -146,7 +146,7 @@ class Test_MscolabProject(object):
             assert Message.query.filter_by(text='test edit').count() == 0
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText(self.MSCOLAB_URL_TEST)
+        self.window.url.setEditText(self.url)
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 

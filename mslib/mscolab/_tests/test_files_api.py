@@ -30,7 +30,6 @@ import pytest
 from werkzeug.urls import url_join
 
 from mslib.mscolab.models import User, Change, Project
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import db, APP, initialize_managers
 from mslib.mscolab.mscolab import handle_db_seed
@@ -49,6 +48,7 @@ class Test_Files(object):
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, fm = initialize_managers(self.app)
+        self.url = self.app.config['URL']
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
@@ -56,10 +56,14 @@ class Test_Files(object):
             'email': 'a',
             'password': 'a'
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/token', data=data)
         self.token = json.loads(r.text)['token']
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
+
+    def teardown(self):
+        for socket in self.sockets:
+            socket.disconnect()
 
     def test_create_project(self):
         data = {
@@ -67,7 +71,7 @@ class Test_Files(object):
             "path": "dummy",
             "description": "test description"
         }
-        url = url_join(MSCOLAB_URL_TEST, 'create_project')
+        url = url_join(self.url, 'create_project')
         r = requests.post(url, data=data)
         assert r.text == "True"
         r = requests.post(url, data=data)
@@ -77,7 +81,7 @@ class Test_Files(object):
         data = {
             "token": self.token
         }
-        url = url_join(MSCOLAB_URL_TEST, 'projects')
+        url = url_join(self.url, 'projects')
         r = requests.get(url, data=data)
         json_res = json.loads(r.text)
         assert len(json_res["projects"]) == 3
@@ -92,7 +96,7 @@ class Test_Files(object):
                 "token": self.token,
                 "p_id": p_id
             }
-            url = url_join(MSCOLAB_URL_TEST, 'get_project')
+            url = url_join(self.url, 'get_project')
             r = requests.get(url, data=data)
             assert json.loads(r.text)["content"] == self.fm.get_file(int(p_id), self.user)
 
@@ -103,8 +107,7 @@ class Test_Files(object):
             "token": self.token,
             "p_id": p_id
         }
-        assert p_id == 4
-        url = url_join(MSCOLAB_URL_TEST, 'authorized_users')
+        url = url_join(self.url, 'authorized_users')
         r = requests.get(url, data=data)
         users = json.loads(r.text)["users"]
         assert len(users) == 2
@@ -121,7 +124,7 @@ class Test_Files(object):
             "token": self.token,
             "p_id": p_id
         }
-        url = url_join(MSCOLAB_URL_TEST, "users_without_permission")
+        url = url_join(self.url, "users_without_permission")
         res = requests.get(url, data=data).json()
         assert res["success"] is True
         data["p_id"] = self.undefined_p_id
@@ -138,7 +141,7 @@ class Test_Files(object):
             "token": self.token,
             "p_id": p_id
         }
-        url = url_join(MSCOLAB_URL_TEST, "users_with_permission")
+        url = url_join(self.url, "users_with_permission")
         res = requests.get(url, data=data).json()
         assert res["success"] is True
         data["p_id"] = self.undefined_p_id
@@ -157,7 +160,7 @@ class Test_Files(object):
             "selected_userids": json.dumps([12, 13]),
             "selected_access_level": "collaborator"
         }
-        url = url_join(MSCOLAB_URL_TEST, 'add_bulk_permissions')
+        url = url_join(self.url, 'add_bulk_permissions')
         res = requests.post(url, data=data).json()
         assert res["success"] is True
         data["p_id"] = self.undefined_p_id
@@ -178,7 +181,7 @@ class Test_Files(object):
             "selected_userids": json.dumps([12, 13]),
             "selected_access_level": "viewer"
         }
-        url = url_join(MSCOLAB_URL_TEST, 'modify_bulk_permissions')
+        url = url_join(self.url, 'modify_bulk_permissions')
         r = requests.post(url, data=data).json()
         assert r["success"] is True
         data["p_id"] = self.undefined_p_id
@@ -196,7 +199,7 @@ class Test_Files(object):
             "p_id": p_id,
             "selected_userids": json.dumps([12, 13]),
         }
-        url = url_join(MSCOLAB_URL_TEST, 'delete_bulk_permissions')
+        url = url_join(self.url, 'delete_bulk_permissions')
         r = requests.post(url, data=data).json()
         assert r["success"] is True
         data["p_id"] = self.undefined_p_id
@@ -214,7 +217,7 @@ class Test_Files(object):
             "current_p_id": current_p_id,
             "import_p_id": import_p_id
         }
-        url = url_join(MSCOLAB_URL_TEST, 'import_permissions')
+        url = url_join(self.url, 'import_permissions')
         res = requests.post(url, data=data).json()
         assert res["success"] is True
         data["import_p_id"] = self.no_perm_p_id
@@ -234,8 +237,8 @@ class Test_Files(object):
             "attribute": "path",
             "value": "a_diff_path"
         }
-        get_proj_url = url_join(MSCOLAB_URL_TEST, 'get_project')
-        update_proj_url = url_join(MSCOLAB_URL_TEST, 'update_project')
+        get_proj_url = url_join(self.url, 'get_project')
+        update_proj_url = url_join(self.url, 'update_project')
         r = requests.post(update_proj_url, data=data)
         assert r.text == "True"
         # to make sure that path has changed, which is indirectly known by this request
@@ -270,7 +273,7 @@ class Test_Files(object):
             "token": self.token,
             "p_id": p_id
         }
-        url = url_join(MSCOLAB_URL_TEST, 'delete_project')
+        url = url_join(self.url, 'delete_project')
         res = requests.post(url, data=data).json()
         assert res["success"] is True
 
@@ -290,7 +293,7 @@ class Test_Files(object):
             "p_id": p_id
         }
         # test 'get all changes' request
-        url = url_join(MSCOLAB_URL_TEST, 'get_all_changes')
+        url = url_join(self.url, 'get_all_changes')
         r = requests.get(url, data=data)
         changes = json.loads(r.text)["changes"]
         assert len(changes) == 1
@@ -306,7 +309,7 @@ class Test_Files(object):
                 "token": self.token,
                 "p_id": p_id
             }
-            get_proj_url = url_join(MSCOLAB_URL_TEST, 'get_project')
+            get_proj_url = url_join(self.url, 'get_project')
             res = requests.get(get_proj_url, data=data)
             content = json.loads(res.text)["content"]
             change = Change.query.order_by(Change.created_at.desc()).first()
@@ -314,7 +317,7 @@ class Test_Files(object):
                 "token": self.token,
                 "ch_id": change.id
             }
-            get_change_content_url = url_join(MSCOLAB_URL_TEST, 'get_change_content')
+            get_change_content_url = url_join(self.url, 'get_change_content')
             res = requests.get(get_change_content_url, data=data).json()
             change_content = res["content"]
             assert content.strip() == change_content.strip()
@@ -332,13 +335,10 @@ class Test_Files(object):
             "p_id": p_id,
             "version_name": "Test Version Name"
         }
-        url = url_join(MSCOLAB_URL_TEST, 'set_version_name')
+        url = url_join(self.url, 'set_version_name')
         res = requests.post(url, data=data).json()
         assert res["success"] is True
         with self.app.app_context():
             change = Change.query.filter_by(id=change.id).first()
             assert change.version_name == "Test Version Name"
 
-    def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()

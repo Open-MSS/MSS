@@ -5,7 +5,6 @@ import fs
 import mock
 import pytest
 
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.mscolab import MSSMscolabWindow
@@ -19,7 +18,7 @@ class Test_Mscolab(object):
         handle_db_seed()
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.url)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -29,6 +28,7 @@ class Test_Mscolab(object):
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        self.url = self.app.config['URL']
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm

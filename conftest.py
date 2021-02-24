@@ -40,6 +40,8 @@ import fs
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
 
+PORTS = list(range(8300, 8500))
+
 
 def pytest_addoption(parser):
     parser.addoption("--mss_settings", action="store")
@@ -178,8 +180,9 @@ def configure_testsetup(request):
 process = None
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def start_mscolab_server(request):
+    port = PORTS.pop()
     from mslib.mscolab.conf import mscolab_settings
     from mslib.mscolab.server import APP, initialize_managers, start_server
 
@@ -187,12 +190,13 @@ def start_mscolab_server(request):
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
     _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    _app.config['URL'] = f"http://localhost:{port}"
     _app, sockio, cm, fm = initialize_managers(_app)
     global process
     process = multiprocessing.Process(
         target=start_server,
         args=(_app, sockio, cm, fm,),
-        kwargs={'port': 8084})
+        kwargs={'port': port})
     process.start()
     time.sleep(2)
 

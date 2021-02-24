@@ -28,7 +28,6 @@ import json
 
 from mslib.mscolab.server import db, check_login, register_user, APP, initialize_managers
 from mslib.mscolab.conf import mscolab_settings
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.models import User
 from mslib.mscolab.mscolab import handle_db_seed
 
@@ -39,9 +38,16 @@ class Test_UserMethods(object):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.url = self.app.config['URL']
         self.app, _, cm, _ = initialize_managers(self.app)
         self.cm = cm
         db.init_app(self.app)
+
+    def teardown(self):
+        with self.app.app_context():
+            User.query.filter_by(emailid="sdf@s.com").delete()
+            User.query.filter_by(emailid="sdf@s1.com").delete()
+            db.session.commit()
 
     def test_registration(self):
         with self.app.app_context():
@@ -65,9 +71,9 @@ class Test_UserMethods(object):
             "password": "sdf",
             "username": "sdf1"
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data).json()
+        r = requests.post(self.url + '/register', data=data).json()
         assert r["success"] is True
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data).json()
+        r = requests.post(self.url + '/register', data=data).json()
         assert r["success"] is False
 
     def test_token_api(self):
@@ -76,16 +82,11 @@ class Test_UserMethods(object):
             "password": "sdf",
             "username": "sdf1"
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/register', data=data)
+        r = requests.post(self.url + '/token', data=data)
         json_ = json.loads(r.text)
         assert json_.get("token", None) is not None
         data["password"] = "asdf"
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/token', data=data)
         assert r.text == "False"
 
-    def teardown(self):
-        with self.app.app_context():
-            User.query.filter_by(emailid="sdf@s.com").delete()
-            User.query.filter_by(emailid="sdf@s1.com").delete()
-            db.session.commit()

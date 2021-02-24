@@ -44,7 +44,8 @@ class Test_MscolabAdminWindow(object):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.url = self.app.config['URL']
+        self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
@@ -52,7 +53,7 @@ class Test_MscolabAdminWindow(object):
 
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.url)
         self._login()
         self._activate_project_at_index(0)
         QtTest.QTest.mouseClick(self.window.adminWindowBtn, QtCore.Qt.LeftButton)

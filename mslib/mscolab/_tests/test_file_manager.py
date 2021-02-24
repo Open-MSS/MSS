@@ -30,7 +30,6 @@ from mslib.mscolab import file_manager
 from mslib.mscolab.models import User, Project
 from mslib.mscolab.server import db, APP
 from mslib.mscolab.mscolab import handle_db_seed
-from mslib._tests.constants import MSCOLAB_URL_TEST
 
 
 class Test_FileManager(object):
@@ -41,6 +40,7 @@ class Test_FileManager(object):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.url = self.app.config['URL']
         db.init_app(self.app)
         self.fm = file_manager.FileManager(mscolab_settings.MSCOLAB_DATA_DIR)
         self._example_data()
@@ -49,7 +49,7 @@ class Test_FileManager(object):
             'email': 'a',
             'password': 'a'
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/token', data=data)
         self.token = json.loads(r.text)['token']
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()

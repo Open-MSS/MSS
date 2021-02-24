@@ -47,20 +47,26 @@ class Test_Mscolab(object):
 
     def setup(self):
         handle_db_seed()
-        self.port = 8084
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app, sockio, cm, fm = initialize_managers(self.app)
+        self.url = self.app.config['URL']
+        self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
+        self.window.show()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        QtWidgets.QApplication.processEvents()
         db.init_app(self.app)
-        self.MSCOLAB_URL_TEST = f"http://localhost:{self.port}"
         logging.debug("starting")
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.url)
 
     def teardown(self):
         QtTest.QTest.mouseClick(self.window.logoutButton, QtCore.Qt.LeftButton)
@@ -72,8 +78,8 @@ class Test_Mscolab(object):
                      ("berta@something.org", "berta"),
                     ]
             for em, username in email:
-                mscolab_delete_all_projects(self.app, self.MSCOLAB_URL_TEST, em, "something", username)
-                mscolab_delete_user(self.app, self.MSCOLAB_URL_TEST, em, "something")
+                mscolab_delete_all_projects(self.app, self.url, em, "something", username)
+                mscolab_delete_user(self.app, self.url, em, "something")
 
         # to disconnect connections, and clear token
         self.window.disconnect_handler()
@@ -362,7 +368,7 @@ class Test_Mscolab(object):
         pass
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText(self.MSCOLAB_URL_TEST)
+        self.window.url.setEditText(self.url)
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
