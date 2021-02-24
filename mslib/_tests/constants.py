@@ -47,7 +47,8 @@ if not ROOT_FS.exists("mss/testdata"):
 SERVER_CONFIG_FS = fs.open_fs(os.path.join(ROOT_DIR, "mss"))
 DATA_FS = fs.open_fs(os.path.join(ROOT_DIR, "mss/testdata"))
 
-os.environ["MSS_CONFIG_PATH"] = SERVER_CONFIG_FS.root_path
+MSS_CONFIG_PATH = SERVER_CONFIG_FS.root_path
+os.environ["MSS_CONFIG_PATH"] = MSS_CONFIG_PATH
 SERVER_CONFIG_FILE_PATH = os.path.join(SERVER_CONFIG_FS.root_path, SERVER_CONFIG_FILE)
 
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2

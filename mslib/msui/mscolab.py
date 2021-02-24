@@ -144,11 +144,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
         default_MSCOLAB = config_loader(
-            dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)
+            dataset="default_MSCOLAB")
         add_mscolab_urls(self.url, default_MSCOLAB)
 
-        self.emailid.setText(config_loader(dataset="MSCOLAB_mailid", default=""))
-        self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
+        self.emailid.setText(config_loader(dataset="MSCOLAB_mailid"))
+        self.password.setText(config_loader(dataset="MSCOLAB_password"))
 
         # fill value of mscolab url if found in QSettings storage
         self.settings = \
@@ -164,6 +164,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
         self.connectMscolab.setEnabled(True)
+        self.url.setEnabled(True)
         # set mscolab_server_url to None
         self.mscolab_server_url = None
 
@@ -187,6 +188,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # enable and disable right buttons
                 self.loginButton.setEnabled(True)
                 self.addUser.setEnabled(True)
+                self.url.setEnabled(False)
                 self.disconnectMscolab.setEnabled(True)
                 self.connectMscolab.setEnabled(False)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
@@ -353,7 +355,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.user_diag.show()
 
     def add_user(self):
-        for key, value in config_loader(dataset="MSC_login", default={}).items():
+        for key, value in config_loader(dataset="MSC_login").items():
             if key not in constants.MSC_LOGIN_CACHE:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
@@ -520,7 +522,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.reload_view_windows()
 
     def authorize(self):
-        for key, value in config_loader(dataset="MSC_login", default={}).items():
+        for key, value in config_loader(dataset="MSC_login").items():
             if key not in constants.MSC_LOGIN_CACHE:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))

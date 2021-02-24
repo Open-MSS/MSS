@@ -40,6 +40,19 @@ import fs
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
 
+
+def pytest_addoption(parser):
+    parser.addoption("--mss_settings", action="store")
+
+
+def pytest_generate_tests(metafunc):
+    option_value = metafunc.config.option.mss_settings
+    if option_value is not None:
+        mss_settings_file_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
+        mss_settings_file_fs.writetext("mss_settings.json", option_value)
+        mss_settings_file_fs.close()
+
+
 if os.getenv("TESTS_VISIBLE") == "TRUE":
     Display = None
 else:
