@@ -48,7 +48,7 @@ def load_from_flitestar(filename):
             if line.startswith('FWP'):
                 line = line.split()
                 if len(line) < 10:
-                    raise SyntaxError("Line {} has less than 9 fields.".format(line))
+                    raise SyntaxError(f"Line {line} has less than 9 fields.")
                 alt = round(float(line[-1]) / 100., 2)
                 if line[4] == 'N':
                     NS = 1.

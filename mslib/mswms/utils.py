@@ -453,7 +453,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
             clev = np.array([0, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     else:
-        raise RuntimeError("Illegal plotting style?! ({})".format(style))
+        raise RuntimeError(f"Illegal plotting style?! ({style})")
     if clev[0] == clev[-1]:
         cmin, cmax = 0, 1
         clev = np.linspace(0, 1, len(clev))
