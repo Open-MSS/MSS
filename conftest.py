@@ -30,6 +30,7 @@ from __future__ import print_function
 import imp
 import os
 import sys
+import socket
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -40,7 +41,7 @@ import fs
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
 
-PORTS = list(range(8300, 8500))
+PORTS = list(range(8300, 8600))
 
 
 def pytest_addoption(parser):
@@ -180,17 +181,32 @@ def configure_testsetup(request):
 process = None
 
 
+def check_free_port(port):
+    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        _s.bind(("127.0.0.1", port))
+    except socket.error:
+        port = PORTS.pop()
+        check_free_port(port)
+    _s.close()
+    return port
+
+
 @pytest.fixture(scope="module", autouse=True)
 def start_mscolab_server(request):
-    port = PORTS.pop()
+    port = check_free_port(PORTS.pop())
     from mslib.mscolab.conf import mscolab_settings
     from mslib.mscolab.server import APP, initialize_managers, start_server
+    url = f"http://localhost:{port}"
+    sio = socketio.Client()
+    sio.connect(url)
 
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
     _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-    _app.config['URL'] = f"http://localhost:{port}"
+    _app.config['URL'] = url
+
     _app, sockio, cm, fm = initialize_managers(_app)
     global process
     process = multiprocessing.Process(

@@ -32,6 +32,7 @@ import requests
 import socketio
 from werkzeug.urls import url_join
 
+from mslib.mscolab.mscolab import handle_db_seed
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message, MessageType
 from mslib.mscolab.server import APP, db, initialize_managers
@@ -41,6 +42,7 @@ from mslib.msui.icons import icons
 class Test_Chat(object):
 
     def setup(self):
+        handle_db_seed()
         self.sockets = []
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
@@ -52,8 +54,9 @@ class Test_Chat(object):
         db.init_app(self.app)
 
     def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()
+        #for socket in self.sockets:
+        #    socket.disconnect()
+        pass
 
     def test_send_message(self):
         response = self._login()

@@ -193,8 +193,8 @@ class Test_Files(object):
 
     def test_delete_project(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'a', 'a', 'a')
-            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+            response = mscolab_register_and_login(self.app, self.url, 'a', 'a', 'a')
+            data, response = mscolab_create_project(self.app, self.url, response,
                                                     path='f3', description='f3 test example')
             p_id = get_recent_pid(self.fm, self.user)
             assert p_id == 7
