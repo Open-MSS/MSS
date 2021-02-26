@@ -1,0 +1,56 @@
+name: Pytest MSS
+
+on: [ push, pull_request ]
+env:
+  PAT: ${{ secrets.PAT }}
+
+jobs:
+  Selected-MSS-Tests:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      image: openmss/mss-test:latest
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: Reinstall dependencies if changed
+      run: |
+        cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt|| (echo Dependencies differ \
+        && cat localbuild/meta.yaml \
+        | sed -n '/^requirements:/,/^test:/p' \
+        | sed -e "s/.*- //" \
+        | sed -e "s/menuinst.*//" \
+        | sed -e "s/.*://" > reqs.txt \
+        && source /opt/conda/bin/activate mssenv \
+        && conda config --add channels conda-forge \
+        && conda config --add channels defaults \
+        && conda install --revision 0 \
+        && conda install mamba \
+        && mamba install --file reqs.txt \
+        && mamba install --file requirements.d/development.txt)
+
+    - name: Run selected tests
+      timeout-minutes: 5
+      run: |
+        source /opt/conda/bin/activate mssenv
+        cd $GITHUB_WORKSPACE
+        xvfb-run pytest -n 4 --dist loadscope --max-worker-restart 0 \
+        --ignore ./mslib/msui/_tests/test_mscolab_admin_window.py \
+        --ignore ./mslib/msui/_tests/test_mscolab.py \
+        --ignore ./mslib/msui/_tests/test_mscolab_version_history.py \
+        --ignore ./mslib/msui/_tests/test_mscolab_merge_waypoints.py \
+        --ignore ./mslib/msui/_tests/test_mscolab_project.py \
+        --ignore ./mslib/mscolab/_tests/test_user.py \
+        --ignore ./mslib/mscolab/_tests/test_files.py \
+        --ignore ./mslib/mscolab/_tests/test_server.py \
+        --ignore ./mslib/mscolab/_tests/test_utils.py \
+        --ignore ./mslib/mscolab/_tests/test_files_api.py \
+        --ignore ./mslib/mscolab/_tests/test_chat_manager.py \
+        --ignore ./mslib/mscolab/_tests/test_sockets.py \
+        --ignore ./mslib/mscolab/_tests/test_file_manager.py \
+        --ignore ./mslib/mscolab/_tests/test_chat.py mslib
