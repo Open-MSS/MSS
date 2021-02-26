@@ -25,7 +25,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import pytest
 import mslib.mswms.mswms as mswms
 from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_307_html
 
