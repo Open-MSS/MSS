@@ -53,11 +53,6 @@ class Test_Chat(object):
         self.cm = cm
         db.init_app(self.app)
 
-    def teardown(self):
-        #for socket in self.sockets:
-        #    socket.disconnect()
-        pass
-
     def test_send_message(self):
         response = self._login()
         sio = socketio.Client()

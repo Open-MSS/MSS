@@ -94,9 +94,6 @@ class Test_Server(object):
             assert server.register_user('alpha2a@alpha.org', 'abcdef', 'alpha') == \
                    {'message': 'Oh no, this username is already registered', 'success': False}
 
-    def test_verify_user(self):
-        pass
-
     def test_home(self):
         with self.app.app_context():
             result = server.home()
@@ -259,9 +256,6 @@ class Test_Server(object):
             result = response.get_data(as_text=True)
             assert "404" in result
 
-    def test_error413(self):
-        pass
-
     def test_create_project(self):
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
@@ -357,9 +351,6 @@ class Test_Server(object):
             response = response.get_data(as_text=True)
             # ToDo add a test with two revisions
             assert response == 'False'
-
-    def test_set_version_name(self):
-        pass
 
     def test_authorized_users(self):
         with self.app.app_context():
@@ -485,9 +476,6 @@ class Test_Server(object):
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
             assert response == {'description': 'f13', 'id': auth_data['p_id'], 'path': 'f13'}
-
-    def test_undo_ftml(self):
-        pass
 
     def test_get_users_without_permission(self):
         with self.app.app_context():
