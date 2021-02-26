@@ -18,18 +18,22 @@ jobs:
     steps:
     - uses: actions/checkout@v2
         
-    - name: Update dependencies if changed
+    - name: Reinstall dependencies if changed
       run: |
-        cmp -s /meta.yaml localbuild/meta.yaml || (echo Dependencies differ \
+        cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
         && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
+        && source /opt/conda/bin/activate mssenv \
         && conda config --add channels conda-forge \
         && conda config --add channels defaults \
-        && conda install -n mssenv --file reqs.txt --force-reinstall)
-
+        && conda install --revision 0 \
+        && conda install mamba \
+        && mamba install --file reqs.txt \
+        && mamba install --file requirements.d/development.txt)
+        
     - name: Run tests
       timeout-minutes: 25
       run: |
