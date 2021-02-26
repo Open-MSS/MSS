@@ -263,7 +263,6 @@ class Test_WMS(object):
         assert isinstance(result.data, bytes), result
         assert result.data.count(b"") >= 1, result
 
-    @pytest.mark.timeout(30)
     def test_application_unkown_request(self):
         environ = {
             'wsgi.url_scheme': 'http',

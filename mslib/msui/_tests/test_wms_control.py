@@ -550,7 +550,6 @@ class TestWMSControlWidgetSetupSimple(object):
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
             ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
 
-    @pytest.mark.timeout(30)
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_xml_time_error(self, mockbox):
         dimext_time_error = """
