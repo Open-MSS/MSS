@@ -198,8 +198,6 @@ def start_mscolab_server(request):
     from mslib.mscolab.conf import mscolab_settings
     from mslib.mscolab.server import APP, initialize_managers, start_server
     url = f"http://localhost:{port}"
-    sio = socketio.Client()
-    sio.connect(url)
 
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
