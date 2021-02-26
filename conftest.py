@@ -156,6 +156,7 @@ imp.load_source('mscolab_settings', path)
 sys.path.insert(0, parent_path)
 
 # ToDo scope="class" for mscolab tests wanted
+
 @pytest.fixture(scope="session")
 def create_data():
     from mslib.mscolab.mscolab import handle_db_seed
