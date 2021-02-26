@@ -134,7 +134,7 @@ class Test_MscolabProject(object):
             assert Message.query.filter_by(text='test edit').count() == 0
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText("http://localhost:8083")
+        self.window.url.setEditText(self.MSCOLAB_URL_TEST)
         QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
