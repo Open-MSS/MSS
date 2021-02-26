@@ -63,10 +63,6 @@ class Test_Mscolab(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
         db.init_app(self.app)
-        logging.debug("starting")
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
 
     def teardown(self):
         QtTest.QTest.mouseClick(self.window.logoutButton, QtCore.Qt.LeftButton)

@@ -39,7 +39,6 @@ class Test_MscolabAdminWindow(object):
         """
         User being used during test: id = 5, username = test1
         """
-        self.port = 8084
         handle_db_seed()
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
@@ -49,7 +48,6 @@ class Test_MscolabAdminWindow(object):
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
-        self.MSCOLAB_URL_TEST = f"http://localhost:{self.port}"
 
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
@@ -191,7 +189,7 @@ class Test_MscolabAdminWindow(object):
         assert self.admin_window.modifyUsersTable.rowCount() == 5
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText(self.MSCOLAB_URL_TEST)
+        self.window.url.setEditText(self.url)
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 

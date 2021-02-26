@@ -46,7 +46,6 @@ class Actions(object):
 class Test_MscolabProject(object):
 
     def setup(self):
-        self.port = 8084
         # start mscolab server
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
