@@ -270,10 +270,12 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_LagrantoTrajStyle_PL_01(driver=self.hsec), level=300)
         assert img is not None
 
+    @pytest.mark.timeout(30)
     def test_HS_BLH_MSLP_Style_01(self):
         img = self.plot(mpl_hsec_styles.HS_BLH_MSLP_Style_01(driver=self.hsec))
         assert img is not None
 
+    @pytest.mark.timeout(30)
     def test_HS_Meteosat_BT108_01(self):
         img = self.plot(mpl_hsec_styles.HS_Meteosat_BT108_01(driver=self.hsec))
         assert img is not None
