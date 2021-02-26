@@ -23,22 +23,28 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 import requests
 import json
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import file_manager
 from mslib.mscolab.models import User, Project
 from mslib.mscolab.server import db, APP
-from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib.mscolab.mscolab import handle_db_seed
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_FileManager(object):
     def setup(self):
         assert 'tmp' in mscolab_settings.MSCOLAB_DATA_DIR
+        handle_db_seed()
         self.sockets = []
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.url = self.app.config['URL']
         db.init_app(self.app)
         self.fm = file_manager.FileManager(mscolab_settings.MSCOLAB_DATA_DIR)
         self._example_data()
@@ -47,7 +53,7 @@ class Test_FileManager(object):
             'email': 'a',
             'password': 'a'
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/token', data=data)
         self.token = json.loads(r.text)['token']
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
@@ -80,8 +86,10 @@ class Test_FileManager(object):
             self.fm.create_project(flight_path, "info about project2", self.user)
             project = Project.query.filter_by(path=flight_path).first()
             self.cleanup_pid.add(project.id)
-            assert self.fm.get_project_details(project.id, self.user) == {'description': 'info about project2',
-                                                                          'id': 7, 'path': 'project2'}
+            pd = self.fm.get_project_details(project.id, self.user)
+            assert pd['description'] == 'info about project2'
+            assert pd['path'] == 'project2'
+            assert pd['id'] == 7
 
     def test_list_projects(self):
         # ToDo check cleanup

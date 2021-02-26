@@ -5,7 +5,7 @@ env:
   PAT: ${{ secrets.PAT }}
 
 jobs:
-  Test-MSS:
+  Selected-MSS-Tests:
     runs-on: ubuntu-latest
     
     defaults:
@@ -30,24 +30,9 @@ jobs:
         && conda config --add channels defaults \
         && conda install -n mssenv --file reqs.txt --force-reinstall)
 
-    - name: Run tests
-      timeout-minutes: 25
+    - name: Run selected tests
+      timeout-minutes: 5
       run: |
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
-        xvfb-run pytest mslib
-    
-  Update-Images:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    needs: [Test-MSS]
-    
-    steps:
-      - if: env.PAT != ''
-        name: Invoke dockerhub image creation
-        uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
-        with:
-          workflow: Update all images
-          repo: Open-MSS/dockerhub
-          ref: stable
-          token: ${{ secrets.PAT }}
+        xvfb-run pytest -n 6 --dist loadscope --max-worker-restart 0 --timeout=30

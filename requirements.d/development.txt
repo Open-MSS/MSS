@@ -3,14 +3,16 @@
 # platform: linux-64
 pep8
 py
+mock
 pycodestyle
 pytest
 pytest-cache
 pytest-pep8
 pytest-flake8
+pytest-timeout
+pytest-xdist
+pytest-cov
 sphinx
 sphinx_rtd_theme
 gitpython
-mock
-pytest-cov
 gevent

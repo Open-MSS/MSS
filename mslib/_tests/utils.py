@@ -26,6 +26,7 @@
     limitations under the License.
 """
 import fs
+import requests
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
 from flask import json
@@ -75,7 +76,7 @@ def mscolab_register_and_login(app, msc_url, email, password, username):
     return response
 
 
-def mscolab_login(app, msc_url, email, password):
+def mscolab_login(app, msc_url, email='a', password='a'):
     data = {
         'email': email,
         'password': password

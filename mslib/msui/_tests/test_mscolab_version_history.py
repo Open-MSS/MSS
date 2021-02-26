@@ -24,30 +24,34 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 import sys
 import time
 
 import mock
 
 from mslib.msui.mscolab import MSSMscolabWindow
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, db, initialize_managers
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_MscolabVersionHistory(object):
     def setup(self):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.url = self.app.config['URL']
         self.app, _, cm, fm = initialize_managers(self.app)
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.url)
         self._login()
         self._activate_project_at_index(0)
         time.sleep(4)
@@ -133,7 +137,7 @@ class Test_MscolabVersionHistory(object):
         assert new_changes_count == changes_count + 2
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText("http://localhost:8084")
+        self.window.url.setEditText(self.url)
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(1)
 

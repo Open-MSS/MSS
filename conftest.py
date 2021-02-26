@@ -30,6 +30,7 @@ from __future__ import print_function
 import imp
 import os
 import sys
+import socket
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -39,6 +40,8 @@ import pytest
 import fs
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
+
+PORTS = list(range(9300, 9600))
 
 
 def pytest_addoption(parser):
@@ -152,8 +155,8 @@ sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 imp.load_source('mscolab_settings', path)
 sys.path.insert(0, parent_path)
 
-
-@pytest.fixture(scope="session", autouse=True)
+# ToDo scope="class" for mscolab tests wanted
+@pytest.fixture(scope="session")
 def create_data():
     from mslib.mscolab.mscolab import handle_db_seed
     handle_db_seed()
@@ -178,26 +181,42 @@ def configure_testsetup(request):
 process = None
 
 
-@pytest.fixture(scope="session", autouse=True)
+def check_free_port(port):
+    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        _s.bind(("127.0.0.1", port))
+    except socket.error:
+        port = PORTS.pop()
+        check_free_port(port)
+    _s.close()
+    return port
+
+
+@pytest.fixture(scope="class")
 def start_mscolab_server(request):
+    testname = request.node.name
+    port = check_free_port(PORTS.pop() + len(testname))
     from mslib.mscolab.conf import mscolab_settings
     from mslib.mscolab.server import APP, initialize_managers, start_server
+    url = f"http://localhost:{port}"
 
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
     _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    _app.config['URL'] = url
+
     _app, sockio, cm, fm = initialize_managers(_app)
     global process
     process = multiprocessing.Process(
         target=start_server,
         args=(_app, sockio, cm, fm,),
-        kwargs={'port': 8084})
+        kwargs={'port': port})
     process.start()
     time.sleep(2)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def stop_server(request):
     """Cleanup a testing directory once we are finished."""
     def stop_callback():

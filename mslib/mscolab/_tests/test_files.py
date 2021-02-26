@@ -24,24 +24,33 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+
+
+
 import socketio
 import requests
 import json
 import os
 from functools import partial
 import time
+import pytest
 
 from werkzeug.urls import url_join
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.server import APP, initialize_managers
+from mslib.mscolab.mscolab import handle_db_seed
 from mslib.mscolab.utils import get_recent_pid
+from mslib._tests.utils import mscolab_register_and_login, mscolab_create_project
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_Files(object):
     def setup(self):
+        handle_db_seed()
         self.sockets = []
         self.file_message_counter = [0] * 2
         self.app = APP
@@ -49,11 +58,16 @@ class Test_Files(object):
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
         self.app, _, cm, fm = initialize_managers(self.app)
+        self.url = self.app.config['URL']
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
+
+    def teardown(self):
+        for socket in self.sockets:
+            socket.disconnect()
 
     def test_create_project(self):
         with self.app.app_context():
@@ -76,7 +90,7 @@ class Test_Files(object):
     def test_projects(self):
         with self.app.app_context():
             projects = self.fm.list_projects(self.user)
-            assert len(projects) == 4
+            assert len(projects) == 3
 
     def test_is_admin(self):
         with self.app.app_context():
@@ -89,7 +103,8 @@ class Test_Files(object):
             assert self.fm.is_admin(u_id, no_perm_p_id) is False
 
     def test_file_save(self):
-        url = url_join(MSCOLAB_URL_TEST, 'token')
+        pytest.skip('faiks with xdist')
+        url = url_join(self.url, 'token')
         r = requests.post(url, data={
             'email': 'a',
             'password': 'a'
@@ -109,8 +124,8 @@ class Test_Files(object):
 
         sio1.on('file-changed', handler=partial(handle_chat_message, 1))
         sio2.on('file-changed', handler=partial(handle_chat_message, 2))
-        sio1.connect(MSCOLAB_URL_TEST)
-        sio2.connect(MSCOLAB_URL_TEST)
+        sio1.connect(self.url)
+        sio2.connect(self.url)
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             user2 = User.query.filter_by(id=9).first()
@@ -152,6 +167,7 @@ class Test_Files(object):
             self.sockets.append(sio2)
 
     def test_undo(self):
+        pytest.skip('depends on test_file_save')
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             changes = Change.query.filter_by(p_id=p_id).all()
@@ -169,7 +185,8 @@ class Test_Files(object):
     def test_authorized_users(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
-            assert len(self.fm.get_authorized_users(p_id)) == 1
+            assert p_id == 4
+            assert len(self.fm.get_authorized_users(p_id)) == 2
 
     def test_modify_project(self):
         with self.app.app_context():
@@ -183,7 +200,12 @@ class Test_Files(object):
 
     def test_delete_project(self):
         with self.app.app_context():
+            response = mscolab_register_and_login(self.app, self.url, 'a', 'a', 'a')
+            data, response = mscolab_create_project(self.app, self.url, response,
+                                                    path='f3', description='f3 test example')
             p_id = get_recent_pid(self.fm, self.user)
+            assert p_id == 7
+            assert response.status == '200 OK'
             user2 = User.query.filter_by(id=9).first()
             assert self.fm.delete_file(p_id, user2) is False
             assert self.fm.delete_file(p_id, self.user) is True
@@ -196,7 +218,3 @@ class Test_Files(object):
             assert len(changes) == 0
             messages = Message.query.filter_by(p_id=p_id).all()
             assert len(messages) == 0
-
-    def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()

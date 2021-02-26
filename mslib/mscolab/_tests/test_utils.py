@@ -23,15 +23,20 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import pytest
 from mslib.mscolab.server import db, APP, initialize_managers
 from mslib.mscolab.models import User
 from mslib.mscolab.utils import get_recent_pid
 from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.mscolab import handle_db_seed
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_Utils(object):
     def setup(self):
+        handle_db_seed()
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
@@ -47,6 +52,3 @@ class Test_Utils(object):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
         assert p_id == 4
-
-    def teardown(self):
-        pass
