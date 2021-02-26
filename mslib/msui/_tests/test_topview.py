@@ -38,6 +38,8 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 
+PORTS = list(range(8084, 8094))
+
 
 class Test_MSS_TV_MapAppearanceDialog(object):
     def setup(self):
@@ -256,6 +258,7 @@ class Test_MSSTopViewWindow(object):
 
 class Test_TopViewWMS(object):
     def setup(self):
+        self.port = PORTS.pop()
         self.application = QtWidgets.QApplication(sys.argv)
 
         self.tempdir = tempfile.mkdtemp()
@@ -263,7 +266,7 @@ class Test_TopViewWMS(object):
             os.mkdir(self.tempdir)
         self.thread = multiprocessing.Process(
             target=application.run,
-            args=("127.0.0.1", 8082))
+            args=("127.0.0.1", self.port))
         self.thread.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
@@ -302,7 +305,7 @@ class Test_TopViewWMS(object):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server("http://127.0.0.1:8082")
+        self.query_server(f"http://127.0.0.1:{self.port}")
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
