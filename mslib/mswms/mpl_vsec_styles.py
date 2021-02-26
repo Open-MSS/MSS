@@ -203,12 +203,12 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
             ("air_potential_temperature", np.arange(200, 700, 10), "dimgrey", "dimgrey", "solid", 2, True)]
 
     class fnord(VS_GenericStyle):
-        name = "VS_{}_{}".format(entity, vert)
+        name = f"VS_{entity}_{vert}"
         dataname = entity
         units, unit_scale = Targets.get_unit(dataname)
         title = Targets.TITLES.get(entity, entity)
         if units:
-            title += " ({})".format(units)
+            title += f" ({units})"
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours
 
@@ -247,22 +247,22 @@ _ADD_DATA = {
 for vert in ["al", "ml", "pl", "tl"]:
     for ent in Targets.get_targets():
         make_generic_class(
-            "VS_GenericStyle_{}_{}".format(vert.upper(), ent), ent, vert,
+            f"VS_GenericStyle_{vert.upper()}_{ent}", ent, vert,
             add_data=_ADD_DATA[vert])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "ertel_potential_vorticity"),
+        f"VS_GenericStyle_{vert.upper()}_{'ertel_potential_vorticity'}",
         "ertel_potential_vorticity", vert,
         add_data=_ADD_DATA[vert],
         fix_styles=[("ertel_potential_vorticity_nh", "northern hemisphere"),
                     ("ertel_potential_vorticity_sh", "southern hemisphere")])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "equivalent_latitude"),
+        f"VS_GenericStyle_{vert.upper()}_{'equivalent_latitude'}",
         "equivalent_latitude", vert,
         add_data=_ADD_DATA[vert],
         fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
                     ("equivalent_latitude_sh", "southern hemisphere")])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
+        f"VS_GenericStyle_{vert.upper()}_{'gravity_wave_temperature_perturbation'}",
         "air_temperature_residual", vert,
         add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure", "Pa"),
                                     ("sfc", "secondary_tropopause_air_pressure", "Pa")],
@@ -270,7 +270,7 @@ for vert in ["al", "ml", "pl", "tl"]:
                       ("secondary_tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("gravity_wave_temperature_perturbation", "")])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
+        f"VS_GenericStyle_{vert.upper()}_{'square_of_brunt_vaisala_frequency_in_air'}",
         "square_of_brunt_vaisala_frequency_in_air", vert,
         add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure", "Pa"),
                                     ("sfc", "secondary_tropopause_air_pressure", "Pa")],
@@ -280,7 +280,7 @@ for vert in ["al", "ml", "pl", "tl"]:
 
 vert = "pl"
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "cloud_ice_mixing_ratio"),
+    f"VS_GenericStyle_{vert.upper()}_{'cloud_ice_mixing_ratio'}",
     "cloud_ice_mixing_ratio", vert,
     add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -291,7 +291,7 @@ make_generic_class(
     fix_styles=[("log_ice_cloud", "iwc")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "number_concentration_of_ice_crystals_in_air"),
+    f"VS_GenericStyle_{vert.upper()}_{'number_concentration_of_ice_crystals_in_air'}",
     "number_concentration_of_ice_crystals_in_air", vert,
     add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -302,7 +302,7 @@ make_generic_class(
     fix_styles=[("log_ice_cloud", "nice")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "mean_mass_radius_of_cloud_ice_crystals"),
+    f"VS_GenericStyle_{vert.upper()}_{'mean_mass_radius_of_cloud_ice_crystals'}",
     "mean_mass_radius_of_cloud_ice_crystals", vert,
     add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -313,7 +313,7 @@ make_generic_class(
     fix_styles=[("ice_cloud", "radius")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "maximum_pressure_on_backtrajectory"),
+    f"VS_GenericStyle_{vert.upper()}_{'maximum_pressure_on_backtrajectory'}",
     "maximum_pressure_on_backtrajectory", vert, [], [])
 
 

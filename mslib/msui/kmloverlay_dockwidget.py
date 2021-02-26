@@ -537,7 +537,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
                     self.listWidget.takeItem(index)  # remove file item from ListWidget
                     QtWidgets.QMessageBox.critical(
-                        self, self.tr("KML Overlay"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+                        self, self.tr("KML Overlay"), self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
         logging.debug(self.dict_files)
 
     def merge_file(self):
@@ -591,10 +591,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while merging KML Files:"),
-                        self.tr("ERROR: {} {}".format(type(ex), ex)))
+                        self.tr(f"ERROR: {type(ex)} {ex}"))
             else:
                 QtWidgets.QMessageBox.warning(self, "Merge KML Files",
-                                              "File extension is not '.kml'!\n{:}".format(filename))
+                                              f"File extension is not '.kml'!\n{filename:}")
 
     def remove_ns(self, root):
         """

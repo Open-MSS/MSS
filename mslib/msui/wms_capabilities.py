@@ -64,29 +64,16 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
                 contact = collections.defaultdict(lambda: None)
             else:
                 contact = vars(provider.contact)
-            text = ("<b>Title:</b> {title}<p>"
-                    "<b>Service type:</b> {type} {version}<br>"
-                    "<b>Abstract:</b><br>{abstract}<br>"
-                    "<b>Contact:</b><br>"
-                    "    {name}<br>"
-                    "    {organization}<br>"
-                    "    {email}<br>"
-                    "    {address}<br>"
-                    "    {postcode} {city}<br>\n"
-                    "<b>Keywords:</b> {keywords}<br>\n"
-                    "<b>Access constraints:</b> {accessconstraints}<br>\n"
-                    "<b>Fees:</b> {fees}").format(
-                type=identification.type,
-                version=identification.version,
-                title=identification.title,
-                abstract=identification.abstract,
-                name=contact["name"],
-                organization=contact["organization"],
-                email=contact["email"],
-                address=contact["address"],
-                postcode=contact["postcode"],
-                city=contact["city"],
-                keywords=identification.keywords,
-                accessconstraints=identification.accessconstraints,
-                fees=identification.fees)
+            text = (f"<b>Title:</b> {identification.title}<p>"
+                    f"<b>Service type:</b> {identification.type} {identification.version}<br>"
+                    f"<b>Abstract:</b><br>{identification.abstract}<br>"
+                    f"<b>Contact:</b><br>"
+                    f"    {contact['name']}<br>"
+                    f"    {contact['organization']}<br>"
+                    f"    {contact['email']}<br>"
+                    f"    {contact['address']}<br>"
+                    f"    {contact['postcode']} {contact['city']}<br>\n"
+                    f"<b>Keywords:</b> {identification.keywords}<br>\n"
+                    f"<b>Access constraints:</b> {identification.accessconstraints}<br>\n"
+                    f"<b>Fees:</b> {identification.fees}")
             self.txtCapabilities.setHtml(text)

@@ -157,7 +157,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         #     raise ValueError("wrong initialisation time in input")
 
         if fc_time not in times:
-            msg = "Forecast valid time '{}' is not available.".format(fc_time)
+            msg = f"Forecast valid time '{fc_time}' is not available."
             logging.error(msg)
             dataset.close()
             raise ValueError(msg)
