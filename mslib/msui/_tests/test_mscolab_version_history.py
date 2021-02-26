@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 import sys
 import time
 
@@ -35,6 +36,9 @@ from mslib.mscolab.server import APP, db, initialize_managers
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_MscolabVersionHistory(object):
     def setup(self):
         self.app = APP

@@ -37,6 +37,9 @@ from mslib.mscolab.utils import get_recent_pid
 from mslib._tests.utils import mscolab_register_and_login, mscolab_create_project
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_Files(object):
     def setup(self):
         handle_db_seed()

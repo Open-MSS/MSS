@@ -41,7 +41,7 @@ import fs
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
 
-PORTS = list(range(8300, 8600))
+PORTS = list(range(9300, 9600))
 
 
 def pytest_addoption(parser):
@@ -156,7 +156,7 @@ imp.load_source('mscolab_settings', path)
 sys.path.insert(0, parent_path)
 
 # ToDo scope="class" for mscolab tests wanted
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def create_data():
     from mslib.mscolab.mscolab import handle_db_seed
     handle_db_seed()
@@ -192,9 +192,10 @@ def check_free_port(port):
     return port
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="class")
 def start_mscolab_server(request):
-    port = check_free_port(PORTS.pop())
+    testname = request.node.name
+    port = check_free_port(PORTS.pop() + len(testname))
     from mslib.mscolab.conf import mscolab_settings
     from mslib.mscolab.server import APP, initialize_managers, start_server
     url = f"http://localhost:{port}"
@@ -215,7 +216,7 @@ def start_mscolab_server(request):
     time.sleep(2)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def stop_server(request):
     """Cleanup a testing directory once we are finished."""
     def stop_callback():

@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 import logging
 import sys
 import time
@@ -43,6 +44,9 @@ class Actions(object):
     DELETE = 4
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_MscolabProject(object):
 
     def setup(self):

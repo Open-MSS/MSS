@@ -23,7 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import pytest
 import requests
 import json
 from werkzeug.urls import url_join
@@ -35,6 +35,9 @@ from mslib.mscolab.utils import get_recent_pid
 from mslib.mscolab.chat_manager import ChatManager
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_Chat_Manager(object):
     def setup(self):
         self.sockets = []

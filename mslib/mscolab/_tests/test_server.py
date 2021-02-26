@@ -23,6 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 import io
 from pathlib import Path
 from flask import json
@@ -37,6 +38,9 @@ from mslib._tests.utils import (callback_307_html, mscolab_register_user,
                                 mscolab_delete_user, mscolab_login)
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_Init_Server(object):
     def setup(self):
         self.app = APP
@@ -51,7 +55,9 @@ class Test_Init_Server(object):
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
 
-
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_Server(object):
     def setup(self):
         mscolab_settings.enable_basic_http_authentication = False

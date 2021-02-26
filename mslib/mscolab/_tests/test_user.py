@@ -23,6 +23,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 import requests
 import json
 
@@ -32,6 +33,9 @@ from mslib.mscolab.models import User
 from mslib.mscolab.mscolab import handle_db_seed
 
 
+@pytest.mark.usefixtures("start_mscolab_server")
+@pytest.mark.usefixtures("stop_server")
+@pytest.mark.usefixtures("create_data")
 class Test_UserMethods(object):
     def setup(self):
         handle_db_seed()
