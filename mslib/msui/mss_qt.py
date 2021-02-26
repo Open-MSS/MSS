@@ -79,7 +79,7 @@ def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=N
     elif pickertype in ["qt", "default"]:
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
-        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -95,7 +95,7 @@ def get_open_filenames(parent, title, dirname, filt, pickertag=None, pickertype=
     if pickertype in ["qt", "default"]:
         filename = get_open_filenames_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
-        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -111,7 +111,7 @@ def get_save_filename(parent, title, filename, filt, pickertag=None, pickertype=
     elif pickertype in ["qt", "default"]:
         filename = get_save_filename_qt(parent, title, os.path.expanduser(filename), filt)
     else:
-        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -125,7 +125,7 @@ def get_existing_directory(parent, title, defaultdir, pickertag=None, pickertype
     elif pickertype in ["qt", "default"]:
         dirname = get_existing_directory_qt(parent, title, defaultdir)
     else:
-        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", dirname)
     if dirname == "":
         dirname = None
@@ -198,21 +198,21 @@ def excepthook(type_, value, traceback_):
     if type_ is mslib.utils.FatalUserError:
         QtWidgets.QMessageBox.critical(
             None, "fatal error",
-            "Fatal user error in MSS {} on {}\n"
-            "Python {}\n"
-            "\n"
-            "{}".format(mslib.__version__, platform.platform(), sys.version, value))
+            f"Fatal user error in MSS {mslib.__version__} on {platform.platform()}\n"
+            f"Python {sys.version}\n"
+            f"\n"
+            f"{value}")
     else:
         QtWidgets.QMessageBox.critical(
             None, "fatal error",
-            "Fatal error in MSS {} on {}\n"
-            "Python {}\n"
-            "\n"
-            "Please report bugs in MSS to https://github.com/Open-MSS/MSS\n"
-            "\n"
-            "Information about the fatal error:\n"
-            "\n"
-            "{}".format(mslib.__version__, platform.platform(), sys.version, tb))
+            f"Fatal error in MSS {mslib.__version__} on {platform.platform()}\n"
+            f"Python {sys.version}\n"
+            f"\n"
+            f"Please report bugs in MSS to https://github.com/Open-MSS/MSS\n"
+            f"\n"
+            f"Information about the fatal error:\n"
+            f"\n"
+            f"{tb}")
 
 
 sys.excepthook = excepthook
