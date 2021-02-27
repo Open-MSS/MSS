@@ -35,8 +35,8 @@ jobs:
         && mamba install --file requirements.d/development.txt)
 
     - name: Run selected tests
-      timeout-minutes: 10
+      timeout-minutes: 15
       run: |
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
-        xvfb-run pytest -v -n 6 --dist loadscope --max-worker-restart 0
+        xvfb-run pytest -v -n auto --dist loadscope --max-worker-restart 0 --durations=0
