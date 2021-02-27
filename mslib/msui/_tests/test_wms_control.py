@@ -141,8 +141,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_connection_error(self, mockbox):
-        if sys.version_info.major == 3:
-            pytest.skip("problem in urllib3")
         """
         assert that a message box informs about server troubles
         """
