@@ -70,16 +70,6 @@ class Test_Mscolab(object):
     def teardown(self):
         QtTest.QTest.mouseClick(self.window.logoutButton, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        with self.app.app_context():
-            email = [("something@something.org", "something"),
-                     ("other@something.org", "other"),
-                     ("anton@something.org", "anton"),
-                     ("berta@something.org", "berta"),
-                    ]
-            for em, username in email:
-                mscolab_delete_all_projects(self.app, self.url, em, "something", username)
-                mscolab_delete_user(self.app, self.url, em, "something")
-
         # to disconnect connections, and clear token
         self.window.disconnect_handler()
         QtWidgets.QApplication.processEvents()
@@ -92,6 +82,7 @@ class Test_Mscolab(object):
                 mss_dir.removetree('local_mscolab_data')
 
     def test_url_combo(self):
+        self._login()
         assert self.window.url.count() >= 1
 
     def test_login(self):
@@ -211,7 +202,6 @@ class Test_Mscolab(object):
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
     def test_set_exported_file(self, mockopen, mockmessage):
-        pytest.skip('fails with xdist')
         # name is misleading
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
@@ -231,15 +221,15 @@ class Test_Mscolab(object):
         assert self.window.listProjects.model().rowCount() == 1
 
     def test_add_project(self):
-        pytest.skip('fails with xdist')
         # ToDo testneeds to be independent from test_user_delete
         self._connect_to_mscolab()
-        self._create_user("something", "something@something.org", "something")
-        self._login("something@something.org", "something")
-        assert self.window.label.text() == 'Welcome, something'
+        self._create_user("otherthing", "other@something.org", "otherthing")
+        self._login("other@something.org", "otherthing")
+        assert self.window.label.text() == 'Welcome, otherthing'
         assert self.window.loginWidget.isVisible() is False
+        amount = self.window.listProjects.model().rowCount()
         self._create_project("Alpha", "Description Alpha")
-        assert self.window.listProjects.model().rowCount() == 1
+        assert self.window.listProjects.model().rowCount() == 1 + amount
 
     def test_add_user(self):
         self._connect_to_mscolab()
@@ -256,7 +246,6 @@ class Test_Mscolab(object):
         assert self.window.help_dialog is None
 
     def test_open_help_dialog(self):
-        pytest.skip('fails with xdist')
         QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.window.help_dialog is not None
@@ -279,7 +268,6 @@ class Test_Mscolab(object):
         assert self.window.active_pid is None
 
     def test_get_recent_pid(self):
-        pytest.skip('fails with xdist')
         self._connect_to_mscolab()
         self._create_user("anton", "anton@something.org", "something")
         self._login("anton@something.org", "something")
@@ -294,7 +282,6 @@ class Test_Mscolab(object):
         assert self.window.get_recent_pid() == current_pid + 2
 
     def test_get_recent_project(self):
-        pytest.skip('fails with xdist')
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
         self._login("berta@something.org", "something")
@@ -308,7 +295,6 @@ class Test_Mscolab(object):
         assert project["access_level"] == "creator"
 
     def test_delete_project_from_list(self):
-        pytest.skip('fails with xdist')
         self._connect_to_mscolab()
         self._create_user("other", "other@something.org", "something")
         self._login("other@something.org", "something")
