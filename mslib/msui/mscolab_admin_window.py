@@ -83,8 +83,6 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.populate_import_permission_cb()
 
     def populate_table(self, table, users):
-        for item in users:
-            item.pop(1)
         table.setRowCount(0)
         for row_number, row_data in enumerate(users):
             table.insertRow(row_number)
