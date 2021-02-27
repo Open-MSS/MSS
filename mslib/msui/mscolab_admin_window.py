@@ -85,7 +85,6 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     def populate_table(self, table, users):
         for item in users:
             item.pop(1)
-        print(users)
         table.setRowCount(0)
         for row_number, row_data in enumerate(users):
             table.insertRow(row_number)
