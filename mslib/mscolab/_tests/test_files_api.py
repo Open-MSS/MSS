@@ -43,7 +43,6 @@ from mslib._tests.utils import mscolab_register_and_login, mscolab_create_projec
 class Test_Files(object):
     def setup(self):
         handle_db_seed()
-        self.sockets = []
         self.file_message_counter = [0] * 2
         self.undefined_p_id = 123
         self.no_perm_p_id = 2
@@ -63,10 +62,6 @@ class Test_Files(object):
         self.token = json.loads(r.text)['token']
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
-
-    def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()
 
     def test_create_project(self):
         data = {

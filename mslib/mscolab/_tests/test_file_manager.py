@@ -26,6 +26,7 @@
 import pytest
 import requests
 import json
+import sys
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import file_manager
 from mslib.mscolab.models import User, Project
@@ -38,9 +39,9 @@ from mslib.mscolab.mscolab import handle_db_seed
 @pytest.mark.usefixtures("create_data")
 class Test_FileManager(object):
     def setup(self):
-        assert 'tmp' in mscolab_settings.MSCOLAB_DATA_DIR
+        if sys.platform ==  'linux':
+            assert 'tmp' in mscolab_settings.MSCOLAB_DATA_DIR
         handle_db_seed()
-        self.sockets = []
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
@@ -64,8 +65,6 @@ class Test_FileManager(object):
             for p_id in self.cleanup_pid:
                 self.fm.delete_file(p_id, self.user)
             db.session.commit()
-        for socket in self.sockets:
-            socket.disconnect()
 
     def test_create_project(self):
         with self.app.app_context():

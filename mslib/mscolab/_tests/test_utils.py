@@ -45,10 +45,8 @@ class Test_Utils(object):
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
-        with self.app.app_context():
-            self.user = User.query.filter_by(id=8).first()
 
     def test_get_recent_pid(self):
         with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
+            p_id = get_recent_pid(self.fm, User.query.filter_by(id=8).first())
         assert p_id == 4

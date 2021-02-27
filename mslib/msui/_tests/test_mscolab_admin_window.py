@@ -77,7 +77,6 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def test_permission_filter(self):
-        pytest.skip('fails with xdist')
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Change filter to viewer
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
@@ -93,7 +92,6 @@ class Test_MscolabAdminWindow(object):
         assert visible_row_count == len_added_users
 
     def test_text_search_filter(self):
-        pytest.skip('fails with xdist')
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Text Search in add users Table
@@ -118,7 +116,6 @@ class Test_MscolabAdminWindow(object):
         assert visible_row_count == len_added_users
 
     def test_permission_and_text_together(self):
-        pytest.skip('fails with xdist')
         QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "test4")
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
         QtWidgets.QApplication.processEvents()
@@ -130,7 +127,6 @@ class Test_MscolabAdminWindow(object):
         assert visible_row_count == 0
 
     def test_add_permissions(self):
-        pytest.skip('fails with xdist')
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         users = ["test2", "test3"]
@@ -144,7 +140,6 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_modify_permissions(self):
-        pytest.skip('fails with xdist')
         self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
@@ -164,7 +159,6 @@ class Test_MscolabAdminWindow(object):
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
     def test_delete_permissions(self):
-        pytest.skip('fails with xdist')
         self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
@@ -187,7 +181,6 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_import_permissions(self):
-        pytest.skip('fails with xdist')
         self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
