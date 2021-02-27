@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
 import pytest
 import os
 import fs
@@ -33,6 +34,9 @@ import multidict
 import werkzeug
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib._tests.utils import create_mss_settings_file
+from mslib._tests import constants
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TestParseTime(object):
@@ -99,6 +103,13 @@ class TestConfigLoader(object):
             config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss',
                                        'not_existing_mss_settings.json.sample')
             _ = utils.config_loader(config_file=config_file)
+
+    def test_config_file_cached(self, caplog):
+        with caplog.at_level(logging.INFO):
+             utils.config_loader()
+        assert 'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html' \
+               in caplog.text
+        assert constants.CACHED_CONFIG_FILE is None
 
     def test_existing_empty_config_file(self):
         """

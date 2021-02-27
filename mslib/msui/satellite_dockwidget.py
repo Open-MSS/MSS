@@ -157,12 +157,12 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         except (IOError, OSError, ValueError) as ex:
             logging.error("Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
-                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+                                           self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
         else:
             logging.debug("read %i segments", len(overpass_segments))
 
             self.cbSatelliteOverpasses.clear()
-            items = ["{} to {}".format(str(seg["utc"][0]), str(seg["utc"][-1]))
+            items = [f"{seg['utc'][0]} to {seg['utc'][-1]}"
                      for seg in overpass_segments]
             items.insert(0, "None (select item to plot)")
             items.insert(1, "All tracks")
