@@ -52,8 +52,6 @@ class Test_MscolabAdminWindow(object):
         self.fm = fm
         self.cm = cm
         db.init_app(self.app)
-        self.MSCOLAB_URL_TEST = f"http://localhost:{self.port}"
-
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
