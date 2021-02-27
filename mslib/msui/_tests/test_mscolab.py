@@ -296,9 +296,9 @@ class Test_Mscolab(object):
 
     def test_delete_project_from_list(self):
         self._connect_to_mscolab()
-        self._create_user("other", "other@something.org", "something")
-        self._login("other@something.org", "something")
-        assert self.window.label.text() == 'Welcome, other'
+        self._create_user("unic", "unic@something.org", "unic")
+        self._login("unic@something.org", "unic")
+        assert self.window.label.text() == 'Welcome, unic'
         assert self.window.loginWidget.isVisible() is False
         assert self.window.listProjects.model().rowCount() == 0
         self._create_project("flight3", "Description flight3")
