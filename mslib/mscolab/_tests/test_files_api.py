@@ -169,7 +169,7 @@ class Test_Files(object):
         assert res["success"] is False
 
     def test_modify_bulk_permissions(self):
-        pytest.skip("needs a review")
+        pytest.skip("status code 500")
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             assert p_id == 4
@@ -180,7 +180,9 @@ class Test_Files(object):
             "selected_access_level": "viewer"
         }
         url = url_join(self.url, 'modify_bulk_permissions')
-        r = requests.post(url, data=data).json()
+        response = requests.post(url, data=data)
+        assert response.status_code != 500
+        r = response.json()
         assert r["success"] is True
         data["p_id"] = self.undefined_p_id
         r = requests.post(url, data=data).json()

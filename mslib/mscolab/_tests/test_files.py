@@ -103,7 +103,7 @@ class Test_Files(object):
             assert self.fm.is_admin(u_id, no_perm_p_id) is False
 
     def test_file_save(self):
-        pytest.skip('faiks with xdist')
+        pytest.skip('fails with xdist')
         url = url_join(self.url, 'token')
         r = requests.post(url, data={
             'email': 'a',

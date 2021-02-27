@@ -249,7 +249,7 @@ class Test_Chat(object):
             assert Message.query.filter_by(text="delete this message").count() == 0
 
     def test_upload_file(self):
-        pytest.skip('repair soon')
+        pytest.skip('fails with xdist')
         response = self._login()
         token = response["token"]
         sio = socketio.Client()
