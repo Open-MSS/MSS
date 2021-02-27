@@ -34,7 +34,7 @@ jobs:
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
 
-    - name: Run selected tests
+    - name: Run tests
       timeout-minutes: 15
       run: |
         source /opt/conda/bin/activate mssenv
