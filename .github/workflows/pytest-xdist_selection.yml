@@ -35,7 +35,7 @@ jobs:
         && mamba install --file requirements.d/development.txt)
 
     - name: Run selected tests
-      timeout-minutes: 5
+      timeout-minutes: 10
       run: |
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
