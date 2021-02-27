@@ -44,7 +44,7 @@ jobs:
   Update-Images:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    needs: [Test-MSS]
+    needs: [xdist-MSS-Tests]
 
     steps:
       - if: env.PAT != ''
