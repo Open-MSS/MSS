@@ -250,9 +250,9 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.help_dialog is not None
 
+    @mock.patch("mslib.msui.mscolab.show_popup")
     @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
-    def test_handle_delete_project(self, mocktext):
-        pytest.skip('needs a review for the delete button pressed. Seems to delete a None project')
+    def test_handle_delete_project(self, mocktext, mockmessage):
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
         self._login("berta@something.org", "something")
@@ -264,6 +264,7 @@ class Test_Mscolab(object):
         assert self.window.listProjects.model().rowCount() == 1
         QtTest.QTest.mouseClick(self.window.deleteProjectBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(1000)
         assert self.window.listProjects.model().rowCount() == 0
         assert self.window.active_pid is None
 
