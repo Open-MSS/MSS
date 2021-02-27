@@ -5,7 +5,7 @@ env:
   PAT: ${{ secrets.PAT }}
 
 jobs:
-  Selected-MSS-Tests:
+  xdist-MSS-Tests:
     runs-on: ubuntu-latest
     
     defaults:
@@ -40,3 +40,18 @@ jobs:
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
         pytest -v -n auto --dist loadscope --max-worker-restart 0 --durations=0
+
+  Update-Images:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: [Test-MSS]
+
+    steps:
+      - if: env.PAT != ''
+        name: Invoke dockerhub image creation
+        uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
+        with:
+          workflow: Update all images
+          repo: Open-MSS/dockerhub
+          ref: stable
+          token: ${{ secrets.PAT }}
