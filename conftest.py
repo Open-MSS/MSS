@@ -186,7 +186,7 @@ def check_free_port(port):
     _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         _s.bind(("127.0.0.1", port))
-    except socket.error:
+    except OSError:
         port = PORTS.pop()
         check_free_port(port)
     _s.close()
