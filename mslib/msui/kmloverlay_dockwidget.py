@@ -274,7 +274,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     This class provides the interface for accessing Multiple KML files and
     adding the appropriate patches to the TopView canvas.
     """
-
+    
     def __init__(self, parent=None, view=None):
         super(KMLOverlayControlWidget, self).__init__(parent)
         self.setupUi(self)
@@ -292,7 +292,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.labelStatusBar.setText("Status: Click on Add KML Files to get started.")
 
         self.listWidget.itemClicked.connect(self.show_clr_lw) #Connect slots and signals (Showing color and linewidth of clicked file).
-
+              
         self.dialog = CustomizeKMLWidget(self)  # create object of dialog UI Box
         self.listWidget.itemDoubleClicked.connect(self.open_customize_kml_dialog)
         self.dialog.pushButton_colour.clicked.connect(self.select_color)
@@ -388,6 +388,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if file in self.dict_files:
             self.dict_files[file]["color"] = self.get_color()
+            clr = self.get_color()
+            self.label_color.setStyleSheet(f'background-color: rgb({clr[0]*255},{clr[1]*255},{clr[2]*255})')
+                                                        #shows the color of the kml file instantaneously
         self.update_settings()
         self.checklistitem(file)
 
@@ -410,8 +413,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if file in self.dict_files:
             self.dict_files[file]["linewidth"] = self.dialog.dsb_linewidth.value()
+            self.label_linewidth.setText(str(self.dialog.dsb_linewidth.value())) #shows the linewidth of the kml file instantaneously
         self.update_settings()
         self.checklistitem(file)
+
 
     def show_clr_lw(self):
 
@@ -423,17 +428,14 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if file in self.dict_files:
             self.label_color.setText(" ")
             clr=self.set_color(file)
-            r = clr[0]*255
-            g = clr[1]*255
-            b = clr[2]*255
-            self.label_color.setStyleSheet(f'background-color: rgb({r},{g},{b})')
+            self.label_color.setStyleSheet(f'background-color: rgb({clr[0]*255},{clr[1]*255},{clr[2]*255})')
             
-            lw = str(self.dict_files[file]["linewidth"])
-            self.label_linewidth.setText(lw)
+            self.label_linewidth.setText(str(self.set_linewidth(file)))
 
         else:
             self.label_linewidth.setText('Unknown')
-            self.label_color.setText('Unknown')    
+            self.label_color.setText('Unknown')                
+        
 
     def checklistitem(self, file):
         """
