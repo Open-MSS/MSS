@@ -456,7 +456,7 @@ class WMSServer(object):
                         bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
 
                 except ValueError:
-                    return self.create_service_exception(text=f"Invalid BBOX: {query.get("BBOX")}", version=version)
+                    return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
 
                 # Vertical level, if applicable.
                 level = query.get('ELEVATION')
@@ -522,7 +522,7 @@ class WMSServer(object):
                 try:
                     bbox = [float(v) for v in query.get("BBOX", "101,1050,10,180").split(",")]
                 except ValueError:
-                    return self.create_service_exception(text=f"Invalid BBOX: {query.get("BBOX")}", version=version)
+                    return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
 
                 plot_driver = self.vsec_drivers[dataset]
                 try:

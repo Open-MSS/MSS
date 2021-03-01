@@ -38,7 +38,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
 
 
-PORTS = list(range(8106, 8116))
+PORTS = list(range(8106, 8117))
 
 class HSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="EPSG:4326")
@@ -257,11 +257,11 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that multilayers get created properly
         """
-        self.query_server("http://127.0.0.1:8082")
-        server = self.window.listLayers.findItems("http://127.0.0.1:8082/", QtCore.Qt.MatchFixedString)[0]
+        self.query_server(f"http://127.0.0.1:{self.port}")
+        server = self.window.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
         assert server is not None
-        assert "header" in self.window.multilayers.layers["http://127.0.0.1:8082/"]
-        assert "wms" in self.window.multilayers.layers["http://127.0.0.1:8082/"]
+        assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
+        assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
 
         for i in range(0, server.childCount()):
             layer_widget = server.child(i)
