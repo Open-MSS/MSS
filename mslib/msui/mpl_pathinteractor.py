@@ -542,9 +542,9 @@ class PathInteractor(QtCore.QObject):
         x, y = list(zip(*vertices))
         wpd = self.waypoints_model.all_waypoint_data()
         for i in range(len(wpd)):
-            textlabel = "{:}   ".format(str(i))
+            textlabel = f"{str(i):}   "
             if wpd[i].location != "":
-                textlabel = "{:}   ".format(wpd[i].location)
+                textlabel = f"{wpd[i].location:}   "
             t = self.ax.text(x[i],
                              y[i],
                              textlabel,
@@ -593,8 +593,7 @@ class PathInteractor(QtCore.QObject):
             wp = wps[row]
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
-                "Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
-                .format(row, wp.lat, wp.lon, wp.flightlevel),
+                f"Remove waypoint no.{row:d} at {wp.lat:.2f}/{wp.lon:.2f}, flightlevel {wp.flightlevel:.2f}?",
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
     def set_path_color(self, line_color=None, marker_facecolor=None,
@@ -1053,7 +1052,7 @@ class HPathInteractor(PathInteractor):
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
-                textlabel = "{:}".format(wpd[i].location)
+                textlabel = f"{wpd[i].location:}"
             t = self.ax.text(x[i] + label_offset,
                              y[i] + label_offset,
                              textlabel,

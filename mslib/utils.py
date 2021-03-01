@@ -122,6 +122,11 @@ def config_loader(config_file=None, dataset=None):
     Returns: a the dataset value or the config as dictionary
 
     """
+    if config_file is None:
+        config_file = constants.CACHED_CONFIG_FILE
+    if config_file is None:
+        logging.info(
+            'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html')
     default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
     if dataset is not None and dataset not in default_config:
         raise KeyError(f"requested dataset '{dataset}' not in defaults or config_file")
