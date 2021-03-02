@@ -841,6 +841,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 self.lLayerName.setText(self.lLayerName.text() + f" (and {len(synced_layers) - 1} more)")
 
         styles = layer.styles
+        crs = layer.get_allowed_crs()
         levels, itimes, vtimes = layer.get_levels(), layer.get_itimes(), layer.get_vtimes()
 
         if levels:
@@ -871,6 +872,16 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.disable_cbInitTime_elements()
         if self.cbValidTime.count() == 0:
             self.disable_cbValidTime_elements()
+
+        if crs and \
+           self.parent() is not None and \
+           self.parent().parent() is not None:
+            logging.debug("Layer offers '%s' projections.", crs)
+            extra = [_code for _code in crs if _code.startswith("EPSG")]
+            extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
+            logging.debug("Selected '%s' for Combobox.", extra)
+            self.parent().parent().update_predefined_maps(extra)
+
         self.multilayers.save_data = True
 
     @staticmethod

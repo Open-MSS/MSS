@@ -1,5 +1,4 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
-import traceback
+from PyQt5 import QtWidgets, QtCore
 import logging
 import mslib.msui.wms_control
 
@@ -33,10 +32,11 @@ class Multilayers(QtCore.QObject):
         return None
 
     def reload_sync(self):
-        levels, itimes, vtimes = self.get_multilayer_common_options()
+        levels, itimes, vtimes, crs = self.get_multilayer_common_options()
         self.synced_reference.levels = levels
         self.synced_reference.itimes = itimes
         self.synced_reference.vtimes = vtimes
+        self.synced_reference.allowed_crs = crs
 
         if self.synced_reference.level not in self.synced_reference.levels:
             self.synced_reference.level = self.synced_reference.levels[0] if self.synced_reference.levels else None
@@ -82,6 +82,7 @@ class Multilayers(QtCore.QObject):
         elevation_values = []
         init_time_values = []
         valid_time_values = []
+        crs_values = []
 
         wms_before = self.parent.wms
 
@@ -89,6 +90,7 @@ class Multilayers(QtCore.QObject):
             elevation_values.append(layer.levels)
             init_time_values.append(layer.itimes)
             valid_time_values.append(layer.vtimes)
+            crs_values.append(layer.allowed_crs)
 
         for values in elevation_values:
             elevation_values[0] = list(set(elevation_values[0]).intersection(values))
@@ -96,12 +98,15 @@ class Multilayers(QtCore.QObject):
             init_time_values[0] = list(set(init_time_values[0]).intersection(values))
         for values in valid_time_values:
             valid_time_values[0] = list(set(valid_time_values[0]).intersection(values))
+        for values in crs_values:
+            crs_values[0] = list(set(crs_values[0]).intersection(values))
 
         self.parent.wms = wms_before
 
         return sorted(elevation_values[0], key=lambda x: float(x.split()[0])) if len(elevation_values) > 0 else [], \
                sorted(init_time_values[0]) if len(init_time_values) > 0 else [], \
-               sorted(valid_time_values[0]) if len(valid_time_values) > 0 else []
+               sorted(valid_time_values[0]) if len(valid_time_values) > 0 else [], \
+               sorted(crs_values[0]) if len(crs_values) > 0 else []
 
     def get_multilayer_priority(self, layer_widget):
         """
@@ -155,8 +160,9 @@ class Multilayers(QtCore.QObject):
             layerobj = self.parent.get_layer_object(name.split(" | ")[-1])
             widget = Layer(self.layers[wms.url]["header"], self, layerobj)
             widget.setText(0, name)
-            widget.setToolTip(0, "Right click a layer to sync it!" +
-                              ("\n\nAbstract: " + layerobj.abstract if layerobj.abstract else ""))
+            widget.setToolTip(0, "Right click a layer to sync it"
+                                 "\nDouble click a layer to draw it" +
+                              ("\n\n" + layerobj.abstract if layerobj.abstract else ""))
             widget.wms_name = wms.url
             widget.setCheckState(0, QtCore.Qt.Unchecked)
             self.layers[wms.url][name] = widget
@@ -171,13 +177,15 @@ class Multilayers(QtCore.QObject):
             return
 
         self.save_data = False
+        self.parent.allow_auto_update = False
         self.current_layer = item
         if self.parent.wms is not self.layers[item.wms_name]["wms"]:
             index = self.parent.cbWMS_URL.findText(item.wms_name)
             if index != -1 and index != self.parent.cbWMS_URL.currentIndex():
                 self.parent.cbWMS_URL.setCurrentIndex(index)
-        self.save_data = True
         self.needs_repopulate.emit()
+        self.parent.allow_auto_update = True
+        self.save_data = True
 
     def multilayer_changed(self, item):
         """
@@ -227,22 +235,44 @@ class Multilayers(QtCore.QObject):
         if not widget or widget.childCount() > 0:
             return
 
-        if not widget.is_synced:
-            levels, itimes, vtimes = self.get_multilayer_common_options(widget)
-            levels_before, itimes_before, vtimes_before = self.get_multilayer_common_options()
-            if (not levels and levels_before) or \
-               (not itimes and itimes_before) or \
-               (not vtimes and vtimes_before):
-                self.multilayer_clicked(widget)
-                return
+        sync_menu = QtWidgets.QMenu()
+        sync_menu.setContentsMargins(10, 0, 10, 0)
+        is_synced = QtWidgets.QCheckBox("Synchronise")
+        is_synced.setChecked(widget.is_synced)
+        action = QtWidgets.QWidgetAction(sync_menu)
+        action.setDefaultWidget(is_synced)
+        sync_menu.addAction(action)
+        sync_menu.addSeparator()
+        info_label = QtWidgets.QLabel("")
+        action2 = QtWidgets.QWidgetAction(sync_menu)
+        action2.setDefaultWidget(info_label)
+        sync_menu.addAction(action2)
 
-        widget.is_synced = not widget.is_synced
-        if widget.is_synced:
-            widget.setText(0, widget.text(0) + " (synced)")
-        else:
-            widget.setText(0, widget.text(0).split(" (synced)")[0])
+        levels_before, itimes_before, vtimes_before, crs_before = self.get_multilayer_common_options()
+        levels, itimes, vtimes, crs = self.get_multilayer_common_options(widget)
+        lost_levels = len(levels) - len(levels_before)
+        lost_itimes = len(itimes) - len(itimes_before)
+        lost_vtimes = len(vtimes) - len(vtimes_before)
 
-        self.reload_sync()
+        info = f"Common levels: {len(levels)} {f'({lost_levels})' if lost_levels < 0 else ''}\n"
+        info += f"Common init times: {len(itimes)} {f'({lost_itimes})' if lost_itimes < 0 else ''}\n"
+        info += f"Common valid times: {len(vtimes)} {f'({lost_vtimes})' if lost_vtimes < 0 else ''}"
+        info_label.setText(info)
+
+        def check_changed(state):
+            widget.is_synced = not widget.is_synced
+            if widget.is_synced:
+                widget.setText(0, widget.text(0) + " (synced)")
+            else:
+                widget.setText(0, widget.text(0).split(" (synced)")[0])
+            self.reload_sync()
+
+        is_synced.stateChanged.connect(check_changed)
+        is_synced.setEnabled((len(levels) > 0 or len(levels_before) == 0) and
+                             (len(itimes) > 0 or len(itimes_before) == 0) and
+                             (len(vtimes) > 0 or len(vtimes_before) == 0))
+
+        sync_menu.exec(self.parent.listLayers.viewport().mapToGlobal(pointer))
         self.multilayer_clicked(widget)
 
 
@@ -281,14 +311,14 @@ class Layer(QtWidgets.QTreeWidgetItem):
         """
         Parses the dimensions and extents out of the self.layerobj
         """
-        self.allowed_crs = None
+        self.allowed_crs = []
         lobj = self.layerobj
         while lobj is not None:
             self.dimensions.update(lobj.dimensions)
             for key in lobj.extents:
                 if key not in self.extents:
                     self.extents[key] = lobj.extents[key]
-            if self.allowed_crs is None:
+            if len(self.allowed_crs) == 0:
                 self.allowed_crs = getattr(lobj, "crsOptions", None)
             lobj = lobj.parent
 
@@ -423,6 +453,12 @@ class Layer(QtWidgets.QTreeWidgetItem):
             urlstr = self.layerobj.styles[style]["legend"]
 
         return urlstr
+
+    def get_allowed_crs(self):
+        if self.is_synced:
+            return self.parent.synced_reference.allowed_crs
+        else:
+            return self.allowed_crs
 
     def draw(self):
         if isinstance(self.parent.parent, mslib.msui.wms_control.HSecWMSControlWidget):
