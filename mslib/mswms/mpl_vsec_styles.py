@@ -49,6 +49,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_T01"
     title = "Temperature (K) Vertical Section"
+    abstract = "Temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -93,8 +94,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Temperature (K) and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -170,7 +170,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(titlestring=self.title)
+        self._latlon_logp_setup()
 
         # Format for colorbar labels
         cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
@@ -325,6 +325,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_CC01"
     title = "Cloud Cover (0-1) Vertical Section"
+    abstract = "Cloud cover (0-1) with temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -383,9 +384,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cloud cover (0-1) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -408,6 +407,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_CW01"
     title = "Cloud Cover (0-1) and Wind Speed (m/s) Vertical Section"
+    abstract = "Cloud cover (0-1) with wind speed (m/s) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -464,9 +464,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cloud cover (0-1) with wind speed (m/s) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -489,6 +487,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_RH01"
     title = "Relative Humdity (%) Vertical Section"
+    abstract = "Relative humdity (%) with temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -563,9 +562,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Relative humdity (%) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -589,6 +586,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
     name = "VS_Q01"
     # title = "Specific Humdity (g/kg) and Northward Wind (m/s) Vertical Section"
     title = "Specific Humdity (g/kg) Vertical Section"
+    abstract = "Specific humdity (g/kg) with temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -675,9 +673,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Specific humdity (g/kg) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -700,6 +696,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_W01"
     title = "Vertical Velocity (cm/s) Vertical Section"
+    abstract = "Veertical velocity (cm/s) with temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -774,9 +771,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Vertical velocity (cm/s) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -799,6 +794,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_HV01"
     title = "Horizontal Wind (m/s) Vertical Section"
+    abstract = "Horizontal wind speed (m/s) with temperature (K) and potential temperature (K)"
 
     # NOTE: This style is used for the flight performance computations. Make sure
     # that it always requests air_pressure, air_temperature, eastward_wind,
@@ -877,9 +873,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Horizontal wind speed (m/s) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -1032,6 +1026,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_PV01"
     title = "Potential Vorticity (PVU) Vertical Section"
+    abstract = "(Neg.) Potential vorticity (PVU) with CLWC/CIWC (g/kg) and potential temperature (K)"
     styles = [
         ("default", "Northern Hemisphere"),
         ("NH", "Northern Hemisphere"),
@@ -1133,13 +1128,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        if self.style.upper() == "SH":
-            tstr = "Neg. potential vorticity (PVU) with CLWC/CIWC (g/kg) " \
-                   "and potential temperature (K)"
-        else:
-            tstr = "Potential vorticity (PVU) with CLWC/CIWC (g/kg) " \
-                   "and potential temperature (K)"
-        self._latlon_logp_setup(orography=curtain_p[0, :], titlestring=tstr)
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -1167,6 +1156,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_PWCB01"
     title = "Probability of WCB (%) Vertical Section"
+    abstract = "Probability of WCB (%) with CLWC/CIWC (g/kg) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -1244,9 +1234,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Probability of WCB (%) with CLWC/CIWC (g/kg) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -1270,6 +1258,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
 
     name = "VS_LGTRAJ01"
     title = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa) Vertical Section"
+    abstract = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -1314,9 +1303,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa) "
-                                            "Vertical Section")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -1340,6 +1327,7 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
 
     name = "VS_EMAC_Eyja_01"
     title = "EMAC Eyjafjallajokull Tracer (relative) Vertical Section"
+    abstract = "EMAC Eyjafjallajokull Tracer (relative) with temperature (K) and potential temp. (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -1403,10 +1391,7 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="EMAC Eyjafjallajokull Tracer (relative) "
-                                            "with temperature (K) "
-                                            "and potential temp. (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
