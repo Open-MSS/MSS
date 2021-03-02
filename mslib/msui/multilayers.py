@@ -1,9 +1,39 @@
+"""
+    mslib.msui.multilayers
+    ~~~~~~~~~~~~~~~~~~~
+
+    This module contains classes for object oriented managing of WMS layers.
+    Improves upon the old method of loading each layer on UI changes,
+    the layers are all persistent and fully functional without requiring user input.
+
+    This file is part of mss.
+
+    :copyright: Copyright 2021 May Bär
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
 from PyQt5 import QtWidgets, QtCore
 import logging
 import mslib.msui.wms_control
 
 
 class Multilayers(QtCore.QObject):
+    """
+    Contains all layers of all loaded WMS and provides helpful methods to manage them.
+    """
+
     needs_repopulate = QtCore.pyqtSignal()
 
     def __init__(self, docker_widget):
@@ -29,9 +59,11 @@ class Multilayers(QtCore.QObject):
     def get_current_wms(self):
         if self.current_layer:
             return self.layers[self.current_layer.wms_name]["wms"]
-        return None
 
     def reload_sync(self):
+        """
+        Updates the self.synced_reference layer to contain the common options of all synced layers
+        """
         levels, itimes, vtimes, crs = self.get_multilayer_common_options()
         self.synced_reference.levels = levels
         self.synced_reference.itimes = itimes
@@ -72,8 +104,8 @@ class Multilayers(QtCore.QObject):
 
     def get_multilayer_common_options(self, additional_layer=None):
         """
-        Return the common option for levels, init_times and valid_times
-        for all active, synchronised layers and the additional provided one
+        Return the common option for levels, init_times, valid_times and CRS
+        for all synchronised layers and the additional provided one
         """
         layers = self.get_active_layers(only_synced=True)
         if additional_layer:
@@ -83,8 +115,6 @@ class Multilayers(QtCore.QObject):
         init_time_values = []
         valid_time_values = []
         crs_values = []
-
-        wms_before = self.parent.wms
 
         for layer in layers:
             elevation_values.append(layer.levels)
@@ -101,16 +131,14 @@ class Multilayers(QtCore.QObject):
         for values in crs_values:
             crs_values[0] = list(set(crs_values[0]).intersection(values))
 
-        self.parent.wms = wms_before
-
         return sorted(elevation_values[0], key=lambda x: float(x.split()[0])) if len(elevation_values) > 0 else [], \
-               sorted(init_time_values[0]) if len(init_time_values) > 0 else [], \
-               sorted(valid_time_values[0]) if len(valid_time_values) > 0 else [], \
-               sorted(crs_values[0]) if len(crs_values) > 0 else []
+            sorted(init_time_values[0]) if len(init_time_values) > 0 else [], \
+            sorted(valid_time_values[0]) if len(valid_time_values) > 0 else [], \
+            sorted(crs_values[0]) if len(crs_values) > 0 else []
 
     def get_multilayer_priority(self, layer_widget):
         """
-        Returns the priority of a layer, or None if it isn't checked
+        Returns the priority of a layer, with a default of 999 if it wasn't explicitly set
         """
         priority = self.parent.listLayers.itemWidget(layer_widget, 1)
         return int(priority.currentText()) if priority else 999
@@ -223,6 +251,10 @@ class Multilayers(QtCore.QObject):
         self.update_priority_selection()
 
     def multilayer_doubleclicked(self, item, column):
+        """
+        Gets called whenever the user double clicks an entry in the multilayer list
+        Currently this is used to draw the double clicked layer
+        """
         if item.childCount() == 0:
             item.draw()
 
@@ -278,12 +310,11 @@ class Multilayers(QtCore.QObject):
 
 class Layer(QtWidgets.QTreeWidgetItem):
     def __init__(self, header, parent, layerobj, is_empty=False):
-        if not is_empty:
-            super().__init__(header)
-            self.parent = parent
-            self.layerobj = layerobj
-            self.dimensions = {}
-            self.extents = {}
+        super().__init__(header)
+        self.parent = parent
+        self.layerobj = layerobj
+        self.dimensions = {}
+        self.extents = {}
 
         self.levels = []
         self.level = None
@@ -349,7 +380,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
                 msg = "cannot determine init time format"
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
-                    self.parent.parent, self.parent.parent.tr("Web Map Service"), self.parent.parent.tr("ERROR: {}".format(msg)))
+                    self.parent.parent, self.parent.parent.tr("Web Map Service"),
+                    self.parent.parent.tr("ERROR: {}".format(msg)))
             else:
                 self.itime = self.itimes[0]
 
@@ -370,11 +402,15 @@ class Layer(QtWidgets.QTreeWidgetItem):
                 msg = "cannot determine init time format"
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
-                    self.parent.parent, self.parent.parent.tr("Web Map Service"), self.parent.parent.tr("ERROR: {}".format(msg)))
+                    self.parent.parent, self.parent.parent.tr("Web Map Service"),
+                    self.parent.parent.tr("ERROR: {}".format(msg)))
             else:
                 self.vtime = self.vtimes[0]
 
     def _parse_styles(self):
+        """
+        Extracts and saves all styles for the layer
+        """
         self.styles = [f"{style} | {self.layerobj.styles[style]['title']}" for style in self.layerobj.styles]
         if len(self.styles) > 0:
             self.style = self.styles[0]
@@ -434,17 +470,25 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.parent.synced_reference.vtime = vtime
 
     def get_layer(self):
+        """
+        Returns the layer name used internally by the WMS
+        """
         return self.text(0).split(" | ")[-1].split(" (synced)")[0]
 
     def get_style(self):
+        """
+        Returns the style name used internally by the WMS
+        """
         if self.style:
             return self.style.split(" |")[0]
         return ""
 
     def get_level_name(self):
+        """
+        Returns the level used internally by the WMS
+        """
         if self.level:
             return self.get_level().split(" (")[0]
-        return None
 
     def get_legend_url(self):
         style = self.get_style()
@@ -461,6 +505,9 @@ class Layer(QtWidgets.QTreeWidgetItem):
             return self.allowed_crs
 
     def draw(self):
+        """
+        Triggers the layer to be drawn by the WMSControlWidget
+        """
         if isinstance(self.parent.parent, mslib.msui.wms_control.HSecWMSControlWidget):
             self.parent.parent.get_map([self])
         else:

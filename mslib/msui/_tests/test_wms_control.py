@@ -278,8 +278,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.window.listLayers.itemWidget(server.child(1), 1) is None
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(6000)
 
         assert mockbox.critical.call_count == 0

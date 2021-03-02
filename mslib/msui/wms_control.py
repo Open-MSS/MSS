@@ -758,7 +758,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.cbValidTime.setCurrentIndex(0)
             self.valid_time_changed()
 
-        # Reconnect layerChanged.
         if len(filtered_layers) > 0:
             self.btGetMap.setEnabled(True)
 
@@ -1281,7 +1280,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         try:
                             value = int(prefetch_config[_x])
                         except ValueError as ex:
-                            logging.error("ERRORasd: %s %s", type(ex), ex)
+                            logging.error("ERROR: %s %s", type(ex), ex)
                             value = 0
                         prefetch_config[_x] = max(0, value)
                     else:
