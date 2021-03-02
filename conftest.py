@@ -221,8 +221,11 @@ def start_mscolab_server(request):
 def stop_server(request):
     """Cleanup a testing directory once we are finished."""
     def stop_callback():
-        global process
-        process.terminate()
+        # currently no better idea
+        os.system('killall python')
+        # global process
+        # process.terminate()
+
     request.addfinalizer(stop_callback)
 
 
