@@ -55,7 +55,7 @@ class Test_MSSSideViewWindow(object):
     def teardown(self):
         for i in range(self.window.listViews.count()):
             self.window.listViews.item(i).window.hide()
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()

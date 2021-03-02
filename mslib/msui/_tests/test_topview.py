@@ -51,7 +51,7 @@ class Test_MSS_TV_MapAppearanceDialog(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
@@ -81,7 +81,7 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
@@ -285,7 +285,7 @@ class Test_TopViewWMS(object):
         self.wms_control.cbWMS_URL.setEditText("")
 
     def teardown(self):
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()

@@ -84,7 +84,7 @@ class WMSControlWidgetSetup(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
@@ -338,7 +338,7 @@ class TestWMSControlWidgetSetupSimple(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()

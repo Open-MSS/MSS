@@ -49,7 +49,7 @@ class Test_MSS_SV_OptionsDialog(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
@@ -106,7 +106,7 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
@@ -154,7 +154,7 @@ class Test_SideViewWMS(object):
         self.wms_control.cbWMS_URL.setEditText("")
 
     def teardown(self):
-        self.window.hide()
+        self.window.close()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
