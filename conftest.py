@@ -223,8 +223,8 @@ def stop_server(request):
     def stop_callback():
         # currently no better idea
         os.system('killall python')
-        # global process
-        # process.terminate()
+        global process
+        process.terminate()
 
     request.addfinalizer(stop_callback)
 
