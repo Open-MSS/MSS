@@ -39,7 +39,7 @@ jobs:
       run: |
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
-        pytest -v -n auto --dist loadscope --max-worker-restart 0 --durations=0
+        pytest -v -n 6 --dist loadscope --max-worker-restart 0 --durations=0
 
   Update-Images:
     runs-on: ubuntu-latest
