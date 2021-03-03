@@ -10,12 +10,13 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.mscolab import MSSMscolabWindow
 from PyQt5 import QtCore, QtTest, QtWidgets
+from mslib.mscolab.mscolab import handle_db_seed
 
 
-# TODO: FIX THESE TESTS
+@pytest.mark.skip('these tests run on direct call')
 class Test_Mscolab(object):
     def setup(self):
-
+        handle_db_seed()
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=MSCOLAB_URL_TEST)
@@ -45,7 +46,6 @@ class Test_Mscolab(object):
         # self.application.quit()
         # QtWidgets.QApplication.processEvents()
 
-    @pytest.mark.skip(reason="Need to fix test for dialog")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_overwrite_to_server(self, mockbox):
         self._login()
@@ -77,7 +77,6 @@ class Test_Mscolab(object):
         new_server_wp = self.window.waypoints_model.waypoint_data(0)
         assert wp_local_before.lat == new_server_wp.lat
 
-    @pytest.mark.skip(reason="Need to fix test for dialog")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_keep_server_points(self, mockbox):
         self._login()
@@ -111,7 +110,6 @@ class Test_Mscolab(object):
         new_server_wp = self.window.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat == new_server_wp.lat
 
-    @pytest.mark.skip(reason="Need to fix test for dialog")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_merge_points(self, mockbox):
         self._login()
@@ -148,7 +146,6 @@ class Test_Mscolab(object):
         for wp_index in range(new_wp_count):
             assert new_server_wp.waypoint_data(wp_index).lat == merge_waypoints_model.waypoint_data(wp_index).lat
 
-    @pytest.mark.skip(reason="Need to fix test for dialog")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_fetch_from_server(self, mockbox):
         self._login()

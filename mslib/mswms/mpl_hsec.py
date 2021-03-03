@@ -219,7 +219,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.data_units = self.driver.data_units.copy()
         for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
-                raise KeyError("required data field '{}' not found".format(dataitem))
+                raise KeyError(f"required data field '{dataitem}' not found")
             origunit = self.driver.data_units[dataitem]
             if dataunit is not None:
                 data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
@@ -298,7 +298,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         elif bbox_units == "no":
             pass
         else:
-            raise ValueError("bbox_units '{}' not known.".format(bbox_units))
+            raise ValueError(f"bbox_units '{bbox_units}' not known.")
         if basemap_use_cache and key in BASEMAP_CACHE:
             bm = basemap.Basemap(resolution=None, **bm_params)
             (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,

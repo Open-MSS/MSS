@@ -28,13 +28,13 @@
 
 import datetime
 import isodate
-from fs import open_fs, errors
 import json
 import logging
 import netCDF4 as nc
 import numpy as np
 import os
 import pint
+from fs import open_fs, errors
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 
@@ -86,16 +86,40 @@ class FatalUserError(Exception):
         logging.debug("%s", error_string)
 
 
-def config_loader(config_file=None, dataset=None, default=None):
+def read_config_file(config_file=None):
+    """
+    reads a config file
+
+    Args:
+        config_file: name of config file
+
+    Returns: a dictionary
+    """
+    user_config = {}
+    if config_file is not None:
+        _dirname, _name = os.path.split(config_file)
+        _fs = open_fs(_dirname)
+        try:
+            with _fs.open(_name, 'r') as source:
+                user_config = json.load(source)
+        except errors.ResourceNotFound:
+            error_message = f"MSS config File '{config_file}' not found"
+            raise FatalUserError(error_message)
+        except ValueError as ex:
+            error_message = f"MSS config File '{config_file}' has a syntax error:\n\n'{ex}'"
+            raise FatalUserError(error_message)
+    return user_config
+
+
+def config_loader(config_file=None, dataset=None):
     """
     Function for loading json config data
 
     Args:
         config_file: json file, parameters for initializing mss,
         dataset: section to pull from json file
-        default: values to return if dataset was requested and don't exist or config_file is not given
 
-    Returns: a dictionary
+    Returns: a the dataset value or the config as dictionary
 
     """
     if config_file is None:
@@ -103,39 +127,29 @@ def config_loader(config_file=None, dataset=None, default=None):
     if config_file is None:
         logging.info(
             'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html')
-        default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
+    default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
+    if dataset is not None and dataset not in default_config:
+        raise KeyError(f"requested dataset '{dataset}' not in defaults or config_file")
+    if config_file is None:
         if dataset is None:
             return default_config
         else:
-            try:
-                return default_config[dataset]
-            except KeyError:
-                logging.debug("'%s' Key(s) are not defined!", dataset)
-                return default
-    _dirname, _name = os.path.split(config_file)
-    _fs = open_fs(_dirname)
-    try:
-        with _fs.open(_name, 'r') as source:
-            data = json.load(source)
-    except (AttributeError, IOError, TypeError, errors.ResourceNotFound) as ex:
-        logging.error("MSS config File error '%s' - '%s' - '%s'", config_file, type(ex), ex)
-        if default is not None:
-            return default
-        raise IOError("MSS config File not found")
-    except ValueError as ex:
-        error_message = f"MSS config File '{config_file}' has a syntax error:\n\n'{ex}'"
-        raise FatalUserError(error_message)
-    if dataset:
-        try:
-            return data[dataset]
-        except KeyError:
-            logging.debug("Config File used: '%s'", config_file)
-            logging.debug("Key not defined in config_file! '%s'", dataset)
-            if default is not None:
-                return default
-            raise KeyError("default value for key not set")
-
-    return data
+            return default_config[dataset]
+    user_config = read_config_file(config_file)
+    if dataset is not None:
+        if dataset not in user_config:
+            return default_config[dataset]
+        else:
+            return user_config[dataset]
+    else:
+        for key in user_config:
+            default_config[key] = user_config[key]
+        return default_config
+    if len(user_config) == 0:
+        if dataset is None:
+            return default_config
+        else:
+            return default_config[dataset]
 
 
 def get_distance(coord0, coord1):
@@ -160,7 +174,7 @@ def find_location(lat, lon, tolerance=5):
     :param tolerance: maximum distance between location and coordinates in km
     :return: None or lat/lon, name
     """
-    locations = config_loader(dataset='locations', default=MissionSupportSystemDefaultConfig.locations)
+    locations = config_loader(dataset='locations')
     distances = sorted([(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
                         for loc, (loc_lat, loc_lon) in locations.items()])
     if len(distances) > 0 and distances[0][0] <= tolerance:

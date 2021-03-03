@@ -43,11 +43,11 @@ class Test_WMS(object):
         assert isinstance(result.data, bytes), result
 
     def test_get_query_string_wrong_values(self):
-        # version implemented is 1.1.1
+        # version implemented is 1.1.1 and 1.3.0
         environ = {
             'wsgi.url_scheme': 'http',
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
-            'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.3.0'}
+            'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.4.0'}
 
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
@@ -64,7 +64,17 @@ class Test_WMS(object):
             {
                 'wsgi.url_scheme': 'http',
                 'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.3.0'
+            },
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
                 'QUERY_STRING': 'request=capabilities&service=WMS&version=1.1.1'
+            },
+            {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING': 'request=capabilities&service=WMS&version=1.3.0'
             },
             {
                 'wsgi.url_scheme': 'http',
@@ -106,6 +116,17 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
         self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_image(result.status, result.headers)
+
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=200&crs=EPSG%3A4326&format=image%2Fpng&'
+                'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
+                'version=1.3.0&bbox=20.0%2C-50.0%2C75.0%2C20.0&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=XML&transparent=FALSE'}
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_image(result.status, result.headers)
 
@@ -154,6 +175,18 @@ class Test_WMS(object):
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C48.08%2C11.28&transparent=FALSE'}
 
         self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_image(result.status, result.headers)
+
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.VS_HV01&styles=&crs=VERT%3ALOGP&format=image%2Fpng&'
+                'request=GetMap&bgcolor=0xFFFFFF&height=245&dim_init_time=2012-10-17T12%3A00%3A00Z&width=842&'
+                'version=1.3.0&bbox=201%2C500.0%2C10%2C100.0&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=XML&path=52.78%2C-8.93%2C48.08%2C11.28&transparent=FALSE'}
+
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_image(result.status, result.headers)
 

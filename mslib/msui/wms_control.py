@@ -44,6 +44,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import mslib.ogcwms
 import owslib.util
+from owslib.crs import axisorder_yx
 import PIL.Image
 
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
@@ -51,7 +52,7 @@ from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings
-from mslib.ogcwms import openURL
+from mslib.ogcwms import openURL, removeXMLNamespace
 
 
 WMS_SERVICE_CACHE = {}
@@ -79,7 +80,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
                format=None, size=None, time=None, init_time=None,
                path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
                time_name="time", init_time_name="init_time",
-               exceptions='application/vnd.ogc.se_xml', method='Get',
+               exceptions='XML', method='Get',
                return_only_url=False):
         """Request and return an image from the WMS as a file-like object.
 
@@ -123,6 +124,9 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         base_url = self.get_redirect_url(method)
         request = {'version': self.version, 'request': 'GetMap'}
 
+        if self.version != "1.3.0":
+            exceptions = "application/vnd.ogc.se_xml"
+
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
@@ -136,7 +140,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         request['width'] = str(size[0])
         request['height'] = str(size[1])
 
-        request['srs'] = str(srs)
+        request['srs' if self.version != "1.3.0" else "crs"] = str(srs)
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
         request['bgcolor'] = '0x' + bgcolor[1:7]
@@ -195,10 +199,10 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
-        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+        proxies = config_loader(dataset="proxies")
 
         u = openURL(base_url, data, method,
-                    username=self.username, password=self.password, proxies=proxies)
+                    username=self.auth.username, password=self.auth.password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -210,6 +214,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         if hasattr(u, "info") and 'application/vnd.ogc.se_xml' in u.info()['Content-Type']:
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
+            # Remove namespaces in the response, otherwise this code might fail
+            removeXMLNamespace(se_tree)
             err_message = str(se_tree.find('ServiceException').text).strip()
             raise owslib.util.ServiceException(err_message, se_xml)
         return u
@@ -371,7 +377,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
        is not instantiated directly, see HSecWMSControlWidget and
        VSecWMSControlWidget below.
 
-    NOTE: Currently this class can only handle WMS 1.1.1 servers.
+    NOTE: Currently this class can only handle WMS 1.1.1/1.3.0 servers.
     """
 
     prefetch = QtCore.pyqtSignal([list], name="prefetch")
@@ -530,7 +536,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.thread_fetch.quit()
         self.thread_fetch.wait()
 
-    def initialise_wms(self, base_url):
+    def initialise_wms(self, base_url, version="1.3.0"):
         """Initialises a MSSWebMapService object with the specified base_url.
 
         If the web server returns a '401 Unauthorized', prompt the user for
@@ -547,7 +553,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         wms = None
         # initialize login cache fomr config file, but do not overwrite existing keys
-        for key, value in config_loader(dataset="WMS_login", default={}).items():
+        for key, value in config_loader(dataset="WMS_login").items():
             if key not in constants.WMS_LOGIN_CACHE:
                 constants.WMS_LOGIN_CACHE[key] = value
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
@@ -556,7 +562,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             str(base_url)  # to provoke early Unicode Error
             while wms is None:
                 try:
-                    wms = MSSWebMapService(base_url, version='1.1.1',
+                    wms = MSSWebMapService(base_url, version=version,
                                            username=username, password=password)
                 except owslib.util.ServiceException as ex:
                     logging.error("ERROR: %s %s", type(ex), ex)
@@ -588,7 +594,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                           "no layers can be used in this view.")
             QtWidgets.QMessageBox.critical(
                 self, self.tr("Web Map Service"),
-                self.tr("ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
+                self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
         return wms
 
     def wms_url_changed(self, text):
@@ -618,7 +624,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.error("ERROR: %s %s", type(ex), ex)
         logging.debug("%s", traceback.format_exc())
         QtWidgets.QMessageBox.critical(
-            self, self.tr("Web Map Service"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+            self, self.tr("Web Map Service"), self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
 
     @QtCore.pyqtSlot()
     def display_progress_dialog(self):
@@ -643,8 +649,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # the CRS that match the filter of this module.
         base_url = self.cbWMS_URL.currentText()
         params = {'service': 'WMS',
-                  'request': 'GetCapabilities',
-                  'version': '1.1.1'}
+                  'request': 'GetCapabilities'}
         try:
             request = requests.get(base_url, params=params)
         except (requests.exceptions.TooManyRedirects,
@@ -656,13 +661,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                           "No layers can be used in this view.")
             QtWidgets.QMessageBox.critical(
                 self, self.tr("Web Map Service"),
-                self.tr("ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
+                self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
         else:
             # url shortener url translated
             url = request.url
-            url = url.replace('?service=WMS&request=GetCapabilities&version=1.1.1', '')
+
+            url = url.replace("?service=WMS", "").replace("&service=WMS", "") \
+                     .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
             logging.debug("requesting capabilities from %s", url)
-            wms = self.initialise_wms(url)
+            wms = self.initialise_wms(url, None)
             if wms is not None:
 
                 # update the combo box, if entry requires change/insertion
@@ -713,7 +720,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if len(layer.layers) > 0:
                 stack.extend(layer.layers)
             elif self.is_layer_aligned(layer):
-                cb_string = "{} | {}".format(layer.title, layer.name)
+                cb_string = f"{layer.title} | {layer.name}"
                 filtered_layers.add(cb_string)
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
@@ -833,7 +840,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layerobj = self.get_layer_object(layer)
         styles = layerobj.styles
         self.cbStyle.clear()
-        self.cbStyle.addItems(["{} | {}".format(s, styles[s]["title"]) for s in styles])
+        self.cbStyle.addItems([f'{s} | {styles[s]["title"]}' for s in styles])
         self.cbStyle.setEnabled(self.cbStyle.count() > 1)
 
         abstract_text = layerobj.abstract if layerobj.abstract else ""
@@ -883,7 +890,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         enable_elevation = False
         if "elevation" in extents:
             units = dimensions["elevation"]["units"]
-            elev_list = ["{} ({})".format(e.strip(), units) for e in
+            elev_list = [f"{e.strip()} ({units})" for e in
                          extents["elevation"]["values"]]
             self.cbLevel.addItems(elev_list)
             if self.save_level in elev_list:
@@ -909,7 +916,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 msg = "cannot determine init time format."
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr("ERROR: {}".format(msg)))
+                    self, self.tr("Web Map Service"), self.tr(f"ERROR: {msg}"))
 
         # ~~~~ C) Valid/forecast time. ~~~~~~~~~~~~~~~~~~~~~~~~~
         try:
@@ -939,7 +946,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 msg = "cannot determine valid time format."
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr("ERROR: {}".format(msg)))
+                    self, self.tr("Web Map Service"), self.tr(f"ERROR: {msg}"))
 
         self.enable_level_elements(enable_elevation)
         self.enable_valid_time_elements(enable_valid_time)
@@ -991,7 +998,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             return 86400 * int(timestep_string.split(" days")[0])
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-            raise ValueError("cannot convert '{}' to seconds: wrong format.".format(timestep_string))
+            raise ValueError(f"cannot convert '{timestep_string}' to seconds: wrong format.")
 
     def init_time_back_click(self):
         """Slot for the tbInitTime_back button.
@@ -1310,9 +1317,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.check_for_allowed_crs and normalize_crs(crs) not in self.allowed_crs:
             ret = QtWidgets.QMessageBox.warning(
                 self, self.tr("Web Map Service"),
-                self.tr("WARNING: Selected CRS '{}' not contained in allowed list of supported CRS for this WMS\n"
-                        "({})\n"
-                        "Continue ?".format(crs, self.allowed_crs)),
+                self.tr(f"WARNING: Selected CRS '{crs}' not contained in allowed list of supported CRS for this WMS\n"
+                        f"({self.allowed_crs})\n"
+                        "Continue ?"),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Ignore | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Ignore:
@@ -1377,7 +1384,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # If caching is enabled, get the URL and check the image cache
             # directory for the suitable image file.
             if self.caching_enabled():
-                prefetch_config = config_loader(dataset="wms_prefetch", default=mss_default.wms_prefetch)
+                prefetch_config = config_loader(dataset="wms_prefetch")
                 prefetch_entries = ["validtime_fwd", "validtime_bck", "level_up", "level_down"]
                 for _x in prefetch_entries:
                     if _x in prefetch_config:
@@ -1461,7 +1468,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     for f in cached_files:
                         os.remove(os.path.join(self.wms_cache, f))
                 except (IOError, OSError) as ex:
-                    msg = "ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
+                    msg = f"ERROR: Cannot delete file '{f}'. ({type(ex)}: {ex})"
                     logging.error(msg)
                     QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
                 else:
@@ -1497,14 +1504,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         try:
             for f, fsize, fage in files:
                 cum_size_bytes += fsize
-                if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes",
-                                                   default=mss_default.wms_cache_max_size_bytes) or
-                        fage > config_loader(dataset="wms_cache_max_age_seconds",
-                                             default=mss_default.wms_cache_max_age_seconds)):
+                if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes") or
+                        fage > config_loader(dataset="wms_cache_max_age_seconds")):
                     os.remove(f)
                     removed_files += 1
         except (IOError, OSError) as ex:
-            msg = "ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
+            msg = f"ERROR: Cannot delete file '{f}'. ({type(ex)}: {ex})"
             logging.error(msg)
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
         logging.debug("cache has been cleaned (%i files removed).", removed_files)
@@ -1554,7 +1559,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         # Get lat/lon coordinates of flight track and convert to string for URL.
         path_string = ""
         for waypoint in self.waypoints_model.all_waypoint_data():
-            path_string += "{:.2f},{:.2f},".format(waypoint.lat, waypoint.lon)
+            path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},"
         path_string = path_string[:-1]
 
         # Determine the current size of the vertical section plot on the
@@ -1614,6 +1619,9 @@ class HSecWMSControlWidget(WMSControlWidget):
         # object in the view.
         crs = self.view.get_crs()
         bbox = self.view.getBBOX()
+        if self.wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
+            bbox = (bbox[1], bbox[0], bbox[3], bbox[2])
+
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
         width, height = self.view.get_plot_size_in_px()

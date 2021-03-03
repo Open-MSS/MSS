@@ -51,7 +51,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.utils import convert_pressure_to_vertical_axis_measure
 
 PIL_IMAGE_ORIGIN = "upper"
-LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir", default=mss_default.data_dir)
+LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
 
 matplotlib.rcParams['savefig.directory'] = LAST_SAVE_DIRECTORY
 
@@ -92,12 +92,12 @@ class MplCanvas(FigureCanvasQTAgg):
         """
         self.default_filename = ""
         if title:
-            self.default_filename += "_{:>5}".format(title.split()[0])
+            self.default_filename += f"_{title.split()[0]:>5}"
         if style:
-            title += " ({})".format(style)
+            title += f" ({style})"
         if level:
-            title += " at {}".format(level)
-            self.default_filename += "_{}".format(level.split()[0])
+            title += f" at {level}"
+            self.default_filename += f"_{level.split()[0]}"
         if isinstance(valid_time, datetime) and isinstance(init_time, datetime):
             time_step = valid_time - init_time
         else:
@@ -111,12 +111,12 @@ class MplCanvas(FigureCanvasQTAgg):
         if valid_time:
             if init_time:
                 if time_step is not None:
-                    title += "\nValid: {} (step {:d} hrs from {})".format(
-                        valid_time, (time_step.days * 86400 + time_step.seconds) // 3600, init_time)
+                    title += f"\nValid: {valid_time} (step {((time_step.days * 86400 + time_step.seconds) // 3600):d}" \
+                             f" hrs from {init_time})"
                 else:
-                    title += "\nValid: {} (initialisation: {})".format(valid_time, init_time)
+                    title += f"\nValid: {valid_time} (initialisation: {init_time})"
             else:
-                title += "\nValid: {}".format(valid_time)
+                title += f"\nValid: {valid_time}"
 
         # Set title.
         self.ax.set_title(title, horizontalalignment='left', x=0)
@@ -168,10 +168,7 @@ save_figure_original = NavigationToolbar2QT.save_figure
 
 
 def save_figure(self, *args):
-    picker_default = config_loader(dataset="filepicker_default",
-                                   default=mss_default.filepicker_default)
-    picker_type = config_loader(dataset="filepicker_matplotlib",
-                                default=picker_default)
+    picker_type = config_loader(dataset="filepicker_default")
     if picker_type in ["default", "qt"]:
         save_figure_original(self, *args)
     elif picker_type == "fs":
@@ -209,7 +206,7 @@ def save_figure(self, *args):
                     self, "Error saving file", six.text_type(e),
                     QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.NoButton)
     else:
-        raise FatalUserError("Unknown file picker type '{}'".format(picker_type))
+        raise FatalUserError(f"Unknown file picker type '{picker_type}'")
 
 
 # Patch matplotlib function
@@ -395,8 +392,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 (lat, lon), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
                 y_value = convert_pressure_to_vertical_axis_measure(
                     self.canvas.settings_dict["vertical_axis"], event.ydata)
-                self.set_message("{} lat={:6.2f} lon={:7.2f} altitude={:.2f}".format(
-                    self.mode, lat, lon, y_value))
+                self.set_message(f"{self.mode} lat={lat:6.2f} lon={lon:7.2f} altitude={y_value:.2f}")
 
     def _update_buttons_checked(self):
         super(NavigationToolbar, self)._update_buttons_checked()
@@ -451,7 +447,7 @@ class MplSideViewCanvas(MplCanvas):
         model -- WaypointsTableModel defining the vertical section.
         """
         if numlabels is None:
-            numlabels = config_loader(dataset='num_labels', default=mss_default.num_labels)
+            numlabels = config_loader(dataset='num_labels')
         super(MplSideViewCanvas, self).__init__()
 
         # Default settings.
@@ -504,8 +500,7 @@ class MplSideViewCanvas(MplCanvas):
             # itself to the change() signals of the flight track data model.
             self.waypoints_interactor = mpl_pi.VPathInteractor(
                 self.ax, self.waypoints_model,
-                numintpoints=config_loader(dataset="num_interpolation_points",
-                                           default=mss_default.num_interpolation_points),
+                numintpoints=config_loader(dataset="num_interpolation_points"),
                 redraw_xaxis=self.redraw_xaxis, clear_figure=self.clear_figure
             )
 
@@ -554,7 +549,7 @@ class MplSideViewCanvas(MplCanvas):
             labels = major_fl
             self.ax.set_ylabel("flight level (hft)")
         else:
-            raise RuntimeError("Unsupported vertical axis type: '{}'".format(vaxis))
+            raise RuntimeError(f"Unsupported vertical axis type: '{vaxis}'")
 
         # Draw ticks and tick labels.
         self.ax.set_yticks(minor_ticks, minor=True)
@@ -607,13 +602,13 @@ class MplSideViewCanvas(MplCanvas):
         tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
         if self.waypoints_model is not None and self.waypoints_model.performance_settings["visible"]:
-            self.ax.set_xticklabels(["{:2.1f}, {:2.1f}\n{}Z".format(d[0], d[1], d[2].strftime("%H:%M"))
+            self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}\n{d[2].strftime("%H:%M")}Z'
                                      for d in zip(lats[::tick_index_step],
                                                   lons[::tick_index_step],
                                                   times[::tick_index_step])],
                                     rotation=25, fontsize=10, horizontalalignment="right")
         else:
-            self.ax.set_xticklabels(["{:2.1f}, {:2.1f}".format(d[0], d[1])
+            self.ax.set_xticklabels([f"{d[0]:2.1f}, {d[1]:2.1f}"
                                      for d in zip(lats[::tick_index_step],
                                                   lons[::tick_index_step],
                                                   times[::tick_index_step])],
@@ -685,7 +680,7 @@ class MplSideViewCanvas(MplCanvas):
         for level in self.flightlevels:
             pressure = thermolib.flightlevel2pressure(level)
             self.fl_label_list.append(ax.axhline(pressure, color='k'))
-            self.fl_label_list.append(ax.text(0.1, pressure, "FL{:d}".format(level)))
+            self.fl_label_list.append(ax.text(0.1, pressure, f"FL{level:d}"))
         self.draw()
 
     def get_flight_levels(self):

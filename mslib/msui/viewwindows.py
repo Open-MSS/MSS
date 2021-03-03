@@ -77,7 +77,7 @@ class MSSViewWindow(QtWidgets.QMainWindow):
             return
 
         ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                            self.tr("Do you want to close this {}?".format(self.name)),
+                                            self.tr(f"Do you want to close this {self.name}?"),
                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                             QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:

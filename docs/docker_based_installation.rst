@@ -1,7 +1,7 @@
 Installation based on Docker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Since 1.7.4 mss is on the `docker hub <https://hub.docker.com/r/dreimark/mss/>`_.
+Since 1.7.4 mss is on the `docker hub <https://hub.docker.com/orgs/openmss/>`_.
 
 Build settings are based on the stable branch. Our latest is any update in the stable repo.
 

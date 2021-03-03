@@ -47,7 +47,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
     def __init__(self, token, p_id, user, project_name, conn, parent=None,
-                 mscolab_server_url=config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)):
+                 mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
         """
         token: access_token
         p_id: project id
