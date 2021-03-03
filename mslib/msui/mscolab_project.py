@@ -33,7 +33,6 @@ from markdown.extensions import Extension
 from werkzeug.urls import url_join
 
 from mslib.mscolab.models import MessageType
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 from mslib.msui.qt5 import ui_mscolab_project_window as ui
 from mslib.utils import config_loader, show_popup
