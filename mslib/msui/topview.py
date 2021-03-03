@@ -31,7 +31,6 @@
 import functools
 import logging
 from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
@@ -331,7 +330,6 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             return
 
         first_waypoint = self.waypoints_model.waypoint_data(0)
-        last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
 
         self.waypoints_model.insertRows(self.waypoints_model.rowCount(), rows=1, waypoints=[
             Waypoint(lat=first_waypoint.lat, lon=first_waypoint.lon, flightlevel=first_waypoint.flightlevel,
@@ -348,7 +346,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
 
             condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
-                        first_waypoint.flightlevel != last_waypoint.flightlevel
+                first_waypoint.flightlevel != last_waypoint.flightlevel
 
         return condition
 

@@ -65,7 +65,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         return ["VERT:LOGP"]
 
     # TODO: the general setup should be a separate class as well
-    def _latlon_logp_setup(self, orography=105000., titlestring=""):
+    def _latlon_logp_setup(self, orography=105000.):
         """General setup for lat/lon vs. log p vertical cross-sections.
         """
         ax = self.ax
@@ -113,13 +113,6 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax.set_xlim(self.lat_inds[0], self.lat_inds[-1])
         ax.set_ylim(self.p_bot, self.p_top)
         ax.grid(b=True)
-
-        # Plot title (either in image axes or above).
-        titlestring = f"{titlestring} [{self.p_bot / 100.:.0f}..{self.p_top / 100.:.0f} hPa]" \
-                      f"\nValid: {self.valid_time.strftime('%a %Y-%m-%d %H:%M UTC')}"
-        if self.uses_inittime_dimension():
-            titlestring += f" (step {(self.valid_time - self.init_time).total_seconds() / 3600:.0f} " \
-                           f"hrs from {self.init_time.strftime('%a %Y-%m-%d %H:%M UTC')})"
 
     @abstractmethod
     def _plot_style(self):
