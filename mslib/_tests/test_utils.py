@@ -88,7 +88,7 @@ class TestConfigLoader(object):
     def test_default_config_wrong_file(self):
         # return default if no access to config file given
         with pytest.raises(utils.FatalUserError):
-            _ = utils.config_loader(config_file="foo.json")
+            utils.config_loader(config_file="foo.json")
 
     def test_sample_config_file(self):
         utils_path = os.path.dirname(os.path.abspath(utils.__file__))
@@ -102,7 +102,7 @@ class TestConfigLoader(object):
         with pytest.raises(utils.FatalUserError):
             config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss',
                                        'not_existing_mss_settings.json.sample')
-            _ = utils.config_loader(config_file=config_file)
+            utils.config_loader(config_file=config_file)
 
     def test_config_file_cached(self, caplog):
         with caplog.at_level(logging.INFO):
