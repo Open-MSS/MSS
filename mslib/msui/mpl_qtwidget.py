@@ -43,7 +43,6 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanva
 import matplotlib.backend_bases
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui.icons import icons

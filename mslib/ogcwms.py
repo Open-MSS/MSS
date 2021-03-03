@@ -68,7 +68,6 @@ from owslib.util import ServiceException
 from owslib.etree import ParseError
 from owslib.map import wms111, wms130, common
 from owslib.util import ResponseWrapper, Authentication, strip_bom
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import config_loader
 
 
@@ -259,7 +258,7 @@ class WebMapService(wms111.WebMapService_1_1_1):
             return layers
         gather_layers(caps, None)
 
-        #for elem in caps.findall(f'{self.WMS_NAMESPACE}Layer'):
+        # for elem in caps.findall(f'{self.WMS_NAMESPACE}Layer'):
         #    cm = ContentMetadata(elem, version=self.version)
         #    self.contents[cm.id] = cm
         #    for subelem in elem.findall(f'{self.WMS_NAMESPACE}Layer'):
