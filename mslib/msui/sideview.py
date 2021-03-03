@@ -29,7 +29,6 @@
 import logging
 import functools
 from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_sideview_window as ui
 from mslib.msui.mss_qt import ui_sideview_options as ui_opt

@@ -56,7 +56,6 @@ from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
 from mslib.utils import config_loader, setup_logging
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import get_open_filename, get_save_filename

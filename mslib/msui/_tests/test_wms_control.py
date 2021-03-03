@@ -40,6 +40,7 @@ import mslib.msui.wms_control as wc
 
 PORTS = list(range(8106, 8116))
 
+
 class HSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="EPSG:4326")
     getBBOX = mock.Mock(return_value=(0, 0, 10, 10))
