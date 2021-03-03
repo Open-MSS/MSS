@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import logging
 import sys
 import time
 import os
@@ -286,7 +285,7 @@ class Test_Mscolab(object):
         assert self.window.loginWidget.isVisible() is False
         assert self.window.listProjects.model().rowCount() == 0
         self._create_project("flight2", "Description flight2")
-        current_pid =  self.window.get_recent_pid()
+        current_pid = self.window.get_recent_pid()
         self._create_project("flight3", "Description flight3")
         self._create_project("flight4", "Description flight4")
         # ToDo fix number after cleanup initial data
@@ -368,4 +367,3 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-

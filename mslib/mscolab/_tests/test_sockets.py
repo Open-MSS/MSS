@@ -156,4 +156,3 @@ class Test_Sockets(object):
             Message.query.filter_by(text="message from 3 - 1").delete()
             Message.query.filter_by(text="message from 3 - 2").delete()
             db.session.commit()
-

@@ -26,7 +26,6 @@
     limitations under the License.
 """
 import fs
-import requests
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
 from flask import json

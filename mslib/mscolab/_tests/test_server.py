@@ -55,6 +55,7 @@ class Test_Init_Server(object):
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
 
+
 @pytest.mark.usefixtures("start_mscolab_server")
 @pytest.mark.usefixtures("stop_server")
 @pytest.mark.usefixtures("create_data")

@@ -344,4 +344,3 @@ class Test_Files(object):
         with self.app.app_context():
             change = Change.query.filter_by(id=change.id).first()
             assert change.version_name == "Test Version Name"
-

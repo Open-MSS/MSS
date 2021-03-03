@@ -65,8 +65,8 @@ class TestConfigLoader(object):
     tests config file for client
     """
     def teardown(self):
-         if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
+        if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
 
     def test_default_config(self):
         data = utils.config_loader()
@@ -84,7 +84,7 @@ class TestConfigLoader(object):
     def test_default_config_wrong_file(self):
         # return default if no access to config file given
         with pytest.raises(utils.FatalUserError):
-            data = utils.config_loader(config_file="foo.json")
+            _ = utils.config_loader(config_file="foo.json")
 
     def test_sample_config_file(self):
         utils_path = os.path.dirname(os.path.abspath(utils.__file__))
@@ -123,7 +123,7 @@ class TestConfigLoader(object):
         with pytest.raises(KeyError):
             assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
 
-    def  test_existing_config_file_different_parameters(self):
+    def test_existing_config_file_different_parameters(self):
         """
         on a user defined mss_settings_json without a defined num_labels this test should return its default value
         """
@@ -167,6 +167,7 @@ class TestConfigLoader(object):
             utils.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
             assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+
 
 class TestGetDistance(object):
     """

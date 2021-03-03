@@ -43,7 +43,7 @@ try:
 except ImportError:
     import pyproj
 
-from mslib.msui import constants, MissionSupportSystemDefaultConfig
+from mslib.msui import MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore, QtWidgets
 

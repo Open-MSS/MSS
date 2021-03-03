@@ -283,4 +283,3 @@ class Test_Chat(object):
         })
         response = json.loads(r.text)
         return response
-

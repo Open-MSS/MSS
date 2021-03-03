@@ -93,4 +93,3 @@ class Test_UserMethods(object):
         data["password"] = "asdf"
         r = requests.post(self.url + '/token', data=data)
         assert r.text == "False"
-
