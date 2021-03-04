@@ -39,7 +39,6 @@ import traceback
 import urllib.parse
 import defusedxml.ElementTree as etree
 from mslib.utils import config_loader
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import mslib.ogcwms
