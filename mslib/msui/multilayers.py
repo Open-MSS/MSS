@@ -56,10 +56,6 @@ class Multilayers(QtCore.QObject):
         self.parent.listLayers.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.parent.listLayers.customContextMenuRequested.connect(self.right_clicked)
 
-    def get_current_wms(self):
-        if self.current_layer:
-            return self.layers[self.current_layer.wms_name]["wms"]
-
     def reload_sync(self):
         """
         Updates the self.synced_reference layer to contain the common options of all synced layers
@@ -258,7 +254,7 @@ class Multilayers(QtCore.QObject):
         if item.childCount() == 0:
             item.draw()
 
-    def right_clicked(self, pointer):
+    def right_clicked(self, pointer, testing=False):
         """
         Gets called whenever the user right clicks somewhere in the multilayer list
         For now this is used to enable syncing
@@ -304,7 +300,13 @@ class Multilayers(QtCore.QObject):
                              (len(itimes) > 0 or len(itimes_before) == 0) and
                              (len(vtimes) > 0 or len(vtimes_before) == 0))
 
-        sync_menu.exec(self.parent.listLayers.viewport().mapToGlobal(pointer))
+        # QMenu.exec blocks pytest
+        if not testing:
+            sync_menu.exec(self.parent.listLayers.viewport().mapToGlobal(pointer))
+        else:
+            check_changed(True)
+            check_changed(False)
+
         self.multilayer_clicked(widget)
 
 
