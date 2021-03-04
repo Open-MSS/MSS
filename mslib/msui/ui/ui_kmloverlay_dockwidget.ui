@@ -36,7 +36,7 @@
           </sizepolicy>
          </property>
          <property name="toolTip">
-          <string>KML Files; double click specific file to customize</string>
+          <string>KML Files;  The icon shows color and height corresponds to linewidth</string>
          </property>
          <property name="sizeAdjustPolicy">
           <enum>QAbstractScrollArea::AdjustToContents</enum>
@@ -53,7 +53,7 @@
        <item>
         <widget class="QPushButton" name="pushButton_color">
          <property name="toolTip">
-          <string>Click individual files to show their respective colours</string>
+          <string>Click to change the colour of the selected KML file</string>
          </property>
          <property name="text">
           <string>Color</string>
@@ -62,8 +62,20 @@
        </item>
        <item>
         <widget class="QLabel" name="label_color">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>This is the colour of the selected KML file</string>
+         </property>
          <property name="text">
-          <string>Unknown</string>
+          <string>None</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -72,21 +84,51 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_linewidth">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
-          <string>Click individual files to show their respective linewidths</string>
+          <string>This shows the linewidth of selected KML file</string>
+         </property>
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
          </property>
          <property name="text">
-          <string>Linewidth</string>
+          <string>Linewidth : None</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label_linewidth">
-         <property name="text">
-          <string>Unknown</string>
+        <widget class="QDoubleSpinBox" name="dsbx_linewidth">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>You can edit the Linewidth here for the selected KML file!</string>
+         </property>
+         <property name="wrapping">
+          <bool>true</bool>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
+         </property>
+         <property name="readOnly">
+          <bool>false</bool>
+         </property>
+         <property name="correctionMode">
+          <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+         </property>
+         <property name="showGroupSeparator" stdset="0">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
