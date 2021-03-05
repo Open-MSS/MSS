@@ -5,7 +5,7 @@ env:
   PAT: ${{ secrets.PAT }}
 
 jobs:
-  ydist_testing:
+  xdist_testing:
     runs-on: ubuntu-latest
     
     defaults:
@@ -35,8 +35,8 @@ jobs:
         && mamba install --file requirements.d/development.txt)
 
     - name: Run selected tests
-      timeout-minutes: 5
+      timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
-        pytest -n 6 --dist loadscope --max-worker-restart 0 mslib
+        pytest -v -n 6 --dist loadscope --max-worker-restart 0 mslib
