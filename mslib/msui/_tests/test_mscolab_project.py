@@ -26,7 +26,6 @@
 """
 import sys
 import time
-import pytest
 
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.conf import mscolab_settings
@@ -46,7 +45,6 @@ class Actions(object):
     DELETE = 4
 
 
-@pytest.mark.skip(reason='needs a review and changes')
 class Test_MscolabProject(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -82,16 +80,14 @@ class Test_MscolabProject(object):
         self._send_message("**test message**")
         self._send_message("**test message**")
         # wait till server processes the change
-        time.sleep(1)
         with self.app.app_context():
             assert Message.query.filter_by(text='**test message**').count() == 2
 
     def test_search_message(self):
         self._send_message("**test message**")
         self._send_message("**test message**")
-        time.sleep(1)
         # wait till server processes the change
-        message_index = self.window.chat_window.messageList.count - 1
+        message_index = self.window.chat_window.messageList.count()
         self.window.chat_window.searchMessageLineEdit.setText("test message")
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
@@ -128,6 +124,8 @@ class Test_MscolabProject(object):
             assert message.first().reply_id == parent_message_id
 
     def test_edit_message(self):
+        self._send_message("**test message**")
+        self._send_message("**test message**")
         self._activate_context_menu_action(Actions.EDIT)
         self.chat_window.messageText.setPlainText('test edit')
         QtTest.QTest.mouseClick(self.chat_window.editMessageBtn, QtCore.Qt.LeftButton)
@@ -136,6 +134,8 @@ class Test_MscolabProject(object):
             assert Message.query.filter_by(text='test edit').count() == 1
 
     def test_delete_message(self):
+        self._send_message("**test message**")
+        self._send_message("**test message**")
         self._activate_context_menu_action(Actions.DELETE)
         time.sleep(1)
         with self.app.app_context():
@@ -171,6 +171,7 @@ class Test_MscolabProject(object):
         self.chat_window.messageText.setPlainText(text)
         QtTest.QTest.mouseClick(self.chat_window.sendMessageBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        time.sleep(1)
 
     def _get_message_id(self, index):
         item = self.chat_window.messageList.item(index)
