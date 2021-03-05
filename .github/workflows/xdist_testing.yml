@@ -5,7 +5,7 @@ env:
   PAT: ${{ secrets.PAT }}
 
 jobs:
-  Selected-MSS-Tests:
+  ydist_testing:
     runs-on: ubuntu-latest
     
     defaults:
@@ -39,18 +39,4 @@ jobs:
       run: |
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
-        xvfb-run pytest -n 4 --dist loadscope --max-worker-restart 0 \
-        --ignore ./mslib/msui/_tests/test_mscolab_admin_window.py \
-        --ignore ./mslib/msui/_tests/test_mscolab.py \
-        --ignore ./mslib/msui/_tests/test_mscolab_version_history.py \
-        --ignore ./mslib/msui/_tests/test_mscolab_merge_waypoints.py \
-        --ignore ./mslib/msui/_tests/test_mscolab_project.py \
-        --ignore ./mslib/mscolab/_tests/test_user.py \
-        --ignore ./mslib/mscolab/_tests/test_files.py \
-        --ignore ./mslib/mscolab/_tests/test_server.py \
-        --ignore ./mslib/mscolab/_tests/test_utils.py \
-        --ignore ./mslib/mscolab/_tests/test_files_api.py \
-        --ignore ./mslib/mscolab/_tests/test_chat_manager.py \
-        --ignore ./mslib/mscolab/_tests/test_sockets.py \
-        --ignore ./mslib/mscolab/_tests/test_file_manager.py \
-        --ignore ./mslib/mscolab/_tests/test_chat.py mslib
+        pytest -n 6 --dist loadscope --max-worker-restart 0 mslib

@@ -26,10 +26,15 @@
     limitations under the License.
 """
 import fs
+import socket
+import multiprocessing
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
 from flask import json
 from mslib._tests.constants import MSS_CONFIG_PATH
+from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.server import APP, initialize_managers, start_server, db
+from mslib.mscolab.mscolab import handle_db_seed
 
 
 def callback_ok_image(status, response_headers):
@@ -75,7 +80,7 @@ def mscolab_register_and_login(app, msc_url, email, password, username):
     return response
 
 
-def mscolab_login(app, msc_url, email, password):
+def mscolab_login(app, msc_url, email='a', password='a'):
     data = {
         'email': email,
         'password': password
@@ -151,6 +156,39 @@ def mscolab_get_project_id(app, msc_url, email, password, username, path):
     for p in response['projects']:
         if p['path'] == path:
             return p['p_id']
+
+
+def mscolab_check_free_port(all_ports, port):
+    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        _s.bind(("127.0.0.1", port))
+    except (socket.error, IOError):
+        port = all_ports.pop()
+        mscolab_check_free_port(port)
+    _s.close()
+    return port
+
+
+def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
+    handle_db_seed()
+    port = mscolab_check_free_port(all_ports, all_ports.pop())
+
+    url = f"http://localhost:{port}"
+
+    _app = APP
+    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    _app.config['URL'] = url
+
+    _app, sockio, cm, fm = initialize_managers(_app)
+    db.init_app(_app)
+    process = multiprocessing.Process(
+        target=start_server,
+        args=(_app, sockio, cm, fm,),
+        kwargs={'port': port})
+    process.start()
+    return process, url, _app, sockio, cm, fm
 
 
 def create_mss_settings_file(content):

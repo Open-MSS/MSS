@@ -24,15 +24,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import logging
 import sys
 import time
+import pytest
 
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
-from mslib.mscolab.server import APP, db, initialize_managers
 from PyQt5 import QtCore, QtTest, QtWidgets, Qt
+from mslib._tests.utils import mscolab_start_server
+
+
+PORTS = list(range(9571, 9590))
 
 
 class Actions(object):
@@ -43,24 +46,15 @@ class Actions(object):
     DELETE = 4
 
 
+@pytest.mark.skip(reason='needs a review and changes')
 class Test_MscolabProject(object):
-
     def setup(self):
-        self.port = 8084
-        # start mscolab server
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app, sockio, cm, fm = initialize_managers(self.app)
-        self.fm = fm
-        self.cm = cm
-        db.init_app(self.app)
-        self.MSCOLAB_URL_TEST = f"http://localhost:{self.port}"
-        logging.debug("starting")
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(2)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.url)
+        self.window.show()
         self._login()
         self._activate_project_at_index(0)
         # activate project window here by clicking button
@@ -82,6 +76,7 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_send_message(self):
         self._send_message("**test message**")
@@ -94,17 +89,18 @@ class Test_MscolabProject(object):
     def test_search_message(self):
         self._send_message("**test message**")
         self._send_message("**test message**")
-        # wait till server processes the change
         time.sleep(1)
-        message_index = self.chat_window.messageList.count() - 1
-        self.chat_window.searchMessageLineEdit.setText("test message")
-        QtTest.QTest.mouseClick(self.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
+        # wait till server processes the change
+        message_index = self.window.chat_window.messageList.count - 1
+        self.window.chat_window.searchMessageLineEdit.setText("test message")
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseClick(self.window.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index).isSelected() is True
-        QtTest.QTest.mouseClick(self.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index - 1).isSelected() is True
-        QtTest.QTest.mouseClick(self.chat_window.searchNextBtn, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.chat_window.searchNextBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index).isSelected() is True
 
@@ -146,7 +142,7 @@ class Test_MscolabProject(object):
             assert Message.query.filter_by(text='test edit').count() == 0
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText(self.MSCOLAB_URL_TEST)
+        self.window.url.setEditText(self.url)
         QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 

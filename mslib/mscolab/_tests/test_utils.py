@@ -23,32 +23,44 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import sys
+import time
 
-from mslib.mscolab.server import db, APP, initialize_managers
+from PyQt5 import QtWidgets
+
 from mslib.mscolab.models import User
 from mslib.mscolab.utils import get_recent_pid
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.mscolab import handle_db_seed
+from mslib.msui.mscolab import MSSMscolabWindow
+from mslib._tests.utils import mscolab_start_server
+
+
+PORTS = list(range(9561, 9580))
 
 
 class Test_Utils(object):
     def setup(self):
-        handle_db_seed()
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app, _, cm, fm = initialize_managers(self.app)
-        self.fm = fm
-        self.cm = cm
-        db.init_app(self.app)
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(2)
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
+        self.window.show()
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
+
+    def teardown(self):
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_get_recent_pid(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
         assert p_id == 4
-
-    def teardown(self):
-        pass

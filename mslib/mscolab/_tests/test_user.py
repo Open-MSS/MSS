@@ -25,23 +25,43 @@
 """
 import requests
 import json
+import sys
+import time
 
-from mslib.mscolab.server import db, check_login, register_user, APP, initialize_managers
+from PyQt5 import QtWidgets
+from mslib.mscolab.server import db, check_login, register_user
 from mslib.mscolab.conf import mscolab_settings
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.models import User
-from mslib.mscolab.mscolab import handle_db_seed
+from mslib.msui.mscolab import MSSMscolabWindow
+from mslib._tests.utils import mscolab_start_server
+
+
+PORTS = list(range(9541, 9560))
 
 
 class Test_UserMethods(object):
     def setup(self):
-        handle_db_seed()
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app, _, cm, _ = initialize_managers(self.app)
-        self.cm = cm
-        db.init_app(self.app)
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(2)
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
+        self.window.show()
+
+    def teardown(self):
+        with self.app.app_context():
+            User.query.filter_by(emailid="sdf@s.com").delete()
+            User.query.filter_by(emailid="sdf@s1.com").delete()
+            db.session.commit()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_registration(self):
         with self.app.app_context():
@@ -65,9 +85,9 @@ class Test_UserMethods(object):
             "password": "sdf",
             "username": "sdf1"
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data).json()
+        r = requests.post(self.url + '/register', data=data).json()
         assert r["success"] is True
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data).json()
+        r = requests.post(self.url + '/register', data=data).json()
         assert r["success"] is False
 
     def test_token_api(self):
@@ -76,16 +96,10 @@ class Test_UserMethods(object):
             "password": "sdf",
             "username": "sdf1"
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/register', data=data)
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/register', data=data)
+        r = requests.post(self.url + '/token', data=data)
         json_ = json.loads(r.text)
         assert json_.get("token", None) is not None
         data["password"] = "asdf"
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/token', data=data)
         assert r.text == "False"
-
-    def teardown(self):
-        with self.app.app_context():
-            User.query.filter_by(emailid="sdf@s.com").delete()
-            User.query.filter_by(emailid="sdf@s1.com").delete()
-            db.session.commit()

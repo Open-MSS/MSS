@@ -31,33 +31,48 @@ import os
 from functools import partial
 import time
 import pytest
+import sys
+
+from PyQt5 import QtWidgets
 
 from werkzeug.urls import url_join
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
-from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib.mscolab.server import APP, initialize_managers
-from mslib.mscolab.mscolab import handle_db_seed
 from mslib.mscolab.utils import get_recent_pid
-from mslib._tests.utils import mscolab_register_and_login, mscolab_create_project
+from mslib._tests.utils import mscolab_register_and_login, mscolab_create_project, mscolab_start_server
+from mslib.msui.mscolab import MSSMscolabWindow
+
+
+PORTS = list(range(9361, 9380))
 
 
 class Test_Files(object):
     def setup(self):
-        handle_db_seed()
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(2)
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
+        self.window.show()
+
         self.sockets = []
         self.file_message_counter = [0] * 2
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app, _, cm, fm = initialize_managers(self.app)
-        self.fm = fm
-        self.cm = cm
-        db.init_app(self.app)
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
+
+    def teardown(self):
+        for socket in self.sockets:
+            socket.disconnect()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_create_project(self):
         with self.app.app_context():
@@ -93,7 +108,7 @@ class Test_Files(object):
             assert self.fm.is_admin(u_id, no_perm_p_id) is False
 
     def test_file_save(self):
-        url = url_join(MSCOLAB_URL_TEST, 'token')
+        url = url_join(self.url, 'token')
         r = requests.post(url, data={
             'email': 'a',
             'password': 'a'
@@ -113,8 +128,8 @@ class Test_Files(object):
 
         sio1.on('file-changed', handler=partial(handle_chat_message, 1))
         sio2.on('file-changed', handler=partial(handle_chat_message, 2))
-        sio1.connect(MSCOLAB_URL_TEST)
-        sio2.connect(MSCOLAB_URL_TEST)
+        sio1.connect(self.url)
+        sio2.connect(self.url)
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             user2 = User.query.filter_by(id=9).first()
@@ -189,8 +204,8 @@ class Test_Files(object):
 
     def test_delete_project(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'a', 'a', 'a')
-            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+            response = mscolab_register_and_login(self.app, self.url, 'a', 'a', 'a')
+            data, response = mscolab_create_project(self.app, self.url, response,
                                                     path='f3', description='f3 test example')
             p_id = get_recent_pid(self.fm, self.user)
             assert p_id == 7
@@ -207,7 +222,3 @@ class Test_Files(object):
             assert len(changes) == 0
             messages = Message.query.filter_by(p_id=p_id).all()
             assert len(messages) == 0
-
-    def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()

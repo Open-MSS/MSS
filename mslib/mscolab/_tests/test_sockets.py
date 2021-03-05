@@ -28,12 +28,19 @@ import socketio
 from functools import partial
 import requests
 import json
+import sys
 import time
 
+from PyQt5 import QtWidgets
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
-from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib.mscolab.server import db, APP, initialize_managers
+from mslib.mscolab.server import db
+from mslib.mscolab.mscolab import handle_db_seed
+from mslib.msui.mscolab import MSSMscolabWindow
+from mslib._tests.utils import mscolab_start_server
+
+
+PORTS = list(range(9521, 9540))
 
 
 class Test_Sockets(object):
@@ -41,16 +48,30 @@ class Test_Sockets(object):
     chat_messages_counter_a = 0  # only for first test
 
     def setup(self):
+        handle_db_seed()
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(2)
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
+        self.window.show()
         self.sockets = []
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app, _, cm, _ = initialize_managers(self.app)
-        self.cm = cm
-        db.init_app(self.app)
+
+    def teardown(self):
+        for socket in self.sockets:
+            socket.disconnect()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_connect(self):
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        r = requests.post(self.url + "/token", data={
                           'email': 'a',
                           'password': 'a'
                           })
@@ -61,7 +82,7 @@ class Test_Sockets(object):
             self.chat_messages_counter_a += 1
 
         sio.on('chat-message-client', handler=handle_chat_message)
-        sio.connect(MSCOLAB_URL_TEST)
+        sio.connect(self.url)
         sio.emit('start', response)
         sio.sleep(2)
         self.sockets.append(sio)
@@ -75,17 +96,17 @@ class Test_Sockets(object):
         assert self.chat_messages_counter_a == 1
 
     def test_emit_permissions(self):
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        r = requests.post(self.url + "/token", data={
                           'email': 'a',
                           'password': 'a'
                           })
         response1 = json.loads(r.text)
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        r = requests.post(self.url + "/token", data={
                           'email': 'b',
                           'password': 'b'
                           })
         response2 = json.loads(r.text)
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        r = requests.post(self.url + "/token", data={
                           'email': 'c',
                           'password': 'c'
                           })
@@ -101,9 +122,9 @@ class Test_Sockets(object):
         sio1.on('chat-message-client', handler=partial(handle_chat_message, 1))
         sio2.on('chat-message-client', handler=partial(handle_chat_message, 2))
         sio3.on('chat-message-client', handler=partial(handle_chat_message, 3))
-        sio1.connect(MSCOLAB_URL_TEST)
-        sio2.connect(MSCOLAB_URL_TEST)
-        sio3.connect(MSCOLAB_URL_TEST)
+        sio1.connect(self.url)
+        sio2.connect(self.url)
+        sio3.connect(self.url)
 
         sio1.emit('start', response1)
         sio2.emit('start', response2)
@@ -146,7 +167,3 @@ class Test_Sockets(object):
             Message.query.filter_by(text="message from 3 - 1").delete()
             Message.query.filter_by(text="message from 3 - 2").delete()
             db.session.commit()
-
-    def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()
