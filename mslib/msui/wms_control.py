@@ -445,6 +445,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enable_valid_time_elements(False)
         self.enable_init_time_elements(False)
         self.btGetMap.setEnabled(False)
+        self.btGetMap2.setEnabled(False)
+        self.btGetMap3.setEnabled(False)
         self.pbViewCapabilities.setEnabled(False)
 
         self.cbTransparent.setChecked(False)
@@ -536,6 +538,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.thread_fetch.quit()
         self.thread_fetch.wait()
 
+    def get_all_maps(self):
+        self.get_map(self.multilayers.get_active_layers())
+
     def initialise_wms(self, base_url, version="1.3.0"):
         """Initialises a MSSWebMapService object with the specified base_url.
 
@@ -604,6 +609,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         elif self.wms is not None:
             self.wms = None
             self.btGetMap.setEnabled(False)
+            self.btGetMap2.setEnabled(False)
+            self.btGetMap3.setEnabled(False)
 
             self.cbLevel.clear()
             self.cbStyle.clear()
@@ -694,6 +701,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Clear layer and style combo boxes. First disconnect the layerChanged
         # slot to avoid calls to this function.
         self.btGetMap.setEnabled(False)
+        self.btGetMap2.setEnabled(False)
+        self.btGetMap3.setEnabled(False)
         self.cbStyle.clear()
         self.cbLevel.clear()
         self.cbStyle.clear()
@@ -760,6 +769,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if len(filtered_layers) > 0:
             self.btGetMap.setEnabled(True)
+            self.btGetMap2.setEnabled(True)
+            self.btGetMap3.setEnabled(True)
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
@@ -995,7 +1006,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress \
                 and self.allow_auto_update:
-            self.btGetMap.click()
+            self.get_all_maps()
 
     def check_init_time(self, dt):
         """Checks whether an initialisation time set with the init time
@@ -1326,7 +1337,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # this is for cases where 'remove' button is clicked, then 'retrieve' is clicked
         self.signal_disable_cbs.emit()
 
-    def get_map(self):
+    def get_map(self, layers=None):
         """Prototypical stub for getMap() function. Needs to be reimplemented
            in derived classes.
         """
@@ -1418,7 +1429,12 @@ class VSecWMSControlWidget(WMSControlWidget):
         super(VSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
-        self.btGetMap.clicked.connect(lambda: self.get_vsec(self.multilayers.get_active_layers()))
+        self.btGetMap.clicked.connect(self.get_all_maps)
+        self.btGetMap2.clicked.connect(self.get_all_maps)
+        self.btGetMap3.clicked.connect(self.get_all_maps)
+
+    def get_all_maps(self):
+        self.get_vsec(self.multilayers.get_active_layers())
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance from which the waypoints
@@ -1429,7 +1445,7 @@ class VSecWMSControlWidget(WMSControlWidget):
     @QtCore.Slot()
     def call_get_vsec(self):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
-            self.btGetMap.click()
+            self.get_all_maps()
 
     def get_vsec(self, layers=None):
         """Slot that retrieves the vertical section and passes the image
@@ -1493,7 +1509,9 @@ class HSecWMSControlWidget(WMSControlWidget):
     def __init__(self, parent=None, default_WMS=None, view=None, wms_cache=None):
         super(HSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
-        self.btGetMap.clicked.connect(lambda: self.get_map(self.multilayers.get_active_layers()))
+        self.btGetMap.clicked.connect(self.get_all_maps)
+        self.btGetMap2.clicked.connect(self.get_all_maps)
+        self.btGetMap3.clicked.connect(self.get_all_maps)
 
     def level_changed(self):
         super().level_changed()
