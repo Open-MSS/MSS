@@ -724,8 +724,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         for layer in filtered_layers:
             self.multilayers.add_multilayer(layer, wms)
         self.multilayers.filter_multilayers()
-        self.populate_ui()
         self.pbViewCapabilities.setEnabled(True)
+        if len(filtered_layers) > 0:
+            self.populate_ui()
 
         if self.prefetcher is not None:
             self.prefetch.disconnect(self.prefetcher.fetch_maps)
