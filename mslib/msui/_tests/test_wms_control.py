@@ -274,7 +274,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         server.child(2).setCheckState(0, QtCore.Qt.Checked)
         self.window.listLayers.itemWidget(server.child(0), 1).setCurrentIndex(1)
         previous_layer = self.window.lLayerName.text()
-        self.window.multilayers.multilayer_clicked(server.child(0))
+        self.window.multilayers.multilayer_clicked(server.child(1))
         assert previous_layer != self.window.lLayerName.text()
         assert self.window.listLayers.itemWidget(server.child(0), 1) is not None
         assert self.window.listLayers.itemWidget(server.child(2), 1) is not None
@@ -290,14 +290,15 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         # Check drawing not causing errors
         self.window.multilayers.multilayer_doubleclicked(server.child(0), 0)
+        QtTest.QTest.qWait(6000)
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(6000)
 
         assert mockbox.critical.call_count == 0
-        assert self.view.draw_image.call_count == 1
-        assert self.view.draw_legend.call_count == 1
-        assert self.view.draw_metadata.call_count == 1
+        assert self.view.draw_image.call_count == 2
+        assert self.view.draw_legend.call_count == 2
+        assert self.view.draw_metadata.call_count == 2
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_multilayer_syncing(self, mockbox):

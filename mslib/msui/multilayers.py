@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -245,6 +245,7 @@ class Multilayers(QtCore.QObject):
         to_move = self.layers_priority.pop(old_index)
         self.layers_priority.insert(new_index, to_move)
         self.update_priority_selection()
+        self.multilayer_clicked(self.layers_priority[new_index])
 
     def multilayer_doubleclicked(self, item, column):
         """
