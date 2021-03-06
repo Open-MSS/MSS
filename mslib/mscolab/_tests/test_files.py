@@ -30,7 +30,6 @@ import json
 import os
 from functools import partial
 import time
-import pytest
 import sys
 
 from PyQt5 import QtWidgets
@@ -171,7 +170,50 @@ class Test_Files(object):
             self.sockets.append(sio2)
 
     def test_undo(self):
-        pytest.skip('depends on test_file_save')
+        url = url_join(self.url, 'token')
+        r = requests.post(url, data={
+            'email': 'a',
+            'password': 'a'
+        })
+        response1 = json.loads(r.text)
+        r = requests.post(url, data={
+            'email': 'b',
+            'password': 'b'
+        })
+        response2 = json.loads(r.text)
+
+        def handle_chat_message(sno, message):
+            self.file_message_counter[sno - 1] += 1
+
+        sio1 = socketio.Client()
+        sio2 = socketio.Client()
+
+        sio1.on('file-changed', handler=partial(handle_chat_message, 1))
+        sio2.on('file-changed', handler=partial(handle_chat_message, 2))
+        sio1.connect(self.url)
+        sio2.connect(self.url)
+        with self.app.app_context():
+            p_id = get_recent_pid(self.fm, self.user)
+            user2 = User.query.filter_by(id=9).first()
+            perm = Permission(u_id=9, p_id=p_id, access_level="admin")
+            db.session.add(perm)
+            db.session.commit()
+            sio1.emit('start', response1)
+            sio2.emit('start', response2)
+            time.sleep(2)
+            sio1.emit('file-save', {
+                "p_id": p_id,
+                "token": response1['token'],
+                "content": "file save content 1"
+            })
+            time.sleep(2)
+            # second file change
+            sio1.emit('file-save', {
+                "p_id": p_id,
+                "token": response1['token'],
+                "content": "file save content 2"
+            })
+            time.sleep(2)
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             changes = Change.query.filter_by(p_id=p_id).all()
