@@ -194,7 +194,7 @@ class Test_Files(object):
         sio2.connect(self.url)
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
-            user2 = User.query.filter_by(id=9).first()
+            User.query.filter_by(id=9).first()
             perm = Permission(u_id=9, p_id=p_id, access_level="admin")
             db.session.add(perm)
             db.session.commit()
