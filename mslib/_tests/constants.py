@@ -37,6 +37,7 @@ else:
     repo = git.Repo(os.path.dirname(os.path.realpath(__file__)), search_parent_directories=True)
     SHA = repo.head.object.hexsha
 
+CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mss_wms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
 ROOT_FS = TempFS(identifier="mss{}".format(SHA))
@@ -47,7 +48,8 @@ if not ROOT_FS.exists("mss/testdata"):
 SERVER_CONFIG_FS = fs.open_fs(os.path.join(ROOT_DIR, "mss"))
 DATA_FS = fs.open_fs(os.path.join(ROOT_DIR, "mss/testdata"))
 
-os.environ["MSS_CONFIG_PATH"] = SERVER_CONFIG_FS.root_path
+MSS_CONFIG_PATH = SERVER_CONFIG_FS.root_path
+os.environ["MSS_CONFIG_PATH"] = MSS_CONFIG_PATH
 SERVER_CONFIG_FILE_PATH = os.path.join(SERVER_CONFIG_FS.root_path, SERVER_CONFIG_FILE)
 
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2

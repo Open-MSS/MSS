@@ -31,7 +31,6 @@ import requests
 from werkzeug.urls import url_encode, url_join
 
 from mslib.msui.flighttrack import WaypointsTableModel
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.qt5 import ui_mscolab_version_history as ui
 from mslib.utils import config_loader, show_popup, utc_to_local_datetime
@@ -47,7 +46,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
     def __init__(self, token, p_id, user, project_name, conn, parent=None,
-                 mscolab_server_url=config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)):
+                 mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
         """
         token: access_token
         p_id: project id

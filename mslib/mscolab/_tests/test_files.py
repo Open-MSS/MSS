@@ -30,6 +30,7 @@ import json
 import os
 from functools import partial
 import time
+import pytest
 
 from werkzeug.urls import url_join
 
@@ -37,11 +38,14 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project, Change, Permission, Message
 from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.server import APP, initialize_managers
+from mslib.mscolab.mscolab import handle_db_seed
 from mslib.mscolab.utils import get_recent_pid
+from mslib._tests.utils import mscolab_register_and_login, mscolab_create_project
 
 
 class Test_Files(object):
     def setup(self):
+        handle_db_seed()
         self.sockets = []
         self.file_message_counter = [0] * 2
         self.app = APP
@@ -76,7 +80,7 @@ class Test_Files(object):
     def test_projects(self):
         with self.app.app_context():
             projects = self.fm.list_projects(self.user)
-            assert len(projects) == 4
+            assert len(projects) == 3
 
     def test_is_admin(self):
         with self.app.app_context():
@@ -152,6 +156,7 @@ class Test_Files(object):
             self.sockets.append(sio2)
 
     def test_undo(self):
+        pytest.skip('depends on test_file_save')
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             changes = Change.query.filter_by(p_id=p_id).all()
@@ -169,7 +174,8 @@ class Test_Files(object):
     def test_authorized_users(self):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
-            assert len(self.fm.get_authorized_users(p_id)) == 1
+            assert p_id == 4
+            assert len(self.fm.get_authorized_users(p_id)) == 2
 
     def test_modify_project(self):
         with self.app.app_context():
@@ -183,7 +189,12 @@ class Test_Files(object):
 
     def test_delete_project(self):
         with self.app.app_context():
+            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'a', 'a', 'a')
+            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+                                                    path='f3', description='f3 test example')
             p_id = get_recent_pid(self.fm, self.user)
+            assert p_id == 7
+            assert response.status == '200 OK'
             user2 = User.query.filter_by(id=9).first()
             assert self.fm.delete_file(p_id, user2) is False
             assert self.fm.delete_file(p_id, self.user) is True

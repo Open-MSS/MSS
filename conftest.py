@@ -40,6 +40,19 @@ import fs
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
 
+
+def pytest_addoption(parser):
+    parser.addoption("--mss_settings", action="store")
+
+
+def pytest_generate_tests(metafunc):
+    option_value = metafunc.config.option.mss_settings
+    if option_value is not None:
+        mss_settings_file_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
+        mss_settings_file_fs.writetext("mss_settings.json", option_value)
+        mss_settings_file_fs.close()
+
+
 if os.getenv("TESTS_VISIBLE") == "TRUE":
     Display = None
 else:
@@ -139,7 +152,7 @@ sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 imp.load_source('mscolab_settings', path)
 sys.path.insert(0, parent_path)
 
-
+# ToDo scope="class" for mscolab tests wanted
 @pytest.fixture(scope="session", autouse=True)
 def create_data():
     from mslib.mscolab.mscolab import handle_db_seed

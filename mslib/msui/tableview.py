@@ -105,7 +105,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
                 title = "Hexagon Control"
                 widget = hex.HexagonControlWidget(view=self)
             else:
-                raise IndexError("invalid control index ({})".format(index))
+                raise IndexError(f"invalid control index ({index})")
             self.createDockWidget(index, title, widget)
 
     def invertDirection(self):
@@ -187,8 +187,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             waypoint = wps[row]
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
-                "Remove waypoint at {:.2f}/{:.2f}, flightlevel {:.2f}?".format(
-                    waypoint.lat, waypoint.lon, waypoint.flightlevel),
+                f"Remove waypoint at {waypoint.lat:.2f}/{waypoint.lon:.2f}, flightlevel {waypoint.flightlevel:.2f}?",
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
     def removeWayPoint(self):
@@ -214,7 +213,6 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             return
 
         first_waypoint = self.waypoints_model.waypoint_data(0)
-        last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
 
         self.waypoints_model.insertRows(self.waypoints_model.rowCount(), rows=1, waypoints=[
             ft.Waypoint(lat=first_waypoint.lat, lon=first_waypoint.lon, flightlevel=first_waypoint.flightlevel,
@@ -231,7 +229,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
 
             condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
-                        first_waypoint.flightlevel != last_waypoint.flightlevel
+                first_waypoint.flightlevel != last_waypoint.flightlevel
 
         return condition
 

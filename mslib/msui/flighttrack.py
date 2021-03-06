@@ -64,7 +64,7 @@ def seconds_to_string(seconds):
     """
     hours, seconds = divmod(int(seconds), 3600)
     minutes, seconds = divmod(seconds, 60)
-    return "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
 
 TABLE_FULL = [
@@ -73,17 +73,17 @@ TABLE_FULL = [
     ("Lon\n(+-180)", lambda waypoint: round(float(waypoint.lon), 2), True),
     ("Flightlevel", lambda waypoint: waypoint.flightlevel, True),
     ("Pressure\n(hPa)", lambda waypoint: QtCore.QLocale().toString(waypoint.pressure / 100., 'f', 2), True),
-    ("Leg dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
-        int(waypoint.distance_to_prev), int(waypoint.distance_to_prev / 1.852)), False),
-    ("Cum. dist.\n(km [nm])", lambda waypoint: "{:d} [{:d}]".format(
-        int(waypoint.distance_total), int(waypoint.distance_total / 1.852)), False),
+    ("Leg dist.\n(km [nm])", lambda waypoint: f"{int(waypoint.distance_to_prev):d} "
+                                              f"[{int(waypoint.distance_to_prev / 1.852):d}]", False),
+    ("Cum. dist.\n(km [nm])", lambda waypoint: f"{int(waypoint.distance_total):d} "
+                                               f"[{int(waypoint.distance_total / 1.852):d}]", False),
     ("Leg time", lambda waypoint: seconds_to_string(waypoint.leg_time), False),
     ("Cum. time", lambda waypoint: seconds_to_string(waypoint.cum_time), False),
     ("Time (UTC)", lambda waypoint: waypoint.utc_time.strftime("%Y-%m-%d %H:%M:%S"), False),
-    ("Rem. fuel\n(lb)", lambda waypoint: ("{:d}".format(int(waypoint.rem_fuel))), False),
-    ("Aircraft\nweight (lb)", lambda waypoint: ("{:d}".format(int(waypoint.weight))), False),
-    ("Ceiling\naltitude (hft)", lambda waypoint: ("{:d}".format(waypoint.ceiling_alt)), False),
-    ("Ascent rate\n(ft/minute)", lambda waypoint: ("{:d}".format(waypoint.ascent_rate)), False),
+    ("Rem. fuel\n(lb)", lambda waypoint: f"{int(waypoint.rem_fuel):d}", False),
+    ("Aircraft\nweight (lb)", lambda waypoint: f"{int(waypoint.weight):d}", False),
+    ("Ceiling\naltitude (hft)", lambda waypoint: f"{waypoint.ceiling_alt:d}", False),
+    ("Ascent rate\n(ft/minute)", lambda waypoint: f"{waypoint.ascent_rate:d}", False),
     ("Comments                        ", lambda waypoint: waypoint.comments, True),
 ]
 
@@ -97,7 +97,7 @@ class Waypoint(object):
 
     def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
         self.location = location
-        locations = config_loader(dataset='locations', default=mss_default.locations)
+        locations = config_loader(dataset='locations')
         if location in locations:
             self.lat, self.lon = locations[location]
         else:
@@ -127,8 +127,7 @@ class Waypoint(object):
         """String representation of the waypoint (e.g., when used with the print
            statement).
         """
-        return "WAYPOINT(LAT={:f}, LON={:f}, FL={:f})".format(
-            self.lat, self.lon, self.flightlevel)
+        return f"WAYPOINT(LAT={self.lat:f}, LON={self.lon:f}, FL={self.flightlevel:f})"
 
 
 class WaypointsTableModel(QtCore.QAbstractTableModel):
@@ -530,7 +529,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         for i in range(1, len(self.waypoints)):
             wp_comm = self.waypoints[i].comments
             if len(wp_comm) == 9 and wp_comm.startswith("Hexagon "):
-                wp_comm = "Hexagon {:d}".format(8 - int(wp_comm[-1]))
+                wp_comm = f"Hexagon {(8 - int(wp_comm[-1])):d}"
                 self.waypoints[i].comments = wp_comm
         self.update_distances(position=0, rows=len(self.waypoints))
         index = self.index(0, 0)
@@ -662,7 +661,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         """
         if index.column() == LOCATION:
             combobox = QtWidgets.QComboBox(parent)
-            locations = config_loader(dataset='locations', default=mss_default.locations)
+            locations = config_loader(dataset='locations')
             adds = list(locations.keys())
             if self.parent() is not None:
                 for loc in [wp.location for wp in self.parent().waypoints_model.all_waypoint_data() if
@@ -693,7 +692,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         """
         if index.column() == LOCATION:
             loc = editor.currentText()
-            locations = config_loader(dataset='locations', default=mss_default.locations)
+            locations = config_loader(dataset='locations')
             if loc in locations:
                 lat, lon = locations[loc]
                 # Don't update distances and flight performance twice, hence
