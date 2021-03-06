@@ -39,7 +39,7 @@ from mslib._tests.utils import (callback_307_html, mscolab_register_user,
                                 mscolab_delete_user, mscolab_login, mscolab_start_server)
 from PyQt5 import QtWidgets
 
-PORTS = list(range(9481, 9530))
+PORTS = list(range(10481, 10530))
 
 
 class Test_Init_Server(object):
