@@ -90,7 +90,7 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
         """
         filename = get_open_filename(
             self, "Open Aircraft Performance JSON File", constants.MSS_CONFIG_PATH,
-            "Performance File (*.json)", pickertag="filepicker_performance")
+            "Performance File (*.json)", pickertag="filepicker_default")
         if filename is not None:
             try:
                 performance = config_loader(config_file=filename)
@@ -101,7 +101,7 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
 
             except KeyError as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr("JSON File missing '{}' entry".format(ex)))
+                                               self.tr(f"JSON File missing '{ex}' entry"))
             except (FatalUserError, ValueError) as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr("JSON File has Syntax Problems:\n{}".format(ex)))
+                                               self.tr(f"JSON File has Syntax Problems:\n{ex}"))

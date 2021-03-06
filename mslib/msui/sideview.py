@@ -29,7 +29,6 @@
 import logging
 import functools
 from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_sideview_window as ui
 from mslib.msui.mss_qt import ui_sideview_options as ui_opt
@@ -289,12 +288,10 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
                 # Open a WMS control widget.
                 title = "Web Service Plot Control"
                 widget = wms.VSecWMSControlWidget(
-                    default_WMS=config_loader(dataset="default_VSEC_WMS",
-                                              default=mss_default.default_VSEC_WMS),
+                    default_WMS=config_loader(dataset="default_VSEC_WMS"),
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
-                    wms_cache=config_loader(dataset="wms_cache",
-                                            default=mss_default.wms_cache))
+                    wms_cache=config_loader(dataset="wms_cache"))
                 self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
             else:
                 raise IndexError("invalid control index")
