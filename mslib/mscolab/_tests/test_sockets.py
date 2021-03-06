@@ -35,7 +35,6 @@ from PyQt5 import QtWidgets
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
 from mslib.mscolab.server import db
-from mslib.mscolab.mscolab import handle_db_seed
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
 
@@ -48,7 +47,6 @@ class Test_Sockets(object):
     chat_messages_counter_a = 0  # only for first test
 
     def setup(self):
-        handle_db_seed()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         time.sleep(2)
         self.application = QtWidgets.QApplication(sys.argv)
