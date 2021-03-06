@@ -333,7 +333,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         
         # When KML overlay widget is opened, it ensures that the color of individual KML files are already shown as icons.
         self.set_color_icons()
-        
+        self.flag = 0 #set flag to know prevent same icon be set twice when we want to show linewidth of KML files(prevent valueChanged connect to function)
+
     def __del__(self):  # destructor
         for x in self.dict_files:
             self.dict_files[x]["patch"] = None  # patch object has to be deleted
@@ -415,10 +416,16 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Stores current selected file; calls set_attribute_linewidth
         """
         if(self.listWidget.currentItem() is not None):
-            if(self.listWidget.count() != 0):
-                file = self.listWidget.currentItem().text()
-                self.set_attribute_linewidth(file)
-        
+            if(self.flag == 0):
+                if(self.listWidget.count() != 0):
+                    file = self.listWidget.currentItem().text()
+                    self.set_attribute_linewidth(file)
+            
+            if(self.dict_files[self.listWidget.currentItem().text()]["linewidth"] != self.dsbx_linewidth.value()):
+               if(self.listWidget.count() != 0):
+                    file = self.listWidget.currentItem().text()
+                    self.set_attribute_linewidth(file)
+                     
         #display message when no item in list widget is added or selected. Prompts to add or select.
         else:
             if(self.dsbx_linewidth.value() != 0.0): #Ensures that remove button is not pressed
@@ -467,6 +474,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             file = self.listWidget.currentItem().text()
             if file in self.dict_files:
                 self.dsbx_linewidth.setValue(self.set_linewidth(file))
+                self.flag = 1
 
     def checklistitem(self, file):
         """
