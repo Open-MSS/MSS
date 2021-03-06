@@ -28,7 +28,6 @@ import datetime
 import json
 import sys
 import time
-import pytest
 import fs
 import requests
 import socketio
@@ -254,7 +253,6 @@ class Test_Chat(object):
             assert Message.query.filter_by(text="delete this message").count() == 0
 
     def test_upload_file(self):
-        pytest.skip('repair soon')
         response = self._login()
         token = response["token"]
         sio = socketio.Client()
@@ -267,8 +265,7 @@ class Test_Chat(object):
         sio.on('chat-message-client', handler=handle_incoming_message)
         sio.connect(self.url)
         sio.emit('start', response)
-        sio.sleep(2)
-        sio.disconnect()
+        sio.sleep(1)
         files = {'file': open(icons('16x16'), 'rb')}
         data = {
             "token": token,
@@ -277,6 +274,8 @@ class Test_Chat(object):
         }
         url = url_join(self.url, 'message_attachment')
         requests.post(url, data=data, files=files)
+        sio.sleep(1)
+        sio.disconnect()
         assert len(message_recv) == 1
         assert fs.path.join("uploads", "1", "mss-logo") in message_recv[0]["text"]
 
