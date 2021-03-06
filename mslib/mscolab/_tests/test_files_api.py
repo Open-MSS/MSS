@@ -26,7 +26,6 @@
 """
 import requests
 import json
-import pytest
 import sys
 import time
 
@@ -183,7 +182,6 @@ class Test_Files(object):
         assert res["success"] is False
 
     def test_modify_bulk_permissions(self):
-        pytest.skip("needs a review")
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             assert p_id == 4
