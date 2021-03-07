@@ -44,7 +44,7 @@ PORTS = list(range(10481, 10530))
 
 class Test_Init_Server(object):
     def setup(self):
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process, self.url, self.app, self.sockio, self.cm, self.fm = mscolab_start_server(PORTS)
         time.sleep(0.1)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
@@ -63,11 +63,10 @@ class Test_Init_Server(object):
         self.process.terminate()
 
     def test_initialize_managers(self):
-        app, sockio, cm, fm = server.initialize_managers(self.app)
-        assert app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
-        assert 'Create a Flask-SocketIO server.' in sockio.__doc__
-        assert 'Class with handler functions for chat related functionalities' in cm.__doc__
-        assert 'Class with handler functions for file related functionalities' in fm.__doc__
+        assert self.app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
+        assert 'Create a Flask-SocketIO server.' in self.sockio.__doc__
+        assert 'Class with handler functions for chat related functionalities' in self.cm.__doc__
+        assert 'Class with handler functions for file related functionalities' in self.fm.__doc__
 
 
 class Test_Server(object):
