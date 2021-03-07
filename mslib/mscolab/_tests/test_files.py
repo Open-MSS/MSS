@@ -121,7 +121,9 @@ class Test_Files(object):
             self.file_message_counter[sno - 1] += 1
 
         sio1 = socketio.Client()
+        self.sockets.append(sio1)
         sio2 = socketio.Client()
+        self.sockets.append(sio2)
 
         sio1.on('file-changed', handler=partial(handle_chat_message, 1))
         sio2.on('file-changed', handler=partial(handle_chat_message, 2))
@@ -160,12 +162,6 @@ class Test_Files(object):
             change = Change.query.order_by(Change.created_at.desc()).first()
             change_content = self.fm.get_change_content(change.id)
             assert change_content == "file save content 2"
-            perm = Permission.query.filter_by(u_id=9, p_id=p_id).first()
-            db.session.delete(perm)
-            db.session.commit()
-            # to disconnect sockets later
-            self.sockets.append(sio1)
-            self.sockets.append(sio2)
 
     def test_undo(self):
         url = url_join(self.url, 'token')
@@ -184,7 +180,9 @@ class Test_Files(object):
             self.file_message_counter[sno - 1] += 1
 
         sio1 = socketio.Client()
+        self.sockets.append(sio1)
         sio2 = socketio.Client()
+        self.sockets.append(sio2)
 
         sio1.on('file-changed', handler=partial(handle_chat_message, 1))
         sio2.on('file-changed', handler=partial(handle_chat_message, 2))
