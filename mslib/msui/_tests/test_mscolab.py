@@ -36,7 +36,6 @@ from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui.mscolab import MSSMscolabWindow
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib._tests.utils import mscolab_delete_all_projects, mscolab_delete_user
 from mslib._tests.utils import mscolab_start_server
 
 

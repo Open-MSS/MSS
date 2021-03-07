@@ -35,7 +35,7 @@ from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.models import User
 from mslib._tests.utils import (callback_307_html, mscolab_register_user,
                                 mscolab_register_and_login, mscolab_create_content,
-                                mscolab_create_project, mscolab_delete_all_projects,
+                                mscolab_create_project,
                                 mscolab_delete_user, mscolab_login, mscolab_start_server)
 from PyQt5 import QtWidgets
 

@@ -29,9 +29,8 @@ import sys
 import time
 
 from PyQt5 import QtWidgets
-from mslib.mscolab.server import db, check_login, register_user
+from mslib.mscolab.server import check_login, register_user
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import User
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
 

@@ -32,8 +32,6 @@ from werkzeug.urls import url_join
 from PyQt5 import QtWidgets
 from mslib.mscolab.models import User, MessageType, Message
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import db
-from mslib.mscolab.utils import get_recent_pid
 from mslib.mscolab.chat_manager import ChatManager
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server

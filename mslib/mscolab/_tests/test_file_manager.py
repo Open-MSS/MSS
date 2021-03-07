@@ -33,7 +33,6 @@ from PyQt5 import QtWidgets
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import file_manager
 from mslib.mscolab.models import User, Project
-from mslib.mscolab.server import db
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
 
