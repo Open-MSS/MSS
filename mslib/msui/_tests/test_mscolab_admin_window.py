@@ -235,5 +235,5 @@ class Test_MscolabAdminWindow(object):
             if username in users:
                 found += 1
                 if access_level is not None:
-                    assert table.item(row_num, 2).text() == access_level
+                    assert table.item(row_num, 1).text() == access_level
         assert found == 2
