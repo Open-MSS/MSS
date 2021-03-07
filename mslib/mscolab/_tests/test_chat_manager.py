@@ -26,6 +26,7 @@
 import requests
 import json
 import sys
+import time
 
 from werkzeug.urls import url_join
 from PyQt5 import QtWidgets
@@ -44,6 +45,7 @@ PORTS = list(range(9321, 9340))
 class Test_Chat_Manager(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(2)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)

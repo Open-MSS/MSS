@@ -26,6 +26,7 @@
 import requests
 import json
 import sys
+import time
 
 from PyQt5 import QtWidgets
 from mslib.mscolab.conf import mscolab_settings
@@ -41,6 +42,7 @@ PORTS = list(range(9341, 9360))
 class Test_FileManager(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(2)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -203,18 +205,17 @@ class Test_FileManager(object):
             all_changes = self.fm.get_all_changes(project.id, self.user)
             assert self.fm.set_version_name(all_changes[1]["id"], project.id, self.user.id, "THIS")
 
-    # def test_undo(self):
-    #    time.sleep(2)
-    #    with self.app.app_context():
-    #        flight_path = "project8"
-    #        assert self.fm.create_project(flight_path, "something to know", self.user)
-    #        project = Project.query.filter_by(path=flight_path).first()
-    #        self.cleanup_pid.add(project.id)
-    #        assert self.fm.get_all_changes(project.id, self.user) == []
-    #        assert self.fm.save_file(project.id, self.content1, self.user)
-    #        assert self.fm.save_file(project.id, self.content2, self.user)
-    #        all_changes = self.fm.get_all_changes(project.id, self.user)
-    #        assert self.fm.undo(all_changes[1]["id"], self.user)
+    def test_undo(self):
+        with self.app.app_context():
+            flight_path = "project8"
+            assert self.fm.create_project(flight_path, "something to know", self.user)
+            project = Project.query.filter_by(path=flight_path).first()
+            self.cleanup_pid.add(project.id)
+            assert self.fm.get_all_changes(project.id, self.user) == []
+            assert self.fm.save_file(project.id, self.content1, self.user)
+            assert self.fm.save_file(project.id, self.content2, self.user)
+            all_changes = self.fm.get_all_changes(project.id, self.user)
+            assert self.fm.undo(all_changes[1]["id"], self.user)
 
     def test_fetch_users_without_permission(self):
         with self.app.app_context():

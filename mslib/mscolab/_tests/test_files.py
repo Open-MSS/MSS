@@ -49,6 +49,7 @@ PORTS = list(range(9361, 9380))
 class Test_Files(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(2)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -169,7 +170,6 @@ class Test_Files(object):
             self.sockets.append(sio2)
 
     def test_undo(self):
-        time.sleep(2)
         url = url_join(self.url, 'token')
         r = requests.post(url, data={
             'email': 'a',
