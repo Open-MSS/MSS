@@ -36,13 +36,13 @@ from mslib.mscolab.server import db
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
 
-PORTS = list(range(9341, 9360))
+PORTS = list(range(19341, 19390))
 
 
 class Test_FileManager(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(2)
+        time.sleep(1)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)

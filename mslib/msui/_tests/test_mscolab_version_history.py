@@ -41,7 +41,7 @@ PORTS = list(range(9591, 9620))
 class Test_MscolabVersionHistory(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(2)
+        time.sleep(1)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -160,7 +160,7 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClick(self.version_window.changes.viewport(), QtCore.Qt.Key_Return)
         QtWidgets.QApplication.processEvents()
-        time.sleep(2)
+        time.sleep(1)
 
     def _change_version_filter(self, index):
         self.version_window.versionFilterCB.setCurrentIndex(index)
