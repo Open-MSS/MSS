@@ -90,6 +90,7 @@ class Test_Mscolab(object):
         assert self.window.url.count() >= 1
 
     def test_login(self):
+        self._connect_to_mscolab()
         self._login()
         # screen shows logout button
         assert self.window.label.text() == 'Welcome, a'
@@ -110,12 +111,14 @@ class Test_Mscolab(object):
         assert self.window.mscolab_server_url is None
 
     def test_activate_project(self):
+        self._connect_to_mscolab()
         self._login()
         # activate a project
         self._activate_project_at_index(0)
         assert self.window.active_pid is not None
 
     def test_view_open(self):
+        self._connect_to_mscolab()
         self._login()
         # test without activating project
         QtTest.QTest.mouseClick(self.window.topview, QtCore.Qt.LeftButton)
@@ -138,6 +141,7 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
     def test_handle_export(self, mockbox):
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         QtTest.QTest.mouseClick(self.window.exportBtn, QtCore.Qt.LeftButton)
@@ -154,6 +158,7 @@ class Test_Mscolab(object):
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockExport, mockImport, mockMessage):
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         exported_wp = WaypointsTableModel(waypoints=self.window.waypoints_model.waypoints)
@@ -174,6 +179,7 @@ class Test_Mscolab(object):
             assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
 
     def test_work_locally_toggle(self):
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         self.window.workLocallyCheckBox.setChecked(True)
@@ -231,7 +237,7 @@ class Test_Mscolab(object):
         assert self.window.listProjects.model().rowCount() == 1
 
     def test_add_project(self):
-        # ToDo testneeds to be independent from test_user_delete
+        # ToDo test needs to be independent from test_user_delete
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")
@@ -367,7 +373,6 @@ class Test_Mscolab(object):
         time.sleep(0.5)
 
     def _login(self, emailid="a", password="a"):
-        self._connect_to_mscolab()
         self.window.emailid.setText(emailid)
         self.window.password.setText(password)
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
