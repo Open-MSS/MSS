@@ -61,6 +61,7 @@ class Test_MscolabProject(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.MSCOLAB_URL_TEST)
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         # activate project window here by clicking button
@@ -152,7 +153,6 @@ class Test_MscolabProject(object):
 
     def _login(self):
         # login
-        self._connect_to_mscolab()
         self.window.emailid.setText('a')
         self.window.password.setText('a')
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
