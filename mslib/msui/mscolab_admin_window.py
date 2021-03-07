@@ -120,9 +120,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     # TODO: Think of a more cleaner implementation.
     def apply_filters(self, table, text_filter, permission_filter=None):
         for row_num in range(table.rowCount()):
-            if text_filter in table.item(row_num, 0).text() or text_filter in table.item(row_num, 1).text():
+            if text_filter in table.item(row_num, 0).text():
                 if permission_filter:
-                    if permission_filter == "all" or permission_filter == table.item(row_num, 2).text():
+                    if permission_filter == "all" or permission_filter == table.item(row_num, 1).text():
                         table.showRow(row_num)
                     else:
                         table.hideRow(row_num)
