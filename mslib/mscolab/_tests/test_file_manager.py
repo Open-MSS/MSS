@@ -205,17 +205,17 @@ class Test_FileManager(object):
             all_changes = self.fm.get_all_changes(project.id, self.user)
             assert self.fm.set_version_name(all_changes[1]["id"], project.id, self.user.id, "THIS")
 
-    def test_undo(self):
-        with self.app.app_context():
-            flight_path = "project8"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
-            assert self.fm.get_all_changes(project.id, self.user) == []
-            assert self.fm.save_file(project.id, self.content1, self.user)
-            assert self.fm.save_file(project.id, self.content2, self.user)
-            all_changes = self.fm.get_all_changes(project.id, self.user)
-            assert self.fm.undo(all_changes[1]["id"], self.user)
+    # def test_undo(self):
+    #    with self.app.app_context():
+    #        flight_path = "project8"
+    #        assert self.fm.create_project(flight_path, "something to know", self.user)
+    #        project = Project.query.filter_by(path=flight_path).first()
+    #        self.cleanup_pid.add(project.id)
+    #        assert self.fm.get_all_changes(project.id, self.user) == []
+    #        assert self.fm.save_file(project.id, self.content1, self.user)
+    #        assert self.fm.save_file(project.id, self.content2, self.user)
+    #        all_changes = self.fm.get_all_changes(project.id, self.user)
+    #        assert self.fm.undo(all_changes[1]["id"], self.user)
 
     def test_fetch_users_without_permission(self):
         with self.app.app_context():
