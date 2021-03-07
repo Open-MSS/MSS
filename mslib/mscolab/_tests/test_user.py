@@ -48,10 +48,6 @@ class Test_UserMethods(object):
                                        mscolab_server_url=self.url)
 
     def teardown(self):
-        with self.app.app_context():
-            User.query.filter_by(emailid="sdf@s.com").delete()
-            User.query.filter_by(emailid="sdf@s1.com").delete()
-            db.session.commit()
         if self.window.version_window:
             self.window.version_window.close()
         if self.window.conn:

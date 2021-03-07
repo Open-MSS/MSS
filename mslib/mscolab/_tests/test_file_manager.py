@@ -61,11 +61,6 @@ class Test_FileManager(object):
             self.user = User.query.filter_by(id=8).first()
 
     def teardown(self):
-        with self.app.app_context():
-            # Todo refactoring for a new user and remove everything from that user, without collection of p_id
-            for p_id in self.cleanup_pid:
-                self.fm.delete_file(p_id, self.user)
-            db.session.commit()
         for socket in self.sockets:
             socket.disconnect()
         if self.window.version_window:

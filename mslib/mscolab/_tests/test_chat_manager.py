@@ -69,10 +69,6 @@ class Test_Chat_Manager(object):
         requests.post(url, data=data)
 
     def teardown(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-            self.fm.delete_file(p_id, self.user)
-            db.session.commit()
         if self.window.version_window:
             self.window.version_window.close()
         if self.window.conn:

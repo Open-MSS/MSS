@@ -80,25 +80,13 @@ class Test_Server(object):
                                        mscolab_server_url=self.url)
 
     def teardown(self):
-        with self.app.app_context():
-            mscolab_delete_all_projects(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            mscolab_delete_all_projects(self.app, self.url, 'user@alpha.org', 'user', 'user')
-            for em, pw in [('alpha@alpha.org', 'abcdef'),
-                           ('user2@example.com', 'user2'),
-                           ('delta@delta.org', 'abcdef'),
-                           ('otheruser@other.org', 'other'),
-                           ('user@alpha.org', 'user')
-                           ]:
-                server.register_user(em, pw, 'test')
-                mscolab_delete_user(self.app, self.url, em, pw)
-            server.db.session.commit()
-            if self.window.version_window:
-                self.window.version_window.close()
-            if self.window.conn:
-                self.window.conn.disconnect()
-            self.application.quit()
-            QtWidgets.QApplication.processEvents()
-            self.process.terminate()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_check_login(self):
         with self.app.app_context():

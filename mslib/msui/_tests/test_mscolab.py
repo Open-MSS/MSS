@@ -57,24 +57,6 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        QtTest.QTest.mouseClick(self.window.logoutButton, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        with self.app.app_context():
-            email = [("something@something.org", "something"),
-                     ("other@something.org", "other"),
-                     ("anton@something.org", "anton"),
-                     ("berta@something.org", "berta"),
-                    ]
-            for em, username in email:
-                mscolab_delete_all_projects(self.app, self.url, em, "something", username)
-                mscolab_delete_user(self.app, self.url, em, "something")
-
-        # to disconnect connections, and clear token
-        self.window.disconnect_handler()
-        with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as mss_dir:
-            if mss_dir.exists('local_mscolab_data'):
-                mss_dir.removetree('local_mscolab_data')
-
         if self.window.version_window:
             self.window.version_window.close()
         if self.window.conn:

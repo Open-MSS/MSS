@@ -63,9 +63,6 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        # to disconnect connections, and clear token
-        # Not logging out since it pops up a dialog
-        # self.window.logout()
         if self.window.chat_window:
             self.window.chat_window.hide()
         if self.window.conn:

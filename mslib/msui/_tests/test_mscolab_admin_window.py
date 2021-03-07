@@ -52,9 +52,6 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        # to disconnect connections, and clear token
-        # Not logging out since it pops up a dialog
-        # self.window.logout()
         if self.window.admin_window:
             self.window.admin_window.close()
         if self.window.conn:
