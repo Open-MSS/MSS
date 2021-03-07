@@ -191,7 +191,7 @@ class Test_MscolabAdminWindow(object):
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText(self.MSCOLAB_URL_TEST)
-        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
     def _login(self):

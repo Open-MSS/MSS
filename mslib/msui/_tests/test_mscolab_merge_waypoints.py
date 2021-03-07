@@ -177,8 +177,8 @@ class Test_Mscolab(object):
         assert self.window.waypoints_model.waypoint_data(0).lat == wp_server_before.lat
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText("http://localhost:8084")
-        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        self.window.url.setEditText(self.MSCOLAB_URL_TEST)
+        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         time.sleep(0.5)
 
     def _login(self, emailid="merge_waypoints_user", password="password"):
