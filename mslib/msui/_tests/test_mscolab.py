@@ -30,6 +30,7 @@ import os
 import fs
 import mock
 import pytest
+import time
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Permission, User
@@ -48,7 +49,6 @@ class Test_Mscolab(object):
 
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(2)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -116,6 +116,7 @@ class Test_Mscolab(object):
         assert self.window.active_pid is not None
 
     def test_view_open(self):
+        time.sleep(2)
         self._login()
         # test without activating project
         QtTest.QTest.mouseClick(self.window.topview, QtCore.Qt.LeftButton)

@@ -45,7 +45,6 @@ PORTS = list(range(10481, 10530))
 class Test_Init_Server(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(2)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)

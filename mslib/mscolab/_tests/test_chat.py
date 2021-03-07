@@ -27,7 +27,6 @@
 import datetime
 import json
 import sys
-import time
 import fs
 import requests
 import socketio
@@ -48,7 +47,6 @@ PORTS = list(range(9300, 9320))
 class Test_Chat(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(2)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
