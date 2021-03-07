@@ -495,7 +495,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if not filenames:
             return
         self.select_file(filenames)
-        self.set_color_icons()
+        # set color icons according to linewidth to newly added KML files
+        for filename in filenames:
+            if filename is not None:
+                item_list = self.listWidget.findItems(filename, QtCore.Qt.MatchExactly)
+                for item in item_list:
+                    index = self.listWidget.row(item)
+                    self.listWidget.item(index).setIcon(self.show_color_icon(filename, self.set_color(filename)))
 
     def select_file(self, filenames):
         """Initializes selected file/ files
