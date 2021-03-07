@@ -35,8 +35,9 @@ from matplotlib import patheffects
 from mslib.msui.mss_qt import get_open_filenames, get_save_filename
 from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
 from PyQt5 import QtGui, QtWidgets, QtCore
-from PyQt5.QtWidgets import QMessageBox 
+from PyQt5.QtWidgets import QMessageBox
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
+
 
 class KMLPatch(object):
     """
@@ -273,7 +274,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     This class provides the interface for accessing Multiple KML files and
     adding the appropriate patches to the TopView canvas.
     """
-    
+
     def __init__(self, parent=None, view=None):
         super(KMLOverlayControlWidget, self).__init__(parent)
         self.setupUi(self)
@@ -289,16 +290,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.pushButton_unselect_all.clicked.connect(self.unselect_all)
         self.pushButton_merge.clicked.connect(self.merge_file)
         self.labelStatusBar.setText("Status: Click on Add KML Files to get started.")
+        self.dsbx_linewidth.setSpecialValueText("None")  # None is the value of double spin box when it is minimum i.e 0
+        self.dsbx_linewidth.setValue(0.0)  # sets initial value as 0 for linewidth
 
-        
-        self.dsbx_linewidth.setSpecialValueText("None") #None is the value of double spin box when it is minimum i.e 0
-        self.dsbx_linewidth.setValue(0.0) #sets initial value as 0 for linewidth
-        
-        #Connect slots and signals (For showing color and linewidth of clicked file).
-        self.listWidget.itemClicked.connect(self.show_linewidth) 
-        self.pushButton_color.clicked.connect(self.select_color) 
+        # Connect slots and signals (For showing color and linewidth of clicked file).
+        self.listWidget.itemClicked.connect(self.show_linewidth)
+        self.pushButton_color.clicked.connect(self.select_color)
         self.dsbx_linewidth.valueChanged.connect(self.select_linewidth)
-        
 
         self.listWidget.itemChanged.connect(self.load_file)  # list of files in ListWidget
 
@@ -323,17 +321,16 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 del self.dict_files[file]  # remove non-existent files from dictionary
             self.load_file()
 
-        
         palette = QtGui.QPalette(self.pushButton_color.palette())
         colour = QtGui.QColor()
         colour.setRgbF(*settings["colour"])
         palette.setColor(QtGui.QPalette.Button, colour)
         self.pushButton_color.setPalette(palette)  # sets the last colour before closing KML Overlay
-        
-        
-        # When KML overlay widget is opened, it ensures that the color of individual KML files are already shown as icons.
+
+        # When KMLoverlaywidget is opened,it ensures that the color of individual KML files are already shown as icons.
         self.set_color_icons()
-        self.flag = 0 #set flag to know prevent same icon be set twice when we want to show linewidth of KML files(prevent valueChanged connect to function)
+        self.flag = 0  # set flag to know prevent same icon be set twice when we want to show linewidth of KML files
+        # (flag prevents valueChanged connect to function)
 
     def __del__(self):  # destructor
         for x in self.dict_files:
@@ -353,13 +350,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
 
         if(self.listWidget.count() != 0):
-                for index in range(self.listWidget.count()):
-                    
-                    if (self.listWidget.item(index).text() in self.dict_files):
-                        file = self.listWidget.item(index).text()
-                        clr = self.dict_files[file]["color"]
-                        self.listWidget.item(index).setIcon(self.show_color_icon(file,clr))
-        
+            for index in range(self.listWidget.count()):
+                if (self.listWidget.item(index).text() in self.dict_files):
+                    file = self.listWidget.item(index).text()
+                    clr = self.dict_files[file]["color"]
+                    self.listWidget.item(index).setIcon(self.show_color_icon(file, clr))
 
     def select_color(self):
         """
@@ -376,8 +371,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 palette.setColor(QtGui.QPalette.Button, colour)
                 button.setPalette(palette)  # finally sets the colour of the button
             self.set_attribute_color(file)
-        
-        #display message when no item in list widget is added or selected. Prompts to add or select.
+
+        # display message when no item in list widget is added or selected. Prompts to add or select.
         else:
             msg = QMessageBox()
             msg.setWindowTitle("Message")
@@ -385,7 +380,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 msg.setText("Please add a KML file and then change the color!")
             else:
                 msg.setText("Please select any KML file and then change the color!")
-            x = msg.exec_()
+            msg.exec_()
 
     def get_color(self):
         """
@@ -406,8 +401,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if file in self.dict_files:
             self.dict_files[file]["color"] = self.get_color()
-            clr = self.dict_files[file]["color"]
-            self.listWidget.currentItem().setIcon(self.show_color_icon(file, self.set_color(file))) #sets the icon to the listWidget
+            # sets the icon to the listWidget
+            self.listWidget.currentItem().setIcon(self.show_color_icon(file, self.set_color(file)))
         self.update_settings()
         self.checklistitem(file)
 
@@ -417,18 +412,16 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         if(self.listWidget.currentItem() is not None):
             if(self.flag == 0):
-                if(self.listWidget.count() != 0):
-                    file = self.listWidget.currentItem().text()
-                    self.set_attribute_linewidth(file)
-            
-            if(self.dict_files[self.listWidget.currentItem().text()]["linewidth"] != self.dsbx_linewidth.value()):
-               if(self.listWidget.count() != 0):
-                    file = self.listWidget.currentItem().text()
-                    self.set_attribute_linewidth(file)
-                     
-        #display message when no item in list widget is added or selected. Prompts to add or select.
+                file = self.listWidget.currentItem().text()
+                self.set_attribute_linewidth(file)
+
+            elif(self.dict_files[self.listWidget.currentItem().text()]["linewidth"] != self.dsbx_linewidth.value()):
+                file = self.listWidget.currentItem().text()
+                self.set_attribute_linewidth(file)
+
+        # display message when no item in list widget is added or selected. Prompts to add or select.
         else:
-            if(self.dsbx_linewidth.value() != 0.0): #Ensures that remove button is not pressed
+            if(self.dsbx_linewidth.value() != 0.0):  # Ensures that remove button is not pressed
                 msg = QMessageBox()
                 msg.setWindowTitle("Message")
                 if(self.listWidget.count() == 0):
@@ -437,7 +430,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 else:
                     msg.setText("Please select any KML file and then change linewidth!")
                     self.dsbx_linewidth.setValue(0.0)
-                x = msg.exec_()
+                msg.exec_()
 
     def set_linewidth(self, file):
         """
@@ -450,9 +443,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Assigns linewidth to given file; calls update_settings
         """
         if file in self.dict_files:
-            self.dict_files[file]["linewidth"] = self.dsbx_linewidth.value() 
+            self.dict_files[file]["linewidth"] = self.dsbx_linewidth.value()
             self.listWidget.currentItem().setIcon(self.show_color_icon(file, self.set_color(file)))
-
 
         self.update_settings()
         self.checklistitem(file)
@@ -462,9 +454,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Creating object of QPixmap for displaying icon inside the listWidget
         """
         pixmap = QtGui.QPixmap(20, int(self.set_linewidth(file)))
-        pixmap.fill(QtGui.QColor(clr[0]*255,clr[1]*255,clr[2]*255))
+        pixmap.fill(QtGui.QColor(clr[0] * 255, clr[1] * 255, clr[2] * 255))
         return QtGui.QIcon(pixmap)
-
 
     def show_linewidth(self):
         """
@@ -517,14 +508,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 # initializing the nested dictionary dict_files
                 self.dict_files[text] = {}
                 self.dict_files[text]["patch"] = None
-                
                 self.dict_files[text]["color"] = self.get_color()
-                self.dict_files[text]["linewidth"] = 5.0 #Sets linewidth to 5.0 for a newly added file/removed and added file.
+                self.dict_files[text]["linewidth"] = 5.0  # Sets linewidth to 5.0 if we add new/previously added files.
 
-                '''self.listWidget.item(index).setIcon(self.show_color_icon
-                                                    (self.listWidget.item(index).text(),self.dict_files
-                                                    [self.listWidget.item(index).text()]["color"]))'''
-                
                 self.directory_location = text  # Saves location of directory to open
                 self.create_list_item(text)
             else:
@@ -569,13 +555,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.labelStatusBar.setText("Status: KML Files removed")
         if self.listWidget.count() == 0:  # implies no files in ListWidget
             self.patch = None
-        #self.load_file() # not sure to keep this or not, works either ways
-
-        if self.listWidget.count() == 0: #Shows Unknown for color and linewidth values in absence of any file
-            # self.label_color.setText('None')
-            # self.pushButton_linewidth.setText('Linewidth : None')
-            # self.label_color.setStyleSheet('background-color: #00000000') #makes the background transparent for the color label value
-            self.dsbx_linewidth.setValue(0.0)
+            self.dsbx_linewidth.setValue(0.0)  # Shows None for Linewidth in absence of any file
+        # self.load_file() # not sure to keep this or not, works either ways
 
     def load_file(self):
         """
@@ -601,14 +582,13 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                 self.patch = KMLPatch(self.view.map, self.kml,
                                                       self.set_color(self.listWidget.item(index).text()),
                                                       self.set_linewidth(self.listWidget.item(index).text()))
-                                
 
                             else:  # if new file is being added
                                 self.patch = KMLPatch(self.view.map, self.kml,
                                                       self.dict_files[self.listWidget.item(index).text()]["color"],
                                                       self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
-        
+
                 except (IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError, et.XMLSchemaParseError,
                         et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
@@ -619,7 +599,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("KML Overlay"), self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
         logging.debug(self.dict_files)
-
 
     def merge_file(self):
         checked_files = []  # list of indices of checked files
@@ -695,5 +674,3 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     elem.tag = elem.tag[i + 1:]
             objectify.deannotate(root, cleanup_namespaces=True)
             logging.debug("namespace removed by objectify.deannotate")
-
-
