@@ -325,10 +325,10 @@ class FileManager(object):
 
         user_list = User.query\
             .join(Permission, (User.id == Permission.u_id) & (Permission.p_id == p_id), isouter=True) \
-            .add_columns(User.id, User.username, User.emailid) \
+            .add_columns(User.id, User.username) \
             .filter(Permission.u_id.is_(None))
 
-        users = [[user.username, user.emailid, user.id] for user in user_list]
+        users = [[user.username, user.id] for user in user_list]
         return users
 
     def fetch_users_with_permission(self, p_id, u_id):
@@ -337,11 +337,11 @@ class FileManager(object):
 
         user_list = User.query\
             .join(Permission, User.id == Permission.u_id)\
-            .add_columns(User.id, User.username, User.emailid, Permission.access_level) \
+            .add_columns(User.id, User.username, Permission.access_level) \
             .filter(Permission.p_id == p_id) \
             .filter((User.id != u_id) & (Permission.access_level != 'creator'))
 
-        users = [[user.username, user.emailid, user.access_level, user.id] for user in user_list]
+        users = [[user.username, user.access_level, user.id] for user in user_list]
         return users
 
     def add_bulk_permission(self, p_id, user, new_u_ids, access_level):
