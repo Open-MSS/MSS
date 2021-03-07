@@ -35,11 +35,11 @@ jobs:
         && mamba install --file requirements.d/development.txt)
         
     - name: Run tests
-      timeout-minutes: 30
+      timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
-        pytest mslib
+        xvfb-run pytest mslib
     
   Update-Images:
     runs-on: ubuntu-latest
