@@ -54,8 +54,6 @@ class Test_Files(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
-        self.window.show()
-
         self.sockets = []
         self.file_message_counter = [0] * 2
         with self.app.app_context():
@@ -68,8 +66,6 @@ class Test_Files(object):
             self.window.version_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

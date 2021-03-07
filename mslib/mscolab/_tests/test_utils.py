@@ -45,7 +45,6 @@ class Test_Utils(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
-        self.window.show()
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
 
@@ -54,8 +53,6 @@ class Test_Utils(object):
             self.window.version_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

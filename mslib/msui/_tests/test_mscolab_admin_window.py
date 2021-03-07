@@ -43,7 +43,6 @@ class Test_MscolabAdminWindow(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
-        self.window.show()
         self._login()
         self._activate_project_at_index(0)
         QtTest.QTest.mouseClick(self.window.adminWindowBtn, QtCore.Qt.LeftButton)
@@ -60,8 +59,6 @@ class Test_MscolabAdminWindow(object):
             self.window.admin_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
-        self.window.close()
-        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

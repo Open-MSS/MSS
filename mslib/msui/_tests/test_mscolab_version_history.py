@@ -45,7 +45,6 @@ class Test_MscolabVersionHistory(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
-        self.window.show()
         self._login()
         self._activate_project_at_index(0)
         # activate project window here by clicking button
@@ -63,8 +62,6 @@ class Test_MscolabVersionHistory(object):
             self.window.version_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

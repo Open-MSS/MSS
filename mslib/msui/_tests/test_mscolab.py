@@ -52,7 +52,6 @@ class Test_Mscolab(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
-        self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
@@ -80,8 +79,6 @@ class Test_Mscolab(object):
             self.window.version_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
-        self.window.close()
-        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
@@ -252,6 +249,7 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.window.help_dialog is not None
+        self.window.close()
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
     def test_handle_delete_project(self, mocktext):

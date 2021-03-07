@@ -47,7 +47,6 @@ class Test_FileManager(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
-        self.window.show()
         self.sockets = []
         self.fm = file_manager.FileManager(mscolab_settings.MSCOLAB_DATA_DIR)
         self._example_data()
@@ -73,8 +72,6 @@ class Test_FileManager(object):
             self.window.version_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

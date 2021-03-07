@@ -48,7 +48,6 @@ class Test_Mscolab(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
-        self.window.show()
 
     def teardown(self):
         with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as mss_dir:
@@ -58,8 +57,6 @@ class Test_Mscolab(object):
             self.window.version_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
-        self.window.close()
-        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

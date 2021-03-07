@@ -52,7 +52,6 @@ class Test_Chat(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
-        self.window.show()
 
     def teardown(self):
         if self.window.version_window:
