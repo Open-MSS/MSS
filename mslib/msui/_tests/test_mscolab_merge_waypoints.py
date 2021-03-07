@@ -48,6 +48,7 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_overwrite_to_server(self, mockbox):
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         wp_server_before = self.window.waypoints_model.waypoint_data(0)
@@ -79,6 +80,7 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_keep_server_points(self, mockbox):
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         wp_server_before = self.window.waypoints_model.waypoint_data(0)
@@ -112,6 +114,7 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_merge_points(self, mockbox):
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         self.window.workLocallyCheckBox.setChecked(True)
@@ -148,6 +151,7 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_fetch_from_server(self, mockbox):
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         wp_server_before = self.window.waypoints_model.waypoint_data(0)
@@ -182,7 +186,6 @@ class Test_Mscolab(object):
         time.sleep(0.5)
 
     def _login(self, emailid="merge_waypoints_user", password="password"):
-        self._connect_to_mscolab()
         self.window.emailid.setText(emailid)
         self.window.password.setText(password)
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)

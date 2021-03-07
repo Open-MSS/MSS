@@ -48,6 +48,7 @@ class Test_MscolabVersionHistory(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=MSCOLAB_URL_TEST)
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         time.sleep(4)
@@ -133,12 +134,11 @@ class Test_MscolabVersionHistory(object):
         assert new_changes_count == changes_count + 2
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText("http://localhost:8083")
+        self.window.url.setEditText("http://localhost:8084")
         QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         time.sleep(1)
 
     def _login(self):
-        self._connect_to_mscolab()
         self.window.emailid.setText('a')
         self.window.password.setText('a')
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
