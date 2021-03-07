@@ -33,8 +33,6 @@ import time
 
 from PyQt5 import QtWidgets
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Message
-from mslib.mscolab.server import db
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
 
@@ -72,6 +70,7 @@ class Test_Sockets(object):
                           })
         response = json.loads(r.text)
         sio = socketio.Client()
+        self.sockets.append(sio)
 
         def handle_chat_message(message):
             self.chat_messages_counter_a += 1
@@ -80,7 +79,6 @@ class Test_Sockets(object):
         sio.connect(self.url)
         sio.emit('start', response)
         sio.sleep(2)
-        self.sockets.append(sio)
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
@@ -113,6 +111,9 @@ class Test_Sockets(object):
         sio1 = socketio.Client()
         sio2 = socketio.Client()
         sio3 = socketio.Client()
+        self.sockets.append(sio1)
+        self.sockets.append(sio2)
+        self.sockets.append(sio3)
 
         sio1.on('chat-message-client', handler=partial(handle_chat_message, 1))
         sio2.on('chat-message-client', handler=partial(handle_chat_message, 2))
@@ -153,12 +154,3 @@ class Test_Sockets(object):
         assert self.chat_messages_counter[0] == 2
         assert self.chat_messages_counter[1] == 1
         assert self.chat_messages_counter[2] == 2
-        self.sockets.append(sio1)
-        self.sockets.append(sio2)
-        self.sockets.append(sio3)
-
-        with self.app.app_context():
-            Message.query.filter_by(text="message from 1").delete()
-            Message.query.filter_by(text="message from 3 - 1").delete()
-            Message.query.filter_by(text="message from 3 - 2").delete()
-            db.session.commit()

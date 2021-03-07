@@ -36,7 +36,6 @@ from PyQt5 import QtWidgets
 from werkzeug.urls import url_join
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message, MessageType
-from mslib.mscolab.server import db
 from mslib.msui.icons import icons
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
@@ -52,8 +51,11 @@ class Test_Chat(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
+        self.sockets = []
 
     def teardown(self):
+        for socket in self.sockets:
+            socket.disconnect()
         if self.window.version_window:
             self.window.version_window.close()
         if self.window.conn:
@@ -67,6 +69,7 @@ class Test_Chat(object):
     def test_send_message(self):
         response = self._login()
         sio = socketio.Client()
+        self.sockets.append(sio)
         messages = []
 
         def handle_incoming_message(msg):
@@ -92,7 +95,6 @@ class Test_Chat(object):
             "reply_id": -1
         })
         sio.sleep(2)
-        sio.disconnect()
         assert messages[0]["text"] == "message from 1"
         assert messages[1]["text"] == "® non ascii"
         with self.app.app_context():
@@ -102,13 +104,11 @@ class Test_Chat(object):
 
             message = Message.query.filter_by(text="® non ascii").first()
             assert message is not None
-            Message.query.filter_by(text="message from 1").delete()
-            Message.query.filter_by(text="® non ascii").delete()
-            db.session.commit()
 
     def test_get_messages(self):
         response = self._login()
         sio = socketio.Client()
+        self.sockets.append(sio)
         sio.connect(self.url)
         sio.emit('start', response)
         sio.sleep(2)
@@ -125,7 +125,6 @@ class Test_Chat(object):
             "reply_id": -1
         })
         sio.sleep(2)
-        sio.disconnect()
         with self.app.app_context():
             messages = self.cm.get_messages(1)
             assert messages[0]["text"] == "message from 1"
@@ -142,6 +141,7 @@ class Test_Chat(object):
     def test_get_messages_api(self):
         response = self._login()
         sio = socketio.Client()
+        self.sockets.append(sio)
         sio.connect(self.url)
         sio.emit('start', response)
         sio.sleep(2)
@@ -158,7 +158,6 @@ class Test_Chat(object):
             "reply_id": -1
         })
         sio.sleep(2)
-        sio.disconnect()
 
         token = response["token"]
         data = {
@@ -175,13 +174,11 @@ class Test_Chat(object):
         # returns False due to bad authorization
         r = requests.get(url, data=data)
         assert r.text == "False"
-        with self.app.app_context():
-            Message.query.filter_by(text="message from 1").delete()
-            db.session.commit()
 
     def test_edit_message(self):
         response = self._login()
         sio = socketio.Client()
+        self.sockets.append(sio)
         edited_messages = []
 
         def handle_message_edited(msg):
@@ -208,18 +205,13 @@ class Test_Chat(object):
             "token": response["token"]
         })
         sio.sleep(2)
-        sio.disconnect()
         assert len(edited_messages) == 1
         assert edited_messages[0]["new_message_text"] == "I have updated the message"
-        with self.app.app_context():
-            edited_message = Message.query.filter_by(text="I have updated the message").first()
-            assert edited_message.id == message.id
-            db.session.delete(edited_message)
-            db.session.commit()
 
     def test_delete_message(self):
         response = self._login()
         sio = socketio.Client()
+        self.sockets.append(sio)
         deleted_messages = []
 
         def handle_message_deleted(msg):
@@ -245,7 +237,6 @@ class Test_Chat(object):
             'token': response["token"]
         })
         sio.sleep(2)
-        sio.disconnect()
         assert len(deleted_messages) == 1
         assert deleted_messages[0]["message_id"] == message.id
         with self.app.app_context():
@@ -255,6 +246,7 @@ class Test_Chat(object):
         response = self._login()
         token = response["token"]
         sio = socketio.Client()
+        self.sockets.append(sio)
         message_recv = []
 
         def handle_incoming_message(msg):
@@ -274,7 +266,6 @@ class Test_Chat(object):
         url = url_join(self.url, 'message_attachment')
         requests.post(url, data=data, files=files)
         sio.sleep(1)
-        sio.disconnect()
         assert len(message_recv) == 1
         assert fs.path.join("uploads", "1", "mss-logo") in message_recv[0]["text"]
 
