@@ -164,8 +164,9 @@ def mscolab_check_free_port(all_ports, port):
         _s.bind(("127.0.0.1", port))
     except (socket.error, IOError):
         port = all_ports.pop()
-        mscolab_check_free_port(all_ports, port)
-    _s.close()
+        port = mscolab_check_free_port(all_ports, port)
+    else:
+        _s.close()
     return port
 
 
