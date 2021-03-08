@@ -1271,8 +1271,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "time": valid_time,
                       "init_time": init_time,
                       "level": level,
-                      "time_name": self.multilayers.current_layer.vtime_name,
-                      "init_time_name": self.multilayers.current_layer.itime_name,
+                      "time_name": layer.vtime_name,
+                      "init_time_name": layer.itime_name,
                       "size": (width, height),
                       "format": 'image/png',
                       "transparent": transparent}
@@ -1412,6 +1412,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
         logging.debug("cache has been cleaned (%i files removed).", removed_files)
 
+    def squash_multiple_images(self, imgs):
+        background = imgs[0]
+        if len(imgs) > 1:
+            for foreground in imgs[1:]:
+                background.paste(foreground, (0, 0), foreground.convert("RGBA"))
+
+        return background
+
         ################################################################################
 
 #
@@ -1481,12 +1489,9 @@ class VSecWMSControlWidget(WMSControlWidget):
 
     def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
-        self.view.draw_image(imgs[0])
-        self.view.draw_legend(legend_imgs[0])
-        if style != "":
-            style_title = self.get_layer_object(layer).styles[style]["title"]
-        else:
-            style_title = None
+        self.view.draw_image(self.squash_multiple_images(imgs))
+        self.view.draw_legend(legend_imgs[-1])
+        style_title = self.multilayers.current_layer.get_style()
         self.view.draw_metadata(title=self.get_layer_object(layer).title,
                                 init_time=init_time,
                                 valid_time=valid_time,
@@ -1547,28 +1552,19 @@ class HSecWMSControlWidget(WMSControlWidget):
         self.fetch.emit(args)
 
     def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
-        img = self.squash_multiple_images(imgs, None)
+        img = self.squash_multiple_images(imgs)
 
         # Plot the image on the view canvas.
-        # ToDo: Display style
-        style_title = None
+        style_title = self.multilayers.current_layer.get_style()
         self.view.draw_metadata(title=self.multilayers.current_layer.layerobj.title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 level=level,
                                 style=style_title)
         self.view.draw_image(img)
-        self.view.draw_legend(legend_imgs[0])
+        self.view.draw_legend(legend_imgs[-1])
         self.view.waypoints_interactor.update()
         self.allow_auto_update = True
-
-    def squash_multiple_images(self, imgs, legend_imgs):
-        background = imgs[0]
-        if len(imgs) > 1:
-            for foreground in imgs[1:]:
-                background.paste(foreground, (0, 0), foreground.convert("RGBA"))
-
-        return background
 
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
