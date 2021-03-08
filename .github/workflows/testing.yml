@@ -39,7 +39,7 @@ jobs:
       run: |
         source /opt/conda/bin/activate mssenv
         cd $GITHUB_WORKSPACE
-        xvfb-run pytest mslib
+        pytest mslib
     
   Update-Images:
     runs-on: ubuntu-latest
