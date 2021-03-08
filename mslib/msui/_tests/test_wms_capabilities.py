@@ -27,6 +27,7 @@
 
 import sys
 import mock
+import time
 
 from PyQt5 import QtWidgets, QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
@@ -52,9 +53,9 @@ class Test_WMSCapabilities(object):
         self.window = wc.WMSCapabilitiesBrowser(
             url="http://example.com",
             capabilities=self.capabilities)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
+        time.sleep(0.1)
 
     def teardown(self):
         QtWidgets.QApplication.processEvents()
