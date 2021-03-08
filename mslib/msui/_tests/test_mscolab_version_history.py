@@ -69,10 +69,10 @@ class Test_MscolabVersionHistory(object):
         # make a changes
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(4)
+        time.sleep(0.1)
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(4)
+        time.sleep(0.1)
         self.version_window.load_all_changes()
         QtWidgets.QApplication.processEvents()
         len_after = self.version_window.changes.count()
@@ -86,7 +86,7 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        time.sleep(4)
+        time.sleep(0.1)
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
 
     def test_version_name_filter(self):
@@ -97,7 +97,7 @@ class Test_MscolabVersionHistory(object):
         self._activate_change_at_index(0)
         QtTest.QTest.mouseClick(self.version_window.deleteVersionNameBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        time.sleep(4)
+        time.sleep(0.1)
         assert self.version_window.changes.count() == 0
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
@@ -117,13 +117,13 @@ class Test_MscolabVersionHistory(object):
         changes_count = self.version_window.changes.count()
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(4)
+        time.sleep(0.1)
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(4)
+        time.sleep(0.1)
         QtTest.QTest.mouseClick(self.version_window.refreshBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        time.sleep(4)
+        time.sleep(0.1)
         new_changes_count = self.version_window.changes.count()
         assert new_changes_count == changes_count + 2
 
@@ -160,4 +160,4 @@ class Test_MscolabVersionHistory(object):
         self.version_window.versionFilterCB.setCurrentIndex(index)
         self.version_window.versionFilterCB.currentIndexChanged.emit(index)
         QtWidgets.QApplication.processEvents()
-        time.sleep(4)
+        time.sleep(0.1)
