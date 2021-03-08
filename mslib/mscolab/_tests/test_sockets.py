@@ -125,7 +125,7 @@ class Test_Sockets(object):
         sio1.emit('start', response1)
         sio2.emit('start', response2)
         sio3.emit('start', response3)
-        time.sleep(5)
+        time.sleep(0.1)
         sio1.emit('chat-message', {
             "p_id": 1,
             "token": response1['token'],
