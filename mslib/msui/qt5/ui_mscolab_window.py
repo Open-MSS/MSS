@@ -170,6 +170,7 @@ class Ui_MSSMscolabWindow(object):
         self.horizontalLayout_2.addWidget(self.line_5)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
+        self.verticalLayout_2.setSpacing(6)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.helpBtn = QtWidgets.QPushButton(self.groupBox)
         self.helpBtn.setObjectName("helpBtn")
@@ -251,8 +252,8 @@ class Ui_MSSMscolabWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MSSMscolabWindow.setWindowTitle(_translate("MSSMscolabWindow", "Mission Support Collaboration"))
         self.label_2.setText(_translate("MSSMscolabWindow", "MSColab URL:"))
-        self.toggleConnectionBtn.setToolTip(_translate("MSSMscolabWindow", "Connect/Disconnect to Mscolab server"))
-        self.toggleConnectionBtn.setWhatsThis(_translate("MSSMscolabWindow", "Connect/Disconnect to Mscolab server"))
+        self.toggleConnectionBtn.setToolTip(_translate("MSSMscolabWindow", "Connect to or disconnect from Mscolab server"))
+        self.toggleConnectionBtn.setWhatsThis(_translate("MSSMscolabWindow", "Connect to or disconnect from Mscolab server"))
         self.toggleConnectionBtn.setText(_translate("MSSMscolabWindow", "Connect"))
         self.status.setText(_translate("MSSMscolabWindow", "Status: Disconnected"))
         self.label.setText(_translate("MSSMscolabWindow", "TextLabel"))
@@ -291,4 +292,14 @@ class Ui_MSSMscolabWindow(object):
         self.deleteProjectBtn.setText(_translate("MSSMscolabWindow", "Delete"))
         self.actionCloseWindow.setText(_translate("MSSMscolabWindow", "CloseWindow"))
         self.actionCloseWindow.setShortcut(_translate("MSSMscolabWindow", "Ctrl+W"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MSSMscolabWindow = QtWidgets.QMainWindow()
+    ui = Ui_MSSMscolabWindow()
+    ui.setupUi(MSSMscolabWindow)
+    MSSMscolabWindow.show()
+    sys.exit(app.exec_())
 
