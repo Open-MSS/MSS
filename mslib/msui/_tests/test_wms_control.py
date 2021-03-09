@@ -93,13 +93,13 @@ class WMSControlWidgetSetup(object):
         self.thread.terminate()
 
     def query_server(self, url):
-        while len(self.window.cbWMS_URL.currentText()) > 0:
-            QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Backspace)
+        while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
+            QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
             QtWidgets.QApplication.processEvents()
-        QtTest.QTest.keyClicks(self.window.cbWMS_URL, url)
+        QtTest.QTest.keyClicks(self.window.multilayers.cbWMS_URL, url)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)  # time for the server to start up
-        QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(5000)  # time for the server to parse all netcdf data
 
@@ -227,20 +227,20 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         assert mockbox.critical.call_count == 0
 
-        QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Backspace)
-        QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Backspace)
+        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
+        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 1
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
         mockbox.reset_mock()
-        QtTest.QTest.keyClick(self.window.cbWMS_URL, ord(str(self.port)[3]))
-        QtTest.QTest.keyClick(self.window.cbWMS_URL, QtCore.Qt.Key_Slash)
+        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, ord(str(self.port)[3]))
+        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Slash)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.btGetCapabilities, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
@@ -259,7 +259,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that multilayers get created, handled and drawn properly
         """
         self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
+        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
         assert server is not None
         assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
         assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
@@ -272,20 +272,20 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         server.setExpanded(True)
         server.child(0).setCheckState(0, QtCore.Qt.Checked)
         server.child(2).setCheckState(0, QtCore.Qt.Checked)
-        self.window.listLayers.itemWidget(server.child(0), 1).setCurrentIndex(1)
+        self.window.multilayers.listLayers.itemWidget(server.child(0), 2).setCurrentIndex(1)
         previous_layer = self.window.lLayerName.text()
         self.window.multilayers.multilayer_clicked(server.child(1))
         assert previous_layer != self.window.lLayerName.text()
-        assert self.window.listLayers.itemWidget(server.child(0), 1) is not None
-        assert self.window.listLayers.itemWidget(server.child(2), 1) is not None
-        assert self.window.listLayers.itemWidget(server.child(0), 1).currentText() == "2"
-        assert self.window.listLayers.itemWidget(server.child(1), 1) is None
+        assert self.window.multilayers.listLayers.itemWidget(server.child(0), 2) is not None
+        assert self.window.multilayers.listLayers.itemWidget(server.child(2), 2) is not None
+        assert self.window.multilayers.listLayers.itemWidget(server.child(0), 2).currentText() == "2"
+        assert self.window.multilayers.listLayers.itemWidget(server.child(1), 2) is None
         server.child(2).setCheckState(0, QtCore.Qt.Unchecked)
-        assert self.window.listLayers.itemWidget(server.child(2), 1) is None
-        assert self.window.listLayers.itemWidget(server.child(0), 1).currentText() == "1"
+        assert self.window.multilayers.listLayers.itemWidget(server.child(2), 2) is None
+        assert self.window.multilayers.listLayers.itemWidget(server.child(0), 2).currentText() == "1"
 
         # Check layer filter is working
-        self.window.leMultiFilter.setText("No matches")
+        self.window.multilayers.leMultiFilter.setText("No matches")
         assert server.isHidden()
 
         # Check drawing not causing errors
@@ -306,14 +306,12 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that synced layers share their options
         """
         self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
-        index = self.window.listLayers.indexOfTopLevelItem(server)
+        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
         server.setExpanded(True)
         layer_a = server.child(0)
         layer_b = server.child(1)
 
         # Check synced layers have the same options
-        self.window.multilayers.right_clicked(QtCore.QPoint(15, 15 * (index + 1) + 7), True)
         layer_a.is_synced = True
         layer_b.is_synced = True
         self.window.multilayers.reload_sync()
@@ -359,7 +357,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert that drawing a layer through double click doesn't fail for vsec
         """
         self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
+        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
         server.child(0).draw()
 
         assert mockbox.critical.call_count == 0

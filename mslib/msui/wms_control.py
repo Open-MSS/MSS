@@ -406,14 +406,20 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Accommodates MSSWebMapService instances.
         self.wms = None
 
+        # Multilayering things
+        self.multilayers = Multilayers(self)
+        self.multilayers.show()
+        self.pbLayerSelect.clicked.connect(lambda: self.multilayers.show())
+        self.allow_auto_update = True
+
         # Initial list of WMS servers.
-        self.cbWMS_URL.setModel(WMS_URL_LIST)
+        self.multilayers.cbWMS_URL.setModel(WMS_URL_LIST)
         if default_WMS is not None:
-            add_wms_urls(self.cbWMS_URL, default_WMS)
+            add_wms_urls(self.multilayers.cbWMS_URL, default_WMS)
         # set last connected url to editable
         wms_settings = load_settings_qsettings('wms', {'recent_wms_url': None})
         if wms_settings['recent_wms_url'] is not None:
-            add_wms_urls(self.cbWMS_URL, [wms_settings['recent_wms_url']])
+            add_wms_urls(self.multilayers.cbWMS_URL, [wms_settings['recent_wms_url']])
 
         # Initially allowed WMS parameters and date/time formats.
         self.allowed_init_times = []
@@ -425,8 +431,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.save_level = None
 
         # Initialise GUI elements that control WMS parameters.
-        self.cbStyle.clear()
-        self.cbStyle.setEnabled(False)
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
@@ -445,15 +449,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enable_valid_time_elements(False)
         self.enable_init_time_elements(False)
         self.btGetMap.setEnabled(False)
-        self.btGetMap2.setEnabled(False)
-        self.btGetMap3.setEnabled(False)
-        self.pbViewCapabilities.setEnabled(False)
+        self.multilayers.btGetMap2.setEnabled(False)
+        self.multilayers.pbViewCapabilities.setEnabled(False)
 
         self.cbTransparent.setChecked(False)
-
-        # Multilayering things
-        self.multilayers = Multilayers(self)
-        self.allow_auto_update = True
 
         # Check for WMS image cache directory, create if necessary.
         if wms_cache is not None:
@@ -478,15 +477,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Connect slots and signals.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.btGetCapabilities.clicked.connect(self.get_capabilities)
-        self.pbViewCapabilities.clicked.connect(self.view_capabilities)
+        self.multilayers.btGetCapabilities.clicked.connect(self.get_capabilities)
+        self.multilayers.pbViewCapabilities.clicked.connect(self.view_capabilities)
 
         self.btClearMap.clicked.connect(self.clear_map)
 
         self.cbLevel.currentIndexChanged.connect(self.level_changed)
         self.cbInitTime.currentIndexChanged.connect(self.init_time_changed)
         self.cbValidTime.currentIndexChanged.connect(self.valid_time_changed)
-        self.cbStyle.currentIndexChanged.connect(self.style_changed)
         self.multilayers.needs_repopulate.connect(self.populate_ui)
 
         self.tbInitTime_back.clicked.connect(self.init_time_back_click)
@@ -503,7 +501,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbLevel_fwd.clicked.connect(self.level_fwd_click)
 
         self.btClearCache.clicked.connect(self.clearCache)
-        self.cbWMS_URL.editTextChanged.connect(self.wms_url_changed)
+        self.multilayers.cbWMS_URL.editTextChanged.connect(self.wms_url_changed)
         if view is not None and hasattr(view, "redrawn"):
             self.view.redrawn.connect(self.after_redraw)
 
@@ -522,9 +520,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.expected_img = None
         self.check_for_allowed_crs = True
 
-        if self.cbWMS_URL.count() > 0:
-            self.cbWMS_URL.setCurrentIndex(0)
-            self.wms_url_changed(self.cbWMS_URL.currentText())
+        if self.multilayers.cbWMS_URL.count() > 0:
+            self.multilayers.cbWMS_URL.setCurrentIndex(0)
+            self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
     def __del__(self):
         """Destructor.
@@ -538,8 +536,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.thread_fetch.quit()
         self.thread_fetch.wait()
 
-    def get_all_maps(self):
-        self.get_map(self.multilayers.get_active_layers())
+    def get_all_maps(self, disregard_current=False):
+        if disregard_current or self.multilayers.current_layer.is_synced:
+            self.get_map(self.multilayers.get_active_layers())
+        else:
+            self.get_map([self.multilayers.current_layer])
 
     def initialise_wms(self, base_url, version="1.3.0"):
         """Initialises a MSSWebMapService object with the specified base_url.
@@ -580,7 +581,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         # the Apache 401 messages, we get an XML message here but
                         # no error code. Quick workaround: Scan the XML message for
                         # the string "Error 401"...
-                        dlg = MSS_WMS_AuthenticationDialog(parent=self)
+                        dlg = MSS_WMS_AuthenticationDialog(parent=self.multilayers)
                         dlg.setModal(True)
                         if dlg.exec_() == QtWidgets.QDialog.Accepted:
                             username, password = dlg.getAuthInfo()
@@ -609,19 +610,16 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         elif self.wms is not None:
             self.wms = None
             self.btGetMap.setEnabled(False)
-            self.btGetMap2.setEnabled(False)
-            self.btGetMap3.setEnabled(False)
+            self.multilayers.btGetMap2.setEnabled(False)
 
             self.cbLevel.clear()
-            self.cbStyle.clear()
             self.cbInitTime.clear()
             self.cbValidTime.clear()
 
-            self.cbStyle.setEnabled(False)
             self.enable_level_elements(False)
             self.enable_valid_time_elements(False)
             self.enable_init_time_elements(False)
-            self.pbViewCapabilities.setEnabled(False)
+            self.multilayers.pbViewCapabilities.setEnabled(False)
             self.cbTransparent.setChecked(False)
 
     @QtCore.pyqtSlot(Exception)
@@ -652,7 +650,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
-        base_url = self.cbWMS_URL.currentText()
+        base_url = self.multilayers.cbWMS_URL.currentText()
         params = {'service': 'WMS',
                   'request': 'GetCapabilities'}
         try:
@@ -679,19 +677,19 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
                 # update the combo box, if entry requires change/insertion
                 found = False
-                for count in range(self.cbWMS_URL.count()):
-                    if self.cbWMS_URL.itemText(count) == base_url:
-                        self.cbWMS_URL.setItemText(count, url)
-                        self.cbWMS_URL.setCurrentIndex(count)
+                for count in range(self.multilayers.cbWMS_URL.count()):
+                    if self.multilayers.cbWMS_URL.itemText(count) == base_url:
+                        self.multilayers.cbWMS_URL.setItemText(count, url)
+                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
                         found = True
                         break
-                    if self.cbWMS_URL.itemText(count) == url:
-                        self.cbWMS_URL.setCurrentIndex(count)
+                    if self.multilayers.cbWMS_URL.itemText(count) == url:
+                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
                         found = True
                 if not found:
                     logging.debug("inserting URL: %s", url)
-                    add_wms_urls(self.cbWMS_URL, [url])
-                    self.cbWMS_URL.setEditText(url)
+                    add_wms_urls(self.multilayers.cbWMS_URL, [url])
+                    self.multilayers.cbWMS_URL.setEditText(url)
                     save_settings_qsettings('wms', {'recent_wms_url': url})
 
                 self.activate_wms(wms)
@@ -701,19 +699,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Clear layer and style combo boxes. First disconnect the layerChanged
         # slot to avoid calls to this function.
         self.btGetMap.setEnabled(False)
-        self.btGetMap2.setEnabled(False)
-        self.btGetMap3.setEnabled(False)
-        self.cbStyle.clear()
+        self.multilayers.btGetMap2.setEnabled(False)
         self.cbLevel.clear()
-        self.cbStyle.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
 
-        self.cbStyle.setEnabled(False)
         self.enable_level_elements(False)
         self.enable_valid_time_elements(False)
         self.enable_init_time_elements(False)
-        self.pbViewCapabilities.setEnabled(False)
+        self.multilayers.pbViewCapabilities.setEnabled(False)
         self.cbTransparent.setChecked(False)
 
         # Parse layer tree of the wms object and discover usable layers.
@@ -733,7 +727,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         for layer in filtered_layers:
             self.multilayers.add_multilayer(layer, wms)
         self.multilayers.filter_multilayers()
-        self.pbViewCapabilities.setEnabled(True)
+        self.multilayers.pbViewCapabilities.setEnabled(True)
         if len(filtered_layers) > 0:
             self.populate_ui()
 
@@ -769,8 +763,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if len(filtered_layers) > 0:
             self.btGetMap.setEnabled(True)
-            self.btGetMap2.setEnabled(True)
-            self.btGetMap3.setEnabled(True)
+            self.multilayers.btGetMap2.setEnabled(True)
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
@@ -782,7 +775,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("Opening WMS capabilities browser..")
         if self.wms is not None:
             wmsbrws = wms_capabilities.WMSCapabilitiesBrowser(
-                parent=self,
+                parent=self.multilayers,
                 url=self.wms.url,
                 capabilities=self.wms)
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -841,7 +834,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
-        self.cbStyle.clear()
 
         layer = self.multilayers.current_layer
         self.lLayerName.setText(layer.text(0))
@@ -850,7 +842,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if len(synced_layers) > 1:
                 self.lLayerName.setText(self.lLayerName.text() + f" (and {len(synced_layers) - 1} more)")
 
-        styles = layer.styles
         crs = layer.get_allowed_crs()
         levels, itimes, vtimes = layer.get_levels(), layer.get_itimes(), layer.get_vtimes()
 
@@ -868,11 +859,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.cbValidTime.addItems(vtimes)
             self.cbValidTime.setCurrentIndex(self.cbValidTime.findText(layer.get_vtime()))
         self.enable_valid_time_elements(len(vtimes) > 0)
-
-        if styles:
-            self.cbStyle.addItems(styles)
-            self.cbStyle.setCurrentIndex(self.cbStyle.findText(layer.style))
-        self.cbStyle.setEnabled(len(styles) > 0)
 
         if not self.init_time_changed():
             self.disable_dteInitTime_elements()
@@ -1076,12 +1062,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def level_changed(self):
         if self.multilayers.save_data:
             self.multilayers.current_layer.set_level(self.cbLevel.currentText())
-        self.auto_update()
-
-    def style_changed(self, index):
-        if self.multilayers.save_data:
-            self.multilayers.current_layer.style = self.cbStyle.currentText()
-
         self.auto_update()
 
     def enable_level_elements(self, enable):
@@ -1312,7 +1292,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     for key, value in prefetch_key_values:
                         kwargs_new = kwargs.copy()
                         kwargs_new[key] = value
-                        prefetch_maps.append((layer, kwargs_new, self.get_md5_filename(layer, kwargs_new), True, {}))
+                        prefetch_maps.append((kwargs_new, self.get_md5_filename(layer, kwargs_new), True, {}))
                     self.prefetch.emit(prefetch_maps)
 
             md5_filename = self.get_md5_filename(layer, kwargs)
@@ -1438,11 +1418,13 @@ class VSecWMSControlWidget(WMSControlWidget):
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
-        self.btGetMap2.clicked.connect(self.get_all_maps)
-        self.btGetMap3.clicked.connect(self.get_all_maps)
+        self.multilayers.btGetMap2.clicked.connect(lambda: self.get_all_maps(True))
 
-    def get_all_maps(self):
-        self.get_vsec(self.multilayers.get_active_layers())
+    def get_all_maps(self, disregard_current=False):
+        if disregard_current or self.multilayers.current_layer.is_synced:
+            self.get_vsec(self.multilayers.get_active_layers())
+        else:
+            self.get_vsec([self.multilayers.current_layer])
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance from which the waypoints
@@ -1515,8 +1497,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         super(HSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.btGetMap.clicked.connect(self.get_all_maps)
-        self.btGetMap2.clicked.connect(self.get_all_maps)
-        self.btGetMap3.clicked.connect(self.get_all_maps)
+        self.multilayers.btGetMap2.clicked.connect(lambda: self.get_all_maps(True))
 
     def level_changed(self):
         super().level_changed()

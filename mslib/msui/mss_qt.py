@@ -173,7 +173,8 @@ for mod in [
         "ui_topview_window",
         "ui_wms_capabilities",
         "ui_wms_dockwidget",
-        "ui_wms_password_dialog"]:
+        "ui_wms_password_dialog",
+        "ui_wms_multilayers"]:
     globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 
 # to store config by QSettings

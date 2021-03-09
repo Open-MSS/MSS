@@ -27,34 +27,36 @@
 from PyQt5 import QtWidgets, QtCore
 import logging
 import mslib.msui.wms_control
+from mslib.msui.mss_qt import ui_wms_multilayers as ui
 
 
-class Multilayers(QtCore.QObject):
+class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
     """
-    Contains all layers of all loaded WMS and provides helpful methods to manage them.
+    Contains all layers of all loaded WMS and provides helpful methods to manage them inside a popup dialog
     """
 
     needs_repopulate = QtCore.pyqtSignal()
 
-    def __init__(self, docker_widget):
-        super().__init__()
-        self.parent = docker_widget
+    def __init__(self, dock_widget):
+        super().__init__(parent=dock_widget)
+        self.setupUi(self)
+        self.setWindowFlags(QtCore.Qt.Window)
+        self.dock_widget = dock_widget
         self.layers = {}
         self.layers_priority = []
         self.current_layer: Layer = None
         self.save_data = True
         self.synced_reference = Layer(None, None, None, is_empty=True)
-        self.parent.listLayers.itemChanged.connect(self.multilayer_changed)
-        self.parent.listLayers.itemClicked.connect(self.multilayer_clicked)
-        self.parent.listLayers.itemDoubleClicked.connect(self.multilayer_doubleclicked)
-        self.parent.listLayers.setVisible(True)
-        self.parent.leMultiFilter.setVisible(True)
-        self.parent.lFilter.setVisible(True)
-        self.parent.leMultiFilter.textChanged.connect(self.filter_multilayers)
-        self.parent.listLayers.setColumnWidth(1, 50)
-        self.parent.listLayers.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        self.parent.listLayers.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.parent.listLayers.customContextMenuRequested.connect(self.right_clicked)
+        self.listLayers.itemChanged.connect(self.multilayer_changed)
+        self.listLayers.itemClicked.connect(self.multilayer_clicked)
+        self.listLayers.itemDoubleClicked.connect(self.multilayer_doubleclicked)
+        self.listLayers.setVisible(True)
+        self.leMultiFilter.setVisible(True)
+        self.lFilter.setVisible(True)
+        self.leMultiFilter.textChanged.connect(self.filter_multilayers)
+        self.listLayers.setColumnWidth(2, 50)
+        self.listLayers.setColumnWidth(1, 200)
+        self.listLayers.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
     def reload_sync(self):
         """
@@ -81,7 +83,7 @@ class Multilayers(QtCore.QObject):
         Shows all multilayers that do
         """
         if filter_string is None:
-            filter_string = self.parent.leMultiFilter.text()
+            filter_string = self.leMultiFilter.text()
 
         for wms_name in self.layers:
             header = self.layers[wms_name]["header"]
@@ -136,7 +138,7 @@ class Multilayers(QtCore.QObject):
         """
         Returns the priority of a layer, with a default of 999 if it wasn't explicitly set
         """
-        priority = self.parent.listLayers.itemWidget(layer_widget, 1)
+        priority = self.listLayers.itemWidget(layer_widget, 2)
         return int(priority.currentText()) if priority else 999
 
     def get_active_layers(self, only_synced=False):
@@ -159,7 +161,7 @@ class Multilayers(QtCore.QObject):
         active_layers = self.get_active_layers()
         possible_values = [str(x) for x in range(1, len(active_layers) + 1)]
         for layer in active_layers:
-            priority = self.parent.listLayers.itemWidget(layer, 1)
+            priority = self.listLayers.itemWidget(layer, 2)
             if priority is not None:
                 # Update available numbers
                 priority.currentIndexChanged.disconnect(self.priority_changed)
@@ -174,23 +176,40 @@ class Multilayers(QtCore.QObject):
         Adds a layer to the multilayer list, with the wms url as a parent
         """
         if wms.url not in self.layers:
-            header = QtWidgets.QTreeWidgetItem(self.parent.listLayers)
+            header = QtWidgets.QTreeWidgetItem(self.listLayers)
             header.setText(0, wms.url)
             header.wms_name = wms.url
             self.layers[wms.url] = {}
             self.layers[wms.url]["header"] = header
             self.layers[wms.url]["wms"] = wms
+            header.setExpanded(True)
+
         if name not in self.layers[wms.url]:
-            layerobj = self.parent.get_layer_object(name.split(" | ")[-1])
+            layerobj = self.dock_widget.get_layer_object(name.split(" | ")[-1])
             widget = Layer(self.layers[wms.url]["header"], self, layerobj)
             widget.setText(0, name)
-            widget.setToolTip(0, "Right click a layer to sync it"
-                                 "\nDouble click a layer to draw it" +
+            widget.setToolTip(0, "Double click a layer to draw it individually" +
                               ("\n\n" + layerobj.abstract if layerobj.abstract else ""))
             widget.wms_name = wms.url
             widget.setCheckState(0, QtCore.Qt.Unchecked)
+
+            if widget.style:
+                style = QtWidgets.QComboBox()
+                style.setFixedHeight(15)
+                style.addItems(widget.styles)
+                style.setCurrentIndex(style.findText(widget.style))
+
+                def style_changed(layer):
+                    self.multilayer_clicked(layer)
+                    layer.style = self.listLayers.itemWidget(layer, 1).currentText()
+                    self.dock_widget.auto_update()
+
+                style.currentIndexChanged.connect(lambda: style_changed(widget))
+                self.listLayers.setItemWidget(widget, 1, style)
+
             self.layers[wms.url][name] = widget
             self.current_layer = widget
+            self.listLayers.setCurrentItem(widget)
 
     def multilayer_clicked(self, item):
         """
@@ -201,14 +220,15 @@ class Multilayers(QtCore.QObject):
             return
 
         self.save_data = False
-        self.parent.allow_auto_update = False
+        self.dock_widget.allow_auto_update = False
         self.current_layer = item
-        if self.parent.wms is not self.layers[item.wms_name]["wms"]:
-            index = self.parent.cbWMS_URL.findText(item.wms_name)
-            if index != -1 and index != self.parent.cbWMS_URL.currentIndex():
-                self.parent.cbWMS_URL.setCurrentIndex(index)
+        self.listLayers.setCurrentItem(item)
+        if self.dock_widget.wms is not self.layers[item.wms_name]["wms"]:
+            index = self.cbWMS_URL.findText(item.wms_name)
+            if index != -1 and index != self.cbWMS_URL.currentIndex():
+                self.cbWMS_URL.setCurrentIndex(index)
         self.needs_repopulate.emit()
-        self.parent.allow_auto_update = True
+        self.dock_widget.allow_auto_update = True
         self.save_data = True
 
     def multilayer_changed(self, item):
@@ -216,18 +236,26 @@ class Multilayers(QtCore.QObject):
         Gets called whenever the checkmark for a layer is activate or deactivated
         Creates a priority combobox or removes it depending on the situation
         """
-        if item.checkState(0) > 0 and not self.parent.listLayers.itemWidget(item, 1):
+        if not self.save_data:
+            return
+
+        if item.checkState(0) > 0 and not self.listLayers.itemWidget(item, 2):
             priority = QtWidgets.QComboBox()
             priority.setFixedHeight(15)
             priority.currentIndexChanged.connect(self.priority_changed)
-            self.parent.listLayers.setItemWidget(item, 1, priority)
+            self.listLayers.setItemWidget(item, 2, priority)
             self.layers_priority.append(item)
             self.update_priority_selection()
-        elif item.checkState(0) == 0 and self.parent.listLayers.itemWidget(item, 1):
+            item.is_synced = True
+            self.reload_sync()
+        elif item.checkState(0) == 0 and self.listLayers.itemWidget(item, 2):
             if item in self.layers_priority:
-                self.parent.listLayers.removeItemWidget(item, 1)
+                self.listLayers.removeItemWidget(item, 2)
                 self.layers_priority.remove(item)
                 self.update_priority_selection()
+            item.is_synced = False
+            self.reload_sync()
+        self.update_checkboxes()
 
     def priority_changed(self, new_index):
         """
@@ -255,60 +283,32 @@ class Multilayers(QtCore.QObject):
         if item.childCount() == 0:
             item.draw()
 
-    def right_clicked(self, pointer, testing=False):
+    def update_checkboxes(self):
         """
-        Gets called whenever the user right clicks somewhere in the multilayer list
-        For now this is used to enable syncing
+        Activates or deactivates the checkboxes for every layer depending on whether they
+        can be synchronised or not
         """
-        widget = self.parent.listLayers.itemAt(pointer)
-        if not widget or widget.childCount() > 0:
-            return
+        self.save_data = False
+        for wms_name in self.layers:
+            header = self.layers[wms_name]["header"]
+            for child_index in range(header.childCount()):
+                layer = header.child(child_index)
+                layer.setDisabled(not self.is_sync_possible(layer))
+        self.save_data = True
 
-        sync_menu = QtWidgets.QMenu()
-        sync_menu.setContentsMargins(10, 0, 10, 0)
-        is_synced = QtWidgets.QCheckBox("Synchronise")
-        is_synced.setChecked(widget.is_synced)
-        action = QtWidgets.QWidgetAction(sync_menu)
-        action.setDefaultWidget(is_synced)
-        sync_menu.addAction(action)
-        sync_menu.addSeparator()
-        info_label = QtWidgets.QLabel("")
-        action2 = QtWidgets.QWidgetAction(sync_menu)
-        action2.setDefaultWidget(info_label)
-        sync_menu.addAction(action2)
+    def is_sync_possible(self, layer):
+        """
+        Returns whether the passed layer can be synchronised with all other synchronised layers
+        """
+        if self.get_active_layers() == 0:
+            return True
 
+        levels, itimes, vtimes, crs = self.get_multilayer_common_options(layer)
         levels_before, itimes_before, vtimes_before, crs_before = self.get_multilayer_common_options()
-        levels, itimes, vtimes, crs = self.get_multilayer_common_options(widget)
-        lost_levels = len(levels) - len(levels_before)
-        lost_itimes = len(itimes) - len(itimes_before)
-        lost_vtimes = len(vtimes) - len(vtimes_before)
 
-        info = f"Common levels: {len(levels)} {f'({lost_levels})' if lost_levels < 0 else ''}\n"
-        info += f"Common init times: {len(itimes)} {f'({lost_itimes})' if lost_itimes < 0 else ''}\n"
-        info += f"Common valid times: {len(vtimes)} {f'({lost_vtimes})' if lost_vtimes < 0 else ''}"
-        info_label.setText(info)
-
-        def check_changed(state):
-            widget.is_synced = not widget.is_synced
-            if widget.is_synced:
-                widget.setText(0, widget.text(0) + " (synced)")
-            else:
-                widget.setText(0, widget.text(0).split(" (synced)")[0])
-            self.reload_sync()
-
-        is_synced.stateChanged.connect(check_changed)
-        is_synced.setEnabled((len(levels) > 0 or len(levels_before) == 0) and
-                             (len(itimes) > 0 or len(itimes_before) == 0) and
-                             (len(vtimes) > 0 or len(vtimes_before) == 0))
-
-        # QMenu.exec blocks pytest
-        if not testing:
-            sync_menu.exec(self.parent.listLayers.viewport().mapToGlobal(pointer))
-        else:
-            check_changed(True)
-            check_changed(False)
-
-        self.multilayer_clicked(widget)
+        return (len(levels) > 0 or (len(levels_before) == 0 and len(layer.levels) == 0)) and \
+               (len(itimes) > 0 or (len(itimes_before) == 0 and len(layer.itimes) == 0)) and \
+               (len(vtimes) > 0 or (len(vtimes_before) == 0 and len(layer.vtimes) == 0))
 
 
 class Layer(QtWidgets.QTreeWidgetItem):
@@ -377,14 +377,14 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if len(init_time_names) > 0:
             self.itime_name = init_time_names[0]
             values = self.extents[self.itime_name]["values"]
-            self.allowed_init_times = self.parent.parent.parse_time_extent(values)
+            self.allowed_init_times = self.parent.dock_widget.parse_time_extent(values)
             self.itimes = [_time.isoformat() + "Z" for _time in self.allowed_init_times]
             if len(self.allowed_init_times) == 0:
                 msg = "cannot determine init time format"
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
-                    self.parent.parent, self.parent.parent.tr("Web Map Service"),
-                    self.parent.parent.tr("ERROR: {}".format(msg)))
+                    self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
+                    self.parent.dock_widget.tr("ERROR: {}".format(msg)))
             else:
                 self.itime = self.itimes[0]
 
@@ -399,14 +399,14 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if len(valid_time_names) > 0:
             self.vtime_name = valid_time_names[0]
             values = self.extents[self.vtime_name]["values"]
-            self.allowed_valid_times = self.parent.parent.parse_time_extent(values)
+            self.allowed_valid_times = self.parent.dock_widget.parse_time_extent(values)
             self.vtimes = [_time.isoformat() + "Z" for _time in self.allowed_valid_times]
             if len(self.allowed_valid_times) == 0:
                 msg = "cannot determine init time format"
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
-                    self.parent.parent, self.parent.parent.tr("Web Map Service"),
-                    self.parent.parent.tr("ERROR: {}".format(msg)))
+                    self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
+                    self.parent.dock_widget.tr("ERROR: {}".format(msg)))
             else:
                 self.vtime = self.vtimes[0]
 
@@ -511,10 +511,10 @@ class Layer(QtWidgets.QTreeWidgetItem):
         """
         Triggers the layer to be drawn by the WMSControlWidget
         """
-        if isinstance(self.parent.parent, mslib.msui.wms_control.HSecWMSControlWidget):
-            self.parent.parent.get_map([self])
+        if isinstance(self.parent.dock_widget, mslib.msui.wms_control.HSecWMSControlWidget):
+            self.parent.dock_widget.get_map([self])
         else:
-            self.parent.parent.get_vsec([self])
+            self.parent.dock_widget.get_vsec([self])
 
     def get_wms(self):
         return self.parent.layers[self.wms_name]["wms"]
