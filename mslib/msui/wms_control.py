@@ -537,7 +537,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.thread_fetch.wait()
 
     def get_all_maps(self, disregard_current=False):
-        if disregard_current or self.multilayers.current_layer.is_synced:
+        if disregard_current or self.multilayers.current_layer.checkState(0):
             self.get_map(self.multilayers.get_active_layers())
         else:
             self.get_map([self.multilayers.current_layer])
@@ -1421,7 +1421,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         self.multilayers.btGetMap2.clicked.connect(lambda: self.get_all_maps(True))
 
     def get_all_maps(self, disregard_current=False):
-        if disregard_current or self.multilayers.current_layer.is_synced:
+        if disregard_current or self.multilayers.current_layer.checkState(0):
             self.get_vsec(self.multilayers.get_active_layers())
         else:
             self.get_vsec([self.multilayers.current_layer])

@@ -246,8 +246,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             self.listLayers.setItemWidget(item, 2, priority)
             self.layers_priority.append(item)
             self.update_priority_selection()
-            item.is_synced = True
-            self.reload_sync()
+            if (item.itimes or item.vtimes or item.levels) and self.is_sync_possible(item):
+                item.is_synced = True
+                self.reload_sync()
         elif item.checkState(0) == 0 and self.listLayers.itemWidget(item, 2):
             if item in self.layers_priority:
                 self.listLayers.removeItemWidget(item, 2)
@@ -293,7 +294,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             header = self.layers[wms_name]["header"]
             for child_index in range(header.childCount()):
                 layer = header.child(child_index)
-                layer.setDisabled(not self.is_sync_possible(layer))
+                is_active = self.is_sync_possible(layer) or not (layer.itimes or layer.vtimes or layer.levels)
+                layer.setDisabled(not is_active)
         self.save_data = True
 
     def is_sync_possible(self, layer):
@@ -332,7 +334,6 @@ class Layer(QtWidgets.QTreeWidgetItem):
         self.styles = []
         self.style = None
         self.is_synced = False
-        self.is_active = False
 
         if not is_empty:
             self._parse_layerobj()
