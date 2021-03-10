@@ -183,7 +183,6 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
     _app.config['URL'] = url
 
     _app, sockio, cm, fm = initialize_managers(_app)
-    db.init_app(_app)
     process = multiprocessing.Process(
         target=start_server,
         args=(_app, sockio, cm, fm,),
