@@ -33,7 +33,7 @@ from mslib.mscolab.server import register_user
 from flask import json
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, initialize_managers, start_server, db
+from mslib.mscolab.server import APP, initialize_managers, start_server
 from mslib.mscolab.mscolab import handle_db_seed
 
 
