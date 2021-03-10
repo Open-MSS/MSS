@@ -1292,7 +1292,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     for key, value in prefetch_key_values:
                         kwargs_new = kwargs.copy()
                         kwargs_new[key] = value
-                        prefetch_maps.append((kwargs_new, self.get_md5_filename(layer, kwargs_new), True, {}))
+                        prefetch_maps.append((layer, kwargs_new, self.get_md5_filename(layer, kwargs_new), True, {}))
                     self.prefetch.emit(prefetch_maps)
 
             md5_filename = self.get_md5_filename(layer, kwargs)
