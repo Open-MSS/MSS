@@ -408,7 +408,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Multilayering things
         self.multilayers = Multilayers(self)
-        self.multilayers.show()
         self.pbLayerSelect.clicked.connect(lambda: self.multilayers.show())
         self.allow_auto_update = True
 
@@ -727,6 +726,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         for layer in filtered_layers:
             self.multilayers.add_multilayer(layer, wms)
         self.multilayers.filter_multilayers()
+        self.multilayers.update_checkboxes()
         self.multilayers.pbViewCapabilities.setEnabled(True)
         if len(filtered_layers) > 0:
             self.populate_ui()
@@ -836,11 +836,16 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.cbValidTime.clear()
 
         layer = self.multilayers.current_layer
-        self.lLayerName.setText(layer.text(0))
-        if layer.is_synced:
-            synced_layers = self.multilayers.get_active_layers(True)
-            if len(synced_layers) > 1:
-                self.lLayerName.setText(self.lLayerName.text() + f" (and {len(synced_layers) - 1} more)")
+        active_layers = self.multilayers.get_active_layers()
+        self.lLayerName.setText(f"{layer.get_wms().url}: {layer.text(0)})")
+
+        tooltip_text = ""
+        for active_layer in active_layers if layer.checkState(0) else [layer]:
+            tooltip_text += f"{active_layer.get_wms().url}: {active_layer.text(0)}\n"
+        self.lLayerName.setToolTip(tooltip_text.strip())
+
+        if len(active_layers) > 1 and layer.checkState(0):
+            self.lLayerName.setText(self.lLayerName.text() + f" (and {len(active_layers) - 1} more)")
 
         crs = layer.get_allowed_crs()
         levels, itimes, vtimes = layer.get_levels(), layer.get_itimes(), layer.get_vtimes()
@@ -1418,7 +1423,7 @@ class VSecWMSControlWidget(WMSControlWidget):
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
-        self.multilayers.btGetMap2.clicked.connect(lambda: self.get_all_maps(True))
+        self.multilayers.btGetMap2.clicked.connect(lambda: (self.get_all_maps(True), self.multilayers.hide()))
 
     def get_all_maps(self, disregard_current=False):
         if disregard_current or self.multilayers.current_layer.checkState(0):
@@ -1497,7 +1502,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         super(HSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.btGetMap.clicked.connect(self.get_all_maps)
-        self.multilayers.btGetMap2.clicked.connect(lambda: self.get_all_maps(True))
+        self.multilayers.btGetMap2.clicked.connect(lambda: (self.get_all_maps(True), self.multilayers.hide()))
 
     def level_changed(self):
         super().level_changed()

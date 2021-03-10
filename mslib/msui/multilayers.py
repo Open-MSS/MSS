@@ -56,6 +56,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.leMultiFilter.textChanged.connect(self.filter_multilayers)
         self.listLayers.setColumnWidth(2, 50)
         self.listLayers.setColumnWidth(1, 200)
+        self.listLayers.setColumnHidden(2, True)
         self.listLayers.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
     def reload_sync(self):
@@ -115,7 +116,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         crs_values = []
 
         for layer in layers:
-            elevation_values.append(layer.levels)
+            if len(layer.levels) > 0:
+                elevation_values.append(layer.levels)
             init_time_values.append(layer.itimes)
             valid_time_values.append(layer.vtimes)
             crs_values.append(layer.allowed_crs)
@@ -152,7 +154,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 widget = header.child(child_index)
                 if widget.checkState(0) > 0 if not only_synced else widget.is_synced:
                     active_layers.append(widget)
-        return active_layers
+        return sorted(active_layers, key=lambda layer: self.get_multilayer_priority(layer))
 
     def update_priority_selection(self):
         """
@@ -249,6 +251,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if (item.itimes or item.vtimes or item.levels) and self.is_sync_possible(item):
                 item.is_synced = True
                 self.reload_sync()
+            self.update_checkboxes()
         elif item.checkState(0) == 0 and self.listLayers.itemWidget(item, 2):
             if item in self.layers_priority:
                 self.listLayers.removeItemWidget(item, 2)
@@ -256,7 +259,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 self.update_priority_selection()
             item.is_synced = False
             self.reload_sync()
-        self.update_checkboxes()
+            self.update_checkboxes()
 
     def priority_changed(self, new_index):
         """
@@ -283,6 +286,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         """
         if item.childCount() == 0:
             item.draw()
+            self.hide()
 
     def update_checkboxes(self):
         """
@@ -296,6 +300,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 layer = header.child(child_index)
                 is_active = self.is_sync_possible(layer) or not (layer.itimes or layer.vtimes or layer.levels)
                 layer.setDisabled(not is_active)
+        self.listLayers.setColumnHidden(2, len(self.layers_priority) <= 1)
         self.save_data = True
 
     def is_sync_possible(self, layer):

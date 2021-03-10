@@ -172,7 +172,7 @@
      <item row="1" column="0">
       <widget class="QPushButton" name="pbLayerSelect">
        <property name="text">
-        <string>Select Layer</string>
+        <string>Server/Layer</string>
        </property>
       </widget>
      </item>
@@ -419,12 +419,12 @@
           <date>
            <year>2009</year>
            <month>12</month>
-           <day>30</day>
+           <day>29</day>
           </date>
          </property>
          <property name="minimumDateTime">
           <datetime>
-           <hour>13</hour>
+           <hour>12</hour>
            <minute>0</minute>
            <second>0</second>
            <year>1999</year>
@@ -441,7 +441,7 @@
          </property>
          <property name="minimumTime">
           <time>
-           <hour>13</hour>
+           <hour>12</hour>
            <minute>0</minute>
            <second>0</second>
           </time>
@@ -482,6 +482,9 @@
         <widget class="QLabel" name="lLayerName">
          <property name="text">
           <string>No Layer selected</string>
+         </property>
+         <property name="wordWrap">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
