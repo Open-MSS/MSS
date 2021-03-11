@@ -23,35 +23,37 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import requests
 import json
-from werkzeug.urls import url_join
+import sys
+import time
 
+from werkzeug.urls import url_join
+from PyQt5 import QtWidgets
 from mslib.mscolab.models import User, MessageType, Message
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import db, APP, initialize_managers
-from mslib.mscolab.utils import get_recent_pid
 from mslib.mscolab.chat_manager import ChatManager
+from mslib.msui.mscolab import MSSMscolabWindow
+from mslib._tests.utils import mscolab_start_server
+
+
+PORTS = list(range(9321, 9340))
 
 
 class Test_Chat_Manager(object):
     def setup(self):
-        self.sockets = []
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app, _, _, fm = initialize_managers(self.app)
-        self.fm = fm
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(0.1)
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
         self.cm = ChatManager()
         self.room_name = "europe"
-        db.init_app(self.app)
         data = {
             'email': 'a',
             'password': 'a'
         }
-        r = requests.post(MSCOLAB_URL_TEST + '/token', data=data)
+        r = requests.post(self.url + '/token', data=data)
         self.token = json.loads(r.text)['token']
         with self.app.app_context():
             self.user = User.query.filter_by(id=8).first()
@@ -61,16 +63,17 @@ class Test_Chat_Manager(object):
             "path": self.room_name,
             "description": "test description"
         }
-        url = url_join(MSCOLAB_URL_TEST, 'create_project')
-        r = requests.post(url, data=data)
+        url = url_join(self.url, 'create_project')
+        requests.post(url, data=data)
 
     def teardown(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-            self.fm.delete_file(p_id, self.user)
-            db.session.commit()
-        for socket in self.sockets:
-            socket.disconnect()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_add_message(self):
         with self.app.app_context():
@@ -96,12 +99,3 @@ class Test_Chat_Manager(object):
             self.cm.delete_message(message.id)
             message = Message.query.filter(Message.id == message.id).first()
             assert message is None
-
-    def _login(self):
-        url = url_join(MSCOLAB_URL_TEST, 'token')
-        r = requests.post(url, data={
-            'email': 'mytestuser@test.com',
-            'password': 'mx'
-        })
-        response = json.loads(r.text)
-        return response

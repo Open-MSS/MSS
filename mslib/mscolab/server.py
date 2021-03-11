@@ -437,7 +437,7 @@ def modify_bulk_permissions():
     success = fm.modify_bulk_permission(p_id, user, u_ids, new_access_level)
     if success:
         for u_id in u_ids:
-            sockio.sm.emit_update_permission(u_id, p_id)
+            sockio.sm.emit_new_permission(u_id=u_id, p_id=p_id)
         sockio.sm.emit_project_permissions_updated(user.id, p_id)
         return jsonify({"success": True, "message": "User permissions successfully updated!"})
 

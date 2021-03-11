@@ -2,7 +2,7 @@
 """
 
     mslib.msui._tests.test_mscolab
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module is used to test mscolab related gui.
 
@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import logging
 import sys
 import time
 import os
@@ -34,57 +33,36 @@ import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Permission, User
-from mslib.mscolab.server import APP, db, initialize_managers
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui.mscolab import MSSMscolabWindow
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib.mscolab.mscolab import handle_db_seed
-from mslib._tests.utils import mscolab_delete_all_projects, mscolab_delete_user
+from mslib._tests.utils import mscolab_start_server
+
+
+PORTS = list(range(9481, 9530))
 
 
 class Test_Mscolab(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
 
     def setup(self):
-        handle_db_seed()
-        self.port = 8084
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app, sockio, cm, fm = initialize_managers(self.app)
-        self.fm = fm
-        self.cm = cm
-        db.init_app(self.app)
-        self.MSCOLAB_URL_TEST = f"http://localhost:{self.port}"
-        logging.debug("starting")
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(0.1)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.url)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        QtTest.QTest.mouseClick(self.window.logoutButton, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        with self.app.app_context():
-            email = [("something@something.org", "something"),
-                     ("other@something.org", "other"),
-                     ("anton@something.org", "anton"),
-                     ("berta@something.org", "berta"),
-                    ]
-            for em, username in email:
-                mscolab_delete_all_projects(self.app, self.MSCOLAB_URL_TEST, em, "something", username)
-                mscolab_delete_user(self.app, self.MSCOLAB_URL_TEST, em, "something")
-
-        # to disconnect connections, and clear token
-        self.window.disconnect_handler()
-        QtWidgets.QApplication.processEvents()
-        self.window.close()
-        QtWidgets.QApplication.processEvents()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as mss_dir:
-            if mss_dir.exists('local_mscolab_data'):
-                mss_dir.removetree('local_mscolab_data')
+        self.process.terminate()
 
     def test_url_combo(self):
         assert self.window.url.count() >= 1
@@ -166,11 +144,11 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(2)
+        time.sleep(0.1)
         assert exported_wp.waypoint_data(0).lat != self.window.waypoints_model.waypoint_data(0).lat
         QtTest.QTest.mouseClick(self.window.importBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        time.sleep(2)
+        time.sleep(0.1)
         assert len(self.window.waypoints_model.waypoints) == 2
         imported_wp = self.window.waypoints_model
         wp_count = len(imported_wp.waypoints)
@@ -184,14 +162,14 @@ class Test_Mscolab(object):
         self._activate_project_at_index(0)
         self.window.workLocallyCheckBox.setChecked(True)
         QtWidgets.QApplication.processEvents()
-        time.sleep(2)
+        time.sleep(0.1)
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(2)
+        time.sleep(0.1)
         wpdata_local = self.window.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckBox.setChecked(False)
         QtWidgets.QApplication.processEvents()
-        time.sleep(2)
+        time.sleep(0.1)
         wpdata_server = self.window.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
@@ -208,12 +186,6 @@ class Test_Mscolab(object):
         with self.app.app_context():
             assert User.query.filter_by(emailid='something').count() == 0
             assert Permission.query.filter_by(u_id=u_id).count() == 0
-
-    def test_add_project_handler(self):
-        pass
-
-    def test_check_an_enable_project_accept(self):
-        pass
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
@@ -246,9 +218,6 @@ class Test_Mscolab(object):
         self._create_project("Alpha", "Description Alpha")
         assert self.window.listProjects.model().rowCount() == 1
 
-    def test_add_user_handler(self):
-        pass
-
     def test_add_user(self):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
@@ -267,6 +236,7 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.window.help_dialog is not None
+        self.window.close()
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
     def test_handle_delete_project(self, mocktext):
@@ -284,15 +254,6 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listProjects.model().rowCount() == 0
         assert self.window.active_pid is None
-
-    def test_close_chat_window(self):
-        pass
-
-    def test_open_admin_window(self):
-        pass
-
-    def test_authorize(self):
-        pass
 
     def test_get_recent_pid(self):
         self._connect_to_mscolab()
@@ -321,25 +282,8 @@ class Test_Mscolab(object):
         assert project["path"] == "flight1234"
         assert project["access_level"] == "creator"
 
-    def test_disable_navbar_action_buttons(self):
-        pass
-
-    def test_enable_navbar_action_buttons(self):
-        pass
-
-    def test_save_wp_mscolab(self):
-        pass
-
-    def test_reload_view_windows(self):
-        pass
-
-    def test_wp_mscolab(self):
-        pass
-
-    def test_handle_update_permissions(self):
-        pass
-
     def test_delete_project_from_list(self):
+        pytest.skip('needs a review for xdist')
         self._connect_to_mscolab()
         self._create_user("other", "other@something.org", "something")
         self._login("other@something.org", "something")
@@ -352,25 +296,10 @@ class Test_Mscolab(object):
         self.window.delete_project_from_list(p_id)
         assert self.window.active_pid is None
 
-    def test_handle_revoke_permissions(self):
-        pass
-
-    def test_render_new_permissions(self):
-        pass
-
-    def test_handle_project_deleted(self):
-        pass
-
-    def test_handle_view(self):
-        pass
-
-    def test_setIdentifier(self):
-        pass
-
     def _connect_to_mscolab(self):
-        self.window.url.setEditText(self.MSCOLAB_URL_TEST)
-        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
-        time.sleep(0.5)
+        self.window.url.setEditText(self.url)
+        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        time.sleep(0.1)
 
     def _login(self, emailid="a", password="a"):
         self.window.emailid.setText(emailid)
@@ -414,42 +343,3 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-
-
-class Test_MscolabMergeWaypointsDialog(object):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def test_handle_selection(self):
-        pass
-
-    def test_save_waypoints(self):
-        pass
-
-    def test_get_values(self):
-        pass
-
-
-class Test_MSCOLAB_AuthenticationDialog(object):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def test_getAuthInfo(self):
-        pass
-
-
-class Test_MscolabHelpDialog(object):
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
-
-    def test_closeEvent(self):
-        pass
