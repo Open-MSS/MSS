@@ -45,19 +45,31 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.layers = {}
         self.layers_priority = []
         self.current_layer: Layer = None
-        self.save_data = True
+        self.threads = 0
         self.synced_reference = Layer(None, None, None, is_empty=True)
         self.listLayers.itemChanged.connect(self.multilayer_changed)
         self.listLayers.itemClicked.connect(self.multilayer_clicked)
-        self.listLayers.itemDoubleClicked.connect(self.multilayer_doubleclicked)
         self.listLayers.setVisible(True)
         self.leMultiFilter.setVisible(True)
         self.lFilter.setVisible(True)
+        self.cbMultilayering.stateChanged.connect(self.toggle_multilayering)
         self.leMultiFilter.textChanged.connect(self.filter_multilayers)
         self.listLayers.setColumnWidth(2, 50)
         self.listLayers.setColumnWidth(1, 200)
         self.listLayers.setColumnHidden(2, True)
         self.listLayers.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+    def get_current_layer(self):
+        """
+        Return the current layer in the perspective of Multilayering or Singlelayering
+        For Multilayering, it is the last of the activated layers
+        For Singlelayering, it is the current selected layer
+        """
+        if self.cbMultilayering.isChecked():
+            active_layers = self.get_active_layers()
+            return active_layers[-1] if active_layers else None
+        else:
+            return self.current_layer
 
     def reload_sync(self):
         """
@@ -190,10 +202,11 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             layerobj = self.dock_widget.get_layer_object(name.split(" | ")[-1])
             widget = Layer(self.layers[wms.url]["header"], self, layerobj)
             widget.setText(0, name)
-            widget.setToolTip(0, "Double click a layer to draw it individually" +
-                              ("\n\n" + layerobj.abstract if layerobj.abstract else ""))
+            if layerobj.abstract:
+                widget.setToolTip(0, layerobj.abstract)
             widget.wms_name = wms.url
-            widget.setCheckState(0, QtCore.Qt.Unchecked)
+            if self.cbMultilayering.isChecked():
+                widget.setCheckState(0, QtCore.Qt.Unchecked)
 
             if widget.style:
                 style = QtWidgets.QComboBox()
@@ -221,8 +234,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         if item.childCount() > 0:
             return
 
-        self.save_data = False
-        self.dock_widget.allow_auto_update = False
+        self.threads += 1
         self.current_layer = item
         self.listLayers.setCurrentItem(item)
         if self.dock_widget.wms is not self.layers[item.wms_name]["wms"]:
@@ -230,15 +242,14 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if index != -1 and index != self.cbWMS_URL.currentIndex():
                 self.cbWMS_URL.setCurrentIndex(index)
         self.needs_repopulate.emit()
-        self.dock_widget.allow_auto_update = True
-        self.save_data = True
+        self.threads -= 1
 
     def multilayer_changed(self, item):
         """
         Gets called whenever the checkmark for a layer is activate or deactivated
         Creates a priority combobox or removes it depending on the situation
         """
-        if not self.save_data:
+        if self.threads > 0:
             return
 
         if item.checkState(0) > 0 and not self.listLayers.itemWidget(item, 2):
@@ -251,13 +262,16 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if (item.itimes or item.vtimes or item.levels) and self.is_sync_possible(item):
                 item.is_synced = True
                 self.reload_sync()
-            self.update_checkboxes()
+                self.update_checkboxes()
+            elif not (item.itimes or item.vtimes or item.levels):
+                item.is_active_unsynced = True
         elif item.checkState(0) == 0 and self.listLayers.itemWidget(item, 2):
             if item in self.layers_priority:
                 self.listLayers.removeItemWidget(item, 2)
                 self.layers_priority.remove(item)
                 self.update_priority_selection()
             item.is_synced = False
+            item.is_active_unsynced = False
             self.reload_sync()
             self.update_checkboxes()
 
@@ -279,21 +293,12 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.update_priority_selection()
         self.multilayer_clicked(self.layers_priority[new_index])
 
-    def multilayer_doubleclicked(self, item, column):
-        """
-        Gets called whenever the user double clicks an entry in the multilayer list
-        Currently this is used to draw the double clicked layer
-        """
-        if item.childCount() == 0:
-            item.draw()
-            self.hide()
-
     def update_checkboxes(self):
         """
         Activates or deactivates the checkboxes for every layer depending on whether they
         can be synchronised or not
         """
-        self.save_data = False
+        self.threads += 1
         for wms_name in self.layers:
             header = self.layers[wms_name]["header"]
             for child_index in range(header.childCount()):
@@ -301,13 +306,13 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 is_active = self.is_sync_possible(layer) or not (layer.itimes or layer.vtimes or layer.levels)
                 layer.setDisabled(not is_active)
         self.listLayers.setColumnHidden(2, len(self.layers_priority) <= 1)
-        self.save_data = True
+        self.threads -= 1
 
     def is_sync_possible(self, layer):
         """
         Returns whether the passed layer can be synchronised with all other synchronised layers
         """
-        if self.get_active_layers() == 0:
+        if len(self.get_active_layers()) == 0:
             return True
 
         levels, itimes, vtimes, crs = self.get_multilayer_common_options(layer)
@@ -316,6 +321,29 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         return (len(levels) > 0 or (len(levels_before) == 0 and len(layer.levels) == 0)) and \
                (len(itimes) > 0 or (len(itimes_before) == 0 and len(layer.itimes) == 0)) and \
                (len(vtimes) > 0 or (len(vtimes_before) == 0 and len(layer.vtimes) == 0))
+
+    def toggle_multilayering(self):
+        """
+        Toggle between checkable layers (multilayering) and single layer mode
+        """
+        self.threads += 1
+        for wms_name in self.layers:
+            header = self.layers[wms_name]["header"]
+            for child_index in range(header.childCount()):
+                layer = header.child(child_index)
+                if self.cbMultilayering.isChecked():
+                    layer.setCheckState(0, 2 if layer.is_synced or layer.is_active_unsynced else 0)
+                else:
+                    layer.setData(0, QtCore.Qt.CheckStateRole, QtCore.QVariant())
+                    layer.setDisabled(False)
+
+        if self.cbMultilayering.isChecked():
+            self.update_checkboxes()
+        else:
+            self.listLayers.setColumnHidden(2, True)
+
+        self.needs_repopulate.emit()
+        self.threads -= 1
 
 
 class Layer(QtWidgets.QTreeWidgetItem):
@@ -339,6 +367,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         self.styles = []
         self.style = None
         self.is_synced = False
+        self.is_active_unsynced = False
 
         if not is_empty:
             self._parse_layerobj()
@@ -425,55 +454,55 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.style = self.styles[0]
 
     def get_level(self):
-        if not self.is_synced:
+        if not self.parent.cbMultilayering.isChecked() or not self.is_synced:
             return self.level
         else:
             return self.parent.synced_reference.level
 
     def get_levels(self):
-        if not self.is_synced:
+        if not self.parent.cbMultilayering.isChecked() or not self.is_synced:
             return self.levels
         else:
             return self.parent.synced_reference.levels
 
     def get_itimes(self):
-        if not self.is_synced:
+        if not self.parent.cbMultilayering.isChecked() or not self.is_synced:
             return self.itimes
         else:
             return self.parent.synced_reference.itimes
 
     def get_itime(self):
-        if not self.is_synced:
+        if not self.parent.cbMultilayering.isChecked() or not self.is_synced:
             return self.itime
         else:
             return self.parent.synced_reference.itime
 
     def get_vtimes(self):
-        if not self.is_synced:
+        if not self.parent.cbMultilayering.isChecked() or not self.is_synced:
             return self.vtimes
         else:
             return self.parent.synced_reference.vtimes
 
     def get_vtime(self):
-        if not self.is_synced:
+        if not self.parent.cbMultilayering.isChecked() or not self.is_synced:
             return self.vtime
         else:
             return self.parent.synced_reference.vtime
 
     def set_level(self, level):
-        if not self.is_synced and level in self.levels:
+        if (not self.parent.cbMultilayering.isChecked() or not self.is_synced) and level in self.levels:
             self.level = level
         elif self.is_synced and level in self.parent.synced_reference.levels:
             self.parent.synced_reference.level = level
 
     def set_itime(self, itime):
-        if not self.is_synced and itime in self.itimes:
+        if (not self.parent.cbMultilayering.isChecked() or not self.is_synced) and itime in self.itimes:
             self.itime = itime
         elif self.is_synced and itime in self.parent.synced_reference.itimes:
             self.parent.synced_reference.itime = itime
 
     def set_vtime(self, vtime):
-        if not self.is_synced and vtime in self.vtimes:
+        if (not self.parent.cbMultilayering.isChecked() or not self.is_synced) and vtime in self.vtimes:
             self.vtime = vtime
         elif self.is_synced and vtime in self.parent.synced_reference.vtimes:
             self.parent.synced_reference.vtime = vtime

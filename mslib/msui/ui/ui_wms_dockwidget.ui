@@ -419,12 +419,12 @@
           <date>
            <year>2009</year>
            <month>12</month>
-           <day>29</day>
+           <day>27</day>
           </date>
          </property>
          <property name="minimumDateTime">
           <datetime>
-           <hour>12</hour>
+           <hour>10</hour>
            <minute>0</minute>
            <second>0</second>
            <year>1999</year>
@@ -441,7 +441,7 @@
          </property>
          <property name="minimumTime">
           <time>
-           <hour>12</hour>
+           <hour>10</hour>
            <minute>0</minute>
            <second>0</second>
           </time>
@@ -536,7 +536,7 @@
           </font>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Request the layer(s) with the specifed parameters.&lt;/p&gt;&lt;p&gt;Keyboard shortcut: Enter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Request the selected layer(s).&lt;/p&gt;&lt;p&gt;Keyboard shortcut: Enter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>retrieve</string>

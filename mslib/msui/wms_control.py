@@ -408,7 +408,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Multilayering things
         self.multilayers = Multilayers(self)
-        self.pbLayerSelect.clicked.connect(lambda: self.multilayers.show())
+        self.pbLayerSelect.clicked.connect(lambda: (self.multilayers.hide(), self.multilayers.show()))
         self.allow_auto_update = True
 
         # Initial list of WMS servers.
@@ -448,7 +448,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enable_valid_time_elements(False)
         self.enable_init_time_elements(False)
         self.btGetMap.setEnabled(False)
-        self.multilayers.btGetMap2.setEnabled(False)
+        self.multilayers.btGetMap.setEnabled(False)
         self.multilayers.pbViewCapabilities.setEnabled(False)
 
         self.cbTransparent.setChecked(False)
@@ -536,10 +536,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.thread_fetch.wait()
 
     def get_all_maps(self, disregard_current=False):
-        if disregard_current or self.multilayers.current_layer.checkState(0):
+        if self.multilayers.cbMultilayering.isChecked():
             self.get_map(self.multilayers.get_active_layers())
         else:
-            self.get_map([self.multilayers.current_layer])
+            self.get_map([self.multilayers.get_current_layer()])
 
     def initialise_wms(self, base_url, version="1.3.0"):
         """Initialises a MSSWebMapService object with the specified base_url.
@@ -609,7 +609,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         elif self.wms is not None:
             self.wms = None
             self.btGetMap.setEnabled(False)
-            self.multilayers.btGetMap2.setEnabled(False)
+            self.multilayers.btGetMap.setEnabled(False)
 
             self.cbLevel.clear()
             self.cbInitTime.clear()
@@ -662,7 +662,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             logging.error("Cannot load capabilities document.\n"
                           "No layers can be used in this view.")
             QtWidgets.QMessageBox.critical(
-                self, self.tr("Web Map Service"),
+                self.multilayers, self.tr("Web Map Service"),
                 self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
         else:
             # url shortener url translated
@@ -698,7 +698,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Clear layer and style combo boxes. First disconnect the layerChanged
         # slot to avoid calls to this function.
         self.btGetMap.setEnabled(False)
-        self.multilayers.btGetMap2.setEnabled(False)
+        self.multilayers.btGetMap.setEnabled(False)
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
@@ -747,23 +747,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.fetcher.exception.connect(self.display_exception)  # implicitely uses a queued connection
         self.fetcher.started_request.connect(self.display_progress_dialog)  # implicitely uses a queued connection
 
-        if self.cbInitTime.count() > 0:
-            self.cbInitTime.setCurrentIndex(self.cbInitTime.count() - 1)
-            self.init_time_changed()
-        if self.cbInitTime.count() > 0 and self.cbValidTime.count() > 0:
-            self.cbValidTime.setCurrentIndex(0)
-            for i in range(self.cbValidTime.count()):
-                if self.cbValidTime.itemText(i) == self.cbInitTime.currentText():
-                    self.cbValidTime.setCurrentIndex(i)
-                    break
-            self.valid_time_changed()
-        elif self.cbValidTime.count() > 0:
-            self.cbValidTime.setCurrentIndex(0)
-            self.valid_time_changed()
-
         if len(filtered_layers) > 0:
             self.btGetMap.setEnabled(True)
-            self.multilayers.btGetMap2.setEnabled(True)
+            self.multilayers.btGetMap.setEnabled(True)
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
@@ -826,18 +812,39 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 logging.error("Can't understand time string '%s'. Please check the implementation.", time_item)
         return times
 
+    def disable_ui(self):
+        self.disable_cbInitTime_elements()
+        self.disable_cbValidTime_elements()
+        self.disable_dteInitTime_elements()
+        self.disable_dteValidTime_elements()
+        self.enable_valid_time_elements(False)
+        self.enable_init_time_elements(False)
+        self.enable_level_elements(False)
+        self.btGetMap.setEnabled(False)
+        self.multilayers.btGetMap.setEnabled(False)
+
     def populate_ui(self):
         """
         Adds the values of the current layer to the UI comboboxes
         """
-        self.multilayers.save_data = False
+        self.allow_auto_update = False
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
 
-        layer = self.multilayers.current_layer
         active_layers = self.multilayers.get_active_layers()
-        self.lLayerName.setText(f"{layer.get_wms().url}: {layer.text(0)})")
+        layer = self.multilayers.get_current_layer()
+
+        if not layer:
+            self.lLayerName.setText("No Layer selected")
+            self.disable_ui()
+            return
+
+        else:
+            self.btGetMap.setEnabled(True)
+            self.multilayers.btGetMap.setEnabled(True)
+
+        self.lLayerName.setText(f"{layer.get_wms().url}: {layer.text(0)}")
 
         tooltip_text = ""
         for active_layer in active_layers if layer.checkState(0) else [layer]:
@@ -883,7 +890,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             logging.debug("Selected '%s' for Combobox.", extra)
             self.parent().parent().update_predefined_maps(extra)
 
-        self.multilayers.save_data = True
+        self.allow_auto_update = True
 
     @staticmethod
     def secs_from_timestep(timestep_string):
@@ -1009,7 +1016,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         font = self.dteInitTime.font()
         pydt = dt.toPyDateTime()
-        init_time_available = pydt in self.multilayers.current_layer.allowed_init_times
+        init_time_available = pydt in self.multilayers.get_current_layer().allowed_init_times
         font.setStrikeOut(not init_time_available)
         self.dteInitTime.setFont(font)
         if init_time_available:
@@ -1021,8 +1028,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         valid_time_available = True
         pydt = dt.toPyDateTime()
-        if self.multilayers.current_layer.allowed_valid_times:
-            if pydt in self.multilayers.current_layer.allowed_valid_times:
+        if self.multilayers.get_current_layer().allowed_valid_times:
+            if pydt in self.multilayers.get_current_layer().allowed_valid_times:
                 index = self.cbValidTime.findText(pydt.isoformat() + "Z")
                 # setCurrentIndex also sets the date/time edit via signal.
                 self.cbValidTime.setCurrentIndex(index)
@@ -1043,8 +1050,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if init_time is not None:
                 self.dteInitTime.setDateTime(init_time)
 
-        if self.multilayers.save_data:
-            self.multilayers.current_layer.set_itime(self.cbInitTime.currentText())
+        if self.multilayers.threads == 0:
+            self.multilayers.get_current_layer().set_itime(self.cbInitTime.currentText())
 
         self.auto_update()
         return init_time == "" or init_time is not None
@@ -1058,15 +1065,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if valid_time is not None:
                 self.dteValidTime.setDateTime(valid_time)
 
-        if self.multilayers.save_data:
-            self.multilayers.current_layer.set_vtime(self.cbValidTime.currentText())
+        if self.multilayers.threads == 0:
+            self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
 
         self.auto_update()
         return valid_time == "" or valid_time is not None
 
     def level_changed(self):
-        if self.multilayers.save_data:
-            self.multilayers.current_layer.set_level(self.cbLevel.currentText())
+        if self.multilayers.threads == 0:
+            self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
         self.auto_update()
 
     def enable_level_elements(self, enable):
@@ -1136,13 +1143,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbValidTime_cbfwd.setEnabled(enable)
 
     def get_layer(self):
-        return self.multilayers.current_layer.get_layer()
+        return self.multilayers.get_current_layer().get_layer()
 
     def get_style(self):
-        return self.multilayers.current_layer.get_style()
+        return self.multilayers.get_current_layer().get_style()
 
     def get_level(self):
-        return self.multilayers.current_layer.get_level_name()
+        return self.multilayers.get_current_layer().get_level_name()
 
     def get_init_time(self):
         """Get the initialisation time from the GUI elements.
@@ -1156,7 +1163,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if self.dteInitTime.isEnabled():
                 return self.dteInitTime.dateTime().toPyDateTime()
             else:
-                itime_str = self.multilayers.current_layer.get_itime()
+                itime_str = self.multilayers.get_current_layer().get_itime()
                 return itime_str
         else:
             return None
@@ -1168,7 +1175,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if self.dteValidTime.isEnabled():
                 return self.dteValidTime.dateTime().toPyDateTime()
             else:
-                vtime_str = self.multilayers.current_layer.get_vtime()
+                vtime_str = self.multilayers.get_current_layer().get_vtime()
                 return vtime_str
         else:
             return None
@@ -1201,7 +1208,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         # Get layer and style names.
         if not layer:
-            layer = self.multilayers.current_layer
+            layer = self.multilayers.get_current_layer()
 
         layer_name = layer.get_layer()
         style = layer.get_style()
@@ -1423,13 +1430,13 @@ class VSecWMSControlWidget(WMSControlWidget):
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
-        self.multilayers.btGetMap2.clicked.connect(lambda: (self.get_all_maps(True), self.multilayers.hide()))
+        self.multilayers.btGetMap.clicked.connect(lambda: (self.get_all_maps(), self.multilayers.hide()))
 
-    def get_all_maps(self, disregard_current=False):
-        if disregard_current or self.multilayers.current_layer.checkState(0):
+    def get_all_maps(self):
+        if self.multilayers.cbMultilayering.isChecked():
             self.get_vsec(self.multilayers.get_active_layers())
         else:
-            self.get_vsec([self.multilayers.current_layer])
+            self.get_vsec([self.multilayers.get_current_layer()])
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance from which the waypoints
@@ -1465,7 +1472,7 @@ class VSecWMSControlWidget(WMSControlWidget):
 
         # Retrieve the image.
         if not layers:
-            layers = [self.multilayers.current_layer]
+            layers = [self.multilayers.get_current_layer()]
         layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
 
         args = []
@@ -1478,7 +1485,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         # Plot the image on the view canvas.
         self.view.draw_image(self.squash_multiple_images(imgs))
         self.view.draw_legend(legend_imgs[-1])
-        style_title = self.multilayers.current_layer.get_style()
+        style_title = self.multilayers.get_current_layer().get_style()
         self.view.draw_metadata(title=self.get_layer_object(layer).title,
                                 init_time=init_time,
                                 valid_time=valid_time,
@@ -1502,7 +1509,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         super(HSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.btGetMap.clicked.connect(self.get_all_maps)
-        self.multilayers.btGetMap2.clicked.connect(lambda: (self.get_all_maps(True), self.multilayers.hide()))
+        self.multilayers.btGetMap.clicked.connect(lambda: (self.get_all_maps(), self.multilayers.hide()))
 
     def level_changed(self):
         super().level_changed()
@@ -1522,7 +1529,7 @@ class HSecWMSControlWidget(WMSControlWidget):
         width, height = self.view.get_plot_size_in_px()
 
         if not layers:
-            layers = [self.multilayers.current_layer]
+            layers = [self.multilayers.get_current_layer()]
 
         layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
 
@@ -1541,8 +1548,8 @@ class HSecWMSControlWidget(WMSControlWidget):
         img = self.squash_multiple_images(imgs)
 
         # Plot the image on the view canvas.
-        style_title = self.multilayers.current_layer.get_style()
-        self.view.draw_metadata(title=self.multilayers.current_layer.layerobj.title,
+        style_title = self.multilayers.get_current_layer().get_style()
+        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 level=level,
@@ -1550,7 +1557,6 @@ class HSecWMSControlWidget(WMSControlWidget):
         self.view.draw_image(img)
         self.view.draw_legend(legend_imgs[-1])
         self.view.waypoints_interactor.update()
-        self.allow_auto_update = True
 
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
