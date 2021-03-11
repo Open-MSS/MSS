@@ -53,6 +53,7 @@ class Test_MscolabProject(object):
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
         self.window.show()
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         # activate project window here by clicking button
@@ -140,12 +141,11 @@ class Test_MscolabProject(object):
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText(self.url)
-        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
-        time.sleep(0.1)
+        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
+        time.sleep(0.5)
 
     def _login(self):
         # login
-        self._connect_to_mscolab()
         self.window.emailid.setText('a')
         self.window.password.setText('a')
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)

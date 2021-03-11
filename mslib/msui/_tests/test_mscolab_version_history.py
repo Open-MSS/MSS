@@ -45,6 +45,7 @@ class Test_MscolabVersionHistory(object):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         # activate project window here by clicking button
@@ -129,11 +130,10 @@ class Test_MscolabVersionHistory(object):
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText(self.url)
-        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         time.sleep(0.1)
 
     def _login(self):
-        self._connect_to_mscolab()
         self.window.emailid.setText('a')
         self.window.password.setText('a')
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
