@@ -33,8 +33,6 @@ import sys
 # Disable pyc files
 sys.dont_write_bytecode = True
 
-import multiprocessing
-import time
 import pytest
 import fs
 from mslib.mswms.demodata import DataFiles
@@ -152,14 +150,6 @@ sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 imp.load_source('mscolab_settings', path)
 sys.path.insert(0, parent_path)
 
-# ToDo scope="class" for mscolab tests wanted
-@pytest.fixture(scope="session", autouse=True)
-def create_data():
-    from mslib.mscolab.mscolab import handle_db_seed
-    handle_db_seed()
-    yield
-    constants.ROOT_FS.clean()
-
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):
@@ -173,43 +163,3 @@ def configure_testsetup(request):
         VIRT_DISPLAY.stop()
     else:
         yield
-
-
-process = None
-
-
-@pytest.fixture(scope="session", autouse=True)
-def start_mscolab_server(request):
-    from mslib.mscolab.conf import mscolab_settings
-    from mslib.mscolab.server import APP, initialize_managers, start_server
-
-    _app = APP
-    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-    _app, sockio, cm, fm = initialize_managers(_app)
-    global process
-    process = multiprocessing.Process(
-        target=start_server,
-        args=(_app, sockio, cm, fm,),
-        kwargs={'port': 8084})
-    process.start()
-    time.sleep(2)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def stop_server(request):
-    """Cleanup a testing directory once we are finished."""
-    def stop_callback():
-        global process
-        process.terminate()
-    request.addfinalizer(stop_callback)
-
-
-@pytest.fixture(scope="class")
-def testdata_exists():
-    if not constants.ROOT_FS.exists(u'mss'):
-        pytest.skip("testdata not existing")
-
-
-assert sys.path[0].startswith('/tmp')
