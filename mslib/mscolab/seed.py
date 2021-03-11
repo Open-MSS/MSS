@@ -96,7 +96,6 @@ def seed_data():
             db_user = User(user['emailid'], user['username'], user['password'])
             db_user.id = user['id']
             db.session.add(db_user)
-        db.session.commit()
 
         # create projects
         projects = [{
@@ -128,7 +127,6 @@ def seed_data():
             db_project = Project(project['path'], project['description'])
             db_project.id = project['id']
             db.session.add(db_project)
-        db.session.commit()
 
         # create permissions
         permissions = [{
