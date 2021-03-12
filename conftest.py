@@ -141,7 +141,8 @@ class mscolab_settings(object):
     if not ROOT_FS.exists('mscolab'):
         ROOT_FS.makedir('mscolab')
     with fs.open_fs(fs.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
-        mscolab_fs.writetext('mscolab_settings.py', config_string)
+        # windows needs \\ or / but mixed is terrible. *nix needs /
+        mscolab_fs.writetext('mscolab_settings.py', config_string.replace('\\', '/'))
     path = fs.path.join(constants.ROOT_DIR, 'mscolab', 'mscolab_settings.py')
     parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
 
