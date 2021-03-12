@@ -263,7 +263,7 @@ class WMSMapFetcher(QtCore.QObject):
     # triggered in case of long lasting operation
     started_request = QtCore.pyqtSignal()
 
-    def __init__(self, wms, wms_cache, parent=None):
+    def __init__(self, wms_cache, parent=None):
         super(WMSMapFetcher, self).__init__(parent)
         self.wms_cache = wms_cache
         self.maps = []
@@ -403,13 +403,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         self.view = view
 
-        # Accommodates MSSWebMapService instances.
-        self.wms = None
-
         # Multilayering things
         self.multilayers = Multilayers(self)
         self.pbLayerSelect.clicked.connect(lambda: (self.multilayers.hide(), self.multilayers.show()))
-        self.allow_auto_update = True
 
         # Initial list of WMS servers.
         self.multilayers.cbWMS_URL.setModel(WMS_URL_LIST)
@@ -419,12 +415,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         wms_settings = load_settings_qsettings('wms', {'recent_wms_url': None})
         if wms_settings['recent_wms_url'] is not None:
             add_wms_urls(self.multilayers.cbWMS_URL, [wms_settings['recent_wms_url']])
-
-        # Initially allowed WMS parameters and date/time formats.
-        self.allowed_init_times = []
-        self.allowed_valid_times = []
-        self.init_time_name = None
-        self.valid_time_name = None
 
         self.layerChangeInProgress = False
         self.save_level = None
@@ -592,34 +582,20 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         raise
         except UnicodeEncodeError:
             logging.error("got a unicode url?!: '%s'", base_url)
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+            QtWidgets.QMessageBox.critical(self.multilayers, self.tr("Web Map Service"),
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
         except Exception as ex:
             logging.error("cannot load capabilities document.. "
                           "no layers can be used in this view.")
             QtWidgets.QMessageBox.critical(
-                self, self.tr("Web Map Service"),
+                self.multilayers, self.tr("Web Map Service"),
                 self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
         return wms
 
     def wms_url_changed(self, text):
         wms = WMS_SERVICE_CACHE.get(text)
-        if wms is not None and wms != self.wms:
+        if wms is not None:
             self.activate_wms(wms)
-        elif self.wms is not None:
-            self.wms = None
-            self.btGetMap.setEnabled(False)
-            self.multilayers.btGetMap.setEnabled(False)
-
-            self.cbLevel.clear()
-            self.cbInitTime.clear()
-            self.cbValidTime.clear()
-
-            self.enable_level_elements(False)
-            self.enable_valid_time_elements(False)
-            self.enable_init_time_elements(False)
-            self.multilayers.pbViewCapabilities.setEnabled(False)
-            self.cbTransparent.setChecked(False)
 
     @QtCore.pyqtSlot(Exception)
     def display_exception(self, ex):
@@ -643,8 +619,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.signal_enable_cbs.emit()
 
     def get_capabilities(self):
-        """Query the WMS server in the URL combobox for its capabilities. Fill
-           layer, style, etc. combo boxes.
+        """
+        Query the WMS server in the URL combobox for its capabilities.
         """
 
         # Load new WMS. Only add those layers to the combobox that can provide
@@ -722,7 +698,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
-        self.wms = wms
         for layer in filtered_layers:
             self.multilayers.add_multilayer(layer, wms)
         self.multilayers.filter_multilayers()
@@ -736,11 +711,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.fetcher is not None:
             self.fetch.disconnect(self.fetcher.fetch_maps)
 
-        self.prefetcher = WMSMapFetcher(self.wms, self.wms_cache)
+        self.prefetcher = WMSMapFetcher(self.wms_cache)
         self.prefetcher.moveToThread(self.thread_prefetch)
         self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
 
-        self.fetcher = WMSMapFetcher(self.wms, self.wms_cache)
+        self.fetcher = WMSMapFetcher(self.wms_cache)
         self.fetcher.moveToThread(self.thread_fetch)
         self.fetch.connect(self.fetcher.fetch_maps)  # implicitely uses a queued connection
         self.fetcher.finished.connect(self.continue_retrieve_image)  # implicitely uses a queued connection
@@ -759,24 +734,25 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            document.
         """
         logging.debug("Opening WMS capabilities browser..")
-        if self.wms is not None:
+        wms = self.multilayers.current_layer.get_wms()
+        if wms is not None:
             wmsbrws = wms_capabilities.WMSCapabilitiesBrowser(
                 parent=self.multilayers,
-                url=self.wms.url,
-                capabilities=self.wms)
+                url=wms.url,
+                capabilities=wms)
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             wmsbrws.show()
 
-    def get_layer_object(self, layername):
+    def get_layer_object(self, wms, layername):
         """Returns the object from the layer tree that fits the given
            layer name.
         """
-        if self.wms is None:
+        if wms is None:
             return None
-        if layername in self.wms.contents:
-            return self.wms.contents[layername]
+        if layername in wms.contents:
+            return wms.contents[layername]
         else:
-            stack = list(self.wms.contents.values())
+            stack = list(wms.contents.values())
             while len(stack) > 0:
                 layer = stack.pop()
                 if layer.name == layername:
@@ -808,7 +784,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     raise ValueError("value has incorrect number of entries.")
 
             except Exception as ex:
-                logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
+                logging.debug("Wildcard Exception %s - %s.", type(ex), ex)
                 logging.error("Can't understand time string '%s'. Please check the implementation.", time_item)
         return times
 
@@ -827,7 +803,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         Adds the values of the current layer to the UI comboboxes
         """
-        self.allow_auto_update = False
+        self.layerChangeInProgress = True
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
@@ -890,7 +866,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             logging.debug("Selected '%s' for Combobox.", extra)
             self.parent().parent().update_predefined_maps(extra)
 
-        self.allow_auto_update = True
+        self.layerChangeInProgress = False
 
     @staticmethod
     def secs_from_timestep(timestep_string):
@@ -1002,8 +978,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         performed (lock mechanism to prevent erroneous requests during
         a layer change).
         """
-        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress \
-                and self.allow_auto_update:
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()
 
     def check_init_time(self, dt):
@@ -1486,7 +1461,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         self.view.draw_image(self.squash_multiple_images(imgs))
         self.view.draw_legend(legend_imgs[-1])
         style_title = self.multilayers.get_current_layer().get_style()
-        self.view.draw_metadata(title=self.get_layer_object(layer).title,
+        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 style=style_title)

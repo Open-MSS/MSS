@@ -67,7 +67,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         """
         if self.cbMultilayering.isChecked():
             active_layers = self.get_active_layers()
-            return active_layers[-1] if active_layers else None
+            synced_layers = [layer for layer in active_layers if layer.is_synced]
+            return synced_layers[-1] if synced_layers else active_layers[-1] if active_layers else None
         else:
             return self.current_layer
 
@@ -199,7 +200,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             header.setExpanded(True)
 
         if name not in self.layers[wms.url]:
-            layerobj = self.dock_widget.get_layer_object(name.split(" | ")[-1])
+            layerobj = self.dock_widget.get_layer_object(wms, name.split(" | ")[-1])
             widget = Layer(self.layers[wms.url]["header"], self, layerobj)
             widget.setText(0, name)
             if layerobj.abstract:
@@ -237,10 +238,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.threads += 1
         self.current_layer = item
         self.listLayers.setCurrentItem(item)
-        if self.dock_widget.wms is not self.layers[item.wms_name]["wms"]:
-            index = self.cbWMS_URL.findText(item.wms_name)
-            if index != -1 and index != self.cbWMS_URL.currentIndex():
-                self.cbWMS_URL.setCurrentIndex(index)
+        index = self.cbWMS_URL.findText(item.wms_name)
+        if index != -1 and index != self.cbWMS_URL.currentIndex():
+            self.cbWMS_URL.setCurrentIndex(index)
         self.needs_repopulate.emit()
         self.threads -= 1
 
