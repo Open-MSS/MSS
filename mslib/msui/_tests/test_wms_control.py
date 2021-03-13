@@ -104,6 +104,8 @@ class WMSControlWidgetSetup(object):
         QtTest.QTest.qWait(5000)  # time for the server to parse all netcdf data
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     def setup(self):
         self._setup("hsec")
@@ -254,6 +256,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 1
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     def setup(self):
         self._setup("vsec")
