@@ -36,7 +36,7 @@ from mslib._tests.constants import ROOT_DIR
 
 class Test_Editor(object):
     sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
-                               "samples", "config", "mss", "mss_settings.json.sample"))
+                                  "samples", "config", "mss", "mss_settings.json.sample"))
     sample_file = sample_file.replace('\\', '/')
 
     save_file_name = fs.path.join(ROOT_DIR, "testeditor_save.json")
