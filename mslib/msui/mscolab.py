@@ -236,6 +236,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
     def handle_export(self):
+        # Setting default filename path for filedialogue
         default_filename = self.active_project_name + ".ftml"
         file_path = get_save_filename(self, "Save Flight track", default_filename, "Flight track (*.ftml)")
         if file_path is None:
