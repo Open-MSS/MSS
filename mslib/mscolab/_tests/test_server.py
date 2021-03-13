@@ -73,6 +73,8 @@ class Test_Init_Server(object):
         assert 'Class with handler functions for file related functionalities' in self.fm.__doc__
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Server(object):
     def setup(self):
         mscolab_settings.enable_basic_http_authentication = False
