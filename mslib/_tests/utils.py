@@ -183,6 +183,10 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
     _app.config['URL'] = url
 
     _app, sockio, cm, fm = initialize_managers(_app)
+
+    # ToDo refactoring for spawn needed, fork is not implemented on windows, spawn is default on MAC and Windows
+    if multiprocessing.get_start_method(allow_none=True) != 'fork':
+        multiprocessing.set_start_method("fork")
     process = multiprocessing.Process(
         target=start_server,
         args=(_app, sockio, cm, fm,),

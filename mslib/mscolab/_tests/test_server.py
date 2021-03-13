@@ -23,9 +23,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import io
 import time
 import sys
+import pytest
 from pathlib import Path
 from flask import json
 from werkzeug.urls import url_join
@@ -42,6 +44,8 @@ from PyQt5 import QtWidgets
 PORTS = list(range(10481, 10530))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Init_Server(object):
     def setup(self):
         self.process, self.url, self.app, self.sockio, self.cm, self.fm = mscolab_start_server(PORTS)

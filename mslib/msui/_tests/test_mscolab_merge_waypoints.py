@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import sys
 import time
 
@@ -40,6 +41,8 @@ from mslib._tests.utils import mscolab_start_server
 PORTS = list(range(9551, 9570))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 @pytest.mark.skip('these tests run on direct call')
 class Test_Mscolab(object):
     def setup(self):
