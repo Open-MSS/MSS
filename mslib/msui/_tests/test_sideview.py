@@ -27,6 +27,7 @@
 
 import mock
 import os
+import pytest
 import shutil
 import sys
 import multiprocessing

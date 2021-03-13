@@ -29,6 +29,7 @@ from __future__ import division
 
 import mock
 import os
+import pytest
 import shutil
 import sys
 import multiprocessing
