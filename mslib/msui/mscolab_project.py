@@ -613,7 +613,7 @@ class MessageItem(QtWidgets.QWidget):
     def handle_download_action(self):
         file_name = fs.path.basename(self.attachment_path)
         file_name, file_ext = fs.path.splitext(file_name)
-        # Replacing dots with underscores as it breaks fs.filepicker method
+        # fs.file_picker cannot take filenames that contain dots
         default_filename = file_name.replace('.', '_') + file_ext
         if self.message_type == MessageType.DOCUMENT:
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
