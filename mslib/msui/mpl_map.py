@@ -104,7 +104,8 @@ class MapCanvas(basemap.Basemap):
 
         # Set up the map appearance.
         if self.appearance["draw_coastlines"]:
-            self.map_coastlines = self.drawcoastlines(zorder=3)
+            if len(self.coastsegs) > 0 and len(self.coastsegs[0]) > 0:
+                self.map_coastlines = self.drawcoastlines(zorder=3)
             self.map_countries = self.drawcountries(zorder=3)
         else:
             self.map_coastlines = None
@@ -425,7 +426,7 @@ class MapCanvas(basemap.Basemap):
         grat_vis = self.appearance["draw_graticule"]
         self.set_graticule_visible(False)
         self.appearance["draw_graticule"] = grat_vis
-        if self.map_coastlines is not None:
+        if self.map_coastlines is not None and (len(self.coastsegs) > 0 and len(self.coastsegs[0]) > 0):
             self.map_coastlines.remove()
 
         if self.image is not None:
