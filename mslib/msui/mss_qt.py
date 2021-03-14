@@ -32,7 +32,7 @@ import platform
 import sys
 import traceback
 
-from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
+from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory, getOpenFileNameAndFilter
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest, Qt  # noqa
 
 from mslib.utils import config_loader, FatalUserError
@@ -72,10 +72,13 @@ def get_pickertype(tag, typ):
     return typ
 
 
-def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=None):
+def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=None, fs_filter=False):
     pickertype = get_pickertype(pickertag, pickertype)
     if pickertype == "fs":
-        filename = getOpenFileName(parent, dirname, filt, title="Import Flight Track")
+        if fs_filter:
+            filename = getOpenFileNameAndFilter(parent, dirname, filt, title="Import Flight Track")
+        else:
+            filename = getOpenFileName(parent, dirname, filt, title="Import Flight Track")
     elif pickertype in ["qt", "default"]:
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
