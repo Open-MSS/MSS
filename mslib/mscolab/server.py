@@ -279,9 +279,9 @@ def create_project():
     return str(fm.create_project(path, description, user, content=content))
 
 
-@APP.route('/get_project', methods=['GET'])
+@APP.route('/get_project_by_id', methods=['GET'])
 @verify_user
-def get_project():
+def get_project_by_id():
     p_id = request.values.get('p_id', None)
     user = g.user
     result = fm.get_file(int(p_id), user)

@@ -104,7 +104,7 @@ class Test_Files(object):
                 "token": self.token,
                 "p_id": p_id
             }
-            url = url_join(self.url, 'get_project')
+            url = url_join(self.url, 'get_project_by_id')
             r = requests.get(url, data=data)
             assert json.loads(r.text)["content"] == self.fm.get_file(int(p_id), self.user)
 
@@ -244,7 +244,7 @@ class Test_Files(object):
             "attribute": "path",
             "value": "a_diff_path"
         }
-        get_proj_url = url_join(self.url, 'get_project')
+        get_proj_url = url_join(self.url, 'get_project_by_id')
         update_proj_url = url_join(self.url, 'update_project')
         r = requests.post(update_proj_url, data=data)
         assert r.text == "True"
@@ -316,7 +316,7 @@ class Test_Files(object):
                 "token": self.token,
                 "p_id": p_id
             }
-            get_proj_url = url_join(self.url, 'get_project')
+            get_proj_url = url_join(self.url, 'get_project_by_id')
             res = requests.get(get_proj_url, data=data)
             content = json.loads(res.text)["content"]
             change = Change.query.order_by(Change.created_at.desc()).first()
