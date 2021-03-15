@@ -42,8 +42,9 @@ from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
-from mslib.msui.mss_qt import get_open_filename
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_add_project_dialog as add_project_ui
 from mslib.msui.qt5 import ui_add_user_dialog as add_user_ui
@@ -164,6 +165,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # toggle to connect button
         self.toggleConnectionBtn.setText('Connect')
         self.toggleConnectionBtn.clicked.connect(self.connect_handler)
+        self.url.setEnabled(True)
         # set mscolab_server_url to None
         self.mscolab_server_url = None
 
@@ -190,6 +192,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # toggle to disconnect button
                 self.toggleConnectionBtn.setText('Disconnect')
                 self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
+                self.url.setEnabled(False)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
                 try:
@@ -214,8 +217,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
 
     def handle_import(self):
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "", "Flight track (*.ftml)")
-        if file_path == "":
+        file_path = get_open_filename(self, "Select a file", "", "Flight track (*.ftml)")
+        if file_path is None:
             return
         dir_path, file_name = fs.path.split(file_path)
         with open_fs(dir_path) as file_dir:
@@ -236,9 +239,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
     def handle_export(self):
-        file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Flight track", self.active_project_name,
-                                                             "Flight track (*.ftml)")
-        if file_path == "":
+        # Setting default filename path for filedialogue
+        default_filename = self.active_project_name + ".ftml"
+        file_path = get_save_filename(self, "Save Flight track", default_filename, "Flight track (*.ftml)")
+        if file_path is None:
             return
         xml_doc = self.waypoints_model.get_xml_doc()
         dir_path, file_name = fs.path.split(file_path)
