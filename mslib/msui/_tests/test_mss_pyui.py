@@ -40,6 +40,7 @@ class Test_MSSSideViewWindow(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
     save_csv = os.path.join(ROOT_DIR, "example.csv")
     save_ftml = os.path.join(ROOT_DIR, "example.ftml")
+    save_ftml = save_ftml.replace('\\', '/')
     save_txt = os.path.join(ROOT_DIR, "example.txt")
 
     def setup(self):

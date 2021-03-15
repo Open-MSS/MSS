@@ -23,6 +23,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import pytest
 import requests
 import json
 import sys
@@ -38,6 +40,8 @@ from mslib._tests.utils import mscolab_start_server
 PORTS = list(range(9541, 9560))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_UserMethods(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)

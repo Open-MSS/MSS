@@ -29,6 +29,7 @@ from __future__ import division
 
 import mock
 import os
+import pytest
 import shutil
 import sys
 import multiprocessing
@@ -256,6 +257,8 @@ class Test_MSSTopViewWindow(object):
         assert mockbox.critical.call_count == 0
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_TopViewWMS(object):
     def setup(self):
         self.port = PORTS.pop()

@@ -42,6 +42,8 @@ from mslib._tests.utils import mscolab_start_server
 PORTS = list(range(9481, 9530))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
 
