@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import pytest
 import requests
 import json
 import sys
@@ -42,6 +44,8 @@ from mslib.msui.mscolab import MSSMscolabWindow
 PORTS = list(range(9381, 9400))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Files(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)

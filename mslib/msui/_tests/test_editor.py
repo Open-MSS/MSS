@@ -27,6 +27,7 @@
 
 import mock
 import os
+import fs
 import sys
 from PyQt5 import QtWidgets
 from mslib.msui import editor
@@ -34,10 +35,11 @@ from mslib._tests.constants import ROOT_DIR
 
 
 class Test_Editor(object):
-    sample_file = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
-                               "samples", "config", "mss", "mss_settings.json.sample")
+    sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
+                                  "samples", "config", "mss", "mss_settings.json.sample"))
+    sample_file = sample_file.replace('\\', '/')
 
-    save_file_name = os.path.join(ROOT_DIR, "testeditor_save.json")
+    save_file_name = fs.path.join(ROOT_DIR, "testeditor_save.json")
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
     def setup(self, mockmessage):
