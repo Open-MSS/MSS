@@ -255,7 +255,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # Check that each dimension has a coordinate dimension
         for dimName in masterDims:
             if dimName not in cdfm.variables and dimName not in skip_dim_check:
-                raise IOError("dimension '{}' has no coordinate variable in master '{}'".format(dimName, master))
+                raise IOError(f"dimension '{dimName}' has no coordinate variable in master '{master}'")
 
         # Create the following:
         #   cdf       list of Dataset instances
