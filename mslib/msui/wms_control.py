@@ -44,7 +44,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import mslib.ogcwms
 import owslib.util
 from owslib.crs import axisorder_yx
-import PIL.Image
+from PIL import Image, ImageOps
 
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
@@ -319,7 +319,7 @@ class WMSMapFetcher(QtCore.QObject):
         logging.debug("MapPrefetcher %s %s.", kwargs["time"], kwargs["level"])
 
         if use_cache and os.path.exists(md5_filename):
-            img = PIL.Image.open(md5_filename)
+            img = Image.open(md5_filename)
             img.load()
             logging.debug("MapPrefetcher - found image cache")
         else:
@@ -327,7 +327,7 @@ class WMSMapFetcher(QtCore.QObject):
             self.long_request = True
             urlobject = layer.get_wms().getmap(**kwargs)
             image_io = io.BytesIO(urlobject.read())
-            img = PIL.Image.open(image_io)
+            img = Image.open(image_io)
             # Check if the image is stored as indexed palette
             # with a transparent colour. Store correspondingly.
             if img.mode == "P" and "transparency" in img.info:
@@ -345,7 +345,7 @@ class WMSMapFetcher(QtCore.QObject):
             return None
 
         if use_cache and os.path.exists(md5_filename):
-            legend_img = PIL.Image.open(md5_filename)
+            legend_img = Image.open(md5_filename)
             legend_img.load()
             logging.debug("MapPrefetcher - found legend cache")
         else:
@@ -353,13 +353,13 @@ class WMSMapFetcher(QtCore.QObject):
                 self.started_request.emit()
                 self.long_request = True
             # This StringIO object can then be passed as a file substitute to
-            # PIL.Image.open(). See
+            # Image.open(). See
             #    http://www.pythonware.com/library/pil/handbook/image.htm
             logging.debug("Retrieving legend from '%s'", urlstr)
             urlobject = requests.get(urlstr)
             image_io = io.BytesIO(urlobject.content)
             try:
-                legend_img_raw = PIL.Image.open(image_io)
+                legend_img_raw = Image.open(image_io)
             except Exception as ex:
                 # This exception may be triggered if there was a problem with the legend
                 # as present with http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi
@@ -1380,12 +1380,37 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("cache has been cleaned (%i files removed).", removed_files)
 
     def squash_multiple_images(self, imgs):
+        """
+        Lay the images on top of each other from 0 to n and return the product
+        """
         background = imgs[0]
         if len(imgs) > 1:
             for foreground in imgs[1:]:
                 background.paste(foreground, (0, 0), foreground.convert("RGBA"))
 
         return background
+
+    def append_multiple_images(self, imgs):
+        """
+        Stack the list of images vertically and return the product
+        """
+        images = [x for x in imgs if x]
+        if images:
+            # Add border around seperate legends
+            if len(images) > 1:
+                images = [ImageOps.expand(x, border=1, fill="black") for x in images]
+            max_height = int((self.view.fig.get_size_inches() * self.view.fig.get_dpi())[1] * 0.99)
+            width = max([image.width for image in images])
+            height = sum([image.height for image in images])
+            result = Image.new("RGBA", (width, height))
+            current_height = 0
+            for i, image in enumerate(images):
+                result.paste(image, (0, current_height - i))
+                current_height += image.height
+
+            if max_height < result.height:
+                result.thumbnail((result.width, max_height), Image.ANTIALIAS)
+            return result
 
         ################################################################################
 
@@ -1459,7 +1484,7 @@ class VSecWMSControlWidget(WMSControlWidget):
     def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
         self.view.draw_image(self.squash_multiple_images(imgs))
-        self.view.draw_legend(legend_imgs[-1])
+        self.view.draw_legend(self.append_multiple_images(legend_imgs))
         style_title = self.multilayers.get_current_layer().get_style()
         self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
                                 init_time=init_time,
@@ -1520,8 +1545,6 @@ class HSecWMSControlWidget(WMSControlWidget):
         self.fetch.emit(args)
 
     def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
-        img = self.squash_multiple_images(imgs)
-
         # Plot the image on the view canvas.
         style_title = self.multilayers.get_current_layer().get_style()
         self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
@@ -1529,8 +1552,8 @@ class HSecWMSControlWidget(WMSControlWidget):
                                 valid_time=valid_time,
                                 level=level,
                                 style=style_title)
-        self.view.draw_image(img)
-        self.view.draw_legend(legend_imgs[-1])
+        self.view.draw_image(self.squash_multiple_images(imgs))
+        self.view.draw_legend(self.append_multiple_images(legend_imgs))
         self.view.waypoints_interactor.update()
 
     def is_layer_aligned(self, layer):

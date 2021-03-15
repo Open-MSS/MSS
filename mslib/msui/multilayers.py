@@ -262,9 +262,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if (item.itimes or item.vtimes or item.levels) and self.is_sync_possible(item):
                 item.is_synced = True
                 self.reload_sync()
-                self.update_checkboxes()
             elif not (item.itimes or item.vtimes or item.levels):
                 item.is_active_unsynced = True
+            self.update_checkboxes()
         elif item.checkState(0) == 0 and self.listLayers.itemWidget(item, 2):
             if item in self.layers_priority:
                 self.listLayers.removeItemWidget(item, 2)
@@ -533,7 +533,6 @@ class Layer(QtWidgets.QTreeWidgetItem):
         urlstr = None
         if style and "legend" in self.layerobj.styles[style]:
             urlstr = self.layerobj.styles[style]["legend"]
-
         return urlstr
 
     def get_allowed_crs(self):

@@ -429,12 +429,12 @@ class WMSServer(object):
                         version=version)
 
                 # Check if the layer requires time information and if they are given.
-                if self.hsec_layer_registry[dataset][layer].uses_inittime_dimension() and init_time is None:
+                if init_time is None and self.hsec_layer_registry[dataset][layer].uses_inittime_dimension():
                     return self.create_service_exception(
                         code="MissingDimensionValue",
                         text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)",
                         version=version)
-                if self.hsec_layer_registry[dataset][layer].uses_validtime_dimension() and valid_time is None:
+                if valid_time is None and self.hsec_layer_registry[dataset][layer].uses_validtime_dimension():
                     return self.create_service_exception(
                         code="MissingDimensionValue",
                         text="TIME not specified",
@@ -462,7 +462,7 @@ class WMSServer(object):
                 level = query.get('ELEVATION')
                 level = float(level) if level is not None else None
                 layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
-                if any(_x in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and level is None:
+                if level is None and any(_x in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]):
                     # Use the default value.
                     level = -1
                 elif ("sfc" in layer_datatypes) and \
