@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import sys
 import time
 import pytest
@@ -38,6 +39,8 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 PORTS = list(range(9591, 9620))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_MscolabVersionHistory(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)

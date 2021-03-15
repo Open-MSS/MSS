@@ -27,6 +27,7 @@
 
 import mock
 import os
+import pytest
 import shutil
 import sys
 import multiprocessing
@@ -126,6 +127,8 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_SideViewWMS(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
