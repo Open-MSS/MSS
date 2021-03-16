@@ -161,40 +161,31 @@ class Test_KmlOverlayDockWidget(object):
         assert os.path.exists(save_kml)
 
     @mock.patch("PyQt5.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
-    def test_customize_kml(self, mock_colour_dialog):
+    def test_customize_kml(self, mock_colour_button):
         """
-        Test opening Customize KML Dialogue and checking specific file gets
-        desired linewidth and colour
+        Test the pushbutton for color and double spin box for linewidth and checking specific
+        file gets desired linewidth and colour
         """
         path = self.select_file("line.kml")  # selects file and returns path
         assert self.window.listWidget.count() == 1
         item = self.window.listWidget.item(0)
         rect = self.window.listWidget.visualItemRect(item)
-        # in testing, need to add mouseclick before double click
+        # in testing, need to add mouseclick and click the listWidget item
         QtTest.QTest.mouseClick(self.window.listWidget.viewport(),
                                 QtCore.Qt.LeftButton,
                                 pos=rect.center())
         QtWidgets.QApplication.processEvents()
-        # Double click feature
-        QtTest.QTest.mouseDClick(self.window.listWidget.viewport(),
-                                 QtCore.Qt.LeftButton,
-                                 pos=rect.center())
-        QtWidgets.QApplication.processEvents()
 
         # Clicking on Push Button Colour
-        QtTest.QTest.mouseClick(self.window.dialog.pushButton_colour, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.pushButton_color, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mock_colour_dialog.call_count == 1
+        assert mock_colour_button.call_count == 1
 
-        # Testing the Double Spin Box
-        self.window.dialog.dsb_linewidth.setValue(3)
-        assert self.window.dialog.dsb_linewidth.value() == 3
+        # Testing the Double Spin Box for linewidth
+        self.window.dsbx_linewidth.setValue(3)
+        assert self.window.dsbx_linewidth.value() == 3
 
-        # clicking on OK Button
-        okWidget = self.window.dialog.buttonBox.button(self.window.dialog.buttonBox.Ok)
-        QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-
+        # Testing the dictionary of files for color and linewidth
         assert self.window.dict_files[path]["color"] == self.window.get_color()
         assert self.window.dict_files[path]["linewidth"] == 3
 

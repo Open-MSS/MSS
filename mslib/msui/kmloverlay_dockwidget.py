@@ -349,9 +349,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         are in correspondence to the linewidth(thickness) of the KML file.
         """
 
-        if(self.listWidget.count() != 0):
+        if self.listWidget.count() != 0:
             for index in range(self.listWidget.count()):
-                if (self.listWidget.item(index).text() in self.dict_files):
+                if self.listWidget.item(index).text() in self.dict_files:
                     file = self.listWidget.item(index).text()
                     clr = self.dict_files[file]["color"]
                     self.listWidget.item(index).setIcon(self.show_color_icon(file, clr))
@@ -360,7 +360,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         Stores current selected file; select colour using Palette
         """
-        if(self.listWidget.currentItem() is not None):
+        if self.listWidget.currentItem() is not None:
             file = self.listWidget.currentItem().text()
             button = self.pushButton_color
 
@@ -376,7 +376,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         else:
             msg = QMessageBox()
             msg.setWindowTitle("Message")
-            if(self.listWidget.count() == 0):
+            if self.listWidget.count() == 0:
                 msg.setText("Please add a KML file and then change the color!")
             else:
                 msg.setText("Please select any KML file and then change the color!")
@@ -410,21 +410,21 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         Stores current selected file; calls set_attribute_linewidth
         """
-        if(self.listWidget.currentItem() is not None):
-            if(self.flag == 0):
+        if self.listWidget.currentItem() is not None:
+            if self.flag == 0:
                 file = self.listWidget.currentItem().text()
                 self.set_attribute_linewidth(file)
 
-            elif(self.dict_files[self.listWidget.currentItem().text()]["linewidth"] != self.dsbx_linewidth.value()):
+            elif self.dict_files[self.listWidget.currentItem().text()]["linewidth"] != self.dsbx_linewidth.value():
                 file = self.listWidget.currentItem().text()
                 self.set_attribute_linewidth(file)
 
         # display message when no item in list widget is added or selected. Prompts to add or select.
         else:
-            if(self.dsbx_linewidth.value() != 0.0):  # Ensures that remove button is not pressed
+            if self.dsbx_linewidth.value() != 0.0:  # Ensures that remove button is not pressed
                 msg = QMessageBox()
                 msg.setWindowTitle("Message")
-                if(self.listWidget.count() == 0):
+                if self.listWidget.count() == 0:
                     msg.setText("Please add a KML file and then change linewidth!")
                     self.dsbx_linewidth.setValue(0.0)
                 else:
@@ -461,7 +461,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         """
         Shows the linewidth of the KML file when the file is clicked inside the listWidget.
         """
-        if(self.listWidget.currentItem() is not None):
+        if self.listWidget.currentItem() is not None:
             file = self.listWidget.currentItem().text()
             if file in self.dict_files:
                 self.dsbx_linewidth.setValue(self.set_linewidth(file))
