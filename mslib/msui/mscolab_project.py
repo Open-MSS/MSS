@@ -231,12 +231,15 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             self.previewBtn.setText("Write")
 
     def handle_upload(self):
-        file_filter = ["Image (*.png *.gif *.jpg *jpeg *.bmp)", "Document (*.*)"]
-        file_path, file_type = get_open_filename(self, "Select a file", "", file_filter, fs_filter=True)
-        if file_path is None:
+        img_type = "Image (*.png *.gif *.jpg *jpeg *.bmp)"
+        doc_type = "Document (*.*)"
+        file_filter = f'{img_type};;{doc_type}'
+        file_path = get_open_filename(self, "Select a file", "", file_filter)
+        if file_path is None or file_path == "":
             return
+        file_type = file_path.split('.')[-1]
         self.attachment = file_path
-        if file_type in ['*.png', '*.gif', '*.jpg', '*.jpeg', '*.bmp']:
+        if file_type in ['png', 'gif', 'jpg', 'jpeg', 'bmp']:
             self.attachment_type = MessageType.IMAGE
             self.display_uploaded_img(file_path)
         else:
