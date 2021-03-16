@@ -24,12 +24,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import socketio
 from functools import partial
 import requests
 import json
 import sys
 import time
+import pytest
 
 from PyQt5 import QtWidgets
 from mslib.mscolab.conf import mscolab_settings
@@ -40,6 +42,8 @@ from mslib._tests.utils import mscolab_start_server
 PORTS = list(range(9521, 9540))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Sockets(object):
     chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
     chat_messages_counter_a = 0  # only for first test

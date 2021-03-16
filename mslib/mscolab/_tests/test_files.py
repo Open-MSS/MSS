@@ -47,6 +47,8 @@ from mslib.msui.mscolab import MSSMscolabWindow
 PORTS = list(range(9361, 9380))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Files(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
