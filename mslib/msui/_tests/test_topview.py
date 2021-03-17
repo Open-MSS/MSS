@@ -285,7 +285,7 @@ class Test_TopViewWMS(object):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
-        self.wms_control.cbWMS_URL.setEditText("")
+        self.wms_control.multilayers.cbWMS_URL.setEditText("")
 
     def teardown(self):
         self.window.hide()
@@ -297,9 +297,9 @@ class Test_TopViewWMS(object):
 
     def query_server(self, url):
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.keyClicks(self.wms_control.cbWMS_URL, url)
+        QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.wms_control.btGetCapabilities, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
 
