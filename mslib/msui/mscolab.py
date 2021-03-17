@@ -696,7 +696,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "token": self.token,
             "p_id": self.active_pid
         }
-        r = requests.get(self.mscolab_server_url + '/get_project', data=data)
+        r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
         xml_content = json.loads(r.text)["content"]
         return xml_content
 
