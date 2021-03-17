@@ -46,11 +46,13 @@ from future import standard_library
 standard_library.install_aliases()
 
 import os
+import io
 import logging
 import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
+from PIL import Image
 
 from flask import request, make_response, redirect
 from flask_httpauth import HTTPBasicAuth
@@ -136,6 +138,19 @@ logging.basicConfig(level=logging.DEBUG,
 base_dir = os.path.abspath(os.path.dirname(__file__))
 xml_template_location = os.path.join(base_dir, "xml_templates")
 templates = PageTemplateLoader(mss_wms_settings.__dict__.get("xml_template_location", xml_template_location))
+
+
+def squash_multiple_images(imgs):
+    with Image.open(io.BytesIO(imgs[0])) as background:
+        background = background.convert("RGBA")
+        if len(imgs) > 1:
+            for img in imgs[1:]:
+                with Image.open(io.BytesIO(img)) as foreground:
+                    background.paste(foreground, (0, 0), foreground.convert("RGBA"))
+
+        output = io.BytesIO()
+        background.save(output, format="PNG")
+        return output.getvalue()
 
 
 class WMSServer(object):
@@ -329,209 +344,212 @@ class WMSServer(object):
 
         # Requested layers.
         layers = [layer for layer in query.get('LAYERS', '').strip().split(',') if layer]
-        layer = layers[0] if len(layers) > 0 else ''
-        if layer.find(".") > 0:
-            dataset, layer = layer.split(".")
-        else:
-            dataset = None
-        logging.debug("  requested dataset = '%s', layer = '%s'", dataset, layer)
+        images = []
+        for index, layer in enumerate(layers):
+            if layer.find(".") > 0:
+                dataset, layer = layer.split(".")
+            else:
+                dataset = None
+            logging.debug("  requested dataset = '%s', layer = '%s'", dataset, layer)
 
-        # Requested style(s).
-        styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
-        style = styles[0] if len(styles) > 0 else None
-        logging.debug("  requested style = '%s'", style)
+            # Requested style(s).
+            styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
+            style = styles[0] if len(styles) > 0 else None
+            logging.debug("  requested style = '%s'", style)
 
-        # Forecast initialisation time.
-        init_time = query.get('DIM_INIT_TIME')
-        if init_time is not None:
-            try:
-                init_time = parse_iso_datetime(init_time)
-            except ValueError:
+            # Forecast initialisation time.
+            init_time = query.get('DIM_INIT_TIME')
+            if init_time is not None:
+                try:
+                    init_time = parse_iso_datetime(init_time)
+                except ValueError:
+                    return self.create_service_exception(
+                        code="InvalidDimensionValue",
+                        text="DIM_INIT_TIME has wrong format (needs to be 2005-08-29T13:00:00Z)",
+                        version=version)
+            logging.debug("  requested initialisation time = '%s'", init_time)
+
+            # Forecast valid time.
+            valid_time = query.get('TIME')
+            if valid_time is not None:
+                try:
+                    valid_time = parse_iso_datetime(valid_time)
+                except ValueError:
+                    return self.create_service_exception(
+                        code="InvalidDimensionValue",
+                        text="TIME has wrong format (needs to be 2005-08-29T13:00:00Z)",
+                        version=version)
+            logging.debug("  requested (valid) time = '%s'", valid_time)
+
+            # Coordinate reference system.
+            crs = query.get("CRS" if version == "1.3.0" else "SRS", 'EPSG:4326').lower()
+            is_yx = version == "1.3.0" and crs.startswith("epsg") and int(crs[5:]) in axisorder_yx
+
+            # Allow to request vertical sections via GetMap, if the specified CRS is of type "VERT:??".
+            msg = None
+            if crs.startswith('vert:logp'):
+                mode = "getvsec"
+            else:
+                try:
+                    get_projection_params(crs)
+                except ValueError:
+                    return self.create_service_exception(
+                        code="InvalidSRS", text=f"The requested CRS '{crs}' is not supported.", version=version)
+            logging.debug("  requested coordinate reference system = '%s'", crs)
+
+            # Create a frameless figure (WMS) or one with title and legend
+            # (MSS specific)? Default is WMS mode (frameless).
+            noframe = query.get('FRAME', 'off').lower() == 'off'
+
+            # Transparency.
+            transparent = query.get('TRANSPARENT', 'false').lower() == 'true'
+            if not transparent and index > 0:
+                transparent = True
+            if transparent:
+                logging.debug("  requested transparent image")
+
+            # Return format (image/png, text/xml, etc.).
+            return_format = query.get('FORMAT', 'image/png').lower()
+            logging.debug("  requested return format = '%s'", return_format)
+            if return_format not in ["image/png", "text/xml"]:
                 return self.create_service_exception(
-                    code="InvalidDimensionValue",
-                    text="DIM_INIT_TIME has wrong format (needs to be 2005-08-29T13:00:00Z)",
-                    version=version)
-        logging.debug("  requested initialisation time = '%s'", init_time)
-
-        # Forecast valid time.
-        valid_time = query.get('TIME')
-        if valid_time is not None:
-            try:
-                valid_time = parse_iso_datetime(valid_time)
-            except ValueError:
-                return self.create_service_exception(
-                    code="InvalidDimensionValue",
-                    text="TIME has wrong format (needs to be 2005-08-29T13:00:00Z)",
-                    version=version)
-        logging.debug("  requested (valid) time = '%s'", valid_time)
-
-        # Coordinate reference system.
-        crs = query.get("CRS" if version == "1.3.0" else "SRS", 'EPSG:4326').lower()
-        is_yx = version == "1.3.0" and crs.startswith("epsg") and int(crs[5:]) in axisorder_yx
-
-        # Allow to request vertical sections via GetMap, if the specified CRS is of type "VERT:??".
-        msg = None
-        if crs.startswith('vert:logp'):
-            mode = "getvsec"
-        else:
-            try:
-                get_projection_params(crs)
-            except ValueError:
-                return self.create_service_exception(
-                    code="InvalidSRS", text=f"The requested CRS '{crs}' is not supported.", version=version)
-        logging.debug("  requested coordinate reference system = '%s'", crs)
-
-        # Create a frameless figure (WMS) or one with title and legend
-        # (MSS specific)? Default is WMS mode (frameless).
-        noframe = query.get('FRAME', 'off').lower() == 'off'
-
-        # Transparency.
-        transparent = query.get('TRANSPARENT', 'false').lower() == 'true'
-        if transparent:
-            logging.debug("  requested transparent image")
-
-        # Return format (image/png, text/xml, etc.).
-        return_format = query.get('FORMAT', 'image/png').lower()
-        logging.debug("  requested return format = '%s'", return_format)
-        if return_format not in ["image/png", "text/xml"]:
-            return self.create_service_exception(
-                code="InvalidFORMAT",
-                text=f"unsupported FORMAT: '{return_format}'",
-                version=version)
-
-        # 3) Check GetMap/GetVSec-specific parameters and produce
-        #    the image with the corresponding section driver.
-        # =======================================================
-        if mode == "getmap":
-            # Check requested layer.
-            if (dataset not in self.hsec_layer_registry) or (layer not in self.hsec_layer_registry[dataset]):
-                return self.create_service_exception(
-                    code="LayerNotDefined",
-                    text=f"Invalid LAYER '{dataset}.{layer}' requested",
+                    code="InvalidFORMAT",
+                    text=f"unsupported FORMAT: '{return_format}'",
                     version=version)
 
-            # Check if the layer requires time information and if they are given.
-            if self.hsec_layer_registry[dataset][layer].uses_inittime_dimension() and init_time is None:
-                return self.create_service_exception(
-                    code="MissingDimensionValue",
-                    text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)",
-                    version=version)
-            if self.hsec_layer_registry[dataset][layer].uses_validtime_dimension() and valid_time is None:
-                return self.create_service_exception(
-                    code="MissingDimensionValue",
-                    text="TIME not specified",
-                    version=version)
+            # 3) Check GetMap/GetVSec-specific parameters and produce
+            #    the image with the corresponding section driver.
+            # =======================================================
+            if mode == "getmap":
+                # Check requested layer.
+                if (dataset not in self.hsec_layer_registry) or (layer not in self.hsec_layer_registry[dataset]):
+                    return self.create_service_exception(
+                        code="LayerNotDefined",
+                        text=f"Invalid LAYER '{dataset}.{layer}' requested",
+                        version=version)
 
-            # Check if the requested coordinate system is supported.
-            if not self.hsec_layer_registry[dataset][layer].support_epsg_code(crs):
-                return self.create_service_exception(
-                    code="InvalidSRS",
-                    text=f"The requested CRS '{crs}' is not supported.",
-                    version=version)
-
-            # Bounding box.
-            try:
-                if is_yx:
-                    bbox = [float(v) for v in query.get('BBOX', '-90,-180,90,180').split(',')]
-                    bbox = (bbox[1], bbox[0], bbox[3], bbox[2])
-                else:
-                    bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
-
-            except ValueError:
-                return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
-
-            # Vertical level, if applicable.
-            level = query.get('ELEVATION')
-            level = float(level) if level is not None else None
-            layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
-            if any(_x in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and level is None:
-                # Use the default value.
-                level = -1
-            elif ("sfc" in layer_datatypes) and \
-                    all(_x not in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and \
-                    level is not None:
-                return self.create_service_exception(
-                    text=f"ELEVATION argument not applicable for layer '{layer}'. Please omit this argument.",
-                    version=version)
-
-            plot_driver = self.hsec_drivers[dataset]
-            try:
-                plot_driver.set_plot_parameters(self.hsec_layer_registry[dataset][layer], bbox=bbox, level=level,
-                                                crs=crs, init_time=init_time, valid_time=valid_time, style=style,
-                                                figsize=figsize, noframe=noframe, transparent=transparent,
-                                                return_format=return_format)
-                image = plot_driver.plot()
-            except (IOError, ValueError) as ex:
-                logging.error("ERROR: %s %s", type(ex), ex)
-                logging.debug("%s", traceback.format_exc())
-                msg = "The data corresponding to your request is not available. Please check the " \
-                      "times and/or levels you have specified.\n\n" \
-                      f"Error message: '{ex}'"
-                return self.create_service_exception(text=msg, version=version)
-
-        elif mode == "getvsec":
-            # Vertical secton path.
-            path = query.get("PATH")
-            if path is None:
-                return self.create_service_exception(text="PATH not specified", version=version)
-            try:
-                path = [float(v) for v in path.split(',')]
-                path = [[lat, lon] for lat, lon in zip(path[0::2], path[1::2])]
-            except ValueError:
-                return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
-            logging.debug("VSEC PATH: %s", path)
-
-            # Check requested layers.
-            if (dataset not in self.vsec_layer_registry) or (layer not in self.vsec_layer_registry[dataset]):
-                return self.create_service_exception(
-                    code="LayerNotDefined",
-                    text=f"Invalid LAYER '{dataset}.{layer}' requested",
-                    version=version)
-
-            # Check if the layer requires time information and if they are given.
-            if self.vsec_layer_registry[dataset][layer].uses_inittime_dimension():
-                if init_time is None:
+                # Check if the layer requires time information and if they are given.
+                if init_time is None and self.hsec_layer_registry[dataset][layer].uses_inittime_dimension():
                     return self.create_service_exception(
                         code="MissingDimensionValue",
                         text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)",
                         version=version)
-                if valid_time is None:
-                    return self.create_service_exception(code="MissingDimensionValue",
-                                                         text="TIME not specified",
-                                                         version=version)
+                if valid_time is None and self.hsec_layer_registry[dataset][layer].uses_validtime_dimension():
+                    return self.create_service_exception(
+                        code="MissingDimensionValue",
+                        text="TIME not specified",
+                        version=version)
 
-            # Bounding box (num interp. points, p_bot, num labels, p_top).
-            try:
-                bbox = [float(v) for v in query.get("BBOX", "101,1050,10,180").split(",")]
-            except ValueError:
-                return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+                # Check if the requested coordinate system is supported.
+                if not self.hsec_layer_registry[dataset][layer].support_epsg_code(crs):
+                    return self.create_service_exception(
+                        code="InvalidSRS",
+                        text=f"The requested CRS '{crs}' is not supported.",
+                        version=version)
 
-            plot_driver = self.vsec_drivers[dataset]
-            try:
-                plot_driver.set_plot_parameters(plot_object=self.vsec_layer_registry[dataset][layer],
-                                                vsec_path=path,
-                                                vsec_numpoints=bbox[0],
-                                                vsec_path_connection="greatcircle",
-                                                vsec_numlabels=bbox[2],
-                                                init_time=init_time,
-                                                valid_time=valid_time,
-                                                style=style,
-                                                bbox=bbox,
-                                                figsize=figsize,
-                                                noframe=noframe,
-                                                transparent=transparent,
-                                                return_format=return_format)
-                image = plot_driver.plot()
-            except (IOError, ValueError) as ex:
-                logging.error("ERROR: %s %s", type(ex), ex)
-                msg = "The data corresponding to your request is not available. Please check the " \
-                      "times and/or path you have specified.\n\n" \
-                      f"Error message: {ex}"
-                return self.create_service_exception(text=msg, version=version)
+                # Bounding box.
+                try:
+                    if is_yx:
+                        bbox = [float(v) for v in query.get('BBOX', '-90,-180,90,180').split(',')]
+                        bbox = (bbox[1], bbox[0], bbox[3], bbox[2])
+                    else:
+                        bbox = [float(v) for v in query.get('BBOX', '-180,-90,180,90').split(',')]
+
+                except ValueError:
+                    return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+
+                # Vertical level, if applicable.
+                level = query.get('ELEVATION')
+                level = float(level) if level is not None else None
+                layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
+                if level is None and any(_x in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]):
+                    # Use the default value.
+                    level = -1
+                elif ("sfc" in layer_datatypes) and \
+                        all(_x not in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and \
+                        level is not None:
+                    return self.create_service_exception(
+                        text=f"ELEVATION argument not applicable for layer '{layer}'. Please omit this argument.",
+                        version=version)
+
+                plot_driver = self.hsec_drivers[dataset]
+                try:
+                    plot_driver.set_plot_parameters(self.hsec_layer_registry[dataset][layer], bbox=bbox, level=level,
+                                                    crs=crs, init_time=init_time, valid_time=valid_time, style=style,
+                                                    figsize=figsize, noframe=noframe, transparent=transparent,
+                                                    return_format=return_format)
+                    images.append(plot_driver.plot())
+                except (IOError, ValueError) as ex:
+                    logging.error("ERROR: %s %s", type(ex), ex)
+                    logging.debug("%s", traceback.format_exc())
+                    msg = "The data corresponding to your request is not available. Please check the " \
+                          "times and/or levels you have specified.\n\n" \
+                          f"Error message: '{ex}'"
+                    return self.create_service_exception(text=msg, version=version)
+
+            elif mode == "getvsec":
+                # Vertical secton path.
+                path = query.get("PATH")
+                if path is None:
+                    return self.create_service_exception(text="PATH not specified", version=version)
+                try:
+                    path = [float(v) for v in path.split(',')]
+                    path = [[lat, lon] for lat, lon in zip(path[0::2], path[1::2])]
+                except ValueError:
+                    return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
+                logging.debug("VSEC PATH: %s", path)
+
+                # Check requested layers.
+                if (dataset not in self.vsec_layer_registry) or (layer not in self.vsec_layer_registry[dataset]):
+                    return self.create_service_exception(
+                        code="LayerNotDefined",
+                        text=f"Invalid LAYER '{dataset}.{layer}' requested",
+                        version=version)
+
+                # Check if the layer requires time information and if they are given.
+                if self.vsec_layer_registry[dataset][layer].uses_inittime_dimension():
+                    if init_time is None:
+                        return self.create_service_exception(
+                            code="MissingDimensionValue",
+                            text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)",
+                            version=version)
+                    if valid_time is None:
+                        return self.create_service_exception(code="MissingDimensionValue",
+                                                             text="TIME not specified",
+                                                             version=version)
+
+                # Bounding box (num interp. points, p_bot, num labels, p_top).
+                try:
+                    bbox = [float(v) for v in query.get("BBOX", "101,1050,10,180").split(",")]
+                except ValueError:
+                    return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+
+                plot_driver = self.vsec_drivers[dataset]
+                try:
+                    plot_driver.set_plot_parameters(plot_object=self.vsec_layer_registry[dataset][layer],
+                                                    vsec_path=path,
+                                                    vsec_numpoints=bbox[0],
+                                                    vsec_path_connection="greatcircle",
+                                                    vsec_numlabels=bbox[2],
+                                                    init_time=init_time,
+                                                    valid_time=valid_time,
+                                                    style=style,
+                                                    bbox=bbox,
+                                                    figsize=figsize,
+                                                    noframe=noframe,
+                                                    transparent=transparent,
+                                                    return_format=return_format)
+                    images.append(plot_driver.plot())
+                except (IOError, ValueError) as ex:
+                    logging.error("ERROR: %s %s", type(ex), ex)
+                    msg = "The data corresponding to your request is not available. Please check the " \
+                          "times and/or path you have specified.\n\n" \
+                          f"Error message: {ex}"
+                    return self.create_service_exception(text=msg, version=version)
 
         # 4) Return the produced image.
         # =============================
-        return image, return_format
+        return squash_multiple_images(images), return_format
 
 
 server = WMSServer()
