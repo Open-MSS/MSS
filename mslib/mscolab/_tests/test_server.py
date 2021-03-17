@@ -317,7 +317,7 @@ class Test_Server(object):
                 if p['path'] == 'f5':
                     data['p_id'] = p['p_id']
                     break
-            url = url_join(self.url, 'get_project')
+            url = url_join(self.url, 'get_project_by_id')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
