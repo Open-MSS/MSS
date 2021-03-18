@@ -35,11 +35,11 @@
 import types
 
 from mslib.msui import hexagon_dockwidget as hex
+from mslib.msui import performance_settings as perfset
 from PyQt5 import QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_tableview_window as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSSViewWindow
-from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
 from mslib.msui.icons import icons
 from mslib.utils import dropEvent, dragEnterEvent
 
@@ -66,13 +66,14 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
 
-        toolitems = ["(select to open control)", "Hexagon Control"]
+        toolitems = ["(select to open control)", "Hexagon Control", "Performance Settings"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
         self.tableWayPoints.dropEvent = types.MethodType(dropEvent, self.tableWayPoints)
         self.tableWayPoints.dragEnterEvent = types.MethodType(dragEnterEvent, self.tableWayPoints)
+
         # Dock windows [Hexagon].
-        self.docks = [None]
+        self.docks = [None, None]
 
         # Connect slots and signals.
         self.btAddWayPointToFlightTrack.clicked.connect(self.addWayPoint)
@@ -80,21 +81,19 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.btDeleteWayPoint.clicked.connect(self.removeWayPoint)
         self.btInvertDirection.clicked.connect(self.invertDirection)
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
-        self.btViewPerformance.clicked.connect(self.settingsDlg)
+
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
         self.resizeColumns()
 
-    def settingsDlg(self):
-        dlg = MSS_PerformanceSettingsDialog(parent=self, settings_dict=self.waypoints_model.performance_settings)
-        dlg.setModal(True)
-        if dlg.exec_() == QtWidgets.QDialog.Accepted:
-            self.waypoints_model.performance_settings = dlg.get_settings()
-            self.waypoints_model.update_distances(0)
-            self.waypoints_model.save_settings()
-            self.resizeColumns()
-        dlg.destroy()
+    def setPerformance(self, settings):
+        """Updating Table View with changed performance settings.
+        """
+        self.waypoints_model.performance_settings = settings
+        self.waypoints_model.update_distances(0)
+        self.waypoints_model.save_settings()
+        self.resizeColumns()
 
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
@@ -104,6 +103,10 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             if index == 0:
                 title = "Hexagon Control"
                 widget = hex.HexagonControlWidget(view=self)
+            elif index == 1:
+                title = "Performance Settings"
+                widget = perfset.MSS_PerformanceSettingsWidget(parent=self, view=self,
+                                                                settings_dict=self.waypoints_model.performance_settings)
             else:
                 raise IndexError(f"invalid control index ({index})")
             self.createDockWidget(index, title, widget)
