@@ -105,8 +105,11 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
                 widget = hex.HexagonControlWidget(view=self)
             elif index == 1:
                 title = "Performance Settings"
-                widget = perfset.MSS_PerformanceSettingsWidget(parent=self, view=self,
-                                                                settings_dict=self.waypoints_model.performance_settings)
+                widget = perfset.MSS_PerformanceSettingsWidget(
+                    parent=self,
+                    view=self,
+                    settings_dict=self.waypoints_model.performance_settings
+                )
             else:
                 raise IndexError(f"invalid control index ({index})")
             self.createDockWidget(index, title, widget)
