@@ -2,16 +2,18 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_wms_multilayers.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MultilayersDialog(object):
     def setupUi(self, MultilayersDialog):
         MultilayersDialog.setObjectName("MultilayersDialog")
-        MultilayersDialog.resize(999, 434)
+        MultilayersDialog.resize(757, 333)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(MultilayersDialog)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
@@ -119,4 +121,3 @@ class Ui_MultilayersDialog(object):
         self.btGetMap.setToolTip(_translate("MultilayersDialog", "<html><head/><body><p>Request the selected layer(s).</p><p>Keyboard shortcut: Enter</p></body></html>"))
         self.btGetMap.setText(_translate("MultilayersDialog", "retrieve"))
         self.btGetMap.setShortcut(_translate("MultilayersDialog", "Return"))
-

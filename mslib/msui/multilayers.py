@@ -212,6 +212,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if widget.style:
                 style = QtWidgets.QComboBox()
                 style.setFixedHeight(15)
+                style.setFixedWidth(200)
                 style.addItems(widget.styles)
                 style.setCurrentIndex(style.findText(widget.style))
 
@@ -236,6 +237,14 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             return
 
         self.threads += 1
+
+        if self.current_layer.get_level() in item.get_levels():
+            item.set_level(self.current_layer.get_level())
+        if self.current_layer.get_itime() in item.get_itimes():
+            item.set_itime(self.current_layer.get_itime())
+        if self.current_layer.get_vtime() in item.get_vtimes():
+            item.set_vtime(self.current_layer.get_vtime())
+
         self.current_layer = item
         self.listLayers.setCurrentItem(item)
         index = self.cbWMS_URL.findText(item.wms_name)
@@ -305,7 +314,6 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 layer = header.child(child_index)
                 is_active = self.is_sync_possible(layer) or not (layer.itimes or layer.vtimes or layer.levels)
                 layer.setDisabled(not is_active)
-        self.listLayers.setColumnHidden(2, len(self.layers_priority) <= 1)
         self.threads -= 1
 
     def is_sync_possible(self, layer):
@@ -339,6 +347,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
         if self.cbMultilayering.isChecked():
             self.update_checkboxes()
+            self.listLayers.setColumnHidden(2, False)
         else:
             self.listLayers.setColumnHidden(2, True)
 
