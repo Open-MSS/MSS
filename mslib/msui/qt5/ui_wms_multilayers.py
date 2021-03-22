@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MultilayersDialog(object):
     def setupUi(self, MultilayersDialog):
         MultilayersDialog.setObjectName("MultilayersDialog")
-        MultilayersDialog.resize(757, 333)
+        MultilayersDialog.resize(892, 396)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(MultilayersDialog)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()

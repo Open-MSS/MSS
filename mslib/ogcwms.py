@@ -334,7 +334,7 @@ def ContentMetadata(elem, parent=None, children=None, index=0,
     # (mss) Replace owslib ContentMetadata children with ogcwms ContentMetadata
     metadata.layers = []
     for child in elem.findall('Layer'):
-        metadata.layers.append(ContentMetadata(child, metadata))
+        metadata.layers.append(ContentMetadata(child, metadata, version=version))
 
     return metadata
 

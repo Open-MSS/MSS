@@ -406,6 +406,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Multilayering things
         self.multilayers = Multilayers(self)
         self.pbLayerSelect.clicked.connect(lambda: (self.multilayers.hide(), self.multilayers.show()))
+        self.multilayers.cbWMS_URL.editTextChanged.connect(
+            lambda text: self.multilayers.pbViewCapabilities.setEnabled(text in self.multilayers.layers))
 
         # Initial list of WMS servers.
         self.multilayers.cbWMS_URL.setModel(WMS_URL_LIST)
@@ -734,7 +736,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            document.
         """
         logging.debug("Opening WMS capabilities browser..")
-        wms = self.multilayers.current_layer.get_wms()
+        wms = self.multilayers.layers[self.multilayers.cbWMS_URL.currentText()]["wms"]
         if wms is not None:
             wmsbrws = wms_capabilities.WMSCapabilitiesBrowser(
                 parent=self.multilayers,
@@ -820,11 +822,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.btGetMap.setEnabled(True)
             self.multilayers.btGetMap.setEnabled(True)
 
-        self.lLayerName.setText(f"{layer.get_wms().url}: {layer.text(0)}")
+        self.lLayerName.setText(str(layer))
 
         tooltip_text = ""
         for active_layer in active_layers if layer.checkState(0) else [layer]:
-            tooltip_text += f"{active_layer.get_wms().url}: {active_layer.text(0)}\n"
+            tooltip_text += f"{active_layer}\n"
         self.lLayerName.setToolTip(tooltip_text.strip())
 
         if len(active_layers) > 1 and layer.checkState(0):
