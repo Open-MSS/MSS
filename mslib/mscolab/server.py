@@ -279,9 +279,9 @@ def create_project():
     return str(fm.create_project(path, description, user, content=content))
 
 
-@APP.route('/get_project', methods=['GET'])
+@APP.route('/get_project_by_id', methods=['GET'])
 @verify_user
-def get_project():
+def get_project_by_id():
     p_id = request.values.get('p_id', None)
     user = g.user
     result = fm.get_file(int(p_id), user)
@@ -437,7 +437,7 @@ def modify_bulk_permissions():
     success = fm.modify_bulk_permission(p_id, user, u_ids, new_access_level)
     if success:
         for u_id in u_ids:
-            sockio.sm.emit_update_permission(u_id, p_id)
+            sockio.sm.emit_new_permission(u_id=u_id, p_id=p_id)
         sockio.sm.emit_project_permissions_updated(user.id, p_id)
         return jsonify({"success": True, "message": "User permissions successfully updated!"})
 

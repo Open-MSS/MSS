@@ -391,10 +391,13 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             facecolor_rgb = list(mpl.colors.hex2color(mpl.colors.cnames[facecolor]))
             for i in [0, 1, 2]:
                 facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
-            facecolor_index = lut.index(tuple(facecolor_rgb))
-
-            logging.debug("saving figure as transparent PNG with transparency index %s.", facecolor_index)
-            palette_img.save(output, format="PNG", transparency=facecolor_index)
+            try:
+                facecolor_index = lut.index(tuple(facecolor_rgb))
+                logging.debug("saving figure as transparent PNG with transparency index %s.", facecolor_index)
+                palette_img.save(output, format="PNG", transparency=facecolor_index)
+            except ValueError:
+                logging.debug("transparency requested but not possible, saving non-transparent instead")
+                palette_img.save(output, format="PNG")
 
         logging.debug("returning figure..")
         return output.getvalue()

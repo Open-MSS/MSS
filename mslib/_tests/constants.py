@@ -35,25 +35,25 @@ except ImportError:
     SHA = ""
 else:
     repo = git.Repo(os.path.dirname(os.path.realpath(__file__)), search_parent_directories=True)
-    SHA = repo.head.object.hexsha
+    SHA = repo.head.object.hexsha[0:10]
 
 CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mss_wms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
 ROOT_FS = TempFS(identifier="mss{}".format(SHA))
-ROOT_DIR = ROOT_FS.root_path
+ROOT_DIR = ROOT_FS.getsyspath("")
 
 if not ROOT_FS.exists("mss/testdata"):
     ROOT_FS.makedirs("mss/testdata")
-SERVER_CONFIG_FS = fs.open_fs(os.path.join(ROOT_DIR, "mss"))
-DATA_FS = fs.open_fs(os.path.join(ROOT_DIR, "mss/testdata"))
+SERVER_CONFIG_FS = fs.open_fs(fs.path.join(ROOT_DIR, "mss"))
+DATA_FS = fs.open_fs(fs.path.join(ROOT_DIR, "mss/testdata"))
 
-MSS_CONFIG_PATH = SERVER_CONFIG_FS.root_path
+MSS_CONFIG_PATH = SERVER_CONFIG_FS.getsyspath("")
 os.environ["MSS_CONFIG_PATH"] = MSS_CONFIG_PATH
-SERVER_CONFIG_FILE_PATH = os.path.join(SERVER_CONFIG_FS.root_path, SERVER_CONFIG_FILE)
+SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.getsyspath(""), SERVER_CONFIG_FILE)
 
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2
-DATA_DIR = DATA_FS.root_path
+DATA_DIR = DATA_FS.getsyspath("")
 
 # deployed mscolab url
 MSCOLAB_URL = "http://localhost:8083"

@@ -106,7 +106,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             "token": self.token,
             "p_id": self.p_id
         }
-        url = url_join(self.mscolab_server_url, 'get_project')
+        url = url_join(self.mscolab_server_url, 'get_project_by_id')
         res = requests.get(url, data=data)
         xml_content = json.loads(res.text)["content"]
         waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)

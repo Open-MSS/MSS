@@ -42,8 +42,9 @@ from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
-from mslib.msui.mss_qt import get_open_filename
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_add_project_dialog as add_project_ui
 from mslib.msui.qt5 import ui_add_user_dialog as add_user_ui
@@ -80,12 +81,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # if token is None, not authorized, else authorized
         self.token = None
         # User related signals
-        self.connectMscolab.clicked.connect(self.connect_handler)
+        self.toggleConnectionBtn.clicked.connect(self.connect_handler)
         self.addUser.clicked.connect(self.add_user_handler)
         self.loginButton.clicked.connect(self.authorize)
         self.logoutButton.clicked.connect(self.logout)
         self.deleteAccountButton.clicked.connect(self.delete_account)
-        self.disconnectMscolab.clicked.connect(self.disconnect_handler)
         self.helpBtn.clicked.connect(self.open_help_dialog)
         # Project related signals
         self.addProject.clicked.connect(self.add_project_handler)
@@ -139,7 +139,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # disabling login, add user button. they are enabled when url is connected
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
-        self.disconnectMscolab.setEnabled(False)
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
@@ -159,11 +158,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def disconnect_handler(self):
         self.logout()
+        self.status.setText("Status: disconnected")
         # enable and disable right buttons
-        self.disconnectMscolab.setEnabled(False)
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
-        self.connectMscolab.setEnabled(True)
+        # toggle to connect button
+        self.toggleConnectionBtn.setText('Connect')
+        self.toggleConnectionBtn.clicked.connect(self.connect_handler)
         self.url.setEnabled(True)
         # set mscolab_server_url to None
         self.mscolab_server_url = None
@@ -188,9 +189,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # enable and disable right buttons
                 self.loginButton.setEnabled(True)
                 self.addUser.setEnabled(True)
+                # toggle to disconnect button
+                self.toggleConnectionBtn.setText('Disconnect')
+                self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
                 self.url.setEnabled(False)
-                self.disconnectMscolab.setEnabled(True)
-                self.connectMscolab.setEnabled(False)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
                 try:
@@ -218,8 +220,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
 
     def handle_import(self):
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "", "Flight track (*.ftml)")
-        if file_path == "":
+        file_path = get_open_filename(self, "Select a file", "", "Flight track (*.ftml)")
+        if file_path is None:
             return
         dir_path, file_name = fs.path.split(file_path)
         with open_fs(dir_path) as file_dir:
@@ -240,9 +242,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
     def handle_export(self):
-        file_path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Flight track", self.active_project_name,
-                                                             "Flight track (*.ftml)")
-        if file_path == "":
+        # Setting default filename path for filedialogue
+        default_filename = self.active_project_name + ".ftml"
+        file_path = get_save_filename(self, "Save Flight track", default_filename, "Flight track (*.ftml)")
+        if file_path is None:
             return
         xml_doc = self.waypoints_model.get_xml_doc()
         dir_path, file_name = fs.path.split(file_path)
@@ -696,7 +699,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "token": self.token,
             "p_id": self.active_pid
         }
-        r = requests.get(self.mscolab_server_url + '/get_project', data=data)
+        r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
         xml_content = json.loads(r.text)["content"]
         return xml_content
 
