@@ -440,7 +440,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enable_valid_time_elements(False)
         self.enable_init_time_elements(False)
         self.btGetMap.setEnabled(False)
-        self.multilayers.btGetMap.setEnabled(False)
         self.multilayers.pbViewCapabilities.setEnabled(False)
 
         self.cbTransparent.setChecked(False)
@@ -676,7 +675,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Clear layer and style combo boxes. First disconnect the layerChanged
         # slot to avoid calls to this function.
         self.btGetMap.setEnabled(False)
-        self.multilayers.btGetMap.setEnabled(False)
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
@@ -726,7 +724,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if len(filtered_layers) > 0:
             self.btGetMap.setEnabled(True)
-            self.multilayers.btGetMap.setEnabled(True)
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
@@ -799,7 +796,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enable_init_time_elements(False)
         self.enable_level_elements(False)
         self.btGetMap.setEnabled(False)
-        self.multilayers.btGetMap.setEnabled(False)
 
     def populate_ui(self):
         """
@@ -820,7 +816,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         else:
             self.btGetMap.setEnabled(True)
-            self.multilayers.btGetMap.setEnabled(True)
 
         self.lLayerName.setText(str(layer))
 
@@ -1432,7 +1427,6 @@ class VSecWMSControlWidget(WMSControlWidget):
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
-        self.multilayers.btGetMap.clicked.connect(lambda: (self.get_all_maps(), self.multilayers.hide()))
 
     def get_all_maps(self):
         if self.multilayers.cbMultilayering.isChecked():
@@ -1511,7 +1505,6 @@ class HSecWMSControlWidget(WMSControlWidget):
         super(HSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.btGetMap.clicked.connect(self.get_all_maps)
-        self.multilayers.btGetMap.clicked.connect(lambda: (self.get_all_maps(), self.multilayers.hide()))
 
     def level_changed(self):
         super().level_changed()
