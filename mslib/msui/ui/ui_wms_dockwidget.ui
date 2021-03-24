@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1001</width>
+    <width>756</width>
     <height>140</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>1001</width>
+    <width>756</width>
     <height>0</height>
    </size>
   </property>
@@ -419,12 +419,12 @@
           <date>
            <year>2009</year>
            <month>12</month>
-           <day>27</day>
+           <day>26</day>
           </date>
          </property>
          <property name="minimumDateTime">
           <datetime>
-           <hour>10</hour>
+           <hour>9</hour>
            <minute>0</minute>
            <second>0</second>
            <year>1999</year>
@@ -441,7 +441,7 @@
          </property>
          <property name="minimumTime">
           <time>
-           <hour>10</hour>
+           <hour>9</hour>
            <minute>0</minute>
            <second>0</second>
           </time>
