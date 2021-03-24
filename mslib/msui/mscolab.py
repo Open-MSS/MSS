@@ -212,6 +212,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
             show_popup(self, "Error", "Invalid URL")
+        except requests.exceptions.SSLError:
+            logging.debug("Certificate Verification Failed")
+            show_popup(self, "Error", "Certificate Verification Failed")
         except Exception as e:
             logging.debug("Error %s", str(e))
             show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
