@@ -26,6 +26,7 @@
 """
 import fs
 import logging
+import json
 
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.mss_qt import QtWidgets
@@ -41,6 +42,9 @@ class EditorMainWindow(QtWidgets.QMainWindow):
     name = "MSSEditor"
     identifier = None
 
+    viewCloses = QtCore.pyqtSignal(name="viewCloses")
+    restartApplication = QtCore.pyqtSignal(name="restartApplication")
+
     def __init__(self, parent=None):
         super(EditorMainWindow, self).__init__(parent)
         self.path = None
@@ -51,22 +55,21 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.editor = QtWidgets.QPlainTextEdit()
 
         # Load mss_settings.json (if already exists)
-        self.mss_path = fs.path.join(MSS_CONFIG_PATH, "mss_settings" + ".json")
-        if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            file_name = fs.path.basename(self.mss_path)
-            with fs.open_fs(fs.path.dirname(self.mss_path)) as file_dir:
-                self.file_content = file_dir.readtext(file_name)
-                self.editor.setPlainText(self.file_content)
-                self.update_title()
+        self.path = constants.CACHED_CONFIG_FILE
+        if self.path:
+            dir_name, file_name = fs.path.split(self.path)
+            with fs.open_fs(dir_name) as _fs:
+                if _fs.exists(file_name):
+                    self.file_content = _fs.readtext(file_name)
+                    self.editor.setPlainText(self.file_content)
+                    self.update_title()
+        self.last_saved = self.editor.toPlainText()
 
         # Setup the QTextEdit editor configuration
         fixedfont = QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
         fixedfont.setPointSize(12)
         self.editor.setFont(fixedfont)
 
-        # self.path holds the path of the currently open file.
-        # If none, we haven't got a file open yet (or creating new).
-        self.path = constants.MSS_CONFIG_PATH
         self.layout.addWidget(self.editor)
 
         self.container = QtWidgets.QWidget()
@@ -89,9 +92,9 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.file_toolbar.addAction(self.open_file_action)
 
         self.save_file_action = QtWidgets.QAction(QtGui.QIcon(icons('config_editor',
-                                                                    'Document-save.svg')), "Save", self)
+                                                                    'Document-save.svg')), "Save and Quit", self)
         self.save_file_action.setStatusTip("Save current page")
-        self.save_file_action.triggered.connect(self.file_save)
+        self.save_file_action.triggered.connect(self.file_save_and_quit)
         self.file_menu.addAction(self.save_file_action)
         self.file_toolbar.addAction(self.save_file_action)
 
@@ -108,6 +111,10 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.print_action.triggered.connect(self.file_print)
         self.file_menu.addAction(self.print_action)
         self.file_toolbar.addAction(self.print_action)
+
+        self.quit_action = QtWidgets.QAction("Quit", self)
+        self.quit_action.triggered.connect(self.close)
+        self.file_menu.addAction(self.quit_action)
 
         self.edit_toolbar = QtWidgets.QToolBar("Edit")
         self.edit_toolbar.setIconSize(QtCore.QSize(16, 16))
@@ -168,43 +175,62 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.update_title()
         self.show()
 
-    def dialog_critical(self, s):
-        dlg = QtWidgets.QMessageBox(self)
-        dlg.setText(s)
-        dlg.setIcon(QtWidgets.QMessageBox.Critical)
-        dlg.show()
-
     def file_open(self):
         file_path = get_open_filename(self, "Open file", MSS_CONFIG_PATH, "Text documents (*.json)")
         if file_path is not None:
             file_name = fs.path.basename(file_path)
             with fs.open_fs(fs.path.dirname(file_path)) as file_dir:
                 self.file_content = file_dir.readtext(file_name)
-                self.path = file_path
+                self.last_saved = self.file_content
                 self.editor.setPlainText(self.file_content)
                 self.update_title()
 
-    def file_save(self):
-        if self.path is None:
-            # If we do not have a path, we need to use Save As.
-            return self.file_saveas()
-        self._save_to_path()
+    def check_modified(self):
+        if self.last_saved != self.editor.toPlainText():
+            return True
+        return False
+
+    def check_json(self):
+        try:
+            json.loads(self.editor.toPlainText())
+        except json.JSONDecodeError as ex:
+            QtWidgets.QMessageBox.warning(
+                self, self.tr("Mission Support System"),
+                self.tr("This JSON file contains Syntax errors and will not be saved.\n") + str(ex))
+            return False
+        return True
+
+    def file_save_and_quit(self):
+        if self.check_modified():
+            if self.check_json():
+                self._save_to_path(self.path)
+
+                ret = QtWidgets.QMessageBox.warning(
+                    self, self.tr("Mission Support System"),
+                    self.tr("Do you want to restart the application?\n"
+                            "(This is necessary to apply changes)"),
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                    QtWidgets.QMessageBox.No)
+                if ret == QtWidgets.QMessageBox.Yes:
+                    self.restartApplication.emit()
+        self.close()
 
     def file_saveas(self):
-        default_filename = fs.path.join(MSS_CONFIG_PATH, "mss_settings" + ".json")
-        self.path = get_save_filename(self, "Save file", default_filename, "Text documents (*.json)")
-        if not self.path:
+        if self.check_json():
+            default_filename = constants.CACHED_CONFIG_FILE
+            path = get_save_filename(
+                self, "Save file", default_filename, "Text documents (*.json)")
             # If dialog is cancelled, will return ''
-            return
-        self._save_to_path()
+            if path:
+                self._save_to_path(path)
 
-    def _save_to_path(self):
-        logging.debug("save config file to: %s" % self.path)
+    def _save_to_path(self, filename):
+        logging.debug("save config file to: %s", filename)
         text = self.editor.toPlainText()
-        dir_name, file_name = fs.path.split(self.path)
-        if file_name.endswith('.json'):
-            with fs.open_fs(dir_name) as _fs:
-                _fs.writetext(file_name, text)
+        self.last_saved = text
+        dir_name, file_name = fs.path.split(filename)
+        with fs.open_fs(dir_name) as _fs:
+            _fs.writetext(file_name, text)
         self.update_title()
 
     def file_print(self):
@@ -213,19 +239,21 @@ class EditorMainWindow(QtWidgets.QMainWindow):
             self.editor.print_(dlg.printer())
 
     def update_title(self):
-        self.setWindowTitle("%s - Config-Settings" % (fs.path.basename(self.path) if self.path else "Untitled"))
+        self.setWindowTitle(f"{fs.path.basename(self.path)} - Config-Settings" if self.path else "Untitled")
 
     def edit_toggle_wrap(self):
         self.editor.setLineWrapMode(1 if self.editor.lineWrapMode() == 0 else 0)
 
     def closeEvent(self, event):
-        ret = QtWidgets.QMessageBox.critical(
-            self, self.tr("Save changes to mss_settings.json?"),
-            self.tr("If you changed the mss_settings.json please restart the gui"),
-            QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Ignore, QtWidgets.QMessageBox.Save)
+        if self.check_modified() and self.check_json():
+            ret = QtWidgets.QMessageBox.question(
+                self, self.tr("Mission Support System"),
+                self.tr("Save Changes to default mss_settings.json?\n"
+                        "You need to restart the gui for changes to take effect."),
+                QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
-        if ret == QtWidgets.QMessageBox.Save:
-            self.file_save()
-            event.accept()
-        else:
-            event.accept()
+            if ret == QtWidgets.QMessageBox.Yes:
+                self.file_save_and_quit()
+
+        self.viewCloses.emit()
+        event.accept()
