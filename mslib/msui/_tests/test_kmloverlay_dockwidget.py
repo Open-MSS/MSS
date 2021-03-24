@@ -186,7 +186,7 @@ class Test_KmlOverlayDockWidget(object):
         assert self.window.dsbx_linewidth.value() == 3
 
         # Testing the dictionary of files for color and linewidth
-        assert self.window.dict_files[path]["color"] == self.window.get_color()
+        assert self.window.dict_files[path]["color"] == (0, 0, 0, 1)
         assert self.window.dict_files[path]["linewidth"] == 3
 
         self.window.remove_file()
