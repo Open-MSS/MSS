@@ -2,22 +2,24 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_wms_dockwidget.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_WMSDockWidget(object):
     def setupUi(self, WMSDockWidget):
         WMSDockWidget.setObjectName("WMSDockWidget")
-        WMSDockWidget.resize(1001, 140)
+        WMSDockWidget.resize(756, 140)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(WMSDockWidget.sizePolicy().hasHeightForWidth())
         WMSDockWidget.setSizePolicy(sizePolicy)
-        WMSDockWidget.setMinimumSize(QtCore.QSize(1001, 0))
+        WMSDockWidget.setMinimumSize(QtCore.QSize(756, 0))
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(WMSDockWidget)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.gridLayout = QtWidgets.QGridLayout()
@@ -172,10 +174,10 @@ class Ui_WMSDockWidget(object):
         self.dteValidTime.setSizePolicy(sizePolicy)
         self.dteValidTime.setMinimumSize(QtCore.QSize(160, 0))
         self.dteValidTime.setMaximumSize(QtCore.QSize(300, 16777215))
-        self.dteValidTime.setDate(QtCore.QDate(2009, 12, 27))
-        self.dteValidTime.setMinimumDateTime(QtCore.QDateTime(QtCore.QDate(1999, 12, 31), QtCore.QTime(10, 0, 0)))
+        self.dteValidTime.setDate(QtCore.QDate(2009, 12, 26))
+        self.dteValidTime.setMinimumDateTime(QtCore.QDateTime(QtCore.QDate(1999, 12, 31), QtCore.QTime(9, 0, 0)))
         self.dteValidTime.setMinimumDate(QtCore.QDate(1999, 12, 31))
-        self.dteValidTime.setMinimumTime(QtCore.QTime(10, 0, 0))
+        self.dteValidTime.setMinimumTime(QtCore.QTime(9, 0, 0))
         self.dteValidTime.setCalendarPopup(False)
         self.dteValidTime.setTimeSpec(QtCore.Qt.UTC)
         self.dteValidTime.setObjectName("dteValidTime")
@@ -270,4 +272,3 @@ class Ui_WMSDockWidget(object):
         self.btGetMap.setToolTip(_translate("WMSDockWidget", "<html><head/><body><p>Request the selected layer(s).</p><p>Keyboard shortcut: Enter</p></body></html>"))
         self.btGetMap.setText(_translate("WMSDockWidget", "retrieve"))
         self.btGetMap.setShortcut(_translate("WMSDockWidget", "Return"))
-
