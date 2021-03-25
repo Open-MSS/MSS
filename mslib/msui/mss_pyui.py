@@ -198,7 +198,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
 
         # Config
-        self.actionConfiguration.triggered.connect(self.open_config_file)
+        self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
+        self.actionConfigurationEditor.triggered.connect(self.open_config_editor)
 
         # Flight Tracks.
         self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
@@ -524,14 +525,41 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         self.activate_flight_track(listitem)
 
-    def open_config_file(self):
-        """
-        Reads the config file
+    def restart_application(self):
+        self.listViews.clear()
+        self.remove_plugins()
+        self.add_plugins()
 
-        Returns:
-
+    def load_config_file(self):
         """
-        self.config_editor = editor.EditorMainWindow(parent=self)
+        Loads a config file and potentially restarts the application
+        """
+        ret = QtWidgets.QMessageBox.warning(
+            self, self.tr("Mission Support System"),
+            self.tr("Opening a config file will reset application. Continue?"),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if ret == QtWidgets.QMessageBox.Yes:
+            filename = get_open_filename(
+                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)",
+                pickertag="filepicker_config")
+            if filename is not None:
+                constants.CACHED_CONFIG_FILE = filename
+                self.restart_application()
+
+    def open_config_editor(self):
+        """
+        Opens up a JSON config editor
+        """
+        if self.config_editor is None:
+            self.config_editor = editor.EditorMainWindow(parent=self)
+            self.config_editor.viewCloses.connect(self.close_config_editor)
+            self.config_editor.restartApplication.connect(self.restart_application)
+        else:
+            self.config_editor.showNormal()
+            self.config_editor.activateWindow()
+
+    def close_config_editor(self):
+        self.config_editor = None
 
     def open_flight_track(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
