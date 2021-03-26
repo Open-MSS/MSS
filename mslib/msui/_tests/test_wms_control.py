@@ -261,7 +261,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that multilayers get created, handled and drawn properly
         """
         self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
+        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+                                                              QtCore.Qt.MatchFixedString)[0]
         assert server is not None
         assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
         assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
@@ -307,7 +308,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that singlelayer mode behaves as expected
         """
         self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
+        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+                                                              QtCore.Qt.MatchFixedString)[0]
         assert server is not None
         assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
         assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
@@ -317,7 +319,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         # Check using singlelayer mode contains no checkboxes
         for i in range(0, server.childCount()):
             layer = server.child(i)
-            assert layer.data(0, QtCore.Qt.CheckStateRole) is None or not layer.data(0, QtCore.Qt.CheckStateRole).isValid()
+            assert layer.data(0, QtCore.Qt.CheckStateRole) is None or not layer.data(0,
+                                                                                     QtCore.Qt.CheckStateRole).isValid()
 
         # Check clicking on layers updates the UI
         self.window.multilayers.multilayer_clicked(server.child(0))
@@ -341,7 +344,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that synced layers share their options
         """
         self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
+        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+                                                              QtCore.Qt.MatchFixedString)[0]
         server.setExpanded(True)
         self.window.multilayers.cbMultilayering.setChecked(True)
         layer_a = server.child(0)
@@ -394,7 +398,8 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert that drawing a layer through code doesn't fail for vsec
         """
         self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/", QtCore.Qt.MatchFixedString)[0]
+        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+                                                              QtCore.Qt.MatchFixedString)[0]
         server.child(0).draw()
 
         assert mockbox.critical.call_count == 0

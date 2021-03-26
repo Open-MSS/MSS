@@ -149,7 +149,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             wms_hits = 0
             for child_index in range(header.childCount()):
                 widget = header.child(child_index)
-                if filter_string.lower() in widget.text(0).lower() and (not self.filter_favourite or widget.is_favourite):
+                if filter_string.lower() in widget.text(0).lower() and (
+                        not self.filter_favourite or widget.is_favourite):
                     widget.setHidden(False)
                     wms_hits += 1
                 else:
