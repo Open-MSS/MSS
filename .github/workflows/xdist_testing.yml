@@ -31,7 +31,7 @@ jobs:
         && conda config --add channels defaults \
         && conda install --revision 0 \
         && conda install mamba \
-        && mamba install --file reqs.txt \
+        && mamba install --file reqs.txt --force-reinstall \
         && mamba install --file requirements.d/development.txt)
 
     - name: Run selected tests
