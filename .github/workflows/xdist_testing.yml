@@ -31,6 +31,7 @@ jobs:
         && conda config --add channels defaults \
         && conda install --revision 0 \
         && conda install mamba \
+        && mamba install pyvirtualdisplay \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
 
