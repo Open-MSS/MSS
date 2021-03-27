@@ -40,7 +40,7 @@ jobs:
         source /opt/conda/bin/activate mssenv \
         && mamba list \
         && cd $GITHUB_WORKSPACE \
-        && pytest mslib
+        && pytest -v mslib
 
   Update-Images:
     runs-on: ubuntu-latest
