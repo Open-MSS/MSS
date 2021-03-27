@@ -39,6 +39,9 @@ class Ui_PerformanceDockWidget(object):
         self.label_4.setObjectName("label_4")
         self.horizontalLayout_4.addWidget(self.label_4)
         self.dsbFuel = QtWidgets.QDoubleSpinBox(PerformanceDockWidget)
+        self.dsbFuel.setDecimals(0)
+        self.dsbFuel.setMaximum(9999999.0)
+        self.dsbFuel.setSingleStep(1000.0)
         self.dsbFuel.setObjectName("dsbFuel")
         self.horizontalLayout_4.addWidget(self.dsbFuel)
         self.gridLayout.addLayout(self.horizontalLayout_4, 3, 0, 1, 1)
@@ -60,6 +63,9 @@ class Ui_PerformanceDockWidget(object):
         self.label_5.setObjectName("label_5")
         self.horizontalLayout_5.addWidget(self.label_5)
         self.dsbTakeoffWeight = QtWidgets.QDoubleSpinBox(PerformanceDockWidget)
+        self.dsbTakeoffWeight.setDecimals(0)
+        self.dsbTakeoffWeight.setMaximum(9999999.0)
+        self.dsbTakeoffWeight.setSingleStep(1000.0)
         self.dsbTakeoffWeight.setObjectName("dsbTakeoffWeight")
         self.horizontalLayout_5.addWidget(self.dsbTakeoffWeight)
         self.gridLayout.addLayout(self.horizontalLayout_5, 1, 0, 1, 1)
@@ -85,4 +91,14 @@ class Ui_PerformanceDockWidget(object):
         self.label_3.setText(_translate("PerformanceDockWidget", "Take off time"))
         self.label_5.setText(_translate("PerformanceDockWidget", "Take off weight (lb)"))
         self.cbShowPerformance.setText(_translate("PerformanceDockWidget", "Show Performance"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    PerformanceDockWidget = QtWidgets.QDialog()
+    ui = Ui_PerformanceDockWidget()
+    ui.setupUi(PerformanceDockWidget)
+    PerformanceDockWidget.show()
+    sys.exit(app.exec_())
 
