@@ -28,7 +28,6 @@ jobs:
         | sed -e "s/.*://" > reqs.txt \
         && source /opt/conda/bin/activate mssenv \
         && conda config --add channels conda-forge \
-        && conda config --add channels defaults \
         && conda install --revision 0 \
         && conda install mamba \
         && mamba install --file reqs.txt \
