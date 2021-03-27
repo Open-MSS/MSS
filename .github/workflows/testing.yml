@@ -37,9 +37,10 @@ jobs:
     - name: Run tests
       timeout-minutes: 25
       run: |
-        source /opt/conda/bin/activate mssenv
-        cd $GITHUB_WORKSPACE
-        pytest mslib
+        source /opt/conda/bin/activate mssenv \
+        && mamba list \
+        && cd $GITHUB_WORKSPACE \
+        && pytest mslib
 
   Update-Images:
     runs-on: ubuntu-latest
