@@ -38,6 +38,5 @@ jobs:
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
-        && mamba list \
         && cd $GITHUB_WORKSPACE \
-        && pytest -v -n 6 --dist loadscope --max-worker-restart 0 mslib
+        && pytest -n 6 --dist loadscope --max-worker-restart 0 mslib

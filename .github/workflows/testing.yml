@@ -38,9 +38,8 @@ jobs:
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
-        && mamba list \
         && cd $GITHUB_WORKSPACE \
-        && pytest -v mslib
+        && pytest mslib
 
   Update-Images:
     runs-on: ubuntu-latest
