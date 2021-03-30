@@ -7,7 +7,7 @@ env:
 jobs:
   Test-MSS:
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         shell: bash
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     needs: [Test-MSS]
-    
+
     steps:
       - if: env.PAT != ''
         name: Invoke dockerhub image creation
