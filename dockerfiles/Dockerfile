@@ -50,7 +50,7 @@ RUN apt-get --yes update && DEBIAN_FRONTEND=noninteractive \
   && rm -rf /var/lib/apt/lists/*
 
 # Set up conda-forge channel
-RUN conda config --add channels conda-forge && conda config --add channels defaults &&\
+RUN conda config --add channels conda-forge &&\
   conda update -n base -c defaults conda
 
 

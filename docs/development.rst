@@ -36,28 +36,24 @@ Setup a development environment
 If you want to contribute make a fork on github of `MSS <https://github.com/Open-MSS/MSS>`_.
 
 In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
-mss repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
+MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
 
-Some of used packages are in the conda-forge channel located, so we have to add this channel to the default::
+MSS is based on the software of the conda-forge channel located, so we have to add this channel to the default::
 
   $ conda config --add channels conda-forge
-  $ conda config --add channels defaults
 
-Your content of the .condarc config file should have defaults on top::
+Your content of the .condarc config file should have conda-forge on top::
 
   $ more $HOME/.condarc
   channels:
-  - defaults
   - conda-forge
+  - defaults
 
 Create an environment and install the whole mss package dependencies then remove the mss package::
 
-  $ conda create -n mssdev python=3
+  $ conda create -n mssdev mamba
   $ conda activate mssdev
-  $ conda install mamba
-  $ mamba install mss
-  $ conda remove mss --force
-
+  $ mamba install mss --only-deps
 
 You can also use conda to install mss, but mamba is a way faster.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
@@ -66,7 +62,7 @@ Add the path of your local cloned mss directory to $PYTHONPATH.
 
 For developer we provide additional packages for running tests, activate your env and run::
 
-  $ conda install --file requirements.d/development.txt
+  $ mamba install --file requirements.d/development.txt
 
 On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager.
 This is used to run tests on a virtual display.
@@ -95,12 +91,13 @@ You can view the default configuration of mscolab in the file `mslib/mscolab/con
 If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server"
 section in :ref:`mscolab`
 
-When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab db --init` to initialise it. The default database is a sqlite3 database.
+When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab db --init`
+to initialise it. The default database is a sqlite3 database.
 You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
 The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
 
 To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the mscolab server on port 8083.
-Going to http://localhost:8083/ should now show "Mscolab server". This means your server has started successfully.
+Going to http://localhost:8083/status should now show "Mscolab server". This means your server has started successfully.
 Now you can use the MSS desktop application to connect to it using the Mscolab window of the application.
 
 
@@ -211,9 +208,9 @@ using a local meta.yaml recipe::
 
   $ cd yourlocalbuild
   $ conda build .
-  $ conda create -n mssbuildtest
+  $ conda create -n mssbuildtest mamba
   $ conda activate mssbuildtest
-  $ conda install --use-local mss
+  $ mamba install --use-local mss
 
 
 Take care on removing alpha builds, or increase the build number for a new version.
