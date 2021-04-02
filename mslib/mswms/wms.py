@@ -51,7 +51,7 @@ import traceback
 import urllib.parse
 from chameleon import PageTemplateLoader
 
-from flask import request, make_response, redirect
+from flask import request, make_response, render_template
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
@@ -535,4 +535,4 @@ def application():
     except Exception as ex:
         error_message = "{}: {}\n".format(type(ex), ex)
         logging.error("Unexpected error: %s", error_message)
-        return redirect('/index', 307)
+        return render_template("/index.html")
