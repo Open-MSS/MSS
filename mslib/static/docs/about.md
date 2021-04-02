@@ -22,7 +22,7 @@ apply to research flights, that concern flight altitude and range,
 ambient temperature, flight permissions in different flight information
 regions and aircraft traffic routes.
 
-> ![image](../mss_theme/img/wise12_overview.png)
+> ![image](/mss/overview.png)
 
 MSS helps to optimize the scientific outcome of the research flights by
 displaying the planned flight route and the corresponding model

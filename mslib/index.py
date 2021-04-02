@@ -158,4 +158,9 @@ def app_loader(name):
         base_path = icons("64x64", "mss-logo.png")
         return send_file(base_path)
 
+    @APP.route('/mss/overview.png')
+    def overview():
+        base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img', 'wise12_overview.png')
+        return send_file(base_path)
+
     return APP
