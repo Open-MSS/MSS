@@ -30,15 +30,15 @@ import mslib
 
 from flask import render_template
 from flask import Flask
-from flask import send_from_directory, send_file
+from flask import send_from_directory, send_file, url_for
 from flask import abort
-from werkzeug.urls import url_join
 from markdown import Markdown
 from xstatic.main import XStatic
 from mslib.msui.icons import icons
 
 # set the project root directory as the static folder
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
+# This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
 SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 
 
@@ -99,10 +99,10 @@ def app_loader(name):
 
     def get_topmenu():
         menu = [
-            (url_join(SCRIPT_NAME, 'mss'), 'Mission Support System',
-             ((url_join(SCRIPT_NAME, 'mss/about'), 'About'),
-              (url_join(SCRIPT_NAME, 'mss/install'), 'Install'),
-              (url_join(SCRIPT_NAME, 'mss/help'), 'Help'),
+            (url_for('index'), 'Mission Support System',
+             ((url_for('about'), 'About'),
+              (url_for('install'), 'Install'),
+              (url_for('help'), 'Help'),
               )),
         ]
         return menu
