@@ -59,6 +59,8 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         self._id = _id
         # Used to force close window without the dialog popping up
         self.force_close = False
+        # Flag variable help in force closing main window with tableview still open.
+        self.tvflag = 0
 
     def handle_force_close(self):
         self.force_close = True
@@ -85,9 +87,19 @@ class MSSViewWindow(QtWidgets.QMainWindow):
             if self._id is not None:
                 self.viewClosesId.emit(self._id)
             logging.debug(self._id)
+            # sets a flag which assists during MSS main window closure.
+            self.tvflag = 1
             event.accept()
         else:
             event.ignore()
+
+    def flag_tv(self):
+        """
+        Returns the flag 1 if self.closeEvent() is triggered else returns 0.
+        This is only for helping as a flag information in
+        force closing of tableview when main window closes.
+        """
+        return self.tvflag
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance that the view displays.
