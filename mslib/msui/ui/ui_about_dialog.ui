@@ -153,6 +153,29 @@ p, li { white-space: pre-wrap; }
          </property>
         </widget>
        </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblChanges">
+         <property name="text">
+          <string>Changes:  --CHANGES--</string>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -199,7 +222,7 @@ p, li { white-space: pre-wrap; }
        <property name="text">
         <string>Copyright 2008-2014: Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
 Copyright 2011-2014: Marc Rautenhaus
-Copyright 2016-2020: by the mss team, see AUTHORS</string>
+Copyright 2016-2021: by the mss team, see AUTHORS</string>
        </property>
       </widget>
      </item>
