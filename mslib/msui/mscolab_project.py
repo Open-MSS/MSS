@@ -34,7 +34,7 @@ from werkzeug.urls import url_join
 
 from mslib.mscolab.models import MessageType
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import Qt, QtCore, QtGui, QtWidgets
+from mslib.msui.mss_qt import Qt, QtCore, QtGui, QtWidgets, get_open_filename, get_save_filename
 from mslib.msui.qt5 import ui_mscolab_project_window as ui
 from mslib.utils import config_loader, show_popup
 
@@ -234,11 +234,12 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         img_type = "Image (*.png *.gif *.jpg *jpeg *.bmp)"
         doc_type = "Document (*.*)"
         file_filter = f'{img_type};;{doc_type}'
-        file_path, file_type = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "", file_filter)
-        if file_path == "":
+        file_path = get_open_filename(self, "Select a file", "", file_filter)
+        if file_path is None or file_path == "":
             return
+        file_type = file_path.split('.')[-1]
         self.attachment = file_path
-        if file_type == img_type:
+        if file_type in ['png', 'gif', 'jpg', 'jpeg', 'bmp']:
             self.attachment_type = MessageType.IMAGE
             self.display_uploaded_img(file_path)
         else:
@@ -615,18 +616,17 @@ class MessageItem(QtWidgets.QWidget):
     def handle_download_action(self):
         file_name = fs.path.basename(self.attachment_path)
         file_name, file_ext = fs.path.splitext(file_name)
+        # fs.file_picker cannot take filenames that contain dots
+        default_filename = file_name.replace('.', '_') + file_ext
         if self.message_type == MessageType.DOCUMENT:
-            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Document", file_name,
-                                                               f"Document (*{file_ext})")
-            file_path = file_tuple[0]
-            if file_path != "":
+            file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
+            if file_path is not None:
                 file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.attachment_path)).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:
-            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image", file_name, f"Image (*{file_ext})")
-            file_path = file_tuple[0]
-            if file_path != "":
+            file_path = get_save_filename(self, "Save Image", default_filename, f"Image (*{file_ext})")
+            if file_path is not None:
                 self.message_image.save(file_path)
 
     def handle_reply_action(self):

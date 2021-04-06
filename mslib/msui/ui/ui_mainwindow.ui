@@ -82,7 +82,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>442</width>
-     <height>20</height>
+     <height>24</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
@@ -115,7 +115,8 @@ Save a flight track to name it.</string>
     <addaction name="menuImport_Flight_Track"/>
     <addaction name="menuExport_Active_Flight_Track"/>
     <addaction name="separator"/>
-    <addaction name="actionConfiguration"/>
+    <addaction name="actionLoadConfigurationFile"/>
+    <addaction name="actionConfigurationEditor"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
    </widget>
@@ -219,9 +220,12 @@ Save a flight track to name it.</string>
     <string>&amp;About MSS</string>
    </property>
   </action>
-  <action name="actionConfiguration">
+  <action name="actionConfigurationEditor">
    <property name="text">
-    <string>Configuration</string>
+    <string>Configuration Editor</string>
+   </property>
+   <property name="toolTip">
+    <string>Start the configuration editor.</string>
    </property>
   </action>
   <action name="actionOnlineHelp">
@@ -240,6 +244,14 @@ Save a flight track to name it.</string>
   <action name="actionMscolabProjects">
    <property name="text">
     <string>Mscolab projects</string>
+   </property>
+  </action>
+  <action name="actionLoadConfigurationFile">
+   <property name="text">
+    <string>Load Configuration File</string>
+   </property>
+   <property name="toolTip">
+    <string>Load a JSON configuration file</string>
    </property>
   </action>
  </widget>

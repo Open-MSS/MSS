@@ -72,6 +72,8 @@ requirements:
     - xstatic-bootstrap
     - pyperclip
     - geos <3.9.0
+    - sqlalchemy <1.4.0
+    - sqlite <3.35.1
 
 test:
   imports:

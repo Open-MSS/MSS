@@ -75,8 +75,12 @@ def get_pickertype(tag, typ):
 def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=None):
     pickertype = get_pickertype(pickertag, pickertype)
     if pickertype == "fs":
+        # fs filepicker takes file filters as a list
+        if not isinstance(filt, list):
+            filt = filt.split(';;')
         filename = getOpenFileName(parent, dirname, filt, title="Import Flight Track")
     elif pickertype in ["qt", "default"]:
+        # qt filepicker takes file filters separated by ';;'
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
         raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
