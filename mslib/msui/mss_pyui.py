@@ -216,7 +216,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Status Bar
         self.labelStatusbar.setText(self.status())
         # Instantiates the tableview window object as None when started.
-        self.tv = None
+        self.tv_window = None
 
     @staticmethod
     def preload_wms(urls):
@@ -416,14 +416,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if self.config_editor is not None:
                 self.config_editor.close()
             """
-            tv = tableview ; it is an object of MSS Table View Window
-            Tableview was not closing even when main window closes
-            But after this, it closes fine.
+            tv = tableview;it is an object of MSS Tableview window. Used for force closing it.
             """
-            if self.tv is not None:
-                if self.tv.flag_tv() == 0:  # checks whether or not tableview window has closed before
-                    self.tv.handle_force_close()
-                    self.tv = None
+            if self.tv_window is not None:
+                if self.tv_window.tvwindow_exists() is True:  # checks whether or not tableview window has closed before
+                    self.tv_window.handle_force_close()     # enters condition when tableview window is not closed.
+                    self.tv_window = None
             event.accept()
         else:
             event.ignore()
@@ -452,7 +450,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
             # copies the table view window instance to self.tv to help it force close on exit
-            self.tv = view_window
+            self.tv_window = view_window
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
