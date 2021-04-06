@@ -423,7 +423,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.config_editor.close()
             # tv = tableview ; it is an object of MSS Tableview window. Used for force closing it.
             if self.tv_window is not None:
-                if self.tv_window.tvwindow_exists() is True:  # checks whether or not tableview window has closed before
+                if self.tv_window.exists():  # checks whether or not tableview window has closed before
                     self.tv_window.handle_force_close()     # enters condition when tableview window is not closed.
                     self.tv_window = None
             event.accept()

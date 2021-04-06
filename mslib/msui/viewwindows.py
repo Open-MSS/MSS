@@ -93,7 +93,7 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         else:
             event.ignore()
 
-    def tvwindow_exists(self):
+    def exists(self):
         """Returns the flag False if self.closeEvent() is triggered else returns True.
            This is only for helping as a flag information in
            force closing of tableview when main window closes.
