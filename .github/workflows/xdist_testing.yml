@@ -28,15 +28,15 @@ jobs:
         | sed -e "s/.*://" > reqs.txt \
         && source /opt/conda/bin/activate mssenv \
         && conda config --add channels conda-forge \
-        && conda config --add channels defaults \
         && conda install --revision 0 \
         && conda install mamba \
+        && mamba install pyvirtualdisplay \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
 
     - name: Run selected tests
       timeout-minutes: 25
       run: |
-        source /opt/conda/bin/activate mssenv
-        cd $GITHUB_WORKSPACE
-        pytest -n 6 --dist loadscope --max-worker-restart 0 mslib
+        source /opt/conda/bin/activate mssenv \
+        && cd $GITHUB_WORKSPACE \
+        && pytest -n 6 --dist loadscope --max-worker-restart 0 mslib

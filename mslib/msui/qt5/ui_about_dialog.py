@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'ui_about_dialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_AboutMSUIDialog(object):
     def setupUi(self, AboutMSUIDialog):
@@ -73,27 +75,33 @@ class Ui_AboutMSUIDialog(object):
         self.lblVersion = QtWidgets.QLabel(AboutMSUIDialog)
         self.lblVersion.setObjectName("lblVersion")
         self.horizontalLayout_2.addWidget(self.lblVersion)
+        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem1)
+        self.lblChanges = QtWidgets.QLabel(AboutMSUIDialog)
+        self.lblChanges.setOpenExternalLinks(True)
+        self.lblChanges.setObjectName("lblChanges")
+        self.horizontalLayout_2.addWidget(self.lblChanges)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
-        self.verticalLayout_2.addItem(spacerItem1)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        self.verticalLayout_2.addItem(spacerItem2)
         self.lblLicense = QtWidgets.QLabel(AboutMSUIDialog)
         self.lblLicense.setObjectName("lblLicense")
         self.verticalLayout_2.addWidget(self.lblLicense)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
-        self.verticalLayout_2.addItem(spacerItem2)
+        spacerItem3 = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        self.verticalLayout_2.addItem(spacerItem3)
         self.lblCopyright = QtWidgets.QLabel(AboutMSUIDialog)
         self.lblCopyright.setObjectName("lblCopyright")
         self.verticalLayout_2.addWidget(self.lblCopyright)
-        spacerItem3 = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
-        self.verticalLayout_2.addItem(spacerItem3)
+        spacerItem4 = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        self.verticalLayout_2.addItem(spacerItem4)
         self.lblLinks = QtWidgets.QLabel(AboutMSUIDialog)
         self.lblLinks.setOpenExternalLinks(True)
         self.lblLinks.setObjectName("lblLinks")
         self.verticalLayout_2.addWidget(self.lblLinks)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem4)
+        spacerItem5 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem5)
         self.btOK = QtWidgets.QPushButton(AboutMSUIDialog)
         self.btOK.setObjectName("btOK")
         self.horizontalLayout.addWidget(self.btOK)
@@ -115,10 +123,10 @@ class Ui_AboutMSUIDialog(object):
 "</style></head><body style=\" font-family:\'Ubuntu\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'DejaVu Sans Mono\'; color:#000000; background-color:#ffffff;\">Please read the reference documentation:</span><span style=\" font-family:\'DejaVu Sans Mono\'; color:#000000;\"><br /><br />Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based tool to plan<br />atmospheric research flights, Geosci. Model Dev., 5,55-71, doi:10.5194/gmd-5-55-2012, 2012.<br /><br />and the paper\'s Supplement (which includes a tutorial) before using the application. The documents are available at:<br /><br /> * </span><span style=\" font-family:\'DejaVu Sans Mono\'; color:#000000; background-color:#ffffff;\">http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf</span><span style=\" font-family:\'DejaVu Sans Mono\'; color:#000000;\"><br /> * http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012-supplement.pdf<br /><br />When using this software, please be so kind and acknowledge its use by citing the above mentioned reference documentation in publications, presentations, reports, etc. that you create. Thank you very much.<br /><br /></span></p></body></html>"))
         self.lblVersion.setText(_translate("AboutMSUIDialog", "Version: --VERSION--"))
+        self.lblChanges.setText(_translate("AboutMSUIDialog", "Changes:  --CHANGES--"))
         self.lblLicense.setText(_translate("AboutMSUIDialog", "License: Apache License Version 2.0"))
         self.lblCopyright.setText(_translate("AboutMSUIDialog", "Copyright 2008-2014: Deutsches Zentrum fuer Luft- und Raumfahrt e.V.\n"
 "Copyright 2011-2014: Marc Rautenhaus\n"
-"Copyright 2016-2020: by the mss team, see AUTHORS"))
-        self.lblLinks.setText(_translate("AboutMSUIDialog", "<html><head/><body><p>See <a href=\"http://mss.rtfd.io\"><span style=\" text-decoration: underline; color:#0000ff;\">http://mss.rtfd.io</span></a> for detailed information and documentation.<br>Report bugs or feature requests at <a href=\"https://github.com/Open-MSS/MSS\"><span style=\" text-decoration: underline; color:#0000ff;\">https://https://github.com/Open-MSS/MSS</span></a>.</p></body></html>"))
+"Copyright 2016-2021: by the mss team, see AUTHORS"))
+        self.lblLinks.setText(_translate("AboutMSUIDialog", "<html><head/><body><p>See <a href=\"http://mss.rtfd.io\"><span style=\" text-decoration: underline; color:#0000ff;\">http://mss.rtfd.io</span></a> for detailed information and documentation.<br>Report bugs or feature requests at <a href=\"https://github.com/Open-MSS/MSS\"><span style=\" text-decoration: underline; color:#0000ff;\">https://github.com/Open-MSS/MSS</span></a>.</p></body></html>"))
         self.btOK.setText(_translate("AboutMSUIDialog", "Ok"))
-

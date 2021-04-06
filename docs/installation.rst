@@ -16,7 +16,6 @@ The Mission Support Web Map Service (mss) is available as anaconda package on th
 
 `conda-forge <https://anaconda.org/conda-forge/mss>`_
 
-The conda-forge packages are based on defaults and other conda-forge packages.
 This channel conda-forge has builds for osx-64, linux-64, win-64
 
 
@@ -30,18 +29,15 @@ conda-forge channel
 Please add the channel conda-forge to your defaults::
 
   $ conda config --add channels conda-forge
-  $ conda config --add channels defaults
 
-The last channel added gets on top of the list. This gives the order:
-First search in default packages then in conda-forge.
+The conda-forge channel must be on top of the list before the anaconda default channel.
 
 You must install mss into a new environment to ensure the most recent
 versions for dependencies (On the Anaconda Prompt on Windows, you have to 
 leave out the 'source' here and below). ::
 
-    $ conda create -n mssenv python=3
+    $ conda create -n mssenv mamba
     $ conda activate mssenv
-    $ conda install mamba
     $ mamba install mss
 
 For updating an existing MSS installation to the current version, it is best to install
@@ -49,7 +45,7 @@ it into a new environment. If an existing environment shall be updated, it is im
 to update all packages in this environment. ::
 
    $ conda activate mssenv
-   $ conda update --all
+   $ mamba update --all
    $ mss
 
 For further details :ref:`mss-configuration`
@@ -68,9 +64,8 @@ We suggest to create a mss user.
 * set execute bit on install script
 * execute script, enable environment in .bashrc
 * login again or export PATH="/home/mss/miniconda3/bin:$PATH"
-* conda create -n mssenv python=3
+* conda create -n mssenv mamba
 * conda activate mssenv
-* conda install mamba
 * mamba install mss
 
 For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
