@@ -31,7 +31,7 @@ import time
 import secrets
 import fs
 import socketio
-from flask import g, jsonify, request, redirect
+from flask import g, jsonify, request, render_template
 from flask import send_from_directory, abort
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
@@ -147,9 +147,8 @@ def verify_user(func):
 
 
 @APP.route('/')
-# currently we do use same redirect as on wms server
 def home():
-    return redirect('/index', 307)
+    return render_template("/index.html")
 
 
 # ToDo setup codes in return statements
