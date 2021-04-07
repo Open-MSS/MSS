@@ -53,6 +53,32 @@ UR.define("degrees_north = degrees")
 UR.define("degrees_south = -degrees")
 UR.define("degrees_east = degrees")
 UR.define("degrees_west = -degrees")
+
+UR.define("degrees_N = degrees")
+UR.define("degrees_S = -degrees")
+UR.define("degrees_E = degrees")
+UR.define("degrees_W = -degrees")
+
+UR.define("degreesN = degrees")
+UR.define("degreesS = -degrees")
+UR.define("degreesE = degrees")
+UR.define("degreesW = -degrees")
+
+UR.define("degree_north = degrees")
+UR.define("degree_south = -degrees")
+UR.define("degree_east = degrees")
+UR.define("degree_west = -degrees")
+
+UR.define("degree_N = degrees")
+UR.define("degree_S = -degrees")
+UR.define("degree_E = degrees")
+UR.define("degree_W = -degrees")
+
+UR.define("degreeN = degrees")
+UR.define("degreeS = -degrees")
+UR.define("degreeE = degrees")
+UR.define("degreeW = -degrees")
+
 UR.define("sigma = dimensionless")
 UR.define("fraction = [] = frac")
 UR.define("percent = 1e-2 fraction")
@@ -573,7 +599,7 @@ def setup_logging(args):
     for ch in logger.handlers:
         logger.removeHandler(ch)
 
-    debug_formatter = logging.Formatter("%(asctime)s (%(module)s.%(funcName)s:%(lineno)s): %(message)s")
+    debug_formatter = logging.Formatter("%(asctime)s (%(module)s.%(funcName)s:%(lineno)s): %(levelname)s: %(message)s")
     default_formatter = logging.Formatter("%(levelname)s: %(message)s")
 
     # Console handler (suppress DEBUG by default)

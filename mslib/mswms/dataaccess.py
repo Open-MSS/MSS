@@ -234,7 +234,7 @@ class DefaultDataAccess(NWPDataAccess):
                 raise IOError("Problem with longitude coordinate variable")
 
             if vert_type != "sfc":
-                elevations = {"levels": vert_var[:], "units": vert_var.units}
+                elevations = {"levels": vert_var[:], "units": getattr(vert_var, "units", "1")}
                 if vert_type in self._elevations:
                     if len(vert_var[:]) != len(self._elevations[vert_type]["levels"]):
                         raise IOError("Number of vertical levels does not fit to levels of "
@@ -248,11 +248,10 @@ class DefaultDataAccess(NWPDataAccess):
 
             standard_names = []
             for ncvarname, ncvar in dataset.variables.items():
-                if hasattr(ncvar, "standard_name"):
-                    if (len(ncvar.dimensions) >= 3 and (
-                            ncvar.dimensions[0] != time_name or
+                if hasattr(ncvar, "standard_name") and (len(ncvar.dimensions) >= 3):
+                    if (ncvar.dimensions[0] != time_name or
                             ncvar.dimensions[-2] != lat_name or
-                            ncvar.dimensions[-1] != lon_name)):
+                            ncvar.dimensions[-1] != lon_name):
                         logging.error("Skipping variable '%s' in file '%s': Incorrect order of dimensions",
                                       ncvarname, filename)
                         continue
@@ -263,7 +262,7 @@ class DefaultDataAccess(NWPDataAccess):
                     if ncvar.standard_name != "time":
                         try:
                             UR(ncvar.units)
-                        except (ValueError, pint.UndefinedUnitError):
+                        except (ValueError, pint.UndefinedUnitError, pint.DefinitionSyntaxError):
                             logging.error("Skipping variable '%s' in file '%s': unparseable units attribute '%s'",
                                           ncvarname, filename, ncvar.units)
                             continue
@@ -411,9 +410,11 @@ class CachedDataAccess(DefaultDataAccess):
                 if content["vert_type"] != "sfc":
                     if content["vert_type"] not in self._elevations:
                         self._elevations[content["vert_type"]] = content["elevations"]
-                    elif not np.allclose(
-                            self._elevations[content["vert_type"]]["levels"],
-                            content["elevations"]["levels"]):
+                    if ((len(self._elevations[content["vert_type"]]["levels"]) !=
+                         len(content["elevations"]["levels"])) or
+                        (not np.allclose(
+                         self._elevations[content["vert_type"]]["levels"],
+                         content["elevations"]["levels"]))):
                         logging.error("Skipping file '%s' due to elevation mismatch", filename)
                         continue
 

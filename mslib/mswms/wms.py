@@ -533,6 +533,6 @@ def application():
         return res
 
     except Exception as ex:
-        error_message = "{}: {}\n".format(type(ex), ex)
-        logging.error("Unexpected error: %s", error_message)
+        logging.error("Unexpected error: %s: %s\nTraceback:\n%s",
+                      type(ex), ex, traceback.format_exc())
         return render_template("/index.html")
