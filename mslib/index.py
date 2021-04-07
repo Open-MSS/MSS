@@ -116,6 +116,9 @@ def app_loader(name):
             with codecs.open(filename, 'r', 'utf-8') as f:
                 md_data = f.read()
             md_data = md_data.replace(':ref:', '')
+            if overrides is not None:
+                v1, v2 = overrides
+                md_data = md_data.replace(v1, v2)
             content = markdown.convert(md_data)
         return content
 
@@ -127,7 +130,10 @@ def app_loader(name):
     @APP.route("/mss")
     def about():
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'about.md')
-        content = get_content(_file)
+        img_url = url_for('overview')
+        overrides = ['![image](/mss/overview.png)', f'![image]({img_url})']
+        content = get_content(_file,
+                              overrides=overrides)
         return render_template("/content.html", act="about", content=content)
 
     @APP.route("/mss/install")
