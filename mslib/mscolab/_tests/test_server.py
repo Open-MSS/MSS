@@ -32,7 +32,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import server
 from mslib.mscolab.models import User
 from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib._tests.utils import (callback_307_html, mscolab_register_user,
+from mslib._tests.utils import (mscolab_register_user,
                                 mscolab_register_and_login, mscolab_create_content,
                                 mscolab_create_project, mscolab_delete_all_projects,
                                 mscolab_delete_user, mscolab_login)
@@ -58,6 +58,7 @@ class Test_Server(object):
         self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['SERVER_NAME'] = 'localhost:8084'
         _app, self.sockio, self.cm, self.fm = server.initialize_managers(self.app)
 
     def teardown(self):
@@ -99,9 +100,7 @@ class Test_Server(object):
     def test_home(self):
         with self.app.app_context():
             result = server.home()
-            callback_307_html(result.status, result.headers)
-            assert isinstance(result.data, bytes), result
-            assert result.data.count(b"") == 220, result
+            assert "!DOCTYPE html" in result
 
     def test_status(self):
         with self.app.app_context():

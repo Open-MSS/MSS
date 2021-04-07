@@ -30,7 +30,7 @@ import mslib
 
 from flask import render_template
 from flask import Flask
-from flask import send_from_directory, send_file
+from flask import send_from_directory, send_file, url_for
 from flask import abort
 from markdown import Markdown
 from xstatic.main import XStatic
@@ -38,6 +38,8 @@ from mslib.msui.icons import icons
 
 # set the project root directory as the static folder
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
+# This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
+SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 
 
 def _xstatic(name):
@@ -58,8 +60,23 @@ def _xstatic(name):
         return None
 
 
+def prefix_route(route_function, prefix='', mask='{0}{1}'):
+    '''
+    https://stackoverflow.com/questions/18967441/add-a-prefix-to-all-flask-routes/18969161#18969161
+    Defines a new route function with a prefix.
+    The mask argument is a `format string` formatted with, in that order:
+      prefix, route
+    '''
+    def newroute(route, *args, **kwargs):
+        ''' prefix route '''
+        return route_function(mask.format(prefix, route), *args, **kwargs)
+    return newroute
+
+
 def app_loader(name):
     APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'))
+    APP.config.from_object(name)
+    APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
     @APP.route('/xstatic/<name>/', defaults=dict(filename=''))
     @APP.route('/xstatic/<name>/<path:filename>')
@@ -82,10 +99,10 @@ def app_loader(name):
 
     def get_topmenu():
         menu = [
-            ('/mss', 'Mission Support System',
-             (('/mss/about', 'About'),
-              ('/mss/install', 'Install'),
-              ('/mss/help', 'Help'),
+            (url_for('index'), 'Mission Support System',
+             ((url_for('about'), 'About'),
+              (url_for('install'), 'Install'),
+              (url_for('help'), 'Help'),
               )),
         ]
         return menu
@@ -99,6 +116,9 @@ def app_loader(name):
             with codecs.open(filename, 'r', 'utf-8') as f:
                 md_data = f.read()
             md_data = md_data.replace(':ref:', '')
+            if overrides is not None:
+                v1, v2 = overrides
+                md_data = md_data.replace(v1, v2)
             content = markdown.convert(md_data)
         return content
 
@@ -110,7 +130,10 @@ def app_loader(name):
     @APP.route("/mss")
     def about():
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'about.md')
-        content = get_content(_file)
+        img_url = url_for('overview')
+        overrides = ['![image](/mss/overview.png)', f'![image]({img_url})']
+        content = get_content(_file,
+                              overrides=overrides)
         return render_template("/content.html", act="about", content=content)
 
     @APP.route("/mss/install")
@@ -132,13 +155,18 @@ def app_loader(name):
         return render_template("/content.html", act="imprint", content=content)
 
     @APP.route('/mss/favicon.ico')
-    def favions():
+    def favicons():
         base_path = icons("16x16", "favicon.ico")
         return send_file(base_path)
 
     @APP.route('/mss/logo.png')
     def logo():
         base_path = icons("64x64", "mss-logo.png")
+        return send_file(base_path)
+
+    @APP.route('/mss/overview.png')
+    def overview():
+        base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img', 'wise12_overview.png')
         return send_file(base_path)
 
     return APP
