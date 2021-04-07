@@ -478,7 +478,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
         lonmesh, latmesh = bm(lonmesh_, latmesh_)
 
-        show_data = np.ma.masked_invalid(self.data[self.dataname]) * self.unit_scale
+        show_data = np.ma.masked_invalid(self.data[self.dataname])
         # get cmin, cmax, cbar_log and cbar_format for level_key
         cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
         cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
@@ -537,11 +537,11 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
         dataname = entity
         title = Targets.TITLES.get(entity, entity)
         long_name = entity
-        units, unit_scale = Targets.get_unit(entity)
+        units, _ = Targets.get_unit(entity)
         if units:
             title += " ({})".format(units)
 
-        required_datafields = [(vert, entity, None)] + add_data
+        required_datafields = [(vert, entity, units)] + add_data
         contours = add_contours
 
     fnord.__name__ = name

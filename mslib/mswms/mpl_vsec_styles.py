@@ -129,7 +129,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
 
     def _plot_style(self):
         ax = self.ax
-        curtain_cc = self.data[self.dataname] * self.unit_scale
+        curtain_cc = self.data[self.dataname]
         curtain_cc = np.ma.masked_invalid(curtain_cc)
         curtain_p = self.data["air_pressure"]
 
@@ -205,11 +205,11 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
     class fnord(VS_GenericStyle):
         name = "VS_{}_{}".format(entity, vert)
         dataname = entity
-        units, unit_scale = Targets.get_unit(dataname)
+        units, _ = Targets.get_unit(dataname)
         title = Targets.TITLES.get(entity, entity)
         if units:
             title += " ({})".format(units)
-        required_datafields = [(vert, entity, None)] + add_data
+        required_datafields = [(vert, entity, units)] + add_data
         contours = add_contours
 
     fnord.__name__ = name
