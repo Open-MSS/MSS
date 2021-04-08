@@ -88,12 +88,13 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.resizeColumns()
 
     def setPerformance(self, settings):
-        """Updating Table View with changed performance settings.
+        """Updating Table View with updated performance settings.
         """
         self.waypoints_model.performance_settings = settings
         self.waypoints_model.update_distances(0)
         self.waypoints_model.save_settings()
         self.resizeColumns()
+        self.tableWayPoints.viewport().repaint()
 
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
