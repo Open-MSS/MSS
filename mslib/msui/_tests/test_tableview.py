@@ -70,6 +70,13 @@ class Test_TableView(object):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
 
+    def test_open_perf_settings(self):
+        """
+        Tests opening the performance settings dock widget.
+        """
+        self.window.cbTools.currentIndexChanged.emit(2)
+        QtWidgets.QApplication.processEvents()
+
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
     def test_insertremove_hexagon(self, mockbox):
