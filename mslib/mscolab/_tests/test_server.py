@@ -35,7 +35,8 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import server
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.models import User
-from mslib._tests.utils import (callback_307_html, mscolab_register_user,
+
+from mslib._tests.utils import (mscolab_register_user,
                                 mscolab_register_and_login, mscolab_create_content,
                                 mscolab_create_project,
                                 mscolab_delete_user, mscolab_login, mscolab_start_server)
@@ -49,6 +50,7 @@ PORTS = list(range(10481, 10530))
 class Test_Init_Server(object):
     def setup(self):
         self.process, self.url, self.app, self.sockio, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.app.config['SERVER_NAME'] = self.url.strip('http://')
         time.sleep(0.1)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
@@ -79,6 +81,7 @@ class Test_Server(object):
     def setup(self):
         mscolab_settings.enable_basic_http_authentication = False
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS, mscolab_settings)
+        self.app.config['SERVER_NAME'] = self.url.strip('http://')
         time.sleep(0.1)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
@@ -115,9 +118,7 @@ class Test_Server(object):
     def test_home(self):
         with self.app.app_context():
             result = server.home()
-            callback_307_html(result.status, result.headers)
-            assert isinstance(result.data, bytes), result
-            assert result.data.count(b"") == 220, result
+            assert "!DOCTYPE html" in result
 
     def test_status(self):
         with self.app.app_context():
