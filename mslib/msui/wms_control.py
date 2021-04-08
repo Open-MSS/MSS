@@ -53,6 +53,7 @@ from mslib.msui import constants
 from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings
 from mslib.ogcwms import openURL, removeXMLNamespace
 from mslib.msui.multilayers import Multilayers
+from mslib.worker import Worker
 
 
 WMS_SERVICE_CACHE = {}
@@ -500,6 +501,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             "retrieving image...", "Cancel", 0, 10, parent=self.parent())
         self.pdlg.close()
 
+        # Progress dialog to inform the user about ongoing capability requests.
+        self.capabilities_worker = Worker(None)
+        self.cpdlg = QtWidgets.QProgressDialog(
+            "retrieving wms capabilities...", "Cancel", 0, 10, parent=self.multilayers)
+        self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)
+        self.cpdlg.close()
+
         self.thread_prefetch = QtCore.QThread()  # no parent!
         self.thread_prefetch.start()
         self.thread_fetch = QtCore.QThread()  # no parent!
@@ -547,51 +555,85 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         (mr, 2011-02-25)
         """
-        wms = None
         # initialize login cache fomr config file, but do not overwrite existing keys
         for key, value in config_loader(dataset="WMS_login").items():
             if key not in constants.WMS_LOGIN_CACHE:
                 constants.WMS_LOGIN_CACHE[key] = value
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
-        try:
-            str(base_url)  # to provoke early Unicode Error
-            while wms is None:
-                try:
-                    wms = MSSWebMapService(base_url, version=version,
-                                           username=username, password=password)
-                except owslib.util.ServiceException as ex:
-                    logging.error("ERROR: %s %s", type(ex), ex)
-                    if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
-                            "Unauthorized") >= 0:
-                        # Catch the "401 Unauthorized" error if one has been
-                        # returned by the server and ask the user for username
-                        # and password.
-                        # WORKAROUND (mr, 28Mar2013) -- owslib doesn't recognize
-                        # the Apache 401 messages, we get an XML message here but
-                        # no error code. Quick workaround: Scan the XML message for
-                        # the string "Error 401"...
-                        dlg = MSS_WMS_AuthenticationDialog(parent=self.multilayers)
-                        dlg.setModal(True)
-                        if dlg.exec_() == QtWidgets.QDialog.Accepted:
-                            username, password = dlg.getAuthInfo()
-                            # If user & pw have been entered, cache them.
-                            constants.WMS_LOGIN_CACHE[base_url] = (username, password)
-                        else:
-                            break
+        def on_success(wms):
+            self.cpdlg.setValue(9)
+            if wms is not None:
+
+                # update the combo box, if entry requires change/insertion
+                found = False
+                current_url = self.multilayers.cbWMS_URL.currentText()
+                for count in range(self.multilayers.cbWMS_URL.count()):
+                    if self.multilayers.cbWMS_URL.itemText(count) == current_url:
+                        self.multilayers.cbWMS_URL.setItemText(count, base_url)
+                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
+                        found = True
+                        break
+                    if self.multilayers.cbWMS_URL.itemText(count) == current_url:
+                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
+                        found = True
+                if not found:
+                    logging.debug("inserting URL: %s", base_url)
+                    add_wms_urls(self.multilayers.cbWMS_URL, [base_url])
+                    self.multilayers.cbWMS_URL.setEditText(base_url)
+                    save_settings_qsettings('wms', {'recent_wms_url': base_url})
+
+                self.activate_wms(wms)
+                WMS_SERVICE_CACHE[wms.url] = wms
+                self.cpdlg.close()
+
+        def on_failure(e):
+            try:
+                raise e
+            except owslib.util.ServiceException as ex:
+                logging.error("ERROR: %s %s", type(ex), ex)
+                if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
+                        "Unauthorized") >= 0:
+                    # Catch the "401 Unauthorized" error if one has been
+                    # returned by the server and ask the user for username
+                    # and password.
+                    # WORKAROUND (mr, 28Mar2013) -- owslib doesn't recognize
+                    # the Apache 401 messages, we get an XML message here but
+                    # no error code. Quick workaround: Scan the XML message for
+                    # the string "Error 401"...
+                    dlg = MSS_WMS_AuthenticationDialog(parent=self.multilayers)
+                    dlg.setModal(True)
+                    if dlg.exec_() == QtWidgets.QDialog.Accepted:
+                        username, password = dlg.getAuthInfo()
+                        # If user & pw have been entered, cache them.
+                        constants.WMS_LOGIN_CACHE[base_url] = (username, password)
+                        self.capabilities_worker.function = lambda: MSSWebMapService(base_url, version=version,
+                                                                                     username=username, password=password)
+                        self.capabilities_worker.start()
                     else:
-                        raise
+                        self.cpdlg.close()
+                        return
+                else:
+                    self.cpdlg.close()
+                    logging.error("cannot load capabilities document.. "
+                                  "no layers can be used in this view.")
+                    QtWidgets.QMessageBox.critical(
+                        self.multilayers, self.tr("Web Map Service"),
+                        self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
+
+        try:
+            str(base_url)
         except UnicodeEncodeError:
+            self.cpdlg.close()
             logging.error("got a unicode url?!: '%s'", base_url)
             QtWidgets.QMessageBox.critical(self.multilayers, self.tr("Web Map Service"),
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
-        except Exception as ex:
-            logging.error("cannot load capabilities document.. "
-                          "no layers can be used in this view.")
-            QtWidgets.QMessageBox.critical(
-                self.multilayers, self.tr("Web Map Service"),
-                self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
-        return wms
+
+        self.capabilities_worker = Worker(lambda: MSSWebMapService(base_url, version=version, username=username,
+                                                                   password=password))
+        self.capabilities_worker.finished.connect(on_success)
+        self.capabilities_worker.failed.connect(on_failure)
+        self.capabilities_worker.start()
 
     def wms_url_changed(self, text):
         wms = WMS_SERVICE_CACHE.get(text)
@@ -613,6 +655,21 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pdlg.setModal(True)
         self.pdlg.show()
 
+    def display_capabilities_dialog(self):
+        logging.debug("showing capabilities dialog")
+        self.cpdlg.reset()
+        self.cpdlg.setValue(1)
+        self.cpdlg.setModal(True)
+        self.cpdlg.show()
+
+    def stop_capabilities_retrieval(self):
+        logging.debug("stopping capabilities retrieval")
+        try:
+            self.capabilities_worker.quit()
+            self.capabilities_worker.disconnect()
+        except TypeError:
+            pass
+
     def clear_map(self):
         logging.debug("clear figure")
         self.view.clear_figure()
@@ -629,47 +686,37 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         base_url = self.multilayers.cbWMS_URL.currentText()
         params = {'service': 'WMS',
                   'request': 'GetCapabilities'}
-        try:
-            request = requests.get(base_url, params=params)
-        except (requests.exceptions.TooManyRedirects,
-                requests.exceptions.ConnectionError,
-                requests.exceptions.InvalidURL,
-                requests.exceptions.InvalidSchema,
-                requests.exceptions.MissingSchema) as ex:
-            logging.error("Cannot load capabilities document.\n"
-                          "No layers can be used in this view.")
-            QtWidgets.QMessageBox.critical(
-                self.multilayers, self.tr("Web Map Service"),
-                self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
-        else:
+
+        def on_success(request):
+            self.cpdlg.setValue(5)
             # url shortener url translated
             url = request.url
 
             url = url.replace("?service=WMS", "").replace("&service=WMS", "") \
-                     .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
+                .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
             logging.debug("requesting capabilities from %s", url)
-            wms = self.initialise_wms(url, None)
-            if wms is not None:
+            self.initialise_wms(url, None)
 
-                # update the combo box, if entry requires change/insertion
-                found = False
-                for count in range(self.multilayers.cbWMS_URL.count()):
-                    if self.multilayers.cbWMS_URL.itemText(count) == base_url:
-                        self.multilayers.cbWMS_URL.setItemText(count, url)
-                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                        break
-                    if self.multilayers.cbWMS_URL.itemText(count) == url:
-                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                if not found:
-                    logging.debug("inserting URL: %s", url)
-                    add_wms_urls(self.multilayers.cbWMS_URL, [url])
-                    self.multilayers.cbWMS_URL.setEditText(url)
-                    save_settings_qsettings('wms', {'recent_wms_url': url})
+        def on_failure(e):
+            try:
+                self.cpdlg.close()
+                raise e
+            except (requests.exceptions.TooManyRedirects,
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.InvalidURL,
+                    requests.exceptions.InvalidSchema,
+                    requests.exceptions.MissingSchema) as ex:
+                logging.error("Cannot load capabilities document.\n"
+                              "No layers can be used in this view.")
+                QtWidgets.QMessageBox.critical(
+                    self.multilayers, self.tr("Web Map Service"),
+                    self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
 
-                self.activate_wms(wms)
-                WMS_SERVICE_CACHE[wms.url] = wms
+        self.capabilities_worker = Worker(lambda: requests.get(base_url, params=params))
+        self.capabilities_worker.finished.connect(on_success)
+        self.capabilities_worker.failed.connect(on_failure)
+        self.display_capabilities_dialog()
+        self.capabilities_worker.start()
 
     def activate_wms(self, wms):
         # Clear layer and style combo boxes. First disconnect the layerChanged
