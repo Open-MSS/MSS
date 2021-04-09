@@ -36,7 +36,7 @@ def test_xstatic():
 
 def test_app_loader():
     assert index.DOCS_SERVER_PATH.endswith('mslib')
-    app = index.app_loader("example")
+    app = index.app_loader(__name__)
     assert app is not None
     with app.test_client() as c:
         response = c.get('/xstatic/bootstrap/css/bootstrap.css')
