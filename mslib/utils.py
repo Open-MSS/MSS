@@ -693,3 +693,24 @@ def dropEvent(self, event):
 
 def dragEnterEvent(self, event):
     event.accept()
+
+
+class Worker(QtCore.QThread):
+    """
+    Can be used to run a function through a QThread without much struggle,
+    and receive the return value or exception through signals.
+    Beware not to modify the parents connections through the function.
+    """
+    finished = QtCore.pyqtSignal(object)
+    failed = QtCore.pyqtSignal(Exception)
+
+    def __init__(self, function):
+        super(Worker, self).__init__()
+        self.function = function
+
+    def run(self):
+        try:
+            result = self.function()
+            self.finished.emit(result)
+        except Exception as e:
+            self.failed.emit(e)

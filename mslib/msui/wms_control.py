@@ -50,10 +50,9 @@ from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
-from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings
+from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings, Worker
 from mslib.ogcwms import openURL, removeXMLNamespace
 from mslib.msui.multilayers import Multilayers
-from mslib.worker import Worker
 
 
 WMS_SERVICE_CACHE = {}
