@@ -573,7 +573,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         self.multilayers.cbWMS_URL.setCurrentIndex(count)
                         found = True
                         break
-                    if self.multilayers.cbWMS_URL.itemText(count) == current_url:
+                    if self.multilayers.cbWMS_URL.itemText(count) == base_url:
                         self.multilayers.cbWMS_URL.setCurrentIndex(count)
                         found = True
                 if not found:
