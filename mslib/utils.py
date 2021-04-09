@@ -719,3 +719,52 @@ def dropEvent(self, event):
 
 def dragEnterEvent(self, event):
     event.accept()
+
+
+class Worker(QtCore.QThread):
+    """
+    Can be used to run a function through a QThread without much struggle,
+    and receive the return value or exception through signals.
+    Beware not to modify the parents connections through the function.
+    You may change the GUI but it may sometimes not update until the Worker is done.
+    """
+    finished = QtCore.pyqtSignal(object)
+    failed = QtCore.pyqtSignal(Exception)
+
+    def __init__(self, function):
+        super(Worker, self).__init__()
+        self.function = function
+        self.failed.connect(lambda e: self._update_gui())
+        self.finished.connect(lambda x: self._update_gui())
+
+    def run(self):
+        try:
+            result = self.function()
+            self.finished.emit(result)
+        except Exception as e:
+            self.failed.emit(e)
+
+    @staticmethod
+    def create(function, on_success=None, on_failure=None, start=True):
+        """
+        Create, connect and directly execute a Worker in a single line.
+        Inspired by QThread.create only available in C++17.
+        """
+        worker = Worker(function)
+        if on_success:
+            worker.finished.connect(on_success)
+        if on_failure:
+            worker.failed.connect(on_failure)
+        if start:
+            worker.start()
+        return worker
+
+    @staticmethod
+    def _update_gui():
+        """
+        Iterate through all windows and update them.
+        Useful for when a thread modifies the GUI.
+        Happens automatically at the end of a Worker.
+        """
+        for window in QtWidgets.QApplication.allWindows():
+            window.requestUpdate()

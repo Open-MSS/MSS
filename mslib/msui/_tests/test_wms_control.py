@@ -101,7 +101,8 @@ class WMSControlWidgetSetup(object):
         QtTest.QTest.qWait(2000)  # time for the server to start up
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(5000)  # time for the server to parse all netcdf data
+        while self.window.cpdlg.isVisible():
+            QtTest.QTest.qWait(100)
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -234,6 +235,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        while self.window.cpdlg.isVisible():
+            QtTest.QTest.qWait(100)
         assert mockbox.critical.call_count == 1
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
@@ -244,6 +247,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        while self.window.cpdlg.isVisible():
+            QtTest.QTest.qWait(100)
         assert mockbox.critical.call_count == 0
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
