@@ -8,7 +8,7 @@
   <meta name="description" content="Mission Support System">
   <meta name="keywords" content="MSS, MSCOLAB">
   <meta name="author" content="authors of MSS">
-  <link rel='shortcut icon' type='image/x-icon' href='/mss/favicon.ico'>
+  <link rel='shortcut icon' type='image/x-icon' href="{{ url_for('favicons') }}">
   <title>Mission Support System Collaboration Platform</title><!-- Bootstrap core CSS -->
   <link href="{{ url_for('files', name='bootstrap', filename='css/bootstrap.css') }}" rel="stylesheet">
 </head>
@@ -19,7 +19,7 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav mr-auto">
             <li style="list-style: none; display: inline">
-              <a class="navbar-brand" href="/index"><img src="/mss/logo.png" title="Mission Support System" alt="logo Mission Support System"></a>
+              <a class="navbar-brand" href="{{ url_for('index') }}"><img src="{{ url_for('logo') }}" title="Mission Support System" alt="logo Mission Support System"></a>
             </li>
             <li class="nav-item dropdown">{% for href, caption, submenu in get_topmenu(): %} {% if submenu[0] %}</li>
             <li class="dropdown">
