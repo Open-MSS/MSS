@@ -628,11 +628,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             QtWidgets.QMessageBox.critical(self.multilayers, self.tr("Web Map Service"),
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
 
-        self.capabilities_worker = Worker(lambda: MSSWebMapService(base_url, version=version, username=username,
-                                                                   password=password))
-        self.capabilities_worker.finished.connect(on_success)
-        self.capabilities_worker.failed.connect(on_failure)
-        self.capabilities_worker.start()
+        self.capabilities_worker = Worker.create(lambda: MSSWebMapService(base_url, version=version,
+                                                                          username=username, password=password),
+                                                 on_success, on_failure)
 
     def wms_url_changed(self, text):
         wms = WMS_SERVICE_CACHE.get(text)
@@ -711,11 +709,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     self.multilayers, self.tr("Web Map Service"),
                     self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
 
-        self.capabilities_worker = Worker(lambda: requests.get(base_url, params=params))
-        self.capabilities_worker.finished.connect(on_success)
-        self.capabilities_worker.failed.connect(on_failure)
         self.display_capabilities_dialog()
-        self.capabilities_worker.start()
+        self.capabilities_worker = Worker.create(lambda: requests.get(base_url, params=params),
+                                                 on_success, on_failure)
 
     def activate_wms(self, wms):
         # Clear layer and style combo boxes. First disconnect the layerChanged
