@@ -533,6 +533,17 @@ def application():
         return res
 
     except Exception as ex:
+        # without query parameter show index page
+        query = request.args
+        if len(query) == 0:
+            return render_template("/index.html")
+
+        # communicate request errors back to client user
         logging.error("Unexpected error: %s: %s\nTraceback:\n%s",
                       type(ex), ex, traceback.format_exc())
-        return render_template("/index.html")
+        error_message = "{}: {}\n".format(type(ex), ex)
+        response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
+        res = make_response(error_message, 404)
+        for response_header in response_headers:
+            res.headers[response_header[0]] = response_header[1]
+        return res
