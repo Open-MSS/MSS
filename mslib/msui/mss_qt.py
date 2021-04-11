@@ -167,7 +167,7 @@ for mod in [
         "ui_kmloverlay_dockwidget",
         "ui_customize_kml",
         "ui_mainwindow",
-        "ui_performance_settings",
+        "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",
         "ui_sideview_options",
