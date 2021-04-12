@@ -619,6 +619,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     QtWidgets.QMessageBox.critical(
                         self.multilayers, self.tr("Web Map Service"),
                         self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
+            except Exception as ex:
+                self.cpdlg.close()
+                logging.error("cannot load capabilities document.. "
+                              "no layers can be used in this view.")
+                QtWidgets.QMessageBox.critical(
+                    self.multilayers, self.tr("Web Map Service"),
+                    self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
 
         try:
             str(base_url)
@@ -714,19 +721,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                                  on_success, on_failure)
 
     def activate_wms(self, wms):
-        # Clear layer and style combo boxes. First disconnect the layerChanged
-        # slot to avoid calls to this function.
-        self.btGetMap.setEnabled(False)
-        self.cbLevel.clear()
-        self.cbInitTime.clear()
-        self.cbValidTime.clear()
-
-        self.enable_level_elements(False)
-        self.enable_valid_time_elements(False)
-        self.enable_init_time_elements(False)
-        self.multilayers.pbViewCapabilities.setEnabled(False)
-        self.cbTransparent.setChecked(False)
-
         # Parse layer tree of the wms object and discover usable layers.
         stack = list(wms.contents.values())
         filtered_layers = set()
@@ -740,6 +734,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
+        self.multilayers.add_wms(wms)
         for layer in filtered_layers:
             self.multilayers.add_multilayer(layer, wms)
         self.multilayers.filter_multilayers()
@@ -763,9 +758,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.fetcher.finished.connect(self.continue_retrieve_image)  # implicitely uses a queued connection
         self.fetcher.exception.connect(self.display_exception)  # implicitely uses a queued connection
         self.fetcher.started_request.connect(self.display_progress_dialog)  # implicitely uses a queued connection
-
-        if len(filtered_layers) > 0:
-            self.btGetMap.setEnabled(True)
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
