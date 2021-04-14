@@ -544,7 +544,8 @@ class WMSServer(object):
                     logging.error("ERROR: %s %s", type(ex), ex)
                     msg = "The data corresponding to your request is not available. Please check the " \
                           "times and/or path you have specified.\n\n" \
-                          f"Error message: {ex}"
+                          f"Error message: {ex}.\n" \
+                          f"Hint: Check used waypoints."
                     return self.create_service_exception(text=msg, version=version)
 
         # 4) Return the produced image.
