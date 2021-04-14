@@ -25,9 +25,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import time
 import fs
 import socket
 import multiprocessing
+from PyQt5 import QtTest
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
 from flask import json
@@ -203,3 +205,26 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
 def create_mss_settings_file(content):
     with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
         file_dir.writetext("mss_settings.json", content)
+
+
+def wait_until_signal(signal, timeout=5):
+    """
+    Blocks the calling thread until the signal emits or the timeout expires.
+    """
+    init_time = time.time()
+    finished = False
+
+    def done(*args):
+        nonlocal finished
+        finished = True
+
+    signal.connect(done)
+    while not finished and time.time() - init_time < timeout:
+        QtTest.QTest.qWait(100)
+
+    try:
+        signal.disconnect(done)
+    except TypeError:
+        pass
+    finally:
+        return finished

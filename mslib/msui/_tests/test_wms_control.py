@@ -36,6 +36,7 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
+from mslib._tests.utils import wait_until_signal
 
 
 PORTS = list(range(8106, 8120))
@@ -101,8 +102,7 @@ class WMSControlWidgetSetup(object):
         QtTest.QTest.qWait(2000)  # time for the server to start up
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        while self.window.cpdlg.isVisible():
-            QtTest.QTest.qWait(100)
+        wait_until_signal(self.window.cpdlg.canceled)
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -163,7 +163,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.qWait(20)
         QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        wait_until_signal(self.window.image_displayed)
 
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
@@ -179,7 +179,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(5000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -196,10 +196,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(6000)
-        QtWidgets.QApplication.processEvents()
+        wait_until_signal(self.window.image_displayed)
 
         # assert mockbox.critical.call_count == 0
 
@@ -212,9 +209,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
 
@@ -235,8 +230,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        while self.window.cpdlg.isVisible():
-            QtTest.QTest.qWait(100)
+        wait_until_signal(self.window.cpdlg.canceled)
         assert mockbox.critical.call_count == 1
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
@@ -247,13 +241,12 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        while self.window.cpdlg.isVisible():
-            QtTest.QTest.qWait(100)
+        wait_until_signal(self.window.cpdlg.canceled)
         assert mockbox.critical.call_count == 0
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -300,7 +293,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         # Check drawing not causing errors
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(6000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -336,7 +329,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         # Check drawing not causing errors
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(6000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -389,7 +382,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(5000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -406,6 +399,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
         server.child(0).draw()
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
 

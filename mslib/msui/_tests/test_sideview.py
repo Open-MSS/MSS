@@ -36,6 +36,7 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
+from mslib._tests.utils import wait_until_signal
 
 PORTS = list(range(8095, 8105))
 
@@ -170,8 +171,7 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        while self.wms_control.cpdlg.isVisible():
-            QtTest.QTest.qWait(100)
+        wait_until_signal(self.wms_control.cpdlg.canceled)
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
@@ -181,7 +181,7 @@ class Test_SideViewWMS(object):
         self.query_server(f"http://127.0.0.1:{self.port}")
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        wait_until_signal(self.wms_control.image_displayed)
         assert mockbox.critical.call_count == 0
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
