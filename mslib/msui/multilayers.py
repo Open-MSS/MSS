@@ -94,7 +94,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         """
         Checks if the mouse is pointing at the favourite icon and handles the event accordingly
         """
-        if layer.childCount() == 0:
+        if isinstance(layer, Layer):
             position = self.listLayers.viewport().mapFromGlobal(QtGui.QCursor().pos())
             if (self.cbMultilayering.isChecked() and 64 <= position.x() <= 80) or \
                (not self.cbMultilayering.isChecked() and 44 <= position.x() <= 60):
@@ -155,7 +155,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                     wms_hits += 1
                 else:
                     widget.setHidden(True)
-            if wms_hits == 0:
+            if wms_hits == 0 and len(filter_string) > 0:
                 header.setHidden(True)
             else:
                 header.setHidden(False)
@@ -234,9 +234,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 priority.setCurrentIndex(self.layers_priority.index(layer))
                 priority.currentIndexChanged.connect(self.priority_changed)
 
-    def add_multilayer(self, name, wms):
+    def add_wms(self, wms):
         """
-        Adds a layer to the multilayer list, with the wms url as a parent
+        Adds a wms to the multilayer list
         """
         if wms.url not in self.layers:
             header = QtWidgets.QTreeWidgetItem(self.listLayers)
@@ -247,6 +247,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             self.layers[wms.url]["wms"] = wms
             header.setExpanded(True)
 
+    def add_multilayer(self, name, wms):
+        """
+        Adds a layer to the multilayer list, with the wms url as a parent
+        """
         if name not in self.layers[wms.url]:
             layerobj = self.dock_widget.get_layer_object(wms, name.split(" | ")[-1])
             widget = Layer(self.layers[wms.url]["header"], self, layerobj, name=name)
@@ -280,7 +284,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         Gets called whenever the user clicks on a layer in the multilayer list
         Makes sure the dock widget updates its data depending on the users selection
         """
-        if item.childCount() > 0:
+        if not isinstance(item, Layer):
+            index = self.cbWMS_URL.findText(item.text(0))
+            if index != -1 and index != self.cbWMS_URL.currentIndex():
+                self.cbWMS_URL.setCurrentIndex(index)
             return
 
         self.threads += 1
