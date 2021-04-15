@@ -27,7 +27,7 @@
 """
 
 import mslib.mswms.mswms as mswms
-from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html
+from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
 
 
 class Test_WMS(object):
@@ -39,7 +39,7 @@ class Test_WMS(object):
 
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_ok_html(result.status, result.headers)
+        callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
 
     def test_get_query_string_wrong_values(self):
@@ -51,7 +51,7 @@ class Test_WMS(object):
 
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_ok_html(result.status, result.headers)
+        callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
 
     def test_get_capabilities(self):
@@ -271,6 +271,6 @@ class Test_WMS(object):
         }
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_ok_html(result.status, result.headers)
+        callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
         assert result.data.count(b"") > 0, result
