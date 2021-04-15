@@ -17,7 +17,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
+        
     - name: Reinstall dependencies if changed
       run: |
         cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     needs: [Test-MSS]
-
+    
     steps:
       - if: env.PAT != ''
         name: Invoke dockerhub image creation
