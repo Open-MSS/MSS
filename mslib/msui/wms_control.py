@@ -607,8 +607,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         username, password = dlg.getAuthInfo()
                         # If user & pw have been entered, cache them.
                         constants.WMS_LOGIN_CACHE[base_url] = (username, password)
-                        self.capabilities_worker.function = lambda: MSSWebMapService(base_url, version=version,
-                                                                                     username=username, password=password)
+                        self.capabilities_worker.function = lambda: MSSWebMapService(
+                            base_url, version=version,
+                            username=username, password=password)
                         self.capabilities_worker.start()
                     else:
                         self.cpdlg.close()
