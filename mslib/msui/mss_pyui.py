@@ -69,6 +69,13 @@ def clean_string(string):
     return re.sub(r'\W|^(?=\d)', '_', string)
 
 
+def version_string():
+    if __canonical_name__ != '':
+        return __canonical_name__
+    else:
+        return __version__
+
+
 class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
     """Subclass of QListWidgetItem, represents an open view in the list of
        open views. Keeps a reference to the view instance (i.e. the window) it
@@ -141,7 +148,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         """
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
-        self.lblVersion.setText("Version: {}".format(__version__))
+        self.lblVersion.setText("Version: {}".format(version_string()))
         self.lblChanges.setText(f'<a href="https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A"\
             "{__version__[:-1]}">New Features and Changes</a>')
         blub = QtGui.QPixmap(python_powered())
@@ -716,10 +723,7 @@ def main():
         print("\n            Mission Support System (mss)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
-        if __canonical_name__ != '':
-            print("Version:", __canonical_name__)
-        else:
-            print("Version:", __version__)
+        print("Version:", version_string())
         sys.exit()
 
     setup_logging(args)
@@ -759,7 +763,7 @@ def main():
         logging.info("menu entry removed")
         sys.exit()
 
-    logging.info("MSS Version: %s", __version__)
+    logging.info("MSS Version: %s", version_string())
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
     logging.info("Launching user interface...")
