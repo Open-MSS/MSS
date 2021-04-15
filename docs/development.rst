@@ -86,6 +86,7 @@ To use this data add the mss_wms_settings.py in your python path::
 
 Developer Documentation of Mscolab
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The Mscolab server is built using the Flask rest framework which communicates with the PyQt5 frontend of MSS.
 You can view the default configuration of mscolab in the file `mslib/mscolab/conf.py`.
 If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server"
@@ -191,11 +192,19 @@ Merging stable into develop
 
 Bug fixes we have done in stable we need to merge regulary into develop too:: 
 
-    git checkout stable
-    git pull
-    git checkout develop
-    git pull
-    git merge stable
+   git checkout stable
+   git pull git@github.com:Open-MSS/MSS.git stable
+   git checkout develop
+   git pull git@github.com:Open-MSS/MSS.git develop
+   git merge stable
+   git checkout -b develop_stable
+   git push git@github.com:Open-MSS/MSS.git develop_stable
+
+
+Then create the proposed merge request. The merge request must *not* be squashed or rebased.
+To allow the merging, the requirement for a linear-history must be disabled *temporarily*
+for the develop branch and one needs to ensure that the merge request is accepted with a
+regular merge with merge commit. Remove the develop_stable branch if still present.
 
 
 Testing local build
