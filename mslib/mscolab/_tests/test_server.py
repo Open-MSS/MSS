@@ -35,7 +35,6 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import server
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.models import User
-
 from mslib._tests.utils import (mscolab_register_user,
                                 mscolab_register_and_login, mscolab_create_content,
                                 mscolab_create_project,
