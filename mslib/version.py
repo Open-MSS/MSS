@@ -24,4 +24,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import sys
+import glob
 __version__ = u'2.0.3.'
+
+__conda_meta__ = os.path.join(sys.prefix, 'conda-meta', '')
+__mss_description__ = glob.glob(os.path.join(__conda_meta__, 'mss-*'))
+__canonical_name__ = ""
+if len(__mss_description__) == 1:
+    __canonical_name__ = __mss_description__[0].split(__conda_meta__)[1].split('.json')[0]

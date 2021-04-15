@@ -44,7 +44,7 @@ import sys
 import types
 import fs
 
-from mslib import __version__
+from mslib import __version__, __canonical_name__
 from mslib.msui.mss_qt import ui_mainwindow as ui
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
 from mslib.msui import flighttrack as ft
@@ -716,7 +716,10 @@ def main():
         print("\n            Mission Support System (mss)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
-        print("Version:", __version__)
+        if __canonical_name__ != '':
+            print("Version:", __canonical_name__)
+        else:
+            print("Version:", __version__)
         sys.exit()
 
     setup_logging(args)

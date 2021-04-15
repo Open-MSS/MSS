@@ -28,3 +28,4 @@
 
 
 from .version import __version__  # noqa
+from .version import __canonical_name__  # noqa
