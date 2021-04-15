@@ -28,12 +28,10 @@ from __future__ import print_function
 
 
 import imp
-import os
 import sys
 # Disable pyc files
 sys.dont_write_bytecode = True
 
-import pytest
 import fs
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
@@ -50,14 +48,6 @@ def pytest_generate_tests(metafunc):
         mss_settings_file_fs.writetext("mss_settings.json", option_value)
         mss_settings_file_fs.close()
 
-
-if os.getenv("TESTS_VISIBLE") == "TRUE":
-    Display = None
-else:
-    try:
-        from pyvirtualdisplay import Display
-    except ImportError:
-        Display = None
 
 if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
     print('\n configure testdata')
@@ -151,17 +141,3 @@ imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 imp.load_source('mscolab_settings', path)
 sys.path.insert(0, parent_path)
-
-
-@pytest.fixture(scope="session", autouse=True)
-def configure_testsetup(request):
-    if Display is not None:
-        # needs for invisible window output xvfb installed,
-        # default backend for visible output is xephyr
-        # by visible=0 you get xvfb
-        VIRT_DISPLAY = Display(visible=0, size=(1280, 1024))
-        VIRT_DISPLAY.start()
-        yield
-        VIRT_DISPLAY.stop()
-    else:
-        yield
