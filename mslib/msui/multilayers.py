@@ -53,7 +53,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.synced_reference = Layer(None, None, None, is_empty=True)
         self.listLayers.itemChanged.connect(self.multilayer_changed)
         self.listLayers.itemClicked.connect(self.multilayer_clicked)
-        self.listLayers.itemClicked.connect(self.check_favourite_clicked)
+        self.listLayers.itemClicked.connect(self.check_icon_clicked)
         self.listLayers.setVisible(True)
 
         self.leMultiFilter.setVisible(True)
@@ -75,6 +75,28 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.listLayers.setColumnHidden(2, True)
         self.listLayers.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
+        self.delete_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Delete"), self)
+        self.delete_shortcut.activated.connect(self.delete_server)
+
+    def delete_server(self, server=None):
+        if not server:
+            server = self.listLayers.currentItem()
+
+        if server and not isinstance(server, Layer):
+            current = self.get_current_layer()
+            if current in self.layers[server.text(0)].values():
+                self.current_layer = None
+            for child_index in range(server.childCount()):
+                widget = server.child(child_index)
+                if widget in self.layers_priority:
+                    self.layers_priority.remove(widget)
+
+            index = self.listLayers.indexOfTopLevelItem(server)
+            self.layers.pop(server.text(0))
+            self.listLayers.takeTopLevelItem(index)
+            self.update_priority_selection()
+            self.needs_repopulate.emit()
+
     def remove_filter_triggered(self):
         self.leMultiFilter.setText("")
         if self.filter_favourite:
@@ -90,18 +112,27 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             self.filterFavouriteAction.setToolTip("Show only favourite layers")
         self.filter_multilayers()
 
-    def check_favourite_clicked(self, layer):
+    def check_icon_clicked(self, item):
         """
-        Checks if the mouse is pointing at the favourite icon and handles the event accordingly
+        Checks if the mouse is pointing at an icon and handles the event accordingly
         """
-        if isinstance(layer, Layer):
+        # Clicked on layer, check favourite
+        if isinstance(item, Layer):
             position = self.listLayers.viewport().mapFromGlobal(QtGui.QCursor().pos())
             if (self.cbMultilayering.isChecked() and 64 <= position.x() <= 80) or \
                (not self.cbMultilayering.isChecked() and 44 <= position.x() <= 60):
                 self.threads += 1
-                layer.favourite_triggered()
+                item.favourite_triggered()
                 if self.filter_favourite:
                     self.filter_multilayers()
+                self.threads -= 1
+
+        # Clicked on server, check garbage bin
+        elif isinstance(item, QtWidgets.QTreeWidgetItem):
+            position = self.listLayers.viewport().mapFromGlobal(QtGui.QCursor().pos())
+            if 26 <= position.x() <= 38:
+                self.threads += 1
+                self.delete_server(item)
                 self.threads -= 1
 
     def get_current_layer(self):
@@ -246,6 +277,11 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             self.layers[wms.url]["header"] = header
             self.layers[wms.url]["wms"] = wms
             header.setExpanded(True)
+            size = QtCore.QSize()
+            size.setHeight(15)
+            header.setSizeHint(0, size)
+            icon = QtGui.QIcon(icons("64x64", "bin.png"))
+            header.setIcon(0, icon)
 
     def add_multilayer(self, name, wms):
         """
@@ -292,12 +328,13 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
         self.threads += 1
 
-        if self.current_layer.get_level() in item.get_levels():
-            item.set_level(self.current_layer.get_level())
-        if self.current_layer.get_itime() in item.get_itimes():
-            item.set_itime(self.current_layer.get_itime())
-        if self.current_layer.get_vtime() in item.get_vtimes():
-            item.set_vtime(self.current_layer.get_vtime())
+        if self.current_layer:
+            if self.current_layer.get_level() in item.get_levels():
+                item.set_level(self.current_layer.get_level())
+            if self.current_layer.get_itime() in item.get_itimes():
+                item.set_itime(self.current_layer.get_itime())
+            if self.current_layer.get_vtime() in item.get_vtimes():
+                item.set_vtime(self.current_layer.get_vtime())
 
         self.current_layer = item
         self.listLayers.setCurrentItem(item)

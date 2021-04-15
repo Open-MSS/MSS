@@ -1059,7 +1059,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if init_time is not None:
                 self.dteInitTime.setDateTime(init_time)
 
-        if self.multilayers.threads == 0:
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_itime(self.cbInitTime.currentText())
 
         self.auto_update()
@@ -1074,14 +1074,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if valid_time is not None:
                 self.dteValidTime.setDateTime(valid_time)
 
-        if self.multilayers.threads == 0:
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
 
         self.auto_update()
         return valid_time == "" or valid_time is not None
 
     def level_changed(self):
-        if self.multilayers.threads == 0:
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
         self.auto_update()
 
