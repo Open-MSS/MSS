@@ -49,7 +49,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.current_layer: Layer = None
         self.threads = 0
         self.filter_favourite = False
-        self.settings = load_settings_qsettings("multilayers", {"favourites": []})
+        self.settings = load_settings_qsettings("multilayers", {"favourites": [], "saved_styles": {}})
         self.synced_reference = Layer(None, None, None, is_empty=True)
         self.listLayers.itemChanged.connect(self.multilayer_changed)
         self.listLayers.itemClicked.connect(self.multilayer_clicked)
@@ -270,6 +270,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 def style_changed(layer):
                     self.multilayer_clicked(layer)
                     layer.style = self.listLayers.itemWidget(layer, 1).currentText()
+                    layer.style_changed()
                     self.dock_widget.auto_update()
 
                 style.currentIndexChanged.connect(lambda: style_changed(widget))
@@ -518,11 +519,15 @@ class Layer(QtWidgets.QTreeWidgetItem):
 
     def _parse_styles(self):
         """
-        Extracts and saves all styles for the layer
+        Extracts and saves all styles for the layer.
+        Sets the layers style to the first one, or the saved one if possible.
         """
         self.styles = [f"{style} | {self.layerobj.styles[style]['title']}" for style in self.layerobj.styles]
         if len(self.styles) > 0:
             self.style = self.styles[0]
+            if str(self) in self.parent.settings["saved_styles"] and \
+               self.parent.settings["saved_styles"][str(self)] in self.styles:
+                self.style = self.parent.settings["saved_styles"][str(self)]
 
     def get_level(self):
         if not self.parent.cbMultilayering.isChecked() or not self.is_synced:
@@ -633,6 +638,16 @@ class Layer(QtWidgets.QTreeWidgetItem):
         else:
             icon = QtGui.QIcon(icons("64x64", "star_unfilled.png"))
         self.setIcon(0, icon)
+
+    def style_changed(self):
+        """
+        Persistently saves the currently selected style of the layer, if it is not the first one
+        """
+        if self.style != self.styles[0]:
+            self.parent.settings["saved_styles"][str(self)] = self.style
+        else:
+            self.parent.settings["saved_styles"].pop(str(self))
+        save_settings_qsettings("multilayers", self.parent.settings)
 
     def favourite_triggered(self):
         """
