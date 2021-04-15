@@ -27,7 +27,9 @@
 import os
 import sys
 import glob
-__version__ = u'2.0.3.'
+
+
+__version__ = u'2.0.4.'
 
 __conda_meta__ = os.path.join(sys.prefix, 'conda-meta', '')
 __mss_description__ = glob.glob(os.path.join(__conda_meta__, 'mss-*'))

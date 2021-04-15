@@ -544,7 +544,8 @@ class WMSServer(object):
                     logging.error("ERROR: %s %s", type(ex), ex)
                     msg = "The data corresponding to your request is not available. Please check the " \
                           "times and/or path you have specified.\n\n" \
-                          f"Error message: {ex}"
+                          f"Error message: {ex}.\n" \
+                          "Hint: Check used waypoints."
                     return self.create_service_exception(text=msg, version=version)
 
         # 4) Return the produced image.
@@ -591,6 +592,17 @@ def application():
         return res
 
     except Exception as ex:
+        # without query parameter show index page
+        query = request.args
+        if len(query) == 0:
+            return render_template("/index.html")
+
+        # communicate request errors back to client user
         logging.error("Unexpected error: %s: %s\nTraceback:\n%s",
                       type(ex), ex, traceback.format_exc())
-        return render_template("/index.html")
+        error_message = "{}: {}\n".format(type(ex), ex)
+        response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(error_message)))]
+        res = make_response(error_message, 404)
+        for response_header in response_headers:
+            res.headers[response_header[0]] = response_header[1]
+        return res
