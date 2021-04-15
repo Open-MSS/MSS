@@ -121,11 +121,16 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
     def _prepare_datafields(self):
         if self.name[-2:] == "pl":
             self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
-            self.data["air_pressure"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
-            self.data_units["air_pressure"] = self.driver.vert_units
+            self.data["air_pressure"][:] = convert_to(
+                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                self.driver.vert_units, "Pa")
+            self.data_units["air_pressure"] = "Pa"
         elif self.name[-2:] == "tl":
             self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
-            self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+            self.data["air_potential_temperature"][:] = convert_to(
+                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                self.driver.vert_units, "K")
+            self.data_units["air_potential_temperature"] = "K"
 
     def _plot_style(self):
         ax = self.ax
