@@ -161,5 +161,5 @@ make a file called :code:`server.py`
 
 Then run the following commands. ::
 
-  $ conda install gunicorn eventlet
+  $ mamba install gunicorn eventlet
   $ gunicorn -b 0.0.0.0:8087 server:app
