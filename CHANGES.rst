@@ -1,6 +1,26 @@
 Changelog
 =========
 
+
+Version 3.0.0
+-------------
+May Bär implemented multilayer support for the Server and Client. By this
+Layers have a selectable priority in which they will be displayed. The multilayers
+are searchable and filterable. Layer parameters can be synchronized.
+The used style of each layer is persistently stored.
+The selection of layers is supported by favorization.
+
+
+Hint:
+~~~~~
+With version 3.0.0 we change our default channel order.
+conda-forge is now sorted before defaults.
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/3?closed=1
+
+
 Version 2.0.4
 -------------
 
