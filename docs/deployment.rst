@@ -205,7 +205,7 @@ conda environment. This procedure may need the package apache2-dev on your serve
 At current state we have to use pip to install mod_wsgi into the INSTANCE environment::
 
   # Instal `mod_wsgi`
-  $ conda install mod_wsgi
+  $ pip install mod_wsgi
 
   # Find the full path to installed `mod_wsgi`
   $ which mod_wsgi-express
