@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -108,14 +108,29 @@ class MissionSupportSystemDefaultConfig(object):
         "http://localhost:8083",
     ]
 
+    # mail address to sign in
+    MSCOLAB_mailid = ""
+
+    # password to sign in
+    MSCOLAB_password = ""
+
+    # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")]
+    MSC_login = {}
+
     # timeout of Url request
     WMS_request_timeout = 30
+
+    WMS_preload = []
+
+    # dictionary of WMS servers {"http://www.your-wms-server.de" : ("youruser", "yourpassword")]
+    WMS_login = {}
 
     # WMS image cache settings:
     wms_cache = os.path.join(tempfile.gettempdir(), "msui_wms_cache")
 
     # Maximum size of the cache in bytes.
     wms_cache_max_size_bytes = 20 * 1024 * 1024
+
     # Maximum age of a cached file in seconds.
     wms_cache_max_age_seconds = 5 * 86400
 
@@ -166,3 +181,9 @@ class MissionSupportSystemDefaultConfig(object):
     # ToDo refactor to rename this to data_dir/mss_data_dir
     # mss dir
     mss_dir = "~/mss"
+
+    # dictionary for export plugins, e.g.  {"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"] }
+    export_plugins = {}
+
+    # dictionary for import plugins, e.g. { "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"] }
+    import_plugins = {}

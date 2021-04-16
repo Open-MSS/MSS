@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,11 +49,10 @@ def save_to_txt(filename, name, waypoints):
             max_com_len = len(str(wp.comments))
     with codecs.open(filename, "w", encoding="utf-8") as out_file:
         out_file.write(u"# Do not modify if you plan to import this file again!\n")
-        out_file.write(u"Track name: {:}\n".format(name))
+        out_file.write(f"Track name: {name:}\n")
         line = u"{0:5d}  {1:{2}}  {3:10.3f}  {4:11.3f}  {5:11.3f}  {6:14.3f}  {7:14.1f}  {8:15.1f}  {9:{10}}\n"
-        header = u"Index  {0:{1}}  Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  " \
-                 u"Leg dist. (km)  Cum. dist. (km)  {2:{3}}\n".format(
-                     "Location", max_loc_len, "Comments", max_com_len)
+        header = f"Index  {'Location':{max_loc_len}}  Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  " \
+                 f"Leg dist. (km)  Cum. dist. (km)  {'Comments':{max_com_len}}\n"
         out_file.write(header)
         for i, wp in enumerate(waypoints):
             # ToDo check str(str( .. ) and may be use csv write
@@ -95,7 +94,7 @@ def load_from_txt(filename):
             if len(pos) == 0:
                 raise SyntaxError("TXT Import could not parse column headings.")
             if len(line) < max(pos):
-                raise SyntaxError("TXT Import could not parse line: '{}'".format(line))
+                raise SyntaxError(f"TXT Import could not parse line: '{line}'")
 
             wp = ft.Waypoint()
             attr_names = ["location", "lat", "lon", "flightlevel",

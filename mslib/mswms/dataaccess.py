@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -206,8 +206,7 @@ class DefaultDataAccess(NWPDataAccess):
             except KeyError as ex:
                 logging.error("Could not identify filename. %s %s %s %s %s %s",
                               variable, vartype, init_time, valid_time, type(ex), ex)
-                raise ValueError("variable type {} not available for variable {}"
-                                 .format(vartype, variable))
+                raise ValueError(f"variable type {vartype} not available for variable {variable}")
 
     def _parse_file(self, filename):
         elevations = {"levels": [], "units": None}
@@ -220,8 +219,8 @@ class DefaultDataAccess(NWPDataAccess):
             valid_times = netCDF4tools.num2date(time_var[:], time_var.units)
             if not self.uses_validtime_dimension():
                 if len(valid_times) > 0:
-                    raise IOError("Skipping file '{}: no support for valid time, but multiple "
-                                  "time steps present".format(filename))
+                    raise IOError(f"Skipping file '{filename}: no support for valid time, but multiple "
+                                  f"time steps present")
                 valid_times = [None]
             lat_name, lat_var, lon_name, lon_var = netCDF4tools.identify_CF_lonlat(dataset)
             vert_name, vert_var, _, _, vert_type = netCDF4tools.identify_vertical_axis(dataset)
@@ -237,14 +236,14 @@ class DefaultDataAccess(NWPDataAccess):
                 elevations = {"levels": vert_var[:], "units": getattr(vert_var, "units", "1")}
                 if vert_type in self._elevations:
                     if len(vert_var[:]) != len(self._elevations[vert_type]["levels"]):
-                        raise IOError("Number of vertical levels does not fit to levels of "
-                                      "previous file '{}'.".format(self._elevations[vert_type]["filename"]))
+                        raise IOError(f"Number of vertical levels does not fit to levels of "
+                                      f"previous file '{self._elevations[vert_type]['filename']}'.")
                     if not np.allclose(vert_var[:], self._elevations[vert_type]["levels"]):
-                        raise IOError("vertical levels do not fit to levels of previous "
-                                      "file '{}'.".format(self._elevations[vert_type]["filename"]))
+                        raise IOError(f"vertical levels do not fit to levels of previous "
+                                      f"file '{self._elevations[vert_type]['filename']}'.")
                     if elevations["units"] != self._elevations[vert_type]["units"]:
-                        raise IOError("vertical level units do not match previous file '{}'".format(
-                            self._elevations[vert_type]["filename"]))
+                        raise IOError(f"vertical level units do not match previous "
+                                      f"file '{self._elevations[vert_type]['filename']}'")
 
             standard_names = []
             for ncvarname, ncvar in dataset.variables.items():

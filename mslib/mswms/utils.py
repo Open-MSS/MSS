@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016 Joern Ungermann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -453,7 +453,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
             clev = np.array([0, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
         norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     else:
-        raise RuntimeError("Illegal plotting style?! ({})".format(style))
+        raise RuntimeError(f"Illegal plotting style?! ({style})")
     if clev[0] == clev[-1]:
         cmin, cmax = 0, 1
         clev = np.linspace(0, 1, len(clev))
@@ -476,3 +476,14 @@ def get_cbar_label_format(style, maxvalue):
     if style == 'log_ice_cloud':
         format = "%.0E"
     return format
+
+
+def make_cbar_labels_readable(fig, axs):
+    """
+    Adjust font size of the colorbar labels and put a white background behind them
+    such that they are readable in front of any background.
+    """
+    fontsize = fig.bbox.height * 0.024
+    for x in axs.yaxis.majorTicks:
+        x.label1.set_path_effects([matplotlib.patheffects.withStroke(linewidth=4, foreground='w')])
+        x.label1.set_fontsize(fontsize)

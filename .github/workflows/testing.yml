@@ -7,7 +7,7 @@ env:
 jobs:
   Test-MSS:
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         shell: bash
@@ -30,16 +30,17 @@ jobs:
         && conda config --add channels conda-forge \
         && conda install --revision 0 \
         && conda install mamba \
+        && mamba install pyvirtualdisplay \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
-        
+
     - name: Run tests
       timeout-minutes: 25
       run: |
-        source /opt/conda/bin/activate mssenv
-        cd $GITHUB_WORKSPACE
-        xvfb-run pytest mslib
-    
+        source /opt/conda/bin/activate mssenv \
+        && cd $GITHUB_WORKSPACE \
+        && pytest mslib
+
   Update-Images:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'

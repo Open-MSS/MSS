@@ -28,8 +28,7 @@ import json
 import requests
 from werkzeug.urls import url_join
 
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
 from mslib.utils import config_loader, show_popup
 
@@ -39,7 +38,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
     def __init__(self, token, p_id, user, project_name, projects, conn, parent=None,
-                 mscolab_server_url=config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)):
+                 mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
         """
         token: access token
         p_id: project id
@@ -121,9 +120,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
     # TODO: Think of a more cleaner implementation.
     def apply_filters(self, table, text_filter, permission_filter=None):
         for row_num in range(table.rowCount()):
-            if text_filter in table.item(row_num, 0).text() or text_filter in table.item(row_num, 1).text():
+            if text_filter in table.item(row_num, 0).text():
                 if permission_filter:
-                    if permission_filter == "all" or permission_filter == table.item(row_num, 2).text():
+                    if permission_filter == "all" or permission_filter == table.item(row_num, 1).text():
                         table.showRow(row_num)
                     else:
                         table.hideRow(row_num)

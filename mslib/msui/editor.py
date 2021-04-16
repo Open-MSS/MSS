@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2020 Vaibhav Mehra <veb7vmehra@gmail.com>
-    :copyright: Copyright 2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2020-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,10 +29,7 @@ import logging
 import json
 
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
-from mslib.msui.mss_qt import QtWidgets
-from mslib.msui.mss_qt import QtGui
-from mslib.msui.mss_qt import QtCore
-from PyQt5 import QtPrintSupport
+from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
 from mslib.msui import constants
 from mslib.msui.constants import MSS_CONFIG_PATH
 from mslib.msui.icons import icons

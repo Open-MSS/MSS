@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@
 import sys
 import mock
 import os
-from mslib.msui.mss_qt import QtWidgets, QtTest
+from PyQt5 import QtWidgets, QtTest
 from mslib._tests.constants import ROOT_DIR
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.plugins.io.text import load_from_txt, save_to_txt
@@ -40,6 +40,7 @@ class Test_MSSSideViewWindow(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
     save_csv = os.path.join(ROOT_DIR, "example.csv")
     save_ftml = os.path.join(ROOT_DIR, "example.ftml")
+    save_ftml = save_ftml.replace('\\', '/')
     save_txt = os.path.join(ROOT_DIR, "example.txt")
 
     def setup(self):
@@ -60,11 +61,11 @@ class Test_MSSSideViewWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_app_start(self, mockbox):
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_new_flightrack(self, mockbox):
         assert self.window.listFlightTracks.count() == 1
         self.window.actionNewFlightTrack.trigger()
@@ -72,7 +73,7 @@ class Test_MSSSideViewWindow(object):
         assert self.window.listFlightTracks.count() == 2
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_topview(self, mockbox):
         assert self.window.listViews.count() == 0
         self.window.actionTopView.trigger()
@@ -80,7 +81,7 @@ class Test_MSSSideViewWindow(object):
         assert mockbox.critical.call_count == 0
         assert self.window.listViews.count() == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_sideview(self, mockbox):
         assert self.window.listViews.count() == 0
         self.window.actionSideView.trigger()
@@ -88,7 +89,7 @@ class Test_MSSSideViewWindow(object):
         assert mockbox.critical.call_count == 0
         assert self.window.listViews.count() == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_tableview(self, mockbox):
         assert self.window.listViews.count() == 0
         self.window.actionTableView.trigger()
@@ -96,7 +97,7 @@ class Test_MSSSideViewWindow(object):
         assert mockbox.critical.call_count == 0
         assert self.window.listViews.count() == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_about(self, mockbox):
         self.window.actionAboutMSUI.trigger()
         QtWidgets.QApplication.processEvents()

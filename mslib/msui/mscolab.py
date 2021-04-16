@@ -42,7 +42,9 @@ from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
-from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets, get_open_filename, get_save_filename
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_add_project_dialog as add_project_ui
 from mslib.msui.qt5 import ui_add_user_dialog as add_user_ui
@@ -79,12 +81,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # if token is None, not authorized, else authorized
         self.token = None
         # User related signals
-        self.connectMscolab.clicked.connect(self.connect_handler)
+        self.toggleConnectionBtn.clicked.connect(self.connect_handler)
         self.addUser.clicked.connect(self.add_user_handler)
         self.loginButton.clicked.connect(self.authorize)
         self.logoutButton.clicked.connect(self.logout)
         self.deleteAccountButton.clicked.connect(self.delete_account)
-        self.disconnectMscolab.clicked.connect(self.disconnect_handler)
         self.helpBtn.clicked.connect(self.open_help_dialog)
         # Project related signals
         self.addProject.clicked.connect(self.add_project_handler)
@@ -138,16 +139,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # disabling login, add user button. they are enabled when url is connected
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
-        self.disconnectMscolab.setEnabled(False)
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
         default_MSCOLAB = config_loader(
-            dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)
+            dataset="default_MSCOLAB")
         add_mscolab_urls(self.url, default_MSCOLAB)
 
-        self.emailid.setText(config_loader(dataset="MSCOLAB_mailid", default=""))
-        self.password.setText(config_loader(dataset="MSCOLAB_password", default=""))
+        self.emailid.setText(config_loader(dataset="MSCOLAB_mailid"))
+        self.password.setText(config_loader(dataset="MSCOLAB_password"))
 
         # fill value of mscolab url if found in QSettings storage
         self.settings = \
@@ -158,11 +158,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def disconnect_handler(self):
         self.logout()
+        self.status.setText("Status: disconnected")
         # enable and disable right buttons
-        self.disconnectMscolab.setEnabled(False)
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
-        self.connectMscolab.setEnabled(True)
+        # toggle to connect button
+        self.toggleConnectionBtn.setText('Connect')
+        self.toggleConnectionBtn.clicked.connect(self.connect_handler)
         self.url.setEnabled(True)
         # set mscolab_server_url to None
         self.mscolab_server_url = None
@@ -187,9 +189,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # enable and disable right buttons
                 self.loginButton.setEnabled(True)
                 self.addUser.setEnabled(True)
+                # toggle to disconnect button
+                self.toggleConnectionBtn.setText('Disconnect')
+                self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
                 self.url.setEnabled(False)
-                self.disconnectMscolab.setEnabled(True)
-                self.connectMscolab.setEnabled(False)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
                 try:
@@ -209,6 +212,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
             show_popup(self, "Error", "Invalid URL")
+        except requests.exceptions.SSLError:
+            logging.debug("Certificate Verification Failed")
+            show_popup(self, "Error", "Certificate Verification Failed")
         except Exception as e:
             logging.debug("Error %s", str(e))
             show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
@@ -336,7 +342,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        r = requests.post('{}/create_project'.format(self.mscolab_server_url), data=data)
+        r = requests.post(f'{self.mscolab_server_url}/create_project', data=data)
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your project was created successfully')
@@ -355,7 +361,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.user_diag.show()
 
     def add_user(self):
-        for key, value in config_loader(dataset="MSC_login", default={}).items():
+        for key, value in config_loader(dataset="MSC_login").items():
             if key not in constants.MSC_LOGIN_CACHE:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
@@ -373,7 +379,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             s = requests.Session()
             s.auth = (auth[0], auth[1])
             s.headers.update({'x-test': 'true'})
-            url = '{}/register'.format(self.mscolab_server_url)
+            url = f'{self.mscolab_server_url}/register'
             r = s.post(url, data=data)
             if r.status_code == 401:
                 r = self.authenticate(data, r, url)
@@ -522,7 +528,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.reload_view_windows()
 
     def authorize(self):
-        for key, value in config_loader(dataset="MSC_login", default={}).items():
+        for key, value in config_loader(dataset="MSC_login").items():
             if key not in constants.MSC_LOGIN_CACHE:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
@@ -585,7 +591,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def get_recent_pid(self):
         """
         get most recent project's p_id
-        # ToDo can be merged with get_recent_project
         """
         data = {
             "token": self.token
@@ -693,7 +698,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "token": self.token,
             "p_id": self.active_pid
         }
-        r = requests.get(self.mscolab_server_url + '/get_project', data=data)
+        r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
         xml_content = json.loads(r.text)["content"]
         return xml_content
 

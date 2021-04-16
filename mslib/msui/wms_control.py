@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,19 +39,20 @@ import traceback
 import urllib.parse
 import defusedxml.ElementTree as etree
 from mslib.utils import config_loader
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import mslib.ogcwms
 import owslib.util
-import PIL.Image
+from owslib.crs import axisorder_yx
+from PIL import Image, ImageOps
 
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
 from mslib.msui import wms_capabilities
 from mslib.msui import constants
-from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings
-from mslib.ogcwms import openURL
+from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings, Worker
+from mslib.ogcwms import openURL, removeXMLNamespace
+from mslib.msui.multilayers import Multilayers
 
 
 WMS_SERVICE_CACHE = {}
@@ -79,7 +80,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
                format=None, size=None, time=None, init_time=None,
                path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
                time_name="time", init_time_name="init_time",
-               exceptions='application/vnd.ogc.se_xml', method='Get',
+               exceptions='XML', method='Get',
                return_only_url=False):
         """Request and return an image from the WMS as a file-like object.
 
@@ -123,6 +124,9 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         base_url = self.get_redirect_url(method)
         request = {'version': self.version, 'request': 'GetMap'}
 
+        if self.version != "1.3.0":
+            exceptions = "application/vnd.ogc.se_xml"
+
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
@@ -136,7 +140,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         request['width'] = str(size[0])
         request['height'] = str(size[1])
 
-        request['srs'] = str(srs)
+        request['srs' if self.version != "1.3.0" else "crs"] = str(srs)
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
         request['bgcolor'] = '0x' + bgcolor[1:7]
@@ -195,10 +199,10 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
-        proxies = config_loader(dataset="proxies", default=mss_default.proxies)
+        proxies = config_loader(dataset="proxies")
 
         u = openURL(base_url, data, method,
-                    username=self.username, password=self.password, proxies=proxies)
+                    username=self.auth.username, password=self.auth.password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -210,13 +214,14 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         if hasattr(u, "info") and 'application/vnd.ogc.se_xml' in u.info()['Content-Type']:
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
+            # Remove namespaces in the response, otherwise this code might fail
+            removeXMLNamespace(se_tree)
             err_message = str(se_tree.find('ServiceException').text).strip()
             raise owslib.util.ServiceException(err_message, se_xml)
         return u
 
     def get_redirect_url(self, method="Get"):
         # return self.getOperationByName("GetMap").methods[method]["url"]
-        # ToDo redirect broken
         return self.getOperationByName("GetMap").methods[0]["url"]
 
 
@@ -257,11 +262,12 @@ class WMSMapFetcher(QtCore.QObject):
     # triggered in case of long lasting operation
     started_request = QtCore.pyqtSignal()
 
-    def __init__(self, wms, wms_cache, parent=None):
+    def __init__(self, wms_cache, parent=None):
         super(WMSMapFetcher, self).__init__(parent)
-        self.wms = wms
         self.wms_cache = wms_cache
         self.maps = []
+        self.map_imgs = []
+        self.legend_imgs = []
         self.process.connect(self.process_map, QtCore.Qt.QueuedConnection)
         self.long_request = False
 
@@ -282,40 +288,45 @@ class WMSMapFetcher(QtCore.QObject):
         """
         if len(self.maps) == 0:
             return
-        kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
+        layer, kwargs, md5_filename, use_cache, legend_kwargs = self.maps[0]
         self.maps = self.maps[1:]
         self.long_request = False
         try:
-            map_img = self.fetch_map(kwargs, use_cache, md5_filename)
-            legend_img = self.fetch_legend(use_cache=use_cache, **legend_kwargs)
+            self.map_imgs.append(self.fetch_map(layer, kwargs, use_cache, md5_filename))
+            self.legend_imgs.append(self.fetch_legend(use_cache=use_cache, **legend_kwargs))
         except Exception as ex:
             logging.error("MapPrefetcher Exception %s - %s.", type(ex), ex)
             # emit finished so progress dialog will be closed
             self.finished.emit(None, None, None, None, None, None, md5_filename)
             self.exception.emit(ex)
+            self.map_imgs = []
+            self.legend_imgs = []
         else:
             if len(self.maps) > 0:
                 self.process.emit()
-            self.finished.emit(
-                map_img, legend_img, kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"], kwargs["time"],
-                md5_filename)
+            else:
+                self.finished.emit(
+                    self.map_imgs, self.legend_imgs, kwargs["layers"][0], kwargs["styles"][0], kwargs["init_time"],
+                    kwargs["time"], md5_filename)
+                self.map_imgs = []
+                self.legend_imgs = []
 
-    def fetch_map(self, kwargs, use_cache, md5_filename):
+    def fetch_map(self, layer, kwargs, use_cache, md5_filename):
         """
         Retrieves a WMS map from a server or reads it from a cache if allowed
         """
         logging.debug("MapPrefetcher %s %s.", kwargs["time"], kwargs["level"])
 
         if use_cache and os.path.exists(md5_filename):
-            img = PIL.Image.open(md5_filename)
+            img = Image.open(md5_filename)
             img.load()
             logging.debug("MapPrefetcher - found image cache")
         else:
             self.started_request.emit()
             self.long_request = True
-            urlobject = self.wms.getmap(**kwargs)
+            urlobject = layer.get_wms().getmap(**kwargs)
             image_io = io.BytesIO(urlobject.read())
-            img = PIL.Image.open(image_io)
+            img = Image.open(image_io)
             # Check if the image is stored as indexed palette
             # with a transparent colour. Store correspondingly.
             if img.mode == "P" and "transparency" in img.info:
@@ -333,7 +344,7 @@ class WMSMapFetcher(QtCore.QObject):
             return None
 
         if use_cache and os.path.exists(md5_filename):
-            legend_img = PIL.Image.open(md5_filename)
+            legend_img = Image.open(md5_filename)
             legend_img.load()
             logging.debug("MapPrefetcher - found legend cache")
         else:
@@ -341,13 +352,13 @@ class WMSMapFetcher(QtCore.QObject):
                 self.started_request.emit()
                 self.long_request = True
             # This StringIO object can then be passed as a file substitute to
-            # PIL.Image.open(). See
+            # Image.open(). See
             #    http://www.pythonware.com/library/pil/handbook/image.htm
             logging.debug("Retrieving legend from '%s'", urlstr)
             urlobject = requests.get(urlstr)
             image_io = io.BytesIO(urlobject.content)
             try:
-                legend_img_raw = PIL.Image.open(image_io)
+                legend_img_raw = Image.open(image_io)
             except Exception as ex:
                 # This exception may be triggered if there was a problem with the legend
                 # as present with http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi
@@ -371,13 +382,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
        is not instantiated directly, see HSecWMSControlWidget and
        VSecWMSControlWidget below.
 
-    NOTE: Currently this class can only handle WMS 1.1.1 servers.
+    NOTE: Currently this class can only handle WMS 1.1.1/1.3.0 servers.
     """
 
     prefetch = QtCore.pyqtSignal([list], name="prefetch")
     fetch = QtCore.pyqtSignal([list], name="fetch")
     signal_disable_cbs = QtCore.Signal(name="disable_cbs")
     signal_enable_cbs = QtCore.Signal(name="enable_cbs")
+    image_displayed = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
@@ -391,32 +403,25 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         self.view = view
 
-        # Accommodates MSSWebMapService instances.
-        self.wms = None
+        # Multilayering things
+        self.multilayers = Multilayers(self)
+        self.pbLayerSelect.clicked.connect(lambda: (self.multilayers.hide(), self.multilayers.show()))
+        self.multilayers.cbWMS_URL.editTextChanged.connect(
+            lambda text: self.multilayers.pbViewCapabilities.setEnabled(text in self.multilayers.layers))
 
         # Initial list of WMS servers.
-        self.cbWMS_URL.setModel(WMS_URL_LIST)
+        self.multilayers.cbWMS_URL.setModel(WMS_URL_LIST)
         if default_WMS is not None:
-            add_wms_urls(self.cbWMS_URL, default_WMS)
+            add_wms_urls(self.multilayers.cbWMS_URL, default_WMS)
         # set last connected url to editable
         wms_settings = load_settings_qsettings('wms', {'recent_wms_url': None})
         if wms_settings['recent_wms_url'] is not None:
-            add_wms_urls(self.cbWMS_URL, [wms_settings['recent_wms_url']])
-
-        # Initially allowed WMS parameters and date/time formats.
-        self.allowed_init_times = []
-        self.allowed_valid_times = []
-        self.init_time_name = None
-        self.valid_time_name = None
+            add_wms_urls(self.multilayers.cbWMS_URL, [wms_settings['recent_wms_url']])
 
         self.layerChangeInProgress = False
         self.save_level = None
 
         # Initialise GUI elements that control WMS parameters.
-        self.cbLayer.clear()
-        self.cbLayer.setEnabled(False)
-        self.cbStyle.clear()
-        self.cbStyle.setEnabled(False)
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
@@ -435,7 +440,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enable_valid_time_elements(False)
         self.enable_init_time_elements(False)
         self.btGetMap.setEnabled(False)
-        self.pbViewCapabilities.setEnabled(False)
+        self.multilayers.pbViewCapabilities.setEnabled(False)
 
         self.cbTransparent.setChecked(False)
 
@@ -462,24 +467,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Connect slots and signals.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self.btGetCapabilities.clicked.connect(self.get_capabilities)
-        self.pbViewCapabilities.clicked.connect(self.view_capabilities)
+        self.multilayers.btGetCapabilities.clicked.connect(self.get_capabilities)
+        self.multilayers.pbViewCapabilities.clicked.connect(self.view_capabilities)
 
         self.btClearMap.clicked.connect(self.clear_map)
 
-        self.cbLayer.currentIndexChanged.connect(self.layer_changed)
-        self.cbStyle.currentIndexChanged.connect(self.style_changed)
         self.cbLevel.currentIndexChanged.connect(self.level_changed)
-
-        # Connecting both activated() and currentIndexChanged() signals leads
-        # to **TimeChanged() being called twice when the user selects a new
-        # item in the combobox. However, currentIndexChanged alone doesn't
-        # trigger the event when the user selects the currently active item
-        # (e.g. to confirm the time). activated() doesn't trigger the event
-        # if the index has been changed programmatically (e.g. through the
-        # back/forward buttons).
-        self.cbInitTime.activated.connect(self.init_time_changed)
-        self.cbValidTime.activated.connect(self.valid_time_changed)
+        self.cbInitTime.currentIndexChanged.connect(self.init_time_changed)
+        self.cbValidTime.currentIndexChanged.connect(self.valid_time_changed)
+        self.multilayers.needs_repopulate.connect(self.populate_ui)
 
         self.tbInitTime_back.clicked.connect(self.init_time_back_click)
         self.tbInitTime_fwd.clicked.connect(self.init_time_fwd_click)
@@ -495,7 +491,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbLevel_fwd.clicked.connect(self.level_fwd_click)
 
         self.btClearCache.clicked.connect(self.clearCache)
-        self.cbWMS_URL.editTextChanged.connect(self.wms_url_changed)
+        self.multilayers.cbWMS_URL.editTextChanged.connect(self.wms_url_changed)
         if view is not None and hasattr(view, "redrawn"):
             self.view.redrawn.connect(self.after_redraw)
 
@@ -503,6 +499,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pdlg = QtWidgets.QProgressDialog(
             "retrieving image...", "Cancel", 0, 10, parent=self.parent())
         self.pdlg.close()
+
+        # Progress dialog to inform the user about ongoing capability requests.
+        self.capabilities_worker = Worker(None)
+        self.cpdlg = QtWidgets.QProgressDialog(
+            "retrieving wms capabilities...", "Cancel", 0, 10, parent=self.multilayers)
+        self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)
+        self.cpdlg.close()
 
         self.thread_prefetch = QtCore.QThread()  # no parent!
         self.thread_prefetch.start()
@@ -514,9 +517,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.expected_img = None
         self.check_for_allowed_crs = True
 
-        if self.cbWMS_URL.count() > 0:
-            self.cbWMS_URL.setCurrentIndex(0)
-            self.wms_url_changed(self.cbWMS_URL.currentText())
+        if self.multilayers.cbWMS_URL.count() > 0:
+            self.multilayers.cbWMS_URL.setCurrentIndex(0)
+            self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
     def __del__(self):
         """Destructor.
@@ -530,7 +533,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.thread_fetch.quit()
         self.thread_fetch.wait()
 
-    def initialise_wms(self, base_url):
+    def get_all_maps(self, disregard_current=False):
+        if self.multilayers.cbMultilayering.isChecked():
+            self.get_map(self.multilayers.get_active_layers())
+        else:
+            self.get_map([self.multilayers.get_current_layer()])
+
+    def initialise_wms(self, base_url, version="1.3.0"):
         """Initialises a MSSWebMapService object with the specified base_url.
 
         If the web server returns a '401 Unauthorized', prompt the user for
@@ -545,80 +554,103 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         (mr, 2011-02-25)
         """
-        wms = None
         # initialize login cache fomr config file, but do not overwrite existing keys
-        for key, value in config_loader(dataset="WMS_login", default={}).items():
+        for key, value in config_loader(dataset="WMS_login").items():
             if key not in constants.WMS_LOGIN_CACHE:
                 constants.WMS_LOGIN_CACHE[key] = value
         username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
-        try:
-            str(base_url)  # to provoke early Unicode Error
-            while wms is None:
-                try:
-                    wms = MSSWebMapService(base_url, version='1.1.1',
-                                           username=username, password=password)
-                except owslib.util.ServiceException as ex:
-                    logging.error("ERROR: %s %s", type(ex), ex)
-                    if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
-                            "Unauthorized") >= 0:
-                        # Catch the "401 Unauthorized" error if one has been
-                        # returned by the server and ask the user for username
-                        # and password.
-                        # WORKAROUND (mr, 28Mar2013) -- owslib doesn't recognize
-                        # the Apache 401 messages, we get an XML message here but
-                        # no error code. Quick workaround: Scan the XML message for
-                        # the string "Error 401"...
-                        dlg = MSS_WMS_AuthenticationDialog(parent=self)
-                        dlg.setModal(True)
-                        if dlg.exec_() == QtWidgets.QDialog.Accepted:
-                            username, password = dlg.getAuthInfo()
-                            # If user & pw have been entered, cache them.
-                            constants.WMS_LOGIN_CACHE[base_url] = (username, password)
-                        else:
-                            break
+        def on_success(wms):
+            self.cpdlg.setValue(9)
+            if wms is not None:
+
+                # update the combo box, if entry requires change/insertion
+                found = False
+                current_url = self.multilayers.cbWMS_URL.currentText()
+                for count in range(self.multilayers.cbWMS_URL.count()):
+                    if self.multilayers.cbWMS_URL.itemText(count) == current_url:
+                        self.multilayers.cbWMS_URL.setItemText(count, base_url)
+                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
+                        found = True
+                        break
+                    if self.multilayers.cbWMS_URL.itemText(count) == base_url:
+                        self.multilayers.cbWMS_URL.setCurrentIndex(count)
+                        found = True
+                if not found:
+                    logging.debug("inserting URL: %s", base_url)
+                    add_wms_urls(self.multilayers.cbWMS_URL, [base_url])
+                    self.multilayers.cbWMS_URL.setEditText(base_url)
+                    save_settings_qsettings('wms', {'recent_wms_url': base_url})
+
+                self.activate_wms(wms)
+                WMS_SERVICE_CACHE[wms.url] = wms
+                self.cpdlg.close()
+
+        def on_failure(e):
+            try:
+                raise e
+            except owslib.util.ServiceException as ex:
+                logging.error("ERROR: %s %s", type(ex), ex)
+                if str(ex).startswith("401") or str(ex).find("Error 401") >= 0 or str(ex).find(
+                        "Unauthorized") >= 0:
+                    # Catch the "401 Unauthorized" error if one has been
+                    # returned by the server and ask the user for username
+                    # and password.
+                    # WORKAROUND (mr, 28Mar2013) -- owslib doesn't recognize
+                    # the Apache 401 messages, we get an XML message here but
+                    # no error code. Quick workaround: Scan the XML message for
+                    # the string "Error 401"...
+                    dlg = MSS_WMS_AuthenticationDialog(parent=self.multilayers)
+                    dlg.setModal(True)
+                    if dlg.exec_() == QtWidgets.QDialog.Accepted:
+                        username, password = dlg.getAuthInfo()
+                        # If user & pw have been entered, cache them.
+                        constants.WMS_LOGIN_CACHE[base_url] = (username, password)
+                        self.capabilities_worker.function = lambda: MSSWebMapService(
+                            base_url, version=version,
+                            username=username, password=password)
+                        self.capabilities_worker.start()
                     else:
-                        raise
+                        self.cpdlg.close()
+                        return
+                else:
+                    logging.error("cannot load capabilities document.. "
+                                  "no layers can be used in this view.")
+                    QtWidgets.QMessageBox.critical(
+                        self.multilayers, self.tr("Web Map Service"),
+                        self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
+                    self.cpdlg.close()
+            except Exception as ex:
+                logging.error("cannot load capabilities document.. "
+                              "no layers can be used in this view.")
+                QtWidgets.QMessageBox.critical(
+                    self.multilayers, self.tr("Web Map Service"),
+                    self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
+                self.cpdlg.close()
+
+        try:
+            str(base_url)
         except UnicodeEncodeError:
             logging.error("got a unicode url?!: '%s'", base_url)
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
+            QtWidgets.QMessageBox.critical(self.multilayers, self.tr("Web Map Service"),
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
-        except Exception as ex:
-            logging.error("cannot load capabilities document.. "
-                          "no layers can be used in this view.")
-            QtWidgets.QMessageBox.critical(
-                self, self.tr("Web Map Service"),
-                self.tr("ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
-        return wms
+            self.cpdlg.close()
+
+        self.capabilities_worker = Worker.create(lambda: MSSWebMapService(base_url, version=version,
+                                                                          username=username, password=password),
+                                                 on_success, on_failure)
 
     def wms_url_changed(self, text):
         wms = WMS_SERVICE_CACHE.get(text)
-        if wms is not None and wms != self.wms:
+        if wms is not None:
             self.activate_wms(wms)
-        elif self.wms is not None:
-            self.wms = None
-            self.btGetMap.setEnabled(False)
-
-            self.cbLayer.clear()
-            self.cbLevel.clear()
-            self.cbStyle.clear()
-            self.cbInitTime.clear()
-            self.cbValidTime.clear()
-
-            self.cbLayer.setEnabled(False)
-            self.cbStyle.setEnabled(False)
-            self.enable_level_elements(False)
-            self.enable_valid_time_elements(False)
-            self.enable_init_time_elements(False)
-            self.pbViewCapabilities.setEnabled(False)
-            self.cbTransparent.setChecked(False)
 
     @QtCore.pyqtSlot(Exception)
     def display_exception(self, ex):
         logging.error("ERROR: %s %s", type(ex), ex)
         logging.debug("%s", traceback.format_exc())
         QtWidgets.QMessageBox.critical(
-            self, self.tr("Web Map Service"), self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+            self, self.tr("Web Map Service"), self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
 
     @QtCore.pyqtSlot()
     def display_progress_dialog(self):
@@ -628,6 +660,21 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pdlg.setModal(True)
         self.pdlg.show()
 
+    def display_capabilities_dialog(self):
+        logging.debug("showing capabilities dialog")
+        self.cpdlg.reset()
+        self.cpdlg.setValue(1)
+        self.cpdlg.setModal(True)
+        self.cpdlg.show()
+
+    def stop_capabilities_retrieval(self):
+        logging.debug("stopping capabilities retrieval")
+        try:
+            self.capabilities_worker.quit()
+            self.capabilities_worker.disconnect()
+        except TypeError:
+            pass
+
     def clear_map(self):
         logging.debug("clear figure")
         self.view.clear_figure()
@@ -635,76 +682,47 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.signal_enable_cbs.emit()
 
     def get_capabilities(self):
-        """Query the WMS server in the URL combobox for its capabilities. Fill
-           layer, style, etc. combo boxes.
+        """
+        Query the WMS server in the URL combobox for its capabilities.
         """
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
-        base_url = self.cbWMS_URL.currentText()
+        base_url = self.multilayers.cbWMS_URL.currentText()
         params = {'service': 'WMS',
-                  'request': 'GetCapabilities',
-                  'version': '1.1.1'}
-        try:
-            request = requests.get(base_url, params=params)
-        except (requests.exceptions.TooManyRedirects,
-                requests.exceptions.ConnectionError,
-                requests.exceptions.InvalidURL,
-                requests.exceptions.InvalidSchema,
-                requests.exceptions.MissingSchema) as ex:
-            logging.error("Cannot load capabilities document.\n"
-                          "No layers can be used in this view.")
-            QtWidgets.QMessageBox.critical(
-                self, self.tr("Web Map Service"),
-                self.tr("ERROR: We cannot load the capability document!\n\n{}\n{}".format(type(ex), ex)))
-        else:
+                  'request': 'GetCapabilities'}
+
+        def on_success(request):
+            self.cpdlg.setValue(5)
             # url shortener url translated
             url = request.url
-            url = url.replace('?service=WMS&request=GetCapabilities&version=1.1.1', '')
+
+            url = url.replace("?service=WMS", "").replace("&service=WMS", "") \
+                .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
             logging.debug("requesting capabilities from %s", url)
-            wms = self.initialise_wms(url)
-            if wms is not None:
+            self.initialise_wms(url, None)
 
-                # update the combo box, if entry requires change/insertion
-                found = False
-                for count in range(self.cbWMS_URL.count()):
-                    if self.cbWMS_URL.itemText(count) == base_url:
-                        self.cbWMS_URL.setItemText(count, url)
-                        self.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                        break
-                    if self.cbWMS_URL.itemText(count) == url:
-                        self.cbWMS_URL.setCurrentIndex(count)
-                        found = True
-                if not found:
-                    logging.debug("inserting URL: %s", url)
-                    add_wms_urls(self.cbWMS_URL, [url])
-                    self.cbWMS_URL.setEditText(url)
-                    save_settings_qsettings('wms', {'recent_wms_url': url})
+        def on_failure(e):
+            try:
+                raise e
+            except (requests.exceptions.TooManyRedirects,
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.InvalidURL,
+                    requests.exceptions.InvalidSchema,
+                    requests.exceptions.MissingSchema) as ex:
+                logging.error("Cannot load capabilities document.\n"
+                              "No layers can be used in this view.")
+                QtWidgets.QMessageBox.critical(
+                    self.multilayers, self.tr("Web Map Service"),
+                    self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
+            finally:
+                self.cpdlg.close()
 
-                self.activate_wms(wms)
-                WMS_SERVICE_CACHE[wms.url] = wms
+        self.display_capabilities_dialog()
+        self.capabilities_worker = Worker.create(lambda: requests.get(base_url, params=params),
+                                                 on_success, on_failure)
 
     def activate_wms(self, wms):
-        # Clear layer and style combo boxes. First disconnect the layerChanged
-        # slot to avoid calls to this function.
-        self.btGetMap.setEnabled(False)
-        self.cbLayer.currentIndexChanged.disconnect(self.layer_changed)
-        self.cbLayer.clear()
-        self.cbStyle.clear()
-        self.cbLevel.clear()
-        self.cbStyle.clear()
-        self.cbInitTime.clear()
-        self.cbValidTime.clear()
-
-        self.cbLayer.setEnabled(False)
-        self.cbStyle.setEnabled(False)
-        self.enable_level_elements(False)
-        self.enable_valid_time_elements(False)
-        self.enable_init_time_elements(False)
-        self.pbViewCapabilities.setEnabled(False)
-        self.cbTransparent.setChecked(False)
-
         # Parse layer tree of the wms object and discover usable layers.
         stack = list(wms.contents.values())
         filtered_layers = set()
@@ -713,51 +731,35 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if len(layer.layers) > 0:
                 stack.extend(layer.layers)
             elif self.is_layer_aligned(layer):
-                cb_string = "{} | {}".format(layer.title, layer.name)
+                cb_string = f"{layer.title} | {layer.name}"
                 filtered_layers.add(cb_string)
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
-        self.cbLayer.addItems(filtered_layers)
-        self.cbLayer.setEnabled(self.cbLayer.count() > 1)
-        self.wms = wms
-        self.layer_changed(0)
-        self.pbViewCapabilities.setEnabled(True)
+        self.multilayers.add_wms(wms)
+        for layer in filtered_layers:
+            self.multilayers.add_multilayer(layer, wms)
+        self.multilayers.filter_multilayers()
+        self.multilayers.update_checkboxes()
+        self.multilayers.pbViewCapabilities.setEnabled(True)
+        if len(filtered_layers) > 0:
+            self.populate_ui()
 
         if self.prefetcher is not None:
             self.prefetch.disconnect(self.prefetcher.fetch_maps)
         if self.fetcher is not None:
             self.fetch.disconnect(self.fetcher.fetch_maps)
 
-        self.prefetcher = WMSMapFetcher(self.wms, self.wms_cache)
+        self.prefetcher = WMSMapFetcher(self.wms_cache)
         self.prefetcher.moveToThread(self.thread_prefetch)
         self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
 
-        self.fetcher = WMSMapFetcher(self.wms, self.wms_cache)
+        self.fetcher = WMSMapFetcher(self.wms_cache)
         self.fetcher.moveToThread(self.thread_fetch)
         self.fetch.connect(self.fetcher.fetch_maps)  # implicitely uses a queued connection
         self.fetcher.finished.connect(self.continue_retrieve_image)  # implicitely uses a queued connection
         self.fetcher.exception.connect(self.display_exception)  # implicitely uses a queued connection
         self.fetcher.started_request.connect(self.display_progress_dialog)  # implicitely uses a queued connection
-
-        if self.cbInitTime.count() > 0:
-            self.cbInitTime.setCurrentIndex(self.cbInitTime.count() - 1)
-            self.init_time_changed()
-        if self.cbInitTime.count() > 0 and self.cbValidTime.count() > 0:
-            self.cbValidTime.setCurrentIndex(0)
-            for i in range(self.cbValidTime.count()):
-                if self.cbValidTime.itemText(i) == self.cbInitTime.currentText():
-                    self.cbValidTime.setCurrentIndex(i)
-                    break
-            self.valid_time_changed()
-        elif self.cbValidTime.count() > 0:
-            self.cbValidTime.setCurrentIndex(0)
-            self.valid_time_changed()
-
-        # Reconnect layerChanged.
-        self.cbLayer.currentIndexChanged.connect(self.layer_changed)
-        if len(filtered_layers) > 0:
-            self.btGetMap.setEnabled(True)
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
@@ -767,24 +769,25 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            document.
         """
         logging.debug("Opening WMS capabilities browser..")
-        if self.wms is not None:
+        wms = self.multilayers.layers[self.multilayers.cbWMS_URL.currentText()]["wms"]
+        if wms is not None:
             wmsbrws = wms_capabilities.WMSCapabilitiesBrowser(
-                parent=self,
-                url=self.wms.url,
-                capabilities=self.wms)
+                parent=self.multilayers,
+                url=wms.url,
+                capabilities=wms)
             wmsbrws.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             wmsbrws.show()
 
-    def get_layer_object(self, layername):
+    def get_layer_object(self, wms, layername):
         """Returns the object from the layer tree that fits the given
            layer name.
         """
-        if self.wms is None:
+        if wms is None:
             return None
-        if layername in self.wms.contents:
-            return self.wms.contents[layername]
+        if layername in wms.contents:
+            return wms.contents[layername]
         else:
-            stack = list(self.wms.contents.values())
+            stack = list(wms.contents.values())
             while len(stack) > 0:
                 layer = stack.pop()
                 if layer.name == layername:
@@ -816,137 +819,68 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     raise ValueError("value has incorrect number of entries.")
 
             except Exception as ex:
-                logging.debug("Wildecard Exception %s - %s.", type(ex), ex)
+                logging.debug("Wildcard Exception %s - %s.", type(ex), ex)
                 logging.error("Can't understand time string '%s'. Please check the implementation.", time_item)
         return times
 
-    def layer_changed(self, index):
-        """Slot that updates the <cbStyle> and <teLayerAbstract> GUI elements
-           when the user selects a new layer in <cbLayer>.
+    def disable_ui(self):
+        self.disable_cbInitTime_elements()
+        self.disable_cbValidTime_elements()
+        self.disable_dteInitTime_elements()
+        self.disable_dteValidTime_elements()
+        self.enable_valid_time_elements(False)
+        self.enable_init_time_elements(False)
+        self.enable_level_elements(False)
+        self.btGetMap.setEnabled(False)
+
+    def populate_ui(self):
         """
-        layer = self.get_layer()
-        if not self.wms or layer == '':
-            # Do not execute this method if no WMS has been registered or no
-            # layer is available (layer will be an empty string then).
-            return
-        self.layerChangeInProgress = True  # Flag for autoUpdate()
-        layerobj = self.get_layer_object(layer)
-        styles = layerobj.styles
-        self.cbStyle.clear()
-        self.cbStyle.addItems(["{} | {}".format(s, styles[s]["title"]) for s in styles])
-        self.cbStyle.setEnabled(self.cbStyle.count() > 1)
-
-        abstract_text = layerobj.abstract if layerobj.abstract else ""
-        abstract_text = ' '.join([s.strip() for s in abstract_text.splitlines()])
-        self.teLayerAbstract.setText(abstract_text)
-
-        # Handle dimensions:
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        if self.cbLevel.isEnabled():
-            self.save_level = self.cbLevel.currentText()
-        save_init_time = self.dteInitTime.dateTime()
-        save_valid_time = self.dteValidTime.dateTime()
-
+        Adds the values of the current layer to the UI comboboxes
+        """
+        self.layerChangeInProgress = True
         self.cbLevel.clear()
         self.cbInitTime.clear()
         self.cbValidTime.clear()
 
-        # Gather dimensions and extents. Dimensions must be declared at one place only, extents may be
-        # overwritten by leafs.
-        dimensions, extents = {}, {}
-        self.allowed_crs = None
-        lobj = layerobj
-        while lobj is not None:
-            dimensions.update(lobj.dimensions)
-            for key in lobj.extents:
-                if key not in extents:
-                    extents[key] = lobj.extents[key]
-            if self.allowed_crs is None:
-                self.allowed_crs = getattr(lobj, "crsOptions", None)
-            lobj = lobj.parent
+        active_layers = self.multilayers.get_active_layers()
+        layer = self.multilayers.get_current_layer()
 
-        if self.allowed_crs is not None and \
-                self.parent() is not None and \
-                self.parent().parent() is not None:
-            logging.debug("Layer offers '%s' projections.", self.allowed_crs)
-            extra = [_code for _code in self.allowed_crs if _code.startswith("EPSG")]
-            extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
-            logging.debug("Selected '%s' for Combobox.", extra)
+        if not layer:
+            self.lLayerName.setText("No Layer selected")
+            self.disable_ui()
+            return
 
-            self.parent().parent().update_predefined_maps(extra)
+        else:
+            self.btGetMap.setEnabled(True)
 
-        for key in [_x for _x in extents.keys() if _x not in dimensions]:
-            logging.error("extent '%s' not in dimensions!", key)
-            del extents[key]
+        self.lLayerName.setText(str(layer))
 
-        # ~~~~ A) Elevation. ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        enable_elevation = False
-        if "elevation" in extents:
-            units = dimensions["elevation"]["units"]
-            elev_list = ["{} ({})".format(e.strip(), units) for e in
-                         extents["elevation"]["values"]]
-            self.cbLevel.addItems(elev_list)
-            if self.save_level in elev_list:
-                idx = elev_list.index(self.save_level)
-                self.cbLevel.setCurrentIndex(idx)
-            enable_elevation = True
+        tooltip_text = ""
+        for active_layer in active_layers if layer.checkState(0) else [layer]:
+            tooltip_text += f"{active_layer}\n"
+        self.lLayerName.setToolTip(tooltip_text.strip())
 
-        # ~~~~ B) Initialisation time. ~~~~~~~~~~~~~~~~~~~~~~~~
-        try:
-            self.init_time_name = [x for x in ["init_time", "reference_time", "run"] if x in extents][0]
-            enable_init_time = True
-        except IndexError:
-            logging.debug("Index Error encountered due to FAILURE of initialisation.")
-            enable_init_time = False
+        if len(active_layers) > 1 and layer.checkState(0):
+            self.lLayerName.setText(self.lLayerName.text() + f" (and {len(active_layers) - 1} more)")
 
-        # Both time dimension and time extent tags were found. Try to determine the
-        # format of the date/time strings.
-        if enable_init_time:
-            self.allowed_init_times = self.parse_time_extent(
-                extents[self.init_time_name]["values"])
-            self.cbInitTime.addItems([_time.isoformat() + "Z" for _time in self.allowed_init_times])
-            if len(self.allowed_init_times) == 0:
-                msg = "cannot determine init time format."
-                logging.error(msg)
-                QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr("ERROR: {}".format(msg)))
+        crs = layer.get_allowed_crs()
+        levels, itimes, vtimes = layer.get_levels(), layer.get_itimes(), layer.get_vtimes()
 
-        # ~~~~ C) Valid/forecast time. ~~~~~~~~~~~~~~~~~~~~~~~~~
-        try:
-            self.valid_time_name = [x for x in ["time", "forecast"] if x in extents][0]
-            enable_valid_time = True
-        except IndexError:
-            logging.debug("Index Error Encountered due to invalid time.")
-            enable_valid_time = False
+        if levels:
+            self.cbLevel.addItems(levels)
+            self.cbLevel.setCurrentIndex(self.cbLevel.findText(layer.get_level()))
+        self.enable_level_elements(len(levels) > 0)
 
-        # TODO Relic from the past: Is this really necessary or even correct??
-        vtime_no_extent = False
-        if not enable_valid_time and "time" in dimensions:
-            self.valid_time_name = "time"
-            enable_valid_time = True
-            vtime_no_extent = True
-            self.allowed_valid_times = []
+        if itimes:
+            self.cbInitTime.addItems(itimes)
+            self.cbInitTime.setCurrentIndex(self.cbInitTime.findText(layer.get_itime()))
+        self.enable_init_time_elements(len(itimes) > 0)
 
-        # Both time dimension and time extent tags were found. Try to determine the
-        # format of the date/time strings.
-        if enable_valid_time and not vtime_no_extent:
-            self.allowed_valid_times = self.parse_time_extent(
-                extents[self.valid_time_name]["values"])
-            self.cbValidTime.addItems(
-                [_time.isoformat() + "Z" for _time in self.allowed_valid_times])
+        if vtimes:
+            self.cbValidTime.addItems(vtimes)
+            self.cbValidTime.setCurrentIndex(self.cbValidTime.findText(layer.get_vtime()))
+        self.enable_valid_time_elements(len(vtimes) > 0)
 
-            if len(self.allowed_valid_times) == 0:
-                msg = "cannot determine valid time format."
-                logging.error(msg)
-                QtWidgets.QMessageBox.critical(
-                    self, self.tr("Web Map Service"), self.tr("ERROR: {}".format(msg)))
-
-        self.enable_level_elements(enable_elevation)
-        self.enable_valid_time_elements(enable_valid_time)
-        self.enable_init_time_elements(enable_init_time)
-
-        # Check whether dimension strings can be interpreted. If not, disable
-        # the sync to the date/time elements.
         if not self.init_time_changed():
             self.disable_dteInitTime_elements()
         if not self.valid_time_changed():
@@ -956,17 +890,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.cbValidTime.count() == 0:
             self.disable_cbValidTime_elements()
 
-        # Try to restore previous time settings. Setting the date/time edits
-        # triggers a signal to calls check_(init/valid)_time(), however, the
-        # method is only called if the date actually changes (i.e. the layer
-        # has provided time values, these were inserted into the combobox,
-        # and via the combobox-signal the datetime edit was changed). This
-        # can lead to a strike through font if the new layer does not provide
-        # time values. Therefore the additional call to check_*_time().
-        self.dteInitTime.setDateTime(save_init_time)
-        self.check_init_time(save_init_time)
-        self.dteValidTime.setDateTime(save_valid_time)
-        self.check_valid_time(save_valid_time)
+        if crs and \
+           self.parent() is not None and \
+           self.parent().parent() is not None:
+            logging.debug("Layer offers '%s' projections.", crs)
+            extra = [_code for _code in crs if _code.startswith("EPSG")]
+            extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
+            logging.debug("Selected '%s' for Combobox.", extra)
+            self.parent().parent().update_predefined_maps(extra)
+
         self.layerChangeInProgress = False
 
     @staticmethod
@@ -991,7 +923,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             return 86400 * int(timestep_string.split(" days")[0])
         except ValueError as error:
             logging.debug("ValueError Exception %s", error)
-            raise ValueError("cannot convert '{}' to seconds: wrong format.".format(timestep_string))
+            raise ValueError(f"cannot convert '{timestep_string}' to seconds: wrong format.")
 
     def init_time_back_click(self):
         """Slot for the tbInitTime_back button.
@@ -1080,7 +1012,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         a layer change).
         """
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
-            self.btGetMap.click()
+            self.get_all_maps()
 
     def check_init_time(self, dt):
         """Checks whether an initialisation time set with the init time
@@ -1092,7 +1024,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         font = self.dteInitTime.font()
         pydt = dt.toPyDateTime()
-        init_time_available = pydt in self.allowed_init_times
+        init_time_available = pydt in self.multilayers.get_current_layer().allowed_init_times
         font.setStrikeOut(not init_time_available)
         self.dteInitTime.setFont(font)
         if init_time_available:
@@ -1104,8 +1036,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         valid_time_available = True
         pydt = dt.toPyDateTime()
-        if self.allowed_valid_times:
-            if pydt in self.allowed_valid_times:
+        if self.multilayers.get_current_layer().allowed_valid_times:
+            if pydt in self.multilayers.get_current_layer().allowed_valid_times:
                 index = self.cbValidTime.findText(pydt.isoformat() + "Z")
                 # setCurrentIndex also sets the date/time edit via signal.
                 self.cbValidTime.setCurrentIndex(index)
@@ -1125,6 +1057,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             init_time = parse_iso_datetime(init_time)
             if init_time is not None:
                 self.dteInitTime.setDateTime(init_time)
+
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
+            self.multilayers.get_current_layer().set_itime(self.cbInitTime.currentText())
+
         self.auto_update()
         return init_time == "" or init_time is not None
 
@@ -1136,20 +1072,22 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             valid_time = parse_iso_datetime(valid_time)
             if valid_time is not None:
                 self.dteValidTime.setDateTime(valid_time)
+
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
+            self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
+
         self.auto_update()
         return valid_time == "" or valid_time is not None
 
     def level_changed(self):
-        self.auto_update()
-
-    def style_changed(self, index):
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
+            self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
         self.auto_update()
 
     def enable_level_elements(self, enable):
         """Enable or disable the GUI elements allowing vertical elevation
            level control.
         """
-        self.cbLevelOn.setChecked(enable)
         self.cbLevel.setEnabled(enable and self.cbLevel.count() > 1)
         self.tbLevel_back.setEnabled(enable)
         self.tbLevel_fwd.setEnabled(enable)
@@ -1158,7 +1096,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """Enables or disables the GUI elements allowing initialisation time
            control.
         """
-        self.cbInitialisationOn.setChecked(enable)
         self.cbInitTime.setEnabled(enable)
         self.dteInitTime.setEnabled(enable)
         self.tbInitTime_back.setEnabled(enable)
@@ -1171,7 +1108,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """Enables or disables the GUI elements allowing valid time
            control.
         """
-        self.cbValidOn.setChecked(enable)
         self.cbValidTime.setEnabled(enable)
         self.dteValidTime.setEnabled(enable)
         self.tbValidTime_back.setEnabled(enable)
@@ -1215,16 +1151,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.tbValidTime_cbfwd.setEnabled(enable)
 
     def get_layer(self):
-        return self.cbLayer.currentText().split(" | ")[-1]
+        return self.multilayers.get_current_layer().get_layer()
 
     def get_style(self):
-        return self.cbStyle.currentText().split(" |")[0]
+        return self.multilayers.get_current_layer().get_style()
 
     def get_level(self):
-        if self.cbLevelOn.isChecked():
-            return self.cbLevel.currentText().split(" (")[0]
-        else:
-            return None
+        return self.multilayers.get_current_layer().get_level_name()
 
     def get_init_time(self):
         """Get the initialisation time from the GUI elements.
@@ -1238,7 +1171,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if self.dteInitTime.isEnabled():
                 return self.dteInitTime.dateTime().toPyDateTime()
             else:
-                itime_str = self.cbInitTime.currentText()
+                itime_str = self.multilayers.get_current_layer().get_itime()
                 return itime_str
         else:
             return None
@@ -1250,7 +1183,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if self.dteValidTime.isEnabled():
                 return self.dteValidTime.dateTime().toPyDateTime()
             else:
-                vtime_str = self.cbValidTime.currentText()
+                vtime_str = self.multilayers.get_current_layer().get_vtime()
                 return vtime_str
         else:
             return None
@@ -1260,24 +1193,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         return self.wms_cache is not None and self.cbCacheEnabled.isChecked()
 
-    def get_legend_url(self):
-        layer = self.get_layer()
-        style = self.get_style()
-        layerobj = self.get_layer_object(layer)
-        urlstr = None
-        if style != "" and "legend" in layerobj.styles[style]:
-            urlstr = layerobj.styles[style]["legend"]
-
-        return urlstr
-
-    def get_md5_filename(self, kwargs):
-        urlstr = self.wms.getmap(return_only_url=True, **kwargs)
-        if not self.wms.url.startswith(self.cbWMS_URL.currentText()):
-            raise RuntimeError("WMS URL does not match, use get capabilities first.")
+    def get_md5_filename(self, layer, kwargs):
+        urlstr = layer.get_wms().getmap(return_only_url=True, **kwargs)
         return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
 
-    def retrieve_image(self, crs="EPSG:4326", bbox=None, path_string=None,
-                       width=800, height=400):
+    def retrieve_image(self, layer=None, crs="EPSG:4326", bbox=None, path_string=None,
+                       width=800, height=400, transparent=False):
         """Retrieve an image of the layer currently selected in the
            GUI elements from the current WMS provider. If caching is
            enabled, first check the cache for the requested image. If
@@ -1285,7 +1206,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            store the image into the cache.
            If a legend graphic is available for the layer, this image
            is also retrieved.
-
         Arguments:
         crs -- coordinate reference system as a string passed to the WMS
         path_string -- string of waypoints that resemble a vertical
@@ -1293,26 +1213,26 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                        sections.
         bbox -- bounding box as list of four floats
         width, height -- width and height of requested image in pixels
-
         """
-
         # Get layer and style names.
-        layer = self.get_layer()
-        style = self.get_style()
-        level = self.get_level()
-        transparent = self.cbTransparent.isChecked()
+        if not layer:
+            layer = self.multilayers.get_current_layer()
+
+        layer_name = layer.get_layer()
+        style = layer.get_style()
+        level = layer.get_level_name()
 
         def normalize_crs(crs):
             if any(crs.startswith(_prefix) for _prefix in ("MSS", "AUTO")):
                 return crs.split(",")[0]
             return crs
 
-        if self.check_for_allowed_crs and normalize_crs(crs) not in self.allowed_crs:
+        if self.check_for_allowed_crs and normalize_crs(crs) not in layer.allowed_crs:
             ret = QtWidgets.QMessageBox.warning(
                 self, self.tr("Web Map Service"),
-                self.tr("WARNING: Selected CRS '{}' not contained in allowed list of supported CRS for this WMS\n"
-                        "({})\n"
-                        "Continue ?".format(crs, self.allowed_crs)),
+                self.tr(f"WARNING: Selected CRS '{crs}' not contained in allowed list of supported CRS for this WMS\n"
+                        f"({layer.allowed_crs})\n"
+                        "Continue ?"),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Ignore | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Ignore:
@@ -1323,21 +1243,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # get...Time() will return None if the corresponding checkboxes are
         # disabled. <None> objects passed to wms.getmap will not be included
         # in the query URL that is send to the server.
-        init_time = self.get_init_time()
-        if init_time is not None and init_time not in self.allowed_init_times:
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR: Invalid init time chosen\n"
-                                                   "(watch out for the strikethrough)!"))
-            return
-
-        valid_time = self.get_valid_time()
-        if (valid_time is not None and
-                self.allowed_valid_times is not None and
-                valid_time not in self.allowed_valid_times):
-            QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"),
-                                           self.tr("ERROR: Invalid valid time chosen!\n"
-                                                   "(watch out for the strikethrough)!"))
-            return
+        init_time = layer.get_itime()
+        valid_time = layer.get_vtime()
 
         logging.debug("fetching layer '%s'; style '%s', width %d, height %d",
                       layer, style, width, height)
@@ -1356,7 +1263,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             #                threading-in-a-pyqt-application-use-qt-threads-or-python-threads
             # b) To retrieve the return value of getmap, a Queue is used.
             #    See: http://stackoverflow.com/questions/1886090/return-value-from-thread
-            kwargs = {"layers": [layer],
+            kwargs = {"layers": [layer_name],
                       "styles": [style],
                       "srs": crs,
                       "bbox": bbox,
@@ -1364,12 +1271,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "time": valid_time,
                       "init_time": init_time,
                       "level": level,
-                      "time_name": self.valid_time_name,
-                      "init_time_name": self.init_time_name,
+                      "time_name": layer.vtime_name,
+                      "init_time_name": layer.itime_name,
                       "size": (width, height),
                       "format": 'image/png',
                       "transparent": transparent}
-            legend_kwargs = {"urlstr": self.get_legend_url(), "md5_filename": None}
+            legend_kwargs = {"urlstr": layer.get_legend_url(), "md5_filename": None}
             if legend_kwargs["urlstr"] is not None:
                 legend_kwargs["md5_filename"] = os.path.join(
                     self.wms_cache, hashlib.md5(legend_kwargs["urlstr"].encode('utf-8')).hexdigest() + ".png")
@@ -1377,7 +1284,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # If caching is enabled, get the URL and check the image cache
             # directory for the suitable image file.
             if self.caching_enabled():
-                prefetch_config = config_loader(dataset="wms_prefetch", default=mss_default.wms_prefetch)
+                prefetch_config = config_loader(dataset="wms_prefetch")
                 prefetch_entries = ["validtime_fwd", "validtime_bck", "level_up", "level_down"]
                 for _x in prefetch_entries:
                     if _x in prefetch_config:
@@ -1392,7 +1299,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 fetch_nr = sum([prefetch_config[_x] for _x in prefetch_entries])
                 if fetch_nr > 0:
                     pre_tfwd, pre_tbck, pre_lfwd, pre_lbck = [prefetch_config[_x] for _x in prefetch_entries]
-
                     ci_time, ci_level = self.cbValidTime.currentIndex(), self.cbLevel.currentIndex()
                     prefetch_key_values = \
                         [("time", self.cbValidTime.itemText(ci_p))
@@ -1402,18 +1308,17 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         [("level", self.cbLevel.itemText(ci_p).split(" (")[0])
                          for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)
                          if ci_p != ci_level and 0 <= ci_p < self.cbLevel.count()]
-
                     prefetch_maps = []
                     for key, value in prefetch_key_values:
                         kwargs_new = kwargs.copy()
                         kwargs_new[key] = value
-                        prefetch_maps.append((kwargs_new, self.get_md5_filename(kwargs_new), True, {}))
+                        prefetch_maps.append((layer, kwargs_new, self.get_md5_filename(layer, kwargs_new), True, {}))
                     self.prefetch.emit(prefetch_maps)
 
-            md5_filename = self.get_md5_filename(kwargs)
+            md5_filename = self.get_md5_filename(layer, kwargs)
             self.expected_img = md5_filename
             self.pdlg.reset()
-            self.fetch.emit([(kwargs, md5_filename, self.caching_enabled(), legend_kwargs)])
+            return [(layer, kwargs, md5_filename, self.caching_enabled(), legend_kwargs)]
 
         except Exception as ex:
             self.display_exception(ex)
@@ -1431,8 +1336,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.display_retrieved_image(img, legend_img, layer, style, init_time, valid_time, complete_level)
         # this is for cases where 'remove' button is clicked, then 'retrieve' is clicked
         self.signal_disable_cbs.emit()
+        self.image_displayed.emit()
 
-    def get_map(self):
+    def get_map(self, layers=None):
         """Prototypical stub for getMap() function. Needs to be reimplemented
            in derived classes.
         """
@@ -1461,7 +1367,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     for f in cached_files:
                         os.remove(os.path.join(self.wms_cache, f))
                 except (IOError, OSError) as ex:
-                    msg = "ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
+                    msg = f"ERROR: Cannot delete file '{f}'. ({type(ex)}: {ex})"
                     logging.error(msg)
                     QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
                 else:
@@ -1497,20 +1403,50 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         try:
             for f, fsize, fage in files:
                 cum_size_bytes += fsize
-                if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes",
-                                                   default=mss_default.wms_cache_max_size_bytes) or
-                        fage > config_loader(dataset="wms_cache_max_age_seconds",
-                                             default=mss_default.wms_cache_max_age_seconds)):
+                if (cum_size_bytes > config_loader(dataset="wms_cache_max_size_bytes") or
+                        fage > config_loader(dataset="wms_cache_max_age_seconds")):
                     os.remove(f)
                     removed_files += 1
         except (IOError, OSError) as ex:
-            msg = "ERROR: Cannot delete file '{}'. ({}: {})".format(f, type(ex), ex)
+            msg = f"ERROR: Cannot delete file '{f}'. ({type(ex)}: {ex})"
             logging.error(msg)
             QtWidgets.QMessageBox.critical(self, self.tr("Web Map Service"), self.tr(msg))
         logging.debug("cache has been cleaned (%i files removed).", removed_files)
 
-        ################################################################################
+    def squash_multiple_images(self, imgs):
+        """
+        Lay the images on top of each other from 0 to n and return the product
+        """
+        background = imgs[0]
+        if len(imgs) > 1:
+            for foreground in imgs[1:]:
+                background.paste(foreground, (0, 0), foreground.convert("RGBA"))
 
+        return background
+
+    def append_multiple_images(self, imgs):
+        """
+        Stack the list of images vertically and return the product
+        """
+        images = [x for x in imgs if x]
+        if images:
+            # Add border around seperate legends
+            if len(images) > 1:
+                images = [ImageOps.expand(x, border=1, fill="black") for x in images]
+            max_height = int((self.view.fig.get_size_inches() * self.view.fig.get_dpi())[1] * 0.99)
+            width = max([image.width for image in images])
+            height = sum([image.height for image in images])
+            result = Image.new("RGBA", (width, height))
+            current_height = 0
+            for i, image in enumerate(images):
+                result.paste(image, (0, current_height - i))
+                current_height += image.height
+
+            if max_height < result.height:
+                result.thumbnail((result.width, max_height), Image.ANTIALIAS)
+            return result
+
+        ################################################################################
 
 #
 # CLASS VSecWMSControlWidget
@@ -1527,7 +1463,13 @@ class VSecWMSControlWidget(WMSControlWidget):
         super(VSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
-        self.btGetMap.clicked.connect(self.get_vsec)
+        self.btGetMap.clicked.connect(self.get_all_maps)
+
+    def get_all_maps(self):
+        if self.multilayers.cbMultilayering.isChecked():
+            self.get_vsec(self.multilayers.get_active_layers())
+        else:
+            self.get_vsec([self.multilayers.get_current_layer()])
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance from which the waypoints
@@ -1538,12 +1480,12 @@ class VSecWMSControlWidget(WMSControlWidget):
     @QtCore.Slot()
     def call_get_vsec(self):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
-            self.btGetMap.click()
+            self.get_all_maps()
 
-    def get_vsec(self):
+    def get_vsec(self, layers=None):
         """Slot that retrieves the vertical section and passes the image
-           to the view.
-        """
+                   to the view.
+                """
         # Specify the coordinate reference system for the request. We will
         # use the non-standard "VERT:LOGP" to query the MSS WMS Server for
         # a vertical section. The vertical extent of the plot is specified
@@ -1554,7 +1496,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         # Get lat/lon coordinates of flight track and convert to string for URL.
         path_string = ""
         for waypoint in self.waypoints_model.all_waypoint_data():
-            path_string += "{:.2f},{:.2f},".format(waypoint.lat, waypoint.lon)
+            path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},"
         path_string = path_string[:-1]
 
         # Determine the current size of the vertical section plot on the
@@ -1562,17 +1504,22 @@ class VSecWMSControlWidget(WMSControlWidget):
         width, height = self.view.get_plot_size_in_px()
 
         # Retrieve the image.
-        self.retrieve_image(crs, bbox, path_string, width, height)
+        if not layers:
+            layers = [self.multilayers.get_current_layer()]
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
 
-    def display_retrieved_image(self, img, legend_img, layer, style, init_time, valid_time, level):
+        args = []
+        for layer in layers:
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height))
+
+        self.fetch.emit(args)
+
+    def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
-        self.view.draw_image(img)
-        self.view.draw_legend(legend_img)
-        if style != "":
-            style_title = self.get_layer_object(layer).styles[style]["title"]
-        else:
-            style_title = None
-        self.view.draw_metadata(title=self.get_layer_object(layer).title,
+        self.view.draw_image(self.squash_multiple_images(imgs))
+        self.view.draw_legend(self.append_multiple_images(legend_imgs))
+        style_title = self.multilayers.get_current_layer().get_style()
+        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 style=style_title)
@@ -1594,19 +1541,13 @@ class HSecWMSControlWidget(WMSControlWidget):
     def __init__(self, parent=None, default_WMS=None, view=None, wms_cache=None):
         super(HSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
-        self.btGetMap.clicked.connect(self.get_map)
+        self.btGetMap.clicked.connect(self.get_all_maps)
 
     def level_changed(self):
-        if self.cbLevelOn.isChecked():
-            s = self.cbLevel.currentText()
-            if s == "":
-                return
-            if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
-                self.btGetMap.click()
-            else:
-                self.view.waypoints_interactor.update()
+        super().level_changed()
+        self.view.waypoints_interactor.update()
 
-    def get_map(self):
+    def get_map(self, layers=None):
         """Slot that retrieves the map and passes the image
            to the view.
         """
@@ -1614,25 +1555,37 @@ class HSecWMSControlWidget(WMSControlWidget):
         # object in the view.
         crs = self.view.get_crs()
         bbox = self.view.getBBOX()
+
         # Determine the current size of the vertical section plot on the
         # screen in pixels. The image will be retrieved in this size.
         width, height = self.view.get_plot_size_in_px()
-        # Retrieve the image.
-        self.retrieve_image(crs, bbox, None, width, height)
 
-    def display_retrieved_image(self, img, legend_img, layer, style, init_time, valid_time, level):
+        if not layers:
+            layers = [self.multilayers.get_current_layer()]
+
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+
+        args = []
+        for i, layer in enumerate(layers):
+            transparent = self.cbTransparent.isChecked() if i == 0 else True
+            bbox_tmp = tuple(bbox)
+            wms = self.multilayers.layers[layer.wms_name]["wms"]
+            if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
+                bbox_tmp = (bbox[1], bbox[0], bbox[3], bbox[2])
+            args.extend(self.retrieve_image(layer, crs, bbox_tmp, None, width, height, transparent))
+
+        self.fetch.emit(args)
+
+    def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
-        if style != "":
-            style_title = self.get_layer_object(layer).styles[style]["title"]
-        else:
-            style_title = None
-        self.view.draw_metadata(title=self.get_layer_object(layer).title,
+        style_title = self.multilayers.get_current_layer().get_style()
+        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 level=level,
                                 style=style_title)
-        self.view.draw_image(img)
-        self.view.draw_legend(legend_img)
+        self.view.draw_image(self.squash_multiple_images(imgs))
+        self.view.draw_legend(self.append_multiple_images(legend_imgs))
         self.view.waypoints_interactor.update()
 
     def is_layer_aligned(self, layer):

@@ -11,7 +11,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         """
         result = set([datafield[0] for datafield in self.required_datafields])
         if len(result) > 1 and "sfc" not in result:
-            msg = "A Plot may contain only 'sfc' and *one* 4-D type! ({}: {})".format(type(self), result)
+            msg = f"A Plot may contain only 'sfc' and *one* 4-D type! ({type(self)}: {result})"
             logging.fatal(msg)
             raise RuntimeError(msg)
         elif len(result) == 2:

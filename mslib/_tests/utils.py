@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,9 +25,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import time
+import fs
+import socket
+import multiprocessing
+from PyQt5 import QtTest
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
 from flask import json
+from mslib._tests.constants import MSS_CONFIG_PATH
+from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.server import APP, initialize_managers, start_server
+from mslib.mscolab.mscolab import handle_db_seed
 
 
 def callback_ok_image(status, response_headers):
@@ -78,7 +87,7 @@ def mscolab_register_and_login(app, msc_url, email, password, username):
     return response
 
 
-def mscolab_login(app, msc_url, email, password):
+def mscolab_login(app, msc_url, email='a', password='a'):
     data = {
         'email': email,
         'password': password
@@ -154,3 +163,68 @@ def mscolab_get_project_id(app, msc_url, email, password, username, path):
     for p in response['projects']:
         if p['path'] == path:
             return p['p_id']
+
+
+def mscolab_check_free_port(all_ports, port):
+    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        _s.bind(("127.0.0.1", port))
+    except (socket.error, IOError):
+        port = all_ports.pop()
+        port = mscolab_check_free_port(all_ports, port)
+    else:
+        _s.close()
+    return port
+
+
+def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
+    handle_db_seed()
+    port = mscolab_check_free_port(all_ports, all_ports.pop())
+
+    url = f"http://localhost:{port}"
+
+    _app = APP
+    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    _app.config['URL'] = url
+
+    _app, sockio, cm, fm = initialize_managers(_app)
+
+    # ToDo refactoring for spawn needed, fork is not implemented on windows, spawn is default on MAC and Windows
+    if multiprocessing.get_start_method(allow_none=True) != 'fork':
+        multiprocessing.set_start_method("fork")
+    process = multiprocessing.Process(
+        target=start_server,
+        args=(_app, sockio, cm, fm,),
+        kwargs={'port': port})
+    process.start()
+    return process, url, _app, sockio, cm, fm
+
+
+def create_mss_settings_file(content):
+    with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
+        file_dir.writetext("mss_settings.json", content)
+
+
+def wait_until_signal(signal, timeout=5):
+    """
+    Blocks the calling thread until the signal emits or the timeout expires.
+    """
+    init_time = time.time()
+    finished = False
+
+    def done(*args):
+        nonlocal finished
+        finished = True
+
+    signal.connect(done)
+    while not finished and time.time() - init_time < timeout:
+        QtTest.QTest.qWait(100)
+
+    try:
+        signal.disconnect(done)
+    except TypeError:
+        pass
+    finally:
+        return finished

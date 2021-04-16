@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,14 +27,18 @@
 
 import mock
 import os
+import pytest
 import shutil
 import sys
 import multiprocessing
 import tempfile
 from mslib.mswms.mswms import application
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore, QtGui
+from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
+from mslib._tests.utils import wait_until_signal
+
+PORTS = list(range(8095, 8105))
 
 
 class Test_MSS_SV_OptionsDialog(object):
@@ -52,22 +56,22 @@ class Test_MSS_SV_OptionsDialog(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_show(self, mockcrit):
         assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_get(self, mockcrit):
         self.window.get_settings()
         assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_addLevel(self, mockcrit):
         QtTest.QTest.mouseClick(self.window.btAdd, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert mockcrit.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_removeLevel(self, mockcrit):
         QtTest.QTest.mouseClick(self.window.btDelete, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
@@ -81,7 +85,7 @@ class Test_MSS_SV_OptionsDialog(object):
         levels = self.window.get_flight_levels()
         assert all(x == y for x, y in zip(levels, [0, 300, 320, 340]))
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
+    @mock.patch("PyQt5.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
     def test_setColour(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.btFillColour, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
@@ -109,13 +113,13 @@ class Test_MSSSideViewWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_wms(self, mockbox):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_mouse_over(self, mockbox):
         # Test mouse over
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
@@ -124,16 +128,18 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_SideViewWMS(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-
+        self.port = PORTS.pop()
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
         self.thread = multiprocessing.Process(
             target=application.run,
-            args=("127.0.0.1", 8082))
+            args=("127.0.0.1", self.port))
         self.thread.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
@@ -149,7 +155,7 @@ class Test_SideViewWMS(object):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
-        self.wms_control.cbWMS_URL.setEditText("")
+        self.wms_control.multilayers.cbWMS_URL.setEditText("")
 
     def teardown(self):
         self.window.hide()
@@ -161,25 +167,24 @@ class Test_SideViewWMS(object):
 
     def query_server(self, url):
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.keyClicks(self.wms_control.cbWMS_URL, url)
+        QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.wms_control.btGetCapabilities, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        wait_until_signal(self.wms_control.cpdlg.canceled)
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server("http://127.0.0.1:8082")
+        self.query_server(f"http://127.0.0.1:{self.port}")
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
-        QtWidgets.QApplication.processEvents()
+        wait_until_signal(self.wms_control.image_displayed)
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.sideview.MSS_SV_OptionsDialog")
     def test_options(self, mockdlg, mockbox):
         QtTest.QTest.mouseClick(self.window.btOptions, QtCore.Qt.LeftButton)
@@ -190,7 +195,7 @@ class Test_SideViewWMS(object):
         assert mockdlg.return_value.exec_.call_count == 1
         assert mockdlg.return_value.destroy.call_count == 1
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_insert_point(self, mockbox):
         """
         Test inserting a point inside and outside the canvas

@@ -27,18 +27,16 @@ uses various automated continuos integration build processes.
 Please add the channel conda-forge to your defaults:
 
     $ conda config --add channels conda-forge
-    $ conda config --add channels defaults
 
 The last channel added gets on top of the list. This gives the order:
-First search in default packages then in conda-forge.
+First search in conda-forge.
 
 You must install mss into a new environment to ensure the most recent
 versions for dependencies (On the Anaconda Prompt on Windows, you have
 to leave out the 'source' here and below). :
 
-    $ conda create -n mssenv python=3
+    $ conda create -n mssenv mamba
     $ conda activate mssenv
-    $ conda install mamba
     $ mamba install mss
 
 For updating an existing MSS installation to the current version, it is
@@ -47,7 +45,7 @@ shall be updated, it is important to update all packages in this
 environment. :
 
     $ conda activate mssenv
-    $ conda update --all
+    $ mamba update --all
     $ mss
 
 For further details mss-configuration
@@ -67,9 +65,8 @@ user for the apache2 wsgi script. We suggest to create a mss user.
 -   execute script, enable environment in .bashrc
 -   login again or export PATH="/home/mss/miniconda3/bin:\$PATH"
 -   python --version should tell Python 3.X.X
--   conda create -n mssenv python=3
+-   conda create -n mssenv mamba
 -   conda activate mssenv
--   conda install mamba
 -   mamba install mss
 
 For a simple test you could start the builtin standalone *mswms* and

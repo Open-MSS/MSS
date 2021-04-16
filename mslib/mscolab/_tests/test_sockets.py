@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,47 +24,65 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import socketio
 from functools import partial
 import requests
 import json
+import sys
 import time
+import pytest
 
+from PyQt5 import QtWidgets
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Message
-from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib.mscolab.server import db, APP, initialize_managers
+from mslib.msui.mscolab import MSSMscolabWindow
+from mslib._tests.utils import mscolab_start_server
 
 
+PORTS = list(range(9521, 9540))
+
+
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Sockets(object):
     chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
     chat_messages_counter_a = 0  # only for first test
 
     def setup(self):
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(0.1)
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
         self.sockets = []
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app, _, cm, _ = initialize_managers(self.app)
-        self.cm = cm
-        db.init_app(self.app)
+
+    def teardown(self):
+        for socket in self.sockets:
+            socket.disconnect()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_connect(self):
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        r = requests.post(self.url + "/token", data={
                           'email': 'a',
                           'password': 'a'
                           })
         response = json.loads(r.text)
         sio = socketio.Client()
+        self.sockets.append(sio)
 
         def handle_chat_message(message):
             self.chat_messages_counter_a += 1
 
         sio.on('chat-message-client', handler=handle_chat_message)
-        sio.connect(MSCOLAB_URL_TEST)
+        sio.connect(self.url)
         sio.emit('start', response)
         sio.sleep(2)
-        self.sockets.append(sio)
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
@@ -75,17 +93,17 @@ class Test_Sockets(object):
         assert self.chat_messages_counter_a == 1
 
     def test_emit_permissions(self):
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        r = requests.post(self.url + "/token", data={
                           'email': 'a',
                           'password': 'a'
                           })
         response1 = json.loads(r.text)
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        r = requests.post(self.url + "/token", data={
                           'email': 'b',
                           'password': 'b'
                           })
         response2 = json.loads(r.text)
-        r = requests.post(MSCOLAB_URL_TEST + "/token", data={
+        r = requests.post(self.url + "/token", data={
                           'email': 'c',
                           'password': 'c'
                           })
@@ -97,18 +115,21 @@ class Test_Sockets(object):
         sio1 = socketio.Client()
         sio2 = socketio.Client()
         sio3 = socketio.Client()
+        self.sockets.append(sio1)
+        self.sockets.append(sio2)
+        self.sockets.append(sio3)
 
         sio1.on('chat-message-client', handler=partial(handle_chat_message, 1))
         sio2.on('chat-message-client', handler=partial(handle_chat_message, 2))
         sio3.on('chat-message-client', handler=partial(handle_chat_message, 3))
-        sio1.connect(MSCOLAB_URL_TEST)
-        sio2.connect(MSCOLAB_URL_TEST)
-        sio3.connect(MSCOLAB_URL_TEST)
+        sio1.connect(self.url)
+        sio2.connect(self.url)
+        sio3.connect(self.url)
 
         sio1.emit('start', response1)
         sio2.emit('start', response2)
         sio3.emit('start', response3)
-        time.sleep(5)
+        time.sleep(0.1)
         sio1.emit('chat-message', {
             "p_id": 1,
             "token": response1['token'],
@@ -137,16 +158,3 @@ class Test_Sockets(object):
         assert self.chat_messages_counter[0] == 2
         assert self.chat_messages_counter[1] == 1
         assert self.chat_messages_counter[2] == 2
-        self.sockets.append(sio1)
-        self.sockets.append(sio2)
-        self.sockets.append(sio3)
-
-        with self.app.app_context():
-            Message.query.filter_by(text="message from 1").delete()
-            Message.query.filter_by(text="message from 3 - 1").delete()
-            Message.query.filter_by(text="message from 3 - 2").delete()
-            db.session.commit()
-
-    def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()

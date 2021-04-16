@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016-2017 Joern Ungermann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -157,7 +157,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         #     raise ValueError("wrong initialisation time in input")
 
         if fc_time not in times:
-            msg = "Forecast valid time '{}' is not available.".format(fc_time)
+            msg = f"Forecast valid time '{fc_time}' is not available."
             logging.error(msg)
             dataset.close()
             raise ValueError(msg)

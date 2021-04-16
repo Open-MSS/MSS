@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ import numpy as np
 from skyfield.api import Loader, Topos, utc
 
 from mslib.msui.constants import MSS_CONFIG_PATH
-from mslib.msui.mss_qt import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
 from mslib.utils import jsec_to_datetime, datetime_to_jsec, get_distance, rotate_point, fix_angle
 

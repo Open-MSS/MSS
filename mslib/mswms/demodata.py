@@ -10,7 +10,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -1045,17 +1045,17 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             fid.write(simple_server_config)
             fid.close()
         else:
-            print('''
-/!\\ existing server config: "{}" for demodata not overwritten!
-            '''.format(self.server_config_file))
+            print(f'''
+/!\\ existing server config: "{self.server_config_file}" for demodata not overwritten!
+            ''')
         if not self.server_config_fs.exists(self.server_auth_config_file):
             fid = self.server_config_fs.open(self.server_auth_config_file, 'w')
             fid.write(simple_auth_config)
             fid.close()
         else:
-            print('''
-/!\\ existing server auth config: "{}" for demodata not overwritten!
-                '''.format(self.server_auth_config_file))
+            print(f'''
+/!\\ existing server auth config: "{self.server_auth_config_file}" for demodata not overwritten!
+                ''')
 
     def generate_file(self, coordinate, label, leveltype, dimvals, variables):
         """
@@ -1070,7 +1070,7 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
         # ToDo nc.Dataset needs fileobject like access
 
         filename_out = os.path.join(
-            self.data_fs.root_path, "20121017_12_ecmwf_forecast.{}.EUR_LL015.036.{}.nc".format(label, leveltype))
+            self.data_fs.root_path, f"20121017_12_ecmwf_forecast.{label}.EUR_LL015.036.{leveltype}.nc")
         ecmwf = nc.Dataset(filename_out, 'w', format='NETCDF4_CLASSIC')
 
         for dim, values in dimvals:
@@ -1196,7 +1196,7 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
-    parser.add_argument("-c", "--create", help="creates demodata for the mswms server",
+    parser.add_argument("-s", "--seed", help="creates demodata for the mswms server",
                         action="store_true", default=False)
     args = parser.parse_args()
     if args.version:
@@ -1206,7 +1206,7 @@ def main():
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
-    if args.create:
+    if args.seed:
         root_fs = fs.open_fs("~/")
         if not root_fs.exists("mss/testdata"):
             root_fs.makedirs("mss/testdata")

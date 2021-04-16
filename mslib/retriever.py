@@ -10,6 +10,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2020 Joern Ungermann
+    :copyright: Copyright 2020-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -153,7 +154,7 @@ def main():
                     color="blue", marker="o", linewidth=2, markerfacecolor="red",
                     latlon=True, markersize=4, zorder=100)
             for i, (lon, lat, loc) in enumerate(zip(wp_lons, wp_lats, wp_locs)):
-                textlabel = "{:}   ".format(loc if loc else str(i))
+                textlabel = f"{loc if loc else str(i)}   "
                 x, y = bm(lon, lat)
                 plt.text(x, y, textlabel, **TEXT_CONFIG)
             plt.tight_layout()
@@ -164,13 +165,13 @@ def main():
             bbox = params['basemap']
             req = requests.get(
                 url, auth=tuple(config["WMS_login"][url]),
-                params={"version": "1.1.1", "request": "GetMap", "format": "image/png",
-                        "exceptions": "application/vnd.ogc.se_xml",
-                        "srs": config["predefined_map_sections"][section]["CRS"],
+                params={"version": "1.3.0", "request": "GetMap", "format": "image/png",
+                        "exceptions": "XML",
+                        "crs": config["predefined_map_sections"][section]["CRS"],
                         "layers": layer, "styles": style, "elevation": elevation,
                         "dim_init_time": init_time, "time": time,
                         "width": width, "height": height,
-                        "bbox": f"{bbox['llcrnrlon']},{bbox['llcrnrlat']},{bbox['urcrnrlon']},{bbox['urcrnrlat']}"})
+                        "bbox": f"{bbox['llcrnrlat']},{bbox['llcrnrlon']},{bbox['urcrnrlat']},{bbox['urcrnrlon']}"})
             if req.headers['Content-Type'] == "text/xml":
                 print(flight, section, vertical, filename, init_time, time)
                 print(url, layer, style, elevation)
@@ -237,7 +238,7 @@ def main():
                     color="blue", marker="o", linewidth=2, markerfacecolor="red",
                     markersize=4)
             for i, (idx, press, loc) in enumerate(zip(intermediate_indexes, wp_presss, wp_locs)):
-                textlabel = "{:} ".format(loc if loc else str(i))
+                textlabel = f"{loc if loc else str(i)} "
                 plt.text(idx + 1, press, textlabel, rotation=90, **TEXT_CONFIG)
             plt.tight_layout()
 
@@ -246,9 +247,9 @@ def main():
             width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
             req = requests.get(
                 url, auth=tuple(config["WMS_login"][url]),
-                params={"version": "1.1.1", "request": "GetMap", "format": "image/png",
-                        "exceptions": "application/vnd.ogc.se_xml",
-                        "srs": "VERT:LOGP", "layers": layer, "styles": style,
+                params={"version": "1.3.0", "request": "GetMap", "format": "image/png",
+                        "exceptions": "XML",
+                        "crs": "VERT:LOGP", "layers": layer, "styles": style,
                         "dim_init_time": init_time, "time": time,
                         "width": width, "height": height,
                         "path": ",".join(f"{wp[0]:.2f},{wp[1]:.2f}" for wp in wps),

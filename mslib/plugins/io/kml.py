@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ def save_to_kml(filename, name, waypoints):
     if not filename:
         raise ValueError("filename to save flight track cannot be None")
     with codecs.open(filename, "w", "utf_8") as out_file:
-        header = """<?xml version="1.0" encoding="UTF-8" ?>
+        header = f"""<?xml version="1.0" encoding="UTF-8" ?>
 <kml xmlns="http://earth.google.com/kml/2.2">
 <Document>
 <name>{name}</name>
@@ -45,7 +45,7 @@ def save_to_kml(filename, name, waypoints):
 <LineString>
 <tessellate>1</tessellate><altitudeMode>absolute</altitudeMode>
 <coordinates>
-""".format(name=name)
+"""
         line = "{lon:.3f},{lat:.3f},{alt:.3f}\n"
         footer = """</coordinates>
 </LineString></Placemark>

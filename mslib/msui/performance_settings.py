@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,12 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import QtCore, QtWidgets, get_open_filename
+from mslib.msui.mss_qt import get_open_filename
+from PyQt5 import QtCore, QtWidgets
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import aircrafts
 from mslib.msui import constants
-from mslib.msui.mss_qt import ui_performance_settings as ui_ps
+from mslib.msui.mss_qt import ui_performance_dockwidget as ui_dw
 
 
 DEFAULT_PERFORMANCE = {
@@ -42,19 +43,21 @@ DEFAULT_PERFORMANCE = {
 }
 
 
-class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSettingsDialog):
-    """Dialog to set map appearance parameters. User interface is
-       defined in "ui_topview_mapappearance.py".
+class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockWidget):
+    """This class implements setting the performance settings as a dockable widget.
     """
 
-    def __init__(self, parent=None, settings_dict=None):
+    def __init__(self, parent=None, view=None, settings_dict=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
-        settings_dict -- dictionary containing topview options.
+        view -- reference to mpl canvas class
+        settings_dict -- dictionary containing topview options
         """
-        super(MSS_PerformanceSettingsDialog, self).__init__(parent)
+        super(MSS_PerformanceSettingsWidget, self).__init__(parent)
         self.setupUi(self)
+        self.view = view
+        self.parent = parent
 
         if not settings_dict:
             settings_dict = DEFAULT_PERFORMANCE
@@ -65,7 +68,12 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
         self.dsbFuel.setValue(settings_dict["fuel"])
         self.dteTakeoffTime.setDateTime(settings_dict["takeoff_time"])
 
+        # Connecting signals
         self.pbLoadPerformance.clicked.connect(self.load_performance)
+        self.cbShowPerformance.stateChanged.connect(lambda: self.parent.setPerformance(self.get_settings()))
+        self.dteTakeoffTime.dateTimeChanged.connect(lambda: self.parent.setPerformance(self.get_settings()))
+        self.dsbTakeoffWeight.valueChanged.connect(lambda: self.parent.setPerformance(self.get_settings()))
+        self.dsbFuel.valueChanged.connect(lambda: self.parent.setPerformance(self.get_settings()))
 
     def get_settings(self):
         """
@@ -77,8 +85,8 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
         settings_dict = {
             "aircraft": self.aircraft,
             "visible": self.cbShowPerformance.isChecked(),
-            "takeoff_weight": self.dsbTakeoffWeight.value(),
             "takeoff_time": self.dteTakeoffTime.dateTime(),
+            "takeoff_weight": self.dsbTakeoffWeight.value(),
             "fuel": self.dsbFuel.value()
         }
         return settings_dict
@@ -89,7 +97,7 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
         """
         filename = get_open_filename(
             self, "Open Aircraft Performance JSON File", constants.MSS_CONFIG_PATH,
-            "Performance File (*.json)", pickertag="filepicker_performance")
+            "Performance File (*.json)", pickertag="filepicker_default")
         if filename is not None:
             try:
                 performance = config_loader(config_file=filename)
@@ -98,9 +106,11 @@ class MSS_PerformanceSettingsDialog(QtWidgets.QDialog, ui_ps.Ui_PerformanceSetti
                 self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
                 self.dsbFuel.setValue(self.aircraft.fuel)
 
+                self.parent.setPerformance(self.get_settings())
+
             except KeyError as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr("JSON File missing '{}' entry".format(ex)))
+                                               self.tr(f"JSON File missing '{ex}' entry"))
             except (FatalUserError, ValueError) as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
-                                               self.tr("JSON File has Syntax Problems:\n{}".format(ex)))
+                                               self.tr(f"JSON File has Syntax Problems:\n{ex}"))

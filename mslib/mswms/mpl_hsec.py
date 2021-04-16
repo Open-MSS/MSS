@@ -11,7 +11,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -219,7 +219,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.data_units = self.driver.data_units.copy()
         for datatype, dataitem, dataunit in self.required_datafields:
             if dataitem not in data:
-                raise KeyError("required data field '{}' not found".format(dataitem))
+                raise KeyError(f"required data field '{dataitem}' not found")
             origunit = self.driver.data_units[dataitem]
             if dataunit is not None:
                 data[dataitem] = convert_to(data[dataitem], origunit, dataunit)
@@ -298,7 +298,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         elif bbox_units == "no":
             pass
         else:
-            raise ValueError("bbox_units '{}' not known.".format(bbox_units))
+            raise ValueError(f"bbox_units '{bbox_units}' not known.")
         if basemap_use_cache and key in BASEMAP_CACHE:
             bm = basemap.Basemap(resolution=None, **bm_params)
             (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,
@@ -391,10 +391,13 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             facecolor_rgb = list(mpl.colors.hex2color(mpl.colors.cnames[facecolor]))
             for i in [0, 1, 2]:
                 facecolor_rgb[i] = int(facecolor_rgb[i] * 255)
-            facecolor_index = lut.index(tuple(facecolor_rgb))
-
-            logging.debug("saving figure as transparent PNG with transparency index %s.", facecolor_index)
-            palette_img.save(output, format="PNG", transparency=facecolor_index)
+            try:
+                facecolor_index = lut.index(tuple(facecolor_rgb))
+                logging.debug("saving figure as transparent PNG with transparency index %s.", facecolor_index)
+                palette_img.save(output, format="PNG", transparency=facecolor_index)
+            except ValueError:
+                logging.debug("transparency requested but not possible, saving non-transparent instead")
+                palette_img.save(output, format="PNG")
 
         logging.debug("returning figure..")
         return output.getvalue()

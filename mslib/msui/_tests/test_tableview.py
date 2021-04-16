@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ import mock
 import pytest
 import sys
 
-from mslib.msui.mss_qt import QtWidgets, QtCore, QtTest
+from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
@@ -70,7 +70,14 @@ class Test_TableView(object):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
+    def test_open_perf_settings(self):
+        """
+        Tests opening the performance settings dock widget.
+        """
+        self.window.cbTools.currentIndexChanged.emit(2)
+        QtWidgets.QApplication.processEvents()
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
     def test_insertremove_hexagon(self, mockbox):
         """
@@ -144,7 +151,7 @@ class Test_TableView(object):
         assert all(_x == _y for _x, _y in zip(wps[:3], wps2[:3])), (wps, wps2)
         assert all(_x == _y for _x, _y in zip(wps[3:], wps2[4:])), (wps, wps2)
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox.question",
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
     def test_remove_point(self, mockbox):
         """
@@ -203,3 +210,32 @@ class Test_TableView(object):
         assert len(self.window.waypoints_model.waypoints) == 5
         wps_after = list(self.window.waypoints_model.waypoints)
         assert wps_before != wps_after, (wps_before, wps_after)
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_roundtrip(self, mockbox):
+        """
+        Test connecting the last and first point
+        Test connecting the first point to itself
+        """
+        count = len(self.window.waypoints_model.waypoints)
+
+        # Test if the last waypoint connects to the first
+        self.window.update_roundtrip_enabled()
+        assert self.window.is_roundtrip_possible()
+        self.window.make_roundtrip()
+        assert len(self.window.waypoints_model.waypoints) == count + 1
+        first = self.window.waypoints_model.waypoints[0]
+        dupe = self.window.waypoints_model.waypoints[-1]
+        assert first.lat == dupe.lat and first.lon == dupe.lon
+
+        # Check if roundtrip is disabled if the last and first point are equal
+        self.window.update_roundtrip_enabled()
+        assert not self.window.is_roundtrip_possible()
+        assert not self.window.btRoundtrip.isEnabled()
+        self.window.make_roundtrip()
+        assert len(self.window.waypoints_model.waypoints) == count + 1
+
+        # Remove connection
+        self.window.waypoints_model.removeRows(count, 1)
+        assert len(self.window.waypoints_model.waypoints) == count
+        assert mockbox.critical.call_count == 0

@@ -1,0 +1,42 @@
+name: Pytest MSS
+
+on: [ push, pull_request ]
+env:
+  PAT: ${{ secrets.PAT }}
+
+jobs:
+  xdist_testing:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      image: openmss/mss-test:latest
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: Reinstall dependencies if changed
+      run: |
+        cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt|| (echo Dependencies differ \
+        && cat localbuild/meta.yaml \
+        | sed -n '/^requirements:/,/^test:/p' \
+        | sed -e "s/.*- //" \
+        | sed -e "s/menuinst.*//" \
+        | sed -e "s/.*://" > reqs.txt \
+        && source /opt/conda/bin/activate mssenv \
+        && conda config --add channels conda-forge \
+        && conda install --revision 0 \
+        && conda install mamba \
+        && mamba install pyvirtualdisplay \
+        && mamba install --file reqs.txt \
+        && mamba install --file requirements.d/development.txt)
+
+    - name: Run selected tests
+      timeout-minutes: 25
+      run: |
+        source /opt/conda/bin/activate mssenv \
+        && cd $GITHUB_WORKSPACE \
+        && pytest -n 6 --dist loadscope --max-worker-restart 0 mslib

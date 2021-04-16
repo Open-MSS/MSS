@@ -23,57 +23,75 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import pytest
+import os
 import io
+import time
+import sys
+import pytest
 from pathlib import Path
 from flask import json
 from werkzeug.urls import url_join
-from mslib.mscolab.server import APP
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import server
+from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.models import User
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib._tests.utils import (mscolab_register_user,
                                 mscolab_register_and_login, mscolab_create_content,
-                                mscolab_create_project, mscolab_delete_all_projects,
-                                mscolab_delete_user, mscolab_login)
+                                mscolab_create_project,
+                                mscolab_delete_user, mscolab_login, mscolab_start_server)
+from PyQt5 import QtWidgets
+
+PORTS = list(range(10481, 10530))
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Init_Server(object):
     def setup(self):
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.process, self.url, self.app, self.sockio, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(0.1)
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
+
+    def teardown(self):
+        # to disconnect connections, and clear token
+        # Not logging out since it pops up a dialog
+        # self.window.logout()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_initialize_managers(self):
-        app, sockio, cm, fm = server.initialize_managers(self.app)
-        assert app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
-        assert 'Create a Flask-SocketIO server.' in sockio.__doc__
-        assert 'Class with handler functions for chat related functionalities' in cm.__doc__
-        assert 'Class with handler functions for file related functionalities' in fm.__doc__
+        assert self.app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
+        assert 'Create a Flask-SocketIO server.' in self.sockio.__doc__
+        assert 'Class with handler functions for chat related functionalities' in self.cm.__doc__
+        assert 'Class with handler functions for file related functionalities' in self.fm.__doc__
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Server(object):
     def setup(self):
         mscolab_settings.enable_basic_http_authentication = False
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        _app, self.sockio, self.cm, self.fm = server.initialize_managers(self.app)
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS, mscolab_settings)
+        time.sleep(0.1)
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
+                                       mscolab_server_url=self.url)
 
     def teardown(self):
-        with self.app.app_context():
-            mscolab_delete_all_projects(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
-            mscolab_delete_all_projects(self.app, MSCOLAB_URL_TEST, 'user@alpha.org', 'user', 'user')
-            for em, pw in [('alpha@alpha.org', 'abcdef'),
-                           ('user2@example.com', 'user2'),
-                           ('delta@delta.org', 'abcdef'),
-                           ('otheruser@other.org', 'other'),
-                           ('user@alpha.org', 'user')
-                           ]:
-                server.register_user(em, pw, 'test')
-                mscolab_delete_user(self.app, MSCOLAB_URL_TEST, em, pw)
-            server.db.session.commit()
+        if self.window.version_window:
+            self.window.version_window.close()
+        if self.window.conn:
+            self.window.conn.disconnect()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_check_login(self):
         with self.app.app_context():
@@ -94,9 +112,6 @@ class Test_Server(object):
             assert server.register_user('alpha2a@alpha.org', 'abcdef', 'alpha') == \
                    {'message': 'Oh no, this username is already registered', 'success': False}
 
-    def test_verify_user(self):
-        pass
-
     def test_home(self):
         pytest.skip("Application is not able to create a URL adapter without SERVER_NAME")
         with self.app.app_context():
@@ -112,7 +127,7 @@ class Test_Server(object):
             'email': 'a',
             'password': 'a'
         }
-        url = url_join(MSCOLAB_URL_TEST, 'token')
+        url = url_join(self.url, 'token')
         response = self.app.test_client().post(url, data=data)
         assert response.status == '200 OK'
         data = json.loads(response.get_data(as_text=True))
@@ -133,41 +148,41 @@ class Test_Server(object):
             'email': 'a',
             'password': 'a'
         }
-        url = url_join(MSCOLAB_URL_TEST, 'token')
+        url = url_join(self.url, 'token')
         response = self.app.test_client().post(url, data=data)
         assert response.status == '200 OK'
         data = json.loads(response.get_data(as_text=True))
-        url = url_join(MSCOLAB_URL_TEST, 'test_authorized')
+        url = url_join(self.url, 'test_authorized')
         response = self.app.test_client().get(url, data=data)
         assert response.status == '200 OK'
         assert response.get_data(as_text=True) == "True"
 
         # wrong token
         data['token'] = "wrong"
-        url = url_join(MSCOLAB_URL_TEST, 'test_authorized')
+        url = url_join(self.url, 'test_authorized')
         response = self.app.test_client().get(url, data=data)
         assert response.status == '200 OK'
         assert response.get_data(as_text=True) == "False"
 
     def test_user_register_handler(self):
-        response = mscolab_register_user(self.app, MSCOLAB_URL_TEST, 'user2', 'user2', 'u2')
+        response = mscolab_register_user(self.app, self.url, 'user2', 'user2', 'u2')
         assert response.status == '200 OK'
         data = json.loads(response.get_data(as_text=True))
         assert data['message'] == 'Oh no, your email ID is not valid!'
         assert data['success'] is False
 
-        response = mscolab_register_user(self.app, MSCOLAB_URL_TEST, 'user2@example.com', 'user2', 'u2')
+        response = mscolab_register_user(self.app, self.url, 'user2@example.com', 'user2', 'u2')
         assert response.status == '201 CREATED'
         data = json.loads(response.get_data(as_text=True))
         assert data['success'] is True
 
     def test_get_user(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST,
+            response = mscolab_register_and_login(self.app, self.url,
                                                   'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            url = url_join(MSCOLAB_URL_TEST, 'user')
+            url = url_join(self.url, 'user')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
@@ -175,10 +190,10 @@ class Test_Server(object):
 
     def test_delete_user(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            url = url_join(MSCOLAB_URL_TEST, 'delete_user')
+            url = url_join(self.url, 'delete_user')
             response = self.app.test_client().post(url, data=data)
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
@@ -186,10 +201,10 @@ class Test_Server(object):
 
     def test_messages(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            url = url_join(MSCOLAB_URL_TEST, 'messages')
+            url = url_join(self.url, 'messages')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
@@ -197,12 +212,12 @@ class Test_Server(object):
 
     def test_message_attachment(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+            data, response = mscolab_create_project(self.app, self.url, response,
                                                     path='f3', description='f3 test example')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             projects = json.loads(response.get_data(as_text=True))
@@ -216,7 +231,7 @@ class Test_Server(object):
             file_name = "fake-text-stream.txt"
             data["file"] = (io.BytesIO(b"some initial text data"), file_name)
 
-            url = url_join(MSCOLAB_URL_TEST, 'message_attachment')
+            url = url_join(self.url, 'message_attachment')
             response = self.app.test_client().post(url, data=data)
             # Todo Example upload
             assert response.status == '200 OK'
@@ -225,12 +240,12 @@ class Test_Server(object):
 
     def test_uploads(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+            data, response = mscolab_create_project(self.app, self.url, response,
                                                     path='f4', description='f4 test example')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             projects = json.loads(response.get_data(as_text=True))
@@ -239,33 +254,30 @@ class Test_Server(object):
             data["message_type"] = 0
             file_name = "fake-text-stream.txt"
             data["file"] = (io.BytesIO(b"some initial text data"), file_name)
-            url = url_join(MSCOLAB_URL_TEST, 'message_attachment')
+            url = url_join(self.url, 'message_attachment')
             response = self.app.test_client().post(url, data=data)
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
             assert data['success'] is True
             fn = Path(data['path']).name
-            url = "%s/uploads/%s/%s" % (MSCOLAB_URL_TEST, p_id, fn)
+            url = "%s/uploads/%s/%s" % (self.url, p_id, fn)
             response = self.app.test_client().get(url)
             data = response.get_data(as_text=True)
             assert data == "some initial text data"
-            url = "%s/uploads/%s" % (MSCOLAB_URL_TEST, p_id)
+            url = "%s/uploads/%s" % (self.url, p_id)
             response = self.app.test_client().get(url)
             result = response.get_data(as_text=True)
             assert "404" in result
-            url = "%s/uploads/" % (MSCOLAB_URL_TEST)
+            url = "%s/uploads/" % (self.url)
             response = self.app.test_client().get(url)
             result = response.get_data(as_text=True)
             assert "404" in result
-
-    def test_error413(self):
-        pass
 
     def test_create_project(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
-            data, response = mscolab_create_project(self.app, MSCOLAB_URL_TEST, response,
+            data, response = mscolab_create_project(self.app, self.url, response,
                                                     path='f1', description='f1 test example')
             assert response.status == '200 OK'
             data = response.get_data(as_text=True)
@@ -273,7 +285,7 @@ class Test_Server(object):
 
     def test_get_project(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
             content = """\
@@ -293,10 +305,10 @@ class Test_Server(object):
             data["path"] = 'f5'
             data['description'] = 'f5 test example'
             data['content'] = content
-            url = url_join(MSCOLAB_URL_TEST, 'create_project')
+            url = url_join(self.url, 'create_project')
             response = self.app.test_client().post(url, data=data)
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -304,7 +316,7 @@ class Test_Server(object):
                 if p['path'] == 'f5':
                     data['p_id'] = p['p_id']
                     break
-            url = url_join(MSCOLAB_URL_TEST, 'get_project')
+            url = url_join(self.url, 'get_project_by_id')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
@@ -312,12 +324,12 @@ class Test_Server(object):
 
     def test_get_all_changes(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f14')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f14')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -326,7 +338,7 @@ class Test_Server(object):
                     data['p_id'] = p['p_id']
                     break
 
-            url = url_join(MSCOLAB_URL_TEST, 'get_all_changes')
+            url = url_join(self.url, 'get_all_changes')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
@@ -336,12 +348,12 @@ class Test_Server(object):
 
     def test_get_change_content(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f15')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f15')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -350,25 +362,22 @@ class Test_Server(object):
                     data['p_id'] = p['p_id']
                     break
 
-            url = url_join(MSCOLAB_URL_TEST, 'get_change_content')
+            url = url_join(self.url, 'get_change_content')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = response.get_data(as_text=True)
             # ToDo add a test with two revisions
             assert response == 'False'
 
-    def test_set_version_name(self):
-        pass
-
     def test_authorized_users(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
             auth_data = data
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f10')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f10')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -377,7 +386,7 @@ class Test_Server(object):
                     auth_data['p_id'] = p['p_id']
                     break
 
-            url = url_join(MSCOLAB_URL_TEST, 'authorized_users')
+            url = url_join(self.url, 'authorized_users')
             response = self.app.test_client().get(url, data=auth_data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -385,28 +394,28 @@ class Test_Server(object):
 
     def test_get_projects(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f7')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f7')
             assert response.status == '200 OK'
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f8')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f8')
             assert response.status == '200 OK'
 
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             response = json.loads(response.get_data(as_text=True))
             assert len(response['projects']) == 2
 
     def test_delete_project(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
             auth_data = data
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f12')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f12')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -415,7 +424,7 @@ class Test_Server(object):
                     auth_data['p_id'] = p['p_id']
                     break
 
-            url = url_join(MSCOLAB_URL_TEST, 'delete_project')
+            url = url_join(self.url, 'delete_project')
             response = self.app.test_client().post(url, data=auth_data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -423,12 +432,12 @@ class Test_Server(object):
 
     def test_update_project(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f16')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f16')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -438,7 +447,7 @@ class Test_Server(object):
                     break
             data['attribute'] = 'path'
             data['value'] = 'example_flight_path'
-            url = url_join(MSCOLAB_URL_TEST, 'update_project')
+            url = url_join(self.url, 'update_project')
             response = self.app.test_client().post(url, data=data)
             assert response.status == '200 OK'
             content = """\
@@ -457,7 +466,7 @@ class Test_Server(object):
             # not sure if the update API should do this
             # data['attribute'] = "content"
             # data['value'] = content
-            # url = url_join(MSCOLAB_URL_TEST, 'update_project')
+            # url = url_join(self.url, 'update_project')
             # response = self.app.test_client().post(url, data=data)
             # assert response.status == '200 OK'
             user = User.query.filter_by(emailid='alpha@alpha.org').first()
@@ -465,13 +474,13 @@ class Test_Server(object):
 
     def test_get_project_details(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
             auth_data = data
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f13')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f13')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -479,24 +488,21 @@ class Test_Server(object):
                 if p['path'] == 'f13':
                     auth_data['p_id'] = p['p_id']
                     break
-            url = url_join(MSCOLAB_URL_TEST, 'project_details')
+            url = url_join(self.url, 'project_details')
             response = self.app.test_client().get(url, data=auth_data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
             assert response == {'description': 'f13', 'id': auth_data['p_id'], 'path': 'f13'}
 
-    def test_undo_ftml(self):
-        pass
-
     def test_get_users_without_permission(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f15')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f15')
             assert response.status == '200 OK'
 
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -505,7 +511,7 @@ class Test_Server(object):
                     data['p_id'] = p['p_id']
                     break
 
-            url = url_join(MSCOLAB_URL_TEST, 'users_without_permission')
+            url = url_join(self.url, 'users_without_permission')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -514,13 +520,13 @@ class Test_Server(object):
 
     def test_get_users_with_permission(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='f15')
+            response = mscolab_create_content(self.app, self.url, data, path_name='f15')
             assert response.status == '200 OK'
 
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -529,7 +535,7 @@ class Test_Server(object):
                     data['p_id'] = p['p_id']
                     break
 
-            url = url_join(MSCOLAB_URL_TEST, 'users_with_permission')
+            url = url_join(self.url, 'users_with_permission')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -538,15 +544,15 @@ class Test_Server(object):
 
     def test_import_permissions(self):
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='p1')
+            response = mscolab_create_content(self.app, self.url, data, path_name='p1')
             assert response.status == '200 OK'
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='p2')
+            response = mscolab_create_content(self.app, self.url, data, path_name='p2')
             assert response.status == '200 OK'
 
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -555,7 +561,7 @@ class Test_Server(object):
                     data['import_p_id'] = p['p_id']
                 if p['path'] == 'p2':
                     data['current_p_id'] = p['p_id']
-            url = url_join(MSCOLAB_URL_TEST, 'import_permissions')
+            url = url_join(self.url, 'import_permissions')
             response = self.app.test_client().post(url, data=data)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
@@ -568,16 +574,16 @@ class Test_Server(object):
         should not find anything
         """
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data, path_name='owns_alpha')
+            response = mscolab_create_content(self.app, self.url, data, path_name='owns_alpha')
             assert response.status == '200 OK'
-            mscolab_delete_user(self.app, MSCOLAB_URL_TEST, 'alpha@alpha.org', 'abcdef')
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'delta@delta.org', 'abcdef', 'delta')
+            mscolab_delete_user(self.app, self.url, 'alpha@alpha.org', 'abcdef')
+            response = mscolab_register_and_login(self.app, self.url, 'delta@delta.org', 'abcdef', 'delta')
             assert response.status == '200 OK'
             data = json.loads(response.get_data(as_text=True))
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data)
             response = json.loads(response.get_data(as_text=True))
             assert len(response['projects']) == 0
@@ -590,20 +596,20 @@ class Test_Server(object):
         finds only projects related to the changed token
         """
         with self.app.app_context():
-            response = mscolab_register_and_login(self.app, MSCOLAB_URL_TEST, 'user@alpha.org', 'user', 'user')
+            response = mscolab_register_and_login(self.app, self.url, 'user@alpha.org', 'user', 'user')
             assert response.status == '200 OK'
             data_1 = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, MSCOLAB_URL_TEST, data_1, path_name='data_1')
+            response = mscolab_create_content(self.app, self.url, data_1, path_name='data_1')
             assert response.status == '200 OK'
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data_1)
             assert response.status == '200 OK'
             response = json.loads(response.get_data(as_text=True))
             assert len(response['projects']) == 1
-            response = mscolab_login(self.app, MSCOLAB_URL_TEST, 'a', 'a')
+            response = mscolab_login(self.app, self.url, 'a', 'a')
             data_a = json.loads(response.get_data(as_text=True))
             data_1['token'] = data_a['token']
-            url = url_join(MSCOLAB_URL_TEST, 'projects')
+            url = url_join(self.url, 'projects')
             response = self.app.test_client().get(url, data=data_1)
             response = json.loads(response.get_data(as_text=True))
             assert len(response['projects']) == 3

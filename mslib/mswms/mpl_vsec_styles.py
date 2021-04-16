@@ -13,7 +13,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ from matplotlib import patheffects
 import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
 from mslib.utils import convert_to
 from mslib import thermolib
 
@@ -49,6 +49,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_T01"
     title = "Temperature (K) Vertical Section"
+    abstract = "Temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -93,8 +94,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Temperature (K) and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -108,6 +108,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_GenericStyle(AbstractVerticalSectionStyle):
@@ -175,7 +176,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(titlestring=self.title)
+        self._latlon_logp_setup()
 
         # Format for colorbar labels
         cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
@@ -189,13 +190,8 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="1%", height="40%", loc=1)
             self.fig.colorbar(cs, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
-
-            # adjust colorbar fontsize to figure height
-            fontsize = self.fig.bbox.height * 0.024
             axins1.yaxis.set_ticks_position("left")
-            for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
-                x.label1.set_fontsize(fontsize)
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
@@ -208,12 +204,12 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
             ("air_potential_temperature", np.arange(200, 700, 10), "dimgrey", "dimgrey", "solid", 2, True)]
 
     class fnord(VS_GenericStyle):
-        name = "VS_{}_{}".format(entity, vert)
+        name = f"VS_{entity}_{vert}"
         dataname = entity
         units, _ = Targets.get_unit(dataname)
         title = Targets.TITLES.get(entity, entity)
         if units:
-            title += " ({})".format(units)
+            title += f" ({units})"
         required_datafields = [(vert, entity, units)] + add_data
         contours = add_contours
 
@@ -252,22 +248,22 @@ _ADD_DATA = {
 for vert in ["al", "ml", "pl", "tl"]:
     for ent in Targets.get_targets():
         make_generic_class(
-            "VS_GenericStyle_{}_{}".format(vert.upper(), ent), ent, vert,
+            f"VS_GenericStyle_{vert.upper()}_{ent}", ent, vert,
             add_data=_ADD_DATA[vert])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "ertel_potential_vorticity"),
+        f"VS_GenericStyle_{vert.upper()}_{'ertel_potential_vorticity'}",
         "ertel_potential_vorticity", vert,
         add_data=_ADD_DATA[vert],
         fix_styles=[("ertel_potential_vorticity_nh", "northern hemisphere"),
                     ("ertel_potential_vorticity_sh", "southern hemisphere")])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "equivalent_latitude"),
+        f"VS_GenericStyle_{vert.upper()}_{'equivalent_latitude'}",
         "equivalent_latitude", vert,
         add_data=_ADD_DATA[vert],
         fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
                     ("equivalent_latitude_sh", "southern hemisphere")])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "gravity_wave_temperature_perturbation"),
+        f"VS_GenericStyle_{vert.upper()}_{'gravity_wave_temperature_perturbation'}",
         "air_temperature_residual", vert,
         add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure", "Pa"),
                                     ("sfc", "secondary_tropopause_air_pressure", "Pa")],
@@ -275,7 +271,7 @@ for vert in ["al", "ml", "pl", "tl"]:
                       ("secondary_tropopause_air_pressure", None, "dimgrey", "dimgrey", "solid", 2, True)],
         fix_styles=[("gravity_wave_temperature_perturbation", "")])
     make_generic_class(
-        "VS_GenericStyle_{}_{}".format(vert.upper(), "square_of_brunt_vaisala_frequency_in_air"),
+        f"VS_GenericStyle_{vert.upper()}_{'square_of_brunt_vaisala_frequency_in_air'}",
         "square_of_brunt_vaisala_frequency_in_air", vert,
         add_data=_ADD_DATA[vert] + [("sfc", "tropopause_air_pressure", "Pa"),
                                     ("sfc", "secondary_tropopause_air_pressure", "Pa")],
@@ -285,7 +281,7 @@ for vert in ["al", "ml", "pl", "tl"]:
 
 vert = "pl"
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "cloud_ice_mixing_ratio"),
+    f"VS_GenericStyle_{vert.upper()}_{'cloud_ice_mixing_ratio'}",
     "cloud_ice_mixing_ratio", vert,
     add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -296,7 +292,7 @@ make_generic_class(
     fix_styles=[("log_ice_cloud", "iwc")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "number_concentration_of_ice_crystals_in_air"),
+    f"VS_GenericStyle_{vert.upper()}_{'number_concentration_of_ice_crystals_in_air'}",
     "number_concentration_of_ice_crystals_in_air", vert,
     add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -307,7 +303,7 @@ make_generic_class(
     fix_styles=[("log_ice_cloud", "nice")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "mean_mass_radius_of_cloud_ice_crystals"),
+    f"VS_GenericStyle_{vert.upper()}_{'mean_mass_radius_of_cloud_ice_crystals'}",
     "mean_mass_radius_of_cloud_ice_crystals", vert,
     add_data=[("pl", "maximum_relative_humidity_wrt_ice_on_backtrajectory", None)],
     add_contours=[("maximum_relative_humidity_wrt_ice_on_backtrajectory",
@@ -318,7 +314,7 @@ make_generic_class(
     fix_styles=[("ice_cloud", "radius")])
 
 make_generic_class(
-    "VS_GenericStyle_{}_{}".format(vert.upper(), "maximum_pressure_on_backtrajectory"),
+    f"VS_GenericStyle_{vert.upper()}_{'maximum_pressure_on_backtrajectory'}",
     "maximum_pressure_on_backtrajectory", vert, [], [])
 
 
@@ -330,6 +326,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_CC01"
     title = "Cloud Cover (0-1) Vertical Section"
+    abstract = "Cloud cover (0-1) with temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -388,9 +385,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cloud cover (0-1) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -404,6 +399,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
@@ -413,6 +409,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_CW01"
     title = "Cloud Cover (0-1) and Wind Speed (m/s) Vertical Section"
+    abstract = "Cloud cover (0-1) with wind speed (m/s) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -469,9 +466,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cloud cover (0-1) with wind speed (m/s) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -485,6 +480,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
@@ -494,6 +490,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_RH01"
     title = "Relative Humdity (%) Vertical Section"
+    abstract = "Relative humdity (%) with temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -568,9 +565,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Relative humdity (%) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -584,6 +579,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
@@ -594,6 +590,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
     name = "VS_Q01"
     # title = "Specific Humdity (g/kg) and Northward Wind (m/s) Vertical Section"
     title = "Specific Humdity (g/kg) Vertical Section"
+    abstract = "Specific humdity (g/kg) with temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -680,9 +677,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Specific humdity (g/kg) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -696,6 +691,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -705,6 +701,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_W01"
     title = "Vertical Velocity (cm/s) Vertical Section"
+    abstract = "Veertical velocity (cm/s) with temperature (K) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -779,9 +776,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Vertical velocity (cm/s) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -795,6 +790,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -804,6 +800,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_HV01"
     title = "Horizontal Wind (m/s) Vertical Section"
+    abstract = "Horizontal wind speed (m/s) with temperature (K) and potential temperature (K)"
 
     # NOTE: This style is used for the flight performance computations. Make sure
     # that it always requests air_pressure, air_temperature, eastward_wind,
@@ -882,9 +879,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Horizontal wind speed (m/s) with temperature (K) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -898,6 +893,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 # POTENTIAL VORTICITY
@@ -1037,6 +1033,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_PV01"
     title = "Potential Vorticity (PVU) Vertical Section"
+    abstract = "(Neg.) Potential vorticity (PVU) with CLWC/CIWC (g/kg) and potential temperature (K)"
     styles = [
         ("default", "Northern Hemisphere"),
         ("NH", "Northern Hemisphere"),
@@ -1138,13 +1135,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        if self.style.upper() == "SH":
-            tstr = "Neg. potential vorticity (PVU) with CLWC/CIWC (g/kg) " \
-                   "and potential temperature (K)"
-        else:
-            tstr = "Potential vorticity (PVU) with CLWC/CIWC (g/kg) " \
-                   "and potential temperature (K)"
-        self._latlon_logp_setup(orography=curtain_p[0, :], titlestring=tstr)
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -1161,6 +1152,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
@@ -1172,6 +1164,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
 
     name = "VS_PWCB01"
     title = "Probability of WCB (%) Vertical Section"
+    abstract = "Probability of WCB (%) with CLWC/CIWC (g/kg) and potential temperature (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -1249,9 +1242,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Probability of WCB (%) with CLWC/CIWC (g/kg) "
-                                            "and potential temperature (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -1265,6 +1256,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
@@ -1275,6 +1267,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
 
     name = "VS_LGTRAJ01"
     title = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa) Vertical Section"
+    abstract = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -1319,9 +1312,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa) "
-                                            "Vertical Section")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -1335,6 +1326,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
@@ -1345,6 +1337,7 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
 
     name = "VS_EMAC_Eyja_01"
     title = "EMAC Eyjafjallajokull Tracer (relative) Vertical Section"
+    abstract = "EMAC Eyjafjallajokull Tracer (relative) with temperature (K) and potential temp. (K)"
 
     # Variables with the highest number of dimensions first (otherwise
     # MFDatasetCommonDims will throw an exception)!
@@ -1408,10 +1401,7 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :],
-                                titlestring="EMAC Eyjafjallajokull Tracer (relative) "
-                                            "with temperature (K) "
-                                            "and potential temp. (K)")
+        self._latlon_logp_setup(orography=curtain_p[0, :])
 
         # Add colorbar.
         if not self.noframe:
@@ -1424,3 +1414,4 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)

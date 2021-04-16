@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_mscolab_project
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.msui._tests.test_mscolab_admin_window
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module is used to test mscolab-project related gui.
 
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,32 +24,30 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import pytest
 import sys
 import time
 
 from mslib.msui.mscolab import MSSMscolabWindow
-from mslib._tests.constants import MSCOLAB_URL_TEST
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, db, initialize_managers
-from mslib.msui.mss_qt import QtCore, QtTest, QtWidgets
+from PyQt5 import QtCore, QtTest, QtWidgets
+from mslib._tests.utils import mscolab_start_server
 
 
+PORTS = list(range(9531, 9550))
+
+
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_MscolabAdminWindow(object):
     def setup(self):
-        """
-        User being used during test: id = 5, username = test1
-        """
-        self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app, _, cm, fm = initialize_managers(self.app)
-        self.fm = fm
-        self.cm = cm
-        db.init_app(self.app)
-
+        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        time.sleep(0.1)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=MSCOLAB_URL_TEST)
+                                       mscolab_server_url=self.url)
+        self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
         QtTest.QTest.mouseClick(self.window.adminWindowBtn, QtCore.Qt.LeftButton)
@@ -59,17 +57,13 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        # to disconnect connections, and clear token
-        # Not logging out since it pops up a dialog
-        # self.window.logout()
         if self.window.admin_window:
             self.window.admin_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
-        self.window.close()
-        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
+        self.process.terminate()
 
     def test_permission_filter(self):
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
@@ -135,7 +129,14 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_modify_permissions(self):
+        self._connect_to_mscolab()
+        self._login()
+        self._activate_project_at_index(0)
         users = ["test2", "test3"]
+        # Select users in the add users table
+        self._select_users(self.admin_window.addUsersTable, users)
+        QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
         # Select users in the modify users table
         self._select_users(self.admin_window.modifyUsersTable, users)
         # Update their permission to viewer
@@ -147,9 +148,17 @@ class Test_MscolabAdminWindow(object):
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
     def test_delete_permissions(self):
+        self._connect_to_mscolab()
+        self._login()
+        self._activate_project_at_index(0)
+        # Select users in the add users table
+        users = ["test2", "test3"]
+        self._select_users(self.admin_window.addUsersTable, users)
+        QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
-        users = ["test2", "test3"]
+
         # Select users in the modify users table
         self._select_users(self.admin_window.modifyUsersTable, users)
         # Click on delete permissions
@@ -161,21 +170,23 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_import_permissions(self):
+        self._connect_to_mscolab()
+        self._login()
+        self._activate_project_at_index(0)
         index = self.admin_window.importPermissionsCB.findText("three", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        time.sleep(1)
+        time.sleep(0.1)
         assert self.admin_window.modifyUsersTable.rowCount() == 5
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText("http://localhost:8084")
-        QtTest.QTest.mouseClick(self.window.connectMscolab, QtCore.Qt.LeftButton)
-        time.sleep(0.5)
+        self.window.url.setEditText(self.url)
+        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
+        time.sleep(0.1)
 
     def _login(self):
         # login
-        self._connect_to_mscolab()
         self.window.emailid.setText('test1')
         self.window.password.setText('test1')
         QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
@@ -214,5 +225,5 @@ class Test_MscolabAdminWindow(object):
             if username in users:
                 found += 1
                 if access_level is not None:
-                    assert table.item(row_num, 2).text() == access_level
+                    assert table.item(row_num, 1).text() == access_level
         assert found == 2

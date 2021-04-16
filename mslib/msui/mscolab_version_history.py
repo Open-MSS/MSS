@@ -31,8 +31,7 @@ import requests
 from werkzeug.urls import url_encode, url_join
 
 from mslib.msui.flighttrack import WaypointsTableModel
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.qt5 import ui_mscolab_version_history as ui
 from mslib.utils import config_loader, show_popup, utc_to_local_datetime
 
@@ -47,7 +46,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
     def __init__(self, token, p_id, user, project_name, conn, parent=None,
-                 mscolab_server_url=config_loader(dataset="default_MSCOLAB", default=mss_default.default_MSCOLAB)):
+                 mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
         """
         token: access_token
         p_id: project id
@@ -107,7 +106,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             "token": self.token,
             "p_id": self.p_id
         }
-        url = url_join(self.mscolab_server_url, 'get_project')
+        url = url_join(self.mscolab_server_url, 'get_project_by_id')
         res = requests.get(url, data=data)
         xml_content = json.loads(res.text)["content"]
         waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)

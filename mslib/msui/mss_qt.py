@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017-2018 Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,10 +33,9 @@ import sys
 import traceback
 
 from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
-from PyQt5 import QtGui, QtCore, QtWidgets, QtTest, Qt  # noqa
+from PyQt5 import QtCore, QtWidgets  # noqa
 
 from mslib.utils import config_loader, FatalUserError
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 
 def get_open_filename_qt(*args):
@@ -63,12 +62,12 @@ def get_existing_directory_qt(*args):
 
 
 def get_pickertype(tag, typ):
-    default = config_loader(dataset="filepicker_default", default=mss_default.filepicker_default)
+    default = config_loader(dataset="filepicker_default")
     if typ is None:
         if tag is None:
             typ = default
         else:
-            typ = config_loader(dataset=tag, default=default)
+            typ = config_loader(dataset=tag)
     return typ
 
 
@@ -83,7 +82,7 @@ def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=N
         # qt filepicker takes file filters separated by ';;'
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
-        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -99,7 +98,7 @@ def get_open_filenames(parent, title, dirname, filt, pickertag=None, pickertype=
     if pickertype in ["qt", "default"]:
         filename = get_open_filenames_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
-        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -115,7 +114,7 @@ def get_save_filename(parent, title, filename, filt, pickertag=None, pickertype=
     elif pickertype in ["qt", "default"]:
         filename = get_save_filename_qt(parent, title, os.path.expanduser(filename), filt)
     else:
-        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -129,7 +128,7 @@ def get_existing_directory(parent, title, defaultdir, pickertag=None, pickertype
     elif pickertype in ["qt", "default"]:
         dirname = get_existing_directory_qt(parent, title, defaultdir)
     else:
-        raise FatalUserError("Unknown file picker type '{}'.".format(pickertype))
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", dirname)
     if dirname == "":
         dirname = None
@@ -168,7 +167,7 @@ for mod in [
         "ui_kmloverlay_dockwidget",
         "ui_customize_kml",
         "ui_mainwindow",
-        "ui_performance_settings",
+        "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",
         "ui_sideview_options",
@@ -178,7 +177,8 @@ for mod in [
         "ui_topview_window",
         "ui_wms_capabilities",
         "ui_wms_dockwidget",
-        "ui_wms_password_dialog"]:
+        "ui_wms_password_dialog",
+        "ui_wms_multilayers"]:
     globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 
 # to store config by QSettings
@@ -202,21 +202,21 @@ def excepthook(type_, value, traceback_):
     if type_ is mslib.utils.FatalUserError:
         QtWidgets.QMessageBox.critical(
             None, "fatal error",
-            "Fatal user error in MSS {} on {}\n"
-            "Python {}\n"
-            "\n"
-            "{}".format(mslib.__version__, platform.platform(), sys.version, value))
+            f"Fatal user error in MSS {mslib.__version__} on {platform.platform()}\n"
+            f"Python {sys.version}\n"
+            f"\n"
+            f"{value}")
     else:
         QtWidgets.QMessageBox.critical(
             None, "fatal error",
-            "Fatal error in MSS {} on {}\n"
-            "Python {}\n"
-            "\n"
-            "Please report bugs in MSS to https://github.com/Open-MSS/MSS\n"
-            "\n"
-            "Information about the fatal error:\n"
-            "\n"
-            "{}".format(mslib.__version__, platform.platform(), sys.version, tb))
+            f"Fatal error in MSS {mslib.__version__} on {platform.platform()}\n"
+            f"Python {sys.version}\n"
+            f"\n"
+            f"Please report bugs in MSS to https://github.com/Open-MSS/MSS\n"
+            f"\n"
+            f"Information about the fatal error:\n"
+            f"\n"
+            f"{tb}")
 
 
 sys.excepthook = excepthook

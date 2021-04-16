@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,8 +31,9 @@ import os
 from datetime import datetime, timedelta
 import numpy as np
 
-from mslib.msui.mss_qt import QtWidgets, get_open_filename
+from mslib.msui.mss_qt import get_open_filename
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
+from PyQt5 import QtWidgets
 from mslib.utils import save_settings_qsettings, load_settings_qsettings
 from fs import open_fs
 
@@ -135,7 +136,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         filename = get_open_filename(
             self, "Open NASA satellite overpass prediction",
             os.path.join(os.path.dirname(self.leFile.text())), "All Files (*)",
-            pickertag="filepicker_satellitetrack")
+            pickertag="filepicker_default")
         if not filename:
             return
         self.leFile.setText(filename)
@@ -145,9 +146,6 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         """Load the file specified in leFile and fill the combobox with the
            available track segments.
         """
-        # ToDo nappy needs filelike object first
-        # _dirname, _name = os.path.split(self.leFile.text())
-        # _fs = open_fs(_dirname)
         filename = self.leFile.text()
         logging.debug("loading satellite overpasses in file '%s'", filename)
 
@@ -156,12 +154,12 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         except (IOError, OSError, ValueError) as ex:
             logging.error("Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
-                                           self.tr("ERROR:\n{}\n{}".format(type(ex), ex)))
+                                           self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
         else:
             logging.debug("read %i segments", len(overpass_segments))
 
             self.cbSatelliteOverpasses.clear()
-            items = ["{} to {}".format(str(seg["utc"][0]), str(seg["utc"][-1]))
+            items = [f"{seg['utc'][0]} to {seg['utc'][-1]}"
                      for seg in overpass_segments]
             items.insert(0, "None (select item to plot)")
             items.insert(1, "All tracks")

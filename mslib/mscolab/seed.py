@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,7 +96,6 @@ def seed_data():
             db_user = User(user['emailid'], user['username'], user['password'])
             db_user.id = user['id']
             db.session.add(db_user)
-        db.session.commit()
 
         # create projects
         projects = [{
@@ -128,7 +127,6 @@ def seed_data():
             db_project = Project(project['path'], project['description'])
             db_project.id = project['id']
             db.session.add(db_project)
-        db.session.commit()
 
         # create permissions
         permissions = [{

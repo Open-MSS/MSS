@@ -28,7 +28,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,7 @@ import numpy as np
 import datetime
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
-from mslib.msui.mss_qt import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from mslib.utils import get_distance, find_location, path_points, latlon_points
 from mslib.thermolib import pressure2flightlevel
 
@@ -542,9 +542,9 @@ class PathInteractor(QtCore.QObject):
         x, y = list(zip(*vertices))
         wpd = self.waypoints_model.all_waypoint_data()
         for i in range(len(wpd)):
-            textlabel = "{:}   ".format(str(i))
+            textlabel = f"{str(i):}   "
             if wpd[i].location != "":
-                textlabel = "{:}   ".format(wpd[i].location)
+                textlabel = f"{wpd[i].location:}   "
             t = self.ax.text(x[i],
                              y[i],
                              textlabel,
@@ -593,8 +593,7 @@ class PathInteractor(QtCore.QObject):
             wp = wps[row]
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
-                "Remove waypoint no.{:d} at {:.2f}/{:.2f}, flightlevel {:.2f}?"
-                .format(row, wp.lat, wp.lon, wp.flightlevel),
+                f"Remove waypoint no.{row:d} at {wp.lat:.2f}/{wp.lon:.2f}, flightlevel {wp.flightlevel:.2f}?",
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
     def set_path_color(self, line_color=None, marker_facecolor=None,
@@ -1053,7 +1052,7 @@ class HPathInteractor(PathInteractor):
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
-                textlabel = "{:}".format(wpd[i].location)
+                textlabel = f"{wpd[i].location:}"
             t = self.ax.text(x[i] + label_offset,
                              y[i] + label_offset,
                              textlabel,

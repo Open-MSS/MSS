@@ -16,7 +16,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,11 +35,11 @@
 import types
 
 from mslib.msui import hexagon_dockwidget as hex
-from mslib.msui.mss_qt import QtWidgets, QtGui
+from mslib.msui import performance_settings as perfset
+from PyQt5 import QtWidgets, QtGui
 from mslib.msui.mss_qt import ui_tableview_window as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSSViewWindow
-from mslib.msui.performance_settings import MSS_PerformanceSettingsDialog
 from mslib.msui.icons import icons
 from mslib.utils import dropEvent, dragEnterEvent
 
@@ -66,34 +66,35 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
 
-        toolitems = ["(select to open control)", "Hexagon Control"]
+        toolitems = ["(select to open control)", "Hexagon Control", "Performance Settings"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
         self.tableWayPoints.dropEvent = types.MethodType(dropEvent, self.tableWayPoints)
         self.tableWayPoints.dragEnterEvent = types.MethodType(dragEnterEvent, self.tableWayPoints)
+
         # Dock windows [Hexagon].
-        self.docks = [None]
+        self.docks = [None, None]
 
         # Connect slots and signals.
         self.btAddWayPointToFlightTrack.clicked.connect(self.addWayPoint)
         self.btCloneWaypoint.clicked.connect(self.cloneWaypoint)
         self.btDeleteWayPoint.clicked.connect(self.removeWayPoint)
         self.btInvertDirection.clicked.connect(self.invertDirection)
-        self.btViewPerformance.clicked.connect(self.settingsDlg)
+        self.btRoundtrip.clicked.connect(self.make_roundtrip)
+
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
         self.resizeColumns()
 
-    def settingsDlg(self):
-        dlg = MSS_PerformanceSettingsDialog(parent=self, settings_dict=self.waypoints_model.performance_settings)
-        dlg.setModal(True)
-        if dlg.exec_() == QtWidgets.QDialog.Accepted:
-            self.waypoints_model.performance_settings = dlg.get_settings()
-            self.waypoints_model.update_distances(0)
-            self.waypoints_model.save_settings()
-            self.resizeColumns()
-        dlg.destroy()
+    def setPerformance(self, settings):
+        """Updating Table View with updated performance settings.
+        """
+        self.waypoints_model.performance_settings = settings
+        self.waypoints_model.update_distances(0)
+        self.waypoints_model.save_settings()
+        self.resizeColumns()
+        self.tableWayPoints.viewport().repaint()
 
     def openTool(self, index):
         """Slot that handles requests to open tool windows.
@@ -103,8 +104,15 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             if index == 0:
                 title = "Hexagon Control"
                 widget = hex.HexagonControlWidget(view=self)
+            elif index == 1:
+                title = "Performance Settings"
+                widget = perfset.MSS_PerformanceSettingsWidget(
+                    parent=self,
+                    view=self,
+                    settings_dict=self.waypoints_model.performance_settings
+                )
             else:
-                raise IndexError("invalid control index ({})".format(index))
+                raise IndexError(f"invalid control index ({index})")
             self.createDockWidget(index, title, widget)
 
     def invertDirection(self):
@@ -186,8 +194,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             waypoint = wps[row]
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
-                "Remove waypoint at {:.2f}/{:.2f}, flightlevel {:.2f}?".format(
-                    waypoint.lat, waypoint.lon, waypoint.flightlevel),
+                f"Remove waypoint at {waypoint.lat:.2f}/{waypoint.lon:.2f}, flightlevel {waypoint.flightlevel:.2f}?",
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
     def removeWayPoint(self):
@@ -203,6 +210,39 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         if self.confirm_delete_waypoint(row):
             self.waypoints_model.removeRows(row)
 
+    def make_roundtrip(self):
+        """
+        Copies the first waypoint and inserts it at the back of the list again
+        Essentially creating a roundtrip
+        """
+        # This case should never be True for users, but might be for developers at some point
+        if not self.is_roundtrip_possible():
+            return
+
+        first_waypoint = self.waypoints_model.waypoint_data(0)
+
+        self.waypoints_model.insertRows(self.waypoints_model.rowCount(), rows=1, waypoints=[
+            ft.Waypoint(lat=first_waypoint.lat, lon=first_waypoint.lon, flightlevel=first_waypoint.flightlevel,
+                        location=first_waypoint.location)])
+
+    def is_roundtrip_possible(self):
+        """
+        Checks if there are at least 2 waypoints, and the first and last are not the same
+        """
+        condition = self.waypoints_model.rowCount() > 1
+
+        if condition:
+            first_waypoint = self.waypoints_model.waypoint_data(0)
+            last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
+
+            condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
+                first_waypoint.flightlevel != last_waypoint.flightlevel
+
+        return condition
+
+    def update_roundtrip_enabled(self):
+        self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
     def resizeColumns(self):
         for column in range(self.waypoints_model.columnCount()):
             self.tableWayPoints.resizeColumnToContents(column)
@@ -212,6 +252,10 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         super(MSSTableViewWindow, self).setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
+
+        # Automatically enable or disable roundtrip when data changes
+        self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
+        self.update_roundtrip_enabled()
 
     def viewPerformance(self):
         """Slot to toggle the view mode of the table between 'USER' and

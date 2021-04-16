@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,8 +27,9 @@
 
 import sys
 import mock
+import time
 
-from mslib.msui.mss_qt import QtWidgets, QtTest, QtCore
+from PyQt5 import QtWidgets, QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
 
 
@@ -52,29 +53,27 @@ class Test_WMSCapabilities(object):
         self.window = wc.WMSCapabilitiesBrowser(
             url="http://example.com",
             capabilities=self.capabilities)
-        self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
+        time.sleep(0.1)
 
     def teardown(self):
-        self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_window_start(self, mockbox):
         self.start_window()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_window_contact_none(self, mockbox):
         self.capabilities.provider.contact = None
         self.start_window()
         assert mockbox.critical.call_count == 0
 
-    @mock.patch("mslib.msui.mss_qt.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_switch_view(self, mockbox):
         self.start_window()
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)

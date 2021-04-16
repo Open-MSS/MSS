@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import socketio
 import json
 import logging
 
-from mslib.msui.mss_qt import QtCore
+from PyQt5 import QtCore
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 

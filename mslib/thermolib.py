@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -106,7 +106,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
         idx_liq = numpy.where(t > 273.15)
     else:
         raise VapourPressureError("Cannot recognize the force_phase "
-                                  "keyword: '{}' (valid are ice, liquid, None)".format(force_phase))
+                                  f"keyword: '{force_phase}' (valid are ice, liquid, None)")
 
     # Initialise output field.
     e_sat = numpy.zeros(numpy.shape(t))
@@ -286,7 +286,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
         else:
             raise VapourPressureError("Unkown method for computing "
-                                      "the vapour pressure curve over liquid: {}".format(liquid))
+                                      f"the vapour pressure curve over liquid: {liquid}")
 
     # =============================================================================
     #  Calculate saturation pressure over ice -------------------------------------
@@ -382,7 +382,7 @@ def sat_vapour_pressure(t, liquid='HylandWexler', ice='GoffGratch',
 
         else:
             raise VapourPressureError("Unkown method for computing "
-                                      "the vapour pressure curve over ice: {}".format(ice))
+                                      f"the vapour pressure curve over ice: {ice}")
 
     # Convert return value units from hPa to Pa.
     return e_sat * 100. if not input_scalar else e_sat[0] * 100.
@@ -639,7 +639,7 @@ def dewpoint_approx(p, q, method='Bolton'):
     if method == 'Bolton':
         td = (243.5 / ((17.67 / numpy.log(e_q / 100. / 6.112)) - 1)) + 273.15
     else:
-        raise ValueError("invalid dew point method '{}'".format(method))
+        raise ValueError(f"invalid dew point method '{method}'")
 
     return td
 
