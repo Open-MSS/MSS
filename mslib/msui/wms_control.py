@@ -222,7 +222,6 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
 
     def get_redirect_url(self, method="Get"):
         # return self.getOperationByName("GetMap").methods[method]["url"]
-        # ToDo redirect broken
         return self.getOperationByName("GetMap").methods[0]["url"]
 
 
