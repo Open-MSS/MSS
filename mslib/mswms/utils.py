@@ -476,3 +476,14 @@ def get_cbar_label_format(style, maxvalue):
     if style == 'log_ice_cloud':
         format = "%.0E"
     return format
+
+
+def make_cbar_labels_readable(fig, axs):
+    """
+    Adjust font size of the colorbar labels and put a white background behind them
+    such that they are readable in front of any background.
+    """
+    fontsize = fig.bbox.height * 0.024
+    for x in axs.yaxis.majorTicks:
+        x.label1.set_path_effects([matplotlib.patheffects.withStroke(linewidth=4, foreground='w')])
+        x.label1.set_fontsize(fontsize)

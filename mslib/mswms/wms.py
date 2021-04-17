@@ -328,9 +328,6 @@ class WMSServer(object):
         Handler for a GetMap and GetVSec requests. Produces a plot with
         the parameters specified in the URL.
 
-        # TODO: Handle multiple layers. (mr, 2010-06-09)
-        # TODO: Cache the produced images: Check whether an image with the given
-        #      parameters has already been produced. (mr, 2010-08-18)
         """
         logging.debug("GetMap/GetVSec request. Interpreting parameters..")
 

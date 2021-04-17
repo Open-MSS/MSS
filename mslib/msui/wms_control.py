@@ -222,7 +222,6 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
 
     def get_redirect_url(self, method="Get"):
         # return self.getOperationByName("GetMap").methods[method]["url"]
-        # ToDo redirect broken
         return self.getOperationByName("GetMap").methods[0]["url"]
 
 
@@ -607,8 +606,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         username, password = dlg.getAuthInfo()
                         # If user & pw have been entered, cache them.
                         constants.WMS_LOGIN_CACHE[base_url] = (username, password)
-                        self.capabilities_worker.function = lambda: MSSWebMapService(base_url, version=version,
-                                                                                     username=username, password=password)
+                        self.capabilities_worker.function = lambda: MSSWebMapService(
+                            base_url, version=version,
+                            username=username, password=password)
                         self.capabilities_worker.start()
                     else:
                         self.cpdlg.close()
@@ -1058,7 +1058,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if init_time is not None:
                 self.dteInitTime.setDateTime(init_time)
 
-        if self.multilayers.threads == 0:
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_itime(self.cbInitTime.currentText())
 
         self.auto_update()
@@ -1073,14 +1073,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if valid_time is not None:
                 self.dteValidTime.setDateTime(valid_time)
 
-        if self.multilayers.threads == 0:
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
 
         self.auto_update()
         return valid_time == "" or valid_time is not None
 
     def level_changed(self):
-        if self.multilayers.threads == 0:
+        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
         self.auto_update()
 

@@ -73,7 +73,7 @@ import mpl_toolkits.basemap
 from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
 from mslib import thermolib
 from mslib.utils import convert_to
 
@@ -122,6 +122,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                     ax, width="3%", height="30%", loc=4)
                 cbar = self.fig.colorbar(lcc, cax=axins1, orientation="vertical")
                 axins1.yaxis.set_ticks_position("left")
+                make_cbar_labels_readable(self.fig, axins1)
 
         if self.style in ["MED", "TOT"]:
             mcc = bm.contourf(lonmesh, latmesh, data['medium_cloud_area_fraction'],
@@ -134,6 +135,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 cbar = self.fig.colorbar(mcc, cax=axins1, orientation="vertical",
                                          format='' if self.style == "TOT" else "%.1f")
                 axins1.yaxis.set_ticks_position("left")
+                make_cbar_labels_readable(self.fig, axins1)
 
         if self.style in ["HIGH", "TOT"]:
             hcc = bm.contourf(lonmesh, latmesh, data['high_cloud_area_fraction'],
@@ -148,6 +150,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 cbar = self.fig.colorbar(hcc, cax=axins1, orientation="vertical",
                                          format='' if self.style == "TOT" else "%.1f")
                 axins1.yaxis.set_ticks_position("left")
+                make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, data['air_pressure_at_sea_level'],
@@ -292,6 +295,7 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(scs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Contour lines plot.
         # Colors in python2.6/site-packages/matplotlib/colors.py
@@ -366,6 +370,7 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(scs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Plot title.
         titlestring = "Sea Ice Cover"
@@ -423,6 +428,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, tempC,
@@ -476,8 +482,8 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
-                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2,
-                                                                                 foreground="w")])
+                plt.setp(cs_pv.collections, path_effects=[
+                    patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
@@ -501,13 +507,8 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="3%", height="40%", loc=cbar_location)
             self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
-
-            # adjust colorbar fontsize to figure height
-            fontsize = self.fig.bbox.height * 0.024
             axins1.yaxis.set_ticks_position(tick_pos)
-            for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
-                x.label1.set_fontsize(fontsize)
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
@@ -613,6 +614,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, tempC,
@@ -709,6 +711,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Convert wind data from m/s to knots for the wind barbs.
         uk = convert_to(u, "m/s", "knots")
@@ -802,6 +805,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(rhc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, rh,
@@ -887,6 +891,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(eqptc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, eqpt,
@@ -975,6 +980,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(wc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, w,
@@ -1123,6 +1129,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         titlestring = f"EMAC Eyjafjallajokull Tracer (relative) at model level {self.level:.0f}"
         titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
@@ -1190,6 +1197,7 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         titlestring = "EMAC Eyjafjallajokull Tracer Total Column Density (kg/m^2)"
         titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
@@ -1278,6 +1286,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, vardata,
@@ -1382,12 +1391,7 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             self.fig.colorbar(contours, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
-
-            # adjust colorbar fontsize to figure height
-            fontsize = self.fig.bbox.height * 0.024
-            for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
-                x.label1.set_fontsize(fontsize)
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(lonmesh, latmesh, vardata,
@@ -1648,6 +1652,7 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
                 ax, width="3%", height="30%", loc=4)
             cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         # cs = bm.contour(lonmesh, latmesh, tempC,

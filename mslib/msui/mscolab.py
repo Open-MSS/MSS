@@ -593,7 +593,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def get_recent_pid(self):
         """
         get most recent project's p_id
-        # ToDo can be merged with get_recent_project
         """
         data = {
             "token": self.token

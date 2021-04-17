@@ -148,9 +148,6 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         Load the file specified in leFile and fill the combobox with the
         available track segments.
         """
-        # ToDo nappy needs filelike object first
-        # _dirname, _name = os.path.split(self.leFile.text())
-        # _fs = open_fs(_dirname)
         filename = self.leFile.text()
         logging.debug("loading satellite overpasses in file '%s'", filename)
 

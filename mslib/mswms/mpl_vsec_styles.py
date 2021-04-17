@@ -36,7 +36,7 @@ from matplotlib import patheffects
 import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
 from mslib.utils import convert_to
 from mslib import thermolib
 
@@ -110,6 +110,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_GenericStyle(AbstractVerticalSectionStyle):
@@ -191,13 +192,8 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="1%", height="40%", loc=1)
             self.fig.colorbar(cs, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
-
-            # adjust colorbar fontsize to figure height
-            fontsize = self.fig.bbox.height * 0.024
             axins1.yaxis.set_ticks_position("left")
-            for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
-                x.label1.set_fontsize(fontsize)
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
@@ -406,6 +402,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
@@ -488,6 +485,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
@@ -588,6 +586,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
@@ -701,6 +700,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -801,6 +801,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -905,6 +906,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 # POTENTIAL VORTICITY
@@ -1163,6 +1165,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
@@ -1268,6 +1271,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
@@ -1337,6 +1341,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
@@ -1425,3 +1430,4 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
