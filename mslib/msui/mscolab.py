@@ -66,14 +66,16 @@ def add_mscolab_urls(combo_box, url_list):
 
 
 class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
-    """PyQt window implementing mscolab window
+    """
+    PyQt window implementing mscolab window
     """
     name = "Mscolab"
     identifier = None
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
     def __init__(self, parent=None, data_dir=mss_default.mss_dir, mscolab_server_url=mss_default.mscolab_server_url):
-        """Set up user interface
+        """
+        Set up user interface
         """
         super(MSSMscolabWindow, self).__init__(parent)
         self.setupUi(self)
@@ -1129,7 +1131,8 @@ class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
         self.setupUi(self)
 
     def getAuthInfo(self):
-        """Return the entered username and password.
+        """
+        Return the entered username and password.
         """
         return (self.leUsername.text(),
                 self.lePassword.text())

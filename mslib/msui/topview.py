@@ -50,8 +50,9 @@ KMLOVERLAY = 3
 
 
 class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
-    """Dialog to set map appearance parameters. User interface is
-       defined in "ui_topview_mapappearance.py".
+    """
+    Dialog to set map appearance parameters. User interface is
+    defined in "ui_topview_mapappearance.py".
     """
 
     def __init__(self, parent=None, settings_dict=None, wms_connected=False):
@@ -134,8 +135,9 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         return settings_dict
 
     def setColour(self, which):
-        """Slot for the colour buttons: Opens a QColorDialog and sets the
-           new button face colour.
+        """
+        Slot for the colour buttons: Opens a QColorDialog and sets the
+        new button face colour.
         """
         if which == "water":
             button = self.btWaterColour
@@ -155,13 +157,15 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
 
 
 class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
-    """PyQt window implementing a MapCanvas as an interactive flight track
-       editor.
+    """
+    PyQt window implementing a MapCanvas as an interactive flight track
+    editor.
     """
     name = "Top View"
 
     def __init__(self, parent=None, model=None, _id=None):
-        """Set up user interface, connect signal/slots.
+        """
+        Set up user interface, connect signal/slots.
         """
         super(MSSTopViewWindow, self).__init__(parent, model, _id)
         logging.debug(_id)
@@ -200,8 +204,9 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         del self.mpl.canvas.waypoints_interactor
 
     def setup_top_view(self):
-        """Initialise GUI elements. (This method is called before signals/slots
-           are connected).
+        """
+        Initialise GUI elements. (This method is called before signals/slots
+        are connected).
         """
         toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay"]
         self.cbTools.clear()
@@ -230,7 +235,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             self.cbChangeMapSection.addItems(sorted(extra))
 
     def openTool(self, index):
-        """Slot that handles requests to open control windows.
+        """
+        Slot that handles requests to open control windows.
         """
         index = self.controlToBeCreated(index)
         if index >= 0:
@@ -267,7 +273,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.wms_connected = False
 
     def changeMapSection(self, index=0, only_kwargs=False):
-        """Change the current map section to one of the predefined regions.
+        """
+        Change the current map section to one of the predefined regions.
         """
         # Get the initial projection parameters from the tables in mss_settings.
         current_map_key = self.cbChangeMapSection.currentText()
@@ -308,14 +315,16 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         dlg.destroy()
 
     def save_settings(self):
-        """Save the current settings (map appearance) to the file
-           self.settingsfile.
+        """
+        Save the current settings (map appearance) to the file
+        self.settingsfile.
         """
         settings = self.getView().get_map_appearance()
         save_settings_qsettings(self.settings_tag, settings)
 
     def load_settings(self):
-        """Load settings from the file self.settingsfile.
+        """
+        Load settings from the file self.settingsfile.
         """
         settings = load_settings_qsettings(self.settings_tag, {})
         self.getView().set_map_appearance(settings)

@@ -42,8 +42,9 @@ WMS = 0
 
 
 class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
-    """Dialog to specify sideview options. User interface is specified
-       in "ui_sideview_options.py".
+    """
+    Dialog to specify sideview options. User interface is specified
+    in "ui_sideview_options.py".
     """
 
     def __init__(self, parent=None, settings_dict=None):
@@ -132,8 +133,9 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             button.setMaximum(top)
 
     def setColour(self, which):
-        """Slot for the colour buttons: Opens a QColorDialog and sets the
-           new button face colour.
+        """
+        Slot for the colour buttons: Opens a QColorDialog and sets the
+        new button face colour.
         """
         if which == "ft_fill":
             button = self.btFillColour
@@ -156,23 +158,26 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             button.setPalette(palette)
 
     def addItem(self):
-        """Add a new item (i.e. flight level) to the table.
+        """
+        Add a new item (i.e. flight level) to the table.
         """
         self.tableWidget.insertRow(0)
         self.tableWidget.setItem(0, 0, QtWidgets.QTableWidgetItem("0"))
         self.tableWidget.sortItems(0)
 
     def deleteSelected(self):
-        """Remove the selected items (i.e. flight levels) from the table.
+        """
+        Remove the selected items (i.e. flight levels) from the table.
         """
         selecteditems = self.tableWidget.selectedItems()
         for item in selecteditems:
             self.tableWidget.removeRow(item.row())
 
     def itemChanged(self, item):
-        """Slot that is called when an item has been changed. Checks for
-           a valid integer in the range 0..999. Other values or non-numeric
-           values are corrected.
+        """
+        Slot that is called when an item has been changed. Checks for
+        a valid integer in the range 0..999. Other values or non-numeric
+        values are corrected.
         """
         try:
             flightlevel = int(item.text())
@@ -187,13 +192,15 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.tableWidget.sortItems(0)
 
     def get_flight_levels(self):
-        """Returns the flight level values contained in the table.
+        """
+        Returns the flight level values contained in the table.
         """
         return [int(self.tableWidget.item(row, 0).text())
                 for row in range(self.tableWidget.rowCount())]
 
     def get_settings(self):
-        """Return settings dictionary with values from the GUI elements.
+        """
+        Return settings dictionary with values from the GUI elements.
         """
         settings_dict = {
             "vertical_extent": (float(self.sbPbot.value()), float(self.sbPtop.value())),
@@ -242,13 +249,15 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
 
 
 class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
-    """PyQt window implementing a matplotlib canvas as an interactive
-       side view flight track editor.
+    """
+    PyQt window implementing a matplotlib canvas as an interactive
+    side view flight track editor.
     """
     name = "Side View"
 
     def __init__(self, parent=None, model=None, _id=None):
-        """Set up user interface, connect signal/slots.
+        """
+        Set up user interface, connect signal/slots.
         """
         super(MSSSideViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
@@ -280,7 +289,8 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         pass
 
     def openTool(self, index):
-        """Slot that handles requests to open tool windows.
+        """
+        Slot that handles requests to open tool windows.
         """
         index = self.controlToBeCreated(index)
         if index >= 0:
@@ -299,14 +309,16 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
             self.createDockWidget(index, title, widget)
 
     def setFlightTrackModel(self, model):
-        """Set the QAbstractItemModel instance that the view displays.
+        """
+        Set the QAbstractItemModel instance that the view displays.
         """
         super(MSSSideViewWindow, self).setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 
     def set_options(self):
-        """Slot to open a dialog that lets the user specifiy sideview options.
+        """
+        Slot to open a dialog that lets the user specifiy sideview options.
         """
         settings = self.getView().get_settings()
         dlg = MSS_SV_OptionsDialog(parent=self, settings_dict=settings)
@@ -318,14 +330,16 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         dlg.destroy()
 
     def save_settings(self):
-        """Save the current settings (vertical extent, displayed flightlevels
-           etc.) to the file self.settingsfile.
+        """
+        Save the current settings (vertical extent, displayed flightlevels
+        etc.) to the file self.settingsfile.
         """
         settings = self.getView().get_settings()
         save_settings_qsettings(self.settings_tag, settings)
 
     def load_settings(self):
-        """Load settings from the file self.settingsfile.
+        """
+        Load settings from the file self.settingsfile.
         """
         settings = load_settings_qsettings(self.settings_tag)
         self.getView().set_settings(settings)

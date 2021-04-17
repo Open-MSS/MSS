@@ -130,8 +130,9 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         self.leFile.setText(settings["filename"])
 
     def select_file(self):
-        """Slot that opens a file dialog to choose a file with satellite
-           overpass predictions.
+        """
+        Slot that opens a file dialog to choose a file with satellite
+        overpass predictions.
         """
         filename = get_open_filename(
             self, "Open NASA satellite overpass prediction",
@@ -143,8 +144,9 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         save_settings_qsettings(self.settings_tag, {"filename": filename})
 
     def load_file(self):
-        """Load the file specified in leFile and fill the combobox with the
-           available track segments.
+        """
+        Load the file specified in leFile and fill the combobox with the
+        available track segments.
         """
         # ToDo nappy needs filelike object first
         # _dirname, _name = os.path.split(self.leFile.text())

@@ -44,7 +44,8 @@ DEFAULT_PERFORMANCE = {
 
 
 class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockWidget):
-    """This class implements setting the performance settings as a dockable widget.
+    """
+    This class implements setting the performance settings as a dockable widget.
     """
 
     def __init__(self, parent=None, view=None, settings_dict=None):
