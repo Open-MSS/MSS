@@ -54,7 +54,7 @@ class MapCanvas(basemap.Basemap):
     """
 
     def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None,
-                 appearance= None, **kwargs):
+                 appearance=None, **kwargs):
         """
         New constructor automatically adds coastlines, continents, and
         a graticule to the map.
