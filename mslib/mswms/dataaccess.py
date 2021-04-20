@@ -261,7 +261,7 @@ class DefaultDataAccess(NWPDataAccess):
                     if ncvar.standard_name != "time":
                         try:
                             UR(ncvar.units)
-                        except (ValueError, pint.UndefinedUnitError, pint.DefinitionSyntaxError):
+                        except (AttributeError, ValueError, pint.UndefinedUnitError, pint.DefinitionSyntaxError):
                             logging.error("Skipping variable '%s' in file '%s': unparseable units attribute '%s'",
                                           ncvarname, filename, ncvar.units)
                             continue
