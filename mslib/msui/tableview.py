@@ -82,6 +82,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.btDeleteWayPoint.clicked.connect(self.removeWayPoint)
         self.btInvertDirection.clicked.connect(self.invertDirection)
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
+        self.tableWayPoints.selectionModel().selectionChanged.connect(self.on_selection_changed)
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
@@ -97,6 +98,14 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.waypoints_model.save_settings()
         self.resizeColumns()
         self.tableWayPoints.viewport().repaint()
+
+    def on_selection_changed(self, index):
+        """
+        Disables insert and clone when multiple rows are selected
+        """
+        enable = len(self.tableWayPoints.selectionModel().selectedRows()) <= 1
+        self.btCloneWaypoint.setEnabled(enable)
+        self.btAddWayPointToFlightTrack.setEnabled(enable)
 
     def openTool(self, index):
         """
@@ -180,7 +189,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         # tableView.edit(index)
         tableView.resizeRowsToContents()
 
-    def confirm_delete_waypoint(self, row):
+    def confirm_delete_waypoint(self, rows):
         """
         Open a QMessageBox and ask the user if he really wants to
         delete the waypoint at index <row>.
@@ -191,16 +200,19 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         is not possible. In this case the user is informed correspondingly.
         """
         wps = self.waypoints_model.all_waypoint_data()
-        if len(wps) < 3:
+        if len(wps) - len(rows) < 2:
             QtWidgets.QMessageBox.warning(
                 None, "Remove waypoint",
                 "Cannot remove waypoint, the flight track needs to consist of at least two points.")
             return False
         else:
-            waypoint = wps[row]
+            waypoints = [wps[row] for row in rows]
+            text = "\n".join(
+                [f"Remove waypoint at {waypoint.lat:.2f}/{waypoint.lon:.2f}, flightlevel {waypoint.flightlevel:.2f}?"
+                    for waypoint in waypoints])
+
             return QtWidgets.QMessageBox.question(
-                None, "Remove waypoint",
-                f"Remove waypoint at {waypoint.lat:.2f}/{waypoint.lon:.2f}, flightlevel {waypoint.flightlevel:.2f}?",
+                None, "Remove waypoint", text,
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
     def removeWayPoint(self):
@@ -209,13 +221,13 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         waypoint.
         """
         tableView = self.tableWayPoints
-        index = tableView.currentIndex()
-        if not index.isValid():
-            return
-        row = index.row()
+        indices = tableView.selectionModel().selectedRows()
+        rows = [index.row() for index in indices]
         # Let the user confirm the deletion.
-        if self.confirm_delete_waypoint(row):
-            self.waypoints_model.removeRows(row)
+        if len(rows) > 0:
+            if self.confirm_delete_waypoint(rows):
+                for row in sorted(rows, reverse=True):
+                    self.waypoints_model.removeRows(row)
 
     def make_roundtrip(self):
         """
