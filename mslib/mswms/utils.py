@@ -273,7 +273,8 @@ def get_log_levels(cmin, cmax, levels=N_LEVELS):
     Returns:
         numpy array of values
     """
-    assert cmin < cmax
+    if cmin >= cmax:
+        cmin, cmax = cmin - 0.5, cmax + 0.5
     if cmin >= 0:
         if cmin == 0:
             cmin = 0.001 * cmax

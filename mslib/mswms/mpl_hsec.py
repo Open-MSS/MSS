@@ -449,15 +449,14 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         x, y = self.bm(lonmesh_, latmesh_)
         # test which coordinates are outside the map domain.
 
-        add_x = ((self.bm.xmax - self.bm.xmin) / 10.)
-        add_y = ((self.bm.ymax - self.bm.ymin) / 10.)
+        add_x = (self.bm.xmax - self.bm.xmin) / 10
+        add_y = (self.bm.ymax - self.bm.ymin) / 10
 
         mask1 = x < self.bm.xmin - add_x
         mask2 = x > self.bm.xmax + add_x
         mask3 = y > self.bm.ymax + add_y
         mask4 = y < self.bm.ymin - add_y
-        mask = mask1 + mask2 + mask3 + mask4
+        mask = mask1 & mask2 & mask3 & mask4
         # mask data arrays.
         for key in self.data:
-            self.data[key] = np.ma.masked_array(
-                self.data[key], mask=mask, keep_mask=False)
+            self.data[key] = np.ma.masked_array(self.data[key], mask=mask)
