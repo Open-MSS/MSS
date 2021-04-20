@@ -643,7 +643,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def wms_url_changed(self, text):
         wms = WMS_SERVICE_CACHE.get(text)
         if wms is not None:
-            self.activate_wms(wms)
+            self.activate_wms(wms, cache=True)
 
     @QtCore.pyqtSlot(Exception)
     def display_exception(self, ex):
@@ -722,7 +722,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.capabilities_worker = Worker.create(lambda: requests.get(base_url, params=params),
                                                  on_success, on_failure)
 
-    def activate_wms(self, wms):
+    def activate_wms(self, wms, cache=False):
         # Parse layer tree of the wms object and discover usable layers.
         stack = list(wms.contents.values())
         filtered_layers = set()
@@ -736,6 +736,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
+        if not cache and wms.url in self.multilayers.layers and \
+                wms.capabilities_document.decode("utf-8") != \
+                self.multilayers.layers[wms.url]["wms"].capabilities_document.decode("utf-8"):
+            self.multilayers.delete_server(self.multilayers.layers[wms.url]["header"])
         self.multilayers.add_wms(wms)
         for layer in filtered_layers:
             self.multilayers.add_multilayer(layer, wms)
