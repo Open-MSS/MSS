@@ -830,7 +830,6 @@ class DataFiles(object):
     Routine to write test data files for MSS using extracted
     variable ranges from ECMWF data
     Jens-Uwe Grooss, IEK-7, Forschungszentrum Juelich, Nov 2016
-
     """
 
     dimensions = {
