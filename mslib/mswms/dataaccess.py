@@ -52,8 +52,9 @@ class NWPDataAccess(metaclass=ABCMeta):
     """
 
     def __init__(self, rootpath, uses_init_time=True, uses_valid_time=True):
-        """Constructor takes the path of the data directory and determines whether
-           this class employs different init_times or valid_times.
+        """
+        Constructor takes the path of the data directory and determines whether
+        this class employs different init_times or valid_times.
         """
         self._root_path = rootpath
         self._modelname = ""
@@ -62,15 +63,17 @@ class NWPDataAccess(metaclass=ABCMeta):
 
     @abstractmethod
     def setup(self):
-        """Checks for existing files etc. and sets up the class. Called by
-           server whenever a client requests a current capability document.
+        """
+        Checks for existing files etc. and sets up the class. Called by
+        server whenever a client requests a current capability document.
         """
         pass
 
     def have_data(self, variable, vartype, init_time, valid_time):
-        """Checks whether a file with data for the specified variable,
-           type and times is known. This does not trigger a search for
-           updated data files on disk.
+        """
+        Checks whether a file with data for the specified variable,
+        type and times is known. This does not trigger a search for
+        updated data files on disk.
         """
         try:
             self._determine_filename(
@@ -82,11 +85,12 @@ class NWPDataAccess(metaclass=ABCMeta):
 
     def get_filename(self, variable, vartype, init_time, valid_time,
                      fullpath=False):
-        """Get the filename of the file in which a given variable at
-           a given time can be found.
+        """
+        Get the filename of the file in which a given variable at
+        a given time can be found.
 
-           In case no file is available, the disk is searched for updated
-           data before failing.
+        In case no file is available, the disk is searched for updated
+        data before failing.
 
         Arguments:
         variable -- string with CF name of variable
@@ -107,66 +111,76 @@ class NWPDataAccess(metaclass=ABCMeta):
 
     @abstractmethod
     def _determine_filename(self, variable, vartype, init_time, valid_time):
-        """Must be overwritten in subclass. Determines the filename
-           (without path) of the variable <variable> at the forecast
-           timestep specified by init_time and valid_time.
+        """
+        Must be overwritten in subclass. Determines the filename
+        (without path) of the variable <variable> at the forecast
+        timestep specified by init_time and valid_time.
         """
         pass
 
     def get_datapath(self):
-        """Return the path to the data directory.
+        """
+        Return the path to the data directory.
         """
         return self._root_path
 
     def uses_inittime_dimension(self):
-        """ Return whether this data set supports multiple init times
+        """
+        Return whether this data set supports multiple init times
         """
         return self._use_init_time
 
     def uses_validtime_dimension(self):
-        """ Return whether this data set supports multiple valid times
+        """
+        Return whether this data set supports multiple valid times
         """
         return self._use_valid_time
 
     @abstractmethod
     def get_all_datafiles(self):
-        """Return a list of all available data files.
+        """
+        Return a list of all available data files.
         """
         pass
 
     @abstractmethod
     def get_init_times(self):
-        """Return a list of available forecast init times (base times).
+        """
+        Return a list of available forecast init times (base times).
         """
         pass
 
     @abstractmethod
     def get_valid_times(self):
-        """Return a list of available forecast times.
+        """
+        Return a list of available forecast times.
         """
         pass
 
     @abstractmethod
     def get_elevations(self, vert_type):
-        """Return a list of available elevations for a vertical level type.
+        """
+        Return a list of available elevations for a vertical level type.
         """
         pass
 
     @abstractmethod
     def get_elevation_units(self, vert_type):
-        """Returns units of supplied vertical type.
+        """
+        Returns units of supplied vertical type.
         """
         pass
 
     _mfDatasetArgsDict = {}
 
     def mfDatasetArgs(self):
-        """Returns additional keyword for the MFDatasetCommonDims instance that
-           handles the input data of this dataset. See the MFDatasetCommonDims
-           documentation for further details.
-           Mainly provided as a workaround for numerical inaccuracies introduced
-           to the NetCDF files by netcdf-java 4.3.
-           (mr, 16Oct2012)
+        """
+        Returns additional keyword for the MFDatasetCommonDims instance that
+        handles the input data of this dataset. See the MFDatasetCommonDims
+        documentation for further details.
+        Mainly provided as a workaround for numerical inaccuracies introduced
+        to the NetCDF files by netcdf-java 4.3.
+        (mr, 16Oct2012)
         """
         return self._mfDatasetArgsDict
 
@@ -181,8 +195,9 @@ class DefaultDataAccess(NWPDataAccess):
     # NetCDF files produced by netcdf-java 4.3..
 
     def __init__(self, rootpath, domain_id, skip_dim_check=[], **kwargs):
-        """Constructor takes the path of the data directory and determines whether
-           this class employs different init_times or valid_times.
+        """
+        Constructor takes the path of the data directory and determines whether
+        this class employs different init_times or valid_times.
         """
         NWPDataAccess.__init__(self, rootpath, **kwargs)
         self._domain_id = domain_id
@@ -191,9 +206,10 @@ class DefaultDataAccess(NWPDataAccess):
         self._mfDatasetArgsDict = {"skip_dim_check": skip_dim_check}
 
     def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
-        """Determines the name of the data file that contains
-           the variable <variable> with type <vartype> of the forecast specified
-           by <init_time> and <valid_time>.
+        """
+        Determines the name of the data file that contains
+        the variable <variable> with type <vartype> of the forecast specified
+        by <init_time> and <valid_time>.
         """
         assert self._filetree is not None, "filetree is None. Forgot to call setup()?"
         try:
@@ -324,15 +340,17 @@ class DefaultDataAccess(NWPDataAccess):
             self._add_to_filetree(filename, content)
 
     def get_init_times(self):
-        """Returns a list of available forecast init times (base times).
+        """
+        Returns a list of available forecast init times (base times).
         """
         init_times = set(itertools.chain.from_iterable(
             self._filetree[_x].keys() for _x in self._filetree))
         return sorted(init_times)
 
     def get_valid_times(self, variable, vartype, init_time):
-        """Returns a list of available valid times for the specified
-           variable at the specified init time.
+        """
+        Returns a list of available valid times for the specified
+        variable at the specified init time.
         """
         try:
             return sorted(self._filetree[vartype][init_time][variable])
@@ -341,20 +359,23 @@ class DefaultDataAccess(NWPDataAccess):
             return []
 
     def get_elevations(self, vert_type):
-        """Return a list of available elevations for a vertical level type.
+        """
+        Return a list of available elevations for a vertical level type.
         """
         logging.debug("%s", self._elevations)
         return self._elevations[vert_type]["levels"]
 
     def get_elevation_units(self, vert_type):
-        """Return a list of available elevations for a vertical level type.
+        """
+        Return a list of available elevations for a vertical level type.
         """
         logging.debug("%s", self._elevations)
         return self._elevations[vert_type]["units"]
 
     def get_all_valid_times(self, variable, vartype):
-        """Similar to get_valid_times(), but returns the combined valid times
-           of all available init times.
+        """
+        Similar to get_valid_times(), but returns the combined valid times
+        of all available init times.
         """
         all_valid_times = []
         if vartype not in self._filetree:
@@ -365,7 +386,8 @@ class DefaultDataAccess(NWPDataAccess):
         return sorted(set(all_valid_times))
 
     def get_all_datafiles(self):
-        """Return a list of all available data files.
+        """
+        Return a list of all available data files.
         """
         return self._available_files
 

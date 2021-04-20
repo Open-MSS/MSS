@@ -55,7 +55,8 @@ def create_hexagon(center_lat, center_lon, radius, angle=0.):
 
 
 class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
-    """This class implements the remote sensing functionality as dockable widget.
+    """
+    This class implements the remote sensing functionality as dockable widget.
     """
 
     def __init__(self, parent=None, view=None):

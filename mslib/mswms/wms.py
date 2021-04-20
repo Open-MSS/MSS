@@ -183,7 +183,8 @@ class WMSServer(object):
             self.register_vsec_layer(datasets, layer)
 
     def register_hsec_layer(self, datasets, layer_class):
-        """Register horizontal section layer in internal dict of layers.
+        """
+        Register horizontal section layer in internal dict of layers.
 
         Arguments:
         datasets -- list of strings describing the datasets with which the
@@ -210,7 +211,8 @@ class WMSServer(object):
             self.hsec_layer_registry[dataset][layer.name] = layer
 
     def register_vsec_layer(self, datasets, layer_class):
-        """Register vertical section layer in internal dict of layers.
+        """
+        Register vertical section layer in internal dict of layers.
 
         See register_hsec_layer() for further information.
         """
@@ -234,7 +236,8 @@ class WMSServer(object):
             self.vsec_layer_registry[dataset][layer.name] = layer
 
     def create_service_exception(self, code=None, text="", version="1.3.0"):
-        """Create a service exception XML from the XML template defined above.
+        """
+        Create a service exception XML from the XML template defined above.
 
         Arguments:
         code -- WMS 1.1.1 exception code, see p.51 of the WMS 1.1.1 standard.
