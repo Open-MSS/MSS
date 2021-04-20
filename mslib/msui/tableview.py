@@ -189,7 +189,6 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         # tableView.edit(index)
         tableView.resizeRowsToContents()
 
-
     def confirm_delete_waypoint(self, rows):
         """
         Open a QMessageBox and ask the user if he really wants to
