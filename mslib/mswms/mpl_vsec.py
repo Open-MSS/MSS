@@ -54,19 +54,22 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
     def __init__(self, driver=None):
-        """Constructor.
+        """
+        Constructor.
         """
         super(AbstractVerticalSectionStyle, self).__init__(driver=driver)
 
     def supported_crs(self):
-        """Returns a list of the coordinate reference systems supported by
-           this style.
+        """
+        Returns a list of the coordinate reference systems supported by
+        this style.
         """
         return ["VERT:LOGP"]
 
     # TODO: the general setup should be a separate class as well
     def _latlon_logp_setup(self, orography=105000.):
-        """General setup for lat/lon vs. log p vertical cross-sections.
+        """
+        General setup for lat/lon vs. log p vertical cross-sections.
         """
         ax = self.ax
 
@@ -116,7 +119,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
     @abstractmethod
     def _plot_style(self):
-        """Can call self._log_setup()
+        """
+        Can call self._log_setup()
         """
         pass
 

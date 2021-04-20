@@ -50,8 +50,9 @@ except ImportError:
 
 
 class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
-    """Implements the table view of the flight plan. Data comes from a
-       flight track data model.
+    """
+    Implements the table view of the flight plan. Data comes from a
+    flight track data model.
     """
 
     name = "Table View"
@@ -88,7 +89,8 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.resizeColumns()
 
     def setPerformance(self, settings):
-        """Updating Table View with updated performance settings.
+        """
+        Updating Table View with updated performance settings.
         """
         self.waypoints_model.performance_settings = settings
         self.waypoints_model.update_distances(0)
@@ -97,7 +99,8 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.tableWayPoints.viewport().repaint()
 
     def openTool(self, index):
-        """Slot that handles requests to open tool windows.
+        """
+        Slot that handles requests to open tool windows.
         """
         index = self.controlToBeCreated(index)
         if index >= 0:
@@ -119,8 +122,9 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.waypoints_model.invert_direction()
 
     def addWayPoint(self):
-        """Handler for button <btAddWayPointToFlightTrack>. Adds a new waypoint
-           behind the currently selected waypoint.
+        """
+        Handler for button <btAddWayPointToFlightTrack>. Adds a new waypoint
+        behind the currently selected waypoint.
         """
         tableView = self.tableWayPoints
         index = tableView.currentIndex()
@@ -148,8 +152,9 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         tableView.resizeRowsToContents()
 
     def cloneWaypoint(self):
-        """Handler for button <btCloneWaypoint>. Adds a new waypoint
-           after the currently selected waypoint, with same data.
+        """
+        Handler for button <btCloneWaypoint>. Adds a new waypoint
+        after the currently selected waypoint, with same data.
         """
         tableView = self.tableWayPoints
         index = tableView.currentIndex()
@@ -176,8 +181,9 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         tableView.resizeRowsToContents()
 
     def confirm_delete_waypoint(self, row):
-        """Open a QMessageBox and ask the user if he really wants to
-           delete the waypoint at index <row>.
+        """
+        Open a QMessageBox and ask the user if he really wants to
+        delete the waypoint at index <row>.
 
         Returns TRUE if the user confirms the deletion.
 
@@ -198,8 +204,9 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
 
     def removeWayPoint(self):
-        """Handler for button <btDeleteWayPoint>. Deletes the currently selected
-           waypoint.
+        """
+        Handler for button <btDeleteWayPoint>. Deletes the currently selected
+        waypoint.
         """
         tableView = self.tableWayPoints
         index = tableView.currentIndex()
@@ -248,7 +255,8 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
             self.tableWayPoints.resizeColumnToContents(column)
 
     def setFlightTrackModel(self, model):
-        """Set the QAbstractItemModel instance that the table displays.
+        """
+        Set the QAbstractItemModel instance that the table displays.
         """
         super(MSSTableViewWindow, self).setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
@@ -258,8 +266,9 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         self.update_roundtrip_enabled()
 
     def viewPerformance(self):
-        """Slot to toggle the view mode of the table between 'USER' and
-           'PERFORMANCE'.
+        """
+        Slot to toggle the view mode of the table between 'USER' and
+        'PERFORMANCE'.
         """
         # Restore the original button face colour (as inherited from this window's palette).
         self.btViewPerformance.setPalette(self.palette())

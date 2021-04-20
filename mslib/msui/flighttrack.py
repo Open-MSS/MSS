@@ -59,8 +59,9 @@ TIME_UTC = 9
 
 
 def seconds_to_string(seconds):
-    """Format a time given in seconds to a string HH:MM:SS. Used for the
-       'leg time/cum. time' columns of the table view.
+    """
+    Format a time given in seconds to a string HH:MM:SS. Used for the
+    'leg time/cum. time' columns of the table view.
     """
     hours, seconds = divmod(int(seconds), 3600)
     minutes, seconds = divmod(seconds, 60)
@@ -91,8 +92,9 @@ TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lam
 
 
 class Waypoint(object):
-    """Represents a waypoint with position, altitude and further
-       properties. Used internally by WaypointsTableModel.
+    """
+    Represents a waypoint with position, altitude and further
+    properties. Used internally by WaypointsTableModel.
     """
 
     def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
@@ -124,15 +126,17 @@ class Waypoint(object):
         self.wpnumber_minor = None
 
     def __str__(self):
-        """String representation of the waypoint (e.g., when used with the print
-           statement).
+        """
+        String representation of the waypoint (e.g., when used with the print
+        statement).
         """
         return f"WAYPOINT(LAT={self.lat:f}, LON={self.lon:f}, FL={self.flightlevel:f})"
 
 
 class WaypointsTableModel(QtCore.QAbstractTableModel):
-    """Qt-QAbstractTableModel-derived data structure representing a flight
-       track composed of a number of waypoints.
+    """
+    Qt-QAbstractTableModel-derived data structure representing a flight
+    track composed of a number of waypoints.
 
     Objects of this class can be directly connected to any Qt view that is
     able to handle tables models.
@@ -172,19 +176,22 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             self.replace_waypoints(waypoints)
 
     def load_settings(self):
-        """Load settings from the file self.settingsfile.
+        """
+        Load settings from the file self.settingsfile.
         """
         self.performance_settings = load_settings_qsettings(self.settings_tag, DEFAULT_PERFORMANCE)
 
     def save_settings(self):
-        """Save the current settings (map appearance) to the file
-           self.settingsfile.
+        """
+        Save the current settings (map appearance) to the file
+        self.settingsfile.
         """
         save_settings_qsettings(self.settings_tag, self.performance_settings)
 
     def flags(self, index):
-        """Used to specify which table columns can be edited by the user;
-           overrides the corresponding QAbstractTableModel method.
+        """
+        Used to specify which table columns can be edited by the user;
+        overrides the corresponding QAbstractTableModel method.
         """
         if not index.isValid():
             return QtCore.Qt.ItemIsEnabled
@@ -203,9 +210,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled)
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
-        """Return a data field at the given index (of type QModelIndex,
-           specifying row and column); overrides the corresponding
-           QAbstractTableModel method.
+        """
+        Return a data field at the given index (of type QModelIndex,
+        specifying row and column); overrides the corresponding
+        QAbstractTableModel method.
 
         NOTE: Other roles (e.g. for display appearance) could be specified in
         this method as well. Cf. the 'ships' example in chapter 14/16 of 'Rapid
@@ -228,17 +236,20 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def waypoint_data(self, row):
-        """Get the waypoint object defining the given row.
+        """
+        Get the waypoint object defining the given row.
         """
         return self.waypoints[row]
 
     def all_waypoint_data(self):
-        """Return the entire list of waypoints.
+        """
+        Return the entire list of waypoints.
         """
         return self.waypoints
 
     def intermediate_points(self, numpoints=101, connection="greatcircle"):
-        """Compute intermediate points between the waypoints.
+        """
+        Compute intermediate points between the waypoints.
 
         See mss_util.path_points() for additional arguments.
 
@@ -249,8 +260,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             path, numpoints=numpoints, connection=connection)
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
-        """Return data describing the table header; overrides the
-           corresponding QAbstractTableModel method.
+        """
+        Return data describing the table header; overrides the
+        corresponding QAbstractTableModel method.
         """
         if role == QtCore.Qt.TextAlignmentRole:
             if orientation == QtCore.Qt.Horizontal:
@@ -269,7 +281,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant(int(section))
 
     def rowCount(self, index=QtCore.QModelIndex()):
-        """Number of waypoints in the model.
+        """
+        Number of waypoints in the model.
         """
         return len(self.waypoints)
 
@@ -277,8 +290,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return len(TABLE_FULL)
 
     def setData(self, index, value, role=QtCore.Qt.EditRole, update=True):
-        """Change a data element of the flight track; overrides the
-           corresponding QAbstractTableModel method.
+        """
+        Change a data element of the flight track; overrides the
+        corresponding QAbstractTableModel method.
 
         NOTE: Performance computations loose their validity if a change is made.
         """
@@ -380,8 +394,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def insertRows(self, position, rows=1, index=QtCore.QModelIndex(),
                    waypoints=None):
-        """Insert waypoint; overrides the corresponding QAbstractTableModel
-           method.
+        """
+        Insert waypoint; overrides the corresponding QAbstractTableModel
+        method.
         """
         if not waypoints:
             waypoints = [Waypoint(0, 0, 0)] * rows
@@ -399,8 +414,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return True
 
     def removeRows(self, position, rows=1, index=QtCore.QModelIndex()):
-        """Remove waypoint; overrides the corresponding QAbstractTableModel
-           method.
+        """
+        Remove waypoint; overrides the corresponding QAbstractTableModel
+        method.
         """
         # beginRemoveRows emits rowsAboutToBeRemoved(index, first, last).
         self.beginRemoveRows(QtCore.QModelIndex(), position,
@@ -415,9 +431,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return True
 
     def update_distances(self, position, rows=1):
-        """Update all distances in a flight track that are affected by a
-           waypoint change involving <rows> waypoints starting at index
-           <position>.
+        """
+        Update all distances in a flight track that are affected by a
+        waypoint change involving <rows> waypoints starting at index
+        <position>.
 
         Distances are computed along great circles.
 
@@ -542,7 +559,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.insertRows(0, rows=len(new_waypoints), waypoints=new_waypoints)
 
     def save_to_ftml(self, filename=None):
-        """Save the flight track to an XML file.
+        """
+        Save the flight track to an XML file.
 
         Arguments:
         filename -- complete path to the file to save. If None, a previously
@@ -586,7 +604,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return doc.toprettyxml(indent="  ", newl="\n")
 
     def load_from_ftml(self, filename):
-        """Load a flight track from an XML file at <filename>.
+        """
+        Load a flight track from an XML file at <filename>.
         """
         _dirname, _name = os.path.split(filename)
         _fs = fs.open_fs(_dirname)
@@ -633,17 +652,19 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
 
 class WaypointDelegate(QtWidgets.QItemDelegate):
-    """Qt delegate class for the appearance of the table view. Based on the
-       'ships' example in chapter 14/16 of 'Rapid GUI Programming with Python
-       and Qt: The Definitive Guide to PyQt Programming' (Mark Summerfield).
+    """
+    Qt delegate class for the appearance of the table view. Based on the
+    'ships' example in chapter 14/16 of 'Rapid GUI Programming with Python
+    and Qt: The Definitive Guide to PyQt Programming' (Mark Summerfield).
     """
 
     def __init__(self, parent=None):
         super(WaypointDelegate, self).__init__(parent)
 
     def paint(self, painter, option, index):
-        """Colours waypoints with a minor waypoint number (i.e. intermediate
-           waypoints generated by the flight performance service) in red.
+        """
+        Colors waypoints with a minor waypoint number (i.e. intermediate
+        waypoints generated by the flight performance service) in red.
         """
         wpnumber_minor = index.model().waypoint_data(index.row()).wpnumber_minor
         if wpnumber_minor is not None and wpnumber_minor > 0:
@@ -656,8 +677,9 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         QtWidgets.QItemDelegate.paint(self, painter, option, index)
 
     def createEditor(self, parent, option, index):
-        """Create a combobox listing predefined locations in the LOCATION
-           column.
+        """
+        Create a combobox listing predefined locations in the LOCATION
+        column.
         """
         if index.column() == LOCATION:
             combobox = QtWidgets.QComboBox(parent)
@@ -687,8 +709,9 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
             QtWidgets.QItemDelegate.setEditorData(self, editor, index)
 
     def setModelData(self, editor, model, index):
-        """For the LOCATION column: If the user selects a location from the
-           combobox, get the corresponding coordinates.
+        """
+        For the LOCATION column: If the user selects a location from the
+        combobox, get the corresponding coordinates.
         """
         if index.column() == LOCATION:
             loc = editor.currentText()
