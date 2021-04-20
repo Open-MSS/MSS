@@ -67,11 +67,22 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         super(HexagonControlWidget, self).__init__(parent)
         self.setupUi(self)
         self.view = view
+        if self.view:
+            self.view.tableWayPoints.selectionModel().selectionChanged.connect(self.on_selection_changed)
+            self.on_selection_changed(None)
 
         self.dsbHexgaonRadius.setValue(200)
 
         self.pbAddHexagon.clicked.connect(self._add_hexagon)
         self.pbRemoveHexagon.clicked.connect(self._remove_hexagon)
+
+    def on_selection_changed(self, index):
+        """
+        Disables add and remove when multiple rows are selected
+        """
+        enable = len(self.view.tableWayPoints.selectionModel().selectedRows()) <= 1
+        self.pbAddHexagon.setEnabled(enable)
+        self.pbRemoveHexagon.setEnabled(enable)
 
     def _get_parameters(self):
         return {
