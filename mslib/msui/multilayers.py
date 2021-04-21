@@ -338,14 +338,15 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if self.current_layer.get_vtime() in item.get_vtimes():
                 item.set_vtime(self.current_layer.get_vtime())
 
-        self.current_layer = item
-        self.listLayers.setCurrentItem(item)
-        index = self.cbWMS_URL.findText(item.get_wms().url)
-        if index != -1 and index != self.cbWMS_URL.currentIndex():
-            self.cbWMS_URL.setCurrentIndex(index)
-        self.needs_repopulate.emit()
-        if not self.cbMultilayering.isChecked():
-            self.dock_widget.auto_update()
+        if self.current_layer != item:
+            self.current_layer = item
+            self.listLayers.setCurrentItem(item)
+            index = self.cbWMS_URL.findText(item.get_wms().url)
+            if index != -1 and index != self.cbWMS_URL.currentIndex():
+                self.cbWMS_URL.setCurrentIndex(index)
+            self.needs_repopulate.emit()
+            if not self.cbMultilayering.isChecked():
+                QtCore.QTimer.singleShot(QtWidgets.QApplication.doubleClickInterval(), self.dock_widget.auto_update)
         self.threads -= 1
 
     def multilayer_doubleclicked(self, item, column):
@@ -404,6 +405,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.layers_priority.insert(new_index, to_move)
         self.update_priority_selection()
         self.multilayer_clicked(self.layers_priority[new_index])
+        self.needs_repopulate.emit()
+        self.dock_widget.auto_update()
 
     def update_checkboxes(self):
         """
