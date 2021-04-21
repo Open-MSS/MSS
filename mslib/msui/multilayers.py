@@ -54,6 +54,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.listLayers.itemChanged.connect(self.multilayer_changed)
         self.listLayers.itemClicked.connect(self.multilayer_clicked)
         self.listLayers.itemClicked.connect(self.check_icon_clicked)
+        self.listLayers.itemDoubleClicked.connect(self.multilayer_doubleclicked)
         self.listLayers.setVisible(True)
 
         self.leMultiFilter.setVisible(True)
@@ -337,13 +338,20 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if self.current_layer.get_vtime() in item.get_vtimes():
                 item.set_vtime(self.current_layer.get_vtime())
 
-        self.current_layer = item
-        self.listLayers.setCurrentItem(item)
-        index = self.cbWMS_URL.findText(item.get_wms().url)
-        if index != -1 and index != self.cbWMS_URL.currentIndex():
-            self.cbWMS_URL.setCurrentIndex(index)
-        self.needs_repopulate.emit()
+        if self.current_layer != item:
+            self.current_layer = item
+            self.listLayers.setCurrentItem(item)
+            index = self.cbWMS_URL.findText(item.get_wms().url)
+            if index != -1 and index != self.cbWMS_URL.currentIndex():
+                self.cbWMS_URL.setCurrentIndex(index)
+            self.needs_repopulate.emit()
+            if not self.cbMultilayering.isChecked():
+                QtCore.QTimer.singleShot(QtWidgets.QApplication.doubleClickInterval(), self.dock_widget.auto_update)
         self.threads -= 1
+
+    def multilayer_doubleclicked(self, item, column):
+        if isinstance(item, Layer):
+            self.hide()
 
     def multilayer_changed(self, item):
         """
@@ -366,6 +374,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             elif not (item.itimes or item.vtimes or item.levels):
                 item.is_active_unsynced = True
             self.update_checkboxes()
+            self.needs_repopulate.emit()
+            self.dock_widget.auto_update()
         elif item.checkState(0) == 0 and self.listLayers.itemWidget(item, 2):
             if item in self.layers_priority:
                 self.listLayers.removeItemWidget(item, 2)
@@ -375,6 +385,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             item.is_active_unsynced = False
             self.reload_sync()
             self.update_checkboxes()
+            self.needs_repopulate.emit()
+            self.dock_widget.auto_update()
 
     def priority_changed(self, new_index):
         """
@@ -393,6 +405,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.layers_priority.insert(new_index, to_move)
         self.update_priority_selection()
         self.multilayer_clicked(self.layers_priority[new_index])
+        self.needs_repopulate.emit()
+        self.dock_widget.auto_update()
 
     def update_checkboxes(self):
         """
