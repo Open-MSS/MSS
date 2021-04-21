@@ -499,13 +499,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pdlg = QtWidgets.QProgressDialog(
             "retrieving image...", "Cancel", 0, 10, parent=self.parent())
         self.pdlg.close()
+        self.pdlg.canceled.connect(lambda: self.parent().setEnabled(True))
 
         # Progress dialog to inform the user about ongoing capability requests.
         self.capabilities_worker = Worker(None)
         self.cpdlg = QtWidgets.QProgressDialog(
             "retrieving wms capabilities...", "Cancel", 0, 10, parent=self.multilayers)
-        self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)
         self.cpdlg.close()
+        self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)
 
         self.thread_prefetch = QtCore.QThread()  # no parent!
         self.thread_prefetch.start()
@@ -657,7 +658,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("showing progress dialog")
         self.pdlg.reset()
         self.pdlg.setValue(5)
-        self.pdlg.setModal(True)
+        self.parent().setEnabled(False)
+        self.multilayers.setEnabled(True)
+        self.pdlg.setEnabled(True)
         self.pdlg.show()
 
     def display_capabilities_dialog(self):
