@@ -535,7 +535,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if len(init_time_names) > 0:
             self.itime_name = init_time_names[0]
             values = self.extents[self.itime_name]["values"]
-            self.allowed_init_times = self.parent.dock_widget.parse_time_extent(values)
+            self.allowed_init_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.itimes = [_time.isoformat() + "Z" for _time in self.allowed_init_times]
             if len(self.allowed_init_times) == 0:
                 msg = "cannot determine init time format"
@@ -544,7 +544,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
                     self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
                     self.parent.dock_widget.tr("ERROR: {}".format(msg)))
             else:
-                self.itime = self.itimes[0]
+                self.itime = self.itimes[-1]
 
     def _parse_vtimes(self):
         """
