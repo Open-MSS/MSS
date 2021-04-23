@@ -358,7 +358,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                             vsec_numlabels=10,
                             init_time=None, valid_time=None, style=None,
                             bbox=None, figsize=(800, 600), noframe=False,
-                            show=False, transparent=False,
+                            show=False, transparent=False, one_dimensional=False,
                             return_format="image/png"):
         """
         """
@@ -374,6 +374,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                         vsec_path_connection)
         self.show = show
         self.vsec_numlabels = vsec_numlabels
+        self.one_dimensional = one_dimensional
 
     def update_plot_parameters(self, plot_object=None, vsec_path=None,
                                vsec_numpoints=None, vsec_path_connection=None,
@@ -513,46 +514,47 @@ class VerticalSectionDriver(MSSPlotDriver):
     def plot(self):
         """
         """
-        d1 = datetime.now()
+        if not self.one_dimensional:
+            d1 = datetime.now()
 
-        # Load and interpolate the data fields as required by the vertical
-        # section style instance. <data> is a dictionary containing the
-        # interpolated curtains of the variables identified through CF
-        # standard names as specified by <self.vsec_style_instance>.
-        data = self._load_interpolate_timestep()
+            # Load and interpolate the data fields as required by the vertical
+            # section style instance. <data> is a dictionary containing the
+            # interpolated curtains of the variables identified through CF
+            # standard names as specified by <self.vsec_style_instance>.
+            data = self._load_interpolate_timestep()
 
-        d2 = datetime.now()
-        logging.debug("Loaded and interpolated data (required time %s).", d2 - d1)
-        logging.debug("Plotting interpolated curtain.")
+            d2 = datetime.now()
+            logging.debug("Loaded and interpolated data (required time %s).", d2 - d1)
+            logging.debug("Plotting interpolated curtain.")
 
-        if len(self.lat_data) > 1 and len(self.lon_data) > 1:
-            resolution = (self.lon_data[1] - self.lon_data[0],
-                          self.lat_data[1] - self.lat_data[0])
-        else:
-            resolution = (-1, -1)
+            if len(self.lat_data) > 1 and len(self.lon_data) > 1:
+                resolution = (self.lon_data[1] - self.lon_data[0],
+                              self.lat_data[1] - self.lat_data[0])
+            else:
+                resolution = (-1, -1)
 
-        # Call the plotting method of the vertical section style instance.
-        image = self.plot_object.plot_vsection(data, self.lats, self.lons,
-                                               valid_time=self.fc_time,
-                                               init_time=self.init_time,
-                                               resolution=resolution,
-                                               bbox=self.bbox,
-                                               style=self.style,
-                                               show=self.show,
-                                               highlight=self.vsec_path,
-                                               noframe=self.noframe,
-                                               figsize=self.figsize,
-                                               transparent=self.transparent,
-                                               numlabels=self.vsec_numlabels,
-                                               return_format=self.return_format)
-        # Free memory.
-        del data
+            # Call the plotting method of the vertical section style instance.
+            image = self.plot_object.plot_vsection(data, self.lats, self.lons,
+                                                   valid_time=self.fc_time,
+                                                   init_time=self.init_time,
+                                                   resolution=resolution,
+                                                   bbox=self.bbox,
+                                                   style=self.style,
+                                                   show=self.show,
+                                                   highlight=self.vsec_path,
+                                                   noframe=self.noframe,
+                                                   figsize=self.figsize,
+                                                   transparent=self.transparent,
+                                                   numlabels=self.vsec_numlabels,
+                                                   return_format=self.return_format)
+            # Free memory.
+            del data
 
-        d3 = datetime.now()
-        logging.debug("Finished plotting (required time %s; total "
-                      "time %s).\n", d3 - d2, d3 - d1)
+            d3 = datetime.now()
+            logging.debug("Finished plotting (required time %s; total "
+                          "time %s).\n", d3 - d2, d3 - d1)
 
-        return image
+            return image
 
 
 class HorizontalSectionDriver(MSSPlotDriver):
@@ -668,6 +670,255 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                                noframe=self.noframe,
                                                figsize=self.figsize,
                                                transparent=self.transparent)
+        # Free memory.
+        del data
+
+        d3 = datetime.now()
+        logging.debug("Finished plotting (required time %s; total "
+                      "time %s).\n", d3 - d2, d3 - d1)
+
+        return image
+
+
+class OneDSectionDriver(MSSPlotDriver):
+    """
+        The vertical section driver is responsible for loading the data that
+        is to be plotted and for calling the plotting routines (that have
+        to be registered).
+        """
+
+    def set_plot_parameters(self, plot_object=None, vsec_path=None,
+                            vsec_numpoints=101, vsec_path_connection='linear',
+                            vsec_numlabels=10,
+                            init_time=None, valid_time=None, style=None,
+                            bbox=None, figsize=(800, 600), noframe=False,
+                            show=False, transparent=False,
+                            return_format="image/png"):
+        """
+        """
+        MSSPlotDriver.set_plot_parameters(self, plot_object,
+                                          init_time=init_time,
+                                          valid_time=valid_time,
+                                          style=style,
+                                          bbox=bbox,
+                                          figsize=figsize, noframe=noframe,
+                                          transparent=transparent,
+                                          return_format=return_format)
+        self._set_vertical_section_path(vsec_path, vsec_numpoints,
+                                        vsec_path_connection)
+        self.show = show
+        self.vsec_numlabels = vsec_numlabels
+
+    def update_plot_parameters(self, plot_object=None, vsec_path=None,
+                               vsec_numpoints=None, vsec_path_connection=None,
+                               vsec_numlabels=None,
+                               init_time=None, valid_time=None, style=None,
+                               bbox=None, figsize=None, noframe=None, show=None,
+                               transparent=None, return_format=None):
+        """
+        """
+        plot_object = plot_object if plot_object is not None else self.plot_object
+        figsize = figsize if figsize is not None else self.figsize
+        noframe = noframe if noframe is not None else self.noframe
+        init_time = init_time if init_time is not None else self.init_time
+        valid_time = valid_time if valid_time is not None else self.valid_time
+        style = style if style is not None else self.style
+        bbox = bbox if bbox is not None else self.bbox
+        vsec_path = vsec_path if vsec_path is not None else self.vsec_path
+        vsec_numpoints = vsec_numpoints if vsec_numpoints is not None else self.vsec_numpoints
+        vsec_numlabels = vsec_numlabels if vsec_numlabels is not None else self.vsec_numlabels
+        if vsec_path_connection is None:
+            vsec_path_connection = self.vsec_path_connection
+        show = show if show else self.show
+        transparent = transparent if transparent is not None else self.transparent
+        return_format = return_format if return_format is not None else self.return_format
+        self.set_plot_parameters(plot_object=plot_object,
+                                 vsec_path=vsec_path,
+                                 vsec_numpoints=vsec_numpoints,
+                                 vsec_path_connection=vsec_path_connection,
+                                 vsec_numlabels=vsec_numlabels,
+                                 init_time=init_time,
+                                 valid_time=valid_time,
+                                 style=style,
+                                 bbox=bbox,
+                                 figsize=figsize,
+                                 noframe=noframe,
+                                 show=show,
+                                 transparent=transparent,
+                                 return_format=return_format)
+
+    def _set_vertical_section_path(self, vsec_path, vsec_numpoints=101,
+                                   vsec_path_connection='linear'):
+        """
+        """
+        logging.debug("computing %i interpolation points, connection: %s",
+                      vsec_numpoints, vsec_path_connection)
+        now = datetime.now()
+        self.lats, self.lons, self.alts, _ = utils.path_points(
+            [(_x, _y, _z, now) for _x, _y, _z in vsec_path],
+            numpoints=vsec_numpoints, connection="linear", contains_altitude=True)
+        self.vsec_path = vsec_path
+        self.vsec_numpoints = vsec_numpoints
+        self.vsec_path_connection = vsec_path_connection
+
+    def _load_interpolate_timestep(self):
+        """
+        Load and interpolate the data fields as required by the vertical
+        section style instance. Only data of time <fc_time> is processed.
+
+        Shifts the data fields such that the longitudes are in the range
+        left_longitude .. left_longitude+360, where left_longitude is the
+        westmost longitude appearing in the list of waypoints minus one
+        gridpoint (to include all waypoint longitudes).
+
+        Necessary to prevent data cut-offs in situations where the requested
+        cross section crosses the data longitude boundaries (e.g. data is
+        stored on a 0..360 grid, but the path is in the range -10..+20).
+        """
+        from scipy.interpolate import RegularGridInterpolator
+        if self.dataset is None:
+            return {}
+        data = {}
+
+        timestep = self.times.searchsorted(self.fc_time)
+        logging.debug("loading data for time step %s (%s)", timestep, self.fc_time)
+
+        # Determine the westmost longitude in the cross-section path. Subtract
+        # one gridbox size to obtain "left_longitude".
+        dlon = self.lon_data[1] - self.lon_data[0]
+        left_longitude = self.lons.min() - dlon
+        logging.debug("shifting data grid to gridpoint west of westmost "
+                      "longitude in path: %.2f (path %.2f).",
+                      left_longitude, self.lons.min())
+
+        # Shift the longitude field such that the data is in the range
+        # left_longitude .. left_longitude+360.
+        # NOTE: This does not overwrite self.lon_data (which is required
+        # in its original form in case other data is loaded while this
+        # file is open).
+        lon_data = ((self.lon_data - left_longitude) % 360) + left_longitude
+        lon_indices = lon_data.argsort()
+        lon_data = lon_data[lon_indices]
+        factors = []
+
+        for name, var in self.data_vars.items():
+            data[name] = []
+            if len(var.shape) == 4:
+                var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
+            else:
+                var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
+            logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %s.",
+                          var_data.nbytes / 1048576., name, timestep)
+            logging.debug("\tVertical dimension direction is %s.",
+                          "up" if self.vert_order == 1 else "down")
+            logging.debug("\tInterpolating to cross-section path.")
+            # Re-arange longitude dimension in the data field.
+            var_data = var_data[:, :, lon_indices]
+
+            points = (self.vert_data, self.lat_data, lon_data)
+            inter_points = np.array([[self.alts[i], self.lats[i], self.lons[i]] for i in range(len(self.lats))])
+            interpolator = RegularGridInterpolator(points, var_data)
+            if name == "air_pressure":
+                for index, point in enumerate(inter_points):
+                    vertical_slice = np.array(
+                        [[self.vert_data[i], point[1], point[2]] for i in range(len(self.vert_data))])
+                    try:
+                        pressures = interpolator(vertical_slice)
+                        closest = 0
+                        direction = 1
+                        for i, pressure in enumerate(pressures):
+                            if abs(pressure - point[0]) < abs(pressures[closest] - point[0]):
+                                closest = i
+                                direction = 1 if pressure - point[0] > 0 else -1
+                        next_closest = closest + direction if closest < len(pressures) - 1 else closest
+                        distance = abs(pressures[closest] - point[0]) + abs(pressures[next_closest] - point[0])
+                        factors.append(
+                            [[closest, abs(pressures[closest] - point[0]) / distance],
+                             [next_closest, abs(pressures[next_closest] - point[0]) / distance]])
+                    except ValueError:
+                        # Extrapolation error, ignore for now
+                        factors.append([[0, 0], [0, 0]])
+                        pass
+
+            for index, point in enumerate(inter_points):
+                value = float("NaN")
+                cur_factor = factors[index]
+                vertical_slice = np.array(
+                    [[self.vert_data[i], point[1], point[2]] for i in range(len(self.vert_data))])
+                try:
+                    vertical = interpolator(vertical_slice)
+                    value = vertical[cur_factor[0][0]] * cur_factor[0][1] + \
+                        vertical[cur_factor[1][0]] * cur_factor[1][1]
+                except ValueError:
+                    # Extrapolation error
+                    logging.debug(f"Could not interpolate point {point}, assigning 0 instead.")
+                finally:
+                    data[name].append(value)
+
+            # Free memory.
+            del var_data
+            data[name] = np.array(data[name])
+
+        return data
+
+    def shift_data(self):
+        """
+        Shift the data fields such that the longitudes are in the range
+        left_longitude .. left_longitude+360, where left_longitude is the
+        westmost longitude appearing in the list of waypoints minus one
+        gridpoint (to include all waypoint longitudes).
+
+        Necessary to prevent data cut-offs in situations where the requested
+        cross section crosses the data longitude boundaries (e.g. data is
+        stored on a 0..360 grid, but the path is in the range -10..+20).
+        """
+        # Determine the leftmost longitude in the plot.
+        left_longitude = self.lons.min()
+        logging.debug("shifting data grid to leftmost longitude in path "
+                      "(%.2f)..", left_longitude)
+
+        # Shift the longitude field such that the data is in the range
+        # left_longitude .. left_longitude+360.
+        self.lons = ((self.lons - left_longitude) % 360) + left_longitude
+        lon_indices = self.lons.argsort()
+        self.lons = self.lons[lon_indices]
+
+        # Shift data fields correspondingly.
+        for key in self.data:
+            self.data[key] = self.data[key][:, lon_indices]
+
+    def plot(self):
+        """
+        """
+        d1 = datetime.now()
+
+        # Load and interpolate the data fields as required by the vertical
+        # section style instance. <data> is a dictionary containing the
+        # interpolated curtains of the variables identified through CF
+        # standard names as specified by <self.vsec_style_instance>.
+        data = self._load_interpolate_timestep()
+        d2 = datetime.now()
+
+        if len(self.lat_data) > 1 and len(self.lon_data) > 1:
+            resolution = (self.lon_data[1] - self.lon_data[0],
+                          self.lat_data[1] - self.lat_data[0])
+        else:
+            resolution = (-1, -1)
+
+        # Call the plotting method of the 1D section style instance.
+        image = self.plot_object.plot_1section(data, self.lats, self.lons,
+                                               valid_time=self.fc_time,
+                                               init_time=self.init_time,
+                                               resolution=resolution,
+                                               bbox=self.bbox,
+                                               style=self.style,
+                                               show=self.show,
+                                               highlight=self.vsec_path,
+                                               noframe=self.noframe,
+                                               figsize=self.figsize,
+                                               transparent=self.transparent,
+                                               numlabels=self.vsec_numlabels,
+                                               return_format=self.return_format)
         # Free memory.
         del data
 

@@ -1594,4 +1594,81 @@ class HSecWMSControlWidget(WMSControlWidget):
 
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
-        return crss is not None and not any(crs.startswith("VERT") for crs in crss)
+        return crss is not None and not any(crs.startswith("VERT") for crs in crss) \
+            and not any(crs.startswith("ONE") for crs in crss)
+
+
+class OneDSecWMSControlWidget(WMSControlWidget):
+    """Subclass of WMSControlWidget that extends the WMS client to
+       handle (non-standard) 1D sections.
+    """
+
+    def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
+                 view=None, wms_cache=None):
+        super(OneDSecWMSControlWidget, self).__init__(
+            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
+        self.waypoints_model = waypoints_model
+        self.btGetMap.clicked.connect(self.get_all_maps)
+
+    def get_all_maps(self):
+        if self.multilayers.cbMultilayering.isChecked():
+            self.get_osec(self.multilayers.get_active_layers())
+        else:
+            self.get_osec([self.multilayers.get_current_layer()])
+
+    def setFlightTrackModel(self, model):
+        """Set the QAbstractItemModel instance from which the waypoints
+           are obtained.
+        """
+        self.waypoints_model = model
+
+    @QtCore.Slot()
+    def call_get_osec(self):
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+            self.get_all_maps()
+
+    def get_osec(self, layers=None):
+        """Slot that retrieves the vertical section and passes the image
+                   to the view.
+                """
+        # Specify the coordinate reference system for the request. We will
+        # use the non-standard "VERT:LOGP" to query the MSS WMS Server for
+        # a vertical section. The vertical extent of the plot is specified
+        # via the bounding box.
+        crs = "ONE:1"
+        bbox = self.view.getBBOX()
+
+        # Get lat/lon coordinates of flight track and convert to string for URL.
+        path_string = ""
+        for waypoint in self.waypoints_model.all_waypoint_data():
+            path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},{waypoint.pressure},"
+        path_string = path_string[:-1]
+
+        # Determine the current size of the vertical section plot on the
+        # screen in pixels. The image will be retrieved in this size.
+        width, height = self.view.get_plot_size_in_px()
+
+        # Retrieve the image.
+        if not layers:
+            layers = [self.multilayers.get_current_layer()]
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+
+        args = []
+        for layer in layers:
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height))
+
+        self.fetch.emit(args)
+
+    def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
+        # Plot the image on the view canvas.
+        self.view.draw_image(self.squash_multiple_images(imgs))
+        self.view.draw_legend(self.append_multiple_images(legend_imgs))
+        style_title = self.multilayers.get_current_layer().get_style()
+        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+                                init_time=init_time,
+                                valid_time=valid_time,
+                                style=style_title)
+
+    def is_layer_aligned(self, layer):
+        crss = getattr(layer, "crsOptions", None)
+        return crss is not None and any(crs.startswith("ONE") for crs in crss)

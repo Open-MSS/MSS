@@ -82,7 +82,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>442</width>
-     <height>24</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
@@ -127,6 +127,7 @@ Save a flight track to name it.</string>
     <addaction name="actionTopView"/>
     <addaction name="actionSideView"/>
     <addaction name="actionTableView"/>
+    <addaction name="action1DView"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -252,6 +253,17 @@ Save a flight track to name it.</string>
    </property>
    <property name="toolTip">
     <string>Load a JSON configuration file</string>
+   </property>
+  </action>
+  <action name="action1DView">
+   <property name="text">
+    <string>&amp;1D View</string>
+   </property>
+   <property name="toolTip">
+    <string>1D View</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
    </property>
   </action>
  </widget>

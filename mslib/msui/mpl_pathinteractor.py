@@ -802,6 +802,95 @@ class VPathInteractor(PathInteractor):
             if self.redraw_xaxis is not None:
                 self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
 
+
+class OPathInteractor(PathInteractor):
+    """Subclass of PathInteractor that implements an interactively editable
+       vertical profile of the flight track.
+    """
+    signal_get_osec = QtCore.Signal(name="get_osec")
+
+    def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
+        """Constructor passes a PathV instance its parent.
+
+        Arguments:
+        ax -- matplotlib.Axes object into which the path should be drawn.
+        waypoints -- flighttrack.WaypointsModel instance.
+        numintpoints -- number of intermediate interpolation points. The entire
+                        flight track will be interpolated to this number of
+                        points.
+        redrawXAxis -- callback function to redraw the x-axis on path changes.
+        """
+        self.numintpoints = numintpoints
+        self.redraw_xaxis = redraw_xaxis
+        self.clear_figure = clear_figure
+        super(OPathInteractor, self).__init__(
+            ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
+
+    def get_num_interpolation_points(self):
+        return self.numintpoints
+
+    def redraw_figure(self):
+        """For the side view, changes in the horizontal position of a waypoint
+           (including moved waypoints, new or deleted waypoints) make a complete
+           redraw of the figure necessary.
+
+           Calls the callback function 'redrawXAxis()'.
+        """
+        self.redraw_path()
+        # emit signal to redraw map
+        self.signal_get_osec.emit()
+
+    def button_release_delete_callback(self, event):
+        """Called whenever a mouse button is released.
+        """
+        pass
+
+    def button_release_insert_callback(self, event):
+        """Called whenever a mouse button is released.
+
+        From the click event's coordinates, best_index is calculated as
+        the index of a vertex whose x coordinate > clicked x coordinate.
+        This is the position where the waypoint is to be inserted.
+
+        'lat' and 'lon' are calculated as an average of each of the first waypoint
+        in left and right neighbourhood of inserted waypoint.
+
+        The coordinates are checked against "locations" defined in mss' config.
+
+        A new waypoint with the coordinates, and name is inserted into the waypoints_model.
+        """
+        pass
+
+    def get_lat_lon(self, event):
+        return [0, 0], 0
+
+    def button_release_move_callback(self, event):
+        """Called whenever a mouse button is released.
+        """
+        pass
+
+    def motion_notify_callback(self, event):
+        """Called on mouse movement. Redraws the path if a vertex has been
+           picked and is being dragged.
+
+        In the side view, the horizontal position of a waypoint is locked.
+        Hence, points can only be moved in the vertical direction (y position
+        in this view).
+        """
+        pass
+
+    def qt_data_changed_listener(self, index1, index2):
+        """Listens to dataChanged() signals emitted by the flight track
+           data model. The side view can thus react to data changes
+           induced by another view (table, top view).
+        """
+        # If the altitude of a point has changed, only the plotted flight
+        # profile needs to be redrawn (redraw_path()). If the horizontal
+        # position of a waypoint has changed, the entire figure needs to be
+        # redrawn, as this affects the x-position of all points.
+        self.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
+        self.redraw_figure()
+
 #
 # CLASS HPathInteractor
 #

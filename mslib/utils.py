@@ -464,7 +464,7 @@ def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     return np.ma.masked_invalid(curtain)
 
 
-def latlon_points(p1, p2, numpoints=100, connection='linear'):
+def latlon_points(p1, p2, numpoints=100, connection='linear', contains_altitude=False):
     """
     Compute intermediate points between two given points.
 
@@ -478,12 +478,15 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
     """
     LAT = 0
     LON = 1
-    TIME = 2
-    lats, lons, times = None, None, None
+    ALT = 2
+    TIME = 2 if not contains_altitude else 3
+    lats, lons, alts, times = None, None, None, None
 
     if connection == 'linear':
         lats = np.linspace(p1[LAT], p2[LAT], numpoints)
         lons = np.linspace(p1[LON], p2[LON], numpoints)
+        if contains_altitude:
+            alts = np.linspace(p1[ALT], p2[ALT], numpoints)
     elif connection == 'greatcircle':
         if numpoints > 2:
             gc = pyproj.Geod(ellps="WGS84")
@@ -497,10 +500,13 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
     p1_time, p2_time = nc.date2num([p1[TIME], p2[TIME]], "seconds since 2000-01-01")
     times = np.linspace(p1_time, p2_time, numpoints)
 
-    return lats, lons, nc.num2date(times, "seconds since 2000-01-01")
+    if not contains_altitude:
+        return lats, lons, nc.num2date(times, "seconds since 2000-01-01")
+    else:
+        return lats, lons, alts, nc.num2date(times, "seconds since 2000-01-01")
 
 
-def path_points(points, numpoints=100, connection='linear'):
+def path_points(points, numpoints=100, connection='linear', contains_altitude=False):
     """
     Compute intermediate points of a path given by a list of points.
 
@@ -516,7 +522,8 @@ def path_points(points, numpoints=100, connection='linear'):
         return None, None
     LAT = 0
     LON = 1
-    TIME = 2
+    ALT = 2
+    TIME = 3 if contains_altitude else 2
 
     # First compute the lengths of the individual path segments, i.e.
     # the distances between the points.
@@ -544,7 +551,11 @@ def path_points(points, numpoints=100, connection='linear'):
         lons = np.repeat(points[0][LON], numpoints)
         lats = np.repeat(points[0][LAT], numpoints)
         times = np.repeat(points[0][TIME], numpoints)
-        return lats, lons, times
+        if contains_altitude:
+            alts = np.repead(points[0][ALT], numpoints)
+            return lats, lons, alts, times
+        else:
+            return lats, lons, times
 
     # For each segment, determine the number of points to be computed
     # from the distance between the two bounding points and the
@@ -553,6 +564,7 @@ def path_points(points, numpoints=100, connection='linear'):
     # first segment to avoid double points.
     lons = []
     lats = []
+    alts = []
     times = []
     for i in range(len(points) - 1):
         segment_points = int(round(distances[i] / length_point_segment))
@@ -560,14 +572,24 @@ def path_points(points, numpoints=100, connection='linear'):
         # (otherwise latlon_points will throw an exception).
         segment_points = max(segment_points, 2)
         # print segment_points
-        lats_, lons_, times_ = latlon_points(
-            points[i], points[i + 1],
-            numpoints=segment_points, connection=connection)
+        if not contains_altitude:
+            lats_, lons_, times_ = latlon_points(
+                points[i], points[i + 1],
+                numpoints=segment_points, connection=connection)
+        else:
+            lats_, lons_, alts_, times_ = latlon_points(
+                points[i], points[i + 1],
+                numpoints=segment_points, connection=connection, contains_altitude=True)
         startidx = 0 if i == 0 else 1
         lons.extend(lons_[startidx:])
         lats.extend(lats_[startidx:])
         times.extend(times_[startidx:])
-    return [np.asarray(_x) for _x in (lats, lons, times)]
+        if contains_altitude:
+            alts.extend(alts_[startidx:])
+
+    if not contains_altitude:
+        return [np.asarray(_x) for _x in (lats, lons, times)]
+    return [np.asarray(_x) for _x in (lats, lons, alts, times)]
 
 
 def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):

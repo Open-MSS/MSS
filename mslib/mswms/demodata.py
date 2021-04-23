@@ -1029,6 +1029,19 @@ if mpl_vsec_styles is not None:
         (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
     ]
+
+
+#
+# Registration of linear layers.
+#
+# The same as above, but for 1D sections.
+register_1d_layers = None
+if mpl_1sec_styles is not None:
+    register_1d_layers = [
+        # ECMWF standard 1D section styles.
+        (mpl_1sec_styles.OS_TemperatureStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"])
+    ]
 '''
             simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)
         else:

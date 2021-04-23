@@ -91,6 +91,25 @@
                 </Style>
             </Layer>
         </Layer>
+
+        <Layer tal:condition="len(osec_layers) > 0">
+            <Title> Vertical Sections of Forecasts. </Title>
+            <Layer tal:repeat="(dataset, layer) osec_layers" tal:attributes="queryable '1' if layer.queryable else None">
+                <Name>${ "%s.%s" % (dataset, layer.name) }</Name>
+                <Title tal:condition="layer.title"> ${ layer.title.strip() } </Title>
+                <Abstract tal:condition="layer.abstract"> ${ layer.abstract.strip() } </Abstract>
+                <SRS tal:repeat="crs layer.supported_crs()"> ${ crs } </SRS>
+                <LatLonBoundingBox minx="-180" maxx="180" miny="-90" maxy="90"></LatLonBoundingBox>
+                <Dimension tal:condition="layer.uses_validtime_dimension()" name="TIME" units="ISO8610"> </Dimension>
+                <Dimension tal:condition="layer.uses_inittime_dimension()" name="INIT_TIME" units="ISO8610"> </Dimension>
+                <Extent tal:condition="layer.uses_validtime_dimension()" name="TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_all_valid_times()]) } </Extent>
+                <Extent tal:condition="layer.uses_inittime_dimension()" name="INIT_TIME"> ${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_init_times()]) } </Extent>
+                <Style tal:condition="type(layer.styles) is list" tal:repeat="(style_name, style_title) layer.styles">
+                    <Name> ${ style_name } </Name>
+                    <Title> ${ style_title } </Title>
+                </Style>
+            </Layer>
+        </Layer>
     </Capability>
 </WMT_MS_Capabilities>
 
