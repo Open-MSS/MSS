@@ -412,6 +412,10 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         (e.g. data is stored on a -180..180 grid, but a map in the range
         -200..-100 is requested).
         """
+        # Shifting makes the grid irregular for stereographic and other projections
+        # in case the data is not global (i.e. covers 360 degrees).
+        if self.bm.projection in ['npstere', 'spstere', 'stere', 'lcc']:
+            return
         # Determine the leftmost longitude in the plot.
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)
