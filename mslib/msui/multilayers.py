@@ -43,6 +43,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         super().__init__(parent=dock_widget)
         self.setupUi(self)
         self.setWindowFlags(QtCore.Qt.Window)
+        if isinstance(dock_widget, mslib.msui.wms_control.HSecWMSControlWidget):
+            self.setWindowTitle(self.windowTitle() + " (Top View)")
+        elif isinstance(dock_widget, mslib.msui.wms_control.VSecWMSControlWidget):
+            self.setWindowTitle(self.windowTitle() + " (Side View)")
         self.dock_widget = dock_widget
         self.layers = {}
         self.layers_priority = []
