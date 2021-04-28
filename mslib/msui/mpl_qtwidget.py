@@ -1066,15 +1066,7 @@ class MplTopViewCanvas(MplCanvas):
     def plot_kml(self, kmloverlay):
         """Plots a satellite track on top of the map.
         """
-        if self.kmloverlay:
-            # If track is currently plotted on the map, remove it.
-            self.kmloverlay.remove()
-            if not kmloverlay:
-                self.kmloverlay = None
-                self.draw()
-        if kmloverlay:
-            # Create a new patch.
-            self.kmloverlay = kmloverlay
+        self.kmloverlay = kmloverlay
 
     def set_map_appearance(self, settings_dict):
         """Apply settings from dictionary 'settings_dict' to the view.
