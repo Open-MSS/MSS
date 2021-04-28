@@ -263,3 +263,4 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
     def closeEvent(self, event):
         self.viewCloses.emit()
+        event.accept()
