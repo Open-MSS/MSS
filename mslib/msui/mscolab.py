@@ -562,7 +562,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.token = _json["token"]
         self.user = _json["user"]
         self.label.setText(self.tr(f"Welcome, {self.user['username']}"))
-        self.password.setText("")
         self.loggedInWidget.show()
         self.loginWidget.hide()
         self.add_projects()
