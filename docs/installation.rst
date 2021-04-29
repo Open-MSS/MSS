@@ -27,7 +27,7 @@ get by the conda installer the mamba installer. Mamba is a fast cross platform i
 Preparations for installing MSS
 +++++++++++++++++++++++++++++++
 
-The fastest way t get the conda installer is to start with Miniconda.
+The fastest way to get the conda installer is to start with Miniconda.
 This is a small subset of the Anaconda package with only the conda installer and its dependencies.
 If you do prefer to use over 7K open-source packages install Anaconda.
 
