@@ -245,13 +245,13 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
                 widget.signal_enable_cbs.connect(self.enable_cbs)
             elif index == SATELLITE:
                 title = "Satellite Track Prediction"
-                widget = sat.SatelliteControlWidget(view=self.mpl.canvas)
+                widget = sat.SatelliteControlWidget(parent=self, view=self.mpl.canvas)
             elif index == REMOTESENSING:
                 title = "Remote Sensing Tools"
-                widget = rs.RemoteSensingControlWidget(view=self.mpl.canvas)
+                widget = rs.RemoteSensingControlWidget(parent=self, view=self.mpl.canvas)
             elif index == KMLOVERLAY:
                 title = "KML Overlay"
-                widget = kml.KMLOverlayControlWidget(view=self.mpl.canvas)
+                widget = kml.KMLOverlayControlWidget(parent=self, view=self.mpl.canvas)
             else:
                 raise IndexError("invalid control index")
 
