@@ -145,9 +145,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         default_MSCOLAB = config_loader(
             dataset="default_MSCOLAB")
         add_mscolab_urls(self.url, default_MSCOLAB)
-
-        self.emailid.setText(config_loader(dataset="MSCOLAB_mailid"))
-        self.password.setText(config_loader(dataset="MSCOLAB_password"))
+        self.emailid.setEnabled(False)
+        self.password.setEnabled(False)
 
         # fill value of mscolab url if found in QSettings storage
         self.settings = \
@@ -159,6 +158,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def disconnect_handler(self):
         self.logout()
         self.status.setText("Status: disconnected")
+        self.emailid.setEnabled(False)
+        self.password.setEnabled(False)
         # enable and disable right buttons
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
@@ -196,6 +197,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
                 save_settings_qsettings('mscolab', self.settings)
+                self.emailid.setEnabled(True)
+                self.password.setEnabled(True)
+                self.emailid.setText(config_loader(dataset="MSCOLAB_mailid"))
+                self.password.setText(config_loader(dataset="MSCOLAB_password"))
             else:
                 show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.ConnectionError:
