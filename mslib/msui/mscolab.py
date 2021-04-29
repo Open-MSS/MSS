@@ -273,9 +273,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.disable_project_buttons()
 
     def authenticate(self, data, r, url):
-        trial = True
-        while r.status_code == 401 and trial:
-            trial = False
+        if r.status_code == 401:
             dlg = MSCOLAB_AuthenticationDialog(parent=self)
             dlg.setModal(True)
             if dlg.exec_() == QtWidgets.QDialog.Accepted:
