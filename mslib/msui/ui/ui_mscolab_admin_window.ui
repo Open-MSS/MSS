@@ -359,7 +359,33 @@
    </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionCloseWindow">
+   <property name="text">
+    <string>actionCloseWindow</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <addaction name="actionCloseWindow"/>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>actionCloseWindow</sender>
+   <signal>triggered()</signal>
+   <receiver>MscolabAdminWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>490</x>
+     <y>377</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
