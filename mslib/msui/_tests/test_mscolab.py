@@ -138,6 +138,7 @@ class Test_Mscolab(object):
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockExport, mockImport, mockMessage):
+        pytest.skip("See issue #861")
         self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
