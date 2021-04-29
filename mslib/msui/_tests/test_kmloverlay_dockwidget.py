@@ -62,6 +62,9 @@ class Test_KmlOverlayDockWidget(object):
         if os.path.exists(save_kml):
             os.remove(save_kml)
 
+    def count_patches(self):
+        return sum([len(_x["patch"].patches) for _x in self.window.dict_files.values() if _x["patch"] is not None])
+
     def select_file(self, file):  # Utility function for single file
         path = fs.path.join(sample_path, "kml", file)
         filename = (path,)  # converted to tuple
@@ -90,9 +93,7 @@ class Test_KmlOverlayDockWidget(object):
         """
         index = 0
         assert self.window.listWidget.count() == 0
-        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml", "features.kml",
-                       "geometry_collection.kml", "Multilinestrings.kml", "polygon_inner.kml",
-                       "World_Map.kml"]:
+        for sample in ["folder.kml", "line.kml", "color.kml", "style.kml"]:
             path = self.select_file(sample)
             QtTest.QTest.qWait(250)
             assert self.window.listWidget.item(index).checkState() == QtCore.Qt.Checked
@@ -101,7 +102,7 @@ class Test_KmlOverlayDockWidget(object):
         assert mockbox.critical.call_count == 0
         assert self.window.listWidget.count() == index
         assert len(self.window.dict_files) == index
-        assert self.window.patch is not None
+        assert self.count_patches() > 0
         self.window.select_all()
         self.window.remove_file()
 
@@ -145,7 +146,7 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listWidget.count() == 0  # No items in list
         assert self.window.dict_files == {}  # Dictionary should be empty
-        assert self.window.patch is None   # Patch should be None
+        assert self.count_patches() == 0
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.kmloverlay_dockwidget.get_save_filename", return_value=save_kml)
@@ -198,10 +199,10 @@ class Test_KmlOverlayDockWidget(object):
         """
         self.select_file("line.kml")
         assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Checked
-        assert len(self.window.patch.patches) == 1
+        assert len([_x for _x in self.window.dict_files.values() if _x["patch"] is not None]) == 1
         self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
         assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Unchecked
-        assert len(self.window.patch.patches) == 0
+        assert len([_x for _x in self.window.dict_files.values() if _x["patch"] is not None]) == 1
         self.window.select_all()
         self.window.remove_file()
 
@@ -211,37 +212,33 @@ class Test_KmlOverlayDockWidget(object):
         Tests the type of patches plotted by each Test Sample File
         """
         self.select_file("line.kml")
-        assert len(self.window.patch.patches) == 1  # 1 LineString Geometry Patch
+        assert self.count_patches() == 1  # 1 LineString Geometry Patch
         self.window.remove_file()
 
         self.select_file("folder.kml")
-        assert len(self.window.patch.patches) == 3  # 1 Point, 1 Polygon, 1 Text Patch
+        assert self.count_patches() == 3  # 1 Point, 1 Polygon, 1 Text Patch
         self.window.remove_file()
 
         self.select_file("color.kml")
-        assert len(self.window.patch.patches) == 1  # 1 Polygon Patch
+        assert self.count_patches() == 1  # 1 Polygon Patch
         self.window.remove_file()
 
         self.select_file("style.kml")
-        assert len(self.window.patch.patches) == 4  # 1 Point, 1 Text, 1 Polygon, 1 LineString Patch
+        assert self.count_patches() == 4  # 1 Point, 1 Text, 1 Polygon, 1 LineString Patch
         self.window.remove_file()
 
         self.select_file("features.kml")
-        assert len(self.window.patch.patches) == 17  # 3 Points, 11 LineStrings, 3 Polygons Patch
+        assert self.count_patches() == 17  # 3 Points, 11 LineStrings, 3 Polygons Patch
         self.window.remove_file()
 
         self.select_file("polygon_inner.kml")
-        assert len(self.window.patch.patches) == 5  # 5 Polygons Patch
+        assert self.count_patches() == 5  # 5 Polygons Patch
         self.window.remove_file()
 
         self.select_file("Multilinestrings.kml")
-        assert len(self.window.patch.patches) == 10  # 10 LineStrings Patch
+        assert self.count_patches() == 10  # 10 LineStrings Patch
         self.window.remove_file()
 
         self.select_file("geometry_collection.kml")
-        assert len(self.window.patch.patches) == 3  # 1 Point, 1 Text, 1 Polygon Patch
-        self.window.remove_file()
-
-        self.select_file("World_Map.kml")
-        assert len(self.window.patch.patches) == 292  # 292 Polygons Patch
+        assert self.count_patches() == 3  # 1 Point, 1 Text, 1 Polygon Patch
         self.window.remove_file()
