@@ -115,7 +115,6 @@ def main():
     database_parser.add_argument("--add_all_to_all_project", help="adds all users into all other projects",
                                  action="store_true")
 
-
     args = parser.parse_args()
 
     if args.version:
