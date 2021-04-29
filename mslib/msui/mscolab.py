@@ -195,11 +195,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.url.setEnabled(False)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
-                try:
-                    recent_email = self.settings["server_settings"][self.mscolab_server_url]["recent_email"]
-                except KeyError:
-                    recent_email = ""
-                self.emailid.setText(recent_email)
                 save_settings_qsettings('mscolab', self.settings)
             else:
                 show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
@@ -574,7 +569,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.conn.signal_project_deleted.connect(self.handle_project_deleted)
         # activate add project button here
         self.addProject.setEnabled(True)
-        self.settings['server_settings'][self.mscolab_server_url].update({"recent_email": emailid})
         save_settings_qsettings('mscolab', self.settings)
 
     def add_projects(self):
