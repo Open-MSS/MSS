@@ -261,6 +261,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
+        self.window.cbAutoUpdate.setCheckState(False)
         assert server is not None
         assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
         assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
@@ -308,6 +309,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
+        self.window.cbAutoUpdate.setCheckState(False)
         assert server is not None
         assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
         assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
@@ -344,6 +346,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
+        self.window.cbAutoUpdate.setCheckState(False)
         server.setExpanded(True)
         self.window.multilayers.cbMultilayering.setChecked(True)
         layer_a = server.child(0)
