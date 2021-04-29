@@ -273,8 +273,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.disable_project_buttons()
 
     def authenticate(self, data, r, url):
-        counter = 0
-        while r.status_code == 401 and counter < 5:
+        trial = True
+        while r.status_code == 401 and trial:
+            trial = False
             dlg = MSCOLAB_AuthenticationDialog(parent=self)
             dlg.setModal(True)
             if dlg.exec_() == QtWidgets.QDialog.Accepted:
@@ -286,7 +287,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 s.auth = (username, password)
                 s.headers.update({'x-test': 'true'})
                 r = s.post(url, data=data)
-                counter += 1
         return r
 
     def add_project_handler(self):
@@ -549,6 +549,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if r.status_code == 200:
                 constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (auth[0], auth[1])
                 self.after_authorize(emailid, r)
+            else:
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
         elif r.text == "False":
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
