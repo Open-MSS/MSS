@@ -556,5 +556,37 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>password</sender>
+   <signal>returnPressed()</signal>
+   <receiver>loginButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>292</x>
+     <y>134</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>429</x>
+     <y>134</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>emailid</sender>
+   <signal>returnPressed()</signal>
+   <receiver>password</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>104</x>
+     <y>134</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>292</x>
+     <y>134</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
 </ui>
