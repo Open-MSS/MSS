@@ -191,6 +191,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 # enable and disable right buttons
                 self.loginButton.setEnabled(True)
                 self.addUser.setEnabled(True)
+                self.password.setEnabled(False)
+                # activate login button after email and password provided
+                self.emailid.textChanged[str].connect(lambda: self.password.setEnabled(self.emailid.text() != ""))
+                self.password.textChanged[str].connect(lambda: self.loginButton.setEnabled(self.password.text() != ""))
                 # toggle to disconnect button
                 self.toggleConnectionBtn.setText('Disconnect')
                 self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
@@ -555,6 +559,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
+            # empty password bok if wrong cresentials were provided
+            self.password.clear()
         else:
             # remove the login modal and put text there
             self.after_authorize(emailid, r)
