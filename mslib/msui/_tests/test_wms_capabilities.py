@@ -27,7 +27,6 @@
 
 import sys
 import mock
-import time
 
 from PyQt5 import QtWidgets, QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
@@ -55,7 +54,7 @@ class Test_WMSCapabilities(object):
             capabilities=self.capabilities)
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
 
     def teardown(self):
         QtWidgets.QApplication.processEvents()
