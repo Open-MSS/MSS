@@ -354,10 +354,11 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             first_waypoint = self.waypoints_model.waypoint_data(0)
             last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
 
-            condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
-                first_waypoint.flightlevel != last_waypoint.flightlevel
+            condition = ((first_waypoint.lat != last_waypoint.lat) or
+                         (first_waypoint.lon != last_waypoint.lon) or
+                         (first_waypoint.flightlevel != last_waypoint.flightlevel))
 
-        return condition
+        return bool(condition)
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
