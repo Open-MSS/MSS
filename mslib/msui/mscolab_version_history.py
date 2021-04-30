@@ -237,3 +237,4 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
 
     def closeEvent(self, event):
         self.viewCloses.emit()
+        event.accept()
