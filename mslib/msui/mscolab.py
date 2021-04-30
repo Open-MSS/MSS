@@ -544,13 +544,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         r = s.post(url, data=data)
         if r.status_code == 401:
             r = self.authenticate(data, r, url)
-            if r.status_code == 200:
+            if r.status_code == 200 and not r.text == "False":
                 constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (auth[0], auth[1])
-                self.after_authorize(emailid, r)
             else:
                 self.error_dialog = QtWidgets.QErrorMessage()
                 self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
-        elif r.text == "False":
+        if r.text == "False":
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
