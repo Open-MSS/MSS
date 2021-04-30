@@ -218,14 +218,19 @@ class SocketsManager(object):
         """
         socketio.emit('new-permission', json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
 
-    def emit_update_permission(self, u_id, p_id):
+    def emit_update_permission(self, u_id, p_id, access_level=None):
         """
         to refresh permissions in msui
         """
-        perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+        if access_level is None:
+            perm = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+            access_level = perm.access_level
+            logging.debug("access_level by database query"
+                          "")
+
         socketio.emit('update-permission', json.dumps({"p_id": p_id,
                                                        "u_id": u_id,
-                                                       "access_level": perm.access_level}), room=str(p_id))
+                                                       "access_level": access_level}), room=str(p_id))
 
     def emit_revoke_permission(self, u_id, p_id):
         socketio.emit("revoke-permission", json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))

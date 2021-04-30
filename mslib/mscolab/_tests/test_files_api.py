@@ -186,21 +186,21 @@ class Test_Files(object):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             assert p_id == 4
-        data = {
-            "token": self.token,
-            "p_id": p_id,
-            "selected_userids": json.dumps([12, 13]),
-            "selected_access_level": "viewer"
-        }
-        url = url_join(self.url, 'modify_bulk_permissions')
-        r = requests.post(url, data=data).json()
-        assert r["success"] is True
-        data["p_id"] = self.undefined_p_id
-        r = requests.post(url, data=data).json()
-        assert r["success"] is False
-        data["p_id"] = self.no_perm_p_id
-        r = requests.post(url, data=data).json()
-        assert r["success"] is False
+            data = {
+                "token": self.token,
+                "p_id": p_id,
+                "selected_userids": json.dumps([12, 13]),
+                "selected_access_level": "viewer"
+            }
+            url = url_join(self.url, 'modify_bulk_permissions')
+            r = requests.post(url, data=data).json()
+            assert r["success"] is True
+            data["p_id"] = self.undefined_p_id
+            r = requests.post(url, data=data).json()
+            assert r["success"] is False
+            data["p_id"] = self.no_perm_p_id
+            r = requests.post(url, data=data).json()
+            assert r["success"] is False
 
     def test_delete_bulk_permissions(self):
         with self.app.app_context():
