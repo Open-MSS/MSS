@@ -168,6 +168,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.addUser.setEnabled(False)
         self.emailid.setEnabled(False)
         self.password.setEnabled(False)
+        self.emailid.textChanged[str].disconnect(self.text_changed)
+        self.password.textChanged[str].disconnect(self.text_changed)
         # toggle to connect button
         self.toggleConnectionBtn.setText('Connect')
         self.toggleConnectionBtn.clicked.disconnect(self.disconnect_handler)
