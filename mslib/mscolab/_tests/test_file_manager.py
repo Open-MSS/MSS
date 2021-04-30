@@ -27,10 +27,9 @@ import os
 import requests
 import json
 import sys
-import time
 import pytest
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtTest
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import file_manager
 from mslib.mscolab.models import User, Project
@@ -45,7 +44,7 @@ PORTS = list(range(19341, 19390))
 class Test_FileManager(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.5)
+        QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)

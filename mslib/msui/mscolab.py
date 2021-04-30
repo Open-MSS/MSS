@@ -147,9 +147,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         default_MSCOLAB = config_loader(
             dataset="default_MSCOLAB")
         add_mscolab_urls(self.url, default_MSCOLAB)
-
-        self.emailid.setText(config_loader(dataset="MSCOLAB_mailid"))
-        self.password.setText(config_loader(dataset="MSCOLAB_password"))
+        self.emailid.setEnabled(False)
+        self.password.setEnabled(False)
 
         # fill value of mscolab url if found in QSettings storage
         self.settings = \
@@ -161,9 +160,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def disconnect_handler(self):
         self.logout()
         self.status.setText("Status: disconnected")
+        self.emailid.setEnabled(False)
+        self.password.setEnabled(False)
         # enable and disable right buttons
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
+        self.emailid.setEnabled(False)
+        self.password.setEnabled(False)
         # toggle to connect button
         self.toggleConnectionBtn.setText('Connect')
         self.toggleConnectionBtn.clicked.connect(self.connect_handler)
@@ -189,20 +192,24 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.mscolab_server_url = url
                 self.status.setText("Status: connected")
                 # enable and disable right buttons
-                self.loginButton.setEnabled(True)
+                self.loginButton.setEnabled(False)
                 self.addUser.setEnabled(True)
+                self.emailid.setEnabled(True)
+                self.password.setEnabled(True)
+                # activate login button after email and password are entered
+                self.emailid.textChanged[str].connect(self.text_changed)
+                self.password.textChanged[str].connect(self.text_changed)
                 # toggle to disconnect button
                 self.toggleConnectionBtn.setText('Disconnect')
                 self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
                 self.url.setEnabled(False)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
                     self.settings["server_settings"].update({self.mscolab_server_url: {}})
-                try:
-                    recent_email = self.settings["server_settings"][self.mscolab_server_url]["recent_email"]
-                except KeyError:
-                    recent_email = ""
-                self.emailid.setText(recent_email)
                 save_settings_qsettings('mscolab', self.settings)
+                self.emailid.setEnabled(True)
+                self.password.setEnabled(True)
+                self.emailid.setText(config_loader(dataset="MSCOLAB_mailid"))
+                self.password.setText(config_loader(dataset="MSCOLAB_password"))
             else:
                 show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.ConnectionError:
@@ -220,6 +227,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         except Exception as e:
             logging.debug("Error %s", str(e))
             show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
+
+    def text_changed(self):
+        self.loginButton.setEnabled(self.emailid.text() != "" and self.password.text() != "")
 
     def handle_import(self):
         file_path = get_open_filename(self, "Select a file", "", "Flight track (*.ftml)")
@@ -268,6 +278,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.versionHistoryBtn.setEnabled(False)
         self.deleteProjectBtn.setEnabled(False)
         self.helperTextLabel.setVisible(False)
+        self.emailid.setEnabled(False)
+        self.password.setEnabled(False)
 
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
@@ -275,8 +287,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.disable_project_buttons()
 
     def authenticate(self, data, r, url):
-        counter = 0
-        while r.status_code == 401 and counter < 5:
+        if r.status_code == 401:
             dlg = MSCOLAB_AuthenticationDialog(parent=self)
             dlg.setModal(True)
             if dlg.exec_() == QtWidgets.QDialog.Accepted:
@@ -288,7 +299,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 s.auth = (username, password)
                 s.headers.update({'x-test': 'true'})
                 r = s.post(url, data=data)
-                counter += 1
         return r
 
     def add_project_handler(self):
@@ -548,10 +558,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         r = s.post(url, data=data)
         if r.status_code == 401:
             r = self.authenticate(data, r, url)
-            if r.status_code == 200:
+            if r.status_code == 200 and not r.text == "False":
                 constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (auth[0], auth[1])
-                self.after_authorize(emailid, r)
-        elif r.text == "False":
+            else:
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
+        if r.text == "False":
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
@@ -564,7 +576,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.token = _json["token"]
         self.user = _json["user"]
         self.label.setText(self.tr(f"Welcome, {self.user['username']}"))
-        self.password.setText("")
         self.loggedInWidget.show()
         self.loginWidget.hide()
         self.add_projects()
@@ -577,7 +588,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.conn.signal_project_deleted.connect(self.handle_project_deleted)
         # activate add project button here
         self.addProject.setEnabled(True)
-        self.settings['server_settings'][self.mscolab_server_url].update({"recent_email": emailid})
         save_settings_qsettings('mscolab', self.settings)
 
     def add_projects(self):
@@ -804,6 +814,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def logout(self):
         self.clean_up_window()
+        self.emailid.setEnabled(True)
+        self.password.setEnabled(True)
 
     def delete_account(self):
         w = QtWidgets.QWidget()

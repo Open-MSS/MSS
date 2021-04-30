@@ -28,13 +28,12 @@ import os
 import datetime
 import json
 import sys
-import time
 import fs
 import requests
 import socketio
 import pytest
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtTest
 from werkzeug.urls import url_join
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message, MessageType
@@ -51,7 +50,7 @@ PORTS = list(range(9300, 9320))
 class Test_Chat(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
