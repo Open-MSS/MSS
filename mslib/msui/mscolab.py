@@ -33,6 +33,7 @@ import logging
 import types
 import fs
 import requests
+import re
 from fs import open_fs
 from werkzeug.urls import url_join
 
@@ -347,6 +348,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         elif not description:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Description can\'t be empty')
+            return
+        # regex checks if the whole path from beginning to end only contains alphanumerical characters or _ and -
+        elif not re.match("^[a-zA-Z0-9_-]*$", path):
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Path can\'t contain spaces or special characters')
             return
 
         data = {
