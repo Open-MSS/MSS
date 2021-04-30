@@ -484,7 +484,7 @@ class MessageItem(QtWidgets.QWidget):
         text_browser.anchorClicked.connect(self.on_link_click)
         text_browser.show()
         text_browser.setFixedHeight(
-            text_browser.document().size().height() + text_browser.contentsMargins().top() * 2
+            int(text_browser.document().size().height() + text_browser.contentsMargins().top() * 2)
         )
         return text_browser
 
@@ -645,7 +645,7 @@ class MessageItem(QtWidgets.QWidget):
         html = self.chat_window.markdown.convert(self.message_text)
         self.messageBox.setHtml(html)
         self.messageBox.setFixedHeight(
-            self.messageBox.document().size().height() + self.messageBox.contentsMargins().top() * 2
+            int(self.messageBox.document().size().height() + self.messageBox.contentsMargins().top() * 2)
         )
         self.textArea.adjustSize()
 
