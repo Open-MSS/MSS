@@ -211,8 +211,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 save_settings_qsettings('mscolab', self.settings)
                 self.emailid.setEnabled(True)
                 self.password.setEnabled(True)
-                self.emailid.setText(config_loader(dataset="MSCOLAB_mailid"))
-                self.password.setText(config_loader(dataset="MSCOLAB_password"))
+                emailid = config_loader(dataset="MSCOLAB_mailid")
+                self.emailid.setText(emailid)
+                password = config_loader(dataset="MSCOLAB_password")
+                self.password.setText(password)
+                if len(emailid) > 0 and len(password) > 0:
+                    self.loginButton.setEnabled(True)
             else:
                 show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.ConnectionError:
