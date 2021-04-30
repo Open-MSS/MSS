@@ -575,7 +575,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             # popup that Failed to establish a connection
             self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage(f'Failed to establish a new connection to {url}. Try in a moment again.')
+            self.error_dialog.showMessage('Failed to establish a new connection'
+                                          f' to "{self.mscolab_server_url}". Try in a moment again.')
             return
         if r.status_code == 401:
             r = self.authenticate(data, r, url)
