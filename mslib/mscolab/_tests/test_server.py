@@ -25,7 +25,6 @@
 """
 import os
 import io
-import time
 import sys
 import pytest
 from pathlib import Path
@@ -39,7 +38,7 @@ from mslib._tests.utils import (mscolab_register_user,
                                 mscolab_register_and_login, mscolab_create_content,
                                 mscolab_create_project,
                                 mscolab_delete_user, mscolab_login, mscolab_start_server)
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtTest
 
 PORTS = list(range(10481, 10530))
 
@@ -49,7 +48,7 @@ PORTS = list(range(10481, 10530))
 class Test_Init_Server(object):
     def setup(self):
         self.process, self.url, self.app, self.sockio, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -79,7 +78,7 @@ class Test_Server(object):
     def setup(self):
         mscolab_settings.enable_basic_http_authentication = False
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS, mscolab_settings)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
