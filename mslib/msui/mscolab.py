@@ -66,14 +66,16 @@ def add_mscolab_urls(combo_box, url_list):
 
 
 class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
-    """PyQt window implementing mscolab window
+    """
+    PyQt window implementing mscolab window
     """
     name = "Mscolab"
     identifier = None
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
     def __init__(self, parent=None, data_dir=mss_default.mss_dir, mscolab_server_url=mss_default.mscolab_server_url):
-        """Set up user interface
+        """
+        Set up user interface
         """
         super(MSSMscolabWindow, self).__init__(parent)
         self.setupUi(self)
@@ -163,6 +165,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # enable and disable right buttons
         self.loginButton.setEnabled(False)
         self.addUser.setEnabled(False)
+        self.emailid.setEnabled(False)
+        self.password.setEnabled(False)
         # toggle to connect button
         self.toggleConnectionBtn.setText('Connect')
         self.toggleConnectionBtn.clicked.connect(self.connect_handler)
@@ -188,8 +192,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.mscolab_server_url = url
                 self.status.setText("Status: connected")
                 # enable and disable right buttons
-                self.loginButton.setEnabled(True)
+                self.loginButton.setEnabled(False)
                 self.addUser.setEnabled(True)
+                self.emailid.setEnabled(True)
+                self.password.setEnabled(True)
+                # activate login button after email and password are entered
+                self.emailid.textChanged[str].connect(self.text_changed)
+                self.password.textChanged[str].connect(self.text_changed)
                 # toggle to disconnect button
                 self.toggleConnectionBtn.setText('Disconnect')
                 self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
@@ -218,6 +227,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         except Exception as e:
             logging.debug("Error %s", str(e))
             show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
+
+    def text_changed(self):
+        self.loginButton.setEnabled(self.emailid.text() != "" and self.password.text() != "")
 
     def handle_import(self):
         file_path = get_open_filename(self, "Select a file", "", "Flight track (*.ftml)")
@@ -266,6 +278,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.versionHistoryBtn.setEnabled(False)
         self.deleteProjectBtn.setEnabled(False)
         self.helperTextLabel.setVisible(False)
+        self.emailid.setEnabled(False)
+        self.password.setEnabled(False)
 
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
@@ -800,6 +814,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def logout(self):
         self.clean_up_window()
+        self.emailid.setEnabled(True)
+        self.password.setEnabled(True)
 
     def delete_account(self):
         w = QtWidgets.QWidget()
@@ -1126,7 +1142,8 @@ class MSCOLAB_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
         self.setupUi(self)
 
     def getAuthInfo(self):
-        """Return the entered username and password.
+        """
+        Return the entered username and password.
         """
         return (self.leUsername.text(),
                 self.lePassword.text())
