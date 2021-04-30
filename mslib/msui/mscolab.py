@@ -195,7 +195,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.addUser.setEnabled(True)
                 self.emailid.setEnabled(True)
                 self.password.setEnabled(True)
-                #activate login button after email and password are entered
+                # activate login button after email and password are entered
                 self.emailid.textChanged[str].connect(self.text_changed)
                 self.password.textChanged[str].connect(self.text_changed)
                 # toggle to disconnect button
