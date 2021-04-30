@@ -644,7 +644,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def force_close_view_windows(self):
-        for window in self.active_windows:
+        for window in self.active_windows[:]:
             window.handle_force_close()
         self.active_windows = []
 
