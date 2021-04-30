@@ -26,7 +26,6 @@
 """
 import os
 import sys
-import time
 
 import fs
 import mock
@@ -47,7 +46,7 @@ PORTS = list(range(9551, 9570))
 class Test_Mscolab(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -75,12 +74,12 @@ class Test_Mscolab(object):
         wp_server_before = self.window.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckBox.setChecked(True)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         wp_local = self.window.waypoints_model.waypoint_data(0)
         assert wp_local.lat == wp_server_before.lat
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         wp_local_before = self.window.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat != wp_local_before.lat
 
@@ -95,7 +94,7 @@ class Test_Mscolab(object):
         assert wp_local_before.lat == new_local_wp.lat
         self.window.workLocallyCheckBox.setChecked(False)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         new_server_wp = self.window.waypoints_model.waypoint_data(0)
         assert wp_local_before.lat == new_server_wp.lat
 
@@ -107,19 +106,19 @@ class Test_Mscolab(object):
         wp_server_before = self.window.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckBox.setChecked(True)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         wp_local = self.window.waypoints_model.waypoint_data(0)
         assert wp_local.lat == wp_server_before.lat
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         wp_local_before = self.window.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat != wp_local_before.lat
 
         def handle_merge_dialog():
             QtTest.QTest.mouseClick(self.window.merge_dialog.keepServerBtn, QtCore.Qt.LeftButton)
             QtWidgets.QApplication.processEvents()
-            time.sleep(0.1)
+            QtTest.QTest.qWait(100)
 
         QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton, delay=1)
@@ -129,7 +128,7 @@ class Test_Mscolab(object):
         assert new_local_wp.lat == wp_server_before.lat
         self.window.workLocallyCheckBox.setChecked(False)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         new_server_wp = self.window.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat == new_server_wp.lat
 
@@ -140,7 +139,7 @@ class Test_Mscolab(object):
         self._activate_project_at_index(0)
         self.window.workLocallyCheckBox.setChecked(True)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.window.waypoints_model.invert_direction()
         merge_waypoints_model = None
 
@@ -151,7 +150,7 @@ class Test_Mscolab(object):
             merge_waypoints_model = self.window.merge_dialog.merge_waypoints_model
             QtTest.QTest.mouseClick(self.window.merge_dialog.saveBtn, QtCore.Qt.LeftButton)
             QtWidgets.QApplication.processEvents()
-            time.sleep(0.1)
+            QtTest.QTest.qWait(100)
 
         QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton, delay=1)
@@ -164,7 +163,7 @@ class Test_Mscolab(object):
             assert new_local_wp.waypoint_data(wp_index).lat == merge_waypoints_model.waypoint_data(wp_index).lat
         self.window.workLocallyCheckBox.setChecked(False)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         new_server_wp = self.window.waypoints_model
         assert len(new_server_wp.waypoints) == new_wp_count
         for wp_index in range(new_wp_count):
@@ -178,7 +177,7 @@ class Test_Mscolab(object):
         wp_server_before = self.window.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckBox.setChecked(True)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         wp_local = self.window.waypoints_model.waypoint_data(0)
         assert wp_local.lat == wp_server_before.lat
         self.window.waypoints_model.invert_direction()
@@ -188,7 +187,7 @@ class Test_Mscolab(object):
         def handle_merge_dialog():
             QtTest.QTest.mouseClick(self.window.merge_dialog.keepServerBtn, QtCore.Qt.LeftButton)
             QtWidgets.QApplication.processEvents()
-            time.sleep(0.1)
+            QtTest.QTest.qWait(100)
 
         QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         QtTest.QTest.mouseClick(self.window.fetch_ft, QtCore.Qt.LeftButton, delay=1)
@@ -198,13 +197,13 @@ class Test_Mscolab(object):
         assert new_local_wp.waypoint_data(0).lat == wp_server_before.lat
         self.window.workLocallyCheckBox.setChecked(False)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         assert self.window.waypoints_model.waypoint_data(0).lat == wp_server_before.lat
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText("http://localhost:8084")
         QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
 
     def _login(self, emailid="merge_waypoints_user", password="password"):
         self.window.emailid.setText(emailid)
