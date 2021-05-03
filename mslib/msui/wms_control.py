@@ -78,7 +78,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
 
     def getmap(self, layers=None, styles=None, srs=None, bbox=None,
                format=None, size=None, time=None, init_time=None,
-               path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
+               path_str=None, level=None, transparent=False, bgcolor='#FFFFFF', color=None,
                time_name="time", init_time_name="init_time",
                exceptions='XML', method='Get',
                return_only_url=False):
@@ -144,6 +144,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
         request['bgcolor'] = '0x' + bgcolor[1:7]
+        if color:
+            request["color"] = "0x" + color[1:7]
         request['exceptions'] = str(exceptions)
 
         # ++(mss)
@@ -1202,7 +1204,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
 
     def retrieve_image(self, layer=None, crs="EPSG:4326", bbox=None, path_string=None,
-                       width=800, height=400, transparent=False):
+                       width=800, height=400, transparent=False, color=None):
         """Retrieve an image of the layer currently selected in the
            GUI elements from the current WMS provider. If caching is
            enabled, first check the cache for the requested image. If
@@ -1256,6 +1258,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("init_time=%s, valid_time=%s", init_time, valid_time)
         logging.debug("level=%s", level)
         logging.debug("transparent=%s", transparent)
+        logging.debug("color=%s", color)
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1280,6 +1283,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "size": (width, height),
                       "format": 'image/png',
                       "transparent": transparent}
+            if color:
+                kwargs["color"] = color
             legend_kwargs = {"urlstr": layer.get_legend_url(), "md5_filename": None}
             if legend_kwargs["urlstr"] is not None:
                 legend_kwargs["md5_filename"] = os.path.join(
@@ -1513,8 +1518,9 @@ class VSecWMSControlWidget(WMSControlWidget):
         layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
 
         args = []
-        for layer in layers:
-            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height))
+        for i, layer in enumerate(layers):
+            transparent = self.cbTransparent.isChecked() if i == 0 else True
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent))
 
         self.fetch.emit(args)
 
@@ -1594,4 +1600,82 @@ class HSecWMSControlWidget(WMSControlWidget):
 
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
-        return crss is not None and not any(crs.startswith("VERT") for crs in crss)
+        return crss is not None and not any(crs.startswith("VERT") for crs in crss) \
+            and not any(crs.startswith("ONE") for crs in crss)
+
+
+class OneDSecWMSControlWidget(WMSControlWidget):
+    """Subclass of WMSControlWidget that extends the WMS client to
+       handle (non-standard) 1D sections.
+    """
+
+    def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
+                 view=None, wms_cache=None):
+        super(OneDSecWMSControlWidget, self).__init__(
+            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
+        self.waypoints_model = waypoints_model
+        self.btGetMap.clicked.connect(self.get_all_maps)
+
+    def get_all_maps(self):
+        if self.multilayers.cbMultilayering.isChecked():
+            self.get_osec(self.multilayers.get_active_layers())
+        else:
+            self.get_osec([self.multilayers.get_current_layer()])
+
+    def setFlightTrackModel(self, model):
+        """Set the QAbstractItemModel instance from which the waypoints
+           are obtained.
+        """
+        self.waypoints_model = model
+
+    @QtCore.Slot()
+    def call_get_osec(self):
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+            self.get_all_maps()
+
+    def get_osec(self, layers=None):
+        """Slot that retrieves the vertical section and passes the image
+                   to the view.
+                """
+        # Specify the coordinate reference system for the request. We will
+        # use the non-standard "VERT:LOGP" to query the MSS WMS Server for
+        # a vertical section. The vertical extent of the plot is specified
+        # via the bounding box.
+        crs = "ONE:1"
+        bbox = self.view.getBBOX()
+
+        # Get lat/lon coordinates of flight track and convert to string for URL.
+        path_string = ""
+        for waypoint in self.waypoints_model.all_waypoint_data():
+            path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},{waypoint.pressure},"
+        path_string = path_string[:-1]
+
+        # Determine the current size of the vertical section plot on the
+        # screen in pixels. The image will be retrieved in this size.
+        width, height = self.view.get_plot_size_in_px()
+
+        # Retrieve the image.
+        if not layers:
+            layers = [self.multilayers.get_current_layer()]
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+
+        args = []
+        for i, layer in enumerate(layers):
+            transparent = self.cbTransparent.isChecked() if i == 0 else True
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent, layer.color))
+
+        self.fetch.emit(args)
+
+    def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
+        # Plot the image on the view canvas.
+        self.view.draw_image(self.squash_multiple_images(imgs))
+        self.view.draw_legend(self.append_multiple_images(legend_imgs))
+        style_title = self.multilayers.get_current_layer().get_style()
+        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+                                init_time=init_time,
+                                valid_time=valid_time,
+                                style=style_title)
+
+    def is_layer_aligned(self, layer):
+        crss = getattr(layer, "crsOptions", None)
+        return crss is not None and any(crs.startswith("ONE") for crs in crss)
