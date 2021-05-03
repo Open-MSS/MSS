@@ -942,6 +942,7 @@ import sys
 import mslib.mswms.dataaccess
 from mslib.mswms import mpl_hsec_styles
 from mslib.mswms import mpl_vsec_styles
+from mslib.mswms import mpl_1sec_styles
 import mslib.mswms
 
 
