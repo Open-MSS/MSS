@@ -1043,10 +1043,16 @@ if mpl_1sec_styles is not None:
         (mpl_1sec_styles.OS_TemperatureStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_1sec_styles.OS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_1sec_styles.OS_CloudsStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_CIWCStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_CLWCStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_1sec_styles.OS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_1sec_styles.OS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_1sec_styles.OS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"])
+        (mpl_1sec_styles.OS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DivergenceStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_OzoneStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_PotentialTemperatureStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_GeopotentialHeightStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
             simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)

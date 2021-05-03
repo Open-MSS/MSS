@@ -211,3 +211,147 @@ class OS_PotentialVorticityStyle_01(Abstract1DSectionStyle):
         numpoints = len(self.lats)
         ax.plot(range(numpoints), self.y_values)
         self._latlon_setup()
+
+
+class OS_CIWCStyle_01(Abstract1DSectionStyle):
+    """
+    1D section of specific cloud ice water content.
+    """
+
+    name = "OS_CIWC01"
+    title = "Specific cloud ice water content (g/kg) 1D Section"
+    abstract = "Specific cloud ice water content (g/kg)"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "specific_cloud_ice_water_content", "g/kg")]
+
+    def _plot_style(self):
+        ax = self.ax
+        self.y_values = self.data["specific_cloud_ice_water_content"]
+
+        numpoints = len(self.lats)
+        ax.plot(range(numpoints), self.y_values)
+        self._latlon_setup()
+
+
+class OS_CLWCStyle_01(Abstract1DSectionStyle):
+    """
+    1D section of specific cloud liquid water content.
+    """
+
+    name = "OS_CLWC01"
+    title = "Specific cloud liquid water content (g/kg) 1D Section"
+    abstract = "Specific cloud liquid water content (g/kg)"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "specific_cloud_liquid_water_content", "g/kg")]
+
+    def _plot_style(self):
+        ax = self.ax
+        self.y_values = self.data["specific_cloud_liquid_water_content"]
+
+        numpoints = len(self.lats)
+        ax.plot(range(numpoints), self.y_values)
+        self._latlon_setup()
+
+
+class OS_DivergenceStyle_01(Abstract1DSectionStyle):
+    """
+    1D section of Divergence.
+    """
+
+    name = "OS_D01"
+    title = "Divergence (1/s) 1D Section"
+    abstract = "Divergence (1/s)"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "divergence_of_wind", "1/s")]
+
+    def _plot_style(self):
+        ax = self.ax
+        self.y_values = self.data["divergence_of_wind"]
+
+        numpoints = len(self.lats)
+        ax.plot(range(numpoints), self.y_values)
+        self._latlon_setup()
+
+
+class OS_OzoneStyle_01(Abstract1DSectionStyle):
+    """
+    1D section of Ozone mass mixing ratio.
+    """
+
+    name = "OS_O301"
+    title = "Ozone mass mixing ratio (kg/kg) 1D Section"
+    abstract = "Ozone mass mixing ratio (kg/kg)"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "mole_fraction_of_ozone_in_air", "kg/kg")]
+
+    def _plot_style(self):
+        ax = self.ax
+        self.y_values = self.data["mole_fraction_of_ozone_in_air"]
+
+        numpoints = len(self.lats)
+        ax.plot(range(numpoints), self.y_values)
+        self._latlon_setup()
+
+
+class OS_PotentialTemperatureStyle_01(Abstract1DSectionStyle):
+    """
+    1D section of Potential Temperature.
+    """
+
+    name = "OS_PT01"
+    title = "Potential Temperature (K) 1D Section"
+    abstract = "Potential Temperature (K)"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_potential_temperature", "K")]
+
+    def _plot_style(self):
+        ax = self.ax
+        self.y_values = self.data["air_potential_temperature"]
+
+        numpoints = len(self.lats)
+        ax.plot(range(numpoints), self.y_values)
+        self._latlon_setup()
+
+
+class OS_GeopotentialHeightStyle_01(Abstract1DSectionStyle):
+    """
+    1D section of Geopotential Height.
+    """
+
+    name = "OS_GPH01"
+    title = "Geopotential Height (m) 1D Section"
+    abstract = "Geopotential Height (m)"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "geopotential_height", "m")]
+
+    def _plot_style(self):
+        ax = self.ax
+        self.y_values = self.data["geopotential_height"]
+
+        numpoints = len(self.lats)
+        ax.plot(range(numpoints), self.y_values)
+        self._latlon_setup()
