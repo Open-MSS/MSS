@@ -29,9 +29,8 @@ import pytest
 import requests
 import json
 import sys
-import time
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtTest
 from werkzeug.urls import url_join
 from mslib.mscolab.models import User, Change, Project
 from mslib.mscolab.conf import mscolab_settings
@@ -49,7 +48,7 @@ PORTS = list(range(9381, 9400))
 class Test_Files(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -186,21 +185,21 @@ class Test_Files(object):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             assert p_id == 4
-        data = {
-            "token": self.token,
-            "p_id": p_id,
-            "selected_userids": json.dumps([12, 13]),
-            "selected_access_level": "viewer"
-        }
-        url = url_join(self.url, 'modify_bulk_permissions')
-        r = requests.post(url, data=data).json()
-        assert r["success"] is True
-        data["p_id"] = self.undefined_p_id
-        r = requests.post(url, data=data).json()
-        assert r["success"] is False
-        data["p_id"] = self.no_perm_p_id
-        r = requests.post(url, data=data).json()
-        assert r["success"] is False
+            data = {
+                "token": self.token,
+                "p_id": p_id,
+                "selected_userids": json.dumps([12, 13]),
+                "selected_access_level": "viewer"
+            }
+            url = url_join(self.url, 'modify_bulk_permissions')
+            r = requests.post(url, data=data).json()
+            assert r["success"] is True
+            data["p_id"] = self.undefined_p_id
+            r = requests.post(url, data=data).json()
+            assert r["success"] is False
+            data["p_id"] = self.no_perm_p_id
+            r = requests.post(url, data=data).json()
+            assert r["success"] is False
 
     def test_delete_bulk_permissions(self):
         with self.app.app_context():

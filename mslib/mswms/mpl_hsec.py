@@ -71,6 +71,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
     """
     name = "BASEMAP"
     title = "Matplotlib basemap"
+    _plot_countries = True  # set to False in derived class to disable country plotting
 
     def _plot_style(self):
         """
@@ -330,17 +331,18 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                     del BASEMAP_CACHE[key]
                     BASEMAP_REQUESTS[:] = [_x for _x in BASEMAP_REQUESTS if key != _x]
 
-        # Set up the map appearance.
-        bm.drawcoastlines(color='0.25')
-        bm.drawcountries(color='0.5')
-        bm.drawmapboundary(fill_color='white')
+        if self._plot_countries:
+            # Set up the map appearance.
+            bm.drawcoastlines(color='0.25')
+            bm.drawcountries(color='0.5')
+            bm.drawmapboundary(fill_color='white')
 
-        # zorder = 0 is necessary to paint over the filled continents with
-        # scatter() for drawing the flight tracks and trajectories.
-        # Curiously, plot() works fine without this setting, but scatter()
-        # doesn't.
-        bm.fillcontinents(color='0.98', lake_color='white', zorder=0)
-        self._draw_auto_graticule(bm)
+            # zorder = 0 is necessary to paint over the filled continents with
+            # scatter() for drawing the flight tracks and trajectories.
+            # Curiously, plot() works fine without this setting, but scatter()
+            # doesn't.
+            bm.fillcontinents(color='0.98', lake_color='white', zorder=0)
+            self._draw_auto_graticule(bm)
 
         if noframe:
             ax.axis('off')
@@ -418,6 +420,10 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         (e.g. data is stored on a -180..180 grid, but a map in the range
         -200..-100 is requested).
         """
+        # Shifting makes the grid irregular for stereographic and other projections
+        # in case the data is not global (i.e. covers 360 degrees).
+        if self.bm.projection in ['npstere', 'spstere', 'stere', 'lcc']:
+            return
         # Determine the leftmost longitude in the plot.
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)

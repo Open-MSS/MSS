@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import sys
-import time
 import os
 import fs
 import mock
@@ -49,7 +48,7 @@ class Test_Mscolab(object):
 
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -138,6 +137,7 @@ class Test_Mscolab(object):
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockExport, mockImport, mockMessage):
+        pytest.skip("See issue #861")
         self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
@@ -146,11 +146,11 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         assert exported_wp.waypoint_data(0).lat != self.window.waypoints_model.waypoint_data(0).lat
         QtTest.QTest.mouseClick(self.window.importBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         assert len(self.window.waypoints_model.waypoints) == 2
         imported_wp = self.window.waypoints_model
         wp_count = len(imported_wp.waypoints)
@@ -164,14 +164,14 @@ class Test_Mscolab(object):
         self._activate_project_at_index(0)
         self.window.workLocallyCheckBox.setChecked(True)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.window.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         wpdata_local = self.window.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckBox.setChecked(False)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         wpdata_server = self.window.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
@@ -301,7 +301,7 @@ class Test_Mscolab(object):
     def _connect_to_mscolab(self):
         self.window.url.setEditText(self.url)
         QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
 
     def _login(self, emailid="a", password="a"):
         self.window.emailid.setText(emailid)

@@ -414,6 +414,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
+            for i in range(self.listViews.count()):
+                self.listViews.item(i).window.handle_force_close()
             self.listViews.clear()
             self.listFlightTracks.clear()
             # cleanup mscolab window
@@ -541,6 +543,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.activate_flight_track(listitem)
 
     def restart_application(self):
+        for i in range(self.listViews.count()):
+            self.listViews.item(i).window.handle_force_close()
         self.listViews.clear()
         self.remove_plugins()
         self.add_plugins()
