@@ -589,7 +589,7 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
 
 def convert_to(value, from_unit, to_unit, default=1.):
     try:
-        value_unit = UR.Quantity(value, UR(from_unit))
+        value_unit = UR.Quantity(value, from_unit)
         result = value_unit.to(to_unit).magnitude
     except pint.UndefinedUnitError:
         logging.error("Error in unit conversion (undefined) %s/%s", from_unit, to_unit)
