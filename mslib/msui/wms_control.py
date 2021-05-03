@@ -1513,8 +1513,9 @@ class VSecWMSControlWidget(WMSControlWidget):
         layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
 
         args = []
-        for layer in layers:
-            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height))
+        for i, layer in enumerate(layers):
+            transparent = self.cbTransparent.isChecked() if i == 0 else True
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent))
 
         self.fetch.emit(args)
 
@@ -1654,8 +1655,9 @@ class OneDSecWMSControlWidget(WMSControlWidget):
         layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
 
         args = []
-        for layer in layers:
-            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height))
+        for i, layer in enumerate(layers):
+            transparent = self.cbTransparent.isChecked() if i == 0 else True
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent))
 
         self.fetch.emit(args)
 

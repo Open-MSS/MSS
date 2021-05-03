@@ -690,7 +690,7 @@ def application():
         if (request_type in ('getcapabilities', 'capabilities') and
                 request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
             return_data, return_format = server.get_capabilities(query, server_url)
-        elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', '1.3.0', ''):
+        elif request_type in ('getmap', 'getvsec', 'getosec') and request_version in ('1.1.1', '1.3.0', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:
             logging.debug("Request type '%s' is not valid.", request)
