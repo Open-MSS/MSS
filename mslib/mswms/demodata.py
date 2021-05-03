@@ -1041,7 +1041,12 @@ if mpl_1sec_styles is not None:
     register_1d_layers = [
         # ECMWF standard 1D section styles.
         (mpl_1sec_styles.OS_TemperatureStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"])
+        (mpl_1sec_styles.OS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_CloudsStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
             simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)
