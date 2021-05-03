@@ -692,7 +692,7 @@ class OneDSectionDriver(MSSPlotDriver):
                             vsec_numlabels=10,
                             init_time=None, valid_time=None, style=None,
                             bbox=None, figsize=(800, 600), noframe=False,
-                            show=False, transparent=False,
+                            show=False, transparent=False, color="0x00AAFF",
                             return_format="image/png"):
         """
         """
@@ -708,13 +708,14 @@ class OneDSectionDriver(MSSPlotDriver):
                                         vsec_path_connection)
         self.show = show
         self.vsec_numlabels = vsec_numlabels
+        self.color = color
 
     def update_plot_parameters(self, plot_object=None, vsec_path=None,
                                vsec_numpoints=None, vsec_path_connection=None,
                                vsec_numlabels=None,
                                init_time=None, valid_time=None, style=None,
                                bbox=None, figsize=None, noframe=None, show=None,
-                               transparent=None, return_format=None):
+                               transparent=None, color=None, return_format=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
@@ -731,6 +732,7 @@ class OneDSectionDriver(MSSPlotDriver):
             vsec_path_connection = self.vsec_path_connection
         show = show if show else self.show
         transparent = transparent if transparent is not None else self.transparent
+        color = color if color is not None else self.color
         return_format = return_format if return_format is not None else self.return_format
         self.set_plot_parameters(plot_object=plot_object,
                                  vsec_path=vsec_path,
@@ -745,6 +747,7 @@ class OneDSectionDriver(MSSPlotDriver):
                                  noframe=noframe,
                                  show=show,
                                  transparent=transparent,
+                                 color=color,
                                  return_format=return_format)
 
     def _set_vertical_section_path(self, vsec_path, vsec_numpoints=101,
@@ -917,6 +920,7 @@ class OneDSectionDriver(MSSPlotDriver):
                                                noframe=self.noframe,
                                                figsize=self.figsize,
                                                transparent=self.transparent,
+                                               color=self.color,
                                                numlabels=self.vsec_numlabels,
                                                return_format=self.return_format)
         # Free memory.

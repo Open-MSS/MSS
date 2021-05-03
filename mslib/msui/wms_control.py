@@ -78,7 +78,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
 
     def getmap(self, layers=None, styles=None, srs=None, bbox=None,
                format=None, size=None, time=None, init_time=None,
-               path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
+               path_str=None, level=None, transparent=False, bgcolor='#FFFFFF', color=None,
                time_name="time", init_time_name="init_time",
                exceptions='XML', method='Get',
                return_only_url=False):
@@ -144,6 +144,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
         request['bgcolor'] = '0x' + bgcolor[1:7]
+        if color:
+            request["color"] = "0x" + color[1:7]
         request['exceptions'] = str(exceptions)
 
         # ++(mss)
@@ -1202,7 +1204,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
 
     def retrieve_image(self, layer=None, crs="EPSG:4326", bbox=None, path_string=None,
-                       width=800, height=400, transparent=False):
+                       width=800, height=400, transparent=False, color=None):
         """Retrieve an image of the layer currently selected in the
            GUI elements from the current WMS provider. If caching is
            enabled, first check the cache for the requested image. If
@@ -1256,6 +1258,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("init_time=%s, valid_time=%s", init_time, valid_time)
         logging.debug("level=%s", level)
         logging.debug("transparent=%s", transparent)
+        logging.debug("color=%s", color)
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1280,6 +1283,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "size": (width, height),
                       "format": 'image/png',
                       "transparent": transparent}
+            if color:
+                kwargs["color"] = color
             legend_kwargs = {"urlstr": layer.get_legend_url(), "md5_filename": None}
             if legend_kwargs["urlstr"] is not None:
                 legend_kwargs["md5_filename"] = os.path.join(
@@ -1657,7 +1662,7 @@ class OneDSecWMSControlWidget(WMSControlWidget):
         args = []
         for i, layer in enumerate(layers):
             transparent = self.cbTransparent.isChecked() if i == 0 else True
-            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent))
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent, layer.color))
 
         self.fetch.emit(args)
 

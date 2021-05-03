@@ -20,7 +20,7 @@ class OS_TemperatureStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_temperature", "K")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         """
         Make a temperature 1D section.
         """
@@ -28,7 +28,7 @@ class OS_TemperatureStyle_01(Abstract1DSectionStyle):
         self.y_values = self.data["air_temperature"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -56,12 +56,12 @@ class OS_RelativeHumdityStyle_01(Abstract1DSectionStyle):
             self.data['air_pressure'], self.data["air_temperature"],
             self.data["specific_humidity"])
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["specific_humidity"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -80,12 +80,12 @@ class OS_CloudsStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "cloud_area_fraction_in_atmosphere_layer", 'dimensionless')]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["cloud_area_fraction_in_atmosphere_layer"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -104,12 +104,12 @@ class OS_SpecificHumdityStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "specific_humidity", "g/kg")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["specific_humidity"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -138,12 +138,12 @@ class OS_VerticalVelocityStyle_01(Abstract1DSectionStyle):
                                  self.data['air_pressure'], self.data["air_temperature"]),
             "m/s", "cm/s")
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["upward_wind"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -170,12 +170,12 @@ class OS_HorizontalVelocityStyle_01(Abstract1DSectionStyle):
         self.data["horizontal_wind"] = np.hypot(
             self.data["eastward_wind"], self.data["northward_wind"])
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["horizontal_wind"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -198,7 +198,7 @@ class OS_PotentialVorticityStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "ertel_potential_vorticity", "PVU")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["ertel_potential_vorticity"]
 
@@ -209,7 +209,7 @@ class OS_PotentialVorticityStyle_01(Abstract1DSectionStyle):
             self.y_values = -self.y_values
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -228,12 +228,12 @@ class OS_CIWCStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "specific_cloud_ice_water_content", "g/kg")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["specific_cloud_ice_water_content"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -252,12 +252,12 @@ class OS_CLWCStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "specific_cloud_liquid_water_content", "g/kg")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["specific_cloud_liquid_water_content"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -276,12 +276,12 @@ class OS_DivergenceStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "divergence_of_wind", "1/s")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["divergence_of_wind"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -300,12 +300,12 @@ class OS_OzoneStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "mole_fraction_of_ozone_in_air", "kg/kg")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["mole_fraction_of_ozone_in_air"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -324,12 +324,12 @@ class OS_PotentialTemperatureStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "air_potential_temperature", "K")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["air_potential_temperature"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
 
@@ -348,10 +348,10 @@ class OS_GeopotentialHeightStyle_01(Abstract1DSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "geopotential_height", "m")]
 
-    def _plot_style(self):
+    def _plot_style(self, color):
         ax = self.ax
         self.y_values = self.data["geopotential_height"]
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()

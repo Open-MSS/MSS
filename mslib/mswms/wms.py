@@ -610,6 +610,8 @@ class WMSServer(object):
                     return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
                 logging.debug("VSEC PATH: %s", path)
 
+                color = query.get("COLOR", "0x00AAFF")
+
                 # Check requested layers.
                 if (dataset not in self.osec_layer_registry) or (layer not in self.osec_layer_registry[dataset]):
                     return self.create_service_exception(
@@ -649,6 +651,7 @@ class WMSServer(object):
                                                     figsize=figsize,
                                                     noframe=False,
                                                     transparent=transparent,
+                                                    color=color,
                                                     return_format=return_format)
                     images.append(plot_driver.plot())
                 except (IOError, ValueError) as ex:

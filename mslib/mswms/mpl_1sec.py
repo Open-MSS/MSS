@@ -100,7 +100,7 @@ class Abstract1DSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                       resolution=(-1, -1), bbox=(-1, 1050, -1, 200), style=None,
                       show=False,
                       highlight=None, noframe=False, figsize=(960, 480),
-                      numlabels=10, orography_color='k', transparent=False,
+                      numlabels=10, orography_color='k', transparent=False, color="0x00AAFF",
                       return_format="image/png"):
         """
         """
@@ -155,7 +155,7 @@ class Abstract1DSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             if transparent:
                 self.fig.patch.set_alpha(0.)
 
-            self._plot_style()
+            self._plot_style(color)
 
             # Return the image as png embedded in a StringIO stream.
             canvas = FigureCanvas(self.fig)
