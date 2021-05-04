@@ -44,7 +44,7 @@ class Test_MSS_AboutDialog():
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = mss_pyui.MSS_AboutDialog()
 
-    def test_milestone(self):
+    def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
             text = f.read()
         pattern = f'value="is:closed milestone:{__version__[:-1]}"'
