@@ -30,7 +30,6 @@ import sys
 import mock
 import os
 from urllib.request import urlopen
-import re
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
 from mslib._tests.constants import ROOT_DIR
@@ -48,7 +47,7 @@ class Test_MSS_AboutDialog():
         with urlopen(self.window.milestone_url) as f:
             text = f.read()
         pattern = f'value="is:closed milestone:{__version__[:-1]}"'
-        assert re.search(pattern, text.decode('utf-8'))
+        assert pattern in text.decode('utf-8')
 
     def teardown(self):
         self.window.hide()
