@@ -1064,6 +1064,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_itime(self.cbInitTime.currentText())
+            self.multilayers.carry_parameters["itime"] = self.cbInitTime.currentText()
 
         self.auto_update()
         return init_time == "" or init_time is not None
@@ -1079,6 +1080,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
+            self.multilayers.carry_parameters["vtime"] = self.cbValidTime.currentText()
 
         self.auto_update()
         return valid_time == "" or valid_time is not None
@@ -1086,6 +1088,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def level_changed(self):
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
+            self.multilayers.carry_parameters["level"] = self.cbLevel.currentText()
         self.auto_update()
 
     def enable_level_elements(self, enable):

@@ -49,6 +49,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.current_layer: Layer = None
         self.threads = 0
         self.filter_favourite = False
+        self.carry_parameters = {"level": None, "itime": None, "vtime": None}
         self.settings = load_settings_qsettings("multilayers", {"favourites": [], "saved_styles": {}})
         self.synced_reference = Layer(None, None, None, is_empty=True)
         self.listLayers.itemChanged.connect(self.multilayer_changed)
@@ -329,13 +330,12 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
         self.threads += 1
 
-        if self.current_layer:
-            if self.current_layer.get_level() in item.get_levels():
-                item.set_level(self.current_layer.get_level())
-            if self.current_layer.get_itime() in item.get_itimes():
-                item.set_itime(self.current_layer.get_itime())
-            if self.current_layer.get_vtime() in item.get_vtimes():
-                item.set_vtime(self.current_layer.get_vtime())
+        if self.carry_parameters["level"] in item.get_levels():
+            item.set_level(self.carry_parameters["level"])
+        if self.carry_parameters["itime"] in item.get_itimes():
+            item.set_itime(self.carry_parameters["itime"])
+        if self.carry_parameters["vtime"] in item.get_vtimes():
+            item.set_vtime(self.carry_parameters["vtime"])
 
         self.current_layer = item
         self.listLayers.setCurrentItem(item)
