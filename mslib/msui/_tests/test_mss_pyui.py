@@ -29,11 +29,31 @@
 import sys
 import mock
 import os
+from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
+from mslib import __version__
 from mslib._tests.constants import ROOT_DIR
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.plugins.io.text import load_from_txt, save_to_txt
 from mslib.plugins.io.flitestar import load_from_flitestar
+
+
+class Test_MSS_AboutDialog():
+    def setup(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = mss_pyui.MSS_AboutDialog()
+
+    def test_milestone_url(self):
+        with urlopen(self.window.milestone_url) as f:
+            text = f.read()
+        pattern = f'value="is:closed milestone:{__version__[:-1]}"'
+        assert pattern in text.decode('utf-8')
+
+    def teardown(self):
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
 
 
 class Test_MSSSideViewWindow(object):

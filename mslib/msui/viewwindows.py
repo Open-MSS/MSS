@@ -68,27 +68,27 @@ class MSSViewWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         """
-        if force_close is True then close window without dialog
+        If force_close is True then close window without dialog
         else ask user if he/she wants to close the window.
 
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
-        if self.force_close is True:
-            event.accept()
-            return
+        if self.force_close:
+            ret = QtWidgets.QMessageBox.Yes
+        else:
+            ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
+                                                self.tr(f"Do you want to close this {self.name}?"),
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                QtWidgets.QMessageBox.No)
 
-        ret = QtWidgets.QMessageBox.warning(self, self.tr("Mission Support System"),
-                                            self.tr(f"Do you want to close this {self.name}?"),
-                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                                            QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
-            self.viewCloses.emit()
             if self._id is not None:
                 self.viewClosesId.emit(self._id)
-            logging.debug(self._id)
+                logging.debug(self._id)
             # sets flag as False which shows tableview window had been closed.
             self.tv_window_exists = False
+            self.viewCloses.emit()
             event.accept()
         else:
             event.ignore()
