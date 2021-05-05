@@ -585,7 +585,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             else:
                 self.error_dialog = QtWidgets.QErrorMessage()
                 self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
-        if r.text == "False":
+        if r.text == "False" or r.text == "Unauthorized Access":
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
