@@ -53,6 +53,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.current_layer: Layer = None
         self.threads = 0
         self.filter_favourite = False
+        self.carry_parameters = {"level": None, "itime": None, "vtime": None}
         self.settings = load_settings_qsettings("multilayers", {"favourites": [], "saved_styles": {}})
         self.synced_reference = Layer(None, None, None, is_empty=True)
         self.listLayers.itemChanged.connect(self.multilayer_changed)
@@ -334,13 +335,12 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
         self.threads += 1
 
-        if self.current_layer:
-            if self.current_layer.get_level() in item.get_levels():
-                item.set_level(self.current_layer.get_level())
-            if self.current_layer.get_itime() in item.get_itimes():
-                item.set_itime(self.current_layer.get_itime())
-            if self.current_layer.get_vtime() in item.get_vtimes():
-                item.set_vtime(self.current_layer.get_vtime())
+        if self.carry_parameters["level"] in item.get_levels():
+            item.set_level(self.carry_parameters["level"])
+        if self.carry_parameters["itime"] in item.get_itimes():
+            item.set_itime(self.carry_parameters["itime"])
+        if self.carry_parameters["vtime"] in item.get_vtimes():
+            item.set_vtime(self.carry_parameters["vtime"])
 
         if self.current_layer != item:
             self.current_layer = item
@@ -561,7 +561,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if len(valid_time_names) > 0:
             self.vtime_name = valid_time_names[0]
             values = self.extents[self.vtime_name]["values"]
-            self.allowed_valid_times = self.parent.dock_widget.parse_time_extent(values)
+            self.allowed_valid_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.vtimes = [_time.isoformat() + "Z" for _time in self.allowed_valid_times]
             if len(self.allowed_valid_times) == 0:
                 msg = "cannot determine init time format"
@@ -570,7 +570,10 @@ class Layer(QtWidgets.QTreeWidgetItem):
                     self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
                     self.parent.dock_widget.tr("ERROR: {}".format(msg)))
             else:
-                self.vtime = self.vtimes[0]
+                if self.itime:
+                    self.vtime = next((vtime for vtime in self.vtimes if vtime >= self.itime), self.vtimes[0])
+                else:
+                    self.vtime = self.vtimes[0]
 
     def _parse_styles(self):
         """
@@ -632,11 +635,25 @@ class Layer(QtWidgets.QTreeWidgetItem):
         elif self.is_synced and itime in self.parent.synced_reference.itimes:
             self.parent.synced_reference.itime = itime
 
+        if self.get_vtime():
+            if self.get_vtime() < itime:
+                valid_vtime = next((vtime for vtime in self.get_vtimes() if vtime >= itime), None)
+                if valid_vtime:
+                    self.set_vtime()
+                    self.parent.carry_parameters["vtime"] = self.get_vtime()
+            self.parent.needs_repopulate.emit()
+
     def set_vtime(self, vtime):
         if (not self.parent.cbMultilayering.isChecked() or not self.is_synced) and vtime in self.vtimes:
             self.vtime = vtime
         elif self.is_synced and vtime in self.parent.synced_reference.vtimes:
             self.parent.synced_reference.vtime = vtime
+
+        if self.get_itime() and self.get_itime() > vtime:
+            valid_itimes = [itime for itime in self.get_itimes() if itime <= vtime]
+            if valid_itimes:
+                self.set_itime(valid_itimes[-1])
+                self.parent.needs_repopulate.emit()
 
     def get_layer(self):
         """

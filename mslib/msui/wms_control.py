@@ -869,6 +869,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         crs = layer.get_allowed_crs()
         levels, itimes, vtimes = layer.get_levels(), layer.get_itimes(), layer.get_vtimes()
+        if vtimes and itimes:
+            vtimes = vtimes[next((i for i, vtime in enumerate(vtimes) if vtime >= layer.get_itime()), 0):]
 
         if levels:
             self.cbLevel.addItems(levels)
@@ -1044,7 +1046,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if pydt in self.multilayers.get_current_layer().allowed_valid_times:
                 index = self.cbValidTime.findText(pydt.isoformat() + "Z")
                 # setCurrentIndex also sets the date/time edit via signal.
-                self.cbValidTime.setCurrentIndex(index)
+                if index > -1:
+                    self.cbValidTime.setCurrentIndex(index)
+                else:
+                    valid_time_available = False
             else:
                 valid_time_available = False
         font = self.dteValidTime.font()
@@ -1064,6 +1069,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_itime(self.cbInitTime.currentText())
+            self.multilayers.carry_parameters["itime"] = self.cbInitTime.currentText()
 
         self.auto_update()
         return init_time == "" or init_time is not None
@@ -1079,6 +1085,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
+            self.multilayers.carry_parameters["vtime"] = self.cbValidTime.currentText()
 
         self.auto_update()
         return valid_time == "" or valid_time is not None
@@ -1086,6 +1093,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def level_changed(self):
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
+            self.multilayers.carry_parameters["level"] = self.cbLevel.currentText()
         self.auto_update()
 
     def enable_level_elements(self, enable):
