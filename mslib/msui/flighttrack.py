@@ -146,12 +146,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     flight performance calculations.
     """
 
-    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
-                 xml_content=None):
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, xml_content=None):
         super(WaypointsTableModel, self).__init__()
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
-        self.data_dir = data_dir
         self.modified = False  # for "save on exit"
         self.waypoints = []  # user-defined waypoints
         # file-save events are handled in a different manner

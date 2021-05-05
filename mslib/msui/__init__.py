@@ -54,7 +54,7 @@ class MissionSupportSystemDefaultConfig(object):
     filepicker_default = "default"
 
     # dir where mss output files are stored
-    data_dir = "~/mssdata"
+    data_dir = os.path.join(os.path.expanduser("~/"), "Documents", "mss")
 
     # layout of different views, with immutable they can't resized
     layout = {"topview": (963, 702),
@@ -180,7 +180,7 @@ class MissionSupportSystemDefaultConfig(object):
     mscolab_server_url = "http://localhost:8083"
     # ToDo refactor to rename this to data_dir/mss_data_dir
     # mss dir
-    mss_dir = "~/mss"
+    mscolab_data_dir = os.path.join(os.path.expanduser("~/"), ".local", "share", "mss")
 
     # dictionary for export plugins, e.g.  {"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"] }
     export_plugins = {}

@@ -73,7 +73,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     identifier = None
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
-    def __init__(self, parent=None, data_dir=mss_default.mss_dir, mscolab_server_url=mss_default.mscolab_server_url):
+    def __init__(self, parent=None, data_dir=None, mscolab_server_url=mss_default.mscolab_server_url):
         """
         Set up user interface
         """
@@ -136,6 +136,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.help_dialog = None
         # set data dir, uri
         self.data_dir = data_dir
+        if self.data_dir is None:
+            self.data_dir = config_loader(dataset="mscolab_data_dir")
         self.mscolab_server_url = None
         self.disable_action_buttons()
         # disabling login, add user button. they are enabled when url is connected
@@ -144,8 +146,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
-        default_MSCOLAB = config_loader(
-            dataset="default_MSCOLAB")
+        default_MSCOLAB = config_loader(dataset="default_MSCOLAB")
         add_mscolab_urls(self.url, default_MSCOLAB)
         self.emailid.setEnabled(False)
         self.password.setEnabled(False)
@@ -898,7 +899,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 window.mpl.canvas.waypoints_interactor.redraw_figure()
 
     def reload_local_wp(self):
-        self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
+        self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file)
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
