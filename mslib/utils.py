@@ -148,34 +148,24 @@ def config_loader(config_file=None, dataset=None):
     Returns: a the dataset value or the config as dictionary
 
     """
+    default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
+    if dataset is not None and dataset not in default_config:
+        raise KeyError(f"requested dataset '{dataset}' not in defaults!")
     if config_file is None:
         config_file = constants.CACHED_CONFIG_FILE
     if config_file is None:
         logging.info(
             'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html')
-    default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
-    if dataset is not None and dataset not in default_config:
-        raise KeyError(f"requested dataset '{dataset}' not in defaults or config_file")
-    if config_file is None:
         if dataset is None:
             return default_config
         else:
             return default_config[dataset]
     user_config = read_config_file(config_file)
     if dataset is not None:
-        if dataset not in user_config:
-            return default_config[dataset]
-        else:
-            return user_config[dataset]
+        return user_config.get(dataset, default_config[dataset])
     else:
-        for key in user_config:
-            default_config[key] = user_config[key]
+        default_config.update(user_config)
         return default_config
-    if len(user_config) == 0:
-        if dataset is None:
-            return default_config
-        else:
-            return default_config[dataset]
 
 
 def get_distance(coord0, coord1):
