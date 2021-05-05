@@ -550,8 +550,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             filename = get_open_filename(
-                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)",
-                pickertag="filepicker_config")
+                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)")
             if filename is not None:
                 constants.CACHED_CONFIG_FILE = filename
                 self.restart_application()
