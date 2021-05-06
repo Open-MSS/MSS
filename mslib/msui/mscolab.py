@@ -533,7 +533,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                         "Turn on work locally to work on local flight track file"))
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
-            if self.access_level == "admin" or self.access_level == "creator":
+            if self.access_level == "admin" or self.access_level == "creator" or self.access_level == "collaborator":
                 self.versionHistoryBtn.setEnabled(True)
             self.waypoints_model = None
             self.load_wps_from_server()
@@ -680,10 +680,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if self.access_level == "viewer" or self.access_level == "collaborator":
             if self.access_level == "viewer":
                 self.chatWindowBtn.setEnabled(False)
+                self.versionHistoryBtn.setEnabled(False)
             else:
                 self.chatWindowBtn.setEnabled(True)
+                self.versionHistoryBtn.setEnabled(True)
             self.adminWindowBtn.setEnabled(False)
-            self.versionHistoryBtn.setEnabled(False)
         else:
             self.adminWindowBtn.setEnabled(True)
             self.chatWindowBtn.setEnabled(True)
@@ -948,11 +949,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # Close mscolab windows based on new access_level and update their buttons
             if self.access_level == "collaborator" or self.access_level == "viewer":
                 self.adminWindowBtn.setEnabled(False)
-                self.versionHistoryBtn.setEnabled(False)
+                if self.access_level == "collaborator":
+                    self.versionHistoryBtn.setEnabled(True)
+                else:
+                    self.versionHistoryBtn.setEnabled(False)
+                    if self.version_window is not None:
+                        self.version_window.close()
                 if self.admin_window is not None:
                     self.admin_window.close()
-                if self.version_window is not None:
-                    self.version_window.close()
             else:
                 self.adminWindowBtn.setEnabled(True)
                 self.versionHistoryBtn.setEnabled(True)
