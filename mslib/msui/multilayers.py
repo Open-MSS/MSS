@@ -143,13 +143,13 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
     def get_current_layer(self):
         """
         Return the current layer in the perspective of Multilayering or Singlelayering
-        For Multilayering, it is the last of the activated layers
+        For Multilayering, it is the first priority syncable layer, or first priority layer if none are syncable
         For Singlelayering, it is the current selected layer
         """
         if self.cbMultilayering.isChecked():
             active_layers = self.get_active_layers()
             synced_layers = [layer for layer in active_layers if layer.is_synced]
-            return synced_layers[-1] if synced_layers else active_layers[-1] if active_layers else None
+            return synced_layers[0] if synced_layers else active_layers[0] if active_layers else None
         else:
             return self.current_layer
 
