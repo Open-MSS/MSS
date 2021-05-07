@@ -74,6 +74,13 @@ Save a flight track to name it.</string>
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QProgressBar" name="progressBar">
+      <property name="value">
+       <number>0</number>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -82,7 +89,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>442</width>
-     <height>24</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="nativeMenuBar">

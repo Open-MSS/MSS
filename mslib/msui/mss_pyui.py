@@ -55,6 +55,7 @@ from mslib.msui import editor
 from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
+from mslib.msui.updater import Updater
 from mslib.utils import config_loader, setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
@@ -173,6 +174,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.last_save_directory = config_loader(dataset="data_dir")
         self.mscolab_window = None
         self.config_editor = None
+        self.progressBar.setVisible(False)
 
         # Connect Qt SIGNALs:
         # ===================
@@ -220,6 +222,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.labelStatusbar.setText(self.status())
         # Instantiates object of MSS Tableview window helping in force close it.
         self.tv_window = None
+
+        self.updater = Updater(self)
+        self.updater.on_update_available.connect(self.notify_on_update)
+        self.updater.on_status_update.connect(lambda s: self.labelStatusbar.setText(s))
+        self.updater.on_progress_update.connect(lambda i: (self.progressBar.setVisible(True),
+                                                           self.progressBar.setValue(i)))
+        self.updater.on_update_finished.connect(lambda: self.labelStatusbar.setText("Finished update. Please restart MSS."))
 
     @staticmethod
     def preload_wms(urls):
@@ -697,6 +706,18 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             head_filename, tail_filename = os.path.split(filename)
             return("Status : User Configuration '" + tail_filename + "' loaded")
 
+    def notify_on_update(self, old, new):
+        """
+        Asks the user if they want to update MSS
+        """
+        ret = QtWidgets.QMessageBox.information(
+            self, "Mission Support System",
+            f"MSS can be updated from {old} to {new}\nDo you want to update?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No)
+        if ret == QtWidgets.QMessageBox.Yes:
+            self.updater.update_mss()
+
 
 def main():
     try:
@@ -774,7 +795,7 @@ def main():
     mainwindow = MSSMainWindow()
     mainwindow.create_new_flight_track()
     mainwindow.show()
-    sys.exit(application.exec_())
+    application.exec_()
 
 
 if __name__ == "__main__":
