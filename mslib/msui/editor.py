@@ -51,7 +51,7 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         # Could also use a QTextEdit and set self.editor.setAcceptRichText(False)
         self.editor = QtWidgets.QPlainTextEdit()
 
-        # Load mss_settings.json (if already exists)
+        # Load mss_settings.json (if already exists), change \\ to / so fs can work with it
         self.path = constants.CACHED_CONFIG_FILE
         if self.path is not None:
             self.path = self.path.replace("\\", "/")
