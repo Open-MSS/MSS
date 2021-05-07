@@ -61,8 +61,9 @@ class EditorMainWindow(QtWidgets.QMainWindow):
                     self.file_content = _fs.readtext(file_name)
                     self.editor.setPlainText(self.file_content)
                     self.update_title()
-        self.path = MSS_SETTINGS
-        self.path = self.path.replace("\\", "/")
+        else:
+            self.path = MSS_SETTINGS
+            self.path = self.path.replace("\\", "/")
         self.last_saved = self.editor.toPlainText()
 
         # Setup the QTextEdit editor configuration
