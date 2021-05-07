@@ -57,7 +57,6 @@ from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog
 from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 from mslib.msui import constants
 from mslib.utils import config_loader
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
 
@@ -76,8 +75,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     identifier = None
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
-    def __init__(self, parent=None, data_dir=config_loader(dataset="mss_dir"),
-                 mscolab_server_url=mss_default.mscolab_server_url):
+    # ToDo refactor tests, mscolab_server_url not used
+    def __init__(self, parent=None, data_dir=None, mscolab_server_url=None):
         """
         Set up user interface
         """
@@ -139,7 +138,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # Mscolab help dialog
         self.help_dialog = None
         # set data dir, uri
-        self.data_dir = data_dir
+        if data_dir is None:
+            self.data_dir = config_loader(dataset="mss_dir")
+        else:
+            self.data_dir = data_dir
         self.create_dir()
         self.mscolab_server_url = None
         self.disable_action_buttons()
