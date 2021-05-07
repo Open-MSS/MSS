@@ -677,18 +677,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.tableview.setEnabled(True)
         self.workLocallyCheckBox.setEnabled(True)
 
+        if self.access_level == "viewer":
+            self.chatWindowBtn.setEnabled(False)
+            self.versionHistoryBtn.setEnabled(False)
+        else:
+            self.chatWindowBtn.setEnabled(True)
+            self.versionHistoryBtn.setEnabled(True)
         if self.access_level == "viewer" or self.access_level == "collaborator":
-            if self.access_level == "viewer":
-                self.chatWindowBtn.setEnabled(False)
-                self.versionHistoryBtn.setEnabled(False)
-            else:
-                self.chatWindowBtn.setEnabled(True)
-                self.versionHistoryBtn.setEnabled(True)
             self.adminWindowBtn.setEnabled(False)
         else:
             self.adminWindowBtn.setEnabled(True)
-            self.chatWindowBtn.setEnabled(True)
-            self.versionHistoryBtn.setEnabled(True)
         if self.access_level == "creator":
             self.deleteProjectBtn.setEnabled(True)
         else:
