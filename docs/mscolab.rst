@@ -70,7 +70,7 @@ There are 4 different access levels of user:
     They have all the capabilities of a collaborator.
   - **Collaborators**
 
-    Collaborators can make changes to the project and have access to the chat room.
+    Collaborators can make changes to the project and have access to the chat room. Additionally, they can view the version history of the project.
   - **Viewer**
 
     Viewers can only view the flight track and have the least amount of access.
@@ -104,7 +104,7 @@ Right-clicking on a message would open a context-menu giving you options to copy
 
 Managing Project Versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-If you have the access level of admin or higher to a project you can view all the change history of the project by clicking on the `Version History` button in Mscolab's main window.
+If you have the access level of collaborator or higher to a project you can view all the change history of the project by clicking on the `Version History` button in Mscolab's main window.
 A new version history window will be opened where you can view all the changes made to the project and compare them with the current flight track by selecting a previous version.
 You can also set names to important versions to keep track of all the important milestones.
 
