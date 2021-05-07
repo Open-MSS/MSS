@@ -204,6 +204,7 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         if self.check_modified():
             if self.check_json():
                 self._save_to_path(self.path)
+                constants.CACHED_CONFIG_FILE = self.path
                 ret = QtWidgets.QMessageBox.warning(
                     self, self.tr("Mission Support System"),
                     self.tr("Do you want to restart the application?\n"
