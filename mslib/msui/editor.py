@@ -52,8 +52,9 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         self.editor = QtWidgets.QPlainTextEdit()
 
         # Load mss_settings.json (if already exists), change \\ to / so fs can work with it
-        self.path = constants.CACHED_CONFIG_FILE.replace("\\", "/")
+        self.path = constants.CACHED_CONFIG_FILE
         if self.path:
+            self.path = self.path.replace("\\", "/")
             dir_name, file_name = fs.path.split(self.path)
             with fs.open_fs(dir_name) as _fs:
                 if _fs.exists(file_name):
