@@ -31,7 +31,7 @@ import json
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
 from mslib.msui import constants
-from mslib.msui.constants import MSS_CONFIG_PATH
+from mslib.msui.constants import MSS_CONFIG_PATH, MSS_SETTINGS
 from mslib.msui.icons import icons
 
 
@@ -53,7 +53,7 @@ class EditorMainWindow(QtWidgets.QMainWindow):
 
         # Load mss_settings.json (if already exists), change \\ to / so fs can work with it
         self.path = constants.CACHED_CONFIG_FILE
-        if self.path:
+        if self.path is not None:
             self.path = self.path.replace("\\", "/")
             dir_name, file_name = fs.path.split(self.path)
             with fs.open_fs(dir_name) as _fs:
@@ -61,6 +61,9 @@ class EditorMainWindow(QtWidgets.QMainWindow):
                     self.file_content = _fs.readtext(file_name)
                     self.editor.setPlainText(self.file_content)
                     self.update_title()
+        else:
+            self.path = MSS_SETTINGS
+            self.path = self.path.replace("\\", "/")
         self.last_saved = self.editor.toPlainText()
 
         # Setup the QTextEdit editor configuration
@@ -202,7 +205,6 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         if self.check_modified():
             if self.check_json():
                 self._save_to_path(self.path)
-
                 ret = QtWidgets.QMessageBox.warning(
                     self, self.tr("Mission Support System"),
                     self.tr("Do you want to restart the application?\n"
@@ -216,6 +218,8 @@ class EditorMainWindow(QtWidgets.QMainWindow):
     def file_saveas(self):
         if self.check_json():
             default_filename = constants.CACHED_CONFIG_FILE
+            if default_filename is None:
+                default_filename = MSS_SETTINGS
             path = get_save_filename(
                 self, "Save file", default_filename, "Text documents (*.json)")
             # If dialog is cancelled, will return ''
@@ -230,6 +234,7 @@ class EditorMainWindow(QtWidgets.QMainWindow):
         with fs.open_fs(dir_name) as _fs:
             _fs.writetext(file_name, text)
         self.update_title()
+        constants.CACHED_CONFIG_FILE = self.path
 
     def file_print(self):
         dlg = QtPrintSupport.QPrintDialog()
