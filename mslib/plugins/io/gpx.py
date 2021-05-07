@@ -29,14 +29,9 @@
 from __future__ import absolute_import
 from __future__ import division
 
-from builtins import str
-
-import unicodecsv as csv
 import os
-
-import mslib.msui.flighttrack as ft
 from fs import open_fs
-import xml.etree.ElementTree as ET
+import gpxpy
 
 
 def save_to_gpx(filename, name, waypoints):
@@ -44,45 +39,20 @@ def save_to_gpx(filename, name, waypoints):
         raise ValueError("fileexportname to save flight track cannot be None")
     _dirname, _name = os.path.split(filename)
     _fs = open_fs(_dirname)
-    with _fs.open(_name, "wb") as gpxfile:
-        csv_writer = csv.writer(gpxfile, dialect='excel', delimiter=";", lineterminator="\n")
-        csv_writer.writerow([name])
-        csv_writer.writerow(["Index", "Location", "Lat (+-90)", "Lon (+-180)", "Flightlevel", "Pressure (hPa)",
-                             "Leg dist. (km)", "Cum. dist. (km)", "Comments"])
-        for i, wp in enumerate(waypoints):
-            loc = str(wp.location)
-            lat = f"{wp.lat:.3f}"
-            lon = f"{wp.lon:.3f}"
-            lvl = f"{wp.flightlevel:.3f}"
-            pre = f"{wp.pressure / 100.:.3f}"
-            leg = f"{wp.distance_to_prev:.3f}"
-            cum = f"{wp.distance_total:.3f}"
-            com = str(wp.comments)
-            csv_writer.writerow([i, loc, lat, lon, lvl, pre, leg, cum, com])
+    gpx = gpxpy.gpx.GPX()
+    gpx_track = gpxpy.gpx.GPXTrack()
+    gpx.tracks.append(gpx_track)
+    gpx_segment = gpxpy.gpx.GPXTrackSegment()
+    gpx_track.segments.append(gpx_segment)
 
+    # add metadata
+    gpx.name = name
+    gpx.description = "MSS flight track export"
 
-def load_from_csv(filename):
-    waypoints = []
-    _dirname, _name = os.path.split(filename)
-    _fs = open_fs(_dirname)
-    with _fs.open(_name, "rb") as in_file:
-        lines = in_file.readlines()
-    if len(lines) < 4:
-        raise SyntaxError("CSV file requires at least 4 lines!")
-    dialect = csv.Sniffer().sniff(lines[-1].decode("utf-8"))
-    csv_reader = csv.reader(lines, encoding="utf-8", dialect=dialect)
-    name = next(csv_reader)[0]
-    next(csv_reader)  # header
-    for row in csv_reader:
-        wp = ft.Waypoint()
-        wp.location = row[1]
-        wp.lat = float(row[2])
-        wp.lon = float(row[3])
-        wp.flightlevel = float(row[4])
-        wp.pressure = float(row[5]) * 100.
-        wp.distance_to_prev = float(row[6])
-        wp.distance_total = float(row[7])
-        wp.comments = row[8]
-        waypoints.append(wp)
-    name = os.path.basename(filename.replace(".csv", "").strip())
-    return name, waypoints
+    # create waypoints
+    for i, wp in enumerate(waypoints):
+        # loc = str(wp.location)
+        gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(wp.lat, wp.lon, name=f"{i}"))
+
+    with _fs.open(_name, "w") as file:
+        file.write(gpx.to_xml())
