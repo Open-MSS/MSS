@@ -533,7 +533,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                         "Turn on work locally to work on local flight track file"))
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
-            if self.access_level == "admin" or self.access_level == "creator" or self.access_level == "collaborator":
+            if self.access_level in ["admin", "creator", "collaborator"]:
                 self.versionHistoryBtn.setEnabled(True)
             self.waypoints_model = None
             self.load_wps_from_server()
