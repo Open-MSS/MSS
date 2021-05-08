@@ -144,18 +144,14 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
-        default_MSCOLAB = config_loader(
-            dataset="default_MSCOLAB")
+        default_MSCOLAB = config_loader(dataset="default_MSCOLAB")
         add_mscolab_urls(self.url, default_MSCOLAB)
         self.emailid.setEnabled(False)
         self.password.setEnabled(False)
 
         # fill value of mscolab url if found in QSettings storage
-        self.settings = \
-            load_settings_qsettings('mscolab',
-                                    default_settings={'recent_mscolab_urls': [], 'auth': {}, 'server_settings': {}})
-        if len(self.settings['recent_mscolab_urls']) > 0:
-            add_mscolab_urls(self.url, self.settings['recent_mscolab_urls'])
+        self.settings = load_settings_qsettings(
+            'mscolab', default_settings={'auth': {}, 'server_settings': {}})
 
     def disconnect_handler(self):
         self.logout()
@@ -184,8 +180,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             r = requests.get(url_join(url, 'status'))
             if r.text == "Mscolab server":
                 # delete mscolab http_auth settings for the url
-                if url not in self.settings["recent_mscolab_urls"]:
-                    self.settings["recent_mscolab_urls"].append(url)
                 if self.mscolab_server_url in self.settings["auth"].keys():
                     del self.settings["auth"][self.mscolab_server_url]
                 # assign new url to self.mscolab_server_url
