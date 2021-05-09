@@ -41,6 +41,8 @@ CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mss_wms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
 ROOT_FS = TempFS(identifier="mss{}".format(SHA))
+OSFS_URL = ROOT_FS.geturl("", purpose="fs")
+
 ROOT_DIR = ROOT_FS.getsyspath("")
 
 if not ROOT_FS.exists("mss/testdata"):
@@ -48,7 +50,8 @@ if not ROOT_FS.exists("mss/testdata"):
 SERVER_CONFIG_FS = fs.open_fs(fs.path.join(ROOT_DIR, "mss"))
 DATA_FS = fs.open_fs(fs.path.join(ROOT_DIR, "mss/testdata"))
 
-MSS_CONFIG_PATH = SERVER_CONFIG_FS.getsyspath("")
+MSS_CONFIG_PATH = OSFS_URL
+# MSS_CONFIG_PATH = SERVER_CONFIG_FS.getsyspath("") would use a none osfs path
 os.environ["MSS_CONFIG_PATH"] = MSS_CONFIG_PATH
 SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.getsyspath(""), SERVER_CONFIG_FILE)
 
