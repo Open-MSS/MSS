@@ -120,7 +120,7 @@ class FileManager(object):
         p_id: project id
         u_id: user-id
         """
-        #return true only if the user is collaborator
+        # return true only if the user is collaborator
         permi = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
         if not permi:
             return False
