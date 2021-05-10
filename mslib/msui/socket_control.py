@@ -29,7 +29,7 @@ import json
 import logging
 
 from PyQt5 import QtCore
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.msui.constants import MissionSupportSystemDefaultConfig as mss_default
 
 
 class ConnectionManager(QtCore.QObject):

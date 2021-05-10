@@ -35,7 +35,7 @@ import traceback
 from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
 from PyQt5 import QtCore, QtWidgets  # noqa
 
-from mslib.utils import config_loader, FatalUserError
+import mslib.utils
 
 
 def get_open_filename_qt(*args):
@@ -62,12 +62,12 @@ def get_existing_directory_qt(*args):
 
 
 def get_pickertype(tag, typ):
-    default = config_loader(dataset="filepicker_default")
+    default = mslib.utils.config_loader(dataset="filepicker_default")
     if typ is None:
         if tag is None:
             typ = default
         else:
-            typ = config_loader(dataset=tag)
+            typ = mslib.utils.config_loader(dataset=tag)
     return typ
 
 
@@ -82,7 +82,7 @@ def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=N
         # qt filepicker takes file filters separated by ';;'
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
-        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
+        raise mslib.utils.FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -98,7 +98,7 @@ def get_open_filenames(parent, title, dirname, filt, pickertag=None, pickertype=
     if pickertype in ["qt", "default"]:
         filename = get_open_filenames_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
-        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
+        raise mslib.utils.FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -114,7 +114,7 @@ def get_save_filename(parent, title, filename, filt, pickertag=None, pickertype=
     elif pickertype in ["qt", "default"]:
         filename = get_save_filename_qt(parent, title, os.path.expanduser(filename), filt)
     else:
-        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
+        raise mslib.utils.FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == "":
         filename = None
@@ -128,7 +128,7 @@ def get_existing_directory(parent, title, defaultdir, pickertag=None, pickertype
     elif pickertype in ["qt", "default"]:
         dirname = get_existing_directory_qt(parent, title, defaultdir)
     else:
-        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
+        raise mslib.utils.FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", dirname)
     if dirname == "":
         dirname = None

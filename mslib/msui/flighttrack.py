@@ -48,7 +48,6 @@ from mslib import utils, __version__
 from mslib import thermolib
 from mslib.utils import config_loader, find_location, save_settings_qsettings, load_settings_qsettings
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 from mslib.utils import writexml
 xml.dom.minidom.Element.writexml = writexml
@@ -146,12 +145,10 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     flight performance calculations.
     """
 
-    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
-                 xml_content=None):
+    def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, xml_content=None):
         super(WaypointsTableModel, self).__init__()
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
-        self.data_dir = data_dir
         self.modified = False  # for "save on exit"
         self.waypoints = []  # user-defined waypoints
         # file-save events are handled in a different manner

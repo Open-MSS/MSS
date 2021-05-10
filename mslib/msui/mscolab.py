@@ -138,10 +138,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # Mscolab help dialog
         self.help_dialog = None
         # set data dir, uri
-        if data_dir is None:
+        self.data_dir = data_dir
+        if self.data_dir is None:
             self.data_dir = config_loader(dataset="mss_dir")
-        else:
-            self.data_dir = data_dir
         self.create_dir()
         self.mscolab_server_url = None
         self.disable_action_buttons()
@@ -940,7 +939,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 window.mpl.canvas.waypoints_interactor.redraw_figure()
 
     def reload_local_wp(self):
-        self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
+        self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file)
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 

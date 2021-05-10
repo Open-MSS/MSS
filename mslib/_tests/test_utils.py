@@ -68,6 +68,9 @@ class TestConfigLoader(object):
     """
     tests config file for client
     """
+    def setup(self):
+        utils.constants.CACHED_CONFIG_FILE = None
+
     def teardown(self):
         if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
@@ -186,6 +189,9 @@ class TestGetDistance(object):
     """
     # we don't test the utils method here, may be that method should me refactored off
 
+    def setup(self):
+        utils.constants.CACHED_CONFIG_FILE = None
+
     def test_get_distance(self):
         coordinates_distance = [((50.355136, 7.566077), (50.353968, 4.577915), 212),
                                 ((-5.135943, -42.792442), (4.606085, 120.028077), 18130)]
@@ -198,6 +204,9 @@ class TestGetDistance(object):
 
 
 class TestProjections(object):
+    def setup(self):
+        utils.constants.CACHED_CONFIG_FILE = None
+
     def test_get_projection_params(self):
         assert utils.get_projection_params("epsg:4839") == {'basemap': {'epsg': '4839'}, 'bbox': 'meter(10.5,51)'}
         with pytest.raises(ValueError):
