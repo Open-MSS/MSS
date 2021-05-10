@@ -292,7 +292,7 @@ class FileManager(object):
         return change_content
 
     def set_version_name(self, ch_id, p_id, u_id, version_name):
-        if not self.is_admin(u_id, p_id) and self.is_collaborator(u_id, p_id):
+        if not self.is_admin(u_id, p_id) or self.is_collaborator(u_id, p_id):
             return False
         Change.query\
             .filter(Change.id == ch_id)\
