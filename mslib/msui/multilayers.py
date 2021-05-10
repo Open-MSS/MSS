@@ -639,7 +639,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
             if self.get_vtime() < itime:
                 valid_vtime = next((vtime for vtime in self.get_vtimes() if vtime >= itime), None)
                 if valid_vtime:
-                    self.set_vtime()
+                    self.set_vtime(valid_vtime)
                     self.parent.carry_parameters["vtime"] = self.get_vtime()
             self.parent.needs_repopulate.emit()
 
