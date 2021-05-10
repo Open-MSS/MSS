@@ -224,6 +224,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Automatically enable or disable roundtrip when data changes
         self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
         self.update_roundtrip_enabled()
+        self.mpl.navbar.push_current()
 
     def update_predefined_maps(self, extra=None):
         self.cbChangeMapSection.clear()
@@ -296,6 +297,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
 
         logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
         self.mpl.canvas.redraw_map(kwargs)
+        self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
         super(MSSTopViewWindow, self).setIdentifier(identifier)
