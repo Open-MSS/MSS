@@ -52,6 +52,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.layers_priority = []
         self.current_layer: Layer = None
         self.threads = 0
+        self.height = None
+        self.scale = self.logicalDpiX() / 96
         self.filter_favourite = False
         self.carry_parameters = {"level": None, "itime": None, "vtime": None}
         self.settings = load_settings_qsettings("multilayers", {"favourites": [], "saved_styles": {}})
@@ -122,11 +124,17 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         """
         Checks if the mouse is pointing at an icon and handles the event accordingly
         """
+        icon_width = self.height - 2
+
         # Clicked on layer, check favourite
         if isinstance(item, Layer):
+            starts_at = 40 * self.scale
+            icon_start = starts_at + 3
+            if self.cbMultilayering.isChecked():
+                checkbox_width = round(self.height * 0.75)
+                icon_start += checkbox_width + 6
             position = self.listLayers.viewport().mapFromGlobal(QtGui.QCursor().pos())
-            if (self.cbMultilayering.isChecked() and 64 <= position.x() <= 80) or \
-               (not self.cbMultilayering.isChecked() and 44 <= position.x() <= 60):
+            if icon_start <= position.x() <= icon_start + icon_width:
                 self.threads += 1
                 item.favourite_triggered()
                 if self.filter_favourite:
@@ -135,8 +143,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
         # Clicked on server, check garbage bin
         elif isinstance(item, QtWidgets.QTreeWidgetItem):
+            starts_at = 20 * self.scale
+            icon_start = starts_at + 3
             position = self.listLayers.viewport().mapFromGlobal(QtGui.QCursor().pos())
-            if 26 <= position.x() <= 38:
+            if icon_start <= position.x() <= icon_start + icon_width:
                 self.threads += 1
                 self.delete_server(item)
                 self.threads -= 1
@@ -144,13 +154,13 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
     def get_current_layer(self):
         """
         Return the current layer in the perspective of Multilayering or Singlelayering
-        For Multilayering, it is the last of the activated layers
+        For Multilayering, it is the first priority syncable layer, or first priority layer if none are syncable
         For Singlelayering, it is the current selected layer
         """
         if self.cbMultilayering.isChecked():
             active_layers = self.get_active_layers()
             synced_layers = [layer for layer in active_layers if layer.is_synced]
-            return synced_layers[-1] if synced_layers else active_layers[-1] if active_layers else None
+            return synced_layers[0] if synced_layers else active_layers[0] if active_layers else None
         else:
             return self.current_layer
 
@@ -283,9 +293,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             self.layers[wms.url]["header"] = header
             self.layers[wms.url]["wms"] = wms
             header.setExpanded(True)
-            size = QtCore.QSize()
-            size.setHeight(15)
-            header.setSizeHint(0, size)
+            if not self.height:
+                self.height = self.listLayers.visualItemRect(header).height()
             icon = QtGui.QIcon(icons("64x64", "bin.png"))
             header.setIcon(0, icon)
 
@@ -304,7 +313,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
             if widget.style:
                 style = QtWidgets.QComboBox()
-                style.setFixedHeight(15)
+                style.setFixedHeight(self.height)
                 style.setFixedWidth(200)
                 style.addItems(widget.styles)
                 style.setCurrentIndex(style.findText(widget.style))
@@ -317,6 +326,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
                 style.currentIndexChanged.connect(lambda: style_changed(widget))
                 self.listLayers.setItemWidget(widget, 1, style)
+
+            size = QtCore.QSize()
+            size.setHeight(self.height)
+            widget.setSizeHint(0, size)
 
             self.layers[wms.url][name] = widget
             self.current_layer = widget
@@ -367,7 +380,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
         if item.checkState(0) > 0 and not self.listLayers.itemWidget(item, 2):
             priority = QtWidgets.QComboBox()
-            priority.setFixedHeight(15)
+            priority.setFixedHeight(self.height)
             priority.currentIndexChanged.connect(self.priority_changed)
             self.listLayers.setItemWidget(item, 2, priority)
             self.layers_priority.append(item)
@@ -474,9 +487,6 @@ class Layer(QtWidgets.QTreeWidgetItem):
         self.dimensions = {}
         self.extents = {}
         self.setText(0, name if name else "")
-        size = QtCore.QSize()
-        size.setHeight(15)
-        self.setSizeHint(0, size)
 
         self.levels = []
         self.level = None
