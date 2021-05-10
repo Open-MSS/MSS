@@ -163,8 +163,8 @@ class Abstract1DSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             canvas.print_png(output)
 
             if show:
-                logging.debug("saving figure to mpl_vsec.png ..")
-                canvas.print_png("mpl_vsec.png")
+                logging.debug("saving figure to mpl_osec.png ..")
+                canvas.print_png("mpl_osec.png")
 
             # Convert the image to an 8bit palette image with a significantly
             # smaller file size (~factor 4, from RGBA to one 8bit value, plus the

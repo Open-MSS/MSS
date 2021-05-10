@@ -188,8 +188,11 @@ class WMSServer(object):
             self.register_vsec_layer(datasets, layer)
 
         self.osec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_1d_layers:
-            self.register_1sec_layer(datasets, layer)
+        for layer in mss_wms_settings.register_1d_layers:
+            if len(layer) == 3:
+                self.register_1sec_layer(layer[2], layer[1], layer[0])
+            else:
+                self.register_1sec_layer(layer[1], layer_class=layer[0])
 
     def register_hsec_layer(self, datasets, layer_class):
         """
@@ -244,7 +247,7 @@ class WMSServer(object):
                     raise ValueError("dataset '%s' not available", dataset)
             self.vsec_layer_registry[dataset][layer.name] = layer
 
-    def register_1sec_layer(self, datasets, layer_class):
+    def register_1sec_layer(self, datasets, variable=None, layer_class=None):
         """
         Register 1D section layer in internal dict of layers.
 
@@ -255,7 +258,10 @@ class WMSServer(object):
         # instances with the datasets.
         for dataset in datasets:
             try:
-                layer = layer_class(self.onesec_drivers[dataset])
+                if variable:
+                    layer = layer_class(self.onesec_drivers[dataset], variable)
+                else:
+                    layer = layer_class(self.onesec_drivers[dataset])
             except KeyError as ex:
                 logging.debug("ERROR: %s %s", type(ex), ex)
                 continue

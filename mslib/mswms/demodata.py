@@ -1040,19 +1040,19 @@ register_1d_layers = None
 if mpl_1sec_styles is not None:
     register_1d_layers = [
         # ECMWF standard 1D section styles.
-        (mpl_1sec_styles.OS_TemperatureStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "mole_fraction_of_ozone_in_air", ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "air_potential_temperature", ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "geopotential_height", ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "specific_humidity", ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "cloud_area_fraction_in_atmosphere_layer", ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "specific_cloud_ice_water_content", ["ecmwf_EUR_LL015"]),
+        (mpl_1sec_styles.OS_DefaultStyle, "specific_cloud_liquid_water_content", ["ecmwf_EUR_LL015"]),
         (mpl_1sec_styles.OS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_CloudsStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_CIWCStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_CLWCStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_1sec_styles.OS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_1sec_styles.OS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DivergenceStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_OzoneStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_PotentialTemperatureStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_GeopotentialHeightStyle_01, ["ecmwf_EUR_LL015"])
+        (mpl_1sec_styles.OS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
             simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)

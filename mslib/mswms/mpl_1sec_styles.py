@@ -5,29 +5,28 @@ import mslib.thermolib as thermolib
 from mslib.utils import convert_to
 
 
-class OS_TemperatureStyle_01(Abstract1DSectionStyle):
+class OS_DefaultStyle(Abstract1DSectionStyle):
     """
-    1D section of temperature.
+    Style for single variables that require no further calculation
     """
-
-    name = "OS_T01"
-    title = "Temperature (K) 1D Section"
-    abstract = "Temperature (K)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "air_temperature", "K")]
+    def __init__(self, driver, variable="air_temperature"):
+        super(Abstract1DSectionStyle, self).__init__(driver=driver)
+        self.variable = variable
+        self.required_datafields = [("ml", "air_pressure", "Pa"), ("ml", self.variable, "")]
+        abbreviation = "".join([text[0] for text in self.variable.split("_")])
+        self.name = f"OS_{str.upper(abbreviation)}"
+        self.title = f"{self.variable} 1D Plot"
+        self.abstract = f"{self.variable}"
 
     def _plot_style(self, color):
         """
-        Make a temperature 1D section.
+        Make a simple 1D plot.
         """
         ax = self.ax
-        self.y_values = self.data["air_temperature"]
+        self.y_values = self.data[self.variable]
 
         numpoints = len(self.lats)
+        ax.set_ylabel(self.driver.data_units[self.variable])
         ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
@@ -38,7 +37,7 @@ class OS_RelativeHumdityStyle_01(Abstract1DSectionStyle):
     """
 
     name = "OS_RH01"
-    title = "Relative Humdity (%) 1D Section"
+    title = "Relative Humdity (%) 1D Plot"
     abstract = "Relative humdity (%)"
 
     # Variables with the highest number of dimensions first (otherwise
@@ -65,61 +64,13 @@ class OS_RelativeHumdityStyle_01(Abstract1DSectionStyle):
         self._latlon_setup()
 
 
-class OS_CloudsStyle_01(Abstract1DSectionStyle):
-    """
-    1D section of cloud cover.
-    """
-
-    name = "OS_CC01"
-    title = "Cloud Cover (0-1) 1D Section"
-    abstract = "Cloud cover (0-1)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "cloud_area_fraction_in_atmosphere_layer", 'dimensionless')]
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["cloud_area_fraction_in_atmosphere_layer"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
-class OS_SpecificHumdityStyle_01(Abstract1DSectionStyle):
-    """
-    1D section of specific humidity.
-    """
-
-    name = "OS_Q01"
-    title = "Specific Humdity (g/kg) 1D Section"
-    abstract = "Specific humdity (g/kg)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "specific_humidity", "g/kg")]
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["specific_humidity"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
 class OS_VerticalVelocityStyle_01(Abstract1DSectionStyle):
     """
     1D section of vertical velocity.
     """
 
     name = "OS_W01"
-    title = "Vertical Velocity (cm/s) 1D Section"
+    title = "Vertical Velocity (cm/s) 1D Plot"
     abstract = "Vertical velocity (cm/s)"
 
     # Variables with the highest number of dimensions first (otherwise
@@ -153,7 +104,7 @@ class OS_HorizontalVelocityStyle_01(Abstract1DSectionStyle):
     """
 
     name = "OS_HV01"
-    title = "Horizontal Wind (m/s) 1D Section"
+    title = "Horizontal Wind (m/s) 1D Plot"
     abstract = "Horizontal wind speed (m/s)"
 
     # Variables with the highest number of dimensions first (otherwise
@@ -185,7 +136,7 @@ class OS_PotentialVorticityStyle_01(Abstract1DSectionStyle):
     """
 
     name = "OS_PV01"
-    title = "Potential Vorticity (PVU) 1D Section"
+    title = "Potential Vorticity (PVU) 1D Plot"
     abstract = "(Neg.) Potential vorticity (PVU)"
     styles = [
         ("default", "Northern Hemisphere"),
@@ -207,150 +158,6 @@ class OS_PotentialVorticityStyle_01(Abstract1DSectionStyle):
             self.style = "NH"
         if self.style.upper() == "SH":
             self.y_values = -self.y_values
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
-class OS_CIWCStyle_01(Abstract1DSectionStyle):
-    """
-    1D section of specific cloud ice water content.
-    """
-
-    name = "OS_CIWC01"
-    title = "Specific cloud ice water content (g/kg) 1D Section"
-    abstract = "Specific cloud ice water content (g/kg)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "specific_cloud_ice_water_content", "g/kg")]
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["specific_cloud_ice_water_content"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
-class OS_CLWCStyle_01(Abstract1DSectionStyle):
-    """
-    1D section of specific cloud liquid water content.
-    """
-
-    name = "OS_CLWC01"
-    title = "Specific cloud liquid water content (g/kg) 1D Section"
-    abstract = "Specific cloud liquid water content (g/kg)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "specific_cloud_liquid_water_content", "g/kg")]
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["specific_cloud_liquid_water_content"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
-class OS_DivergenceStyle_01(Abstract1DSectionStyle):
-    """
-    1D section of Divergence.
-    """
-
-    name = "OS_D01"
-    title = "Divergence (1/s) 1D Section"
-    abstract = "Divergence (1/s)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "divergence_of_wind", "1/s")]
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["divergence_of_wind"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
-class OS_OzoneStyle_01(Abstract1DSectionStyle):
-    """
-    1D section of Ozone mass mixing ratio.
-    """
-
-    name = "OS_O301"
-    title = "Ozone mass mixing ratio (kg/kg) 1D Section"
-    abstract = "Ozone mass mixing ratio (kg/kg)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "mole_fraction_of_ozone_in_air", "kg/kg")]
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["mole_fraction_of_ozone_in_air"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
-class OS_PotentialTemperatureStyle_01(Abstract1DSectionStyle):
-    """
-    1D section of Potential Temperature.
-    """
-
-    name = "OS_PT01"
-    title = "Potential Temperature (K) 1D Section"
-    abstract = "Potential Temperature (K)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "air_potential_temperature", "K")]
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["air_potential_temperature"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
-class OS_GeopotentialHeightStyle_01(Abstract1DSectionStyle):
-    """
-    1D section of Geopotential Height.
-    """
-
-    name = "OS_GPH01"
-    title = "Geopotential Height (m) 1D Section"
-    abstract = "Geopotential Height (m)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "geopotential_height", "m")]
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["geopotential_height"]
 
         numpoints = len(self.lats)
         ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
