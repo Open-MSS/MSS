@@ -108,7 +108,6 @@
                 </EX_GeographicBoundingBox>
                 <Dimension tal:condition="layer.uses_validtime_dimension()" name="TIME" units="ISO8601">${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_all_valid_times()]) }</Dimension>
                 <Dimension tal:condition="layer.uses_inittime_dimension()" name="INIT_TIME" units="ISO8601">${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_init_times()]) }</Dimension>
-                <Dimension tal:condition="layer.uses_elevation_dimension()" name="ELEVATION" units="${layer.get_elevation_units()}">${ ",".join(layer.get_elevations()) }</Dimension>
                 <Style tal:condition="type(layer.styles) is list" tal:repeat="(style_name, style_title) layer.styles">
                     <Name>${ style_name }</Name>
                     <Title>${ style_title }</Title>
