@@ -727,6 +727,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         if self.access_level == "viewer" or self.access_level == "collaborator":
             if self.access_level == "viewer":
+                self.workLocallyCheckBox.setEnabled(False)
+                self.importBtn.setEnabled(False)
                 self.chatWindowBtn.setEnabled(False)
             else:
                 self.chatWindowBtn.setEnabled(True)
