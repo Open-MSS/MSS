@@ -803,11 +803,11 @@ class VPathInteractor(PathInteractor):
                 self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
 
 
-class OPathInteractor(PathInteractor):
-    """Subclass of PathInteractor that implements an interactively editable
-       vertical profile of the flight track.
+class LPathInteractor(PathInteractor):
     """
-    signal_get_osec = QtCore.Signal(name="get_osec")
+    Subclass of PathInteractor that implements a non interactive linear profile of the flight track.
+    """
+    signal_get_lsec = QtCore.Signal(name="get_lsec")
 
     def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
         """Constructor passes a PathV instance its parent.
@@ -823,7 +823,7 @@ class OPathInteractor(PathInteractor):
         self.numintpoints = numintpoints
         self.redraw_xaxis = redraw_xaxis
         self.clear_figure = clear_figure
-        super(OPathInteractor, self).__init__(
+        super(LPathInteractor, self).__init__(
             ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
 
     def get_num_interpolation_points(self):
@@ -838,7 +838,7 @@ class OPathInteractor(PathInteractor):
         """
         self.redraw_path()
         # emit signal to redraw map
-        self.signal_get_osec.emit()
+        self.signal_get_lsec.emit()
 
     def button_release_delete_callback(self, event):
         """Called whenever a mouse button is released.

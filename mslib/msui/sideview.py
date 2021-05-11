@@ -31,7 +31,6 @@ import functools
 from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_sideview_window as ui
-from mslib.msui.mss_qt import ui_1dview_window as ui1
 from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wms
@@ -329,87 +328,6 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
             self.getView().set_settings(settings)
             self.save_settings()
         dlg.destroy()
-
-    def save_settings(self):
-        """
-        Save the current settings (vertical extent, displayed flightlevels
-        etc.) to the file self.settingsfile.
-        """
-        settings = self.getView().get_settings()
-        save_settings_qsettings(self.settings_tag, settings)
-
-    def load_settings(self):
-        """
-        Load settings from the file self.settingsfile.
-        """
-        settings = load_settings_qsettings(self.settings_tag)
-        self.getView().set_settings(settings)
-
-
-class MSS1DViewWindow(MSSMplViewWindow, ui1.Ui_OneDWindow):
-    """
-    PyQt window implementing a matplotlib canvas as an interactive
-    side view flight track editor.
-    """
-    name = "1D View"
-
-    def __init__(self, parent=None, model=None, _id=None):
-        """
-        Set up user interface, connect signal/slots.
-        """
-        super(MSS1DViewWindow, self).__init__(parent, model, _id)
-        self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon(icons('64x64')))
-
-        # Dock windows [WMS]:
-        self.cbTools.clear()
-        self.cbTools.addItems(["(select to open control)", "1D Section WMS"])
-        self.docks = [None]
-
-        self.setFlightTrackModel(model)
-
-        self.settings_tag = "1dview"
-        self.load_settings()
-
-        # Connect slots and signals.
-        # ==========================
-
-        # Tool opener.
-        self.cbTools.currentIndexChanged.connect(self.openTool)
-
-    def __del__(self):
-        del self.mpl.canvas.waypoints_interactor
-
-    def update_predefined_maps(self, extra):
-        pass
-
-    def openTool(self, index):
-        """
-        Slot that handles requests to open tool windows.
-        """
-        index = self.controlToBeCreated(index)
-        if index >= 0:
-            if index == WMS:
-                # Open a WMS control widget.
-                title = "Web Service Plot Control"
-                widget = wms.OneDSecWMSControlWidget(
-                    default_WMS=config_loader(dataset="default_VSEC_WMS"),
-                    waypoints_model=self.waypoints_model,
-                    view=self.mpl.canvas,
-                    wms_cache=config_loader(dataset="wms_cache"))
-                self.mpl.canvas.waypoints_interactor.signal_get_osec.connect(widget.call_get_osec)
-            else:
-                raise IndexError("invalid control index")
-            # Create the actual dock widget containing <widget>.
-            self.createDockWidget(index, title, widget)
-
-    def setFlightTrackModel(self, model):
-        """
-        Set the QAbstractItemModel instance that the view displays.
-        """
-        super(MSS1DViewWindow, self).setFlightTrackModel(model)
-        if self.docks[WMS] is not None:
-            self.docks[WMS].widget().setFlightTrackModel(model)
 
     def save_settings(self):
         """

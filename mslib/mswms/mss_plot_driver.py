@@ -358,7 +358,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                             vsec_numlabels=10,
                             init_time=None, valid_time=None, style=None,
                             bbox=None, figsize=(800, 600), noframe=False,
-                            show=False, transparent=False, one_dimensional=False,
+                            show=False, transparent=False,
                             return_format="image/png"):
         """
         """
@@ -374,7 +374,6 @@ class VerticalSectionDriver(MSSPlotDriver):
                                         vsec_path_connection)
         self.show = show
         self.vsec_numlabels = vsec_numlabels
-        self.one_dimensional = one_dimensional
 
     def update_plot_parameters(self, plot_object=None, vsec_path=None,
                                vsec_numpoints=None, vsec_path_connection=None,
@@ -514,47 +513,46 @@ class VerticalSectionDriver(MSSPlotDriver):
     def plot(self):
         """
         """
-        if not self.one_dimensional:
-            d1 = datetime.now()
+        d1 = datetime.now()
 
-            # Load and interpolate the data fields as required by the vertical
-            # section style instance. <data> is a dictionary containing the
-            # interpolated curtains of the variables identified through CF
-            # standard names as specified by <self.vsec_style_instance>.
-            data = self._load_interpolate_timestep()
+        # Load and interpolate the data fields as required by the vertical
+        # section style instance. <data> is a dictionary containing the
+        # interpolated curtains of the variables identified through CF
+        # standard names as specified by <self.vsec_style_instance>.
+        data = self._load_interpolate_timestep()
 
-            d2 = datetime.now()
-            logging.debug("Loaded and interpolated data (required time %s).", d2 - d1)
-            logging.debug("Plotting interpolated curtain.")
+        d2 = datetime.now()
+        logging.debug("Loaded and interpolated data (required time %s).", d2 - d1)
+        logging.debug("Plotting interpolated curtain.")
 
-            if len(self.lat_data) > 1 and len(self.lon_data) > 1:
-                resolution = (self.lon_data[1] - self.lon_data[0],
-                              self.lat_data[1] - self.lat_data[0])
-            else:
-                resolution = (-1, -1)
+        if len(self.lat_data) > 1 and len(self.lon_data) > 1:
+            resolution = (self.lon_data[1] - self.lon_data[0],
+                          self.lat_data[1] - self.lat_data[0])
+        else:
+            resolution = (-1, -1)
 
-            # Call the plotting method of the vertical section style instance.
-            image = self.plot_object.plot_vsection(data, self.lats, self.lons,
-                                                   valid_time=self.fc_time,
-                                                   init_time=self.init_time,
-                                                   resolution=resolution,
-                                                   bbox=self.bbox,
-                                                   style=self.style,
-                                                   show=self.show,
-                                                   highlight=self.vsec_path,
-                                                   noframe=self.noframe,
-                                                   figsize=self.figsize,
-                                                   transparent=self.transparent,
-                                                   numlabels=self.vsec_numlabels,
-                                                   return_format=self.return_format)
-            # Free memory.
-            del data
+        # Call the plotting method of the vertical section style instance.
+        image = self.plot_object.plot_vsection(data, self.lats, self.lons,
+                                               valid_time=self.fc_time,
+                                               init_time=self.init_time,
+                                               resolution=resolution,
+                                               bbox=self.bbox,
+                                               style=self.style,
+                                               show=self.show,
+                                               highlight=self.vsec_path,
+                                               noframe=self.noframe,
+                                               figsize=self.figsize,
+                                               transparent=self.transparent,
+                                               numlabels=self.vsec_numlabels,
+                                               return_format=self.return_format)
+        # Free memory.
+        del data
 
-            d3 = datetime.now()
-            logging.debug("Finished plotting (required time %s; total "
-                          "time %s).\n", d3 - d2, d3 - d1)
+        d3 = datetime.now()
+        logging.debug("Finished plotting (required time %s; total "
+                      "time %s).\n", d3 - d2, d3 - d1)
 
-            return image
+        return image
 
 
 class HorizontalSectionDriver(MSSPlotDriver):
@@ -680,7 +678,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
         return image
 
 
-class OneDSectionDriver(MSSPlotDriver):
+class LinearSectionDriver(MSSPlotDriver):
     """
         The vertical section driver is responsible for loading the data that
         is to be plotted and for calling the plotting routines (that have
@@ -908,8 +906,8 @@ class OneDSectionDriver(MSSPlotDriver):
         else:
             resolution = (-1, -1)
 
-        # Call the plotting method of the 1D section style instance.
-        image = self.plot_object.plot_1section(data, self.lats, self.lons,
+        # Call the plotting method of the linear section style instance.
+        image = self.plot_object.plot_lsection(data, self.lats, self.lons,
                                                valid_time=self.fc_time,
                                                init_time=self.init_time,
                                                resolution=resolution,

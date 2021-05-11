@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_1dview_window.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_linearview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -10,15 +10,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_OneDWindow(object):
-    def setupUi(self, OneDWindow):
-        OneDWindow.setObjectName("OneDWindow")
-        OneDWindow.resize(800, 600)
-        self.centralwidget = QtWidgets.QWidget(OneDWindow)
+class Ui_LinearWindow(object):
+    def setupUi(self, LinearWindow):
+        LinearWindow.setObjectName("LinearWindow")
+        LinearWindow.resize(800, 600)
+        self.centralwidget = QtWidgets.QWidget(LinearWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.mpl = Mpl1DViewWidget(self.centralwidget)
+        self.mpl = MplLinearViewWidget(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -47,15 +47,15 @@ class Ui_OneDWindow(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        OneDWindow.setCentralWidget(self.centralwidget)
+        LinearWindow.setCentralWidget(self.centralwidget)
 
-        self.retranslateUi(OneDWindow)
-        QtCore.QMetaObject.connectSlotsByName(OneDWindow)
+        self.retranslateUi(LinearWindow)
+        QtCore.QMetaObject.connectSlotsByName(LinearWindow)
 
-    def retranslateUi(self, OneDWindow):
+    def retranslateUi(self, LinearWindow):
         _translate = QtCore.QCoreApplication.translate
-        OneDWindow.setWindowTitle(_translate("OneDWindow", "1D View - Mission Support System"))
-        self.btOptions.setText(_translate("OneDWindow", "options"))
-        self.cbTools.setItemText(0, _translate("OneDWindow", "(select to open control)"))
-        self.cbTools.setItemText(1, _translate("OneDWindow", "WMS"))
-from mslib.msui.mpl_qtwidget import Mpl1DViewWidget
+        LinearWindow.setWindowTitle(_translate("LinearWindow", "Linear View - Mission Support System"))
+        self.btOptions.setText(_translate("LinearWindow", "options"))
+        self.cbTools.setItemText(0, _translate("LinearWindow", "(select to open control)"))
+        self.cbTools.setItemText(1, _translate("LinearWindow", "WMS"))
+from mslib.msui.mpl_qtwidget import MplLinearViewWidget

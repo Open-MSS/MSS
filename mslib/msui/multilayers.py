@@ -47,15 +47,15 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             self.setWindowTitle(self.windowTitle() + " (Top View)")
         elif isinstance(dock_widget, mslib.msui.wms_control.VSecWMSControlWidget):
             self.setWindowTitle(self.windowTitle() + " (Side View)")
-        elif isinstance(dock_widget, mslib.msui.wms_control.OneDSecWMSControlWidget):
-            self.setWindowTitle(self.windowTitle() + " (1D View)")
+        elif isinstance(dock_widget, mslib.msui.wms_control.OneLSecWMSControlWidget):
+            self.setWindowTitle(self.windowTitle() + " (Linear View)")
         self.dock_widget = dock_widget
         self.layers = {}
         self.layers_priority = []
         self.current_layer: Layer = None
         self.threads = 0
         self.filter_favourite = False
-        self.is_1d = isinstance(dock_widget, mslib.msui.wms_control.OneDSecWMSControlWidget)
+        self.is_linear = isinstance(dock_widget, mslib.msui.wms_control.OneLSecWMSControlWidget)
         self.settings = load_settings_qsettings("multilayers", {"favourites": [], "saved_styles": {}, "saved_colors": {}})
         self.synced_reference = Layer(None, None, None, is_empty=True)
         self.listLayers.itemChanged.connect(self.multilayer_changed)
@@ -82,7 +82,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.listLayers.setColumnWidth(3, 50)
         self.listLayers.setColumnWidth(1, 200)
         self.listLayers.setColumnHidden(2, True)
-        self.listLayers.setColumnHidden(3, not self.is_1d)
+        self.listLayers.setColumnHidden(3, not self.is_linear)
         self.listLayers.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
         self.delete_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Delete"), self)
@@ -306,7 +306,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if self.cbMultilayering.isChecked():
                 widget.setCheckState(0, QtCore.Qt.Unchecked)
 
-            if self.is_1d:
+            if self.is_linear:
                 color = QtWidgets.QPushButton()
                 color.setFixedHeight(15)
                 color.setStyleSheet(f"background-color: {widget.color}")

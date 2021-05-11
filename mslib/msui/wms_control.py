@@ -1604,23 +1604,23 @@ class HSecWMSControlWidget(WMSControlWidget):
             and not any(crs.startswith("ONE") for crs in crss)
 
 
-class OneDSecWMSControlWidget(WMSControlWidget):
+class OneLSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to
-       handle (non-standard) 1D sections.
+       handle (non-standard) linear sections.
     """
 
     def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
-        super(OneDSecWMSControlWidget, self).__init__(
+        super(OneLSecWMSControlWidget, self).__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
 
     def get_all_maps(self):
         if self.multilayers.cbMultilayering.isChecked():
-            self.get_osec(self.multilayers.get_active_layers())
+            self.get_lsec(self.multilayers.get_active_layers())
         else:
-            self.get_osec([self.multilayers.get_current_layer()])
+            self.get_lsec([self.multilayers.get_current_layer()])
 
     def setFlightTrackModel(self, model):
         """Set the QAbstractItemModel instance from which the waypoints
@@ -1629,11 +1629,11 @@ class OneDSecWMSControlWidget(WMSControlWidget):
         self.waypoints_model = model
 
     @QtCore.Slot()
-    def call_get_osec(self):
+    def call_get_lsec(self):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()
 
-    def get_osec(self, layers=None):
+    def get_lsec(self, layers=None):
         """Slot that retrieves the vertical section and passes the image
                    to the view.
                 """

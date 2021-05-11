@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms.mpl_vsec
+    mslib.mswms.mpl_lsec
     ~~~~~~~~~~~~~~~~~~~~
 
-    Vertical section style super classes for use with the
-    VerticalSectionDriver class.
+    Linear section style super class.
 
     This file is part of mss.
 
-    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021 May Baer
+    :copyright: Copyright 2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,17 +41,18 @@ mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
 
 
-class Abstract1DSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
+class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     """
-    Abstract Vertical Section Style
-    Superclass for all Matplotlib-based vertical section styles.
+    Abstract Linear Section Style
+    Superclass for all Matplotlib-based linear section styles.
     """
 
     def __init__(self, driver=None):
         """
         Constructor.
         """
-        super(Abstract1DSectionStyle, self).__init__(driver=driver)
+        super(AbstractLinearSectionStyle, self).__init__(driver=driver)
+        self.variable = ""
 
     def supported_crs(self):
         """
@@ -65,7 +64,7 @@ class Abstract1DSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     # TODO: the general setup should be a separate class as well
     def _latlon_setup(self, orography=105000.):
         """
-        General setup for lat/lon vs. log p vertical cross-sections.
+        General setup for lat/lon x axis
         """
         ax = self.ax
 
@@ -90,13 +89,17 @@ class Abstract1DSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax.set_xlim(self.lat_inds[0], self.lat_inds[-1])
         ax.grid(b=True)
 
-    def _plot_style(self):
-        """
-        Can call self._log_setup()
-        """
-        pass
+    def _plot_style(self, color):
+        ax = self.ax
+        y_values = self.data[self.variable]
 
-    def plot_1section(self, data, lats, lons, valid_time, init_time,
+        numpoints = len(self.lats)
+        if self.variable in self.driver.data_units:
+            ax.set_ylabel(self.driver.data_units[self.variable])
+        ax.plot(range(numpoints), y_values, color.replace("0x", "#"))
+        self._latlon_setup()
+
+    def plot_lsection(self, data, lats, lons, valid_time, init_time,
                       resolution=(-1, -1), bbox=(-1, 1050, -1, 200), style=None,
                       show=False,
                       highlight=None, noframe=False, figsize=(960, 480),
@@ -163,8 +166,8 @@ class Abstract1DSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             canvas.print_png(output)
 
             if show:
-                logging.debug("saving figure to mpl_osec.png ..")
-                canvas.print_png("mpl_osec.png")
+                logging.debug("saving figure to mpl_lsec.png ..")
+                canvas.print_png("mpl_lsec.png")
 
             # Convert the image to an 8bit palette image with a significantly
             # smaller file size (~factor 4, from RGBA to one 8bit value, plus the

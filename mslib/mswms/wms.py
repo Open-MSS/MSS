@@ -176,7 +176,7 @@ class WMSServer(object):
 
         self.onesec_drivers = {}
         for key in data_access_dict:
-            self.onesec_drivers[key] = mss_plot_driver.OneDSectionDriver(
+            self.onesec_drivers[key] = mss_plot_driver.LinearSectionDriver(
                 data_access_dict[key])
 
         self.hsec_layer_registry = {}
@@ -187,12 +187,12 @@ class WMSServer(object):
         for layer, datasets in mss_wms_settings.register_vertical_layers:
             self.register_vsec_layer(datasets, layer)
 
-        self.osec_layer_registry = {}
-        for layer in mss_wms_settings.register_1d_layers:
+        self.lsec_layer_registry = {}
+        for layer in mss_wms_settings.register_linear_layers:
             if len(layer) == 3:
-                self.register_1sec_layer(layer[2], layer[1], layer[0])
+                self.register_lsec_layer(layer[2], layer[1], layer[0])
             else:
-                self.register_1sec_layer(layer[1], layer_class=layer[0])
+                self.register_lsec_layer(layer[1], layer_class=layer[0])
 
     def register_hsec_layer(self, datasets, layer_class):
         """
@@ -247,9 +247,9 @@ class WMSServer(object):
                     raise ValueError("dataset '%s' not available", dataset)
             self.vsec_layer_registry[dataset][layer.name] = layer
 
-    def register_1sec_layer(self, datasets, variable=None, layer_class=None):
+    def register_lsec_layer(self, datasets, variable=None, layer_class=None):
         """
-        Register 1D section layer in internal dict of layers.
+        Register linear section layer in internal dict of layers.
 
         See register_hsec_layer() for further information.
         """
@@ -265,15 +265,15 @@ class WMSServer(object):
             except KeyError as ex:
                 logging.debug("ERROR: %s %s", type(ex), ex)
                 continue
-            logging.debug("registering 1D section layer '%s' with dataset '%s'", layer.name, dataset)
+            logging.debug("registering linear section layer '%s' with dataset '%s'", layer.name, dataset)
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
-            if dataset not in self.osec_layer_registry:
+            if dataset not in self.lsec_layer_registry:
                 if dataset in self.onesec_drivers:
-                    self.osec_layer_registry[dataset] = {}
+                    self.lsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError("dataset '%s' not available", dataset)
-            self.osec_layer_registry[dataset][layer.name] = layer
+            self.lsec_layer_registry[dataset][layer.name] = layer
 
     def create_service_exception(self, code=None, text="", version="1.3.0"):
         """
@@ -342,20 +342,20 @@ class WMSServer(object):
                     continue
                 vsec_layers.append((dataset, layer))
 
-        # 1D Layers
-        osec_layers = []
-        for dataset in self.osec_layer_registry:
-            for layer in self.osec_layer_registry[dataset].values():
+        # Linear Layers
+        lsec_layers = []
+        for dataset in self.lsec_layer_registry:
+            for layer in self.lsec_layer_registry[dataset].values():
                 if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
                     logging.error("layer %s/%s has no init times!", layer, dataset)
                     continue
                 if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
                     logging.error("layer %s/%s has no valid times!", layer, dataset)
                     continue
-                osec_layers.append((dataset, layer))
+                lsec_layers.append((dataset, layer))
 
         settings = mss_wms_settings.__dict__
-        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, osec_layers=osec_layers,
+        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, lsec_layers=lsec_layers,
                                server_url=server_url,
                                service_name=settings.get("service_name", "OGC:WMS"),
                                service_title=settings.get("service_title", "Mission Support System Web Map Service"),
@@ -443,7 +443,7 @@ class WMSServer(object):
             if crs.startswith('vert:'):
                 mode = "getvsec"
             elif crs.startswith("one:"):
-                mode = "getosec"
+                mode = "getlsec"
             else:
                 try:
                     get_projection_params(crs)
@@ -604,8 +604,8 @@ class WMSServer(object):
                           "Hint: Check used waypoints."
                     return self.create_service_exception(text=msg, version=version)
 
-            elif mode == "getosec":
-                # 1D section path.
+            elif mode == "getlsec":
+                # Linear section path.
                 path = query.get("PATH")
                 if path is None:
                     return self.create_service_exception(text="PATH not specified", version=version)
@@ -614,19 +614,19 @@ class WMSServer(object):
                     path = [[lat, lon, alt] for lat, lon, alt in zip(path[0::3], path[1::3], path[2::3])]
                 except ValueError:
                     return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
-                logging.debug("VSEC PATH: %s", path)
+                logging.debug("LSEC PATH: %s", path)
 
                 color = query.get("COLOR", "0x00AAFF")
 
                 # Check requested layers.
-                if (dataset not in self.osec_layer_registry) or (layer not in self.osec_layer_registry[dataset]):
+                if (dataset not in self.lsec_layer_registry) or (layer not in self.lsec_layer_registry[dataset]):
                     return self.create_service_exception(
                         code="LayerNotDefined",
                         text=f"Invalid LAYER '{dataset}.{layer}' requested",
                         version=version)
 
                 # Check if the layer requires time information and if they are given.
-                if self.osec_layer_registry[dataset][layer].uses_inittime_dimension():
+                if self.lsec_layer_registry[dataset][layer].uses_inittime_dimension():
                     if init_time is None:
                         return self.create_service_exception(
                             code="MissingDimensionValue",
@@ -645,7 +645,7 @@ class WMSServer(object):
 
                 plot_driver = self.onesec_drivers[dataset]
                 try:
-                    plot_driver.set_plot_parameters(plot_object=self.osec_layer_registry[dataset][layer],
+                    plot_driver.set_plot_parameters(plot_object=self.lsec_layer_registry[dataset][layer],
                                                     vsec_path=path,
                                                     vsec_numpoints=bbox[0],
                                                     vsec_path_connection="linear",
@@ -699,7 +699,7 @@ def application():
         if (request_type in ('getcapabilities', 'capabilities') and
                 request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
             return_data, return_format = server.get_capabilities(query, server_url)
-        elif request_type in ('getmap', 'getvsec', 'getosec') and request_version in ('1.1.1', '1.3.0', ''):
+        elif request_type in ('getmap', 'getvsec', 'getlsec') and request_version in ('1.1.1', '1.3.0', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:
             logging.debug("Request type '%s' is not valid.", request)

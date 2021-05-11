@@ -357,7 +357,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         """
         overwrite mouse_move to print lon/lat instead of x/y coordinates.
         """
-        if isinstance(self.canvas.waypoints_interactor, mpl_pi.OPathInteractor):
+        if isinstance(self.canvas.waypoints_interactor, mpl_pi.LPathInteractor):
             return
 
         if self.mode == _Mode.MOVE_WP:
@@ -839,8 +839,8 @@ class MplSideViewWidget(MplNavBarWidget):
                 action.setEnabled(False)
 
 
-class Mpl1DViewCanvas(MplCanvas):
-    """Specialised MplCanvas that draws a 1D view of a
+class MplLinearViewCanvas(MplCanvas):
+    """Specialised MplCanvas that draws a linear view of a
        flight track / list of waypoints.
     """
 
@@ -851,7 +851,7 @@ class Mpl1DViewCanvas(MplCanvas):
         """
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
-        super(Mpl1DViewCanvas, self).__init__()
+        super(MplLinearViewCanvas, self).__init__()
 
         # Default settings.
         self.settings_dict = {"vertical_axis": "Value",
@@ -876,7 +876,7 @@ class Mpl1DViewCanvas(MplCanvas):
         # If a waypoints model has been passed, create an interactor on it.
         self.waypoints_interactor = None
         self.waypoints_model = None
-        self.basename = "1dview"
+        self.basename = "linearview"
         self.draw()
         self.set_settings(self.settings_dict)
 
@@ -892,7 +892,7 @@ class Mpl1DViewCanvas(MplCanvas):
         else:
             # Create a path interactor object. The interactor object connects
             # itself to the change() signals of the flight track data model.
-            self.waypoints_interactor = mpl_pi.OPathInteractor(
+            self.waypoints_interactor = mpl_pi.LPathInteractor(
                 self.ax, self.waypoints_model,
                 numintpoints=config_loader(dataset="num_interpolation_points"),
                 redraw_xaxis=self.redraw_xaxis, clear_figure=self.clear_figure
@@ -904,7 +904,7 @@ class Mpl1DViewCanvas(MplCanvas):
         Vertical cross section code (log-p axis etc.) taken from
         mss_batch_production/visualisation/mpl_vsec.py.
         """
-        self.ax.set_title("1D flight profile", horizontalalignment="left", x=0)
+        self.ax.set_title("Linear flight profile", horizontalalignment="left", x=0)
         self.ax.set_xlabel("lat/lon")
 
     def clear_figure(self):
@@ -990,14 +990,14 @@ class Mpl1DViewCanvas(MplCanvas):
         logging.debug("done.")
 
 
-class Mpl1DViewWidget(MplNavBarWidget):
+class MplLinearViewWidget(MplNavBarWidget):
     """MplNavBarWidget using an MplSideViewCanvas as the Matplotlib
        view instance.
     """
 
     def __init__(self, parent=None):
-        super(Mpl1DViewWidget, self).__init__(
-            sideview=True, parent=parent, canvas=Mpl1DViewCanvas())
+        super(MplLinearViewWidget, self).__init__(
+            sideview=True, parent=parent, canvas=MplLinearViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
         #                    Customize, Save, Insert Waypoint, Delete Waypoint

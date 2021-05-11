@@ -127,7 +127,7 @@ Save a flight track to name it.</string>
     <addaction name="actionTopView"/>
     <addaction name="actionSideView"/>
     <addaction name="actionTableView"/>
-    <addaction name="action1DView"/>
+    <addaction name="actionLinearView"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -255,15 +255,15 @@ Save a flight track to name it.</string>
     <string>Load a JSON configuration file</string>
    </property>
   </action>
-  <action name="action1DView">
+  <action name="actionLinearView">
    <property name="text">
-    <string>&amp;1D View</string>
+    <string>&amp;Linear View</string>
    </property>
    <property name="toolTip">
-    <string>1D View</string>
+    <string>Linear View</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+1</string>
+    <string>Ctrl+L</string>
    </property>
   </action>
  </widget>

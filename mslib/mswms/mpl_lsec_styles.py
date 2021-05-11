@@ -1,43 +1,58 @@
+# -*- coding: utf-8 -*-
+"""
+
+    mslib.mswms.mpl_lsec_styles
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Matplotlib linear section styles.
+
+    This file is part of mss.
+
+    :copyright: Copyright 2021 May Baer
+    :copyright: Copyright 2021 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+
 import numpy as np
 
-from mslib.mswms.mpl_1sec import Abstract1DSectionStyle
+from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
 import mslib.thermolib as thermolib
 from mslib.utils import convert_to
 
 
-class OS_DefaultStyle(Abstract1DSectionStyle):
+class OS_DefaultStyle(AbstractLinearSectionStyle):
     """
     Style for single variables that require no further calculation
     """
     def __init__(self, driver, variable="air_temperature"):
-        super(Abstract1DSectionStyle, self).__init__(driver=driver)
+        super(AbstractLinearSectionStyle, self).__init__(driver=driver)
         self.variable = variable
         self.required_datafields = [("ml", "air_pressure", "Pa"), ("ml", self.variable, "")]
         abbreviation = "".join([text[0] for text in self.variable.split("_")])
         self.name = f"OS_{str.upper(abbreviation)}"
-        self.title = f"{self.variable} 1D Plot"
+        self.title = f"{self.variable} Linear Plot"
         self.abstract = f"{self.variable}"
 
-    def _plot_style(self, color):
-        """
-        Make a simple 1D plot.
-        """
-        ax = self.ax
-        self.y_values = self.data[self.variable]
 
-        numpoints = len(self.lats)
-        ax.set_ylabel(self.driver.data_units[self.variable])
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
-
-
-class OS_RelativeHumdityStyle_01(Abstract1DSectionStyle):
+class OS_RelativeHumdityStyle_01(AbstractLinearSectionStyle):
     """
-    1D section of relative humidity.
+    Linear plot of relative humidity.
     """
 
     name = "OS_RH01"
-    title = "Relative Humdity (%) 1D Plot"
+    title = "Relative Humdity (%) Linear Plot"
     abstract = "Relative humdity (%)"
 
     # Variables with the highest number of dimensions first (otherwise
@@ -54,23 +69,16 @@ class OS_RelativeHumdityStyle_01(Abstract1DSectionStyle):
         self.data["relative_humidity"] = thermolib.rel_hum(
             self.data['air_pressure'], self.data["air_temperature"],
             self.data["specific_humidity"])
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["specific_humidity"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
+        self.variable = "relative_humidity"
 
 
-class OS_VerticalVelocityStyle_01(Abstract1DSectionStyle):
+class OS_VerticalVelocityStyle_01(AbstractLinearSectionStyle):
     """
-    1D section of vertical velocity.
+    Linear plot of vertical velocity.
     """
 
     name = "OS_W01"
-    title = "Vertical Velocity (cm/s) 1D Plot"
+    title = "Vertical Velocity (cm/s) Linear Plot"
     abstract = "Vertical velocity (cm/s)"
 
     # Variables with the highest number of dimensions first (otherwise
@@ -88,23 +96,16 @@ class OS_VerticalVelocityStyle_01(Abstract1DSectionStyle):
             thermolib.omega_to_w(self.data["lagrangian_tendency_of_air_pressure"],
                                  self.data['air_pressure'], self.data["air_temperature"]),
             "m/s", "cm/s")
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["upward_wind"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
+        self.variable = "upward_wind"
 
 
-class OS_HorizontalVelocityStyle_01(Abstract1DSectionStyle):
+class OS_HorizontalVelocityStyle_01(AbstractLinearSectionStyle):
     """
-    1D section of horizontal velocity.
+    Linear plot of horizontal velocity.
     """
 
     name = "OS_HV01"
-    title = "Horizontal Wind (m/s) 1D Plot"
+    title = "Horizontal Wind (m/s) Linear Plot"
     abstract = "Horizontal wind speed (m/s)"
 
     # Variables with the highest number of dimensions first (otherwise
@@ -120,23 +121,16 @@ class OS_HorizontalVelocityStyle_01(Abstract1DSectionStyle):
         """
         self.data["horizontal_wind"] = np.hypot(
             self.data["eastward_wind"], self.data["northward_wind"])
-
-    def _plot_style(self, color):
-        ax = self.ax
-        self.y_values = self.data["horizontal_wind"]
-
-        numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
-        self._latlon_setup()
+        self.variable = "horizontal_wind"
 
 
-class OS_PotentialVorticityStyle_01(Abstract1DSectionStyle):
+class OS_PotentialVorticityStyle_01(AbstractLinearSectionStyle):
     """
-    1D section of potential vorticity.
+    Linear plot of potential vorticity.
     """
 
     name = "OS_PV01"
-    title = "Potential Vorticity (PVU) 1D Plot"
+    title = "Potential Vorticity (PVU) Linear Plot"
     abstract = "(Neg.) Potential vorticity (PVU)"
     styles = [
         ("default", "Northern Hemisphere"),
@@ -151,14 +145,14 @@ class OS_PotentialVorticityStyle_01(Abstract1DSectionStyle):
 
     def _plot_style(self, color):
         ax = self.ax
-        self.y_values = self.data["ertel_potential_vorticity"]
+        y_values = self.data["ertel_potential_vorticity"]
 
         # Change PV sign on southern hemisphere.
         if self.style.lower() == "default":
             self.style = "NH"
         if self.style.upper() == "SH":
-            self.y_values = -self.y_values
+            y_values = -y_values
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
+        ax.plot(range(numpoints), y_values, color.replace("0x", "#"))
         self._latlon_setup()

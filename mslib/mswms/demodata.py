@@ -942,7 +942,7 @@ import sys
 import mslib.mswms.dataaccess
 from mslib.mswms import mpl_hsec_styles
 from mslib.mswms import mpl_vsec_styles
-from mslib.mswms import mpl_1sec_styles
+from mslib.mswms import mpl_lsec_styles
 import mslib.mswms
 
 
@@ -1035,24 +1035,23 @@ if mpl_vsec_styles is not None:
 #
 # Registration of linear layers.
 #
-# The same as above, but for 1D sections.
-register_1d_layers = None
-if mpl_1sec_styles is not None:
-    register_1d_layers = [
-        # ECMWF standard 1D section styles.
-        (mpl_1sec_styles.OS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DefaultStyle, "mole_fraction_of_ozone_in_air", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DefaultStyle, "air_potential_temperature", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DefaultStyle, "geopotential_height", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DefaultStyle, "specific_humidity", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DefaultStyle, "cloud_area_fraction_in_atmosphere_layer", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DefaultStyle, "specific_cloud_ice_water_content", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_DefaultStyle, "specific_cloud_liquid_water_content", ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
-        (mpl_1sec_styles.OS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"])
+# The same as above, but for linear sections.
+register_linear_layers = None
+if mpl_lsec_styles is not None:
+    register_linear_layers = [
+        (mpl_lsec_styles.OS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_DefaultStyle, "mole_fraction_of_ozone_in_air", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_DefaultStyle, "air_potential_temperature", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_DefaultStyle, "geopotential_height", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_DefaultStyle, "specific_humidity", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_DefaultStyle, "cloud_area_fraction_in_atmosphere_layer", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_DefaultStyle, "specific_cloud_ice_water_content", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_DefaultStyle, "specific_cloud_liquid_water_content", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.OS_PotentialVorticityStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
             simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)

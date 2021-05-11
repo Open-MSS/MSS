@@ -95,7 +95,7 @@
                     <Title>${ style_title }</Title>
                 </Style>
             </Layer>
-            <Layer tal:repeat="(dataset, layer) osec_layers" tal:attributes="queryable '0' if layer.queryable else None">
+            <Layer tal:repeat="(dataset, layer) lsec_layers" tal:attributes="queryable '0' if layer.queryable else None">
                 <Name>${ "%s.%s" % (dataset, layer.name) }</Name>
                 <Title tal:condition="layer.title">${ layer.title.strip() }</Title>
                 <Abstract tal:condition="layer.abstract">${ layer.abstract.strip() }</Abstract>
