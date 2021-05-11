@@ -124,6 +124,11 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.load_users()
         # load messages
         self.load_all_messages()
+        if access_level == "viewer":
+            self.messageText.setEnabled(False)
+            self.previewBtn.setEnabled(False)
+            self.uploadBtn.setEnabled(False)
+            self.sendMessageBtn.setEnabled(False)
 
     # UI SET UP METHODS
     def setup_message_text(self):
