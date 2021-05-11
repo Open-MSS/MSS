@@ -921,6 +921,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
         self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
+        self.merge_dialog.saveBtn.setDisabled(True)
         if self.merge_dialog.exec_():
             xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
@@ -954,6 +955,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
         self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
+        self.merge_dialog.saveBtn.setDisabled(True)
         if self.merge_dialog.exec_():
             xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
@@ -1162,7 +1164,10 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
             row = deselected.indexes()[index].row()
             delete_waypoint = wp_dict[row]
             self.merge_waypoints_list.remove(delete_waypoint)
-
+        if len(self.merge_waypoints_list) > 1:
+            self.saveBtn.setDisabled(False)
+        else:
+            self.saveBtn.setDisabled(True)
         self.merge_waypoints_model = ft.WaypointsTableModel(waypoints=self.merge_waypoints_list)
         self.mergedWaypointsTable.setModel(self.merge_waypoints_model)
 
