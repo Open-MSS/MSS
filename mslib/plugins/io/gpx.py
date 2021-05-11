@@ -4,12 +4,13 @@
     mslib.plugins.io.csv
     ~~~~~~~~~~~~~~~~~~~~
 
-    plugin for csv format flight track export
+    plugin for gpx format flight track export
 
     This file is part of mss.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2021 Johannes Roettenbacher
     :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
@@ -51,8 +52,9 @@ def save_to_gpx(filename, name, waypoints):
 
     # create waypoints
     for i, wp in enumerate(waypoints):
-        # loc = str(wp.location)
-        gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(wp.lat, wp.lon, name=f"{i}"))
+        loc = str(wp.location)
+        wp_name = loc if loc else str(i)
+        gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(wp.lat, wp.lon, name=wp_name))
 
-    with _fs.open(_name, "w") as file:
-        file.write(gpx.to_xml())
+    with _fs.open(_name, "w") as fh:
+        fh.write(gpx.to_xml())
