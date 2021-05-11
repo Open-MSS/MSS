@@ -28,11 +28,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import sys
 import json
 import logging
 import types
 import fs
 import requests
+import re
 from fs import open_fs
 from werkzeug.urls import url_join
 
@@ -54,7 +57,6 @@ from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog
 from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 from mslib.msui import constants
 from mslib.utils import config_loader
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
 
@@ -73,7 +75,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     identifier = None
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
-    def __init__(self, parent=None, data_dir=mss_default.mss_dir, mscolab_server_url=mss_default.mscolab_server_url):
+    # ToDo refactor tests, mscolab_server_url not used
+    def __init__(self, parent=None, data_dir=None, mscolab_server_url=None):
         """
         Set up user interface
         """
@@ -135,7 +138,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # Mscolab help dialog
         self.help_dialog = None
         # set data dir, uri
-        self.data_dir = data_dir
+        if data_dir is None:
+            self.data_dir = config_loader(dataset="mss_dir")
+        else:
+            self.data_dir = data_dir
+        self.create_dir()
         self.mscolab_server_url = None
         self.disable_action_buttons()
         # disabling login, add user button. they are enabled when url is connected
@@ -144,18 +151,32 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.url.setEditable(True)
         self.url.setModel(MSCOLAB_URL_LIST)
         # fill value of mscolab url from config
-        default_MSCOLAB = config_loader(
-            dataset="default_MSCOLAB")
+        default_MSCOLAB = config_loader(dataset="default_MSCOLAB")
         add_mscolab_urls(self.url, default_MSCOLAB)
         self.emailid.setEnabled(False)
         self.password.setEnabled(False)
 
         # fill value of mscolab url if found in QSettings storage
-        self.settings = \
-            load_settings_qsettings('mscolab',
-                                    default_settings={'recent_mscolab_urls': [], 'auth': {}, 'server_settings': {}})
-        if len(self.settings['recent_mscolab_urls']) > 0:
-            add_mscolab_urls(self.url, self.settings['recent_mscolab_urls'])
+        self.settings = load_settings_qsettings(
+            'mscolab', default_settings={'auth': {}, 'server_settings': {}})
+
+    def create_dir(self):
+        # ToDo this needs to be done earlier
+        if '://' in self.data_dir:
+            try:
+                _ = fs.open_fs(self.data_dir)
+            except fs.errors.CreateFailed:
+                logging.error(f'Make sure that the FS url "{self.data_dir}" exists')
+                show_popup(self, "Error", f'FS Url: "{self.data_dir}" does not exist!')
+                sys.exit()
+            except fs.opener.errors.UnsupportedProtocol:
+                logging.error(f'FS url "{self.data_dir}" not supported')
+                show_popup(self, "Error", f'FS Url: "{self.data_dir}" not supported!')
+                sys.exit()
+        else:
+            _dir = os.path.expanduser(self.data_dir)
+            if not os.path.exists(_dir):
+                os.makedirs(_dir)
 
     def disconnect_handler(self):
         self.logout()
@@ -167,8 +188,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.addUser.setEnabled(False)
         self.emailid.setEnabled(False)
         self.password.setEnabled(False)
+        self.emailid.textChanged[str].disconnect(self.text_changed)
+        self.password.textChanged[str].disconnect(self.text_changed)
         # toggle to connect button
         self.toggleConnectionBtn.setText('Connect')
+        self.toggleConnectionBtn.clicked.disconnect(self.disconnect_handler)
         self.toggleConnectionBtn.clicked.connect(self.connect_handler)
         self.url.setEnabled(True)
         # set mscolab_server_url to None
@@ -184,8 +208,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             r = requests.get(url_join(url, 'status'))
             if r.text == "Mscolab server":
                 # delete mscolab http_auth settings for the url
-                if url not in self.settings["recent_mscolab_urls"]:
-                    self.settings["recent_mscolab_urls"].append(url)
                 if self.mscolab_server_url in self.settings["auth"].keys():
                     del self.settings["auth"][self.mscolab_server_url]
                 # assign new url to self.mscolab_server_url
@@ -201,6 +223,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.password.textChanged[str].connect(self.text_changed)
                 # toggle to disconnect button
                 self.toggleConnectionBtn.setText('Disconnect')
+                self.toggleConnectionBtn.clicked.disconnect(self.connect_handler)
                 self.toggleConnectionBtn.clicked.connect(self.disconnect_handler)
                 self.url.setEnabled(False)
                 if self.mscolab_server_url not in self.settings["server_settings"].keys():
@@ -208,8 +231,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 save_settings_qsettings('mscolab', self.settings)
                 self.emailid.setEnabled(True)
                 self.password.setEnabled(True)
-                self.emailid.setText(config_loader(dataset="MSCOLAB_mailid"))
-                self.password.setText(config_loader(dataset="MSCOLAB_password"))
+                emailid = config_loader(dataset="MSCOLAB_mailid")
+                self.emailid.setText(emailid)
+                password = config_loader(dataset="MSCOLAB_password")
+                self.password.setText(password)
+                if len(emailid) > 0 and len(password) > 0:
+                    self.loginButton.setEnabled(True)
             else:
                 show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.ConnectionError:
@@ -345,6 +372,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         elif not description:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Description can\'t be empty')
+            return
+        # regex checks if the whole path from beginning to end only contains alphanumerical characters or _ and -
+        elif not re.match("^[a-zA-Z0-9_-]*$", path):
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Path can\'t contain spaces or special characters')
             return
 
         data = {
@@ -516,8 +548,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if self.version_window is not None:
                 self.version_window.close()
             self.create_local_project_file()
-            self.local_ftml_file = fs.path.join(self.data_dir, 'local_mscolab_data',
-                                                self.user['username'], self.active_project_name, 'mscolab_project.ftml')
+            self.local_ftml_file = fs.path.combine(self.data_dir,
+                                                   fs.path.join('local_mscolab_data',
+                                                                self.user['username'], self.active_project_name,
+                                                                'mscolab_project.ftml'))
             self.helperTextLabel.setText(
                 self.tr("Working On: Local File. Your changes are only available to you."
                         "To save your changes with everyone, use the \"Save to Server\" button."))
@@ -555,7 +589,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         s.auth = (auth[0], auth[1])
         s.headers.update({'x-test': 'true'})
         url = self.mscolab_server_url + '/token'
-        r = s.post(url, data=data)
+        try:
+            r = s.post(url, data=data)
+        except requests.exceptions.ConnectionError as ex:
+            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
+            # popup that Failed to establish a connection
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Failed to establish a new connection'
+                                          f' to "{self.mscolab_server_url}". Try in a moment again.')
+            return
         if r.status_code == 401:
             r = self.authenticate(data, r, url)
             if r.status_code == 200 and not r.text == "False":
@@ -563,7 +605,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             else:
                 self.error_dialog = QtWidgets.QErrorMessage()
                 self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
-        if r.text == "False":
+        if r.text == "False" or r.text == "Unauthorized Access":
             # popup that has wrong credentials
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your credentials were incorrect.')
@@ -642,7 +684,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.listProjects.itemActivated.connect(self.set_active_pid)
 
     def force_close_view_windows(self):
-        for window in self.active_windows:
+        for window in self.active_windows[:]:
             window.handle_force_close()
         self.active_windows = []
 

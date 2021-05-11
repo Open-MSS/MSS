@@ -143,8 +143,8 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText("Version: {}".format(__version__))
-        self.lblChanges.setText(f'<a href="https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A"\
-            "{__version__[:-1]}">New Features and Changes</a>')
+        self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
+        self.lblChanges.setText(f'<a href="{self.milestone_url}">New Features and Changes</a>')
         blub = QtGui.QPixmap(python_powered())
         self.lblPython.setPixmap(blub)
 
@@ -220,8 +220,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         # Status Bar
         self.labelStatusbar.setText(self.status())
-        # Instantiates object of MSS Tableview window helping in force close it.
-        self.tv_window = None
 
     @staticmethod
     def preload_wms(urls):
@@ -415,8 +413,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
-            for i in range(self.listViews.count()):
-                self.listViews.item(i).window.handle_force_close()
+            while self.listViews.count() > 0:
+                self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
             self.listFlightTracks.clear()
             # cleanup mscolab window
@@ -424,11 +422,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.mscolab_window.close()
             if self.config_editor is not None:
                 self.config_editor.close()
-            # tv = tableview ; it is an object of MSS Tableview window. Used for force closing it.
-            if self.tv_window is not None:
-                if self.tv_window.exists():  # checks whether or not tableview window has closed before
-                    self.tv_window.handle_force_close()     # enters condition when tableview window is not closed.
-                    self.tv_window = None
             event.accept()
         else:
             event.ignore()
@@ -456,7 +449,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
-            self.tv_window = view_window
         elif self.sender() == self.actionLinearView:
             # Linear view.
             view_window = linearview.MSSLinearViewWindow(model=self.active_flight_track)
@@ -544,8 +536,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.activate_flight_track(listitem)
 
     def restart_application(self):
-        for i in range(self.listViews.count()):
-            self.listViews.item(i).window.handle_force_close()
+        while self.listViews.count() > 0:
+            self.listViews.item(0).window.handle_force_close()
         self.listViews.clear()
         self.remove_plugins()
         self.add_plugins()
@@ -560,8 +552,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             filename = get_open_filename(
-                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)",
-                pickertag="filepicker_config")
+                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)")
             if filename is not None:
                 constants.CACHED_CONFIG_FILE = filename
                 self.restart_application()
