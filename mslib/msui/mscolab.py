@@ -1035,16 +1035,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.close_external_windows()
             self.disable_project_buttons()
 
-            # Update project list
-            remove_item = None
-            for i in range(self.listProjects.count()):
-                item = self.listProjects.item(i)
-                if item.p_id == p_id:
-                    remove_item = item
-            if remove_item is not None:
-                logging.debug("remove_item: %s" % remove_item)
-                self.listProjects.takeItem(self.listProjects.row(remove_item))
-                return remove_item.text().split(' - ')[0]
+        # Update project list
+        remove_item = None
+        for i in range(self.listProjects.count()):
+            item = self.listProjects.item(i)
+            if item.p_id == p_id:
+                remove_item = item
+        if remove_item is not None:
+            logging.debug("remove_item: %s" % remove_item)
+            self.listProjects.takeItem(self.listProjects.row(remove_item))
+            return remove_item.text().split(' - ')[0]
 
     @QtCore.Slot(int, int)
     def handle_revoke_permission(self, p_id, u_id):
