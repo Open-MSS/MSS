@@ -47,7 +47,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             self.setWindowTitle(self.windowTitle() + " (Top View)")
         elif isinstance(dock_widget, mslib.msui.wms_control.VSecWMSControlWidget):
             self.setWindowTitle(self.windowTitle() + " (Side View)")
-        elif isinstance(dock_widget, mslib.msui.wms_control.OneLSecWMSControlWidget):
+        elif isinstance(dock_widget, mslib.msui.wms_control.LSecWMSControlWidget):
             self.setWindowTitle(self.windowTitle() + " (Linear View)")
         self.dock_widget = dock_widget
         self.layers = {}
@@ -58,8 +58,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.scale = self.logicalDpiX() / 96
         self.filter_favourite = False
         self.carry_parameters = {"level": None, "itime": None, "vtime": None}
-        self.is_linear = isinstance(dock_widget, mslib.msui.wms_control.OneLSecWMSControlWidget)
-        self.settings = load_settings_qsettings("multilayers", {"favourites": [], "saved_styles": {}, "saved_colors": {}})
+        self.is_linear = isinstance(dock_widget, mslib.msui.wms_control.LSecWMSControlWidget)
+        self.settings = load_settings_qsettings("multilayers",
+                                                {"favourites": [], "saved_styles": {}, "saved_colors": {}})
         self.synced_reference = Layer(None, None, None, is_empty=True)
         self.listLayers.itemChanged.connect(self.multilayer_changed)
         self.listLayers.itemClicked.connect(self.multilayer_clicked)
@@ -730,8 +731,10 @@ class Layer(QtWidgets.QTreeWidgetItem):
         """
         if isinstance(self.parent.dock_widget, mslib.msui.wms_control.HSecWMSControlWidget):
             self.parent.dock_widget.get_map([self])
-        else:
+        elif isinstance(self.parent.dock_widget, mslib.msui.wms_control.VSecWMSControlWidget):
             self.parent.dock_widget.get_vsec([self])
+        else:
+            self.parent.dock_widget.get_lsec([self])
 
     def get_wms(self):
         return self.parent.layers[self.header.text(0)]["wms"]

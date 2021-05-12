@@ -475,8 +475,6 @@ def latlon_points(p1, p2, numpoints=100, connection='linear', contains_altitude=
     if connection == 'linear':
         lats = np.linspace(p1[LAT], p2[LAT], numpoints)
         lons = np.linspace(p1[LON], p2[LON], numpoints)
-        if contains_altitude:
-            alts = np.linspace(p1[ALT], p2[ALT], numpoints)
     elif connection == 'greatcircle':
         if numpoints > 2:
             gc = pyproj.Geod(ellps="WGS84")
@@ -486,6 +484,9 @@ def latlon_points(p1, p2, numpoints=100, connection='linear', contains_altitude=
         else:
             lats = np.asarray([p1[LAT], p2[LAT]])
             lons = np.asarray([p1[LON], p2[LON]])
+
+    if contains_altitude:
+        alts = np.linspace(p1[ALT], p2[ALT], numpoints)
 
     p1_time, p2_time = nc.date2num([p1[TIME], p2[TIME]], "seconds since 2000-01-01")
     times = np.linspace(p1_time, p2_time, numpoints)

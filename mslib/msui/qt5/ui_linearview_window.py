@@ -29,11 +29,6 @@ class Ui_LinearWindow(object):
         self.verticalLayout.addWidget(self.mpl)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.btOptions = QtWidgets.QPushButton(self.centralwidget)
-        self.btOptions.setObjectName("btOptions")
-        self.horizontalLayout.addWidget(self.btOptions)
-        spacerItem = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
         self.cbTools = QtWidgets.QComboBox(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -44,8 +39,8 @@ class Ui_LinearWindow(object):
         self.cbTools.addItem("")
         self.cbTools.addItem("")
         self.horizontalLayout.addWidget(self.cbTools)
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem1)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout)
         LinearWindow.setCentralWidget(self.centralwidget)
 
@@ -55,7 +50,6 @@ class Ui_LinearWindow(object):
     def retranslateUi(self, LinearWindow):
         _translate = QtCore.QCoreApplication.translate
         LinearWindow.setWindowTitle(_translate("LinearWindow", "Linear View - Mission Support System"))
-        self.btOptions.setText(_translate("LinearWindow", "options"))
         self.cbTools.setItemText(0, _translate("LinearWindow", "(select to open control)"))
         self.cbTools.setItemText(1, _translate("LinearWindow", "WMS"))
 from mslib.msui.mpl_qtwidget import MplLinearViewWidget

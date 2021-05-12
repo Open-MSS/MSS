@@ -32,26 +32,26 @@ import mslib.thermolib as thermolib
 from mslib.utils import convert_to
 
 
-class OS_DefaultStyle(AbstractLinearSectionStyle):
+class LS_DefaultStyle(AbstractLinearSectionStyle):
     """
     Style for single variables that require no further calculation
     """
     def __init__(self, driver, variable="air_temperature"):
         super(AbstractLinearSectionStyle, self).__init__(driver=driver)
         self.variable = variable
-        self.required_datafields = [("ml", "air_pressure", "Pa"), ("ml", self.variable, "")]
+        self.required_datafields = [("ml", "air_pressure", "Pa"), ("ml", self.variable, None)]
         abbreviation = "".join([text[0] for text in self.variable.split("_")])
-        self.name = f"OS_{str.upper(abbreviation)}"
+        self.name = f"LS_{str.upper(abbreviation)}"
         self.title = f"{self.variable} Linear Plot"
         self.abstract = f"{self.variable}"
 
 
-class OS_RelativeHumdityStyle_01(AbstractLinearSectionStyle):
+class LS_RelativeHumdityStyle_01(AbstractLinearSectionStyle):
     """
     Linear plot of relative humidity.
     """
 
-    name = "OS_RH01"
+    name = "LS_RH01"
     title = "Relative Humdity (%) Linear Plot"
     abstract = "Relative humdity (%)"
 
@@ -70,14 +70,16 @@ class OS_RelativeHumdityStyle_01(AbstractLinearSectionStyle):
             self.data['air_pressure'], self.data["air_temperature"],
             self.data["specific_humidity"])
         self.variable = "relative_humidity"
+        self.y_values = self.data[self.variable]
+        self.unit = "%"
 
 
-class OS_VerticalVelocityStyle_01(AbstractLinearSectionStyle):
+class LS_VerticalVelocityStyle_01(AbstractLinearSectionStyle):
     """
     Linear plot of vertical velocity.
     """
 
-    name = "OS_W01"
+    name = "LS_W01"
     title = "Vertical Velocity (cm/s) Linear Plot"
     abstract = "Vertical velocity (cm/s)"
 
@@ -97,14 +99,16 @@ class OS_VerticalVelocityStyle_01(AbstractLinearSectionStyle):
                                  self.data['air_pressure'], self.data["air_temperature"]),
             "m/s", "cm/s")
         self.variable = "upward_wind"
+        self.y_values = self.data[self.variable]
+        self.unit = "cm/s"
 
 
-class OS_HorizontalVelocityStyle_01(AbstractLinearSectionStyle):
+class LS_HorizontalVelocityStyle_01(AbstractLinearSectionStyle):
     """
     Linear plot of horizontal velocity.
     """
 
-    name = "OS_HV01"
+    name = "LS_HV01"
     title = "Horizontal Wind (m/s) Linear Plot"
     abstract = "Horizontal wind speed (m/s)"
 
@@ -122,14 +126,16 @@ class OS_HorizontalVelocityStyle_01(AbstractLinearSectionStyle):
         self.data["horizontal_wind"] = np.hypot(
             self.data["eastward_wind"], self.data["northward_wind"])
         self.variable = "horizontal_wind"
+        self.y_values = self.data[self.variable]
+        self.unit = "m/s"
 
 
-class OS_PotentialVorticityStyle_01(AbstractLinearSectionStyle):
+class LS_PotentialVorticityStyle_01(AbstractLinearSectionStyle):
     """
     Linear plot of potential vorticity.
     """
 
-    name = "OS_PV01"
+    name = "LS_PV01"
     title = "Potential Vorticity (PVU) Linear Plot"
     abstract = "(Neg.) Potential vorticity (PVU)"
     styles = [
@@ -143,16 +149,19 @@ class OS_PotentialVorticityStyle_01(AbstractLinearSectionStyle):
         ("ml", "air_pressure", "Pa"),
         ("ml", "ertel_potential_vorticity", "PVU")]
 
+    def __init__(self, driver):
+        super(AbstractLinearSectionStyle, self).__init__(driver=driver)
+        self.variable = "ertel_potential_vorticity"
+
     def _plot_style(self, color):
         ax = self.ax
-        y_values = self.data["ertel_potential_vorticity"]
 
         # Change PV sign on southern hemisphere.
         if self.style.lower() == "default":
             self.style = "NH"
         if self.style.upper() == "SH":
-            y_values = -y_values
+            self.y_values = -self.y_values
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), y_values, color.replace("0x", "#"))
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()

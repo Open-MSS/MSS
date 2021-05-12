@@ -50,6 +50,7 @@ import io
 import logging
 import traceback
 import urllib.parse
+from xml.etree import ElementTree
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
@@ -153,6 +154,14 @@ def squash_multiple_images(imgs):
         return output.getvalue()
 
 
+def squash_multiple_xml(xml_strings):
+    base = ElementTree.fromstring(xml_strings[0])
+    for xml in xml_strings[1:]:
+        tree = ElementTree.fromstring(xml)
+        base.extend(tree)
+    return ElementTree.tostring(base)
+
+
 class WMSServer(object):
 
     def __init__(self):
@@ -174,9 +183,9 @@ class WMSServer(object):
             self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
                 data_access_dict[key])
 
-        self.onesec_drivers = {}
+        self.lsec_drivers = {}
         for key in data_access_dict:
-            self.onesec_drivers[key] = mss_plot_driver.LinearSectionDriver(
+            self.lsec_drivers[key] = mss_plot_driver.LinearSectionDriver(
                 data_access_dict[key])
 
         self.hsec_layer_registry = {}
@@ -259,9 +268,9 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 if variable:
-                    layer = layer_class(self.onesec_drivers[dataset], variable)
+                    layer = layer_class(self.lsec_drivers[dataset], variable)
                 else:
-                    layer = layer_class(self.onesec_drivers[dataset])
+                    layer = layer_class(self.lsec_drivers[dataset])
             except KeyError as ex:
                 logging.debug("ERROR: %s %s", type(ex), ex)
                 continue
@@ -269,7 +278,7 @@ class WMSServer(object):
             # Check if the current dataset has already been registered. If
             # not, check whether a suitable driver is available.
             if dataset not in self.lsec_layer_registry:
-                if dataset in self.onesec_drivers:
+                if dataset in self.lsec_drivers:
                     self.lsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError("dataset '%s' not available", dataset)
@@ -407,7 +416,7 @@ class WMSServer(object):
 
             # Requested style(s).
             styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
-            style = styles[0] if len(styles) > 0 else None
+            style = styles[index] if len(styles) > index else None
             logging.debug("  requested style = '%s'", style)
 
             # Forecast initialisation time.
@@ -440,9 +449,9 @@ class WMSServer(object):
 
             # Allow to request vertical sections via GetMap, if the specified CRS is of type "VERT:??".
             msg = None
-            if crs.startswith('vert:'):
+            if crs.startswith('vert:logp'):
                 mode = "getvsec"
-            elif crs.startswith("one:"):
+            elif crs.startswith("line:1"):
                 mode = "getlsec"
             else:
                 try:
@@ -596,7 +605,6 @@ class WMSServer(object):
                                                     return_format=return_format)
                     images.append(plot_driver.plot())
                 except (IOError, ValueError) as ex:
-                    traceback.print_exc()
                     logging.error("ERROR: %s %s", type(ex), ex)
                     msg = "The data corresponding to your request is not available. Please check the " \
                           "times and/or path you have specified.\n\n" \
@@ -616,7 +624,11 @@ class WMSServer(object):
                     return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
                 logging.debug("LSEC PATH: %s", path)
 
-                color = query.get("COLOR", "0x00AAFF")
+                color = query.get("COLORS", "0x00AAFF").split(",")
+                if len(color) > index:
+                    color = color[index]
+                else:
+                    color = color[-1]
 
                 # Check requested layers.
                 if (dataset not in self.lsec_layer_registry) or (layer not in self.lsec_layer_registry[dataset]):
@@ -637,19 +649,19 @@ class WMSServer(object):
                                                              text="TIME not specified",
                                                              version=version)
 
-                # Bounding box (num interp. points, p_bot, num labels, p_top).
+                # Bounding box (num interp. points, num labels).
                 try:
-                    bbox = [float(v) for v in query.get("BBOX", "101,1050,10,180").split(",")]
+                    bbox = [float(v) for v in query.get("BBOX", "101,10").split(",")]
                 except ValueError:
                     return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
 
-                plot_driver = self.onesec_drivers[dataset]
+                plot_driver = self.lsec_drivers[dataset]
                 try:
                     plot_driver.set_plot_parameters(plot_object=self.lsec_layer_registry[dataset][layer],
-                                                    vsec_path=path,
-                                                    vsec_numpoints=bbox[0],
-                                                    vsec_path_connection="linear",
-                                                    vsec_numlabels=bbox[2],
+                                                    lsec_path=path,
+                                                    lsec_numpoints=bbox[0],
+                                                    lsec_path_connection="greatcircle",
+                                                    lsec_numlabels=bbox[1],
                                                     init_time=init_time,
                                                     valid_time=valid_time,
                                                     style=style,
@@ -661,7 +673,6 @@ class WMSServer(object):
                                                     return_format=return_format)
                     images.append(plot_driver.plot())
                 except (IOError, ValueError) as ex:
-                    traceback.print_exc()
                     logging.error("ERROR: %s %s", type(ex), ex)
                     msg = "The data corresponding to your request is not available. Please check the " \
                           "times and/or path you have specified.\n\n" \
@@ -671,7 +682,13 @@ class WMSServer(object):
 
         # 4) Return the produced image.
         # =============================
-        return squash_multiple_images(images), return_format
+        if len(layers) > 1:
+            if "image" in return_format:
+                return squash_multiple_images(images), return_format
+            elif "xml" in return_format:
+                return squash_multiple_xml(images), return_format
+        else:
+            return images[0], return_format
 
 
 server = WMSServer()

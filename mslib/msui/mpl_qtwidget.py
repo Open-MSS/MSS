@@ -882,26 +882,20 @@ class MplLinearViewCanvas(MplCanvas):
     def __init__(self, model=None, settings=None, numlabels=None):
         """
         Arguments:
-        model -- WaypointsTableModel defining the vertical section.
+        model -- WaypointsTableModel defining the linear section.
         """
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
         super(MplLinearViewCanvas, self).__init__()
 
         # Default settings.
-        self.settings_dict = {"vertical_axis": "Value",
-                              "flightlevels": [],
-                              "draw_ceiling": True,
-                              "colour_ft_vertices": (0, 0, 1, 1),
-                              "colour_ft_waypoints": (1, 0, 0, 1),
-                              "colour_ft_fill": (0, 0, 1, 0.15),
-                              "colour_ceiling": (0, 0, 1, 0.15)}
+        self.settings_dict = {"flightlevels": []}
         if settings is not None:
             self.settings_dict.update(settings)
 
         # Setup the plot.
         self.numlabels = numlabels
-        self.setup_side_view()
+        self.setup_linear_view()
         # Draw a number of flight level lines.
         self.flightlevels = []
         self.fl_label_list = []
@@ -916,9 +910,8 @@ class MplLinearViewCanvas(MplCanvas):
         self.set_settings(self.settings_dict)
 
     def set_waypoints_model(self, model):
-        """Set the WaypointsTableModel defining the vertical section.
-        If no model had been set before, create a new interactor object on the
-        model to let the user interactively move the altitude of the waypoints.
+        """Set the WaypointsTableModel defining the linear section.
+        If no model had been set before, create a new interactor object on the model
         """
         self.waypoints_model = model
         pass
@@ -930,37 +923,24 @@ class MplLinearViewCanvas(MplCanvas):
             self.waypoints_interactor = mpl_pi.LPathInteractor(
                 self.ax, self.waypoints_model,
                 numintpoints=config_loader(dataset="num_interpolation_points"),
-                redraw_xaxis=self.redraw_xaxis, clear_figure=self.clear_figure
+                clear_figure=self.clear_figure
             )
+        self.redraw_xaxis()
 
-    def setup_side_view(self):
-        """Set up a vertical section view.
-
-        Vertical cross section code (log-p axis etc.) taken from
-        mss_batch_production/visualisation/mpl_vsec.py.
+    def setup_linear_view(self):
+        """Set up a linear section view.
         """
         self.ax.set_title("Linear flight profile", horizontalalignment="left", x=0)
-        self.ax.set_xlabel("lat/lon")
+        self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
 
     def clear_figure(self):
-        logging.debug("path of side view has changed.. removing invalidated "
-                      "image (if existent) and redrawing.")
-        if self.image is not None:
-            self.image.remove()
-            self.image = None
-            self.ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
-            self.ax.figure.canvas.draw()
-
-    def redraw_xaxis(self, lats, lons, times):
-        """Redraw the x-axis of the side view on path changes. Also remove
-           a vertical section image if one exists, as it is invalid after
-           a path change.
-        """
-        logging.debug("redrawing x-axis")
-        self.draw()
+        logging.debug("path of linear view has changed.. removing invalidated plots")
+        self.ax.figure.clf()
+        self.ax = self.fig.add_subplot(111, zorder=99)
+        self.ax.figure.patch.set_visible(False)
 
     def get_settings(self):
-        """Returns a dictionary containing settings regarding the side view
+        """Returns a dictionary containing settings regarding the linear view
            appearance.
         """
         return self.settings_dict
@@ -974,14 +954,8 @@ class MplLinearViewCanvas(MplCanvas):
         self.settings_dict = settings
 
     def getBBOX(self):
-        """Get the bounding box of the view (returns a 4-tuple
-           x1, y1(p_bot[hPa]), x2, y2(p_top[hPa])).
+        """Get the bounding box of the view (returns a 2-tuple x1, x2).
         """
-        # Get the bounding box of the current view
-        # (bbox = llcrnrlon, llcrnrlat, urcrnrlon, urcrnrlat; i.e. for the side
-        #  view bbox = x1, y1(p_bot), x2, y2(p_top)).
-        axis = self.ax.axis()
-
         # Get the number of (great circle) interpolation points and the
         # number of labels along the x-axis.
         if self.waypoints_interactor is not None:
@@ -989,50 +963,77 @@ class MplLinearViewCanvas(MplCanvas):
                 self.waypoints_interactor.get_num_interpolation_points()
             num_labels = self.numlabels
 
-        # Return a tuple (num_interpolation_points, p_bot[hPa],
-        #                 num_labels, p_top[hPa]) as BBOX.
-        bbox = (num_interpolation_points, (axis[2] / 100),
-                num_labels, (axis[3] / 100))
+        # Return a tuple (num_interpolation_points, num_labels) as BBOX.
+        bbox = (num_interpolation_points, num_labels)
         return bbox
 
     def draw_legend(self, img):
         if img is not None:
-            logging.error("Legends not supported in SideView mode!")
+            logging.error("Legends not supported in LinearView mode!")
             raise NotImplementedError
 
-    def draw_image(self, img):
-        """Draw the image img on the current plot.
-
-        NOTE: The image is plotted in a separate axes object that is located
-        below the axes that display the flight profile. This is necessary
-        because imshow() does not work with logarithmic axes.
+    def redraw_xaxis(self):
+        """Redraw the x-axis of the linear view on path changes.
         """
-        logging.debug("plotting vertical section image..")
-        ix, iy = img.size
-        logging.debug("  image size is %dx%d px, format is '%s'", ix, iy, img.format)
+        if self.waypoints_interactor is not None:
+            lats = self.waypoints_interactor.path.ilats
+            lons = self.waypoints_interactor.path.ilons
+            logging.debug("redrawing x-axis")
 
-        # If an image is currently displayed, remove it from the plot.
-        if self.image is not None:
-            self.image.remove()
+            # Re-label x-axis.
+            self.ax.set_xlim(0, len(lats) - 1)
+            # Set xticks so that they display lat/lon. Plot "numlabels" labels.
+            lat_inds = np.arange(len(lats))
+            tick_index_step = len(lat_inds) // self.numlabels
+            self.ax.set_xticks(lat_inds[::tick_index_step])
+            self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
+                                     for d in zip(lats[::tick_index_step],
+                                                  lons[::tick_index_step])],
+                                    rotation=25, fontsize=10, horizontalalignment="right")
 
-        # Plot the new image in the image axes and adjust the axes limits.
-        self.image = self.ax.imshow(
-            img, interpolation="nearest", aspect="auto", origin=PIL_IMAGE_ORIGIN)
-        self.ax.set_xlim(0, ix - 1)
-        self.ax.set_ylim(iy - 1, 0)
-        self.ax.axis("off")
+            ipoint = 0
+            highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
+            for i, (lat, lon) in enumerate(zip(lats, lons)):
+                if (ipoint < len(highlight) and
+                        np.hypot(lat - highlight[ipoint][0],
+                                 lon - highlight[ipoint][1]) < 2E-10):
+                    self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
+                    ipoint += 1
+
+    def draw_image(self, xmls):
+        self.clear_figure()
+        offset = 40
+        self.ax.patch.set_visible(False)
+
+        for i, xml in enumerate(xmls):
+            data = xml.find("Data")
+            values = [float(value) for value in data.text.split(",")]
+            unit = data.attrib["unit"]
+            numpoints = int(data.attrib["num_waypoints"])
+            color = data.attrib["color"].replace("0x", "#")
+            par = self.ax.twinx() if i > 0 else self.ax
+
+            par.plot(range(numpoints), values, color.replace("0x", "#"))
+            if i > 0:
+                par.spines["right"].set_position(("outward", (i - 1) * offset))
+            if unit:
+                par.set_ylabel(unit)
+
+            par.yaxis.label.set_color(color.replace("0x", "#"))
+        self.redraw_xaxis()
+        self.fig.tight_layout()
+        self.fig.subplots_adjust(top=0.85, bottom=0.20)
         self.draw()
-        logging.debug("done.")
 
 
 class MplLinearViewWidget(MplNavBarWidget):
-    """MplNavBarWidget using an MplSideViewCanvas as the Matplotlib
+    """MplNavBarWidget using an MplLinearViewCanvas as the Matplotlib
        view instance.
     """
 
     def __init__(self, parent=None):
         super(MplLinearViewWidget, self).__init__(
-            sideview=True, parent=parent, canvas=MplLinearViewCanvas())
+            sideview=False, parent=parent, canvas=MplLinearViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
         #                    Customize, Save, Insert Waypoint, Delete Waypoint

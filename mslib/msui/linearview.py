@@ -25,7 +25,7 @@
     limitations under the License.
 """
 
-from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils import config_loader
 from PyQt5 import QtGui
 from mslib.msui.mss_qt import ui_linearview_window as ui
 from mslib.msui.viewwindows import MSSMplViewWindow
@@ -57,9 +57,6 @@ class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
 
         self.setFlightTrackModel(model)
 
-        self.settings_tag = "linearview"
-        self.load_settings()
-
         # Connect slots and signals.
         # ==========================
 
@@ -81,7 +78,7 @@ class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
             if index == WMS:
                 # Open a WMS control widget.
                 title = "Web Service Plot Control"
-                widget = wms.OneLSecWMSControlWidget(
+                widget = wms.LSecWMSControlWidget(
                     default_WMS=config_loader(dataset="default_LSEC_WMS"),
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
@@ -99,18 +96,3 @@ class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
         super(MSSLinearViewWindow, self).setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
-
-    def save_settings(self):
-        """
-        Save the current settings (vertical extent, displayed flightlevels
-        etc.) to the file self.settingsfile.
-        """
-        settings = self.getView().get_settings()
-        save_settings_qsettings(self.settings_tag, settings)
-
-    def load_settings(self):
-        """
-        Load settings from the file self.settingsfile.
-        """
-        settings = load_settings_qsettings(self.settings_tag)
-        self.getView().set_settings(settings)

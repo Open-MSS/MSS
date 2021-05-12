@@ -53,20 +53,28 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         super(AbstractLinearSectionStyle, self).__init__(driver=driver)
         self.variable = ""
+        self.unit = ""
+        self.y_values = []
+
+    def _prepare_datafields(self):
+        self.y_values = self.data[self.variable]
+        if self.variable in self.driver.data_units:
+            self.unit = self.driver.data_units[self.variable]
 
     def supported_crs(self):
         """
         Returns a list of the coordinate reference systems supported by
         this style.
         """
-        return ["ONE:1"]
+        return ["LINE:1"]
 
     # TODO: the general setup should be a separate class as well
-    def _latlon_setup(self, orography=105000.):
+    def _latlon_setup(self, orography=105000., ax=None):
         """
         General setup for lat/lon x axis
         """
-        ax = self.ax
+        if not ax:
+            ax = self.ax
 
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
         tick_index_step = max(1, len(self.lat_inds) // int(self.numlabels))
@@ -91,17 +99,14 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
     def _plot_style(self, color):
         ax = self.ax
-        y_values = self.data[self.variable]
 
         numpoints = len(self.lats)
-        if self.variable in self.driver.data_units:
-            ax.set_ylabel(self.driver.data_units[self.variable])
-        ax.plot(range(numpoints), y_values, color.replace("0x", "#"))
+        ax.set_ylabel(self.unit)
+        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
         self._latlon_setup()
 
     def plot_lsection(self, data, lats, lons, valid_time, init_time,
-                      resolution=(-1, -1), bbox=(-1, 1050, -1, 200), style=None,
-                      show=False,
+                      resolution=(-1, -1), style=None, show=False,
                       highlight=None, noframe=False, figsize=(960, 480),
                       numlabels=10, orography_color='k', transparent=False, color="0x00AAFF",
                       return_format="image/png"):
@@ -130,8 +135,6 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.style = style
         self.highlight = highlight
         self.noframe = noframe
-        self.p_bot = bbox[1] * 100
-        self.p_top = bbox[3] * 100
         self.numlabels = numlabels
         self.orography_color = orography_color
 
@@ -258,25 +261,18 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             xmldoc.documentElement.appendChild(node)
 
             # Variable data.
-            data_node = xmldoc.createElement("Data")
+            node = xmldoc.createElement("Data")
+            node.setAttribute("num_waypoints", f"{len(self.y_values)}")
+            node.setAttribute("unit", self.unit)
+            node.setAttribute("color", color)
 
-            for var in self.data:
-                node = xmldoc.createElement(var)
-                data_shape = self.data[var].shape
-                node.setAttribute("num_levels", f"{data_shape[0]}")
-                node.setAttribute("num_waypoints", f"{data_shape[1]}")
+            data_str = ""
+            for value in self.y_values:
+                data_str += str(value) + ","
+            data_str = data_str[:-1]
 
-                data_str = ""
-                for data_row in self.data[var]:
-                    for value in data_row:
-                        data_str += str(value) + ","
-                    data_str = data_str[:-1] + "\n"
-                data_str = data_str[:-1]
-
-                node.appendChild(xmldoc.createTextNode(data_str))
-                data_node.appendChild(node)
-
-            xmldoc.documentElement.appendChild(data_node)
+            node.appendChild(xmldoc.createTextNode(data_str))
+            xmldoc.documentElement.appendChild(node)
 
             # Return the XML document as formatted string.
             return xmldoc.toprettyxml(indent="  ")

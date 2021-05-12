@@ -33,6 +33,7 @@ import os
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
+from scipy.interpolate import RegularGridInterpolator
 
 from mslib import netCDF4tools
 from mslib import utils
@@ -680,14 +681,14 @@ class HorizontalSectionDriver(MSSPlotDriver):
 
 class LinearSectionDriver(MSSPlotDriver):
     """
-        The vertical section driver is responsible for loading the data that
+        The linear plot driver is responsible for loading the data that
         is to be plotted and for calling the plotting routines (that have
         to be registered).
         """
 
-    def set_plot_parameters(self, plot_object=None, vsec_path=None,
-                            vsec_numpoints=101, vsec_path_connection='linear',
-                            vsec_numlabels=10,
+    def set_plot_parameters(self, plot_object=None, lsec_path=None,
+                            lsec_numpoints=101, lsec_path_connection='linear',
+                            lsec_numlabels=10,
                             init_time=None, valid_time=None, style=None,
                             bbox=None, figsize=(800, 600), noframe=False,
                             show=False, transparent=False, color="0x00AAFF",
@@ -702,15 +703,14 @@ class LinearSectionDriver(MSSPlotDriver):
                                           figsize=figsize, noframe=noframe,
                                           transparent=transparent,
                                           return_format=return_format)
-        self._set_vertical_section_path(vsec_path, vsec_numpoints,
-                                        vsec_path_connection)
+        self._set_linear_section_path(lsec_path, lsec_numpoints, lsec_path_connection)
         self.show = show
-        self.vsec_numlabels = vsec_numlabels
+        self.lsec_numlabels = lsec_numlabels
         self.color = color
 
-    def update_plot_parameters(self, plot_object=None, vsec_path=None,
-                               vsec_numpoints=None, vsec_path_connection=None,
-                               vsec_numlabels=None,
+    def update_plot_parameters(self, plot_object=None, lsec_path=None,
+                               lsec_numpoints=None, lsec_path_connection=None,
+                               lsec_numlabels=None,
                                init_time=None, valid_time=None, style=None,
                                bbox=None, figsize=None, noframe=None, show=None,
                                transparent=None, color=None, return_format=None):
@@ -723,20 +723,20 @@ class LinearSectionDriver(MSSPlotDriver):
         valid_time = valid_time if valid_time is not None else self.valid_time
         style = style if style is not None else self.style
         bbox = bbox if bbox is not None else self.bbox
-        vsec_path = vsec_path if vsec_path is not None else self.vsec_path
-        vsec_numpoints = vsec_numpoints if vsec_numpoints is not None else self.vsec_numpoints
-        vsec_numlabels = vsec_numlabels if vsec_numlabels is not None else self.vsec_numlabels
-        if vsec_path_connection is None:
-            vsec_path_connection = self.vsec_path_connection
+        lsec_path = lsec_path if lsec_path is not None else self.lsec_path
+        lsec_numpoints = lsec_numpoints if lsec_numpoints is not None else self.lsec_numpoints
+        lsec_numlabels = lsec_numlabels if lsec_numlabels is not None else self.lsec_numlabels
+        if lsec_path_connection is None:
+            lsec_path_connection = self.lsec_path_connection
         show = show if show else self.show
         transparent = transparent if transparent is not None else self.transparent
         color = color if color is not None else self.color
         return_format = return_format if return_format is not None else self.return_format
         self.set_plot_parameters(plot_object=plot_object,
-                                 vsec_path=vsec_path,
-                                 vsec_numpoints=vsec_numpoints,
-                                 vsec_path_connection=vsec_path_connection,
-                                 vsec_numlabels=vsec_numlabels,
+                                 lsec_path=lsec_path,
+                                 lsec_numpoints=lsec_numpoints,
+                                 lsec_path_connection=lsec_path_connection,
+                                 lsec_numlabels=lsec_numlabels,
                                  init_time=init_time,
                                  valid_time=valid_time,
                                  style=style,
@@ -748,23 +748,22 @@ class LinearSectionDriver(MSSPlotDriver):
                                  color=color,
                                  return_format=return_format)
 
-    def _set_vertical_section_path(self, vsec_path, vsec_numpoints=101,
-                                   vsec_path_connection='linear'):
+    def _set_linear_section_path(self, lsec_path, lsec_numpoints=101, lsec_path_connection='linear'):
         """
         """
         logging.debug("computing %i interpolation points, connection: %s",
-                      vsec_numpoints, vsec_path_connection)
+                      lsec_numpoints, lsec_path_connection)
         now = datetime.now()
         self.lats, self.lons, self.alts, _ = utils.path_points(
-            [(_x, _y, _z, now) for _x, _y, _z in vsec_path],
-            numpoints=vsec_numpoints, connection="linear", contains_altitude=True)
-        self.vsec_path = vsec_path
-        self.vsec_numpoints = vsec_numpoints
-        self.vsec_path_connection = vsec_path_connection
+            [(_x, _y, _z, now) for _x, _y, _z in lsec_path],
+            numpoints=lsec_numpoints, connection=lsec_path_connection, contains_altitude=True)
+        self.lsec_path = lsec_path
+        self.lsec_numpoints = lsec_numpoints
+        self.lsec_path_connection = lsec_path_connection
 
     def _load_interpolate_timestep(self):
         """
-        Load and interpolate the data fields as required by the vertical
+        Load and interpolate the data fields as required by the linear
         section style instance. Only data of time <fc_time> is processed.
 
         Shifts the data fields such that the longitudes are in the range
@@ -776,7 +775,6 @@ class LinearSectionDriver(MSSPlotDriver):
         cross section crosses the data longitude boundaries (e.g. data is
         stored on a 0..360 grid, but the path is in the range -10..+20).
         """
-        from scipy.interpolate import RegularGridInterpolator
         if self.dataset is None:
             return {}
         data = {}
@@ -818,43 +816,32 @@ class LinearSectionDriver(MSSPlotDriver):
 
             points = (self.vert_data, self.lat_data, lon_data)
             inter_points = np.array([[self.alts[i], self.lats[i], self.lons[i]] for i in range(len(self.lats))])
-            interpolator = RegularGridInterpolator(points, var_data)
+            interpolator = RegularGridInterpolator(points, var_data, bounds_error=False)
             if name == "air_pressure":
                 for index, point in enumerate(inter_points):
                     vertical_slice = np.array(
                         [[self.vert_data[i], point[1], point[2]] for i in range(len(self.vert_data))])
-                    try:
-                        pressures = interpolator(vertical_slice)
-                        closest = 0
-                        direction = 1
-                        for i, pressure in enumerate(pressures):
-                            if abs(pressure - point[0]) < abs(pressures[closest] - point[0]):
-                                closest = i
-                                direction = 1 if pressure - point[0] > 0 else -1
-                        next_closest = closest + direction if closest < len(pressures) - 1 else closest
-                        distance = abs(pressures[closest] - point[0]) + abs(pressures[next_closest] - point[0])
-                        factors.append(
-                            [[closest, abs(pressures[closest] - point[0]) / distance],
-                             [next_closest, abs(pressures[next_closest] - point[0]) / distance]])
-                    except ValueError:
-                        # Extrapolation error, ignore for now
-                        factors.append([[0, 0], [0, 0]])
-                        pass
+                    pressures = interpolator(vertical_slice)
+                    closest = 0
+                    direction = 1
+                    for i, pressure in enumerate(pressures):
+                        if abs(pressure - point[0]) < abs(pressures[closest] - point[0]):
+                            closest = i
+                            direction = 1 if pressure - point[0] > 0 else -1
+                    next_closest = closest + direction if closest < len(pressures) - 1 else closest
+                    distance = abs(pressures[closest] - point[0]) + abs(pressures[next_closest] - point[0])
+                    factors.append(
+                        [[closest, abs(pressures[closest] - point[0]) / distance],
+                         [next_closest, abs(pressures[next_closest] - point[0]) / distance]])
 
             for index, point in enumerate(inter_points):
-                value = float("NaN")
                 cur_factor = factors[index]
                 vertical_slice = np.array(
                     [[self.vert_data[i], point[1], point[2]] for i in range(len(self.vert_data))])
-                try:
-                    vertical = interpolator(vertical_slice)
-                    value = vertical[cur_factor[0][0]] * cur_factor[0][1] + \
-                        vertical[cur_factor[1][0]] * cur_factor[1][1]
-                except ValueError:
-                    # Extrapolation error
-                    logging.debug(f"Could not interpolate point {point}, assigning 0 instead.")
-                finally:
-                    data[name].append(value)
+                vertical = interpolator(vertical_slice)
+                value = vertical[cur_factor[0][0]] * cur_factor[0][1] + \
+                    vertical[cur_factor[1][0]] * cur_factor[1][1]
+                data[name].append(value)
 
             # Free memory.
             del var_data
@@ -893,10 +880,10 @@ class LinearSectionDriver(MSSPlotDriver):
         """
         d1 = datetime.now()
 
-        # Load and interpolate the data fields as required by the vertical
+        # Load and interpolate the data fields as required by the linear
         # section style instance. <data> is a dictionary containing the
         # interpolated curtains of the variables identified through CF
-        # standard names as specified by <self.vsec_style_instance>.
+        # standard names as specified by <self.lsec_style_instance>.
         data = self._load_interpolate_timestep()
         d2 = datetime.now()
 
@@ -911,15 +898,14 @@ class LinearSectionDriver(MSSPlotDriver):
                                                valid_time=self.fc_time,
                                                init_time=self.init_time,
                                                resolution=resolution,
-                                               bbox=self.bbox,
                                                style=self.style,
                                                show=self.show,
-                                               highlight=self.vsec_path,
+                                               highlight=self.lsec_path,
                                                noframe=self.noframe,
                                                figsize=self.figsize,
                                                transparent=self.transparent,
                                                color=self.color,
-                                               numlabels=self.vsec_numlabels,
+                                               numlabels=self.lsec_numlabels,
                                                return_format=self.return_format)
         # Free memory.
         del data
