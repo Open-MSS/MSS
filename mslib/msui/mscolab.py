@@ -985,28 +985,19 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if p_id != self.active_pid:
                 return
 
-            self.access_level = access_level
             # Close mscolab windows based on new access_level and update their buttons
-            if self.access_level == "collaborator" or self.access_level == "viewer":
-                self.adminWindowBtn.setEnabled(False)
-                if self.access_level == "collaborator":
-                    self.versionHistoryBtn.setEnabled(True)
-                else:
-                    self.versionHistoryBtn.setEnabled(False)
-                    if self.version_window is not None:
-                        self.version_window.close()
-                if self.admin_window is not None:
-                    self.admin_window.close()
-            else:
-                self.adminWindowBtn.setEnabled(True)
-                self.versionHistoryBtn.setEnabled(True)
+            allow_version_access = self.access_level in ["collaborator", "creator", "admin"]
+            self.versionHistoryBtn.setEnabled(allow_version_access)
+            self.chatWindowBtn.setEnabled(allow_version_access)
+            if not allow_version_access and self.version_window is not None:
+                self.version_window.close()
+            if not allow_version_access and self.chat_window is not None:
+                self.chat_window.close()
 
-            if self.access_level == "viewer":
-                self.chatWindowBtn.setEnabled(False)
-                if self.chat_window is not None:
-                    self.chat_window.close()
-            else:
-                self.chatWindowBtn.setEnabled(True)
+            allow_version_access1 = self.access_level in ["creator", "admin"]
+            self.adminWindowBtn.setEnabled(allow_version_access1)
+            if not allow_version_access1 and self.admin_window is not None:
+                self.admin_window.close()
             # update view window nav elements if open
             for window in self.active_windows:
                 _type = window.view_type
