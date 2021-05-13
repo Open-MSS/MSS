@@ -75,6 +75,8 @@ requirements:
     - sqlalchemy <1.4.0
     - sqlite <3.35.1
     - gpxpy >=1.4.2
+    - gunicorn
+    - eventlet ==0.30.2
 
 test:
   imports:
