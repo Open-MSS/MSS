@@ -985,6 +985,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if p_id != self.active_pid:
                 return
 
+            self.access_level = access_level
             # Close mscolab windows based on new access_level and update their buttons
             allow_version_access = self.access_level in ["collaborator", "creator", "admin"]
             self.versionHistoryBtn.setEnabled(allow_version_access)
