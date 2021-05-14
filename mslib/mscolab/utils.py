@@ -25,12 +25,15 @@
 """
 import os
 
+from mslib.utils import os_fs_create_dir
 from mslib.mscolab.conf import mscolab_settings
 
 
 def get_recent_pid(fm, user):
     projects = fm.list_projects(user)
-    p_id = projects[-1]["p_id"]
+    p_id = None
+    if projects:
+        p_id = projects[-1]["p_id"]
     return p_id
 
 
@@ -56,7 +59,5 @@ def get_message_dict(message):
 
 
 def create_files():
-    if not os.path.exists(mscolab_settings.MSCOLAB_DATA_DIR):
-        os.makedirs(mscolab_settings.MSCOLAB_DATA_DIR)
-    if not os.path.exists(mscolab_settings.UPLOAD_FOLDER):
-        os.makedirs(mscolab_settings.UPLOAD_FOLDER)
+    os_fs_create_dir(mscolab_settings.MSCOLAB_DATA_DIR)
+    os_fs_create_dir(mscolab_settings.UPLOAD_FOLDER)

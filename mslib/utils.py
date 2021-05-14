@@ -758,3 +758,20 @@ class Worker(QtCore.QThread):
         """
         for window in QtWidgets.QApplication.allWindows():
             window.requestUpdate()
+
+def os_fs_create_dir(dir):
+    if '://' in dir:
+        try:
+            _ = fs.open_fs(dir)
+        except fs.errors.CreateFailed:
+            logging.error(f'Make sure that the FS url "{dir}" exists')
+            show_popup(self, "Error", f'FS Url: "{dir}" does not exist!')
+            sys.exit()
+        except fs.opener.errors.UnsupportedProtocol:
+            logging.error(f'FS url "{dir}" not supported')
+            show_popup(self, "Error", f'FS Url: "{dir}" not supported!')
+            sys.exit()
+    else:
+        _dir = os.path.expanduser(dir)
+        if not os.path.exists(_dir):
+            os.makedirs(_dir)
