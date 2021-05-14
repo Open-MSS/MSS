@@ -51,9 +51,13 @@ requirements:
     - fs_filepicker
     - cftime >=1.0.1
     - matplotlib >=3.3.2
-    - flask
+    - flask <2.0.0
+    - jinja2 <3.0.0
+    - click <8.0.o
+    - itsdangerous <2.0.0
+    - markupsafe <2.0.0
     - flask-httpauth
-    - werkzeug
+    - werkzeug <2.0.0
     - flask-socketio >=4.3.1, <5
     - flask-sqlalchemy
     - passlib
