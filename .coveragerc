@@ -1,0 +1,6 @@
+[run]
+omit = 
+     _tests/* 
+     mslib/msui/qt5/*
+     docs/*
+     tmp/*
