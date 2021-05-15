@@ -29,6 +29,7 @@
 
 import fs
 import os
+import logging
 
 
 HOME = os.path.expanduser(f"~{os.path.sep}")
