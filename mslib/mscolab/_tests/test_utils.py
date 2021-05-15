@@ -39,23 +39,24 @@ from mslib.mscolab.server import register_user
 PORTS = list(range(9561, 9580))
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-
 class Message():
     id = 1
     u_id = 2
+
     class user():
         username = "name"
     text = "Moin"
     message_type = MessageType.TEXT
     reply_id = 0
     replies = []
+
     class created_at():
         def strftime(value):
-             pass
+            pass
 
 
+@pytest.mark.skipif(os.name == "nt",
+                    reason="multiprocessing needs currently start_method fork")
 class Test_Utils_with_Projects(object):
     def setup(self):
         self.process, self.url, self.app, self.sio, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -117,12 +118,12 @@ class Test_Utils_No_Project(object):
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
         with self.app.app_context():
-            x = register_user('sdf@s.com', 'sdf', 'sdf')
+            register_user('sdf@s.com', 'sdf', 'sdf')
             self.user = User.query.filter_by(emailid="sdf@s.com").first()
 
     def teardown(self):
         with self.app.app_context():
-            mscolab_delete_user(self.app, self.url, 'sdf@s.com', 'sdf' )
+            mscolab_delete_user(self.app, self.url, 'sdf@s.com', 'sdf')
         if self.window.version_window:
             self.window.version_window.close()
         if self.window.conn:

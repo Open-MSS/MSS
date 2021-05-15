@@ -56,7 +56,7 @@ from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog
 from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 from mslib.msui import constants
-from mslib.utils import config_loader, os_fs_create_dir
+from mslib.utils import config_loader
 
 MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
 
@@ -162,7 +162,21 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def create_dir(self):
         # ToDo this needs to be done earlier
-        os_fs_create_dir(self.data_dir)
+        if '://' in self.data_dir:
+            try:
+                _ = fs.open_fs(self.data_dir)
+            except fs.errors.CreateFailed:
+                logging.error(f'Make sure that the FS url "{self.data_dir}" exists')
+                show_popup(self, "Error", f'FS Url: "{self.data_dir}" does not exist!')
+                sys.exit()
+            except fs.opener.errors.UnsupportedProtocol:
+                logging.error(f'FS url "{self.data_dir}" not supported')
+                show_popup(self, "Error", f'FS Url: "{self.data_dir}" not supported!')
+                sys.exit()
+        else:
+            _dir = os.path.expanduser(self.data_dir)
+            if not os.path.exists(_dir):
+                os.makedirs(_dir)
 
     def disconnect_handler(self):
         self.logout()

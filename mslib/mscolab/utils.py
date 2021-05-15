@@ -23,9 +23,10 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import fs
 import os
+import logging
 
-from mslib.utils import os_fs_create_dir
 from mslib.mscolab.conf import mscolab_settings
 
 
@@ -56,6 +57,20 @@ def get_message_dict(message):
         "replies": [],
         "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
     }
+
+
+def os_fs_create_dir(dir):
+    if '://' in dir:
+        try:
+            _ = fs.open_fs(dir)
+        except fs.errors.CreateFailed:
+            logging.error(f'Make sure that the FS url "{dir}" exists')
+        except fs.opener.errors.UnsupportedProtocol:
+            logging.error(f'FS url "{dir}" not supported')
+    else:
+        _dir = os.path.expanduser(dir)
+        if not os.path.exists(_dir):
+            os.makedirs(_dir)
 
 
 def create_files():
