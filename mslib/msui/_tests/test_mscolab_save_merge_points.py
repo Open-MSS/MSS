@@ -35,10 +35,10 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 # ToDo Understand why this needs to be skipped, it runs when direct called
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-@pytest.mark.skip('this tests run only on direct call')
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_merge_points(self, mockbox):
+        pytest.skip("probably a timing problem, fails sometimes")
         self.emailid = "mergepoints@alpha.org"
         self._create_user_data(emailid=self.emailid)
         self.window.workLocallyCheckBox.setChecked(True)
