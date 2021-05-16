@@ -50,6 +50,7 @@ class ConnectionManager(QtCore.QObject):
         self.token = token
         self.user = user
         self.mscolab_server_url = mscolab_server_url
+        logging.getLogger("engineio.client").addFilter(filter=lambda record: token not in record.getMessage())
         self.sio = socketio.Client(reconnection_attempts=5)
         self.sio.connect(self.mscolab_server_url)
 
