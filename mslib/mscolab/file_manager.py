@@ -296,6 +296,8 @@ class FileManager(object):
         # ToDo a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()
+        if not self.is_admin(user.id, ch.p_id):
+            return False
         if ch is None:
             return False
         project = Project.query.filter_by(id=ch.p_id).first()

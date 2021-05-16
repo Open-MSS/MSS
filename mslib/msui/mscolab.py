@@ -721,6 +721,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         if self.access_level == "viewer" or self.access_level == "collaborator":
             if self.access_level == "viewer":
+                self.workLocallyCheckBox.setEnabled(False)
+                self.importBtn.setEnabled(False)
                 self.chatWindowBtn.setEnabled(False)
             else:
                 self.chatWindowBtn.setEnabled(True)
@@ -915,6 +917,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
         self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
+        self.merge_dialog.saveBtn.setDisabled(True)
         if self.merge_dialog.exec_():
             xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
@@ -948,6 +951,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         server_xml = self.request_wps_from_server()
         server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
         self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
+        self.merge_dialog.saveBtn.setDisabled(True)
         if self.merge_dialog.exec_():
             xml_content = self.merge_dialog.get_values()
             if xml_content is not None:
@@ -1029,16 +1033,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.close_external_windows()
             self.disable_project_buttons()
 
-            # Update project list
-            remove_item = None
-            for i in range(self.listProjects.count()):
-                item = self.listProjects.item(i)
-                if item.p_id == p_id:
-                    remove_item = item
-            if remove_item is not None:
-                logging.debug("remove_item: %s" % remove_item)
-                self.listProjects.takeItem(self.listProjects.row(remove_item))
-                return remove_item.text().split(' - ')[0]
+        # Update project list
+        remove_item = None
+        for i in range(self.listProjects.count()):
+            item = self.listProjects.item(i)
+            if item.p_id == p_id:
+                remove_item = item
+        if remove_item is not None:
+            logging.debug("remove_item: %s" % remove_item)
+            self.listProjects.takeItem(self.listProjects.row(remove_item))
+            return remove_item.text().split(' - ')[0]
 
     @QtCore.Slot(int, int)
     def handle_revoke_permission(self, p_id, u_id):
@@ -1156,7 +1160,10 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, ui_mscolab_merge_waypoints_
             row = deselected.indexes()[index].row()
             delete_waypoint = wp_dict[row]
             self.merge_waypoints_list.remove(delete_waypoint)
-
+        if len(self.merge_waypoints_list) > 1:
+            self.saveBtn.setDisabled(False)
+        else:
+            self.saveBtn.setDisabled(True)
         self.merge_waypoints_model = ft.WaypointsTableModel(waypoints=self.merge_waypoints_list)
         self.mergedWaypointsTable.setModel(self.merge_waypoints_model)
 
