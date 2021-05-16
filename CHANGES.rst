@@ -1,6 +1,20 @@
 Changelog
 =========
 
+
+Version 3.0.3
+-------------
+
+Bug Fix release
+
+* Security fix: viewers were able to store attachments within the chat and could undo flightpathes. #43f7fab10b0ae57c2747de94f39df08535d52cad
+* Security fix: omit recording of the token. #9afc5b4768817b4cd8dceca7201a4f1ebc331944
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/56?closed=1
+
+
 Version 3.0.2
 -------------
 
