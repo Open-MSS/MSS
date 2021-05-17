@@ -37,6 +37,10 @@ Current release info
 
 
 
+[![Coverage Status](https://coveralls.io/repos/github/Open-MSS/MSS/badge.svg)](https://coveralls.io/github/Open-MSS/MSS)
+
+
+
 Publications
 ============
 
