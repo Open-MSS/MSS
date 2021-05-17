@@ -1,11 +1,16 @@
-# This workflow will install Python dependencies, lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+# This workflow is for coveralls on merges PRs
+# idea from https://brennerm.github.io/posts/trigger-github-actions-on-pr-close.html
 
 name: coveralls
 
-on: [ pull ]
+on:
+  pull_request:
+    types: [ closed ]
+
 jobs:
-  lint:
+  merge_job:
+    # this job will only run if the PR has been merged
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -18,6 +23,14 @@ jobs:
       env: 
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
       run: |
+        echo PR #${{ github.event.number }} has been merged
         python -m pip install --upgrade pip
         pip install python-coveralls
         coveralls mslib
+  close_jobs:
+    # this job will only run if the PR has been closed without being merged
+    if: github.event.pull_request.merged == false
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        echo PR #${{ github.event.number }} has been closed without being merged
