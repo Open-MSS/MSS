@@ -21,12 +21,12 @@ jobs:
         python-version: 3.8
     - name: coveralls
       env: 
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo PR #${{ github.event.number }} has been merged
         python -m pip install --upgrade pip
         pip install python-coveralls
-        coveralls mslib
+        coveralls --service=github mslib
   close_jobs:
     # this job will only run if the PR has been closed without being merged
     if: github.event.pull_request.merged == false
