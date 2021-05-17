@@ -243,7 +243,7 @@ class Test_Mscolab(object):
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
     def test_handle_delete_project(self, mocktext):
-        pytest.skip('needs a review for the delete button pressed. Seems to delete a None project')
+        # pytest.skip('needs a review for the delete button pressed. Seems to delete a None project')
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
         self._login("berta@something.org", "something")
@@ -251,12 +251,15 @@ class Test_Mscolab(object):
         assert self.window.loginWidget.isVisible() is False
         assert self.window.listProjects.model().rowCount() == 0
         self._create_project("flight7", "Description flight7")
+        assert self.window.active_pid is None
         self._activate_project_at_index(0)
+        p_id = self.window.get_recent_pid()
+        assert p_id is not None
         assert self.window.listProjects.model().rowCount() == 1
         QtTest.QTest.mouseClick(self.window.deleteProjectBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert self.window.listProjects.model().rowCount() == 0
-        assert self.window.active_pid is None
+        p_id = self.window.get_recent_pid()
+        assert p_id is None
 
     def test_get_recent_pid(self):
         self._connect_to_mscolab()
@@ -286,7 +289,6 @@ class Test_Mscolab(object):
         assert project["access_level"] == "creator"
 
     def test_delete_project_from_list(self):
-        pytest.skip('needs a review for xdist')
         self._connect_to_mscolab()
         self._create_user("other", "other@something.org", "something")
         self._login("other@something.org", "something")

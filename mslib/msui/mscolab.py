@@ -652,7 +652,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         r = requests.get(self.mscolab_server_url + '/projects', data=data)
         _json = json.loads(r.text)
         projects = _json["projects"]
-        return projects[-1]["p_id"]
+        p_id = None
+        if projects:
+            p_id = projects[-1]["p_id"]
+        return p_id
 
     def get_recent_project(self):
         """
@@ -664,7 +667,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         r = requests.get(self.mscolab_server_url + '/projects', data=data)
         _json = json.loads(r.text)
         projects = _json["projects"]
-        return projects[-1]
+        recent_project = None
+        if projects:
+            recent_project = projects[-1]
+        return recent_project
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
@@ -691,7 +697,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def set_active_pid(self, item):
         if item.p_id == self.active_pid:
             return
-            # close all hanging window
+        # close all hanging window
         self.force_close_view_windows()
         self.close_external_windows()
         # Turn off work locally toggle
