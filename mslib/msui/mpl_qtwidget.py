@@ -879,7 +879,7 @@ class MplLinearViewCanvas(MplCanvas):
        flight track / list of waypoints.
     """
 
-    def __init__(self, model=None, settings=None, numlabels=None):
+    def __init__(self, model=None, numlabels=None):
         """
         Arguments:
         model -- WaypointsTableModel defining the linear section.
@@ -888,26 +888,16 @@ class MplLinearViewCanvas(MplCanvas):
             numlabels = config_loader(dataset='num_labels')
         super(MplLinearViewCanvas, self).__init__()
 
-        # Default settings.
-        self.settings_dict = {"flightlevels": []}
-        if settings is not None:
-            self.settings_dict.update(settings)
-
         # Setup the plot.
         self.numlabels = numlabels
         self.setup_linear_view()
-        # Draw a number of flight level lines.
-        self.flightlevels = []
-        self.fl_label_list = []
-        self.imgax = None
-        self.image = None
-        self.ceiling_alt = []
         # If a waypoints model has been passed, create an interactor on it.
         self.waypoints_interactor = None
         self.waypoints_model = None
         self.basename = "linearview"
         self.draw()
-        self.set_settings(self.settings_dict)
+        if model:
+            self.set_waypoints_model(model)
 
     def set_waypoints_model(self, model):
         """Set the WaypointsTableModel defining the linear section.

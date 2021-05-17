@@ -33,7 +33,6 @@ import os
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
 
 from mslib import netCDF4tools
 from mslib import utils
@@ -814,14 +813,11 @@ class LinearSectionDriver(MSSPlotDriver):
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
 
-            points = (self.vert_data, self.lat_data, lon_data)
+            cross_section = utils.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
             inter_points = np.array([[self.alts[i], self.lats[i], self.lons[i]] for i in range(len(self.lats))])
-            interpolator = RegularGridInterpolator(points, var_data, bounds_error=False)
             if name == "air_pressure":
                 for index, point in enumerate(inter_points):
-                    vertical_slice = np.array(
-                        [[self.vert_data[i], point[1], point[2]] for i in range(len(self.vert_data))])
-                    pressures = interpolator(vertical_slice)
+                    pressures = cross_section[:, index]
                     closest = 0
                     direction = 1
                     for i, pressure in enumerate(pressures):
@@ -831,16 +827,13 @@ class LinearSectionDriver(MSSPlotDriver):
                     next_closest = closest + direction if closest < len(pressures) - 1 else closest
                     distance = abs(pressures[closest] - point[0]) + abs(pressures[next_closest] - point[0])
                     factors.append(
-                        [[closest, abs(pressures[closest] - point[0]) / distance],
-                         [next_closest, abs(pressures[next_closest] - point[0]) / distance]])
+                        [[closest, 1 - (abs(pressures[closest] - point[0]) / distance)],
+                         [next_closest, 1 - (abs(pressures[next_closest] - point[0]) / distance)]])
 
             for index, point in enumerate(inter_points):
                 cur_factor = factors[index]
-                vertical_slice = np.array(
-                    [[self.vert_data[i], point[1], point[2]] for i in range(len(self.vert_data))])
-                vertical = interpolator(vertical_slice)
-                value = vertical[cur_factor[0][0]] * cur_factor[0][1] + \
-                    vertical[cur_factor[1][0]] * cur_factor[1][1]
+                value = cross_section[cur_factor[0][0], index] * cur_factor[0][1] + \
+                    cross_section[cur_factor[1][0], index] * cur_factor[1][1]
                 data[name].append(value)
 
             # Free memory.

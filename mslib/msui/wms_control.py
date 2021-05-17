@@ -325,14 +325,16 @@ class WMSMapFetcher(QtCore.QObject):
                 img.load()
                 logging.debug("MapPrefetcher - found image cache")
             else:
-                return etree.fromstring(open(md5_filename, "r").read())
+                with open(md5_filename, "r") as cache:
+                    return etree.fromstring(cache.read())
         else:
             self.started_request.emit()
             self.long_request = True
             urlobject = layer.get_wms().getmap(**kwargs)
 
             if "xml" in urlobject.info()["content-type"].lower():
-                open(md5_filename, "w").write(str(urlobject.read(), encoding="utf8"))
+                with open(md5_filename, "w") as cache:
+                    cache.write(str(urlobject.read(), encoding="utf8"))
                 return etree.fromstring(urlobject.read())
 
             image_io = io.BytesIO(urlobject.read())
