@@ -40,8 +40,8 @@ from fs import open_fs
 from werkzeug.urls import url_join
 
 from mslib.msui import flighttrack as ft
-from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_project as mp
+from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import sideview, tableview, topview
 from mslib.msui import socket_control as sc
@@ -492,6 +492,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.chat_window.show()
 
     def close_chat_window(self):
+        self.raise_()
         self.chat_window = None
 
     def open_admin_window(self):
@@ -511,6 +512,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.admin_window.show()
 
     def close_admin_window(self):
+        self.raise_()
         self.admin_window = None
 
     def open_version_history_window(self):
@@ -531,6 +533,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.version_window.show()
 
     def close_version_history_window(self):
+        self.raise_()
         self.version_window = None
 
     def create_local_project_file(self):
