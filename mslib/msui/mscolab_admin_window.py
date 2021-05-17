@@ -155,10 +155,13 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         url = url_join(self.mscolab_server_url, "users_without_permission")
         res = requests.get(url, data=data)
         res = res.json()
-        self.addUsers = res["users"]
-        self.populate_table(self.addUsersTable, self.addUsers)
-        text_filter = self.addUsersSearch.text()
-        self.apply_filters(self.addUsersTable, text_filter, None)
+        if res["success"]:
+            self.addUsers = res["users"]
+            self.populate_table(self.addUsersTable, self.addUsers)
+            text_filter = self.addUsersSearch.text()
+            self.apply_filters(self.addUsersTable, text_filter, None)
+        else:
+            show_popup(self, "Error", res["message"])
 
     def load_users_with_permission(self):
         self.modifyUsers = []
@@ -169,11 +172,14 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         url = url_join(self.mscolab_server_url, "users_with_permission")
         res = requests.get(url, data=data)
         res = res.json()
-        self.modifyUsers = res["users"]
-        self.populate_table(self.modifyUsersTable, self.modifyUsers)
-        text_filter = self.modifyUsersSearch.text()
-        permission_filter = str(self.modifyUsersPermissionFilter.currentText())
-        self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
+        if res["success"]:
+            self.modifyUsers = res["users"]
+            self.populate_table(self.modifyUsersTable, self.modifyUsers)
+            text_filter = self.modifyUsersSearch.text()
+            permission_filter = str(self.modifyUsersPermissionFilter.currentText())
+            self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
+        else:
+            show_popup(self, "Error", res["message"])
 
     def add_selected_users(self):
         selected_userids = self.get_selected_userids(self.addUsersTable, self.addUsers)
