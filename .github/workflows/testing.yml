@@ -39,7 +39,17 @@ jobs:
       run: |
         source /opt/conda/bin/activate mssenv \
         && cd $GITHUB_WORKSPACE \
-        && pytest mslib
+        && pytest --cov=mslib mslib
+        
+    - name: coveralls
+      if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/coverall-test' }}
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        source /opt/conda/bin/activate mssenv \
+        && cd $GITHUB_WORKSPACE \
+        && mamba install coveralls \
+        && coveralls --service=github
 
   Update-Images:
     runs-on: ubuntu-latest
