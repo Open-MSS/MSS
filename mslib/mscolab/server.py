@@ -231,6 +231,9 @@ def message_attachment():
     p_id = request.form.get("p_id", None)
     message_type = MessageType(int(request.form.get("message_type")))
     user = g.user
+    users = fm.fetch_users_without_permission(int(p_id), user.id)
+    if users is False:
+        return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
     if file is not None:
         with fs.open_fs('/') as home_fs:
             file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], p_id)
