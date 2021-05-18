@@ -68,6 +68,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.selectAllModifyBtn.clicked.connect(lambda: self.select_all(self.modifyUsersTable))
         self.deselectAllModifyBtn.clicked.connect(lambda: self.deselect_all(self.modifyUsersTable))
 
+        index = self.addUsersPermission.findText("collaborator", QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            self.addUsersPermission.setCurrentIndex(index)
         # Search filter
         self.addUsersSearch.textChanged.connect(lambda text: self.search_user_filter(text, self.addUsersTable))
         self.modifyUsersSearch.textChanged.connect(lambda text: self.search_user_filter(text, self.modifyUsersTable))
