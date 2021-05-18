@@ -85,6 +85,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.populate_import_permission_cb()
 
     def populate_table(self, table, users):
+        users.sort()
         table.setRowCount(0)
         for row_number, row_data in enumerate(users):
             table.insertRow(row_number)
@@ -140,9 +141,6 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 table.showRow(row_num)
             else:
                 table.hideRow(row_num)
-
-        # Sort all filtered table items
-        table.sortItems(0, QtCore.Qt.AscendingOrder)
 
     def search_user_filter(self, text_filter, table):
         permission_filter = None
