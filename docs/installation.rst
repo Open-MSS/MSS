@@ -47,13 +47,16 @@ Please add the channel conda-forge to your defaults::
 
 The conda-forge channel must be on top of the list before the anaconda default channel.
 
+install
++++++++
+
 You must install mss into a new environment to ensure the most recent
 versions for dependencies (On the Anaconda Prompt on Windows, you have to 
 leave out the 'source' here and below). ::
 
     $ conda create -n mssenv mamba
     $ conda activate mssenv
-    $ mamba install mss
+    (mssenv) $ mamba install mss
 
 
 You need to reactivate after the installation once the environment to setup all needed enironment
@@ -61,18 +64,52 @@ variables. ::
 
     $ conda deactivate
     $ conda activate mssenv
-    $ mss
+    (mssenv) $ mss
 
 
+update
+++++++
 For updating an existing MSS installation to the current version, it is best to install
-it into a new environment. If an existing environment shall be updated, it is important
-to update all packages in this environment. ::
+it into a new environment.
+
+.. Important::
+  mamba is under development. All dependencies of MSS and MSS itselfs are under development.
+  Sometimes this update feature of mamba can't resolve from existing to new dependencies.
+
+search for MSS what you can get ::
+
+   (mssenv) $ mamba search mss
+
+    mss                            3.0.3  py39hf3d152e_0  conda-forge
+    mss                            3.0.3  py39hf3d152e_1  conda-forge
+
+compare what you have installed ::
+
+   (mssenv) $ mamba list mss
+
+     mss                            3.0.2     py39hf3d152e_0    conda-forge
+
+If an existing environment shall be updated, it is important to update all packages in this environment. ::
 
    $ conda activate mssenv
-   $ mamba update --all
-   $ mss
+   (mssenv) $ mamba update --all
+
+In this example there was a further build done after the first release of 3.0.3.
+Compare in the list of proposed updates what you would get ::
+
+   matplotlib                3.4.2            py39hf3d152e_0    conda-forge
+   matplotlib-base           3.4.2            py39h2fa2bec_0    conda-forge
+   mss                       3.0.3            py39hf3d152e_0    conda-forge
+   multidict                 5.1.0            py39h3811e60_1    conda-forge
+
+If you see a mismatch like this, not getting the recent buildnumber. In this example value in
+third column ends with "_1" you have to force the update by the conda command::
+
+  (mssenv) $ conda install mss==3.0.3=py39hf3d152e_1
 
 For further details :ref:`mss-configuration`
+
+
 
 Server based installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
