@@ -1004,6 +1004,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.version_window.close()
             if not allow_version_access and self.chat_window is not None:
                 self.chat_window.close()
+            if not allow_version_access and self.handle_work_locally_toggle is not None:
+                self.handle_work_locally_toggle.close()
+            if not allow_version_access and self.handle_import is not None:
+                self.handle_import.close()
 
             allow_version_access = self.access_level in ["creator", "admin"]
             self.adminWindowBtn.setEnabled(allow_version_access)
