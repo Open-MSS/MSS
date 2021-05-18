@@ -728,20 +728,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.tableview.setEnabled(True)
         self.workLocallyCheckBox.setEnabled(True)
 
-        if self.access_level == "viewer":
-            self.chatWindowBtn.setEnabled(False)
-            self.versionHistoryBtn.setEnabled(False)
-        else:
-            self.chatWindowBtn.setEnabled(True)
-            self.versionHistoryBtn.setEnabled(True)
-        if self.access_level == "viewer" or self.access_level == "collaborator":
-            self.adminWindowBtn.setEnabled(False)
-        else:
-            self.adminWindowBtn.setEnabled(True)
-        if self.access_level == "creator":
-            self.deleteProjectBtn.setEnabled(True)
-        else:
-            self.deleteProjectBtn.setEnabled(False)
+        allow_version_access = self.access_level in ["collaborator", "admin", "creator"]
+        self.versionHistoryBtn.setEnabled(allow_version_access)
+        self.chatWindowBtn.setEnabled(allow_version_access)
+        self.workLocallyCheckBox.setEnabled(allow_version_access)
+        self.importBtn.setEnabled(allow_version_access)
+
+        allow_version_access = self.access_level in ["creator", "admin"]
+        self.adminWindowBtn.setEnabled(allow_version_access)
+
+        allow_version_access = self.access_level in ["creator"]
+        self.deleteProjectBtn.setEnabled(allow_version_access)
         # change font style for selected
         font = QtGui.QFont()
         for i in range(self.listProjects.count()):
@@ -1001,14 +998,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             allow_version_access = self.access_level in ["collaborator", "creator", "admin"]
             self.versionHistoryBtn.setEnabled(allow_version_access)
             self.chatWindowBtn.setEnabled(allow_version_access)
+            self.workLocallyCheckBox.setEnabled(allow_version_access)
+            self.importBtn.setEnabled(allow_version_access)
             if not allow_version_access and self.version_window is not None:
                 self.version_window.close()
             if not allow_version_access and self.chat_window is not None:
                 self.chat_window.close()
 
-            allow_version_access1 = self.access_level in ["creator", "admin"]
-            self.adminWindowBtn.setEnabled(allow_version_access1)
-            if not allow_version_access1 and self.admin_window is not None:
+            allow_version_access = self.access_level in ["creator", "admin"]
+            self.adminWindowBtn.setEnabled(allow_version_access)
+            if not allow_version_access and self.admin_window is not None:
                 self.admin_window.close()
             # update view window nav elements if open
             for window in self.active_windows:
