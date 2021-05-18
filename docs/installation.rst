@@ -56,7 +56,7 @@ leave out the 'source' here and below). ::
 
     $ conda create -n mssenv mamba
     $ conda activate mssenv
-    $ (mssenv) mamba install mss
+    (mssenv) $ mamba install mss
 
 
 You need to reactivate after the installation once the environment to setup all needed enironment
@@ -64,7 +64,7 @@ variables. ::
 
     $ conda deactivate
     $ conda activate mssenv
-    $ (mssenv) mss
+    (mssenv) $ mss
 
 
 update
@@ -72,26 +72,27 @@ update
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment.
 
-HINT: mamba is under development. All dependencies of MSS and MSS itselfs are under development.
-Sometimes this update feature of mamba can't resolve from existing to new dependencies.
+.. Important::
+  mamba is under development. All dependencies of MSS and MSS itselfs are under development.
+  Sometimes this update feature of mamba can't resolve from existing to new dependencies.
 
 search for MSS what you can get ::
 
-   $ (mssenv) mamba search mss
+   (mssenv) $ mamba search mss
 
     mss                            3.0.3  py39hf3d152e_0  conda-forge
     mss                            3.0.3  py39hf3d152e_1  conda-forge
 
 compare what you have installed ::
 
-   $ (mssenv) mamba list mss
+   (mssenv) $ mamba list mss
 
      mss                            3.0.2     py39hf3d152e_0    conda-forge
 
 If an existing environment shall be updated, it is important to update all packages in this environment. ::
 
    $ conda activate mssenv
-   $ (mssenv) mamba update --all
+   (mssenv) $ mamba update --all
 
 In this example there was a further build done after the first release of 3.0.3.
 Compare in the list of proposed updates what you would get ::
@@ -104,7 +105,7 @@ Compare in the list of proposed updates what you would get ::
 If you see a mismatch like this, not getting the recent buildnumber. In this example value in
 third column ends with "_1" you have to force the update by the conda command::
 
-  $ (mssenv) conda install mss==3.0.3=py39hf3d152e_1
+  (mssenv) $ conda install mss==3.0.3=py39hf3d152e_1
 
 For further details :ref:`mss-configuration`
 
