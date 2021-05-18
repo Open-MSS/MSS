@@ -822,6 +822,7 @@ class LPathInteractor(PathInteractor):
         """
         self.numintpoints = numintpoints
         self.clear_figure = clear_figure
+        self.redraw_xaxis = redraw_xaxis
         super(LPathInteractor, self).__init__(
             ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
 
@@ -834,6 +835,7 @@ class LPathInteractor(PathInteractor):
            redraw of the figure necessary.
         """
         # emit signal to redraw map
+        self.redraw_xaxis()
         self.signal_get_lsec.emit()
 
     def redraw_path(self, vertices=None):
@@ -847,7 +849,50 @@ class LPathInteractor(PathInteractor):
         pass
 
     def get_lat_lon(self, event):
-        return [0, 0], 0
+        x = event.xdata
+        wpm = self.waypoints_model
+        vertices = self.pathpatch.get_path().vertices
+        vertices = np.ndarray.tolist(vertices)
+        for index, vertex in enumerate(vertices):
+            vertices[index].append(datetime.datetime(2012, 7, 1, 10, 30))
+        best_index = 1
+        # if x axis has increasing coordinates
+        if vertices[-1][0] > vertices[0][0]:
+            for index, vertex in enumerate(vertices):
+                if x >= vertex[0]:
+                    best_index = index + 1
+        # if x axis has decreasing coordinates
+        else:
+            for index, vertex in enumerate(vertices):
+                if x <= vertex[0]:
+                    best_index = index + 1
+        # number of subcoordinates is determined by difference in x coordinates
+        number_of_intermediate_points = math.floor(vertices[best_index][0] - vertices[best_index - 1][0])
+        intermediate_vertices_list = path_points([vertices[best_index - 1], vertices[best_index]],
+                                                 number_of_intermediate_points)
+        wp1Array = [wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
+                    datetime.datetime(2012, 7, 1, 10, 30)]
+        wp2Array = [wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
+                    datetime.datetime(2012, 7, 1, 10, 30)]
+        intermediate_waypoints_list = latlon_points(wp1Array, wp2Array, number_of_intermediate_points,
+                                                    connection="greatcircle")
+
+        # best_index1 is the best index among the intermediate coordinates to fit the hovered point
+        # if x axis has increasing coordinates
+        best_index1 = 1
+        if vertices[-1][0] > vertices[0][0]:
+            for index, vertex in enumerate(intermediate_vertices_list[0]):
+                if x >= vertex:
+                    best_index1 = index + 1
+        # if x axis has decreasing coordinates
+        else:
+            for index, vertex in enumerate(intermediate_vertices_list[0]):
+                if x <= vertex:
+                    best_index1 = index + 1
+        # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
+        return [intermediate_waypoints_list[0][best_index1 - 1],
+                intermediate_waypoints_list[1][best_index1 - 1],
+                intermediate_vertices_list[1][best_index1 - 1]], best_index
 
     def qt_data_changed_listener(self, index1, index2):
         """Listens to dataChanged() signals emitted by the flight track

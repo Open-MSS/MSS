@@ -678,7 +678,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
         return image
 
 
-class LinearSectionDriver(MSSPlotDriver):
+class LinearSectionDriver(VerticalSectionDriver):
     """
         The linear plot driver is responsible for loading the data that
         is to be plotted and for calling the plotting routines (that have
@@ -690,7 +690,7 @@ class LinearSectionDriver(MSSPlotDriver):
                             lsec_numlabels=10,
                             init_time=None, valid_time=None, style=None,
                             bbox=None, figsize=(800, 600), noframe=False,
-                            show=False, transparent=False, color="0x00AAFF",
+                            show=False, transparent=False,
                             return_format="image/png"):
         """
         """
@@ -705,14 +705,13 @@ class LinearSectionDriver(MSSPlotDriver):
         self._set_linear_section_path(lsec_path, lsec_numpoints, lsec_path_connection)
         self.show = show
         self.lsec_numlabels = lsec_numlabels
-        self.color = color
 
     def update_plot_parameters(self, plot_object=None, lsec_path=None,
                                lsec_numpoints=None, lsec_path_connection=None,
                                lsec_numlabels=None,
                                init_time=None, valid_time=None, style=None,
                                bbox=None, figsize=None, noframe=None, show=None,
-                               transparent=None, color=None, return_format=None):
+                               transparent=None, return_format=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
@@ -729,7 +728,6 @@ class LinearSectionDriver(MSSPlotDriver):
             lsec_path_connection = self.lsec_path_connection
         show = show if show else self.show
         transparent = transparent if transparent is not None else self.transparent
-        color = color if color is not None else self.color
         return_format = return_format if return_format is not None else self.return_format
         self.set_plot_parameters(plot_object=plot_object,
                                  lsec_path=lsec_path,
@@ -744,7 +742,6 @@ class LinearSectionDriver(MSSPlotDriver):
                                  noframe=noframe,
                                  show=show,
                                  transparent=transparent,
-                                 color=color,
                                  return_format=return_format)
 
     def _set_linear_section_path(self, lsec_path, lsec_numpoints=101, lsec_path_connection='linear'):
@@ -799,7 +796,13 @@ class LinearSectionDriver(MSSPlotDriver):
         lon_data = lon_data[lon_indices]
         factors = []
 
-        for name, var in self.data_vars.items():
+        # Make sure air_pressure is the first to be evaluated
+        variables = list(self.data_vars)
+        if variables[0] != "air_pressure":
+            variables.insert(0, variables.pop(variables.index("air_pressure")))
+
+        for name in variables:
+            var = self.data_vars[name]
             data[name] = []
             if len(var.shape) == 4:
                 var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
@@ -814,23 +817,24 @@ class LinearSectionDriver(MSSPlotDriver):
             var_data = var_data[:, :, lon_indices]
 
             cross_section = utils.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
-            inter_points = np.array([[self.alts[i], self.lats[i], self.lons[i]] for i in range(len(self.lats))])
+            # Create vertical interpolation factors and indices for subsequent variables
             if name == "air_pressure":
-                for index, point in enumerate(inter_points):
+                for index, alt in enumerate(self.alts):
                     pressures = cross_section[:, index]
                     closest = 0
                     direction = 1
                     for i, pressure in enumerate(pressures):
-                        if abs(pressure - point[0]) < abs(pressures[closest] - point[0]):
+                        if abs(pressure - alt) < abs(pressures[closest] - alt):
                             closest = i
-                            direction = 1 if pressure - point[0] > 0 else -1
+                            direction = 1 if pressure - alt > 0 else -1
                     next_closest = closest + direction if closest < len(pressures) - 1 else closest
-                    distance = abs(pressures[closest] - point[0]) + abs(pressures[next_closest] - point[0])
+                    distance = abs(pressures[closest] - alt) + abs(pressures[next_closest] - alt)
                     factors.append(
-                        [[closest, 1 - (abs(pressures[closest] - point[0]) / distance)],
-                         [next_closest, 1 - (abs(pressures[next_closest] - point[0]) / distance)]])
+                        [[closest, 1 - (abs(pressures[closest] - alt) / distance)],
+                         [next_closest, 1 - (abs(pressures[next_closest] - alt) / distance)]])
+                continue
 
-            for index, point in enumerate(inter_points):
+            for index in range(len(self.alts)):
                 cur_factor = factors[index]
                 value = cross_section[cur_factor[0][0], index] * cur_factor[0][1] + \
                     cross_section[cur_factor[1][0], index] * cur_factor[1][1]
@@ -841,32 +845,6 @@ class LinearSectionDriver(MSSPlotDriver):
             data[name] = np.array(data[name])
 
         return data
-
-    def shift_data(self):
-        """
-        Shift the data fields such that the longitudes are in the range
-        left_longitude .. left_longitude+360, where left_longitude is the
-        westmost longitude appearing in the list of waypoints minus one
-        gridpoint (to include all waypoint longitudes).
-
-        Necessary to prevent data cut-offs in situations where the requested
-        cross section crosses the data longitude boundaries (e.g. data is
-        stored on a 0..360 grid, but the path is in the range -10..+20).
-        """
-        # Determine the leftmost longitude in the plot.
-        left_longitude = self.lons.min()
-        logging.debug("shifting data grid to leftmost longitude in path "
-                      "(%.2f)..", left_longitude)
-
-        # Shift the longitude field such that the data is in the range
-        # left_longitude .. left_longitude+360.
-        self.lons = ((self.lons - left_longitude) % 360) + left_longitude
-        lon_indices = self.lons.argsort()
-        self.lons = self.lons[lon_indices]
-
-        # Shift data fields correspondingly.
-        for key in self.data:
-            self.data[key] = self.data[key][:, lon_indices]
 
     def plot(self):
         """
@@ -897,7 +875,6 @@ class LinearSectionDriver(MSSPlotDriver):
                                                noframe=self.noframe,
                                                figsize=self.figsize,
                                                transparent=self.transparent,
-                                               color=self.color,
                                                numlabels=self.lsec_numlabels,
                                                return_format=self.return_format)
         # Free memory.

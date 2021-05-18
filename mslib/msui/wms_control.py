@@ -78,7 +78,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
 
     def getmap(self, layers=None, styles=None, srs=None, bbox=None,
                format=None, size=None, time=None, init_time=None,
-               path_str=None, level=None, transparent=False, bgcolor='#FFFFFF', colors=None,
+               path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
                time_name="time", init_time_name="init_time",
                exceptions='XML', method='Get',
                return_only_url=False):
@@ -144,8 +144,6 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         request['format'] = str(format)
         request['transparent'] = str(transparent).upper()
         request['bgcolor'] = '0x' + bgcolor[1:7]
-        if "LINE" in str(srs):
-            request["colors"] = ",".join(["0x" + color[1:7] for color in colors])
         request['exceptions'] = str(exceptions)
 
         # ++(mss)
@@ -1249,7 +1247,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         layer_name = [layer.get_layer() for layer in layers]
         style = [layer.get_style() for layer in layers]
-        colors = [layer.color for layer in layers]
         level = layer.get_level_name()
 
         def normalize_crs(crs):
@@ -1282,7 +1279,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("init_time=%s, valid_time=%s", init_time, valid_time)
         logging.debug("level=%s", level)
         logging.debug("transparent=%s", transparent)
-        logging.debug("color=%s", colors)
 
         try:
             # Call the self.wms.getmap() method in a separate thread to keep
@@ -1307,8 +1303,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "size": (width, height),
                       "format": format,
                       "transparent": transparent}
-            if "LINE" in crs:
-                kwargs["colors"] = colors
             legend_kwargs = {"urlstr": layer.get_legend_url(), "md5_filename": None}
             if legend_kwargs["urlstr"] is not None:
                 legend_kwargs["md5_filename"] = os.path.join(
@@ -1686,7 +1680,11 @@ class LSecWMSControlWidget(WMSControlWidget):
 
     def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
-        self.view.draw_image(imgs)
+        layers = self.multilayers.get_active_layers() if self.multilayers.cbMultilayering.isChecked() else \
+            [self.multilayers.get_current_layer()]
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+        colors = [layer.color for layer in layers]
+        self.view.draw_image(imgs, colors)
         self.view.draw_legend(self.append_multiple_images(legend_imgs))
         style_title = self.multilayers.get_current_layer().get_style()
         self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,

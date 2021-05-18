@@ -392,12 +392,16 @@ class NavigationToolbar(NavigationToolbar2QT):
         """
         overwrite mouse_move to print lon/lat instead of x/y coordinates.
         """
-        if isinstance(self.canvas.waypoints_interactor, mpl_pi.LPathInteractor):
-            return
-
         if self.mode == _Mode.MOVE_WP:
             self.canvas.waypoints_interactor.motion_notify_callback(event)
-        if not self.sideview:
+
+        if isinstance(self.canvas.waypoints_interactor, mpl_pi.LPathInteractor):
+            if not event.ydata or not event.xdata:
+                self.set_message(self.mode)
+            else:
+                (lat, lon, alt), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
+                self.set_message(f"lat={lat: <6.2f} lon={lon: <7.2f} altitude={alt/100: <.2f}hPa")
+        elif not self.sideview:
             self._update_cursor(event)
 
             if event.inaxes and event.inaxes.get_navigate():
@@ -913,7 +917,8 @@ class MplLinearViewCanvas(MplCanvas):
             self.waypoints_interactor = mpl_pi.LPathInteractor(
                 self.ax, self.waypoints_model,
                 numintpoints=config_loader(dataset="num_interpolation_points"),
-                clear_figure=self.clear_figure
+                clear_figure=self.clear_figure,
+                redraw_xaxis=self.redraw_xaxis
             )
         self.redraw_xaxis()
 
@@ -989,8 +994,9 @@ class MplLinearViewCanvas(MplCanvas):
                                  lon - highlight[ipoint][1]) < 2E-10):
                     self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
                     ipoint += 1
+            self.draw()
 
-    def draw_image(self, xmls):
+    def draw_image(self, xmls, colors=None):
         self.clear_figure()
         offset = 40
         self.ax.patch.set_visible(False)
@@ -1000,10 +1006,14 @@ class MplLinearViewCanvas(MplCanvas):
             values = [float(value) for value in data.text.split(",")]
             unit = data.attrib["unit"]
             numpoints = int(data.attrib["num_waypoints"])
-            color = data.attrib["color"].replace("0x", "#")
+
+            if colors:
+                color = colors[i] if len(colors) > i else colors[-1]
+            else:
+                color = "#00AAFF"
             par = self.ax.twinx() if i > 0 else self.ax
 
-            par.plot(range(numpoints), values, color.replace("0x", "#"))
+            par.plot(range(numpoints), values, color)
             if i > 0:
                 par.spines["right"].set_position(("outward", (i - 1) * offset))
             if unit:
@@ -1028,7 +1038,7 @@ class MplLinearViewWidget(MplNavBarWidget):
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
         #                    Customize, Save, Insert Waypoint, Delete Waypoint
         actions = self.navbar.actions()
-        for action in actions:
+        for action in actions[:-1]:
             if action.text() in ["Home", "Back", "Forward", "Pan", "Zoom", "",
                                  "Subplots", "Customize", "Mv WP", "Del WP", "Ins WP"]:
                 action.setVisible(False)

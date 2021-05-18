@@ -153,7 +153,7 @@ class LS_PotentialVorticityStyle_01(AbstractLinearSectionStyle):
         super(AbstractLinearSectionStyle, self).__init__(driver=driver)
         self.variable = "ertel_potential_vorticity"
 
-    def _plot_style(self, color):
+    def _plot_style(self):
         ax = self.ax
 
         # Change PV sign on southern hemisphere.
@@ -163,5 +163,5 @@ class LS_PotentialVorticityStyle_01(AbstractLinearSectionStyle):
             self.y_values = -self.y_values
 
         numpoints = len(self.lats)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
+        ax.plot(range(numpoints), self.y_values)
         self._latlon_setup()

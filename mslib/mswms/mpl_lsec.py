@@ -97,18 +97,18 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         ax.set_xlim(self.lat_inds[0], self.lat_inds[-1])
         ax.grid(b=True)
 
-    def _plot_style(self, color):
+    def _plot_style(self):
         ax = self.ax
 
         numpoints = len(self.lats)
         ax.set_ylabel(self.unit)
-        ax.plot(range(numpoints), self.y_values, color.replace("0x", "#"))
+        ax.plot(range(numpoints), self.y_values)
         self._latlon_setup()
 
     def plot_lsection(self, data, lats, lons, valid_time, init_time,
                       resolution=(-1, -1), style=None, show=False,
                       highlight=None, noframe=False, figsize=(960, 480),
-                      numlabels=10, orography_color='k', transparent=False, color="0x00AAFF",
+                      numlabels=10, orography_color='k', transparent=False,
                       return_format="image/png"):
         """
         """
@@ -161,7 +161,7 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             if transparent:
                 self.fig.patch.set_alpha(0.)
 
-            self._plot_style(color)
+            self._plot_style()
 
             # Return the image as png embedded in a StringIO stream.
             canvas = FigureCanvas(self.fig)
@@ -220,7 +220,7 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         elif return_format == "text/xml":
 
             impl = getDOMImplementation()
-            xmldoc = impl.createDocument(None, "MSS_1DSection_Data", None)
+            xmldoc = impl.createDocument(None, "MSS_LinearSection_Data", None)
 
             # Title of this section.
             node = xmldoc.createElement("Title")
@@ -264,7 +264,6 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             node = xmldoc.createElement("Data")
             node.setAttribute("num_waypoints", f"{len(self.y_values)}")
             node.setAttribute("unit", self.unit)
-            node.setAttribute("color", color)
 
             data_str = ""
             for value in self.y_values:
