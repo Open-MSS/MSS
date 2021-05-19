@@ -56,6 +56,24 @@ class Test_MSS_AboutDialog():
         QtWidgets.QApplication.processEvents()
 
 
+class Test_MSS_ShortcutDialog():
+    def setup(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.main_window = mss_pyui.MSSMainWindow()
+        self.main_window.show()
+        self.shortcuts = mss_pyui.MSS_ShortcutsDialog()
+
+    def teardown(self):
+        self.shortcuts.hide()
+        self.main_window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+
+    def test_shortcuts_present(self):
+        assert self.shortcuts.treeWidget.topLevelItemCount() == 1
+
+
 class Test_MSSSideViewWindow(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
     save_csv = os.path.join(ROOT_DIR, "example.csv")
