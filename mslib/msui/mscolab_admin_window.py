@@ -127,7 +127,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
         # Show/Hide item based on permission and text_filter
         for row_num in range(table.rowCount()):
-            permitted = all_items or permission_filter == table.item(row_num, 1).text()
+            permitted = True if all_items else permission_filter == table.item(row_num, 1).text()
             if permitted and text_filter in table.item(row_num, 0).text():
                 table.showRow(row_num)
             else:
