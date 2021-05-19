@@ -92,8 +92,12 @@ class Ui_MultilayersDialog(object):
         self.horizontalLayout_12.addWidget(self.pbViewCapabilities)
         self.verticalLayout_3.addLayout(self.horizontalLayout_12)
         self.verticalLayout_4.addLayout(self.verticalLayout_3)
+        self.actionCloseWindow = QtWidgets.QAction(MultilayersDialog)
+        self.actionCloseWindow.setObjectName("actionCloseWindow")
+        MultilayersDialog.addAction(self.actionCloseWindow)
 
         self.retranslateUi(MultilayersDialog)
+        self.actionCloseWindow.triggered.connect(MultilayersDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(MultilayersDialog)
 
     def retranslateUi(self, MultilayersDialog):
@@ -111,3 +115,5 @@ class Ui_MultilayersDialog(object):
         self.btGetCapabilities.setText(_translate("MultilayersDialog", "get capabilities"))
         self.pbViewCapabilities.setToolTip(_translate("MultilayersDialog", "Show information on the selected WMS server."))
         self.pbViewCapabilities.setText(_translate("MultilayersDialog", "view"))
+        self.actionCloseWindow.setText(_translate("MultilayersDialog", "Close Window"))
+        self.actionCloseWindow.setShortcut(_translate("MultilayersDialog", "Ctrl+W"))

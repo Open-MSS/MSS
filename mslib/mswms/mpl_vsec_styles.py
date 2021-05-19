@@ -13,7 +13,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ from matplotlib import patheffects
 import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format
+from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
 from mslib.utils import convert_to
 from mslib import thermolib
 
@@ -58,14 +58,16 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
         ("ml", "air_temperature", "K")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature if
+        """
+        Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
-        """Make a temperature/potential temperature vertical section.
+        """
+        Make a temperature/potential temperature vertical section.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -108,6 +110,7 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_GenericStyle(AbstractVerticalSectionStyle):
@@ -121,15 +124,20 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
     def _prepare_datafields(self):
         if self.name[-2:] == "pl":
             self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
-            self.data["air_pressure"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
-            self.data_units["air_pressure"] = self.driver.vert_units
+            self.data["air_pressure"][:] = convert_to(
+                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                self.driver.vert_units, "Pa")
+            self.data_units["air_pressure"] = "Pa"
         elif self.name[-2:] == "tl":
             self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
-            self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
+            self.data["air_potential_temperature"][:] = convert_to(
+                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                self.driver.vert_units, "K")
+            self.data_units["air_potential_temperature"] = "K"
 
     def _plot_style(self):
         ax = self.ax
-        curtain_cc = self.data[self.dataname] * self.unit_scale
+        curtain_cc = self.data[self.dataname]
         curtain_cc = np.ma.masked_invalid(curtain_cc)
         curtain_p = self.data["air_pressure"]
 
@@ -184,13 +192,8 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="1%", height="40%", loc=1)
             self.fig.colorbar(cs, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
-
-            # adjust colorbar fontsize to figure height
-            fontsize = self.fig.bbox.height * 0.024
             axins1.yaxis.set_ticks_position("left")
-            for x in axins1.yaxis.majorTicks:
-                x.label1.set_path_effects([patheffects.withStroke(linewidth=4, foreground='w')])
-                x.label1.set_fontsize(fontsize)
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
@@ -205,11 +208,11 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
     class fnord(VS_GenericStyle):
         name = f"VS_{entity}_{vert}"
         dataname = entity
-        units, unit_scale = Targets.get_unit(dataname)
+        units, _ = Targets.get_unit(dataname)
         title = Targets.TITLES.get(entity, entity)
         if units:
             title += f" ({units})"
-        required_datafields = [(vert, entity, None)] + add_data
+        required_datafields = [(vert, entity, units)] + add_data
         contours = add_contours
 
     fnord.__name__ = name
@@ -342,8 +345,9 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
             self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
-        """Make a cloud cover vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a cloud cover vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -398,6 +402,7 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
@@ -419,8 +424,9 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature and
-           total horizontal wind speed.
+        """
+        Computes potential temperature from pressure and temperature and
+        total horizontal wind speed.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
@@ -428,8 +434,9 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
             self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
-        """Make a cloud cover vertical section with wind speed and potential
-           temperature overlay.
+        """
+        Make a cloud cover vertical section with wind speed and potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -478,6 +485,7 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
@@ -497,7 +505,8 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         ("ml", "specific_humidity", "kg/kg")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature if
+        """
+        Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
@@ -507,8 +516,9 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
             self.data["specific_humidity"])
 
     def _plot_style(self):
-        """Make a relative humidity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a relative humidity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -576,6 +586,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
@@ -597,15 +608,17 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature if
+        """
+        Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
-        """Make a relative humidity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a relative humidity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -687,6 +700,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -706,7 +720,8 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         ("ml", "lagrangian_tendency_of_air_pressure", "Pa/s")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature if
+        """
+        Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes vertical
         velocity in cm/s.
         """
@@ -718,8 +733,9 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
             "m/s", "cm/s")
 
     def _plot_style(self):
-        """Make a vertical velocity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a vertical velocity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -785,6 +801,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -809,8 +826,9 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature and
-           total horizontal wind speed.
+        """
+        Computes potential temperature from pressure and temperature and
+        total horizontal wind speed.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
@@ -818,8 +836,9 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
             self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
-        """Make a horizontal velocity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a horizontal velocity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -887,6 +906,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 # POTENTIAL VORTICITY
@@ -1145,6 +1165,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
@@ -1170,8 +1191,9 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         ("ml", "probability_of_wcb_occurrence", 'dimensionless')]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature and
-           total horizontal wind speed.
+        """
+        Computes potential temperature from pressure and temperature and
+        total horizontal wind speed.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
@@ -1179,8 +1201,9 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
             self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
-        """Make a horizontal velocity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a horizontal velocity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -1248,6 +1271,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
@@ -1317,6 +1341,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
@@ -1344,8 +1369,9 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
             self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
-        """Make a volcanic ash cloud cover vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a volcanic ash cloud cover vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -1404,3 +1430,4 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
                                                                       loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)

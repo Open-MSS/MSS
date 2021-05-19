@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,10 +24,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from __future__ import print_function
 
-
-import imp
+import importlib
+import importlib.machinery
 import os
 import sys
 # Disable pyc files
@@ -147,9 +146,9 @@ class mscolab_settings(object):
     parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
 
 
-imp.load_source('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH)
+importlib.machinery.SourceFileLoader('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH).load_module()
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
-imp.load_source('mscolab_settings', path)
+importlib.machinery.SourceFileLoader('mscolab_settings', path).load_module()
 sys.path.insert(0, parent_path)
 
 

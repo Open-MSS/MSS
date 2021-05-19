@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,22 +59,25 @@ class MSSPlotDriver(metaclass=ABCMeta):
     """
 
     def __init__(self, data_access_object):
-        """Requires an instance of a data access object from the MSS
-           configuration (i.e. an NWPDataAccess instance).
+        """
+        Requires an instance of a data access object from the MSS
+        configuration (i.e. an NWPDataAccess instance).
         """
         self.data_access = data_access_object
         self.dataset = None
         self.plot_object = None
 
     def __del__(self):
-        """Closes the open NetCDF dataset, if existing.
+        """
+        Closes the open NetCDF dataset, if existing.
         """
         if self.dataset is not None:
             self.dataset.close()
 
     def _set_time(self, init_time, fc_time):
-        """Open the dataset that corresponds to a forecast field specified
-           by an initialisation and a valid time.
+        """
+        Open the dataset that corresponds to a forecast field specified
+        by an initialisation and a valid time.
 
         This method
           determines the files that correspond to an init time and forecast step
@@ -186,7 +189,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
         self._find_data_vars()
 
     def _find_data_vars(self):
-        """Find NetCDF variables of required data fields.
+        """
+        Find NetCDF variables of required data fields.
 
         A dictionary data_vars is created. Its keys are the CF standard names
         of the variables provided by the plot object. The values are pointers
@@ -203,7 +207,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
             self.data_units[df_name] = getattr(var, "units", None)
 
     def have_data(self, plot_object, init_time, valid_time):
-        """Checks if this driver has the required data to do the plot
+        """
+        Checks if this driver has the required data to do the plot
 
         This inquires the contained data access class if data is available for
         all required data fields for the specified times.
@@ -217,7 +222,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
                             style=None, bbox=None, figsize=(800, 600),
                             noframe=False, require_reload=False, transparent=False,
                             return_format="image/png"):
-        """Set parameters controlling the plot.
+        """
+        Set parameters controlling the plot.
 
         Parameters not passed as arguments are reset to standard values.
 
@@ -252,7 +258,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
     def update_plot_parameters(self, plot_object=None, figsize=None, style=None,
                                bbox=None, init_time=None, valid_time=None,
                                noframe=None, transparent=None, return_format=None):
-        """Update parameters controlling the plot.
+        """
+        Update parameters controlling the plot.
 
         Similar to set_plot_parameters(), but keeps all parameters already
         set except the ones that are specified.
@@ -287,8 +294,9 @@ class MSSPlotDriver(metaclass=ABCMeta):
 
     @abstractmethod
     def plot(self):
-        """Plot the figure (i.e. load the data fields and call the
-           corresponding plotting routines of the plot object).
+        """
+        Plot the figure (i.e. load the data fields and call the
+        corresponding plotting routines of the plot object).
 
         THIS METHOD NEEDS TO BE REIMPLEMENTED IN ANY CLASS DERIVING FROM
         MSSPlotDriver!
@@ -296,45 +304,53 @@ class MSSPlotDriver(metaclass=ABCMeta):
         pass
 
     def get_init_times(self):
-        """Returns a list of available forecast init times (base times).
+        """
+        Returns a list of available forecast init times (base times).
         """
         return self.data_access.get_init_times()
 
     def get_elevations(self, vert_type):
-        """See ECMWFDataAccess.get_elevations().
+        """
+        See ECMWFDataAccess.get_elevations().
         """
         return self.data_access.get_elevations(vert_type)
 
     def get_elevation_units(self, vert_type):
-        """See ECMWFDataAccess.get_elevation().
+        """
+        See ECMWFDataAccess.get_elevation().
         """
         return self.data_access.get_elevation_units(vert_type)
 
     def get_all_valid_times(self, variable, vartype):
-        """See ECMWFDataAccess.get_all_valid_times().
+        """
+        See ECMWFDataAccess.get_all_valid_times().
         """
         return self.data_access.get_all_valid_times(variable, vartype)
 
     def get_valid_times(self, variable, vartype, init_time):
-        """See ECMWFDataAccess.get_valid_times().
+        """
+        See ECMWFDataAccess.get_valid_times().
         """
         return self.data_access.get_valid_times(variable, vartype, init_time)
 
     def uses_inittime_dimension(self):
-        """Returns whether this driver uses the WMS inittime dimensions.
+        """
+        Returns whether this driver uses the WMS inittime dimensions.
         """
         return self.data_access.uses_inittime_dimension()
 
     def uses_validtime_dimension(self):
-        """Returns whether this layer uses the WMS time dimensions.
+        """
+        Returns whether this layer uses the WMS time dimensions.
         """
         return self.data_access.uses_validtime_dimension()
 
 
 class VerticalSectionDriver(MSSPlotDriver):
-    """The vertical section driver is responsible for loading the data that
-       is to be plotted and for calling the plotting routines (that have
-       to be registered).
+    """
+    The vertical section driver is responsible for loading the data that
+    is to be plotted and for calling the plotting routines (that have
+    to be registered).
     """
 
     def set_plot_parameters(self, plot_object=None, vsec_path=None,
@@ -412,8 +428,9 @@ class VerticalSectionDriver(MSSPlotDriver):
         self.vsec_path_connection = vsec_path_connection
 
     def _load_interpolate_timestep(self):
-        """Load and interpolate the data fields as required by the vertical
-           section style instance. Only data of time <fc_time> is processed.
+        """
+        Load and interpolate the data fields as required by the vertical
+        section style instance. Only data of time <fc_time> is processed.
 
         Shifts the data fields such that the longitudes are in the range
         left_longitude .. left_longitude+360, where left_longitude is the
@@ -468,7 +485,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         return data
 
     def shift_data(self):
-        """Shift the data fields such that the longitudes are in the range
+        """
+        Shift the data fields such that the longitudes are in the range
         left_longitude .. left_longitude+360, where left_longitude is the
         westmost longitude appearing in the list of waypoints minus one
         gridpoint (to include all waypoint longitudes).
@@ -538,9 +556,10 @@ class VerticalSectionDriver(MSSPlotDriver):
 
 
 class HorizontalSectionDriver(MSSPlotDriver):
-    """The horizontal section driver is responsible for loading the data that
-       is to be plotted and for calling the plotting routines (that have
-       to be registered).
+    """
+    The horizontal section driver is responsible for loading the data that
+    is to be plotted and for calling the plotting routines (that have
+    to be registered).
     """
 
     def set_plot_parameters(self, plot_object=None, bbox=None, level=None, crs=None, init_time=None, valid_time=None,
@@ -582,8 +601,9 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                  transparent=transparent, return_format=return_format)
 
     def _load_timestep(self):
-        """Load the data fields as required by the horizontal section style
-           instance at the current timestep.
+        """
+        Load the data fields as required by the horizontal section style
+        instance at the current timestep.
         """
         if self.dataset is None:
             return {}

@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -203,7 +203,7 @@ class KMLPatch(object):
 
     def parse_styles(self, kml_doc):
         # exterior_style : <Style> OUTSIDE placemarks
-        # interior style : within <Style>
+        # interior_style : within <Style>
         for exterior_style in kml_doc.styles():
             if isinstance(exterior_style, styles.Style):
                 name = exterior_style.id
@@ -236,7 +236,8 @@ class KMLPatch(object):
         return local_styles
 
     def draw(self):
-        """Do the actual plotting of the patch.
+        """
+        Do the actual plotting of the patch.
         """
         # Plot satellite track.
         self.styles = {}
@@ -248,18 +249,21 @@ class KMLPatch(object):
         self.map.ax.figure.canvas.draw()
 
     def update(self, color=None, linewidth=None):
-        """Removes the current plot of the patch and redraws the patch.
-           This is necessary, for instance, when the map projection and/or
-           extent has been changed.
+        """
+        Removes the current plot of the patch and redraws the patch.
+        This is necessary, for instance, when the map projection and/or
+        extent has been changed.
         """
         if color is not None:
             self.color = color
         if linewidth is not None:
             self.linewidth = linewidth
+        self.remove()
         self.draw()
 
     def remove(self):
-        """Remove this satellite patch from the map canvas.
+        """
+        Remove this satellite patch from the map canvas.
         """
         for patch in self.patches:
             for element in patch:
@@ -279,7 +283,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.setupUi(self)
         self.view = view  # canvas
         self.kml = None
-        self.patch = None  # patch refers to plottings on the map
         self.dict_files = {}  # Dictionary of files added; key : patch , color , linewidth
         self.colour = None
         # Connect slots and signals.
@@ -310,27 +313,35 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                 "saved_files": {}})  # initial settings
 
         self.directory_location = settings["filename"]
+        if parent is not None:
+            parent.viewCloses.connect(self.save_settings)
 
         # Restore previously opened files
         if settings["saved_files"] is not None:
             delete_files = []  # list to store non-existing files
             self.dict_files = settings["saved_files"]
-            for file in self.dict_files:
-                if os.path.isfile(file) is True:
-                    self.create_list_item(file)
+            for fn in self.dict_files:
+                if os.path.isfile(fn) is True:
+                    self.create_list_item(fn)
                 else:
-                    delete_files.append(file)  # add non-existent files to list
-                    logging.info(file + " does not exist in the directory anymore")
-            for file in delete_files:
-                del self.dict_files[file]  # remove non-existent files from dictionary
+                    delete_files.append(fn)  # add non-existent files to list
+                    logging.info("'%s' does not exist in the directory anymore.", fn)
+            for fn in delete_files:
+                del self.dict_files[fn]  # remove non-existent files from dictionary
             self.load_file()
 
-        # When KMLoverlaywidget is opened,it ensures that the color of individual KML files are already shown as icons.
+        # When KMLoverlaywidget is opened, it ensures that the
+        # color of individual KML files are already shown as icons.
         self.set_color_icons()
+        self.view.plot_kml(self)
 
-    def __del__(self):  # destructor
-        for x in self.dict_files:
-            self.dict_files[x]["patch"] = None  # patch object has to be deleted
+    def update(self):
+        for entry in self.dict_files.values():
+            entry["patch"].update()
+
+    def save_settings(self):
+        for entry in self.dict_files.values():
+            entry["patch"] = None  # patch object has to be deleted
         settings = {
             "filename": str(self.directory_location),
             "linewidth": self.dsbx_linewidth.value(),
@@ -403,8 +414,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
     def flagop(self):
         """
-        Flag operation method to control the call of self.load_file() whenever th item in the listWidget changes
-        by any means. If select_linewidth and select_color are already executed, then it doesnot calls self.load_file
+        Flag operation method to control the call of self.load_file() whenever the item in the listWidget changes
+        by any means. If select_linewidth and select_color are already executed, then it doesn't calls self.load_file
         otherwise, it always calls when item is changed anywhere.
         """
         if self.flag == 1:
@@ -446,7 +457,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.listWidget.item(index).setCheckState(QtCore.Qt.Checked)
 
     def get_file(self):
-        """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
+        """
+        Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
         filenames = get_open_filenames(
             self, "Open KML File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
@@ -462,7 +474,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     self.listWidget.item(index).setIcon(self.show_color_icon(filename, self.set_color(filename)))
 
     def select_file(self, filenames):
-        """Initializes selected file/ files
+        """
+        Initializes selected file/ files
         """
         for filename in filenames:
             if filename is None:
@@ -518,7 +531,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
         self.labelStatusBar.setText("Status: KML Files removed")
         if self.listWidget.count() == 0:  # implies no files in ListWidget
-            self.patch = None
             self.dsbx_linewidth.setValue(0.1)  # Shows 0.1 for Linewidth in absence of any file
             self.frame.hide()   # again hide the color and linewidth options when all files are removed.
         # self.load_file() # not sure to keep this or not, works either ways
@@ -528,10 +540,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Loads multiple KML Files simultaneously and constructs the
         corresponding patches.
         """
-        if self.patch is not None:  # --> self.patch has been initialized before
-            for filename in self.dict_files:  # removes all patches from map, but not from dict_files
-                if self.dict_files[filename]["patch"] is not None:  # since newly initialized files will have patch:None
-                    self.dict_files[filename]["patch"].remove()
+        for entry in self.dict_files.values():  # removes all patches from map, but not from dict_files
+            if entry["patch"] is not None:  # since newly initialized files will have patch:None
+                entry["patch"].remove()
 
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
@@ -544,15 +555,14 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                         self.kml.from_string(kmlf.read().encode('utf-8'))
                         if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
                             if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # added before
-                                self.patch = KMLPatch(self.view.map, self.kml,
-                                                      self.set_color(self.listWidget.item(index).text()),
-                                                      self.set_linewidth(self.listWidget.item(index).text()))
-
+                                patch = KMLPatch(self.view.map, self.kml,
+                                                 self.set_color(self.listWidget.item(index).text()),
+                                                 self.set_linewidth(self.listWidget.item(index).text()))
                             else:  # if new file is being added
-                                self.patch = KMLPatch(self.view.map, self.kml,
-                                                      self.dict_files[self.listWidget.item(index).text()]["color"],
-                                                      self.dict_files[self.listWidget.item(index).text()]["linewidth"])
-                            self.dict_files[self.listWidget.item(index).text()]["patch"] = self.patch
+                                patch = KMLPatch(self.view.map, self.kml,
+                                                 self.dict_files[self.listWidget.item(index).text()]["color"],
+                                                 self.dict_files[self.listWidget.item(index).text()]["linewidth"])
+                            self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
                 except (IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError, et.XMLSchemaParseError,
                         et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors

@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_tableview_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_TableViewWindow(object):
     def setupUi(self, TableViewWindow):
@@ -26,20 +28,12 @@ class Ui_TableViewWindow(object):
         self.tableWayPoints.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.tableWayPoints.setDefaultDropAction(QtCore.Qt.CopyAction)
         self.tableWayPoints.setAlternatingRowColors(True)
-        self.tableWayPoints.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tableWayPoints.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.tableWayPoints.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWayPoints.setObjectName("tableWayPoints")
         self.verticalLayout.addWidget(self.tableWayPoints)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.btViewPerformance = QtWidgets.QPushButton(self.centralwidget)
-        self.btViewPerformance.setEnabled(True)
-        self.btViewPerformance.setCheckable(True)
-        self.btViewPerformance.setChecked(False)
-        self.btViewPerformance.setObjectName("btViewPerformance")
-        self.horizontalLayout.addWidget(self.btViewPerformance)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
         self.cbTools = QtWidgets.QComboBox(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -50,8 +44,8 @@ class Ui_TableViewWindow(object):
         self.cbTools.setObjectName("cbTools")
         self.cbTools.addItem("")
         self.horizontalLayout.addWidget(self.cbTools)
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem1)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
@@ -84,7 +78,6 @@ class Ui_TableViewWindow(object):
     def retranslateUi(self, TableViewWindow):
         _translate = QtCore.QCoreApplication.translate
         TableViewWindow.setWindowTitle(_translate("TableViewWindow", "Table View - Mission Support System"))
-        self.btViewPerformance.setText(_translate("TableViewWindow", "performance settings"))
         self.cbTools.setItemText(0, _translate("TableViewWindow", "(select to open control)"))
         self.label.setText(_translate("TableViewWindow", "Waypoints:"))
         self.btAddWayPointToFlightTrack.setText(_translate("TableViewWindow", "insert"))
@@ -94,4 +87,3 @@ class Ui_TableViewWindow(object):
         self.btRoundtrip.setText(_translate("TableViewWindow", "make roundtrip"))
         self.actionCloseWindow.setText(_translate("TableViewWindow", "Close Window"))
         self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+W"))
-

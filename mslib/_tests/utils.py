@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,9 +25,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import time
 import fs
 import socket
 import multiprocessing
+from PyQt5 import QtTest
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
 from flask import json
@@ -45,6 +47,11 @@ def callback_ok_image(status, response_headers):
 def callback_ok_xml(status, response_headers):
     assert status == "200 OK"
     assert response_headers[0] == ('Content-type', 'text/xml')
+
+
+def callback_ok_html(status, response_headers):
+    assert status == "200 OK"
+    assert response_headers[0] == ('Content-Type', 'text/html; charset=utf-8')
 
 
 def callback_404_plain(status, response_headers):
@@ -198,3 +205,26 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
 def create_mss_settings_file(content):
     with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
         file_dir.writetext("mss_settings.json", content)
+
+
+def wait_until_signal(signal, timeout=5):
+    """
+    Blocks the calling thread until the signal emits or the timeout expires.
+    """
+    init_time = time.time()
+    finished = False
+
+    def done(*args):
+        nonlocal finished
+        finished = True
+
+    signal.connect(done)
+    while not finished and time.time() - init_time < timeout:
+        QtTest.QTest.qWait(100)
+
+    try:
+        signal.disconnect(done)
+    except TypeError:
+        pass
+    finally:
+        return finished

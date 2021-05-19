@@ -92,8 +92,9 @@ importing changed files back in addition to the main FTML format. These filters 
 from the File menu of the Main Window.
 
 MSS currently offers several import/export filters in the mslib.plugins.io module, which may serve
-as an example for the definition of own plugins. The CSV plugin is enabled by default. Enabling the
-experimental FliteStar text import plugin would require those lines in the UI settings file:
+as an example for the definition of own plugins. They are listed below. The CSV plugin is enabled
+by default. Enabling the experimental FliteStar text import plugin would require those lines in
+the UI settings file:
 
 .. code:: text
 
@@ -121,10 +122,20 @@ The given plugins demonstrate, how additional plugins may be implemented. Please
 attributes of the waypoints are automatically computed by MSS (for example all time and performance data)
 and will be overwritten after reading back the file.
 
+**Available Export Formats:**
+
+.. code:: text
+
+    "export_plugins": {
+        "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
+        "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
+        "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
+    },
+
 Web Proxy
 ~~~~~~~~~
 
-If you are in an area with a very low bandwith you may consider to use a squid web proxy
+If you are in an area with a very low bandwidth you may consider to use a squid web proxy
 and add those lines in your mss_settings pointing to the proxy server.
 
 .. literalinclude:: samples/config/mss/snippets/proxies.sample
@@ -199,7 +210,7 @@ according to the relative position of sun, moon, and some planets (to either avo
 Upon first starting the widget, it is thus necessary to download astronomic positional data
 (`see here for more information <http://rhodesmill.org/skyfield/files.html>`_).
 This is automatically performed by the skyfield python package, retrieving the data from public sources of JPL
-and other US services. The data is stored in the MSS configuration directory and may need to update irregularily.
+and other US services. The data is stored in the MSS configuration directory and may need to update irregularly.
 
 
 File picker dialogue

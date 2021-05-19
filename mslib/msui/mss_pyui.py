@@ -13,7 +13,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -142,8 +142,8 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText("Version: {}".format(__version__))
-        self.lblChanges.setText(f'<a href="https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A"\
-            "{__version__[:-1]}">New Features and Changes</a>')
+        self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
+        self.lblChanges.setText(f'<a href="{self.milestone_url}">New Features and Changes</a>')
         blub = QtGui.QPixmap(python_powered())
         self.lblPython.setPixmap(blub)
 
@@ -346,6 +346,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self, "Import Flight Track", self.last_save_directory,
                 "All Files (*." + extension + ")", pickertype=pickertype)
             if filename is not None:
+                self.last_save_directory = fs.path.dirname(filename)
                 try:
                     ft_name, new_waypoints = function(filename)
                 # wildcard exception to be resilient against error introduced by user code
@@ -384,6 +385,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self, "Export Flight Track", default_filename,
                 name + " (*." + extension + ")", pickertype=pickertype)
             if filename is not None:
+                self.last_save_directory = fs.path.dirname(filename)
                 try:
                     function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
                 # wildcard exception to be resilient against error introduced by user code
@@ -411,6 +413,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
+            while self.listViews.count() > 0:
+                self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
             self.listFlightTracks.clear()
             # cleanup mscolab window
@@ -535,6 +539,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.activate_flight_track(listitem)
 
     def restart_application(self):
+        while self.listViews.count() > 0:
+            self.listViews.item(0).window.handle_force_close()
         self.listViews.clear()
         self.remove_plugins()
         self.add_plugins()
@@ -549,8 +555,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             filename = get_open_filename(
-                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)",
-                pickertag="filepicker_config")
+                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)")
             if filename is not None:
                 constants.CACHED_CONFIG_FILE = filename
                 self.restart_application()
@@ -578,6 +583,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self, "Open Flight Track", self.last_save_directory, "Flight Track Files (*.ftml)",
             pickertag="filepicker_default")
         if filename is not None:
+            self.last_save_directory = fs.path.dirname(filename)
             try:
                 if filename.endswith('.ftml'):
                     self.create_new_flight_track(filename=filename)

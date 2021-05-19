@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,7 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
+from mslib._tests.utils import wait_until_signal
 
 
 PORTS = list(range(8106, 8120))
@@ -101,7 +102,7 @@ class WMSControlWidgetSetup(object):
         QtTest.QTest.qWait(2000)  # time for the server to start up
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(5000)  # time for the server to parse all netcdf data
+        wait_until_signal(self.window.cpdlg.canceled)
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -162,7 +163,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.qWait(20)
         QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        wait_until_signal(self.window.image_displayed)
 
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
@@ -178,7 +179,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(5000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -195,10 +196,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(6000)
-        QtWidgets.QApplication.processEvents()
+        wait_until_signal(self.window.image_displayed)
 
         # assert mockbox.critical.call_count == 0
 
@@ -211,9 +209,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
 
@@ -234,6 +230,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        wait_until_signal(self.window.cpdlg.canceled)
         assert mockbox.critical.call_count == 1
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
@@ -244,11 +241,12 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        wait_until_signal(self.window.cpdlg.canceled)
         assert mockbox.critical.call_count == 0
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(1000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -263,6 +261,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
+        self.window.cbAutoUpdate.setCheckState(False)
         assert server is not None
         assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
         assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
@@ -295,7 +294,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         # Check drawing not causing errors
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(6000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -310,6 +309,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
+        self.window.cbAutoUpdate.setCheckState(False)
         assert server is not None
         assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
         assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
@@ -331,7 +331,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         # Check drawing not causing errors
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(6000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -346,6 +346,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
+        self.window.cbAutoUpdate.setCheckState(False)
         server.setExpanded(True)
         self.window.multilayers.cbMultilayering.setChecked(True)
         layer_a = server.child(0)
@@ -366,6 +367,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert layer_a.get_vtime() == self.window.cbValidTime.currentText()
         assert layer_a.get_level() == layer_b.get_level()
         assert layer_a.get_vtime() == layer_b.get_vtime()
+        assert layer_a.get_itime() == layer_a.get_itimes()[-1]
         assert mockbox.critical.call_count == 0
 
 
@@ -384,7 +386,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(5000)
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -401,6 +403,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
         server.child(0).draw()
+        wait_until_signal(self.window.image_displayed)
 
         assert mockbox.critical.call_count == 0
 
@@ -641,14 +644,33 @@ class TestWMSControlWidgetSetupSimple(object):
         dimext_time_period = '<Dimension name="TIME" units="ISO8610"> </Dimension> ' \
             '<Extent name="TIME"> 2010-10-17T12:00:00Z/2010-11-18T00:00:00Z/P1M, ' \
             '2012-10-01T12:00:00Z,2012-10-17T12:00:00Z/2012-10-18T00:00:00Z/PT12H </Extent>'
+        dimext_inittime = """
+                <Dimension name="INIT_TIME" units="ISO8610"> </Dimension>
+                <Extent name="INIT_TIME"> 2010-10-17T12:00:00Z,2012-10-16T12:00:00Z,2012-10-17T12:00:00Z </Extent>"""
+
+        testxml = self.xml.format(
+            "", self.srs_base, dimext_time_period + dimext_inittime + self.dimext_elevation)
+        self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
+        QtWidgets.QApplication.processEvents()
+        self.window.cbAutoUpdate.setCheckState(False)
+        self.window.cbInitTime.setCurrentIndex(0)
+        assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
+            ['2010-10-17T12:00:00Z', '2010-11-17T12:00:00Z',
+             '2012-10-01T12:00:00Z',
+             '2012-10-17T12:00:00Z', '2012-10-18T00:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
+            ['2010-10-17T12:00:00Z', '2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+
+    def test_valid_before_init(self):
+        dimext_time_period = '<Dimension name="TIME" units="ISO8610"> </Dimension> ' \
+            '<Extent name="TIME"> 2010-10-17T12:00:00Z,2012-10-17T12:00:00Z </Extent>' \
+
         testxml = self.xml.format(
             "", self.srs_base, dimext_time_period + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
-            ['2010-10-17T12:00:00Z', '2010-11-17T12:00:00Z',
-             '2012-10-01T12:00:00Z',
-             '2012-10-17T12:00:00Z', '2012-10-18T00:00:00Z']
+            ['2012-10-17T12:00:00Z']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
             ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
 
@@ -675,6 +697,8 @@ class TestWMSControlWidgetSetupSimple(object):
             "", self.srs_base, dimext_time_format + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
+        self.window.cbAutoUpdate.setCheckState(False)
+        self.window.cbInitTime.setCurrentIndex(0)
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == \
             ['2012-10-17T00:00:00Z', '2012-10-18T00:00:00Z', '2012-10-19T00:00:00Z']
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \

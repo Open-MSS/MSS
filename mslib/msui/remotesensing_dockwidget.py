@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import fs
+import logging
 import collections
 
 from matplotlib.collections import LineCollection
@@ -55,7 +56,18 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.setupUi(self)
 
         self.view = view
-        self.load = Loader(MSS_CONFIG_PATH, verbose=False)
+        if '://' in MSS_CONFIG_PATH:
+            try:
+                _fs = fs.open_fs(MSS_CONFIG_PATH)
+                download_path = _fs.getsyspath("")
+            except fs.errors.CreateFailed:
+                logging.error(f'Make sure that the FS url "{MSS_CONFIG_PATH}" exists')
+            except fs.opener.errors.UnsupportedProtocol:
+                logging.error(f'FS url "{MSS_CONFIG_PATH}" not supported')
+        else:
+            download_path = MSS_CONFIG_PATH
+
+        self.load = Loader(download_path, verbose=False)
         self.planets = self.load('de421.bsp')
         self.timescale = self.load.timescale(builtin=True)
         # don't download files, use shipped files

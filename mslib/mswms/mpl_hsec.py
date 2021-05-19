@@ -11,7 +11,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,28 +49,33 @@ BASEMAP_REQUESTS = []
 
 
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
-    """Abstract horizontal section super class. Use this class as a parent
-       to classes implementing different plotting backends. For example,
-       to derive a Matplotlib-based style class, or a Magics++-based
-       style class.
+    """
+    Abstract horizontal section super class. Use this class as a parent
+    to classes implementing different plotting backends. For example,
+    to derive a Matplotlib-based style class, or a Magics++-based
+    style class.
     """
 
     @abstractmethod
     def plot_hsection(self):
-        """Re-implement this function to perform the actual plotting.
+        """
+        Re-implement this function to perform the actual plotting.
         """
         pass
 
 
 class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
-    """Matplotlib-based super class for all horizontal section styles.
-       Sets up the map projection and draws a basemap.
+    """
+    Matplotlib-based super class for all horizontal section styles.
+    Sets up the map projection and draws a basemap.
     """
     name = "BASEMAP"
     title = "Matplotlib basemap"
+    _plot_countries = True  # set to False in derived class to disable country plotting
 
     def _plot_style(self):
-        """Overwrite this method to plot style-specific data on the map.
+        """
+        Overwrite this method to plot style-specific data on the map.
         """
         pass
 
@@ -78,7 +83,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         return list(mss_wms_settings.epsg_to_mpl_basemap_table.keys())
 
     def support_epsg_code(self, crs):
-        """Returns a list of supported EPSG codes.
+        """
+        Returns a list of supported EPSG codes.
         """
         try:
             get_projection_params(crs)
@@ -87,8 +93,9 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         return True
 
     def supported_crs(self):
-        """Returns a list of the coordinate reference systems supported by
-           this style.
+        """
+        Returns a list of the coordinate reference systems supported by
+        this style.
         """
         crs_list = set([
             "EPSG:3031",  # WGS 84 / Antarctic Polar Stereographic
@@ -324,17 +331,18 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                     del BASEMAP_CACHE[key]
                     BASEMAP_REQUESTS[:] = [_x for _x in BASEMAP_REQUESTS if key != _x]
 
-        # Set up the map appearance.
-        bm.drawcoastlines(color='0.25')
-        bm.drawcountries(color='0.5')
-        bm.drawmapboundary(fill_color='white')
+        if self._plot_countries:
+            # Set up the map appearance.
+            bm.drawcoastlines(color='0.25')
+            bm.drawcountries(color='0.5')
+            bm.drawmapboundary(fill_color='white')
 
-        # zorder = 0 is necessary to paint over the filled continents with
-        # scatter() for drawing the flight tracks and trajectories.
-        # Curiously, plot() works fine without this setting, but scatter()
-        # doesn't.
-        bm.fillcontinents(color='0.98', lake_color='white', zorder=0)
-        self._draw_auto_graticule(bm)
+            # zorder = 0 is necessary to paint over the filled continents with
+            # scatter() for drawing the flight tracks and trajectories.
+            # Curiously, plot() works fine without this setting, but scatter()
+            # doesn't.
+            bm.fillcontinents(color='0.98', lake_color='white', zorder=0)
+            self._draw_auto_graticule(bm)
 
         if noframe:
             ax.axis('off')
@@ -412,6 +420,10 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         (e.g. data is stored on a -180..180 grid, but a map in the range
         -200..-100 is requested).
         """
+        # Shifting makes the grid irregular for stereographic and other projections
+        # in case the data is not global (i.e. covers 360 degrees).
+        if self.bm.projection in ['npstere', 'spstere', 'stere', 'lcc']:
+            return
         # Determine the leftmost longitude in the plot.
         axis = self.bm.ax.axis()
         ulcrnrlon, ulcrnrlat = self.bm(axis[0], axis[3], inverse=True)
@@ -443,15 +455,14 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         x, y = self.bm(lonmesh_, latmesh_)
         # test which coordinates are outside the map domain.
 
-        add_x = ((self.bm.xmax - self.bm.xmin) / 10.)
-        add_y = ((self.bm.ymax - self.bm.ymin) / 10.)
+        add_x = (self.bm.xmax - self.bm.xmin) / 10
+        add_y = (self.bm.ymax - self.bm.ymin) / 10
 
         mask1 = x < self.bm.xmin - add_x
         mask2 = x > self.bm.xmax + add_x
         mask3 = y > self.bm.ymax + add_y
         mask4 = y < self.bm.ymin - add_y
-        mask = mask1 + mask2 + mask3 + mask4
+        mask = mask1 & mask2 & mask3 & mask4
         # mask data arrays.
         for key in self.data:
-            self.data[key] = np.ma.masked_array(
-                self.data[key], mask=mask, keep_mask=False)
+            self.data[key] = np.ma.masked_array(self.data[key], mask=mask)

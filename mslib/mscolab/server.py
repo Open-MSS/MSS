@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ import time
 import secrets
 import fs
 import socketio
-from flask import g, jsonify, request, redirect
+from flask import g, jsonify, request, render_template
 from flask import send_from_directory, abort
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
@@ -91,7 +91,7 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
 
 def initialize_managers(app):
     sockio, cm, fm = setup_managers(app)
-    # initiatializing socketio and db
+    # initializing socketio and db
     app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
     db.init_app(app)
@@ -147,9 +147,8 @@ def verify_user(func):
 
 
 @APP.route('/')
-# currently we do use same redirect as on wms server
 def home():
-    return redirect('/index', 307)
+    return render_template("/index.html")
 
 
 # ToDo setup codes in return statements
@@ -232,6 +231,9 @@ def message_attachment():
     p_id = request.form.get("p_id", None)
     message_type = MessageType(int(request.form.get("message_type")))
     user = g.user
+    users = fm.fetch_users_without_permission(int(p_id), user.id)
+    if users is False:
+        return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
     if file is not None:
         with fs.open_fs('/') as home_fs:
             file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], p_id)
@@ -437,7 +439,7 @@ def modify_bulk_permissions():
     success = fm.modify_bulk_permission(p_id, user, u_ids, new_access_level)
     if success:
         for u_id in u_ids:
-            sockio.sm.emit_new_permission(u_id=u_id, p_id=p_id)
+            sockio.sm.emit_update_permission(u_id, p_id, access_level=new_access_level)
         sockio.sm.emit_project_permissions_updated(user.id, p_id)
         return jsonify({"success": True, "message": "User permissions successfully updated!"})
 
