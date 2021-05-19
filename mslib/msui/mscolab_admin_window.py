@@ -121,23 +121,14 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             if table.item(row_num, 0).isSelected() and table.isRowHidden(row_num) is False:
                 table.selectRow(row_num)
 
-    # TODO: Think of a more cleaner implementation.
     def apply_filters(self, table, text_filter, permission_filter=None):
-        row_count = table.rowCount()
+        # Check if no permission or permission is all
+        all_items = permission_filter is None or permission_filter == "all"
 
-        # Filter items with permissions
-        if permission_filter is None or permission_filter == "all":
-            permitted_items = range(row_count)
-        else:
-            permitted_items = [
-                row_num
-                for row_num in range(row_count)
-                if permission_filter == table.item(row_num, 1).text()
-            ]
-
-        # Display items that have permission and text_filter
-        for row_num in range(row_count):
-            if row_num in permitted_items and text_filter in table.item(row_num, 0).text():
+        # Show/Hide item based on permission and text_filter
+        for row_num in range(table.rowCount()):
+            permitted = True if all_items else permission_filter == table.item(row_num, 1).text()
+            if permitted and text_filter in table.item(row_num, 0).text():
                 table.showRow(row_num)
             else:
                 table.hideRow(row_num)
