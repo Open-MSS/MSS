@@ -1,6 +1,72 @@
 Changelog
 =========
 
+
+Version 3.0.3
+-------------
+
+Bug Fix release
+
+* Security fix: viewers were able to store attachments within the chat and could undo flightpathes. #43f7fab10b0ae57c2747de94f39df08535d52cad
+* Security fix: omit recording of the token. #9afc5b4768817b4cd8dceca7201a4f1ebc331944
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/56?closed=1
+
+
+Version 3.0.2
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/55?closed=1
+
+Version 3.0.1
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/54?closed=1
+
+
+Version 3.0.0
+-------------
+May Bär implemented multilayer support for the Server and Client. By this
+Layers have a selectable priority in which they will be displayed. The multilayers
+are searchable and filterable. Layer parameters can be synchronized.
+The used style of each layer is persistently stored.
+The selection of layers is supported by favorization.
+
+
+Hint:
+~~~~~
+With version 3.0.0 we change our default channel order.
+conda-forge is now sorted before defaults.
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/3?closed=1
+
+
+Version 2.0.4
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/51?closed=1
+
+Version 2.0.3
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/49?closed=1
+
 Version 2.0.2
 -------------
 

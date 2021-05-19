@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -130,8 +130,9 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         self.leFile.setText(settings["filename"])
 
     def select_file(self):
-        """Slot that opens a file dialog to choose a file with satellite
-           overpass predictions.
+        """
+        Slot that opens a file dialog to choose a file with satellite
+        overpass predictions.
         """
         filename = get_open_filename(
             self, "Open NASA satellite overpass prediction",
@@ -143,12 +144,10 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
         save_settings_qsettings(self.settings_tag, {"filename": filename})
 
     def load_file(self):
-        """Load the file specified in leFile and fill the combobox with the
-           available track segments.
         """
-        # ToDo nappy needs filelike object first
-        # _dirname, _name = os.path.split(self.leFile.text())
-        # _fs = open_fs(_dirname)
+        Load the file specified in leFile and fill the combobox with the
+        available track segments.
+        """
         filename = self.leFile.text()
         logging.debug("loading satellite overpasses in file '%s'", filename)
 

@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016-2017 Joern Ungermann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ AIRCRAFT_DUMMY = {
 class SimpleAircraft(object):
     """
     Simple aircraft model that offers methods to estimate fuel and time consumption
-    of air craft for different flight maneuvers.
+    of aircraft for different flight maneuvers.
     """
 
     def __init__(self, data):
@@ -141,7 +141,7 @@ class SimpleAircraft(object):
     def get_ceiling_altitude(self, grossweight):
         """
         Ceiling altitude of aircraft for given weight [lbs]. Computed by
-        a polynomial with arbitray number of terms.
+        a polynomial with arbitrary number of terms.
 
         Args:
             grossweight:  total weight of the aircraft in lbs

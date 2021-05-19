@@ -230,7 +230,7 @@ class WebMapService(wms111.WebMapService_1_1_1):
             .ServiceIdentification(serviceelem, self.version)
 
         # serviceProvider metadata
-        self.provider = wms130.ServiceProvider(serviceelem)
+        self.provider = (wms130 if self.version == "1.3.0" else wms111).ServiceProvider(serviceelem)
 
         # serviceOperations metadata
         self.operations = []

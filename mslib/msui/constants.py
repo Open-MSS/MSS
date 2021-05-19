@@ -11,7 +11,7 @@
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Tongxi Lou (tl)
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,13 +27,24 @@
     limitations under the License.
 """
 
-
+import fs
 import os
+import logging
 
-HOME = os.path.expanduser("~/")
+
+HOME = os.path.expanduser(f"~{os.path.sep}")
 MSS_CONFIG_PATH = os.getenv("MSS_CONFIG_PATH", os.path.join(HOME, ".config", "mss"))
-if not os.path.exists(MSS_CONFIG_PATH):
-    os.makedirs(MSS_CONFIG_PATH)
+if '://' in MSS_CONFIG_PATH:
+    try:
+        _fs = fs.open_fs(MSS_CONFIG_PATH)
+    except fs.errors.CreateFailed:
+        _fs.makedirs(MSS_CONFIG_PATH)
+    except fs.opener.errors.UnsupportedProtocol:
+        logging.error(f'FS url "{MSS_CONFIG_PATH}" not supported')
+else:
+    _dir = os.path.expanduser(MSS_CONFIG_PATH)
+    if not os.path.exists(_dir):
+        os.makedirs(_dir)
 
 MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
 

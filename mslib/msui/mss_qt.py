@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017-2018 Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -167,7 +167,7 @@ for mod in [
         "ui_kmloverlay_dockwidget",
         "ui_customize_kml",
         "ui_mainwindow",
-        "ui_performance_settings",
+        "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",
         "ui_sideview_options",

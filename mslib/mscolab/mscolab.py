@@ -30,10 +30,12 @@ import platform
 import os
 import shutil
 import sys
+import secrets
 
 from mslib import __version__
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.seed import seed_data
+from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_project,\
+    add_all_users_to_all_projects, delete_user
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
 
@@ -104,6 +106,14 @@ def main():
     database_parser.add_argument("--init", help="Initialise database", action="store_true")
     database_parser.add_argument("--reset", help="Reset database", action="store_true")
     database_parser.add_argument("--seed", help="Seed database", action="store_true")
+    database_parser.add_argument("--users_by_file", type=argparse.FileType('r'),
+                                 help="adds users into database, fileformat: suggested_username  name   <email>")
+    database_parser.add_argument("--delete_users_by_file", type=argparse.FileType('r'),
+                                 help="removes users from the database, fileformat: email")
+    database_parser.add_argument("--default_project", help="adds all users into a default TEMPLATE project",
+                                 action="store_true")
+    database_parser.add_argument("--add_all_to_all_project", help="adds all users into all other projects",
+                                 action="store_true")
 
     args = parser.parse_args()
 
@@ -131,6 +141,35 @@ def main():
                                           "existing data and replace it with seed data (y/[n]):")
             if confirmation is True:
                 handle_db_seed()
+        elif args.users_by_file is not None:
+            # fileformat: suggested_username  name   <email>
+            confirmation = confirm_action("Are you sure you want to add users to the database? (y/[n]):")
+            if confirmation is True:
+                for line in args.users_by_file.readlines():
+                    info = line.split()
+                    username = info[0]
+                    emailid = info[-1][1:-1]
+                    password = secrets.token_hex(8)
+                    add_user(emailid, username, password)
+        elif args.default_project:
+            confirmation = confirm_action(
+                "Are you sure you want to add users to the default TEMPLATE project? (y/[n]):")
+            if confirmation is True:
+                # adds all users as collaborator on the project TEMPLATE if not added, command can be repeated
+                add_all_users_default_project(access_level='admin')
+        elif args.add_all_to_all_project:
+            confirmation = confirm_action(
+                "Are you sure you want to add users to the ALL projects? (y/[n]):")
+            if confirmation is True:
+                # adds all users to all Projects
+                add_all_users_to_all_projects()
+        elif args.delete_users_by_file:
+            confirmation = confirm_action(
+                "Are you sure you want to delete a user? (y/[n]):")
+            if confirmation is True:
+                # deletes users from the db
+                for email in args.delete_users_by_file.readlines():
+                    delete_user(email.strip())
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -23,14 +23,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import fs
 import os
+import logging
 
 from mslib.mscolab.conf import mscolab_settings
 
 
 def get_recent_pid(fm, user):
     projects = fm.list_projects(user)
-    p_id = projects[-1]["p_id"]
+    p_id = None
+    if projects:
+        p_id = projects[-1]["p_id"]
     return p_id
 
 
@@ -55,8 +59,20 @@ def get_message_dict(message):
     }
 
 
+def os_fs_create_dir(dir):
+    if '://' in dir:
+        try:
+            _ = fs.open_fs(dir)
+        except fs.errors.CreateFailed:
+            logging.error(f'Make sure that the FS url "{dir}" exists')
+        except fs.opener.errors.UnsupportedProtocol:
+            logging.error(f'FS url "{dir}" not supported')
+    else:
+        _dir = os.path.expanduser(dir)
+        if not os.path.exists(_dir):
+            os.makedirs(_dir)
+
+
 def create_files():
-    if not os.path.exists(mscolab_settings.MSCOLAB_DATA_DIR):
-        os.makedirs(mscolab_settings.MSCOLAB_DATA_DIR)
-    if not os.path.exists(mscolab_settings.UPLOAD_FOLDER):
-        os.makedirs(mscolab_settings.UPLOAD_FOLDER)
+    os_fs_create_dir(mscolab_settings.MSCOLAB_DATA_DIR)
+    os_fs_create_dir(mscolab_settings.UPLOAD_FOLDER)

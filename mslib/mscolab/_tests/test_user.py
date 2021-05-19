@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -28,9 +28,8 @@ import pytest
 import requests
 import json
 import sys
-import time
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtTest
 from mslib.mscolab.server import check_login, register_user
 from mslib.mscolab.conf import mscolab_settings
 from mslib.msui.mscolab import MSSMscolabWindow
@@ -45,7 +44,7 @@ PORTS = list(range(9541, 9560))
 class Test_UserMethods(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)

@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -296,6 +296,8 @@ class FileManager(object):
         # ToDo a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()
+        if not self.is_admin(user.id, ch.p_id):
+            return False
         if ch is None:
             return False
         project = Project.query.filter_by(id=ch.p_id).first()

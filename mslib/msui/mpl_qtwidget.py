@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -273,6 +273,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         self.setIconSize(QtCore.QSize(24, 24))
         self.layout().setSpacing(12)
         self.canvas = canvas
+        self.no_push_history = False
 
     def _icon(self, name, *args):
         """
@@ -299,6 +300,34 @@ class NavigationToolbar(NavigationToolbar2QT):
                 self.canvas.waypoints_interactor.button_release_move_callback(event)
             elif self.mode == _Mode.DELETE_WP:
                 self.canvas.waypoints_interactor.button_release_delete_callback(event)
+
+    def clear_history(self):
+        self._nav_stack.clear()
+        self.push_current()
+        self.set_history_buttons()
+
+    def push_current(self):
+        """Push the current view limits and position onto the stack."""
+        if self.sideview:
+            super(NavigationToolbar, self).push_current()
+        elif self.no_push_history:
+            pass
+        else:
+            self._nav_stack.push(self.canvas.map.kwargs.copy())
+            self.set_history_buttons()
+
+    def _update_view(self):
+        """
+        Update the viewlim and position from the view and position stack for
+        each axes.
+        """
+        if self.sideview:
+            super(NavigationToolbar, self)._update_view()
+        else:
+            nav_info = self._nav_stack()
+            if nav_info is None:
+                return
+            self.canvas.redraw_map(nav_info)
 
     def insert_wp(self, *args):
         """
@@ -346,12 +375,18 @@ class NavigationToolbar(NavigationToolbar2QT):
         self._update_buttons_checked()
 
     def release_zoom(self, event):
+        self.no_push_history = True
         super(NavigationToolbar, self).release_zoom(event)
+        self.no_push_history = False
         self.canvas.redraw_map()
+        self.push_current()
 
     def release_pan(self, event):
+        self.no_push_history = True
         super(NavigationToolbar, self).release_pan(event)
+        self.no_push_history = False
         self.canvas.redraw_map()
+        self.push_current()
 
     def mouse_move(self, event):
         """
@@ -1066,15 +1101,7 @@ class MplTopViewCanvas(MplCanvas):
     def plot_kml(self, kmloverlay):
         """Plots a satellite track on top of the map.
         """
-        if self.kmloverlay:
-            # If track is currently plotted on the map, remove it.
-            self.kmloverlay.remove()
-            if not kmloverlay:
-                self.kmloverlay = None
-                self.draw()
-        if kmloverlay:
-            # Create a new patch.
-            self.kmloverlay = kmloverlay
+        self.kmloverlay = kmloverlay
 
     def set_map_appearance(self, settings_dict):
         """Apply settings from dictionary 'settings_dict' to the view.
@@ -1138,11 +1165,3 @@ class MplTopViewWidget(MplNavBarWidget):
         for action in actions:
             if action.text() in ["Subplots", "Customize"]:
                 action.setEnabled(False)
-            elif action.text() in ["Home", "Back", "Forward"]:
-                action.triggered.connect(self.historyEvent)
-
-    def historyEvent(self):
-        """Slot to react to clicks on one of the history buttons in the
-           navigation toolbar. Redraws the image.
-        """
-        self.canvas.redraw_map()
