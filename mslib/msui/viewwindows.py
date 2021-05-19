@@ -61,7 +61,7 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         # Used to force close window without the dialog popping up
         self.force_close = False
 
-        # Flag variable help in force closing main window with tableview still open.
+        # Flag variable to check whether tableview window exists or not.
         self.tv_window_exists = True
 
     def handle_force_close(self):
@@ -87,29 +87,17 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             if self._id is not None:
                 self.viewClosesId.emit(self._id)
-<<<<<<< HEAD
-            logging.debug(self._id)
-            # sets a flag which assists during MSS main window closure.
-            self.tv_window_exists = False
-=======
                 logging.debug(self._id)
             # sets flag as False which shows tableview window had been closed.
             self.tv_window_exists = False
             self.viewCloses.emit()
->>>>>>> 5526c74f3ff806b613e9a179099c91dab88b8c1e
             event.accept()
         else:
             event.ignore()
 
-<<<<<<< HEAD
-    def tvwindow_exists(self):
-        """
-        Returns the flag 1 if self.closeEvent() is triggered else returns 0.
-=======
     def exists(self):
         """
         Returns the flag False if self.closeEvent() is triggered else returns True.
->>>>>>> 5526c74f3ff806b613e9a179099c91dab88b8c1e
         This is only for helping as a flag information in
         force closing of tableview when main window closes.
         """
