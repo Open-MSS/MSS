@@ -120,6 +120,9 @@ class Test_MscolabAdminWindow(object):
         users = ["test2", "test3"]
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
+        index = self.admin_window.addUsersPermission.findText("admin", QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            self.admin_window.addUsersPermission.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         # Check if they have been added in the modify users table
