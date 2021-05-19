@@ -934,22 +934,8 @@ class MplLinearViewCanvas(MplCanvas):
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.ax.figure.patch.set_visible(False)
 
-    def get_settings(self):
-        """Returns a dictionary containing settings regarding the linear view
-           appearance.
-        """
-        return self.settings_dict
-
-    def set_settings(self, settings):
-        """Apply settings to view.
-        """
-        if settings is not None:
-            self.settings_dict.update(settings)
-
-        self.settings_dict = settings
-
     def getBBOX(self):
-        """Get the bounding box of the view (returns a 2-tuple x1, x2).
+        """Get the bounding box of the view.
         """
         # Get the number of (great circle) interpolation points and the
         # number of labels along the x-axis.

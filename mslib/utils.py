@@ -543,7 +543,7 @@ def path_points(points, numpoints=100, connection='linear', contains_altitude=Fa
         lats = np.repeat(points[0][LAT], numpoints)
         times = np.repeat(points[0][TIME], numpoints)
         if contains_altitude:
-            alts = np.repead(points[0][ALT], numpoints)
+            alts = np.repeat(points[0][ALT], numpoints)
             return lats, lons, alts, times
         else:
             return lats, lons, times
