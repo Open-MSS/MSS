@@ -687,62 +687,35 @@ class LinearSectionDriver(VerticalSectionDriver):
 
     def set_plot_parameters(self, plot_object=None, lsec_path=None,
                             lsec_numpoints=101, lsec_path_connection='linear',
-                            lsec_numlabels=10,
-                            init_time=None, valid_time=None, style=None,
-                            bbox=None, figsize=(800, 600), noframe=False,
-                            show=False, transparent=False,
-                            return_format="image/png"):
+                            init_time=None, valid_time=None, bbox=None):
         """
         """
         MSSPlotDriver.set_plot_parameters(self, plot_object,
                                           init_time=init_time,
                                           valid_time=valid_time,
-                                          style=style,
-                                          bbox=bbox,
-                                          figsize=figsize, noframe=noframe,
-                                          transparent=transparent,
-                                          return_format=return_format)
+                                          bbox=bbox)
         self._set_linear_section_path(lsec_path, lsec_numpoints, lsec_path_connection)
-        self.show = show
-        self.lsec_numlabels = lsec_numlabels
 
     def update_plot_parameters(self, plot_object=None, lsec_path=None,
                                lsec_numpoints=None, lsec_path_connection=None,
-                               lsec_numlabels=None,
-                               init_time=None, valid_time=None, style=None,
-                               bbox=None, figsize=None, noframe=None, show=None,
-                               transparent=None, return_format=None):
+                               init_time=None, valid_time=None, bbox=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
-        figsize = figsize if figsize is not None else self.figsize
-        noframe = noframe if noframe is not None else self.noframe
         init_time = init_time if init_time is not None else self.init_time
         valid_time = valid_time if valid_time is not None else self.valid_time
-        style = style if style is not None else self.style
         bbox = bbox if bbox is not None else self.bbox
         lsec_path = lsec_path if lsec_path is not None else self.lsec_path
         lsec_numpoints = lsec_numpoints if lsec_numpoints is not None else self.lsec_numpoints
-        lsec_numlabels = lsec_numlabels if lsec_numlabels is not None else self.lsec_numlabels
         if lsec_path_connection is None:
             lsec_path_connection = self.lsec_path_connection
-        show = show if show else self.show
-        transparent = transparent if transparent is not None else self.transparent
-        return_format = return_format if return_format is not None else self.return_format
         self.set_plot_parameters(plot_object=plot_object,
                                  lsec_path=lsec_path,
                                  lsec_numpoints=lsec_numpoints,
                                  lsec_path_connection=lsec_path_connection,
-                                 lsec_numlabels=lsec_numlabels,
                                  init_time=init_time,
                                  valid_time=valid_time,
-                                 style=style,
-                                 bbox=bbox,
-                                 figsize=figsize,
-                                 noframe=noframe,
-                                 show=show,
-                                 transparent=transparent,
-                                 return_format=return_format)
+                                 bbox=bbox)
 
     def _set_linear_section_path(self, lsec_path, lsec_numpoints=101, lsec_path_connection='linear'):
         """
@@ -818,21 +791,28 @@ class LinearSectionDriver(VerticalSectionDriver):
 
             cross_section = utils.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
             # Create vertical interpolation factors and indices for subsequent variables
+            # TODO: Improve performance for this interpolation in general
             if name == "air_pressure":
-                for index, alt in enumerate(self.alts):
-                    pressures = cross_section[:, index]
+                for index_lonlat, alt in enumerate(self.alts):
+                    pressures = cross_section[:, index_lonlat]
                     closest = 0
                     direction = 1
-                    for i, pressure in enumerate(pressures):
+                    for index_altitude, pressure in enumerate(pressures):
                         if abs(pressure - alt) < abs(pressures[closest] - alt):
-                            closest = i
+                            closest = index_altitude
                             direction = 1 if pressure - alt > 0 else -1
-                    next_closest = closest + direction if closest < len(pressures) - 1 else closest
-                    distance = abs(pressures[closest] - alt) + abs(pressures[next_closest] - alt)
-                    factors.append(
-                        [[closest, 1 - (abs(pressures[closest] - alt) / distance)],
-                         [next_closest, 1 - (abs(pressures[next_closest] - alt) / distance)]])
-                continue
+
+                    next_closest = closest + direction
+                    if next_closest >= len(pressures) or next_closest < 0:
+                        next_closest = closest
+
+                    if closest == next_closest:
+                        factors.append([[closest, 0.5], [closest, 0.5]])
+                    else:
+                        distance = abs(pressures[closest] - alt) + abs(pressures[next_closest] - alt)
+                        factors.append(
+                            [[closest, 1 - (abs(pressures[closest] - alt) / distance)],
+                             [next_closest, 1 - (abs(pressures[next_closest] - alt) / distance)]])
 
             for index in range(len(self.alts)):
                 cur_factor = factors[index]
@@ -858,25 +838,10 @@ class LinearSectionDriver(VerticalSectionDriver):
         data = self._load_interpolate_timestep()
         d2 = datetime.now()
 
-        if len(self.lat_data) > 1 and len(self.lon_data) > 1:
-            resolution = (self.lon_data[1] - self.lon_data[0],
-                          self.lat_data[1] - self.lat_data[0])
-        else:
-            resolution = (-1, -1)
-
         # Call the plotting method of the linear section style instance.
         image = self.plot_object.plot_lsection(data, self.lats, self.lons,
                                                valid_time=self.fc_time,
-                                               init_time=self.init_time,
-                                               resolution=resolution,
-                                               style=self.style,
-                                               show=self.show,
-                                               highlight=self.lsec_path,
-                                               noframe=self.noframe,
-                                               figsize=self.figsize,
-                                               transparent=self.transparent,
-                                               numlabels=self.lsec_numlabels,
-                                               return_format=self.return_format)
+                                               init_time=self.init_time)
         # Free memory.
         del data
 

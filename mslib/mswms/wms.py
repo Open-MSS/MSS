@@ -613,6 +613,12 @@ class WMSServer(object):
                     return self.create_service_exception(text=msg, version=version)
 
             elif mode == "getlsec":
+                if return_format != "text/xml":
+                    return self.create_service_exception(
+                        code="InvalidFORMAT",
+                        text=f"unsupported FORMAT: '{return_format}'",
+                        version=version)
+
                 # Linear section path.
                 path = query.get("PATH")
                 if path is None:
@@ -643,9 +649,9 @@ class WMSServer(object):
                                                              text="TIME not specified",
                                                              version=version)
 
-                # Bounding box (num interp. points, num labels).
+                # Bounding box (num interp. points).
                 try:
-                    bbox = [float(v) for v in query.get("BBOX", "101,10").split(",")]
+                    bbox = float(query.get("BBOX", "101"))
                 except ValueError:
                     return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
 
@@ -653,17 +659,11 @@ class WMSServer(object):
                 try:
                     plot_driver.set_plot_parameters(plot_object=self.lsec_layer_registry[dataset][layer],
                                                     lsec_path=path,
-                                                    lsec_numpoints=bbox[0],
+                                                    lsec_numpoints=bbox,
                                                     lsec_path_connection="greatcircle",
-                                                    lsec_numlabels=bbox[1],
                                                     init_time=init_time,
                                                     valid_time=valid_time,
-                                                    style=style,
-                                                    bbox=bbox,
-                                                    figsize=figsize,
-                                                    noframe=False,
-                                                    transparent=transparent,
-                                                    return_format=return_format)
+                                                    bbox=bbox)
                     images.append(plot_driver.plot())
                 except (IOError, ValueError) as ex:
                     logging.error("ERROR: %s %s", type(ex), ex)
@@ -680,6 +680,8 @@ class WMSServer(object):
                 return squash_multiple_images(images), return_format
             elif "xml" in return_format:
                 return squash_multiple_xml(images), return_format
+            else:
+                raise RuntimeError(f"Unexpected format error: {return_format}")
         else:
             return images[0], return_format
 

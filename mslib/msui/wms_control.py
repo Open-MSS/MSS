@@ -1246,7 +1246,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layer = layers[0]
 
         layer_name = [layer.get_layer() for layer in layers]
-        style = [layer.get_style()  if "image" in format else "" for layer in layers]
+        style = [layer.get_style() if "image" in format else "" for layer in layers]
         level = layer.get_level_name()
 
         def normalize_crs(crs):

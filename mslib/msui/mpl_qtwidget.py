@@ -956,10 +956,9 @@ class MplLinearViewCanvas(MplCanvas):
         if self.waypoints_interactor is not None:
             num_interpolation_points = \
                 self.waypoints_interactor.get_num_interpolation_points()
-            num_labels = self.numlabels
 
-        # Return a tuple (num_interpolation_points, num_labels) as BBOX.
-        bbox = (num_interpolation_points, num_labels)
+        # Return a tuple (num_interpolation_points) as BBOX.
+        bbox = (num_interpolation_points,)
         return bbox
 
     def draw_legend(self, img):

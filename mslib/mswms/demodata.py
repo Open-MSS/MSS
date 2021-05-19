@@ -1048,6 +1048,7 @@ if mpl_lsec_styles is not None:
         (mpl_lsec_styles.LS_DefaultStyle, "cloud_area_fraction_in_atmosphere_layer", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_DefaultStyle, "specific_cloud_ice_water_content", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_DefaultStyle, "specific_cloud_liquid_water_content", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "ertel_potential_vorticity", ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_lsec_styles.LS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"])
