@@ -17,4 +17,3 @@ mslib/mscolab/colabdata/
 docs/_build
 build/
 mss.egg-info/
-.coverage

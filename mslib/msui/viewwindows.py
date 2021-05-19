@@ -60,7 +60,6 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         self._id = _id
         # Used to force close window without the dialog popping up
         self.force_close = False
-
         # Flag variable to check whether tableview window exists or not.
         self.tv_window_exists = True
 
