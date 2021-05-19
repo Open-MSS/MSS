@@ -504,6 +504,9 @@ def path_points(points, numpoints=100, connection='linear'):
     """
     if connection not in ['linear', 'greatcircle']:
         return None, None
+    if points is None or len(points) == 0:
+        return None, None, None
+
     LAT = 0
     LON = 1
     TIME = 2

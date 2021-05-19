@@ -130,36 +130,39 @@ class SocketsManager(object):
         p_id = _json['p_id']
         reply_id = int(_json["reply_id"])
         user = User.verify_auth_token(_json['token'])
-        perm = self.permission_check_emit(user.id, int(p_id))
-        if perm:
-            new_message = self.cm.add_message(user, _json['message_text'], str(p_id), reply_id=reply_id)
-            new_message_dict = get_message_dict(new_message)
-            if reply_id == -1:
-                socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
-            else:
-                socketio.emit('chat-message-reply-client', json.dumps(new_message_dict), room=str(p_id))
+        if user is not None:
+            perm = self.permission_check_emit(user.id, int(p_id))
+            if perm:
+                new_message = self.cm.add_message(user, _json['message_text'], str(p_id), reply_id=reply_id)
+                new_message_dict = get_message_dict(new_message)
+                if reply_id == -1:
+                    socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+                else:
+                    socketio.emit('chat-message-reply-client', json.dumps(new_message_dict), room=str(p_id))
 
     def handle_message_edit(self, socket_message):
         message_id = socket_message["message_id"]
         p_id = socket_message["p_id"]
         new_message_text = socket_message["new_message_text"]
         user = User.verify_auth_token(socket_message["token"])
-        perm = self.permission_check_emit(user.id, int(p_id))
-        if perm:
-            self.cm.edit_message(message_id, new_message_text)
-            socketio.emit('edit-message-client', json.dumps({
-                "message_id": message_id,
-                "new_message_text": new_message_text
-            }), room=str(p_id))
+        if user is not None:
+            perm = self.permission_check_emit(user.id, int(p_id))
+            if perm:
+                self.cm.edit_message(message_id, new_message_text)
+                socketio.emit('edit-message-client', json.dumps({
+                    "message_id": message_id,
+                    "new_message_text": new_message_text
+                }), room=str(p_id))
 
     def handle_message_delete(self, socket_message):
         message_id = socket_message["message_id"]
         p_id = socket_message["p_id"]
         user = User.verify_auth_token(socket_message['token'])
-        perm = self.permission_check_emit(user.id, int(p_id))
-        if perm:
-            self.cm.delete_message(message_id)
-            socketio.emit('delete-message-client', json.dumps({"message_id": message_id}), room=str(p_id))
+        if user is not None:
+            perm = self.permission_check_emit(user.id, int(p_id))
+            if perm:
+                self.cm.delete_message(message_id)
+                socketio.emit('delete-message-client', json.dumps({"message_id": message_id}), room=str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
         """
@@ -197,16 +200,18 @@ class SocketsManager(object):
         content = json_req['content']
         comment = json_req.get('comment', "")
         user = User.verify_auth_token(json_req['token'])
-        perm = self.permission_check_emit(user.id, int(p_id))
-        # if permission is correct and file saved properly
-        if perm and self.fm.save_file(int(p_id), content, user, comment):
-            # send service message
-            message_ = "[service message] saved changes"
-            new_message = self.cm.add_message(user, message_, str(p_id), message_type=MessageType.SYSTEM_MESSAGE)
-            new_message_dict = get_message_dict(new_message)
-            socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
-            # emit file-changed event to trigger reload of flight track
-            socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
+        if user is not None:
+            # when the socket connection is expired this in None and also on wrong tokens
+            perm = self.permission_check_emit(user.id, int(p_id))
+            # if permission is correct and file saved properly
+            if perm and self.fm.save_file(int(p_id), content, user, comment):
+                # send service message
+                message_ = "[service message] saved changes"
+                new_message = self.cm.add_message(user, message_, str(p_id), message_type=MessageType.SYSTEM_MESSAGE)
+                new_message_dict = get_message_dict(new_message)
+                socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+                # emit file-changed event to trigger reload of flight track
+                socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
 
     def emit_file_change(self, p_id):
         socketio.emit('file-changed', json.dumps({"p_id": p_id}), room=str(p_id))

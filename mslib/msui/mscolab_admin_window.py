@@ -154,14 +154,15 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         }
         url = url_join(self.mscolab_server_url, "users_without_permission")
         res = requests.get(url, data=data)
-        res = res.json()
-        if res["success"]:
-            self.addUsers = res["users"]
-            self.populate_table(self.addUsersTable, self.addUsers)
-            text_filter = self.addUsersSearch.text()
-            self.apply_filters(self.addUsersTable, text_filter, None)
-        else:
-            show_popup(self, "Error", res["message"])
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.addUsers = res["users"]
+                self.populate_table(self.addUsersTable, self.addUsers)
+                text_filter = self.addUsersSearch.text()
+                self.apply_filters(self.addUsersTable, text_filter, None)
+            else:
+                show_popup(self, "Error", res["message"])
 
     def load_users_with_permission(self):
         self.modifyUsers = []
@@ -171,15 +172,16 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         }
         url = url_join(self.mscolab_server_url, "users_with_permission")
         res = requests.get(url, data=data)
-        res = res.json()
-        if res["success"]:
-            self.modifyUsers = res["users"]
-            self.populate_table(self.modifyUsersTable, self.modifyUsers)
-            text_filter = self.modifyUsersSearch.text()
-            permission_filter = str(self.modifyUsersPermissionFilter.currentText())
-            self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
-        else:
-            show_popup(self, "Error", res["message"])
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.modifyUsers = res["users"]
+                self.populate_table(self.modifyUsersTable, self.modifyUsers)
+                text_filter = self.modifyUsersSearch.text()
+                permission_filter = str(self.modifyUsersPermissionFilter.currentText())
+                self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
+            else:
+                show_popup(self, "Error", res["message"])
 
     def add_selected_users(self):
         selected_userids = self.get_selected_userids(self.addUsersTable, self.addUsers)
@@ -195,13 +197,14 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         }
         url = url_join(self.mscolab_server_url, "add_bulk_permissions")
         res = requests.post(url, data=data)
-        res = res.json()
-        if res["success"]:
-            # TODO: Do we need a success popup?
-            self.load_users_without_permission()
-            self.load_users_with_permission()
-        else:
-            show_popup(self, "Error", res["message"])
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                # TODO: Do we need a success popup?
+                self.load_users_without_permission()
+                self.load_users_with_permission()
+            else:
+                show_popup(self, "Error", res["message"])
 
     def modify_selected_users(self):
         selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
@@ -217,12 +220,13 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         }
         url = url_join(self.mscolab_server_url, "modify_bulk_permissions")
         res = requests.post(url, data=data)
-        res = res.json()
-        if res["success"]:
-            self.load_users_without_permission()
-            self.load_users_with_permission()
-        else:
-            self.show_error_popup(res["message"])
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.load_users_without_permission()
+                self.load_users_with_permission()
+            else:
+                self.show_error_popup(res["message"])
 
     def delete_selected_users(self):
         selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
@@ -236,12 +240,13 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         }
         url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
         res = requests.post(url, data=data)
-        res = res.json()
-        if res["success"]:
-            self.load_users_without_permission()
-            self.load_users_with_permission()
-        else:
-            self.show_error_popup(res["message"])
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.load_users_without_permission()
+                self.load_users_with_permission()
+            else:
+                self.show_error_popup(res["message"])
 
     def import_permissions(self):
         import_p_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
@@ -251,12 +256,14 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "import_p_id": import_p_id
         }
         url = url_join(self.mscolab_server_url, 'import_permissions')
-        res = requests.post(url, data=data).json()
-        if res["success"]:
-            self.load_users_without_permission()
-            self.load_users_with_permission()
-        else:
-            show_popup(self, "Error", res["message"])
+        res = requests.post(url, data=data)
+        if res.text != "False":
+            res = res.json()
+            if res["success"]:
+                self.load_users_without_permission()
+                self.load_users_with_permission()
+            else:
+                show_popup(self, "Error", res["message"])
 
     # Socket Events
     def handle_permissions_updated(self, u_id):

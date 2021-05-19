@@ -641,9 +641,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "token": self.token
         }
         r = requests.get(self.mscolab_server_url + '/projects', data=data)
-        _json = json.loads(r.text)
-        self.projects = _json["projects"]
-        self.add_projects_to_ui(self.projects)
+        if r.text != "False":
+            _json = json.loads(r.text)
+            self.projects = _json["projects"]
+            self.add_projects_to_ui(self.projects)
 
     def get_recent_pid(self):
         """
@@ -653,12 +654,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "token": self.token
         }
         r = requests.get(self.mscolab_server_url + '/projects', data=data)
-        _json = json.loads(r.text)
-        projects = _json["projects"]
-        p_id = None
-        if projects:
-            p_id = projects[-1]["p_id"]
-        return p_id
+        if r.text != "False":
+            _json = json.loads(r.text)
+            projects = _json["projects"]
+            p_id = None
+            if projects:
+                p_id = projects[-1]["p_id"]
+            return p_id
 
     def get_recent_project(self):
         """
@@ -668,12 +670,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "token": self.token
         }
         r = requests.get(self.mscolab_server_url + '/projects', data=data)
-        _json = json.loads(r.text)
-        projects = _json["projects"]
-        recent_project = None
-        if projects:
-            recent_project = projects[-1]
-        return recent_project
+        if r.text != "False":
+            _json = json.loads(r.text)
+            projects = _json["projects"]
+            recent_project = None
+            if projects:
+                recent_project = projects[-1]
+            return recent_project
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
@@ -764,8 +767,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             "p_id": self.active_pid
         }
         r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
-        xml_content = json.loads(r.text)["content"]
-        return xml_content
+        if r.text != "False":
+            xml_content = json.loads(r.text)["content"]
+            return xml_content
 
     def load_wps_from_server(self):
         if self.workLocallyCheckBox.isChecked():
@@ -949,7 +953,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for window in self.active_windows:
             window.setFlightTrackModel(self.waypoints_model)
             if hasattr(window, 'mpl'):
-                window.mpl.canvas.waypoints_interactor.redraw_figure()
+                try:
+                    window.mpl.canvas.waypoints_interactor.redraw_figure()
+                except AttributeError as err:
+                    logging.error("%s" % err)
 
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
@@ -1075,16 +1082,17 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             'token': self.token
         }
         r = requests.get(self.mscolab_server_url + '/user', data=data)
-        _json = json.loads(r.text)
-        if _json['user']['id'] == u_id:
-            project = self.get_recent_project()
-            project_desc = f'{project["path"]} - {project["access_level"]}'
-            widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
-            widgetItem.p_id = project["p_id"]
-            widgetItem.access_level = project["access_level"]
-            self.listProjects.addItem(widgetItem)
-        if self.chat_window is not None:
-            self.chat_window.load_users()
+        if r.text != "False":
+            _json = json.loads(r.text)
+            if _json['user']['id'] == u_id:
+                project = self.get_recent_project()
+                project_desc = f'{project["path"]} - {project["access_level"]}'
+                widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
+                widgetItem.p_id = project["p_id"]
+                widgetItem.access_level = project["access_level"]
+                self.listProjects.addItem(widgetItem)
+            if self.chat_window is not None:
+                self.chat_window.load_users()
 
     @QtCore.Slot(int)
     def handle_project_deleted(self, p_id):

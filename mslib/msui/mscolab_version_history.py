@@ -108,9 +108,12 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         }
         url = url_join(self.mscolab_server_url, 'get_project_by_id')
         res = requests.get(url, data=data)
-        xml_content = json.loads(res.text)["content"]
-        waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)
-        self.currentWaypointsTable.setModel(waypoint_model)
+        if res.text != "False":
+            xml_content = json.loads(res.text)["content"]
+            waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)
+            self.currentWaypointsTable.setModel(waypoint_model)
+        else:
+            show_popup(self, "Error", "Some error occurred while fetching data!")
 
     def load_all_changes(self):
         """
@@ -127,20 +130,21 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         url_path = f'get_all_changes?{query_string}'
         url = url_join(self.mscolab_server_url, url_path)
         r = requests.get(url, data=data)
-        changes = json.loads(r.text)["changes"]
-        self.changes.clear()
-        for change in changes:
-            created_at = datetime.strptime(change["created_at"], "%Y-%m-%d, %H:%M:%S")
-            local_time = utc_to_local_datetime(created_at)
-            date = local_time.strftime('%d/%m/%Y')
-            time = local_time.strftime('%I:%M %p')
-            item_text = f'{change["username"]} made change on {date} at {time}'
-            if change["version_name"] is not None:
-                item_text = f'{change["version_name"]}\n{item_text}'
-            item = QtWidgets.QListWidgetItem(item_text, parent=self.changes)
-            item.id = change["id"]
-            item.version_name = change["version_name"]
-            self.changes.addItem(item)
+        if r.text != "False":
+            changes = json.loads(r.text)["changes"]
+            self.changes.clear()
+            for change in changes:
+                created_at = datetime.strptime(change["created_at"], "%Y-%m-%d, %H:%M:%S")
+                local_time = utc_to_local_datetime(created_at)
+                date = local_time.strftime('%d/%m/%Y')
+                time = local_time.strftime('%I:%M %p')
+                item_text = f'{change["username"]} made change on {date} at {time}'
+                if change["version_name"] is not None:
+                    item_text = f'{change["version_name"]}\n{item_text}'
+                item = QtWidgets.QListWidgetItem(item_text, parent=self.changes)
+                item.id = change["id"]
+                item.version_name = change["version_name"]
+                self.changes.addItem(item)
 
     def preview_change(self, current_item, previous_item):
         font = QtGui.QFont()
@@ -160,14 +164,16 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             "ch_id": current_item.id
         }
         url = url_join(self.mscolab_server_url, 'get_change_content')
-        res = requests.get(url, data=data).json()
-        waypoint_model = WaypointsTableModel(xml_content=res["content"])
-        self.changePreviewTable.setModel(waypoint_model)
-        if current_item.version_name is not None:
-            self.deleteVersionNameBtn.setVisible(True)
-        else:
-            self.deleteVersionNameBtn.setVisible(False)
-        self.toggle_version_buttons(True)
+        res = requests.get(url, data=data)
+        if res.text != "False":
+            res = res.json()
+            waypoint_model = WaypointsTableModel(xml_content=res["content"])
+            self.changePreviewTable.setModel(waypoint_model)
+            if current_item.version_name is not None:
+                self.deleteVersionNameBtn.setVisible(True)
+            else:
+                self.deleteVersionNameBtn.setVisible(False)
+            self.toggle_version_buttons(True)
 
     def request_set_version_name(self, version_name, ch_id):
         data = {
@@ -225,7 +231,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             }
             url = url_join(self.mscolab_server_url, 'undo')
             r = requests.post(url, data=data)
-            if r.text == "True":
+            if r.text != "False":
                 # reload windows
                 self.reloadWindows.emit()
                 self.load_current_waypoints()
