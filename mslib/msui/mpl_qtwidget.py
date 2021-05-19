@@ -996,7 +996,7 @@ class MplLinearViewCanvas(MplCanvas):
                     ipoint += 1
             self.draw()
 
-    def draw_image(self, xmls, colors=None):
+    def draw_image(self, xmls, colors=None, scales=None):
         self.clear_figure()
         offset = 40
         self.ax.patch.set_visible(False)
@@ -1011,7 +1011,14 @@ class MplLinearViewCanvas(MplCanvas):
                 color = colors[i] if len(colors) > i else colors[-1]
             else:
                 color = "#00AAFF"
+
+            if scales:
+                scale = scales[i] if len(scales) > i else scales[-1]
+            else:
+                scale = "linear"
+
             par = self.ax.twinx() if i > 0 else self.ax
+            par.set_yscale(scale)
 
             par.plot(range(numpoints), values, color)
             if i > 0:

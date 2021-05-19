@@ -617,6 +617,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
         Sets the layers style to the first one, or the saved one if possible.
         """
         self.styles = [f"{style} | {self.layerobj.styles[style]['title']}" for style in self.layerobj.styles]
+        if self.parent.is_linear:
+            self.styles.extend(["linear | linear scaled y-axis", "log | log scaled y-axis"])
         if len(self.styles) > 0:
             self.style = self.styles[0]
             if str(self) in self.parent.settings["saved_styles"] and \
@@ -713,11 +715,12 @@ class Layer(QtWidgets.QTreeWidgetItem):
             return self.get_level().split(" (")[0]
 
     def get_legend_url(self):
-        style = self.get_style()
-        urlstr = None
-        if style and "legend" in self.layerobj.styles[style]:
-            urlstr = self.layerobj.styles[style]["legend"]
-        return urlstr
+        if not self.parent.is_linear:
+            style = self.get_style()
+            urlstr = None
+            if style and "legend" in self.layerobj.styles[style]:
+                urlstr = self.layerobj.styles[style]["legend"]
+            return urlstr
 
     def get_allowed_crs(self):
         if self.is_synced:

@@ -130,7 +130,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
-        if styles is not None:
+        if styles:
             assert len(styles) == len(layers)
             request['styles'] = ','.join(styles)
         else:
@@ -1246,7 +1246,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         layer = layers[0]
 
         layer_name = [layer.get_layer() for layer in layers]
-        style = [layer.get_style() for layer in layers]
+        style = [layer.get_style()  if "image" in format else "" for layer in layers]
         level = layer.get_level_name()
 
         def normalize_crs(crs):
@@ -1684,7 +1684,8 @@ class LSecWMSControlWidget(WMSControlWidget):
             [self.multilayers.get_current_layer()]
         layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
         colors = [layer.color for layer in layers]
-        self.view.draw_image(imgs, colors)
+        scales = [layer.get_style() for layer in layers]
+        self.view.draw_image(imgs, colors, scales)
         self.view.draw_legend(self.append_multiple_images(legend_imgs))
         style_title = self.multilayers.get_current_layer().get_style()
         self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
