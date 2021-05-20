@@ -58,7 +58,7 @@
        <item>
         <widget class="QToolButton" name="tbLevel_back">
          <property name="toolTip">
-          <string>Keyboard shortcut: down</string>
+          <string>Previous Level (Down)</string>
          </property>
          <property name="text">
           <string>&lt;</string>
@@ -71,7 +71,7 @@
        <item>
         <widget class="QToolButton" name="tbLevel_fwd">
          <property name="toolTip">
-          <string>Keyboard shortcut: up</string>
+          <string>Next Level (Up)</string>
          </property>
          <property name="text">
           <string>&gt;</string>
@@ -250,7 +250,7 @@
        <item>
         <widget class="QToolButton" name="tbInitTime_cbback">
          <property name="toolTip">
-          <string>Keyboard shortcut: alt-left</string>
+          <string>Previous Init-Time (Alt+Left)</string>
          </property>
          <property name="text">
           <string>&lt;</string>
@@ -263,7 +263,7 @@
        <item>
         <widget class="QToolButton" name="tbInitTime_cbfwd">
          <property name="toolTip">
-          <string>Keyboard shortcut: alt-right</string>
+          <string>Next Init-Time (Alt+Right)</string>
          </property>
          <property name="text">
           <string>&gt;</string>
@@ -366,7 +366,7 @@
        <item>
         <widget class="QToolButton" name="tbValidTime_cbback">
          <property name="toolTip">
-          <string>Keyboard shortcut: left</string>
+          <string>Previous Valid-Time (Left)</string>
          </property>
          <property name="text">
           <string>&lt;</string>
@@ -382,7 +382,7 @@
        <item>
         <widget class="QToolButton" name="tbValidTime_cbfwd">
          <property name="toolTip">
-          <string>Keyboard shortcut: right</string>
+          <string>Next Valid-Time (Right)</string>
          </property>
          <property name="text">
           <string>&gt;</string>
@@ -419,12 +419,12 @@
           <date>
            <year>2009</year>
            <month>12</month>
-           <day>26</day>
+           <day>25</day>
           </date>
          </property>
          <property name="minimumDateTime">
           <datetime>
-           <hour>9</hour>
+           <hour>8</hour>
            <minute>0</minute>
            <second>0</second>
            <year>1999</year>
@@ -441,7 +441,7 @@
          </property>
          <property name="minimumTime">
           <time>
-           <hour>9</hour>
+           <hour>8</hour>
            <minute>0</minute>
            <second>0</second>
           </time>
@@ -536,7 +536,7 @@
           </font>
          </property>
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Request the selected layer(s).&lt;/p&gt;&lt;p&gt;Keyboard shortcut: Enter&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>Request the selected layer(s) (Return)</string>
          </property>
          <property name="text">
           <string>retrieve</string>

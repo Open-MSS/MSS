@@ -176,10 +176,12 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                 for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0]
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), shortcut.key().toString())
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
+            actions.extend([(button.window(), button.toolTip(), button.shortcut().toString())
+                            for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut()])
             for item in actions:
                 if item[0] not in shortcuts:
                     shortcuts[item[0]] = {}
-                shortcuts[item[0]][item[1]] = item[2]
+                shortcuts[item[0]][item[1].replace(f"({item[2]})", "")] = item[2]
 
         return shortcuts
 
