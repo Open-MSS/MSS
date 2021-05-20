@@ -645,6 +645,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             _json = json.loads(r.text)
             self.projects = _json["projects"]
             self.add_projects_to_ui(self.projects)
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def get_recent_pid(self):
         """
@@ -661,6 +663,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if projects:
                 p_id = projects[-1]["p_id"]
             return p_id
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def get_recent_project(self):
         """
@@ -677,6 +681,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if projects:
                 recent_project = projects[-1]
             return recent_project
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
@@ -770,13 +776,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         if r.text != "False":
             xml_content = json.loads(r.text)["content"]
             return xml_content
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def load_wps_from_server(self):
         if self.workLocallyCheckBox.isChecked():
             return
         xml_content = self.request_wps_from_server()
-        self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
-        self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+        if xml_content is not None:
+            self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
     def open_topview(self):
         # showing dummy info dialog
@@ -1093,6 +1102,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.listProjects.addItem(widgetItem)
             if self.chat_window is not None:
                 self.chat_window.load_users()
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     @QtCore.Slot(int)
     def handle_project_deleted(self, p_id):

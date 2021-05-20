@@ -340,6 +340,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
                 item = QtWidgets.QListWidgetItem(f'{user["username"]} - {user["access_level"]}',
                                                  parent=self.collaboratorsList)
                 self.collaboratorsList.addItem(item)
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def load_all_messages(self):
         # empty messages and reload from server
@@ -359,6 +361,8 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             for message in messages:
                 self.render_new_message(message, scroll=False)
             self.messageList.scrollToBottom()
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def render_new_message(self, message, scroll=True):
         message_item = MessageItem(message, self)

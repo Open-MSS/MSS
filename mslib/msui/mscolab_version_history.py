@@ -145,6 +145,8 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 item.id = change["id"]
                 item.version_name = change["version_name"]
                 self.changes.addItem(item)
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def preview_change(self, current_item, previous_item):
         font = QtGui.QFont()
@@ -174,6 +176,8 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             else:
                 self.deleteVersionNameBtn.setVisible(False)
             self.toggle_version_buttons(True)
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def request_set_version_name(self, version_name, ch_id):
         data = {
@@ -194,32 +198,39 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 return
             selected_item = self.changes.currentItem()
             res = self.request_set_version_name(version_name, selected_item.id)
-            res = res.json()
-            if res["success"] is True:
-                item_text = selected_item.text().split('\n')[-1]
-                new_text = f"{version_name}\n{item_text}"
-                selected_item.setText(new_text)
-                selected_item.version_name = version_name
-                self.deleteVersionNameBtn.setVisible(True)
+            if res.text != "False":
+                res = res.json()
+                if res["success"] is True:
+                    item_text = selected_item.text().split('\n')[-1]
+                    new_text = f"{version_name}\n{item_text}"
+                    selected_item.setText(new_text)
+                    selected_item.version_name = version_name
+                    self.deleteVersionNameBtn.setVisible(True)
+                else:
+                    show_popup(self, "Error", res["message"])
             else:
-                show_popup(self, "Error", res["message"])
+                show_popup(self, "Error", "Session expired, new login required")
+
 
     def handle_delete_version_name(self):
         selected_item = self.changes.currentItem()
         res = self.request_set_version_name(None, selected_item.id)
-        res = res.json()
-        if res["success"] is True:
-            # Remove item if the filter is set to Named version
-            if self.versionFilterCB.currentIndex() == 0:
-                self.changes.takeItem(self.changes.currentRow())
-            # Remove name from item
+        if res.text != "False":
+            res = res.json()
+            if res["success"] is True:
+                # Remove item if the filter is set to Named version
+                if self.versionFilterCB.currentIndex() == 0:
+                    self.changes.takeItem(self.changes.currentRow())
+                # Remove name from item
+                else:
+                    item_text = selected_item.text().split('\n')[-1]
+                    selected_item.setText(item_text)
+                    selected_item.version_name = None
+                self.deleteVersionNameBtn.setVisible(False)
             else:
-                item_text = selected_item.text().split('\n')[-1]
-                selected_item.setText(item_text)
-                selected_item.version_name = None
-            self.deleteVersionNameBtn.setVisible(False)
+                show_popup(self, "Error", res["message"])
         else:
-            show_popup(self, "Error", res["message"])
+            show_popup(self, "Error", "Session expired, new login required")
 
     def handle_undo(self):
         qm = QtWidgets.QMessageBox
@@ -236,6 +247,8 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 self.reloadWindows.emit()
                 self.load_current_waypoints()
                 self.load_all_changes()
+            else:
+                show_popup(self, "Error", "Session expired, new login required")
 
     def handle_refresh(self):
         self.load_current_waypoints()

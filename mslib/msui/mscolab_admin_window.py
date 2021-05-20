@@ -165,6 +165,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 self.apply_filters(self.addUsersTable, text_filter, None)
             else:
                 show_popup(self, "Error", res["message"])
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def load_users_with_permission(self):
         self.modifyUsers = []
@@ -184,6 +186,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
             else:
                 show_popup(self, "Error", res["message"])
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def add_selected_users(self):
         selected_userids = self.get_selected_userids(self.addUsersTable, self.addUsers)
@@ -207,6 +211,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 self.load_users_with_permission()
             else:
                 show_popup(self, "Error", res["message"])
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def modify_selected_users(self):
         selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
@@ -229,6 +235,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 self.load_users_with_permission()
             else:
                 self.show_error_popup(res["message"])
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def delete_selected_users(self):
         selected_userids = self.get_selected_userids(self.modifyUsersTable, self.modifyUsers)
@@ -249,6 +257,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 self.load_users_with_permission()
             else:
                 self.show_error_popup(res["message"])
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def import_permissions(self):
         import_p_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
@@ -266,6 +276,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 self.load_users_with_permission()
             else:
                 show_popup(self, "Error", res["message"])
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     # Socket Events
     def handle_permissions_updated(self, u_id):
