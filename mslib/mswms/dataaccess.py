@@ -102,12 +102,20 @@ class NWPDataAccess(metaclass=ABCMeta):
         fullpath -- if True, the complete path to the file will be returned.
                     Default is False, only the filename will be returned.
         """
-        filename = self._determine_filename(variable, vartype,
-                                            init_time, valid_time)
+        filename = self._determine_filename(
+            variable, vartype, init_time, valid_time)
         if fullpath:
             return os.path.join(self._root_path, filename)
         else:
             return filename
+
+    @abstractmethod
+    def is_reload_required(self, filenames):
+        """
+        Must be overwritten in subclass. Checks if a file was modified since last
+        read-in.
+        """
+        pass
 
     @abstractmethod
     def _determine_filename(self, variable, vartype, init_time, valid_time):
@@ -204,6 +212,7 @@ class DefaultDataAccess(NWPDataAccess):
         self._available_files = None
         self._filetree = None
         self._mfDatasetArgsDict = {"skip_dim_check": skip_dim_check}
+        self._file_cache = {}
 
     def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
         """
@@ -214,15 +223,17 @@ class DefaultDataAccess(NWPDataAccess):
         assert self._filetree is not None, "filetree is None. Forgot to call setup()?"
         try:
             return self._filetree[vartype][init_time][variable][valid_time]
-        except KeyError:
+        except KeyError as ex:
             if reload:
                 self.setup()
-            try:
-                return self._filetree[vartype][init_time][variable][valid_time]
-            except KeyError as ex:
+                return self._determine_filename(variable, vartype, init_time, valid_time, reload=False)
+            else:
                 logging.error("Could not identify filename. %s %s %s %s %s %s",
                               variable, vartype, init_time, valid_time, type(ex), ex)
                 raise ValueError(f"variable type {vartype} not available for variable {variable}")
+
+    def is_reload_required(self, filenames):
+        return False
 
     def _parse_file(self, filename):
         elevations = {"filename": filename, "levels": [], "units": None}
@@ -326,19 +337,41 @@ class DefaultDataAccess(NWPDataAccess):
         logging.info("Files identified for domain '%s': %s",
                      self._domain_id, self._available_files)
 
+        for filename in list(self._file_cache):
+            if filename not in self._available_files:
+                del self._file_cache[filename]
+
         self._filetree = {}
         self._elevations = {"sfc": {"filename": None, "levels": [], "units": None}}
 
         # Build the tree structure.
         for filename in self._available_files:
-            logging.info("Opening candidate '%s'", filename)
-            try:
-                content = self._parse_file(filename)
-            except IOError as ex:
-                logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
-                continue
-            if content["vert_type"] not in self._elevations:
-                self._elevations[content["vert_type"]] = content["elevations"]
+            mtime = os.path.getmtime(os.path.join(self._root_path, filename))
+            if (filename in self._file_cache) and (mtime == self._file_cache[filename][0]):
+                logging.info("Using cached candidate '%s'", filename)
+                content = self._file_cache[filename][1]
+                if content["vert_type"] != "sfc":
+                    if content["vert_type"] not in self._elevations:
+                        self._elevations[content["vert_type"]] = content["elevations"]
+                    if ((len(self._elevations[content["vert_type"]]["levels"]) !=
+                         len(content["elevations"]["levels"])) or
+                        (not np.allclose(
+                         self._elevations[content["vert_type"]]["levels"],
+                         content["elevations"]["levels"]))):
+                        logging.error("Skipping file '%s' due to elevation mismatch", filename)
+                        continue
+            else:
+                if filename in self._file_cache:
+                    del self._file_cache[filename]
+                logging.info("Opening candidate '%s'", filename)
+                try:
+                    content = self._parse_file(filename)
+                except IOError as ex:
+                    logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
+                    continue
+                self._file_cache[filename] = (mtime, content)
+                if content["vert_type"] not in self._elevations:
+                    self._elevations[content["vert_type"]] = content["elevations"]
             self._add_to_filetree(filename, content)
 
     def get_init_times(self):
@@ -364,14 +397,12 @@ class DefaultDataAccess(NWPDataAccess):
         """
         Return a list of available elevations for a vertical level type.
         """
-        logging.debug("%s", self._elevations)
         return self._elevations[vert_type]["levels"]
 
     def get_elevation_units(self, vert_type):
         """
         Return a list of available elevations for a vertical level type.
         """
-        logging.debug("%s", self._elevations)
         return self._elevations[vert_type]["units"]
 
     def get_all_valid_times(self, variable, vartype):
@@ -394,63 +425,52 @@ class DefaultDataAccess(NWPDataAccess):
         return self._available_files
 
 
-class CachedDataAccess(DefaultDataAccess):
-    """
-    Subclass to NWPDataAccess for accessing properly constructed NetCDF files
-    Constructor needs information on domain ID.
+# to retain backwards compatibility
+CachedDataAccess = DefaultDataAccess
 
-    Uses file name and modification date to reduce setup time by caching directory
-    content in a dictionary.
+
+class WatchModificationDataAccess(DefaultDataAccess):
+    """
+    Subclass to CachedDataAccess that constantly watches for modified netCDF files.
+    Imposes a heavy performance cost. It is mostly thought for use when setting up
+    a server in contrast to operation use.
     """
 
-    def __init__(self, rootpath, domain_id, **kwargs):
-        """Constructor takes the path of the data directory and determines whether
-           this class employs different init_times or valid_times.
+    def _determine_filename(self, variable, vartype, init_time, valid_time, reload=True):
         """
-        DefaultDataAccess.__init__(self, rootpath, domain_id, **kwargs)
-        self._file_cache = {}
-
-    def setup(self):
-        # Get a list of the available data files.
-        self._available_files = [
-            _filename for _filename in os.listdir(self._root_path) if self._domain_id in _filename]
-        logging.info("Files identified for domain '%s': %s",
-                     self._domain_id, self._available_files)
-
-        for filename in list(self._file_cache):
-            if filename not in self._available_files:
-                del self._file_cache[filename]
-
-        self._filetree = {}
-        self._elevations = {"sfc": {"filename": None, "levels": [], "units": None}}
-
-        # Build the tree structure.
-        for filename in self._available_files:
+        Determines the name of the data file that contains
+        the variable <variable> with type <vartype> of the forecast specified
+        by <init_time> and <valid_time>.
+        """
+        assert self._filetree is not None, "filetree is None. Forgot to call setup()?"
+        try:
+            filename = self._filetree[vartype][init_time][variable][valid_time]
             mtime = os.path.getmtime(os.path.join(self._root_path, filename))
             if filename in self._file_cache and mtime == self._file_cache[filename][0]:
-                logging.info("Using cached candidate '%s'", filename)
-                content = self._file_cache[filename][1]
-                if content["vert_type"] != "sfc":
-                    if content["vert_type"] not in self._elevations:
-                        self._elevations[content["vert_type"]] = content["elevations"]
-                    if ((len(self._elevations[content["vert_type"]]["levels"]) !=
-                         len(content["elevations"]["levels"])) or
-                        (not np.allclose(
-                         self._elevations[content["vert_type"]]["levels"],
-                         content["elevations"]["levels"]))):
-                        logging.error("Skipping file '%s' due to elevation mismatch", filename)
-                        continue
-
+                return filename
+            raise KeyError
+        except (KeyError, OSError) as ex:
+            if reload:
+                self.setup()
+                self._determine_filename(self, variable, vartype, init_time, valid_time, reload=False)
             else:
-                if filename in self._file_cache:
-                    del self._file_cache[filename]
-                logging.info("Opening candidate '%s'", filename)
-                try:
-                    content = self._parse_file(filename)
-                except IOError as ex:
-                    logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
-                    continue
-                if content["vert_type"] not in self._elevations:
-                    self._elevations[content["vert_type"]] = content["elevations"]
-                self._file_cache[filename] = (mtime, content)
-            self._add_to_filetree(filename, content)
+                logging.error("Could not identify filename. %s %s %s %s %s %s",
+                              variable, vartype, init_time, valid_time, type(ex), ex)
+                raise ValueError(f"variable type {vartype} not available for variable {variable}")
+
+    def is_reload_required(self, filenames):
+        try:
+            for filename in filenames:
+                basename = os.path.basename(filename)
+                if basename not in self._file_cache:
+                    raise OSError
+                fullname = os.path.join(self._root_path, basename)
+                if not os.path.exists(fullname):
+                    raise OSError
+                mtime = os.path.getmtime(fullname)
+                if mtime != self._file_cache[basename][0]:
+                    raise OSError
+        except OSError:
+            self.setup()
+            return True
+        return False
