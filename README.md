@@ -36,7 +36,7 @@ Current release info
 | [![Conda Recipe](https://img.shields.io/badge/recipe-mss-green.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss) |
 
 
-[![Coverage Status](https://coveralls.io/repos/github/Open-MSS/MSS/badge.svg)](https://coveralls.io/github/Open-MSS/MSS)
+[![Coverage Status](https://coveralls.io/repos/github/Open-MSS/MSS/badge.svg?branch=develop)](https://coveralls.io/github/Open-MSS/MSS?branch=develop)
 
 
 Publications
