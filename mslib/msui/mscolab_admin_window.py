@@ -68,6 +68,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.selectAllModifyBtn.clicked.connect(lambda: self.select_all(self.modifyUsersTable))
         self.deselectAllModifyBtn.clicked.connect(lambda: self.deselect_all(self.modifyUsersTable))
 
+        index = self.addUsersPermission.findText("collaborator", QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            self.addUsersPermission.setCurrentIndex(index)
         # Search filter
         self.addUsersSearch.textChanged.connect(lambda text: self.search_user_filter(text, self.addUsersTable))
         self.modifyUsersSearch.textChanged.connect(lambda text: self.search_user_filter(text, self.modifyUsersTable))
@@ -82,6 +85,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.populate_import_permission_cb()
 
     def populate_table(self, table, users):
+        users.sort()
         table.setRowCount(0)
         for row_number, row_data in enumerate(users):
             table.insertRow(row_number)
@@ -117,17 +121,15 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             if table.item(row_num, 0).isSelected() and table.isRowHidden(row_num) is False:
                 table.selectRow(row_num)
 
-    # TODO: Think of a more cleaner implementation.
     def apply_filters(self, table, text_filter, permission_filter=None):
+        # Check if no permission or permission is all
+        all_items = permission_filter is None or permission_filter == "all"
+
+        # Show/Hide item based on permission and text_filter
         for row_num in range(table.rowCount()):
-            if text_filter in table.item(row_num, 0).text():
-                if permission_filter:
-                    if permission_filter == "all" or permission_filter == table.item(row_num, 1).text():
-                        table.showRow(row_num)
-                    else:
-                        table.hideRow(row_num)
-                else:
-                    table.showRow(row_num)
+            permitted = True if all_items else permission_filter == table.item(row_num, 1).text()
+            if permitted and text_filter in table.item(row_num, 0).text():
+                table.showRow(row_num)
             else:
                 table.hideRow(row_num)
 

@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_topview_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_TopViewWindow(object):
     def setupUi(self, TopViewWindow):
@@ -93,6 +95,7 @@ class Ui_TopViewWindow(object):
     def retranslateUi(self, TopViewWindow):
         _translate = QtCore.QCoreApplication.translate
         TopViewWindow.setWindowTitle(_translate("TopViewWindow", "Top View - Mission Support System"))
+        self.btMapRedraw.setToolTip(_translate("TopViewWindow", "Redraw Map (R)"))
         self.btMapRedraw.setText(_translate("TopViewWindow", "&REDRAW"))
         self.btMapRedraw.setShortcut(_translate("TopViewWindow", "R"))
         self.btSettings.setText(_translate("TopViewWindow", "options"))
@@ -108,5 +111,4 @@ class Ui_TopViewWindow(object):
         self.cbChangeMapSection.setItemText(6, _translate("TopViewWindow", "Germany (cyl)"))
         self.actionCloseWindow.setText(_translate("TopViewWindow", "CloseWindow"))
         self.actionCloseWindow.setShortcut(_translate("TopViewWindow", "Ctrl+W"))
-
 from mslib.msui.mpl_qtwidget import MplTopViewWidget
