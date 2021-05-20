@@ -143,7 +143,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.data_dir = config_loader(dataset="mss_dir")
         else:
             self.data_dir = data_dir
-        self.export_plugins = {}
+        self.export_plugins = self.add_plugins(dataset="export_plugins")
+        self.import_plugins = self.add_plugins(dataset="import_plugins")
         self.add_plugins()
         self.create_dir()
         self.mscolab_server_url = None
@@ -163,20 +164,22 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.settings = load_settings_qsettings(
             'mscolab', default_settings={'auth': {}, 'server_settings': {}})
 
-    def add_plugins(self):
-        self._export_plugins = config_loader(dataset="export_plugins")
-        for name in self._export_plugins:
-            extension, module, function = self._export_plugins[name][:3]
+    def add_plugins(self, dataset="export_plugins"):
+        plugins = {}
+        self._plugins = config_loader(dataset=dataset)
+        for name in self._plugins:
+            extension, module, function = self._plugins[name][:3]
             try:
                 imported_module = importlib.import_module(module)
-                self.export_plugins[extension] = getattr(imported_module, function)
+                plugins[extension] = getattr(imported_module, function)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{self._exported_plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
+                    self.tr(f"ERROR: Configuration\n\n{self._plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
+        return plugins
 
     def create_dir(self):
         # ToDo this needs to be done earlier
@@ -277,26 +280,36 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.loginButton.setEnabled(self.emailid.text() != "" and self.password.text() != "")
 
     def handle_import(self):
-        file_path = get_open_filename(self, "Select a file", "", "Flight track (*.ftml)")
+        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.import_plugins.keys()]
+        file_path = get_open_filename(self, "Select a file", "", ';;'.join(file_type))
         if file_path is None:
             return
         dir_path, file_name = fs.path.split(file_path)
-        with open_fs(dir_path) as file_dir:
-            xml_content = file_dir.readtext(file_name)
-        try:
-            model = ft.WaypointsTableModel(xml_content=xml_content)
-        except SyntaxError:
-            show_popup(self, "Import Failed", f"The file - {file_name}, does not contain valid XML")
-            return
-        self.waypoints_model = model
-        if self.workLocallyCheckBox.isChecked():
-            self.waypoints_model.save_to_ftml(self.local_ftml_file)
-            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+        file_name = fs.path.basename(file_path)
+        name, file_ext = fs.path.splitext(file_name)
+        if file_ext[1:] == "ftml":
+            with open_fs(dir_path) as file_dir:
+                xml_content = file_dir.readtext(file_name)
+            try:
+                model = ft.WaypointsTableModel(xml_content=xml_content)
+            except SyntaxError:
+                show_popup(self, "Import Failed", f"The file - {file_name}, does not contain valid XML")
+                return
+            if self.workLocallyCheckBox.isChecked():
+                self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            else:
+                self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
+                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         else:
-            self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
-            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            _function = self.import_plugins[file_ext[1:]]
+            ft_name, new_waypoints = _function(file_path)
+            if not ft_name:
+                ft_name = name
+            model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
         self.reload_view_windows()
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
+        self.waypoints_model = model
 
     def handle_export(self):
         # Setting default filename path for filedialogue
@@ -313,8 +326,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             with open_fs(dir_path).open(file_name, 'w') as file:
                 xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
         else:
-            exp_function = self.export_plugins[file_ext[1:]]
-            exp_function(file_path, file_name, self.waypoints_model.waypoints)
+            _function = self.export_plugins[file_ext[1:]]
+            _function(file_path, file_name, self.waypoints_model.waypoints)
+            show_popup(self, "Export Success", f"The file - {file_name}, was exported successfully!", 1)
 
     def disable_project_buttons(self):
         self.save_ft.setEnabled(False)
