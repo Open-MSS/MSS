@@ -60,7 +60,7 @@ class Message():
 class Test_Utils_with_Projects(object):
     def setup(self):
         self.process, self.url, self.app, self.sio, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(100)
+        QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
