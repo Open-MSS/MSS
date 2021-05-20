@@ -211,7 +211,6 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             else:
                 show_popup(self, "Error", "Session expired, new login required")
 
-
     def handle_delete_version_name(self):
         selected_item = self.changes.currentItem()
         res = self.request_set_version_name(None, selected_item.id)
