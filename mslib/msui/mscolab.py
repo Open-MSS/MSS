@@ -308,6 +308,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
         self.waypoints_model = model
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+        xml_content = self.request_wps_from_server()
+        self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
         self.reload_view_windows()
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
