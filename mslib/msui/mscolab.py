@@ -307,8 +307,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 ft_name = name
             model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
         self.reload_view_windows()
-        show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
         self.waypoints_model = model
+        show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
     def handle_export(self):
         # Setting default filename path for filedialogue
