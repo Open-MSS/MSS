@@ -145,7 +145,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.data_dir = data_dir
         self.export_plugins = self.add_plugins(dataset="export_plugins")
         self.import_plugins = self.add_plugins(dataset="import_plugins")
-        self.add_plugins()
         self.create_dir()
         self.mscolab_server_url = None
         self.disable_action_buttons()
