@@ -32,6 +32,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import BoundaryNorm, ListedColormap
 import numpy as np
 from skyfield.api import Loader, Topos, utc
+import skyfield_data
 
 from mslib.msui.constants import MSS_CONFIG_PATH
 from PyQt5 import QtGui, QtWidgets
@@ -68,9 +69,10 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             download_path = MSS_CONFIG_PATH
 
         self.load = Loader(download_path, verbose=False)
-        self.planets = self.load('de421.bsp')
+        self.load_bsp = Loader(skyfield_data.get_skyfield_data_path(), verbose=False)
+
         self.timescale = self.load.timescale(builtin=True)
-        # don't download files, use shipped files
+        self.planets = self.load_bsp('de421.bsp')
 
         button = self.btTangentsColour
         palette = QtGui.QPalette(button.palette())
