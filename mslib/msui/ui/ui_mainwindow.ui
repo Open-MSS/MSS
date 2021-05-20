@@ -82,7 +82,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>442</width>
-     <height>24</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
@@ -134,6 +134,7 @@ Save a flight track to name it.</string>
     </property>
     <addaction name="actionOnlineHelp"/>
     <addaction name="actionAboutMSUI"/>
+    <addaction name="actionShortcuts"/>
    </widget>
    <widget class="QMenu" name="menu_Mscolab">
     <property name="title">
@@ -252,6 +253,20 @@ Save a flight track to name it.</string>
    </property>
    <property name="toolTip">
     <string>Load a JSON configuration file</string>
+   </property>
+  </action>
+  <action name="actionShortcuts">
+   <property name="text">
+    <string>Shortcuts</string>
+   </property>
+   <property name="toolTip">
+    <string>Show Current Shortcuts</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+S</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
    </property>
   </action>
  </widget>
