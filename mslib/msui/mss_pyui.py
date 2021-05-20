@@ -136,10 +136,6 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
 
     def __init__(self):
-        """
-        Arguments:
-        parent -- Qt widget that is parent to this widget.
-        """
         super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
         self.current_shortcuts = self.get_shortcuts()
@@ -170,10 +166,11 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         shortcuts = {}
         for qobject in QtWidgets.QApplication.topLevelWidgets():
-            actions = [
+            actions = [(qobject.window(), "Show Current Shortcuts", "Alt+S")]
+            actions.extend([
                 (action.parent().window(), action.toolTip(), ",".join(
                     [shortcut.toString() for shortcut in action.shortcuts()]))
-                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0]
+                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0])
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), shortcut.key().toString())
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
             actions.extend([(button.window(), button.toolTip(), button.shortcut().toString())
@@ -181,7 +178,7 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
             for item in actions:
                 if item[0] not in shortcuts:
                     shortcuts[item[0]] = {}
-                shortcuts[item[0]][item[1].replace(f"({item[2]})", "")] = item[2]
+                shortcuts[item[0]][item[1].replace(f"({item[2]})", "").strip()] = item[2]
 
         return shortcuts
 
