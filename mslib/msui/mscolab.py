@@ -36,6 +36,7 @@ import types
 import fs
 import requests
 import re
+import importlib
 from fs import open_fs
 from werkzeug.urls import url_join
 
@@ -142,6 +143,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.data_dir = config_loader(dataset="mss_dir")
         else:
             self.data_dir = data_dir
+        self.export_plugins = {}
+        self.add_plugins()
         self.create_dir()
         self.mscolab_server_url = None
         self.disable_action_buttons()
@@ -159,6 +162,21 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         # fill value of mscolab url if found in QSettings storage
         self.settings = load_settings_qsettings(
             'mscolab', default_settings={'auth': {}, 'server_settings': {}})
+
+    def add_plugins(self):
+        self._export_plugins = config_loader(dataset="export_plugins")
+        for name in self._export_plugins:
+            extension, module, function = self._export_plugins[name][:3]
+            try:
+                imported_module = importlib.import_module(module)
+                self.export_plugins[extension] = getattr(imported_module, function)
+            # wildcard exception to be resilient against error introduced by user code
+            except Exception as ex:
+                logging.error("Error on import: %s: %s", type(ex), ex)
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("file io plugin error import plugins"),
+                    self.tr(f"ERROR: Configuration\n\n{self._exported_plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
+                continue
 
     def create_dir(self):
         # ToDo this needs to be done earlier
@@ -283,13 +301,20 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
     def handle_export(self):
         # Setting default filename path for filedialogue
         default_filename = self.active_project_name + ".ftml"
-        file_path = get_save_filename(self, "Save Flight track", default_filename, "Flight track (*.ftml)")
+        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
+        file_path = get_save_filename(self, "Save Flight track", default_filename, ';;'.join(file_type))
         if file_path is None:
             return
-        xml_doc = self.waypoints_model.get_xml_doc()
-        dir_path, file_name = fs.path.split(file_path)
-        with open_fs(dir_path).open(file_name, 'w') as file:
-            xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+        file_name = fs.path.basename(file_path)
+        file_name, file_ext = fs.path.splitext(file_name)
+        if file_ext[1:] == "ftml":
+            xml_doc = self.waypoints_model.get_xml_doc()
+            dir_path, file_name = fs.path.split(file_path)
+            with open_fs(dir_path).open(file_name, 'w') as file:
+                xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+        else:
+            exp_function = self.export_plugins[file_ext[1:]]
+            exp_function(file_path, file_name, self.waypoints_model.waypoints)
 
     def disable_project_buttons(self):
         self.save_ft.setEnabled(False)
