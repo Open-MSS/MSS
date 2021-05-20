@@ -294,7 +294,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             except SyntaxError:
                 show_popup(self, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                 return
+            self.waypoints_model = model
             if self.workLocallyCheckBox.isChecked():
+                # this is only ftml file based
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             else:
@@ -306,10 +308,10 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if not ft_name:
                 ft_name = name
             model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
-        self.waypoints_model = model
-        self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
-        xml_content = self.request_wps_from_server()
-        self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
+            self.waypoints_model = model
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            xml_content = self.request_wps_from_server()
+            self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
         self.reload_view_windows()
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
