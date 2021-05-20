@@ -826,6 +826,7 @@ def main():
     application = QtWidgets.QApplication(sys.argv)
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
     application.setApplicationDisplayName("MSS")
+    application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSSMainWindow()
     mainwindow.create_new_flight_track()
     mainwindow.show()
