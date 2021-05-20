@@ -47,6 +47,7 @@ import fs
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
+from mslib.msui.mss_qt import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview
 from mslib.msui import topview
@@ -129,6 +130,59 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
         self.flighttrack_model = flighttrack_model
 
 
+class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
+    """
+    Dialog showing shortcuts for all currently open windows
+    """
+
+    def __init__(self):
+        super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
+        self.setupUi(self)
+        self.current_shortcuts = self.get_shortcuts()
+        self.fill_list()
+
+    def fill_list(self):
+        """
+        Fills the treeWidget with all relevant windows as top level items and their shortcuts as children
+        """
+        for widget in self.current_shortcuts:
+            name = widget.window().windowTitle()
+            if len(name) == 0 or widget.window().isHidden():
+                continue
+            header = QtWidgets.QTreeWidgetItem(self.treeWidget)
+            header.setText(0, name)
+            if widget.window() == self.parent():
+                header.setExpanded(True)
+                header.setSelected(True)
+                self.treeWidget.setCurrentItem(header)
+            for description, shortcut in self.current_shortcuts[widget].items():
+                item = QtWidgets.QTreeWidgetItem(header)
+                item.setText(0, f"{description}: {shortcut}")
+                header.addChild(item)
+
+    def get_shortcuts(self):
+        """
+        Iterates through all top level widgets and puts their shortcuts in a dictionary
+        """
+        shortcuts = {}
+        for qobject in QtWidgets.QApplication.topLevelWidgets():
+            actions = [(qobject.window(), "Show Current Shortcuts", "Alt+S")]
+            actions.extend([
+                (action.parent().window(), action.toolTip(), ",".join(
+                    [shortcut.toString() for shortcut in action.shortcuts()]))
+                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0])
+            actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), shortcut.key().toString())
+                            for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
+            actions.extend([(button.window(), button.toolTip(), button.shortcut().toString())
+                            for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut()])
+            for item in actions:
+                if item[0] not in shortcuts:
+                    shortcuts[item[0]] = {}
+                shortcuts[item[0]][item[1].replace(f"({item[2]})", "").strip()] = item[2]
+
+        return shortcuts
+
+
 class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
        defined in the QtDesigner file.
@@ -196,6 +250,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
+        self.actionShortcuts.triggered.connect(self.show_shortcuts)
+        self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
         # Config
         self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
@@ -677,6 +733,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """Show the 'About MSUI' dialog to the user.
         """
         dlg = MSS_AboutDialog(parent=self)
+        dlg.setModal(True)
+        dlg.exec_()
+
+    def show_shortcuts(self):
+        """Show the shortcuts dialog to the user.
+        """
+        dlg = MSS_ShortcutsDialog()
         dlg.setModal(True)
         dlg.exec_()
 
