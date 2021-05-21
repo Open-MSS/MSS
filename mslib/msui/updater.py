@@ -25,6 +25,7 @@
 import subprocess
 import sys
 import os
+import logging
 
 from mslib import __version__
 from mslib.utils import Worker
@@ -47,7 +48,6 @@ class Updater(QtCore.QObject):
         self.parent = parent
         self.updater_worker = None
         self.environment = None
-        self.command = None
         self.is_git_env = False
         self.new_version = None
         self.old_version = __version__
@@ -66,28 +66,23 @@ class Updater(QtCore.QObject):
         # Don't run updates if mss is in a git repo, as you are most likely a developer
         try:
             git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
-                                 encoding="utf8")
-            if "true" in git.stdout:
+                                 stderr=subprocess.STDOUT, encoding="utf8")
+            if False and "true" in git.stdout:
                 self.is_git_env = True
                 return
         except FileNotFoundError:
             pass
 
-        # Determine if mamba or conda should be used initially
+        # Return if conda is not installed
         try:
-            subprocess.run(["mamba"], stdout=subprocess.PIPE)
-            self.command = "mamba"
+            subprocess.run(["conda"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         except FileNotFoundError:
-            try:
-                subprocess.run(["conda"], stdout=subprocess.PIPE)
-                self.command = "conda"
-            except FileNotFoundError:
-                return
+            return
 
         self.on_status_update.emit("Checking for updates...")
 
         # Check if "search mss" yields a higher version than the currently running one
-        search = subprocess.run([self.command, "search", "mss"], stdout=subprocess.PIPE)
+        search = subprocess.run(["conda", "search", "mss"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if search.returncode == 0:
             self.new_version = str(search.stdout, "utf-8").split("\n")[-2].split()[1]
             if any(c.isdigit() for c in self.new_version):
@@ -104,60 +99,43 @@ class Updater(QtCore.QObject):
         QtCore.QCoreApplication.quit()
         os.execv(sys.executable, [sys.executable.split(os.sep)[-1]] + sys.argv)
 
-    def _update_info(self, updater):
-        """
-        Iterates through a conda/mamba download, and updates on the total progress
-        """
-        total_download = 0
-        downloaded = 0
-        for line in updater.stdout:
-            line = line.replace("\n", "")
-            info = line.split()
-            print(line)
-            if "Total download:" in line:
-                print("Total Download info", info)
-                factor = 0.001 if info[-1] == "KB" else 1000 if info[-1] == "GB" else 1
-                total_download = int(float(info[-2]) * factor)
-            elif "Finished" in line:
-                print("Download info", info)
-                factor = 0.001 if info[-3] == "KB" else 1000 if info[-3] == "GB" else 1
-                downloaded += int(float(info[-4]) * factor)
-                self.on_progress_update.emit(int((downloaded / total_download) * 100))
-
     def _install_and_update(self):
         """
         Try to install MSS' newest version and update all packages
         """
-        subprocess.run([self.command, "config", "--add", "channels", "conda-forge"])
+        self._set_base_env_path()
+        self.on_progress_update.emit(0)
+        self._execute_in_env("conda config --add channels conda-forge")
+
+        self.on_status_update.emit("Creating temporary environment...")
+        self._execute_in_env(f"conda create -n mss-tmp-env mamba -y")
+        self.on_progress_update.emit(10)
 
         self.on_status_update.emit("Installing latest MSS...")
-        updater = subprocess.Popen([self.command, "install", f"mss={self.new_version}", "-y"],
-                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8")
-        self.update_info(updater)
+        self._execute_in_env(f"mamba install mss={self.new_version} python -y", "mss-tmp-env")
+        self.on_progress_update.emit(45)
 
-        # Try again with conda instead of mamba, if installing the newest MSS failed
-        if not self.verify_newest_mss():
-            if self.command == "mamba":
-                self.on_status_update.emit("Installing latest MSS...")
-                updater = subprocess.Popen(["conda", "install", f"mss={self.new_version}", "-y"],
-                                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8")
-                self.update_info(updater)
-
-                if not self.verify_newest_mss():
-                    self.failed()
-            else:
-                self.failed()
+        if not self._verify_newest_mss():
+            self._failed()
+            return
 
         self.on_status_update.emit("Updating packages...")
-        updater = subprocess.Popen([self.command, "update", "--all", "-y"],
-                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8")
-        self.update_info(updater)
+        self._execute_in_env("mamba update --all -y", "mss-tmp-env")
+        self.on_progress_update.emit(50)
+
+        self.on_status_update.emit("Replacing environment...")
+        self._execute_in_env(f"conda create -p {self.current_path} --clone mss-tmp-env -y")
+        self.on_progress_update.emit(95)
+
+        self.on_status_update.emit("Deleting temporary environment...")
+        self._execute_in_env(f"conda remove -n mss-tmp-env --all -y")
+        self.on_progress_update.emit(100)
 
         self.on_status_update.emit("Update finished. Please restart MSS.")
         self.on_update_finished.emit()
 
     def _verify_newest_mss(self):
-        verify = subprocess.run([self.command, "list", "mss"], stdout=subprocess.PIPE, encoding="utf-8")
+        verify = self._execute_in_env("conda list mss", "mss-tmp-env")
         if self.new_version in verify.stdout:
             return True
         return False
@@ -167,8 +145,27 @@ class Updater(QtCore.QObject):
                                    "https://mss.readthedocs.io/en/stable/installation.html#conda-forge-channel")
         self.on_update_failed.emit()
 
+    def _set_base_env_path(self):
+        env_list = subprocess.run(["conda", "env", "list"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                  encoding="utf8")
+        self.base_path = next(line for line in env_list.stdout.split("\n") if "#" not in line).split()[-1]
+        self.current_path = next(line for line in env_list.stdout.split("\n") if "*" in line).split()[-1]
+
+    def _execute_in_env(self, command, env=None, popen=False):
+        """
+        Executes a subprocess from the base conda environment
+        """
+        conda_command = ["conda", "run", "--live-stream", "-p", self.base_path]
+        if env is not None:
+            conda_command.extend(["conda", "run", "--live-stream", "-n", env])
+        conda_command.extend(command.split())
+        if popen:
+            return subprocess.Popen(conda_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
+        else:
+            return subprocess.run(conda_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
+
     def update_mss(self):
         """
         Installs the newest mss version
         """
-        Worker.create(self.install_and_update)
+        Worker.create(self._install_and_update)
