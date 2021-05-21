@@ -447,8 +447,7 @@ def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     # parameter controls the degree of the splines used, i.e. order=1
     # stands for linear interpolation.
     for ml in range(data3D.shape[0]):
-        data = data3D[ml, :, :]
-        curtain[ml, :] = map_coordinates(data, ind_coords, order=1)
+        curtain[ml, :] = map_coordinates(data3D[ml, :, :].filled(np.nan), ind_coords, order=1)
 
     curtain[:, np.isnan(ind_lats) | np.isnan(ind_lons)] = np.nan
     return np.ma.masked_invalid(curtain)
