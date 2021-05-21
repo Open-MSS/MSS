@@ -278,15 +278,17 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Status Bar
         self.labelStatusbar.setText(self.status())
 
-        self.updater = Updater(self)
-        self.updater.on_update_available.connect(self.notify_on_update)
-        self.updater.on_status_update.connect(lambda s: (self.labelUpdate.setVisible(True),
-                                                         self.labelUpdate.setText(s)))
-        self.updater.on_progress_update.connect(lambda i: (self.progressBar.setVisible(True),
-                                                           self.progressBar.setValue(i)))
-        self.updater.on_update_finished.connect(lambda: self.progressBar.setVisible(False))
-        self.updater.on_update_failed.connect(lambda: self.progressBar.setVisible(False))
-        self.updater.run()
+        # Don't start the updater during a test run of mss_pyui
+        if "pytest" not in sys.modules:
+            self.updater = Updater(self)
+            self.updater.on_update_available.connect(self.notify_on_update)
+            self.updater.on_status_update.connect(lambda s: (self.labelUpdate.setVisible(True),
+                                                             self.labelUpdate.setText(s)))
+            self.updater.on_progress_update.connect(lambda i: (self.progressBar.setVisible(True),
+                                                               self.progressBar.setValue(i)))
+            self.updater.on_update_finished.connect(lambda: self.progressBar.setVisible(False))
+            self.updater.on_update_failed.connect(lambda: self.progressBar.setVisible(False))
+            self.updater.run()
 
     @staticmethod
     def preload_wms(urls):
@@ -854,7 +856,7 @@ def main():
     mainwindow = MSSMainWindow()
     mainwindow.create_new_flight_track()
     mainwindow.show()
-    application.exec_()
+    sys.exit(application.exec_())
 
 
 if __name__ == "__main__":

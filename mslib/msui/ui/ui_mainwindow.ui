@@ -295,9 +295,6 @@ Save a flight track to name it.</string>
    <property name="shortcut">
     <string>Alt+S</string>
    </property>
-   <property name="shortcutContext">
-    <enum>Qt::ApplicationShortcut</enum>
-   </property>
   </action>
  </widget>
  <resources/>

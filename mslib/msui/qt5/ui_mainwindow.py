@@ -106,7 +106,6 @@ class Ui_MSSMainWindow(object):
         self.actionLoadConfigurationFile = QtWidgets.QAction(MSSMainWindow)
         self.actionLoadConfigurationFile.setObjectName("actionLoadConfigurationFile")
         self.actionShortcuts = QtWidgets.QAction(MSSMainWindow)
-        self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
         self.actionShortcuts.setObjectName("actionShortcuts")
         self.menu_File.addAction(self.actionNewFlightTrack)
         self.menu_File.addAction(self.actionOpenFlightTrack)
