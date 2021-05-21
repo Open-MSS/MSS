@@ -718,10 +718,13 @@ class Worker(QtCore.QThread):
     Beware not to modify the parents connections through the function.
     You may change the GUI but it may sometimes not update until the Worker is done.
     """
+    # Static set of all workers to avoid segfaults
+    workers = set()
     finished = QtCore.pyqtSignal(object)
     failed = QtCore.pyqtSignal(Exception)
 
     def __init__(self, function):
+        Worker.workers.add(self)
         super(Worker, self).__init__()
         self.function = function
         self.failed.connect(lambda e: self._update_gui())
@@ -733,6 +736,8 @@ class Worker(QtCore.QThread):
             self.finished.emit(result)
         except Exception as e:
             self.failed.emit(e)
+        finally:
+            Worker.workers.remove(self)
 
     @staticmethod
     def create(function, on_success=None, on_failure=None, start=True):
