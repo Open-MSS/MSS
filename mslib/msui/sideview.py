@@ -29,7 +29,7 @@
 import logging
 import functools
 from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
-from PyQt5 import QtGui, QtWidgets, QtCore
+from PyQt5 import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_sideview_window as ui
 from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
@@ -53,13 +53,13 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing sideview options.
         """
-        _translate = QtCore.QCoreApplication.translate
         super(MSS_SV_OptionsDialog, self).__init__(parent)
         self.setupUi(self)
 
         default_settings_dict = {
             "vertical_extent": (1050, 180),
             "vertical_axis": "pressure",
+            "secondary_axis": "no secondary axis",
             "flightlevels": [300, 320, 340],
             "draw_flightlevels": True,
             "draw_flighttrack": True,
@@ -71,7 +71,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "draw_ceiling": True,
             "colour_ceiling": (0.1, 0.5, 0.1, 0),
         }
-        suffixes = [' hpa', ' km', ' hft']
+        self._suffixes = ['hPa', 'km', 'hft']
         if settings_dict is not None:
             default_settings_dict.update(settings_dict)
         settings_dict = default_settings_dict
@@ -90,8 +90,11 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         for i in range(self.cbVerticalAxis.count()):
             if self.cbVerticalAxis.itemText(i) == settings_dict["vertical_axis"]:
                 self.cbVerticalAxis.setCurrentIndex(i)
-                self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", suffixes[i]))
-                self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", suffixes[i]))
+                self.sbPbot.setSuffix(" " + self._suffixes[i])
+                self.sbPtop.setSuffix(" " + self._suffixes[i])
+        for i in range(self.cbVerticalAxis2.count()):
+            if self.cbVerticalAxis2.itemText(i) == settings_dict["secondary_axis"]:
+                self.cbVerticalAxis2.setCurrentIndex(i)
 
         self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
@@ -110,7 +113,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             button.setPalette(palette)
 
         # Connect colour button signals.
-        self.cbVerticalAxis.view().pressed.connect(self.verticalunitsclicked)
+        self.cbVerticalAxis.currentIndexChanged.connect(self.verticalunitsclicked)
         self.btFillColour.clicked.connect(functools.partial(self.setColour, "ft_fill"))
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
@@ -121,13 +124,13 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
 
         self.tableWidget.itemChanged.connect(self.itemChanged)
 
-    def setBotTopLimits(self, type):
+    def setBotTopLimits(self, axis_type):
         bot, top = {
             "maximum": (0, 2132),
             "pressure": (0.1, 1050),
             "pressure altitude": (0, 65),
             "flight level": (0, 2132),
-        }[type]
+        }[axis_type]
         for button in (self.sbPbot, self.sbPtop):
             button.setMinimum(bot)
             button.setMaximum(top)
@@ -205,6 +208,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         settings_dict = {
             "vertical_extent": (float(self.sbPbot.value()), float(self.sbPtop.value())),
             "vertical_axis": self.cbVerticalAxis.currentText(),
+            "secondary_axis": self.cbVerticalAxis2.currentText(),
             "flightlevels": self.get_flight_levels(),
             "draw_ceiling": self.cbDrawCeiling.isChecked(),
             "draw_flightlevels": self.cbDrawFlightLevels.isChecked(),
@@ -223,29 +227,22 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         return settings_dict
 
     def verticalunitsclicked(self, index):
-        units = {"pressure": "hPa", "pressure altitude": "km", "flight level": "hft"}
-        _translate = QtCore.QCoreApplication.translate
-        unit = units[self.cbVerticalAxis.model().itemFromIndex(index).text()]
-        currentunit = units[self.cbVerticalAxis.currentText()]
-        if unit == currentunit:
+        new_unit = self._suffixes[index]
+        old_unit = self.sbPbot.suffix().strip()
+        if new_unit == old_unit:
             return
         self.setBotTopLimits("maximum")
-        self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " " + unit))
-        self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " " + unit))
-        if unit == "hPa":
-            self.sbPtop.setValue(thermolib.flightlevel2pressure(
-                convert_to(self.sbPtop.value(), currentunit, "hft", 1)) / 100)
-            self.sbPbot.setValue(thermolib.flightlevel2pressure(
-                convert_to(self.sbPbot.value(), currentunit, "hft", 1)) / 100)
-        elif currentunit == "hPa":
-            self.sbPtop.setValue(convert_to(
-                thermolib.pressure2flightlevel(self.sbPtop.value() * 100), "hft", unit))
-            self.sbPbot.setValue(convert_to(
-                thermolib.pressure2flightlevel(self.sbPbot.value() * 100), "hft", unit))
-        else:
-            self.sbPtop.setValue(convert_to(self.sbPtop.value(), currentunit, unit, 1))
-            self.sbPbot.setValue(convert_to(self.sbPbot.value(), currentunit, unit, 1))
-        self.setBotTopLimits(self.cbVerticalAxis.model().itemFromIndex(index).text())
+        for sb in (self.sbPbot, self.sbPtop):
+            sb.setSuffix(" " + new_unit)
+            if new_unit == "hPa":
+                sb.setValue(thermolib.flightlevel2pressure(
+                    convert_to(sb.value(), old_unit, "hft", 1)) / 100)
+            elif old_unit == "hPa":
+                sb.setValue(convert_to(
+                    thermolib.pressure2flightlevel(sb.value() * 100), "hft", new_unit))
+            else:
+                sb.setValue(convert_to(sb.value(), old_unit, new_unit, 1))
+        self.setBotTopLimits(self.cbVerticalAxis.currentText())
 
 
 class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):

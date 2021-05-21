@@ -487,6 +487,7 @@ class MplSideViewCanvas(MplCanvas):
         # Default settings.
         self.settings_dict = {"vertical_extent": (1050, 180),
                               "vertical_axis": "pressure",
+                              "secondary_axis": "no secondary axis",
                               "flightlevels": [],
                               "draw_flightlevels": True,
                               "draw_flighttrack": True,
@@ -501,15 +502,20 @@ class MplSideViewCanvas(MplCanvas):
             self.settings_dict.update(settings)
 
         # Setup the plot.
-        self.p_bot = self.settings_dict["vertical_extent"][0] * 100
-        self.p_top = self.settings_dict["vertical_extent"][1] * 100
+        self.update_vertical_extent_from_settings(init=True)
+
         self.numlabels = numlabels
+        self.ax2 = self.ax.twinx()
+        self.ax.patch.set_facecolor("None")
+        self.ax2.patch.set_facecolor("None")
+        # Main axes instance of mplwidget has zorder 99.
+        self.imgax = self.fig.add_axes(
+            self.ax.get_position(), frameon=True, xticks=[], yticks=[], label="imgax", zorder=0)
         self.setup_side_view()
         # Draw a number of flight level lines.
         self.flightlevels = []
         self.fl_label_list = []
         self.draw_flight_levels()
-        self.imgax = None
         self.image = None
         self.ceiling_alt = []
         # If a waypoints model has been passed, create an interactor on it.
@@ -538,12 +544,13 @@ class MplSideViewCanvas(MplCanvas):
                 redraw_xaxis=self.redraw_xaxis, clear_figure=self.clear_figure
             )
 
-    def redraw_yaxis(self):
-        """ Redraws the y-axis on map after setting the values from sideview options dialog box"""
-
-        self.checknconvert()
-        vaxis = self.settings_dict["vertical_axis"]
-        if vaxis == "pressure":
+    def _determine_ticks_labels(self, typ):
+        if typ == "no secondary axis":
+            major_ticks = []
+            minor_ticks = []
+            labels = []
+            ylabel = ""
+        elif typ == "pressure":
             # Compute the position of major and minor ticks. Major ticks are labelled.
             major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
             minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
@@ -553,8 +560,8 @@ class MplSideViewCanvas(MplCanvas):
                 labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
             elif len(labels) > 10:
                 labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
-            self.ax.set_ylabel("pressure (hPa)")
-        elif vaxis == "pressure altitude":
+            ylabel = "pressure (hPa)"
+        elif typ == "pressure altitude":
             bot_km = thermolib.pressure2flightlevel(self.p_bot) * 0.03048
             top_km = thermolib.pressure2flightlevel(self.p_top) * 0.03048
             ma_dist, mi_dist = 4, 1.0
@@ -567,8 +574,8 @@ class MplSideViewCanvas(MplCanvas):
             major_ticks = thermolib.flightlevel2pressure_a(major_heights / 0.03048)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_heights / 0.03048)
             labels = major_heights
-            self.ax.set_ylabel("pressure altitude (km)")
-        elif vaxis == "flight level":
+            ylabel = "pressure altitude (km)"
+        elif typ == "flight level":
             bot_km = thermolib.pressure2flightlevel(self.p_bot) * 0.03048
             top_km = thermolib.pressure2flightlevel(self.p_top) * 0.03048
             ma_dist, mi_dist = 50, 10
@@ -581,16 +588,33 @@ class MplSideViewCanvas(MplCanvas):
             major_ticks = thermolib.flightlevel2pressure_a(major_fl)
             minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
             labels = major_fl
-            self.ax.set_ylabel("flight level (hft)")
+            ylabel = "flight level (hft)"
         else:
-            raise RuntimeError(f"Unsupported vertical axis type: '{vaxis}'")
+            raise RuntimeError(f"Unsupported vertical axis type: '{typ}'")
+        return ylabel, major_ticks, minor_ticks, labels
 
-        # Draw ticks and tick labels.
-        self.ax.set_yticks(minor_ticks, minor=True)
-        self.ax.set_yticks(major_ticks, minor=False)
-        self.ax.set_yticklabels([], minor=True, fontsize=10)
-        self.ax.set_yticklabels(labels, minor=False, fontsize=10)
-        self.ax.set_ylim(self.p_bot, self.p_top)
+    def redraw_yaxis(self):
+        """ Redraws the y-axis on map after setting the values from sideview options dialog box"""
+
+        vaxis = self.settings_dict["vertical_axis"]
+        vaxis2 = self.settings_dict["secondary_axis"]
+
+        for ax, typ in zip((self.ax, self.ax2), (vaxis, vaxis2)):
+            ylabel, major_ticks, minor_ticks, labels = self._determine_ticks_labels(typ)
+
+            ax.set_ylabel(ylabel)
+            ax.set_yticks(minor_ticks, minor=True)
+            ax.set_yticks(major_ticks, minor=False)
+            ax.set_yticklabels([], minor=True, fontsize=10)
+            ax.set_yticklabels(labels, minor=False, fontsize=10)
+            ax.set_ylim(self.p_bot, self.p_top)
+
+        if vaxis2 == "no secondary axis":
+            self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
+            self.imgax.set_position(self.ax.get_position())
+        else:
+            self.fig.subplots_adjust(left=0.08, right=0.92, top=0.9, bottom=0.14)
+            self.imgax.set_position(self.ax.get_position())
 
     def setup_side_view(self):
         """Set up a vertical section view.
@@ -598,19 +622,15 @@ class MplSideViewCanvas(MplCanvas):
         Vertical cross section code (log-p axis etc.) taken from
         mss_batch_production/visualisation/mpl_vsec.py.
         """
-        self.checknconvert()
 
-        ax = self.ax
-        self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
+        self.ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
+        self.ax.grid(b=True)
+        self.ax.set_xlabel("lat/lon")
 
-        ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
-        ax.set_yscale("log")
+        for ax in (self.ax, self.ax2):
+            ax.set_yscale("log")
+            ax.set_ylim(self.p_bot, self.p_top)
 
-        # Set axis limits and draw grid for major ticks.
-        ax.set_ylim(self.p_bot, self.p_top)
-        ax.grid(b=True)
-
-        ax.set_xlabel("lat/lon")
         self.redraw_yaxis()
 
     def clear_figure(self):
@@ -655,51 +675,29 @@ class MplSideViewCanvas(MplCanvas):
             vertices = self.waypoints_interactor.pathpatch.get_path().vertices
             vx, vy = list(zip(*vertices))
             wpd = self.waypoints_model.all_waypoint_data()
-            xs, ys = [], []
-            aircraft = self.waypoints_model.performance_settings["aircraft"]
-            for i in range(len(wpd) - 1):
-                weight = np.linspace(wpd[i].weight, wpd[i + 1].weight, 5, endpoint=False)
-                ceil = [aircraft.get_ceiling_altitude(_w) for _w in weight]
-                xs.extend(np.linspace(vx[i], vx[i + 1], 5, endpoint=False))
-                ys.extend(ceil)
-            xs.append(vx[-1])
-            ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
+            if len(wpd) > 0:
+                xs, ys = [], []
+                aircraft = self.waypoints_model.performance_settings["aircraft"]
+                for i in range(len(wpd) - 1):
+                    weight = np.linspace(wpd[i].weight, wpd[i + 1].weight, 5, endpoint=False)
+                    ceil = [aircraft.get_ceiling_altitude(_w) for _w in weight]
+                    xs.extend(np.linspace(vx[i], vx[i + 1], 5, endpoint=False))
+                    ys.extend(ceil)
+                xs.append(vx[-1])
+                ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
 
-            self.ceiling_alt = self.ax.plot(
-                xs, thermolib.flightlevel2pressure_a(np.asarray(ys)),
-                color="k", ls="--")
-            self.update_ceiling(
-                self.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
-                self.settings_dict["colour_ceiling"])
+                self.ceiling_alt = self.ax.plot(
+                    xs, thermolib.flightlevel2pressure_a(np.asarray(ys)),
+                    color="k", ls="--")
+                self.update_ceiling(
+                    self.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
+                    self.settings_dict["colour_ceiling"])
 
         self.draw()
-
-    def set_vertical_extent(self, pbot, ptop):
-        """Set the vertical extent of the view to the specified pressure
-           values (hPa) and redraw the plot.
-        """
-        self.checknconvert()
-        changed = False
-        if self.p_bot != pbot * 100:
-            self.p_bot = pbot * 100
-            changed = True
-        if self.p_top != ptop * 100:
-            self.p_top = ptop * 100
-            changed = True
-        if changed:
-            if self.image is not None:
-                self.image.remove()
-                self.image = None
-            self.setup_side_view()
-            self.waypoints_interactor.redraw_figure()
-        else:
-            self.redraw_yaxis()
 
     def get_vertical_extent(self):
         """Returns the bottom and top pressure (hPa) of the plot.
         """
-        self.checknconvert()
-
         return (self.p_bot // 100), (self.p_top // 100)
 
     def draw_flight_levels(self):
@@ -756,13 +754,13 @@ class MplSideViewCanvas(MplCanvas):
             self.settings_dict.update(settings)
         settings = self.settings_dict
         self.set_flight_levels(settings["flightlevels"])
-        self.set_vertical_extent(*settings["vertical_extent"])
         self.set_flight_levels_visible(settings["draw_flightlevels"])
         self.update_ceiling(
             settings["draw_ceiling"] and (
                 self.waypoints_model is not None and
                 self.waypoints_model.performance_settings["visible"]),
             settings["colour_ceiling"])
+        self.update_vertical_extent_from_settings()
 
         if self.waypoints_interactor is not None:
             self.waypoints_interactor.set_vertices_visible(
@@ -815,19 +813,6 @@ class MplSideViewCanvas(MplCanvas):
         logging.debug("plotting vertical section image..")
         ix, iy = img.size
         logging.debug("  image size is %dx%d px, format is '%s'", ix, iy, img.format)
-        # Test if the image axes exist. If not, create them.
-        if self.imgax is None:
-            # Disable old white figure background so that the new underlying
-            # axes become visible.
-            self.ax.patch.set_facecolor("None")
-            # self.mpl.canvas.ax.patch.set_alpha(0.5)
-
-            # Add new axes to the plot (imshow doesn't work with logarithmic axes).
-            ax_bbox = self.ax.get_position()
-            # Main axes instance of mplwidget has zorder 99.
-            self.imgax = self.fig.add_axes(ax_bbox, frameon=True,
-                                           xticks=[], yticks=[],
-                                           label="ax2", zorder=0)
 
         # If an image is currently displayed, remove it from the plot.
         if self.image is not None:
@@ -841,9 +826,13 @@ class MplSideViewCanvas(MplCanvas):
         self.draw()
         logging.debug("done.")
 
-    def checknconvert(self):
+    def update_vertical_extent_from_settings(self, init=False):
         """ Checks for current units of axis and convert the upper and lower limit
         to pa(pascals) for the internal computation by code """
+
+        if not init:
+            p_bot_old = self.p_bot
+            p_top_old = self.p_top
 
         if self.settings_dict["vertical_axis"] == "pressure altitude":
             self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * 32.80)
@@ -851,6 +840,19 @@ class MplSideViewCanvas(MplCanvas):
         elif self.settings_dict["vertical_axis"] == "flight level":
             self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0])
             self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1])
+        else:
+            self.p_bot = self.settings_dict["vertical_extent"][0] * 100
+            self.p_top = self.settings_dict["vertical_extent"][1] * 100
+
+        if not init:
+            if (p_bot_old != self.p_bot) or (p_top_old != self.p_top):
+                if self.image is not None:
+                    self.image.remove()
+                    self.image = None
+                self.setup_side_view()
+                self.waypoints_interactor.redraw_figure()
+            else:
+                self.redraw_yaxis()
 
 
 class MplSideViewWidget(MplNavBarWidget):
@@ -926,11 +928,14 @@ class MplTopViewCanvas(MplCanvas):
             # Create a path interactor object. The interactor object connects
             # itself to the change() signals of the flight track data model.
             appearance = self.get_map_appearance()
-            self.waypoints_interactor = mpl_pi.HPathInteractor(
-                self.map, self.waypoints_model,
-                linecolor=appearance["colour_ft_vertices"],
-                markerfacecolor=appearance["colour_ft_waypoints"])
-            self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
+            try:
+                self.waypoints_interactor = mpl_pi.HPathInteractor(
+                    self.map, self.waypoints_model,
+                    linecolor=appearance["colour_ft_vertices"],
+                    markerfacecolor=appearance["colour_ft_waypoints"])
+                self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
+            except IOError as err:
+                logging.error("%s" % err)
 
     def redraw_map(self, kwargs_update=None):
         """Redraw map canvas.

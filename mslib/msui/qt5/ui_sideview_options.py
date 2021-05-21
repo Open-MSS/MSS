@@ -2,16 +2,18 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_sideview_options.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_SideViewOptionsDialog(object):
     def setupUi(self, SideViewOptionsDialog):
         SideViewOptionsDialog.setObjectName("SideViewOptionsDialog")
-        SideViewOptionsDialog.resize(489, 622)
+        SideViewOptionsDialog.resize(489, 647)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(SideViewOptionsDialog)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.groupBox = QtWidgets.QGroupBox(SideViewOptionsDialog)
@@ -51,11 +53,23 @@ class Ui_SideViewOptionsDialog(object):
         self.sbPtop.setObjectName("sbPtop")
         self.horizontalLayout.addWidget(self.sbPtop)
         self.verticalLayout_6.addLayout(self.horizontalLayout)
-        self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
-        self.label_4 = QtWidgets.QLabel(self.groupBox)
-        self.label_4.setObjectName("label_4")
-        self.horizontalLayout_7.addWidget(self.label_4)
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setObjectName("gridLayout")
+        self.label_5 = QtWidgets.QLabel(self.groupBox)
+        self.label_5.setObjectName("label_5")
+        self.gridLayout.addWidget(self.label_5, 1, 0, 1, 1)
+        self.cbVerticalAxis2 = QtWidgets.QComboBox(self.groupBox)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.cbVerticalAxis2.sizePolicy().hasHeightForWidth())
+        self.cbVerticalAxis2.setSizePolicy(sizePolicy)
+        self.cbVerticalAxis2.setObjectName("cbVerticalAxis2")
+        self.cbVerticalAxis2.addItem("")
+        self.cbVerticalAxis2.addItem("")
+        self.cbVerticalAxis2.addItem("")
+        self.cbVerticalAxis2.addItem("")
+        self.gridLayout.addWidget(self.cbVerticalAxis2, 1, 1, 1, 1)
         self.cbVerticalAxis = QtWidgets.QComboBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -66,8 +80,11 @@ class Ui_SideViewOptionsDialog(object):
         self.cbVerticalAxis.addItem("")
         self.cbVerticalAxis.addItem("")
         self.cbVerticalAxis.addItem("")
-        self.horizontalLayout_7.addWidget(self.cbVerticalAxis)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_7)
+        self.gridLayout.addWidget(self.cbVerticalAxis, 0, 1, 1, 1)
+        self.label_4 = QtWidgets.QLabel(self.groupBox)
+        self.label_4.setObjectName("label_4")
+        self.gridLayout.addWidget(self.label_4, 0, 0, 1, 1)
+        self.verticalLayout_6.addLayout(self.gridLayout)
         self.verticalLayout_4.addWidget(self.groupBox)
         self.groupBox_2 = QtWidgets.QGroupBox(SideViewOptionsDialog)
         font = QtGui.QFont()
@@ -203,6 +220,21 @@ class Ui_SideViewOptionsDialog(object):
         self.buttonBox.accepted.connect(SideViewOptionsDialog.accept)
         self.buttonBox.rejected.connect(SideViewOptionsDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(SideViewOptionsDialog)
+        SideViewOptionsDialog.setTabOrder(self.sbPbot, self.sbPtop)
+        SideViewOptionsDialog.setTabOrder(self.sbPtop, self.cbVerticalAxis)
+        SideViewOptionsDialog.setTabOrder(self.cbVerticalAxis, self.cbVerticalAxis2)
+        SideViewOptionsDialog.setTabOrder(self.cbVerticalAxis2, self.cbDrawFlightLevels)
+        SideViewOptionsDialog.setTabOrder(self.cbDrawFlightLevels, self.tableWidget)
+        SideViewOptionsDialog.setTabOrder(self.tableWidget, self.btAdd)
+        SideViewOptionsDialog.setTabOrder(self.btAdd, self.btDelete)
+        SideViewOptionsDialog.setTabOrder(self.btDelete, self.cbDrawFlightTrack)
+        SideViewOptionsDialog.setTabOrder(self.cbDrawFlightTrack, self.btWaypointsColour)
+        SideViewOptionsDialog.setTabOrder(self.btWaypointsColour, self.btVerticesColour)
+        SideViewOptionsDialog.setTabOrder(self.btVerticesColour, self.cbFillFlightTrack)
+        SideViewOptionsDialog.setTabOrder(self.cbFillFlightTrack, self.btFillColour)
+        SideViewOptionsDialog.setTabOrder(self.btFillColour, self.cbLabelFlightTrack)
+        SideViewOptionsDialog.setTabOrder(self.cbLabelFlightTrack, self.cbDrawCeiling)
+        SideViewOptionsDialog.setTabOrder(self.cbDrawCeiling, self.btCeilingColour)
 
     def retranslateUi(self, SideViewOptionsDialog):
         _translate = QtCore.QCoreApplication.translate
@@ -212,10 +244,15 @@ class Ui_SideViewOptionsDialog(object):
         self.sbPbot.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
         self.label_3.setText(_translate("SideViewOptionsDialog", "to"))
         self.sbPtop.setSuffix(_translate("SideViewOptionsDialog", " hpa"))
-        self.label_4.setText(_translate("SideViewOptionsDialog", "Vertical axis units:"))
+        self.label_5.setText(_translate("SideViewOptionsDialog", "Secondary axis units: "))
+        self.cbVerticalAxis2.setItemText(0, _translate("SideViewOptionsDialog", "no secondary axis"))
+        self.cbVerticalAxis2.setItemText(1, _translate("SideViewOptionsDialog", "pressure"))
+        self.cbVerticalAxis2.setItemText(2, _translate("SideViewOptionsDialog", "pressure altitude"))
+        self.cbVerticalAxis2.setItemText(3, _translate("SideViewOptionsDialog", "flight level"))
         self.cbVerticalAxis.setItemText(0, _translate("SideViewOptionsDialog", "pressure"))
         self.cbVerticalAxis.setItemText(1, _translate("SideViewOptionsDialog", "pressure altitude"))
         self.cbVerticalAxis.setItemText(2, _translate("SideViewOptionsDialog", "flight level"))
+        self.label_4.setText(_translate("SideViewOptionsDialog", "Vertical axis units:       "))
         self.groupBox_2.setTitle(_translate("SideViewOptionsDialog", "Flight Levels"))
         self.cbDrawFlightLevels.setText(_translate("SideViewOptionsDialog", "draw the following flight levels:"))
         item = self.tableWidget.horizontalHeaderItem(0)
@@ -232,4 +269,3 @@ class Ui_SideViewOptionsDialog(object):
         self.groupBox_4.setTitle(_translate("SideViewOptionsDialog", "Performance"))
         self.cbDrawCeiling.setText(_translate("SideViewOptionsDialog", "draw ceiling altitude"))
         self.btCeilingColour.setText(_translate("SideViewOptionsDialog", "colour"))
-

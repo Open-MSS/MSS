@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 3.0.4
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/57?closed=1
 
 Version 3.0.3
 -------------
