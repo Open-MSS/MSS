@@ -675,22 +675,23 @@ class MplSideViewCanvas(MplCanvas):
             vertices = self.waypoints_interactor.pathpatch.get_path().vertices
             vx, vy = list(zip(*vertices))
             wpd = self.waypoints_model.all_waypoint_data()
-            xs, ys = [], []
-            aircraft = self.waypoints_model.performance_settings["aircraft"]
-            for i in range(len(wpd) - 1):
-                weight = np.linspace(wpd[i].weight, wpd[i + 1].weight, 5, endpoint=False)
-                ceil = [aircraft.get_ceiling_altitude(_w) for _w in weight]
-                xs.extend(np.linspace(vx[i], vx[i + 1], 5, endpoint=False))
-                ys.extend(ceil)
-            xs.append(vx[-1])
-            ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
+            if len(wpd) > 0:
+                xs, ys = [], []
+                aircraft = self.waypoints_model.performance_settings["aircraft"]
+                for i in range(len(wpd) - 1):
+                    weight = np.linspace(wpd[i].weight, wpd[i + 1].weight, 5, endpoint=False)
+                    ceil = [aircraft.get_ceiling_altitude(_w) for _w in weight]
+                    xs.extend(np.linspace(vx[i], vx[i + 1], 5, endpoint=False))
+                    ys.extend(ceil)
+                xs.append(vx[-1])
+                ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
 
-            self.ceiling_alt = self.ax.plot(
-                xs, thermolib.flightlevel2pressure_a(np.asarray(ys)),
-                color="k", ls="--")
-            self.update_ceiling(
-                self.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
-                self.settings_dict["colour_ceiling"])
+                self.ceiling_alt = self.ax.plot(
+                    xs, thermolib.flightlevel2pressure_a(np.asarray(ys)),
+                    color="k", ls="--")
+                self.update_ceiling(
+                    self.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
+                    self.settings_dict["colour_ceiling"])
 
         self.draw()
 
@@ -927,11 +928,14 @@ class MplTopViewCanvas(MplCanvas):
             # Create a path interactor object. The interactor object connects
             # itself to the change() signals of the flight track data model.
             appearance = self.get_map_appearance()
-            self.waypoints_interactor = mpl_pi.HPathInteractor(
-                self.map, self.waypoints_model,
-                linecolor=appearance["colour_ft_vertices"],
-                markerfacecolor=appearance["colour_ft_waypoints"])
-            self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
+            try:
+                self.waypoints_interactor = mpl_pi.HPathInteractor(
+                    self.map, self.waypoints_model,
+                    linecolor=appearance["colour_ft_vertices"],
+                    markerfacecolor=appearance["colour_ft_waypoints"])
+                self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
+            except IOError as err:
+                logging.error("%s" % err)
 
     def redraw_map(self, kwargs_update=None):
         """Redraw map canvas.
