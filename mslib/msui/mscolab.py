@@ -279,8 +279,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.loginButton.setEnabled(self.emailid.text() != "" and self.password.text() != "")
 
     def handle_import(self):
-        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.import_plugins.keys()]
-        file_path = get_open_filename(self, "Select a file", "", ';;'.join(file_type))
+        if self.workLocallyCheckBox.isChecked():
+            file_path = get_open_filename(self, "Select a file", "", "Flight track (*.ftml)")
+        else:
+            file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.import_plugins.keys()]
+            file_path = get_open_filename(self, "Select a file", "", ';;'.join(file_type))
         if file_path is None:
             return
         dir_path, file_name = fs.path.split(file_path)
@@ -296,7 +299,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 return
             self.waypoints_model = model
             if self.workLocallyCheckBox.isChecked():
-                # this is only ftml file based
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             else:
@@ -304,14 +306,13 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         else:
             _function = self.import_plugins[file_ext[1:]]
-            ft_name, new_waypoints = _function(file_path)
-            if not ft_name:
-                ft_name = name
-            model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
+            _, new_waypoints = _function(file_path)
+            model = ft.WaypointsTableModel(waypoints=new_waypoints)
             self.waypoints_model = model
-            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
-            xml_content = self.request_wps_from_server()
+            xml_doc = self.waypoints_model.get_xml_doc()
+            xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
             self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
         show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
 
