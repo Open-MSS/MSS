@@ -47,6 +47,7 @@ import fs
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
+from mslib.msui.mss_qt import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview
 from mslib.msui import topview
@@ -130,6 +131,59 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
         self.flighttrack_model = flighttrack_model
 
 
+class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
+    """
+    Dialog showing shortcuts for all currently open windows
+    """
+
+    def __init__(self):
+        super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
+        self.setupUi(self)
+        self.current_shortcuts = self.get_shortcuts()
+        self.fill_list()
+
+    def fill_list(self):
+        """
+        Fills the treeWidget with all relevant windows as top level items and their shortcuts as children
+        """
+        for widget in self.current_shortcuts:
+            name = widget.window().windowTitle()
+            if len(name) == 0 or widget.window().isHidden():
+                continue
+            header = QtWidgets.QTreeWidgetItem(self.treeWidget)
+            header.setText(0, name)
+            if widget.window() == self.parent():
+                header.setExpanded(True)
+                header.setSelected(True)
+                self.treeWidget.setCurrentItem(header)
+            for description, shortcut in self.current_shortcuts[widget].items():
+                item = QtWidgets.QTreeWidgetItem(header)
+                item.setText(0, f"{description}: {shortcut}")
+                header.addChild(item)
+
+    def get_shortcuts(self):
+        """
+        Iterates through all top level widgets and puts their shortcuts in a dictionary
+        """
+        shortcuts = {}
+        for qobject in QtWidgets.QApplication.topLevelWidgets():
+            actions = [(qobject.window(), "Show Current Shortcuts", "Alt+S")]
+            actions.extend([
+                (action.parent().window(), action.toolTip(), ",".join(
+                    [shortcut.toString() for shortcut in action.shortcuts()]))
+                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0])
+            actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), shortcut.key().toString())
+                            for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
+            actions.extend([(button.window(), button.toolTip(), button.shortcut().toString())
+                            for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut()])
+            for item in actions:
+                if item[0] not in shortcuts:
+                    shortcuts[item[0]] = {}
+                shortcuts[item[0]][item[1].replace(f"({item[2]})", "").strip()] = item[2]
+
+        return shortcuts
+
+
 class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
        defined in the QtDesigner file.
@@ -143,8 +197,8 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText("Version: {}".format(__version__))
-        self.lblChanges.setText(f'<a href="https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A"\
-            "{__version__[:-1]}">New Features and Changes</a>')
+        self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
+        self.lblChanges.setText(f'<a href="{self.milestone_url}">New Features and Changes</a>')
         blub = QtGui.QPixmap(python_powered())
         self.lblPython.setPixmap(blub)
 
@@ -198,6 +252,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
+        self.actionShortcuts.triggered.connect(self.show_shortcuts)
+        self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
         # Config
         self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
@@ -220,8 +276,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         # Status Bar
         self.labelStatusbar.setText(self.status())
-        # Instantiates object of MSS Tableview window helping in force close it.
-        self.tv_window = None
 
         self.updater = Updater(self)
         self.updater.on_update_available.connect(self.notify_on_update)
@@ -422,8 +476,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
-            for i in range(self.listViews.count()):
-                self.listViews.item(i).window.handle_force_close()
+            while self.listViews.count() > 0:
+                self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
             self.listFlightTracks.clear()
             # cleanup mscolab window
@@ -431,11 +485,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.mscolab_window.close()
             if self.config_editor is not None:
                 self.config_editor.close()
-            # tv = tableview ; it is an object of MSS Tableview window. Used for force closing it.
-            if self.tv_window is not None:
-                if self.tv_window.exists():  # checks whether or not tableview window has closed before
-                    self.tv_window.handle_force_close()     # enters condition when tableview window is not closed.
-                    self.tv_window = None
             event.accept()
         else:
             event.ignore()
@@ -463,7 +512,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
-            self.tv_window = view_window
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -545,8 +593,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.activate_flight_track(listitem)
 
     def restart_application(self):
-        for i in range(self.listViews.count()):
-            self.listViews.item(i).window.handle_force_close()
+        while self.listViews.count() > 0:
+            self.listViews.item(0).window.handle_force_close()
         self.listViews.clear()
         self.remove_plugins()
         self.add_plugins()
@@ -561,8 +609,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             filename = get_open_filename(
-                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)",
-                pickertag="filepicker_config")
+                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)")
             if filename is not None:
                 constants.CACHED_CONFIG_FILE = filename
                 self.restart_application()
@@ -698,6 +745,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
+    def show_shortcuts(self):
+        """Show the shortcuts dialog to the user.
+        """
+        dlg = MSS_ShortcutsDialog()
+        dlg.setModal(True)
+        dlg.exec_()
+
     def status(self):
         if constants.CACHED_CONFIG_FILE is None:
             return ("Status : System Configuration")
@@ -792,6 +846,7 @@ def main():
     application = QtWidgets.QApplication(sys.argv)
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
     application.setApplicationDisplayName("MSS")
+    application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSSMainWindow()
     mainwindow.create_new_flight_track()
     mainwindow.show()

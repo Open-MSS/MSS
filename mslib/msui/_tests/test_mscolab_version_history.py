@@ -43,7 +43,7 @@ PORTS = list(range(9591, 9620))
 class Test_MscolabVersionHistory(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(100)
+        QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -83,17 +83,19 @@ class Test_MscolabVersionHistory(object):
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
     def test_set_version_name(self, mockbox):
-        pytest.skip('check xdist dependencies')
         self._change_version_filter(1)
+        # make a changes
+        self.window.waypoints_model.invert_direction()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(100)
+        self.version_window.load_all_changes()
+        QtWidgets.QApplication.processEvents()
         self._activate_change_at_index(0)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
-
-    def test_version_name_filter(self):
-        pytest.skip('check xdist dependencies')
         assert self.version_window.changes.count() == 1
 
     def test_version_name_delete(self):
@@ -105,13 +107,19 @@ class Test_MscolabVersionHistory(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_undo(self, mockbox):
-        pytest.skip('check xdist dependencies')
         self._change_version_filter(1)
+        # make changes
+        for i in range(2):
+            self.window.waypoints_model.invert_direction()
+            QtWidgets.QApplication.processEvents()
+            QtTest.QTest.qWait(100)
+        self.version_window.load_all_changes()
+        QtWidgets.QApplication.processEvents()
         changes_count = self.version_window.changes.count()
         self._activate_change_at_index(1)
         QtTest.QTest.mouseClick(self.version_window.checkoutBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(4000)
+        QtTest.QTest.qWait(200)
         new_changes_count = self.version_window.changes.count()
         assert changes_count + 1 == new_changes_count
 

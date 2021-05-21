@@ -26,6 +26,12 @@
 """
 
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
+import skyfield_data
+
+
+def test_skyfield_data_expiration(recwarn):
+    skyfield_data.check_expirations()
+    assert len(recwarn) == 0, [_x.message for _x in recwarn]
 
 
 class TestAngles(object):
