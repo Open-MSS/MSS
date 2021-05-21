@@ -478,7 +478,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 self.error_dialog.showMessage('You are registered, you can now log in.')
             else:
                 self.error_dialog = QtWidgets.QErrorMessage()
-                self.error_dialog.showMessage(r.json()["message"])
+                self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Oh no, your passwords don\'t match')
