@@ -503,6 +503,9 @@ def path_points(points, numpoints=100, connection='linear'):
     """
     if connection not in ['linear', 'greatcircle']:
         return None, None
+    if points is None or len(points) == 0:
+        return None, None, None
+
     LAT = 0
     LON = 1
     TIME = 2
@@ -581,7 +584,7 @@ def convert_to(value, from_unit, to_unit, default=1.):
         value_unit = UR.Quantity(value, from_unit)
         result = value_unit.to(to_unit).magnitude
     except pint.UndefinedUnitError:
-        logging.error("Error in unit conversion (undefined) %s/%s", from_unit, to_unit)
+        logging.error("Error in unit conversion (undefined) '%s'/'%s'", from_unit, to_unit)
         result = value * default
     except pint.DimensionalityError:
         if UR(to_unit).to_base_units().units == UR.m:
