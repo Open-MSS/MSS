@@ -163,6 +163,7 @@ def variant_to_float(variant, locale=QtCore.QLocale()):
 # Import all Dialogues from the proper module directory.
 for mod in [
         "ui_about_dialog",
+        "ui_shortcuts",
         "ui_hexagon_dockwidget",
         "ui_kmloverlay_dockwidget",
         "ui_customize_kml",
