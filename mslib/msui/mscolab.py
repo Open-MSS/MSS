@@ -786,6 +786,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
+        projects = sorted(projects, key=lambda k: k["path"].lower())
         self.listProjects.clear()
         selectedProject = None
         for project in projects:
