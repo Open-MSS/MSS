@@ -488,6 +488,8 @@ class MplSideViewCanvas(MplCanvas):
         self.settings_dict = {"vertical_extent": (1050, 180),
                               "vertical_axis": "pressure",
                               "secondary_axis": "no secondary axis",
+                              "plot_title_size": "default",
+                              "axes_label_size": "default",
                               "flightlevels": [],
                               "draw_flightlevels": True,
                               "draw_flighttrack": True,
@@ -594,19 +596,35 @@ class MplSideViewCanvas(MplCanvas):
         return ylabel, major_ticks, minor_ticks, labels
 
     def redraw_yaxis(self):
-        """ Redraws the y-axis on map after setting the values from sideview options dialog box"""
+        """ Redraws the y-axis on map after setting the values from sideview options dialog box
+        and also updates the sizes for map title and x and y axes labels and ticklabels"""
 
         vaxis = self.settings_dict["vertical_axis"]
         vaxis2 = self.settings_dict["secondary_axis"]
 
+        # Sets fontsize for x axis ticklabel.
+        if self.settings_dict["axes_label_size"] == "default":
+            axes_label_size = 10    # A default size of 10 has been taken.
+        else:
+            axes_label_size = int(self.settings_dict["axes_label_size"])
+        self.ax.tick_params(axis='x', labelsize=axes_label_size)
+
+        # Sets fontsize for plot title and axes title/label
+        if self.settings_dict["plot_title_size"] == "default":
+            plot_title_size = 10
+        else:
+            plot_title_size = self.settings_dict["plot_title_size"]
+        self.ax.set_title("vertical flight profile", fontsize=plot_title_size, horizontalalignment="left", x=0)
+        self.ax.set_xlabel("lat/lon", fontsize=plot_title_size)
+
         for ax, typ in zip((self.ax, self.ax2), (vaxis, vaxis2)):
             ylabel, major_ticks, minor_ticks, labels = self._determine_ticks_labels(typ)
 
-            ax.set_ylabel(ylabel)
+            ax.set_ylabel(ylabel, fontsize=plot_title_size)     # Sets fontsize for both y labels/titles.
             ax.set_yticks(minor_ticks, minor=True)
             ax.set_yticks(major_ticks, minor=False)
-            ax.set_yticklabels([], minor=True, fontsize=10)
-            ax.set_yticklabels(labels, minor=False, fontsize=10)
+            ax.set_yticklabels([], minor=True)
+            ax.set_yticklabels(labels, minor=False, fontsize=axes_label_size)   # Sets fontsize for both y ticklabels.
             ax.set_ylim(self.p_bot, self.p_top)
 
         if vaxis2 == "no secondary axis":
@@ -623,8 +641,9 @@ class MplSideViewCanvas(MplCanvas):
         mss_batch_production/visualisation/mpl_vsec.py.
         """
 
-        self.ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
+        self.ax.set_title("vertical flight profile", fontsize=10, horizontalalignment="left", x=0)
         self.ax.grid(b=True)
+
         self.ax.set_xlabel("lat/lon")
 
         for ax in (self.ax, self.ax2):
@@ -655,6 +674,7 @@ class MplSideViewCanvas(MplCanvas):
         lat_inds = np.arange(len(lats))
         tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
+
         if self.waypoints_model is not None and self.waypoints_model.performance_settings["visible"]:
             self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}\n{d[2].strftime("%H:%M")}Z'
                                      for d in zip(lats[::tick_index_step],
