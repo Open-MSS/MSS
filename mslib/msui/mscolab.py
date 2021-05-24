@@ -850,7 +850,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # enable project specific buttons
             self.helperTextLabel.setVisible(True)
             self.helperTextLabel.setText(self.tr("Working On: Shared File."
-                                                 " All your changes will be shared with everyone."
+                                                 "All your changes will be shared with everyone."
                                                  "Turn on work locally to work on local flight track file"))
             self.importBtn.setEnabled(True)
             self.exportBtn.setEnabled(True)
@@ -860,6 +860,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.workLocallyCheckBox.setEnabled(True)
             # enable access level specific buttons
             self.handle_mscolab_buttons()
+            # change font style for selected
             font = QtGui.QFont()
             for i in range(self.listProjects.count()):
                 self.listProjects.item(i).setFont(font)
