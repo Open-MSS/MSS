@@ -361,6 +361,26 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.emailid.setEnabled(False)
         self.password.setEnabled(False)
 
+    def handle_mscolab_buttons(self):
+        # disable some buttons and close windows based on access level
+        allow_version_access = self.access_level in ["collaborator", "creator", "admin"]
+        self.versionHistoryBtn.setEnabled(allow_version_access)
+        self.chatWindowBtn.setEnabled(allow_version_access)
+        self.workLocallyCheckBox.setEnabled(allow_version_access)
+        self.importBtn.setEnabled(allow_version_access)
+        if not allow_version_access and self.version_window is not None:
+            self.version_window.close()
+        if not allow_version_access and self.chat_window is not None:
+            self.chat_window.close()
+
+        allow_version_access = self.access_level in ["creator", "admin"]
+        self.adminWindowBtn.setEnabled(allow_version_access)
+        if not allow_version_access and self.admin_window is not None:
+            self.admin_window.close()
+
+        allow_version_access = self.access_level in ["creator"]
+        self.deleteProjectBtn.setEnabled(allow_version_access)
+
     def disable_action_buttons(self):
         # disable some buttons to be activated after successful login or project activate
         self.addProject.setEnabled(False)
@@ -644,7 +664,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                             "Turn on work locally to work on local flight track file"))
                 self.save_ft.setEnabled(False)
                 self.fetch_ft.setEnabled(False)
-                if self.access_level == "admin" or self.access_level == "creator":
+                if self.access_level in ["admin", "creator", "collaborator"]:
                     self.versionHistoryBtn.setEnabled(True)
                 self.waypoints_model = None
                 self.load_wps_from_server()
@@ -820,7 +840,6 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.workLocallyCheckBox.blockSignals(False)
             self.save_ft.setEnabled(False)
             self.fetch_ft.setEnabled(False)
-
             # set active_pid here
             self.active_pid = item.p_id
             self.access_level = item.access_level
@@ -839,25 +858,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.sideview.setEnabled(True)
             self.tableview.setEnabled(True)
             self.workLocallyCheckBox.setEnabled(True)
-
-            if self.access_level == "viewer" or self.access_level == "collaborator":
-                if self.access_level == "viewer":
-                    self.workLocallyCheckBox.setEnabled(False)
-                    self.importBtn.setEnabled(False)
-                    self.chatWindowBtn.setEnabled(False)
-                else:
-                    self.chatWindowBtn.setEnabled(True)
-                self.adminWindowBtn.setEnabled(False)
-                self.versionHistoryBtn.setEnabled(False)
-            else:
-                self.adminWindowBtn.setEnabled(True)
-                self.chatWindowBtn.setEnabled(True)
-                self.versionHistoryBtn.setEnabled(True)
-            if self.access_level == "creator":
-                self.deleteProjectBtn.setEnabled(True)
-            else:
-                self.deleteProjectBtn.setEnabled(False)
-            # change font style for selected
+            # enable access level specific buttons
+            self.handle_mscolab_buttons()
             font = QtGui.QFont()
             for i in range(self.listProjects.count()):
                 self.listProjects.item(i).setFont(font)
@@ -1155,23 +1157,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
             self.access_level = access_level
             # Close mscolab windows based on new access_level and update their buttons
-            if self.access_level == "collaborator" or self.access_level == "viewer":
-                self.adminWindowBtn.setEnabled(False)
-                self.versionHistoryBtn.setEnabled(False)
-                if self.admin_window is not None:
-                    self.admin_window.close()
-                if self.version_window is not None:
-                    self.version_window.close()
-            else:
-                self.adminWindowBtn.setEnabled(True)
-                self.versionHistoryBtn.setEnabled(True)
+            self.handle_mscolab_buttons()
 
-            if self.access_level == "viewer":
-                self.chatWindowBtn.setEnabled(False)
-                if self.chat_window is not None:
-                    self.chat_window.close()
-            else:
-                self.chatWindowBtn.setEnabled(True)
             # update view window nav elements if open
             for window in self.active_windows:
                 _type = window.view_type
