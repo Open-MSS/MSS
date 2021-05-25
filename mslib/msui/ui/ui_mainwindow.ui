@@ -135,6 +135,7 @@ Save a flight track to name it.</string>
     </property>
     <addaction name="actionOnlineHelp"/>
     <addaction name="actionAboutMSUI"/>
+    <addaction name="actionShortcuts"/>
    </widget>
    <widget class="QMenu" name="menu_Mscolab">
     <property name="title">
@@ -255,6 +256,7 @@ Save a flight track to name it.</string>
     <string>Load a JSON configuration file</string>
    </property>
   </action>
+<<<<<<< HEAD
   <action name="actionLinearView">
    <property name="text">
     <string>&amp;Linear View</string>
@@ -264,6 +266,20 @@ Save a flight track to name it.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionShortcuts">
+   <property name="text">
+    <string>Shortcuts</string>
+   </property>
+   <property name="toolTip">
+    <string>Show Current Shortcuts</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+S</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
    </property>
   </action>
  </widget>

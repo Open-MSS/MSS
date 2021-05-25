@@ -91,6 +91,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
         self.delete_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Delete"), self)
         self.delete_shortcut.activated.connect(self.delete_server)
+        self.delete_shortcut.setWhatsThis("Delete selected server")
 
     def delete_server(self, server=None):
         if not server:

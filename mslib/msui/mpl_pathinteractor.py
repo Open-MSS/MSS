@@ -162,6 +162,8 @@ class WaypointsPath(mpath.Path):
         """
         Path = mpath.Path
         wps = wps_model.all_waypoint_data()
+        pathdata = []
+        # on a expired mscolab server wps is an empty list
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i, _ in enumerate(wps[1:]):
@@ -211,25 +213,26 @@ class PathV(WaypointsPath):
         lats, lons, times = wps_model.intermediate_points(
             numpoints=self.numintpoints, connection="greatcircle")
 
-        # Determine indices of waypoints in list of intermediate points.
-        # Store these indices.
-        waypoints = [[wp.lat, wp.lon] for wp in wps_model.all_waypoint_data()]
-        intermediate_indexes = []
-        ipoint = 0
-        for i, (lat, lon) in enumerate(zip(lats, lons)):
-            if abs(lat - waypoints[ipoint][0]) < 1E-10 and abs(lon - waypoints[ipoint][1]) < 1E-10:
-                intermediate_indexes.append(i)
-                ipoint += 1
-            if ipoint >= len(waypoints):
-                break
+        if lats is not None:
+            # Determine indices of waypoints in list of intermediate points.
+            # Store these indices.
+            waypoints = [[wp.lat, wp.lon] for wp in wps_model.all_waypoint_data()]
+            intermediate_indexes = []
+            ipoint = 0
+            for i, (lat, lon) in enumerate(zip(lats, lons)):
+                if abs(lat - waypoints[ipoint][0]) < 1E-10 and abs(lon - waypoints[ipoint][1]) < 1E-10:
+                    intermediate_indexes.append(i)
+                    ipoint += 1
+                if ipoint >= len(waypoints):
+                    break
 
-        self.intermediate_indexes = intermediate_indexes
-        self.ilats = lats
-        self.ilons = lons
-        self.itimes = times
+            self.intermediate_indexes = intermediate_indexes
+            self.ilats = lats
+            self.ilons = lons
+            self.itimes = times
 
-        # Call super method.
-        WaypointsPath.update_from_WaypointsTableModel(self, wps_model)
+            # Call super method.
+            WaypointsPath.update_from_WaypointsTableModel(self, wps_model)
 
     def transform_waypoint(self, wps_list, index):
         """Returns the x-index of the waypoint and its pressure.
@@ -287,21 +290,21 @@ class PathH_GC(PathH):
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
-        wp_codes, wp_vertices = list(zip(*pathdata))
-        self.wp_codes = np.array(wp_codes, dtype=np.uint8)
-        self.wp_vertices = np.array(wp_vertices)
+            wp_codes, wp_vertices = list(zip(*pathdata))
+            self.wp_codes = np.array(wp_codes, dtype=np.uint8)
+            self.wp_vertices = np.array(wp_vertices)
 
-        # Coordinates of intermediate great circle points.
-        lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
-        x, y = self.map.gcpoints_path(lons, lats)
+            # Coordinates of intermediate great circle points.
+            lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
+            x, y = self.map.gcpoints_path(lons, lats)
 
-        if len(x) > 0:
-            pathdata = [(Path.MOVETO, (x[0], y[0]))]
-            for i in range(len(x[1:])):
-                pathdata.append((Path.LINETO, (x[i + 1], y[i + 1])))
-        codes, vertices = list(zip(*pathdata))
-        self.codes = np.array(codes, dtype=np.uint8)
-        self.vertices = np.array(vertices)
+            if len(x) > 0:
+                pathdata = [(Path.MOVETO, (x[0], y[0]))]
+                for i in range(len(x[1:])):
+                    pathdata.append((Path.LINETO, (x[i + 1], y[i + 1])))
+            codes, vertices = list(zip(*pathdata))
+            self.codes = np.array(codes, dtype=np.uint8)
+            self.vertices = np.array(vertices)
 
     def index_of_closest_segment(self, x, y, eps=5):
         """Find the index of the edge closest to the specified point at x,y.
@@ -658,7 +661,10 @@ class VPathInteractor(PathInteractor):
             self.clear_figure()
 
         if self.redraw_xaxis is not None:
-            self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
+            try:
+                self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
+            except AttributeError as err:
+                logging.debug("%s" % err)
         self.ax.figure.canvas.draw()
 
     def button_release_delete_callback(self, event):
@@ -1098,6 +1104,8 @@ class HPathInteractor(PathInteractor):
 
         if wp_vertices is None:
             wp_vertices = self.pathpatch.get_path().wp_vertices
+            if len(wp_vertices) == 0:
+                raise IOError("mscolab session expired")
             vertices = self.pathpatch.get_path().vertices
         else:
             # If waypoints have been provided, compute the intermediate
