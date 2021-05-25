@@ -44,7 +44,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
-from mslib.msui import sideview, tableview, topview
+from mslib.msui import sideview, tableview, topview, linearview
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -108,6 +108,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.clicked.connect(self.open_topview)
         self.sideview.clicked.connect(self.open_sideview)
         self.tableview.clicked.connect(self.open_tableview)
+        self.linearview.clicked.connect(self.open_linearview)
         # int to store active pid
         self.active_pid = None
         # storing access_level to save network call
@@ -341,6 +342,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.setEnabled(False)
         self.sideview.setEnabled(False)
         self.tableview.setEnabled(False)
+        self.linearview.setEnabled(False)
         self.workLocallyCheckBox.setEnabled(False)
         self.importBtn.setEnabled(False)
         self.exportBtn.setEnabled(False)
@@ -800,6 +802,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.setEnabled(True)
         self.sideview.setEnabled(True)
         self.tableview.setEnabled(True)
+        self.linearview.setEnabled(True)
         self.workLocallyCheckBox.setEnabled(True)
 
         # enable access level specific buttons
@@ -856,6 +859,12 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             return
         self.create_view_window("tableview")
 
+    def open_linearview(self):
+        # showing dummy info dialog
+        if self.active_pid is None:
+            return
+        self.create_view_window("linearview")
+
     def create_view_window(self, _type):
         for active_window in self.active_windows:
             if active_window.view_type == _type:
@@ -873,10 +882,15 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                                                      parent=self.listProjects,
                                                      _id=self.id_count)
             view_window.view_type = "sideview"
-        else:
+        elif _type == "tableview":
             view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
                                                        parent=self.listProjects,
                                                        _id=self.id_count)
+            view_window.view_type = "tableview"
+        else:
+            view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
+                                                         parent=self.listProjects,
+                                                         _id=self.id_count)
             view_window.view_type = "tableview"
         if self.access_level == "viewer":
             self.disable_navbar_action_buttons(_type, view_window)
