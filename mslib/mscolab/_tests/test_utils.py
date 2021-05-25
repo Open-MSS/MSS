@@ -26,10 +26,12 @@
 import os
 import sys
 import pytest
+from fs.tempfs import TempFS
+
 from PyQt5 import QtWidgets, QtTest
 
 from mslib.mscolab.models import User, MessageType
-from mslib.mscolab.utils import get_recent_pid, get_session_id, get_message_dict, create_files
+from mslib.mscolab.utils import get_recent_pid, get_session_id, get_message_dict, create_files, os_fs_create_dir
 from mslib.mscolab.conf import mscolab_settings
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import (mscolab_start_server, mscolab_create_project, mscolab_register_and_login,
@@ -136,3 +138,10 @@ class Test_Utils_No_Project(object):
         with self.app.app_context():
             p_id = get_recent_pid(self.fm, self.user)
             assert p_id is None
+
+
+def test_os_fs_create_dir():
+    _fs = TempFS(identifier="mss")
+    _dir = _fs.getsyspath("")
+    os_fs_create_dir(_dir)
+    assert os.path.exists(_dir)
