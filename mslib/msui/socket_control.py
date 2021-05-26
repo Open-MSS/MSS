@@ -161,6 +161,7 @@ class ConnectionManager(QtCore.QObject):
         })
 
     def save_file(self, token, p_id, content, comment=None):
+        # ToDo refactor API
         logging.debug("saving file")
         self.sio.emit('file-save', {
                       "p_id": p_id,

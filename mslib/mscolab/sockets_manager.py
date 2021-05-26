@@ -206,12 +206,14 @@ class SocketsManager(object):
             # if permission is correct and file saved properly
             if perm and self.fm.save_file(int(p_id), content, user, comment):
                 # send service message
-                message_ = "[service message] saved changes"
+                message_ = f"[service message] **{user.username}** saved changes"
                 new_message = self.cm.add_message(user, message_, str(p_id), message_type=MessageType.SYSTEM_MESSAGE)
                 new_message_dict = get_message_dict(new_message)
                 socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
                 # emit file-changed event to trigger reload of flight track
                 socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
+        else:
+            logging.debug(f'login expired for {user.username}, state unauthorized!')
 
     def emit_file_change(self, p_id):
         socketio.emit('file-changed', json.dumps({"p_id": p_id}), room=str(p_id))
