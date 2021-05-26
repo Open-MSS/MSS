@@ -357,7 +357,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                             vsec_numpoints=101, vsec_path_connection='linear',
                             vsec_numlabels=10,
                             init_time=None, valid_time=None, style=None,
-                            bbox=None, figsize=(800, 600), noframe=False,
+                            bbox=None, figsize=(800, 600), noframe=False, draw_verticals=False,
                             show=False, transparent=False,
                             return_format="image/png"):
         """
@@ -374,18 +374,20 @@ class VerticalSectionDriver(MSSPlotDriver):
                                         vsec_path_connection)
         self.show = show
         self.vsec_numlabels = vsec_numlabels
+        self.draw_verticals = draw_verticals
 
     def update_plot_parameters(self, plot_object=None, vsec_path=None,
                                vsec_numpoints=None, vsec_path_connection=None,
                                vsec_numlabels=None,
                                init_time=None, valid_time=None, style=None,
-                               bbox=None, figsize=None, noframe=None, show=None,
+                               bbox=None, figsize=None, noframe=None, draw_verticals=None, show=None,
                                transparent=None, return_format=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
         figsize = figsize if figsize is not None else self.figsize
         noframe = noframe if noframe is not None else self.noframe
+        draw_verticals = draw_verticals if draw_verticals else self.draw_verticals
         init_time = init_time if init_time is not None else self.init_time
         valid_time = valid_time if valid_time is not None else self.valid_time
         style = style if style is not None else self.style
@@ -409,6 +411,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                  bbox=bbox,
                                  figsize=figsize,
                                  noframe=noframe,
+                                 draw_verticals=draw_verticals,
                                  show=show,
                                  transparent=transparent,
                                  return_format=return_format)
@@ -542,6 +545,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                                highlight=self.vsec_path,
                                                noframe=self.noframe,
                                                figsize=self.figsize,
+                                               draw_verticals=self.draw_verticals,
                                                transparent=self.transparent,
                                                numlabels=self.vsec_numlabels,
                                                return_format=self.return_format)

@@ -434,6 +434,20 @@
         </item>
        </layout>
       </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QCheckBox" name="cbVerticalLines">
+          <property name="statusTip">
+           <string>Draw a vertical line to visualise each point in the flight path</string>
+          </property>
+          <property name="text">
+           <string>draw vertical lines</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
      </layout>
     </widget>
    </item>

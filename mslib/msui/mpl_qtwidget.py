@@ -493,6 +493,7 @@ class MplSideViewCanvas(MplCanvas):
                               "draw_flighttrack": True,
                               "fill_flighttrack": True,
                               "label_flighttrack": True,
+                              "draw_verticals": True,
                               "draw_ceiling": True,
                               "colour_ft_vertices": (0, 0, 1, 1),
                               "colour_ft_waypoints": (1, 0, 0, 1),
@@ -693,6 +694,23 @@ class MplSideViewCanvas(MplCanvas):
                     self.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
                     self.settings_dict["colour_ceiling"])
 
+            # Remove all vertical lines
+            vertical_lines = [line for line in self.ax.lines if
+                              all(x == line.get_path().vertices[0, 0] for x in line.get_path().vertices[:, 0])]
+            for line in vertical_lines:
+                self.ax.lines.remove(line)
+
+            # Add vertical lines
+            if self.settings_dict["draw_verticals"]:
+                ipoint = 0
+                highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
+                for i, (lat, lon) in enumerate(zip(lats, lons)):
+                    if (ipoint < len(highlight) and
+                            np.hypot(lat - highlight[ipoint][0],
+                                     lon - highlight[ipoint][1]) < 2E-10):
+                        self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
+                        ipoint += 1
+
         self.draw()
 
     def get_vertical_extent(self):
@@ -750,6 +768,7 @@ class MplSideViewCanvas(MplCanvas):
     def set_settings(self, settings):
         """Apply settings to view.
         """
+        vertical_lines = self.settings_dict["draw_verticals"]
         if settings is not None:
             self.settings_dict.update(settings)
         settings = self.settings_dict
@@ -773,6 +792,11 @@ class MplSideViewCanvas(MplCanvas):
                 settings["fill_flighttrack"])
             self.waypoints_interactor.set_labels_visible(
                 settings["label_flighttrack"])
+
+        if self.waypoints_model is not None and self.waypoints_interactor is not None \
+                and settings["draw_verticals"] != vertical_lines:
+            self.redraw_xaxis(self.waypoints_interactor.path.ilats, self.waypoints_interactor.path.ilons,
+                              self.waypoints_interactor.path.itimes)
 
         self.settings_dict = settings
 
