@@ -88,7 +88,8 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         view_name = f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.name}"
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, type)
 
-        view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()}")
+        view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()} - "
+                                   f"{view_window.waypoints_model.name}")
         view_window.setIdentifier(view_name)
         self.window = view_window
         self.parent = parent
