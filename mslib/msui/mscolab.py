@@ -872,6 +872,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 active_window.activateWindow()
                 return
 
+        self.waypoints_model.name = self.active_project_name
         if _type == "topview":
             view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
                                                    parent=self.listProjects,
@@ -896,6 +897,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.disable_navbar_action_buttons(_type, view_window)
 
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        view_window.setWindowTitle(f"{view_window.windowTitle()} - {self.active_project_name}")
         view_window.show()
         view_window.viewClosesId.connect(self.handle_view_close)
         self.active_windows.append(view_window)
