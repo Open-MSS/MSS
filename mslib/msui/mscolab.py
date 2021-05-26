@@ -922,6 +922,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window.btCloneWaypoint.setEnabled(False)
             view_window.btDeleteWayPoint.setEnabled(False)
             view_window.btInvertDirection.setEnabled(False)
+            view_window.btRoundtrip.setEnabled(False)
+            view_window.cbTools.setEnabled(False)
+            view_window.tableWayPoints.setEnabled(False)
 
     def enable_navbar_action_buttons(self, _type, view_window):
         """
@@ -942,6 +945,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window.btCloneWaypoint.setEnabled(True)
             view_window.btDeleteWayPoint.setEnabled(True)
             view_window.btInvertDirection.setEnabled(True)
+            view_window.btRoundtrip.setEnabled(True)
+            view_window.cbTools.setEnabled(True)
+            view_window.tableWayPoints.setEnabled(True)
 
     def logout(self):
         self.clean_up_window()
