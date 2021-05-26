@@ -372,6 +372,20 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <item>
+         <widget class="QCheckBox" name="cbMarker">
+          <property name="toolTip">
+           <string>Draw a circle marker on every waypoint along the flight track</string>
+          </property>
+          <property name="text">
+           <string>draw marker</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
          <widget class="QCheckBox" name="cbFillFlightTrack">
@@ -438,7 +452,7 @@
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
          <widget class="QCheckBox" name="cbVerticalLines">
-          <property name="statusTip">
+          <property name="toolTip">
            <string>Draw a vertical line to visualise each point in the flight path</string>
           </property>
           <property name="text">

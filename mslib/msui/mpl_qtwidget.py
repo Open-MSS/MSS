@@ -494,6 +494,7 @@ class MplSideViewCanvas(MplCanvas):
                               "fill_flighttrack": True,
                               "label_flighttrack": True,
                               "draw_verticals": True,
+                              "draw_marker": True,
                               "draw_ceiling": True,
                               "colour_ft_vertices": (0, 0, 1, 1),
                               "colour_ft_waypoints": (1, 0, 0, 1),
@@ -782,6 +783,7 @@ class MplSideViewCanvas(MplCanvas):
         self.update_vertical_extent_from_settings()
 
         if self.waypoints_interactor is not None:
+            self.waypoints_interactor.line.set_marker("o" if settings["draw_marker"] else None)
             self.waypoints_interactor.set_vertices_visible(
                 settings["draw_flighttrack"])
             self.waypoints_interactor.set_path_color(
