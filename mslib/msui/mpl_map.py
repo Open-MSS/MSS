@@ -53,7 +53,7 @@ class MapCanvas(basemap.Basemap):
     automatically draw a graticule and to redraw specific map elements.
     """
 
-    def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None,
+    def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None, PROJECT_NAME=None,
                  appearance=None, **kwargs):
         """
         New constructor automatically adds coastlines, continents, and
@@ -64,6 +64,7 @@ class MapCanvas(basemap.Basemap):
         Additional arguments:
         CRS -- string describing the coordinate reference system of the map.
         BBOX_UNITS -- string describing the units of the map coordinates.
+        PROJECT_NAME -- string with project name
 
         """
         # Coordinate reference system identifier and coordinate system units.
@@ -72,6 +73,9 @@ class MapCanvas(basemap.Basemap):
             self.bbox_units = BBOX_UNITS
         else:
             self.bbox_units = getattr(self, "bbox_units", None)
+
+        self.project_name = PROJECT_NAME if PROJECT_NAME is not None else self.project_name \
+            if hasattr(self, "project_name") else None
 
         # Dictionary containing map appearance settings.
         if appearance is not None:
@@ -129,12 +133,16 @@ class MapCanvas(basemap.Basemap):
 
         self.image = None
 
-        # Print CRS identifier into the figure.
-        if self.crs is not None:
-            if hasattr(self, "crs_text"):
-                self.crs_text.set_text(self.crs)
-            else:
-                self.crs_text = self.ax.figure.text(0, 0, self.crs)
+        # Print CRS identifier and project name into figure.
+        if self.crs is not None and self.project_name is not None:
+            self.crs_text = self.ax.figure.text(0, 0, f"{self.project_name}\n{self.crs}")
+        else:
+            # Print only CRS identifier into the figure.
+            if self.crs is not None:
+                if hasattr(self, "crs_text"):
+                    self.crs_text.set_text(self.crs)
+                else:
+                    self.crs_text = self.ax.figure.text(0, 0, self.crs)
 
         if self.appearance["draw_graticule"]:
             try:
