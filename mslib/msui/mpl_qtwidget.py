@@ -958,7 +958,8 @@ class MplTopViewCanvas(MplCanvas):
                 self.waypoints_interactor = mpl_pi.HPathInteractor(
                     self.map, self.waypoints_model,
                     linecolor=appearance["colour_ft_vertices"],
-                    markerfacecolor=appearance["colour_ft_waypoints"])
+                    markerfacecolor=appearance["colour_ft_waypoints"],
+                    show_marker=appearance["draw_marker"])
                 self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
             except IOError as err:
                 logging.error("%s" % err)
@@ -1145,6 +1146,7 @@ class MplTopViewCanvas(MplCanvas):
                     "fill_waterbodies": True,
                     "fill_continents": True,
                     "draw_flighttrack": True,
+                    "draw_marker": True,
                     "label_flighttrack": True,
                     "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
                     "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
@@ -1165,6 +1167,7 @@ class MplTopViewCanvas(MplCanvas):
                                              bg_color=settings["colour_water"])
             self.waypoints_interactor.set_path_color(line_color=settings["colour_ft_vertices"],
                                                      marker_facecolor=settings["colour_ft_waypoints"])
+            self.waypoints_interactor.show_marker = settings["draw_marker"]
             self.waypoints_interactor.set_vertices_visible(settings["draw_flighttrack"])
             self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
 

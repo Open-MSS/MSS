@@ -104,7 +104,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
         self.cbDrawCeiling.setChecked(settings_dict["draw_ceiling"])
         self.cbVerticalLines.setChecked(settings_dict["draw_verticals"])
-        self.cbMarker.setChecked(settings_dict["draw_marker"])
+        self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
 
         for button, ids in [(self.btFillColour, "colour_ft_fill"),
                             (self.btWaypointsColour, "colour_ft_waypoints"),
@@ -216,7 +216,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "flightlevels": self.get_flight_levels(),
             "draw_ceiling": self.cbDrawCeiling.isChecked(),
             "draw_verticals": self.cbVerticalLines.isChecked(),
-            "draw_marker": self.cbMarker.isChecked(),
+            "draw_marker": self.cbDrawMarker.isChecked(),
             "draw_flightlevels": self.cbDrawFlightLevels.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "fill_flighttrack": self.cbFillFlightTrack.isChecked(),
