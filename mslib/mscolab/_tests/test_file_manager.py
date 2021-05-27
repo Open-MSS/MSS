@@ -111,6 +111,13 @@ class Test_FileManager(object):
             project = Project.query.filter_by(path="three").first()
             assert self.fm.is_admin(self.user.id, project.id) is False
 
+    def test_is_collaborator(self):
+        with self.app.app_context():
+            project = Project.query.filter_by(path="three").first()
+            assert self.fm.is_collaborator(self.user.id, project.id)
+            project = Project.query.filter_by(path="four").first()
+            assert self.fm.is_collaborator(self.user.id, project.id) is False
+
     def test_auth_type(self):
         with self.app.app_context():
             project = Project.query.filter_by(path="three").first()

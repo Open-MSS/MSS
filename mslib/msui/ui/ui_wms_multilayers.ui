@@ -99,7 +99,7 @@
         <bool>false</bool>
        </property>
        <property name="columnCount">
-        <number>3</number>
+        <number>4</number>
        </property>
        <attribute name="headerVisible">
         <bool>true</bool>
@@ -123,6 +123,11 @@
        <column>
         <property name="text">
          <string>Priority</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Colour</string>
         </property>
        </column>
       </widget>

@@ -39,7 +39,7 @@ import mslib.msui.wms_control as wc
 from mslib._tests.utils import wait_until_signal
 
 
-PORTS = list(range(8106, 8120))
+PORTS = list(range(8107, 8121))
 
 
 class HSecViewMockup(mock.Mock):
