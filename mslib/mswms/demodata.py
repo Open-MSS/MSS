@@ -1060,7 +1060,7 @@ if mpl_lsec_styles is not None:
 simple server config for demodata
 """
 from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
-                                  register_horizontal_layers, register_vertical_layers)
+                                  register_horizontal_layers, register_vertical_layers, register_linear_layers)
 '''
 
         if not self.server_config_fs.exists(self.server_config_file):

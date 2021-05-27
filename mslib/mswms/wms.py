@@ -94,6 +94,7 @@ except ImportError as ex:
         service_access_constraints = "This service is intended for research purposes only."
         register_horizontal_layers = []
         register_vertical_layers = []
+        register_linear_layers = []
         data = {}
         enable_basic_http_authentication = False
         __file__ = None
@@ -197,6 +198,11 @@ class WMSServer(object):
             self.register_vsec_layer(datasets, layer)
 
         self.lsec_layer_registry = {}
+        if not hasattr(mss_wms_settings, "register_linear_layers"):
+            logging.info("Since 4.0.0 MSS has support for linear layers in the mss_wms_settings.py.\n"
+                         "Look at the documentation for an example "
+                         "https://mss.readthedocs.io/en/stable/deployment.html#configuration-file-of-the-wms-server")
+            mss_wms_settings.register_linear_layers = []
         for layer in mss_wms_settings.register_linear_layers:
             if len(layer) == 3:
                 self.register_lsec_layer(layer[2], layer[1], layer[0])

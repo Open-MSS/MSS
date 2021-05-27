@@ -859,6 +859,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.topview.setEnabled(True)
             self.sideview.setEnabled(True)
             self.tableview.setEnabled(True)
+            self.linearview.setEnabled(True)
             self.workLocallyCheckBox.setEnabled(True)
             # enable access level specific buttons
             self.handle_mscolab_buttons()
