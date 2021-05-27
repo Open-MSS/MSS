@@ -34,8 +34,9 @@ import logging
 
 
 class MSSViewWindow(QtWidgets.QMainWindow):
-    """Derives QMainWindow to provide some common functionality to all
-       MSUI view windows.
+    """
+    Derives QMainWindow to provide some common functionality to all
+    MSUI view windows.
     """
     name = "Abstract MSS View Window"
     identifier = None
@@ -94,20 +95,23 @@ class MSSViewWindow(QtWidgets.QMainWindow):
             event.ignore()
 
     def exists(self):
-        """Returns the flag False if self.closeEvent() is triggered else returns True.
-           This is only for helping as a flag information in
-           force closing of tableview when main window closes.
+        """
+        Returns the flag False if self.closeEvent() is triggered else returns True.
+        This is only for helping as a flag information in
+        force closing of tableview when main window closes.
         """
         return self.tv_window_exists
 
     def setFlightTrackModel(self, model):
-        """Set the QAbstractItemModel instance that the view displays.
+        """
+        Set the QAbstractItemModel instance that the view displays.
         """
         self.waypoints_model = model
 
     def controlToBeCreated(self, index):
-        """Check if the dock widget at index <index> exists. If yes, show
-           the widget and return -1. Otherwise return <index-1>.
+        """
+        Check if the dock widget at index <index> exists. If yes, show
+        the widget and return -1. Otherwise return <index-1>.
         """
         index -= 1
         if index >= 0 and self.docks[index] is not None:
@@ -121,9 +125,10 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         return index
 
     def createDockWidget(self, index, title, widget):
-        """Create a new dock widget. A pointer to the dock widget will be
-           stored in self.docks[index]. The dock will have the title <title>
-           and contain the Qt widget <widget>.
+        """
+        Create a new dock widget. A pointer to the dock widget will be
+        stored in self.docks[index]. The dock will have the title <title>
+        and contain the Qt widget <widget>.
         """
         self.docks[index] = QtWidgets.QDockWidget(title, self)
         self.docks[index].setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
@@ -143,7 +148,8 @@ class MSSViewWindow(QtWidgets.QMainWindow):
 
     @abstractmethod
     def getView(self):
-        """Return view object that tools can interact with.
+        """
+        Return view object that tools can interact with.
 
         ABSTRACT method, needs to be implemented in derived classes.
         """
@@ -154,7 +160,8 @@ class MSSViewWindow(QtWidgets.QMainWindow):
 
 
 class MSSMplViewWindow(MSSViewWindow):
-    """Adds Matplotlib-specific functionality to MSSViewWindow.
+    """
+    Adds Matplotlib-specific functionality to MSSViewWindow.
     """
 
     def __init__(self, parent=None, model=None, _id=None):
@@ -163,13 +170,15 @@ class MSSMplViewWindow(MSSViewWindow):
         self.mpl = None
 
     def setFlightTrackModel(self, model):
-        """Set the QAbstractItemModel instance that the view displays.
+        """
+        Set the QAbstractItemModel instance that the view displays.
         """
         self.waypoints_model = model
         if self.mpl is not None:
             self.mpl.canvas.set_waypoints_model(model)
 
     def getView(self):
-        """Return the MplCanvas instance of the window.
+        """
+        Return the MplCanvas instance of the window.
         """
         return self.mpl.canvas

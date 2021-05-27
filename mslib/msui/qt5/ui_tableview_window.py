@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_tableview_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_TableViewWindow(object):
     def setupUi(self, TableViewWindow):
@@ -26,7 +28,7 @@ class Ui_TableViewWindow(object):
         self.tableWayPoints.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.tableWayPoints.setDefaultDropAction(QtCore.Qt.CopyAction)
         self.tableWayPoints.setAlternatingRowColors(True)
-        self.tableWayPoints.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tableWayPoints.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.tableWayPoints.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWayPoints.setObjectName("tableWayPoints")
         self.verticalLayout.addWidget(self.tableWayPoints)
@@ -85,4 +87,3 @@ class Ui_TableViewWindow(object):
         self.btRoundtrip.setText(_translate("TableViewWindow", "make roundtrip"))
         self.actionCloseWindow.setText(_translate("TableViewWindow", "Close Window"))
         self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+W"))
-

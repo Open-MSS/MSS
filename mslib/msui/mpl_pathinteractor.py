@@ -162,6 +162,8 @@ class WaypointsPath(mpath.Path):
         """
         Path = mpath.Path
         wps = wps_model.all_waypoint_data()
+        pathdata = []
+        # on a expired mscolab server wps is an empty list
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i, _ in enumerate(wps[1:]):
@@ -211,25 +213,26 @@ class PathV(WaypointsPath):
         lats, lons, times = wps_model.intermediate_points(
             numpoints=self.numintpoints, connection="greatcircle")
 
-        # Determine indices of waypoints in list of intermediate points.
-        # Store these indices.
-        waypoints = [[wp.lat, wp.lon] for wp in wps_model.all_waypoint_data()]
-        intermediate_indexes = []
-        ipoint = 0
-        for i, (lat, lon) in enumerate(zip(lats, lons)):
-            if abs(lat - waypoints[ipoint][0]) < 1E-10 and abs(lon - waypoints[ipoint][1]) < 1E-10:
-                intermediate_indexes.append(i)
-                ipoint += 1
-            if ipoint >= len(waypoints):
-                break
+        if lats is not None:
+            # Determine indices of waypoints in list of intermediate points.
+            # Store these indices.
+            waypoints = [[wp.lat, wp.lon] for wp in wps_model.all_waypoint_data()]
+            intermediate_indexes = []
+            ipoint = 0
+            for i, (lat, lon) in enumerate(zip(lats, lons)):
+                if abs(lat - waypoints[ipoint][0]) < 1E-10 and abs(lon - waypoints[ipoint][1]) < 1E-10:
+                    intermediate_indexes.append(i)
+                    ipoint += 1
+                if ipoint >= len(waypoints):
+                    break
 
-        self.intermediate_indexes = intermediate_indexes
-        self.ilats = lats
-        self.ilons = lons
-        self.itimes = times
+            self.intermediate_indexes = intermediate_indexes
+            self.ilats = lats
+            self.ilons = lons
+            self.itimes = times
 
-        # Call super method.
-        WaypointsPath.update_from_WaypointsTableModel(self, wps_model)
+            # Call super method.
+            WaypointsPath.update_from_WaypointsTableModel(self, wps_model)
 
     def transform_waypoint(self, wps_list, index):
         """Returns the x-index of the waypoint and its pressure.
@@ -287,21 +290,21 @@ class PathH_GC(PathH):
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
                 pathdata.append((Path.LINETO, self.transform_waypoint(wps, i + 1)))
-        wp_codes, wp_vertices = list(zip(*pathdata))
-        self.wp_codes = np.array(wp_codes, dtype=np.uint8)
-        self.wp_vertices = np.array(wp_vertices)
+            wp_codes, wp_vertices = list(zip(*pathdata))
+            self.wp_codes = np.array(wp_codes, dtype=np.uint8)
+            self.wp_vertices = np.array(wp_vertices)
 
-        # Coordinates of intermediate great circle points.
-        lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
-        x, y = self.map.gcpoints_path(lons, lats)
+            # Coordinates of intermediate great circle points.
+            lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
+            x, y = self.map.gcpoints_path(lons, lats)
 
-        if len(x) > 0:
-            pathdata = [(Path.MOVETO, (x[0], y[0]))]
-            for i in range(len(x[1:])):
-                pathdata.append((Path.LINETO, (x[i + 1], y[i + 1])))
-        codes, vertices = list(zip(*pathdata))
-        self.codes = np.array(codes, dtype=np.uint8)
-        self.vertices = np.array(vertices)
+            if len(x) > 0:
+                pathdata = [(Path.MOVETO, (x[0], y[0]))]
+                for i in range(len(x[1:])):
+                    pathdata.append((Path.LINETO, (x[i + 1], y[i + 1])))
+            codes, vertices = list(zip(*pathdata))
+            self.codes = np.array(codes, dtype=np.uint8)
+            self.vertices = np.array(vertices)
 
     def index_of_closest_segment(self, x, y, eps=5):
         """Find the index of the edge closest to the specified point at x,y.
@@ -658,7 +661,10 @@ class VPathInteractor(PathInteractor):
             self.clear_figure()
 
         if self.redraw_xaxis is not None:
-            self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
+            try:
+                self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
+            except AttributeError as err:
+                logging.debug("%s" % err)
         self.ax.figure.canvas.draw()
 
     def button_release_delete_callback(self, event):
@@ -802,6 +808,106 @@ class VPathInteractor(PathInteractor):
             if self.redraw_xaxis is not None:
                 self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
 
+
+class LPathInteractor(PathInteractor):
+    """
+    Subclass of PathInteractor that implements a non interactive linear profile of the flight track.
+    """
+    signal_get_lsec = QtCore.Signal(name="get_lsec")
+
+    def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
+        """Constructor passes a PathV instance its parent.
+
+        Arguments:
+        ax -- matplotlib.Axes object into which the path should be drawn.
+        waypoints -- flighttrack.WaypointsModel instance.
+        numintpoints -- number of intermediate interpolation points. The entire
+                        flight track will be interpolated to this number of
+                        points.
+        redrawXAxis -- callback function to redraw the x-axis on path changes.
+        """
+        self.numintpoints = numintpoints
+        self.clear_figure = clear_figure
+        self.redraw_xaxis = redraw_xaxis
+        super(LPathInteractor, self).__init__(
+            ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
+
+    def get_num_interpolation_points(self):
+        return self.numintpoints
+
+    def redraw_figure(self):
+        """For the linear view, changes in the horizontal or vertical position of a waypoint
+           (including moved waypoints, new or deleted waypoints) make a complete
+           redraw of the figure necessary.
+        """
+        # emit signal to redraw map
+        self.redraw_xaxis()
+        self.signal_get_lsec.emit()
+
+    def redraw_path(self, vertices=None):
+        """Skip redrawing paths for LSec
+        """
+        pass
+
+    def draw_callback(self, event):
+        """Skip drawing paths for LSec
+        """
+        pass
+
+    def get_lat_lon(self, event):
+        x = event.xdata
+        wpm = self.waypoints_model
+        vertices = self.pathpatch.get_path().vertices
+        vertices = np.ndarray.tolist(vertices)
+        for index, vertex in enumerate(vertices):
+            vertices[index].append(datetime.datetime(2012, 7, 1, 10, 30))
+        best_index = 1
+        # if x axis has increasing coordinates
+        if vertices[-1][0] > vertices[0][0]:
+            for index, vertex in enumerate(vertices):
+                if x >= vertex[0]:
+                    best_index = index + 1
+        # if x axis has decreasing coordinates
+        else:
+            for index, vertex in enumerate(vertices):
+                if x <= vertex[0]:
+                    best_index = index + 1
+        # number of subcoordinates is determined by difference in x coordinates
+        number_of_intermediate_points = math.floor(vertices[best_index][0] - vertices[best_index - 1][0])
+        intermediate_vertices_list = path_points([vertices[best_index - 1], vertices[best_index]],
+                                                 number_of_intermediate_points)
+        wp1Array = [wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
+                    datetime.datetime(2012, 7, 1, 10, 30)]
+        wp2Array = [wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
+                    datetime.datetime(2012, 7, 1, 10, 30)]
+        intermediate_waypoints_list = latlon_points(wp1Array, wp2Array, number_of_intermediate_points,
+                                                    connection="greatcircle")
+
+        # best_index1 is the best index among the intermediate coordinates to fit the hovered point
+        # if x axis has increasing coordinates
+        best_index1 = 1
+        if vertices[-1][0] > vertices[0][0]:
+            for index, vertex in enumerate(intermediate_vertices_list[0]):
+                if x >= vertex:
+                    best_index1 = index + 1
+        # if x axis has decreasing coordinates
+        else:
+            for index, vertex in enumerate(intermediate_vertices_list[0]):
+                if x <= vertex:
+                    best_index1 = index + 1
+        # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
+        return [intermediate_waypoints_list[0][best_index1 - 1],
+                intermediate_waypoints_list[1][best_index1 - 1],
+                intermediate_vertices_list[1][best_index1 - 1]], best_index
+
+    def qt_data_changed_listener(self, index1, index2):
+        """Listens to dataChanged() signals emitted by the flight track
+           data model. The linear view can thus react to data changes
+           induced by another view (table, top view, side view).
+        """
+        self.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
+        self.redraw_figure()
+
 #
 # CLASS HPathInteractor
 #
@@ -813,7 +919,7 @@ class HPathInteractor(PathInteractor):
     """
 
     def __init__(self, mplmap, waypoints,
-                 linecolor='blue', markerfacecolor='red',
+                 linecolor='blue', markerfacecolor='red', show_marker=True,
                  label_waypoints=True):
         """Constructor passes a PathH_GC instance its parent (horizontal path
            with waypoints connected with great circles).
@@ -828,6 +934,7 @@ class HPathInteractor(PathInteractor):
         self.tangent_lines = None
         self.show_tangent_points = False
         self.solar_lines = None
+        self.show_marker = show_marker
         self.show_solar_angle = None
         self.remote_sensing = None
         super(HPathInteractor, self).__init__(
@@ -998,6 +1105,8 @@ class HPathInteractor(PathInteractor):
 
         if wp_vertices is None:
             wp_vertices = self.pathpatch.get_path().wp_vertices
+            if len(wp_vertices) == 0:
+                raise IOError("mscolab session expired")
             vertices = self.pathpatch.get_path().vertices
         else:
             # If waypoints have been provided, compute the intermediate
@@ -1041,7 +1150,7 @@ class HPathInteractor(PathInteractor):
         # (animated is important to remove the old scatter points from the map)
         self.wp_scatter = self.ax.scatter(x, y, color=self.markerfacecolor,
                                           s=20, zorder=3, animated=True,
-                                          visible=self.showverts)
+                                          visible=self.show_marker)
 
         # Draw waypoint labels.
         label_offset = self.appropriate_epsilon(px=5)
@@ -1134,7 +1243,7 @@ class HPathInteractor(PathInteractor):
     def set_vertices_visible(self, showverts=True):
         """Set the visibility of path vertices (the line plot).
         """
-        self.wp_scatter.set_visible(showverts)
+        self.wp_scatter.set_visible(self.show_marker)
         PathInteractor.set_vertices_visible(self, showverts)
 
     def set_tangent_visible(self, visible):

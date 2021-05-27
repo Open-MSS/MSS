@@ -1,6 +1,35 @@
 Changelog
 =========
 
+Version 4.0.0
+-------------
+
+This release brings a new view mode of 1-D samples along the flight path.
+Also in sideview waypoint symbols and corresponding vertical lines can be switched off.
+A lot of UI improvements, e.g. import and export filters, topview history and home button implemented
+for steorographic projections
+
+HINT:
+~~~~~
+
+For using the 1-D samples along the flight path you have to add a configuration to your
+mss_wms_settings.py. Similiar as to the other layers add:
+
+.. code-block:: python
+
+  register_linear_layers = None
+  if mpl_lsec_styles is not None:
+      register_linear_layers = [
+          # ECMWF standard 1D section styles.
+          (mpl_lsec_styles.LS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
+          (mpl_lsec_styles.LS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
+      ]
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/52?closed=1
+
+
 Version 3.0.4
 -------------
 

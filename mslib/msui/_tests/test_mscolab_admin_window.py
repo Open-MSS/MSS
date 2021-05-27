@@ -42,7 +42,7 @@ PORTS = list(range(9531, 9550))
 class Test_MscolabAdminWindow(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(100)
+        QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -120,6 +120,9 @@ class Test_MscolabAdminWindow(object):
         users = ["test2", "test3"]
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
+        index = self.admin_window.addUsersPermission.findText("admin", QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            self.admin_window.addUsersPermission.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         # Check if they have been added in the modify users table

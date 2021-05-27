@@ -333,15 +333,15 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         }
         url = url_join(self.mscolab_server_url, 'authorized_users')
         r = requests.get(url, data=data)
-        if r.text == "False":
-            show_popup(self, "Error", "Some error occurred while fetching users!")
-        else:
+        if r.text != "False":
             self.collaboratorsList.clear()
             users = r.json()["users"]
             for user in users:
                 item = QtWidgets.QListWidgetItem(f'{user["username"]} - {user["access_level"]}',
                                                  parent=self.collaboratorsList)
                 self.collaboratorsList.addItem(item)
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def load_all_messages(self):
         # empty messages and reload from server
@@ -352,12 +352,17 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         }
         # returns an array of messages
         url = url_join(self.mscolab_server_url, "messages")
-        res = requests.get(url, data=data).json()
-        messages = res["messages"]
-        # clear message box
-        for message in messages:
-            self.render_new_message(message, scroll=False)
-        self.messageList.scrollToBottom()
+
+        res = requests.get(url, data=data)
+        if res.text != "False":
+            res = res.json()
+            messages = res["messages"]
+            # clear message box
+            for message in messages:
+                self.render_new_message(message, scroll=False)
+            self.messageList.scrollToBottom()
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def render_new_message(self, message, scroll=True):
         message_item = MessageItem(message, self)
@@ -489,7 +494,7 @@ class MessageItem(QtWidgets.QWidget):
         text_browser.anchorClicked.connect(self.on_link_click)
         text_browser.show()
         text_browser.setFixedHeight(
-            text_browser.document().size().height() + text_browser.contentsMargins().top() * 2
+            int(text_browser.document().size().height() + text_browser.contentsMargins().top() * 2)
         )
         return text_browser
 
@@ -650,7 +655,7 @@ class MessageItem(QtWidgets.QWidget):
         html = self.chat_window.markdown.convert(self.message_text)
         self.messageBox.setHtml(html)
         self.messageBox.setFixedHeight(
-            self.messageBox.document().size().height() + self.messageBox.contentsMargins().top() * 2
+            int(self.messageBox.document().size().height() + self.messageBox.contentsMargins().top() * 2)
         )
         self.textArea.adjustSize()
 

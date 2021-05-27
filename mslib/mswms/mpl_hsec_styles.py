@@ -181,7 +181,6 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
 class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
     """
     Surface Field: Mean Sea Level Pressure
-
     """
     name = "MSLP"
     title = "Mean Sea Level Pressure (hPa)"
@@ -658,7 +657,6 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
     """
     Upper Air Field: Geopotential and Wind
-
     """
     name = "PLGeopWind"
     title = "Geopotential Height (m) and Horizontal Wind (m/s)"
@@ -776,7 +774,8 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "specific_humidity", "kg/kg")]
 
     def _prepare_datafields(self):
-        """Computes relative humidity from p, t, q.
+        """
+        Computes relative humidity from p, t, q.
         """
         self.data["relative_humidity"] = thermolib.rel_hum(
             self.level * 100., self.data["air_temperature"], self.data["specific_humidity"])
@@ -860,7 +859,8 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "specific_humidity", "kg/kg")]
 
     def _prepare_datafields(self):
-        """Computes relative humidity from p, t, q.
+        """
+        Computes relative humidity from p, t, q.
         """
         self.data["equivalent_potential_temperature"] = thermolib.eqpt_approx(
             self.level * 100., self.data["air_temperature"], self.data["specific_humidity"])
@@ -949,7 +949,8 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ("pl", "geopotential_height", "m")]
 
     def _prepare_datafields(self):
-        """Computes relative humidity from p, t, q.
+        """
+        Computes relative humidity from p, t, q.
         """
         self.data["upward_wind"] = thermolib.omega_to_w(
             self.data["lagrangian_tendency_of_air_pressure"],

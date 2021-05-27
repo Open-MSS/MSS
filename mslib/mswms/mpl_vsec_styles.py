@@ -58,14 +58,16 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
         ("ml", "air_temperature", "K")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature if
+        """
+        Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
-        """Make a temperature/potential temperature vertical section.
+        """
+        Make a temperature/potential temperature vertical section.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -343,8 +345,9 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
             self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
-        """Make a cloud cover vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a cloud cover vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -421,8 +424,9 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature and
-           total horizontal wind speed.
+        """
+        Computes potential temperature from pressure and temperature and
+        total horizontal wind speed.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
@@ -430,8 +434,9 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
             self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
-        """Make a cloud cover vertical section with wind speed and potential
-           temperature overlay.
+        """
+        Make a cloud cover vertical section with wind speed and potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -500,7 +505,8 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         ("ml", "specific_humidity", "kg/kg")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature if
+        """
+        Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
@@ -510,8 +516,9 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
             self.data["specific_humidity"])
 
     def _plot_style(self):
-        """Make a relative humidity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a relative humidity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -601,15 +608,17 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature if
+        """
+        Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes relative humdity.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
-        """Make a relative humidity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a relative humidity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -711,7 +720,8 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         ("ml", "lagrangian_tendency_of_air_pressure", "Pa/s")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature if
+        """
+        Computes potential temperature from pressure and temperature if
         it has not been passed as a data field. Also computes vertical
         velocity in cm/s.
         """
@@ -723,8 +733,9 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
             "m/s", "cm/s")
 
     def _plot_style(self):
-        """Make a vertical velocity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a vertical velocity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -815,8 +826,9 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         ("ml", "northward_wind", "m/s")]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature and
-           total horizontal wind speed.
+        """
+        Computes potential temperature from pressure and temperature and
+        total horizontal wind speed.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
@@ -824,8 +836,9 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
             self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
-        """Make a horizontal velocity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a horizontal velocity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -1178,8 +1191,9 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         ("ml", "probability_of_wcb_occurrence", 'dimensionless')]
 
     def _prepare_datafields(self):
-        """Computes potential temperature from pressure and temperature and
-           total horizontal wind speed.
+        """
+        Computes potential temperature from pressure and temperature and
+        total horizontal wind speed.
         """
         self.data['air_potential_temperature'] = thermolib.pot_temp(
             self.data['air_pressure'], self.data['air_temperature'])
@@ -1187,8 +1201,9 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
             self.data["eastward_wind"], self.data["northward_wind"])
 
     def _plot_style(self):
-        """Make a horizontal velocity vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a horizontal velocity vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]
@@ -1354,8 +1369,9 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
             self.data['air_pressure'], self.data['air_temperature'])
 
     def _plot_style(self):
-        """Make a volcanic ash cloud cover vertical section with temperature/potential
-           temperature overlay.
+        """
+        Make a volcanic ash cloud cover vertical section with temperature/potential
+        temperature overlay.
         """
         ax = self.ax
         curtain_p = self.data["air_pressure"]

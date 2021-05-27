@@ -1,14 +1,14 @@
 {
     "name": "DUMMY",
     "takeoff_weight": 91000,
-    "fuel": 35000,
+    "empty_weight": 56000,
     "climb": [[0.00, 0.0, 0.0, 0.0, 0.0]],
     "descent": [[0.00, 0.0, 0.0, 0.0, 0.0]],
     "cruise": [[0.00, 0.00, 400, 2900.00]],
     "ceiling": [410],
     "_comment1": "_comment fields are just for self-documentation!",
-    "_comment2": "takeoff_weight: weight(lbs)",
-    "_comment3": "fuel: weight(lbs)",
+    "_comment2": "takeoff_weight: maximum weight for takeoff (lbs)",
+    "_comment3": "empty_weight: aircraft weight without fuel (lbs)",
     "_comment4": "climb/descent: weight(lbs), altitude(ft), duration(min), distance(nm), fuel(lbs)",
     "_comment5": "cruise: weight(lbs), altitude(ft), total air speed(nm/h), fuel flow(lbs/h)"
     "_comment6": "ceiling: polynomial coeficients for relating weight (lbs) with peak flightlevel (hft). Leftmost coefficient is the intercept."

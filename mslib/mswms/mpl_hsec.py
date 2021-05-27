@@ -49,28 +49,33 @@ BASEMAP_REQUESTS = []
 
 
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
-    """Abstract horizontal section super class. Use this class as a parent
-       to classes implementing different plotting backends. For example,
-       to derive a Matplotlib-based style class, or a Magics++-based
-       style class.
+    """
+    Abstract horizontal section super class. Use this class as a parent
+    to classes implementing different plotting backends. For example,
+    to derive a Matplotlib-based style class, or a Magics++-based
+    style class.
     """
 
     @abstractmethod
     def plot_hsection(self):
-        """Re-implement this function to perform the actual plotting.
+        """
+        Re-implement this function to perform the actual plotting.
         """
         pass
 
 
 class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
-    """Matplotlib-based super class for all horizontal section styles.
-       Sets up the map projection and draws a basemap.
+    """
+    Matplotlib-based super class for all horizontal section styles.
+    Sets up the map projection and draws a basemap.
     """
     name = "BASEMAP"
     title = "Matplotlib basemap"
+    _plot_countries = True  # set to False in derived class to disable country plotting
 
     def _plot_style(self):
-        """Overwrite this method to plot style-specific data on the map.
+        """
+        Overwrite this method to plot style-specific data on the map.
         """
         pass
 
@@ -78,7 +83,8 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         return list(mss_wms_settings.epsg_to_mpl_basemap_table.keys())
 
     def support_epsg_code(self, crs):
-        """Returns a list of supported EPSG codes.
+        """
+        Returns a list of supported EPSG codes.
         """
         try:
             get_projection_params(crs)
@@ -87,8 +93,9 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         return True
 
     def supported_crs(self):
-        """Returns a list of the coordinate reference systems supported by
-           this style.
+        """
+        Returns a list of the coordinate reference systems supported by
+        this style.
         """
         crs_list = set([
             "EPSG:3031",  # WGS 84 / Antarctic Polar Stereographic
@@ -324,17 +331,18 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
                     del BASEMAP_CACHE[key]
                     BASEMAP_REQUESTS[:] = [_x for _x in BASEMAP_REQUESTS if key != _x]
 
-        # Set up the map appearance.
-        bm.drawcoastlines(color='0.25')
-        bm.drawcountries(color='0.5')
-        bm.drawmapboundary(fill_color='white')
+        if self._plot_countries:
+            # Set up the map appearance.
+            bm.drawcoastlines(color='0.25')
+            bm.drawcountries(color='0.5')
+            bm.drawmapboundary(fill_color='white')
 
-        # zorder = 0 is necessary to paint over the filled continents with
-        # scatter() for drawing the flight tracks and trajectories.
-        # Curiously, plot() works fine without this setting, but scatter()
-        # doesn't.
-        bm.fillcontinents(color='0.98', lake_color='white', zorder=0)
-        self._draw_auto_graticule(bm)
+            # zorder = 0 is necessary to paint over the filled continents with
+            # scatter() for drawing the flight tracks and trajectories.
+            # Curiously, plot() works fine without this setting, but scatter()
+            # doesn't.
+            bm.fillcontinents(color='0.98', lake_color='white', zorder=0)
+            self._draw_auto_graticule(bm)
 
         if noframe:
             ax.axis('off')

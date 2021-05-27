@@ -54,19 +54,22 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
     def __init__(self, driver=None):
-        """Constructor.
+        """
+        Constructor.
         """
         super(AbstractVerticalSectionStyle, self).__init__(driver=driver)
 
     def supported_crs(self):
-        """Returns a list of the coordinate reference systems supported by
-           this style.
+        """
+        Returns a list of the coordinate reference systems supported by
+        this style.
         """
         return ["VERT:LOGP"]
 
     # TODO: the general setup should be a separate class as well
     def _latlon_logp_setup(self, orography=105000.):
-        """General setup for lat/lon vs. log p vertical cross-sections.
+        """
+        General setup for lat/lon vs. log p vertical cross-sections.
         """
         ax = self.ax
 
@@ -78,14 +81,15 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                                          self.lons[::tick_index_step])],
                            rotation=25, fontsize=10, horizontalalignment='right')
 
-        # Add lines to highlight points if any are given.
-        ipoint = 0
-        for i, (lat, lon) in enumerate(zip(self.lats, self.lons)):
-            if (ipoint < len(self.highlight) and
-                np.hypot(lat - self.highlight[ipoint][0],
-                         lon - self.highlight[ipoint][1]) < 2E-10):
-                ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
-                ipoint += 1
+        if self.draw_verticals:
+            # Add lines to highlight points if any are given.
+            ipoint = 0
+            for i, (lat, lon) in enumerate(zip(self.lats, self.lons)):
+                if (ipoint < len(self.highlight) and
+                    np.hypot(lat - self.highlight[ipoint][0],
+                             lon - self.highlight[ipoint][1]) < 2E-10):
+                    ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
+                    ipoint += 1
 
         # Add lower limit of pressure curtain to indicate orography.
         ax.fill_between(self.lat_inds, orography, y2=self.p_bot,
@@ -116,14 +120,15 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
     @abstractmethod
     def _plot_style(self):
-        """Can call self._log_setup()
+        """
+        Can call self._log_setup()
         """
         pass
 
     def plot_vsection(self, data, lats, lons, valid_time, init_time,
                       resolution=(-1, -1), bbox=(-1, 1050, -1, 200), style=None,
                       show=False,
-                      highlight=None, noframe=False, figsize=(960, 480),
+                      highlight=None, noframe=False, figsize=(960, 480), draw_verticals=False,
                       numlabels=10, orography_color='k', transparent=False,
                       return_format="image/png"):
         """
@@ -151,6 +156,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.style = style
         self.highlight = highlight
         self.noframe = noframe
+        self.draw_verticals = draw_verticals
         self.p_bot = bbox[1] * 100
         self.p_top = bbox[3] * 100
         self.numlabels = numlabels

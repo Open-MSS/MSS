@@ -43,6 +43,12 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         super().__init__(parent=dock_widget)
         self.setupUi(self)
         self.setWindowFlags(QtCore.Qt.Window)
+        if isinstance(dock_widget, mslib.msui.wms_control.HSecWMSControlWidget):
+            self.setWindowTitle(self.windowTitle() + " (Top View)")
+        elif isinstance(dock_widget, mslib.msui.wms_control.VSecWMSControlWidget):
+            self.setWindowTitle(self.windowTitle() + " (Side View)")
+        elif isinstance(dock_widget, mslib.msui.wms_control.LSecWMSControlWidget):
+            self.setWindowTitle(self.windowTitle() + " (Linear View)")
         self.dock_widget = dock_widget
         self.layers = {}
         self.layers_priority = []
@@ -51,11 +57,15 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.height = None
         self.scale = self.logicalDpiX() / 96
         self.filter_favourite = False
-        self.settings = load_settings_qsettings("multilayers", {"favourites": [], "saved_styles": {}})
+        self.carry_parameters = {"level": None, "itime": None, "vtime": None}
+        self.is_linear = isinstance(dock_widget, mslib.msui.wms_control.LSecWMSControlWidget)
+        self.settings = load_settings_qsettings("multilayers",
+                                                {"favourites": [], "saved_styles": {}, "saved_colors": {}})
         self.synced_reference = Layer(None, None, None, is_empty=True)
         self.listLayers.itemChanged.connect(self.multilayer_changed)
         self.listLayers.itemClicked.connect(self.multilayer_clicked)
         self.listLayers.itemClicked.connect(self.check_icon_clicked)
+        self.listLayers.itemDoubleClicked.connect(self.multilayer_doubleclicked)
         self.listLayers.setVisible(True)
 
         self.leMultiFilter.setVisible(True)
@@ -73,12 +83,15 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.leMultiFilter.textChanged.connect(self.filter_multilayers)
 
         self.listLayers.setColumnWidth(2, 50)
+        self.listLayers.setColumnWidth(3, 50)
         self.listLayers.setColumnWidth(1, 200)
         self.listLayers.setColumnHidden(2, True)
+        self.listLayers.setColumnHidden(3, not self.is_linear)
         self.listLayers.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
         self.delete_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Delete"), self)
         self.delete_shortcut.activated.connect(self.delete_server)
+        self.delete_shortcut.setWhatsThis("Delete selected server")
 
     def delete_server(self, server=None):
         if not server:
@@ -148,13 +161,13 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
     def get_current_layer(self):
         """
         Return the current layer in the perspective of Multilayering or Singlelayering
-        For Multilayering, it is the last of the activated layers
+        For Multilayering, it is the first priority syncable layer, or first priority layer if none are syncable
         For Singlelayering, it is the current selected layer
         """
         if self.cbMultilayering.isChecked():
             active_layers = self.get_active_layers()
             synced_layers = [layer for layer in active_layers if layer.is_synced]
-            return synced_layers[-1] if synced_layers else active_layers[-1] if active_layers else None
+            return synced_layers[0] if synced_layers else active_layers[0] if active_layers else None
         else:
             return self.current_layer
 
@@ -305,6 +318,22 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if self.cbMultilayering.isChecked():
                 widget.setCheckState(0, QtCore.Qt.Unchecked)
 
+            if self.is_linear:
+                color = QtWidgets.QPushButton()
+                color.setFixedHeight(15)
+                color.setStyleSheet(f"background-color: {widget.color}")
+                self.listLayers.setItemWidget(widget, 3, color)
+
+                def color_changed(layer):
+                    self.multilayer_clicked(layer)
+                    new_color = QtWidgets.QColorDialog.getColor().name()
+                    color.setStyleSheet(f"background-color: {new_color}")
+                    layer.color_changed(new_color)
+                    self.multilayer_clicked(layer)
+                    self.dock_widget.auto_update()
+
+                color.clicked.connect(lambda: color_changed(widget))
+
             if widget.style:
                 style = QtWidgets.QComboBox()
                 style.setFixedHeight(self.height)
@@ -313,9 +342,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 style.setCurrentIndex(style.findText(widget.style))
 
                 def style_changed(layer):
-                    self.multilayer_clicked(layer)
                     layer.style = self.listLayers.itemWidget(layer, 1).currentText()
                     layer.style_changed()
+                    self.multilayer_clicked(layer)
                     self.dock_widget.auto_update()
 
                 style.currentIndexChanged.connect(lambda: style_changed(widget))
@@ -342,21 +371,27 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
 
         self.threads += 1
 
-        if self.current_layer:
-            if self.current_layer.get_level() in item.get_levels():
-                item.set_level(self.current_layer.get_level())
-            if self.current_layer.get_itime() in item.get_itimes():
-                item.set_itime(self.current_layer.get_itime())
-            if self.current_layer.get_vtime() in item.get_vtimes():
-                item.set_vtime(self.current_layer.get_vtime())
+        if self.carry_parameters["level"] in item.get_levels():
+            item.set_level(self.carry_parameters["level"])
+        if self.carry_parameters["itime"] in item.get_itimes():
+            item.set_itime(self.carry_parameters["itime"])
+        if self.carry_parameters["vtime"] in item.get_vtimes():
+            item.set_vtime(self.carry_parameters["vtime"])
 
-        self.current_layer = item
-        self.listLayers.setCurrentItem(item)
-        index = self.cbWMS_URL.findText(item.get_wms().url)
-        if index != -1 and index != self.cbWMS_URL.currentIndex():
-            self.cbWMS_URL.setCurrentIndex(index)
-        self.needs_repopulate.emit()
+        if self.current_layer != item:
+            self.current_layer = item
+            self.listLayers.setCurrentItem(item)
+            index = self.cbWMS_URL.findText(item.get_wms().url)
+            if index != -1 and index != self.cbWMS_URL.currentIndex():
+                self.cbWMS_URL.setCurrentIndex(index)
+            self.needs_repopulate.emit()
+            if not self.cbMultilayering.isChecked():
+                QtCore.QTimer.singleShot(QtWidgets.QApplication.doubleClickInterval(), self.dock_widget.auto_update)
         self.threads -= 1
+
+    def multilayer_doubleclicked(self, item, column):
+        if isinstance(item, Layer):
+            self.hide()
 
     def multilayer_changed(self, item):
         """
@@ -379,6 +414,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             elif not (item.itimes or item.vtimes or item.levels):
                 item.is_active_unsynced = True
             self.update_checkboxes()
+            self.needs_repopulate.emit()
+            self.dock_widget.auto_update()
         elif item.checkState(0) == 0 and self.listLayers.itemWidget(item, 2):
             if item in self.layers_priority:
                 self.listLayers.removeItemWidget(item, 2)
@@ -388,6 +425,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             item.is_active_unsynced = False
             self.reload_sync()
             self.update_checkboxes()
+            self.needs_repopulate.emit()
+            self.dock_widget.auto_update()
 
     def priority_changed(self, new_index):
         """
@@ -406,6 +445,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.layers_priority.insert(new_index, to_move)
         self.update_priority_selection()
         self.multilayer_clicked(self.layers_priority[new_index])
+        self.needs_repopulate.emit()
+        self.dock_widget.auto_update()
 
     def update_checkboxes(self):
         """
@@ -494,6 +535,10 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self._parse_styles()
             self.is_favourite = str(self) in self.parent.settings["favourites"]
             self.show_favourite()
+            if str(self) in self.parent.settings["saved_colors"]:
+                self.color = self.parent.settings["saved_colors"][str(self)]
+            else:
+                self.color = "#00aaff"
 
     def _parse_layerobj(self):
         """
@@ -531,7 +576,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if len(init_time_names) > 0:
             self.itime_name = init_time_names[0]
             values = self.extents[self.itime_name]["values"]
-            self.allowed_init_times = self.parent.dock_widget.parse_time_extent(values)
+            self.allowed_init_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.itimes = [_time.isoformat() + "Z" for _time in self.allowed_init_times]
             if len(self.allowed_init_times) == 0:
                 msg = "cannot determine init time format"
@@ -540,7 +585,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
                     self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
                     self.parent.dock_widget.tr("ERROR: {}".format(msg)))
             else:
-                self.itime = self.itimes[0]
+                self.itime = self.itimes[-1]
 
     def _parse_vtimes(self):
         """
@@ -553,7 +598,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if len(valid_time_names) > 0:
             self.vtime_name = valid_time_names[0]
             values = self.extents[self.vtime_name]["values"]
-            self.allowed_valid_times = self.parent.dock_widget.parse_time_extent(values)
+            self.allowed_valid_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.vtimes = [_time.isoformat() + "Z" for _time in self.allowed_valid_times]
             if len(self.allowed_valid_times) == 0:
                 msg = "cannot determine init time format"
@@ -562,7 +607,10 @@ class Layer(QtWidgets.QTreeWidgetItem):
                     self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
                     self.parent.dock_widget.tr("ERROR: {}".format(msg)))
             else:
-                self.vtime = self.vtimes[0]
+                if self.itime:
+                    self.vtime = next((vtime for vtime in self.vtimes if vtime >= self.itime), self.vtimes[0])
+                else:
+                    self.vtime = self.vtimes[0]
 
     def _parse_styles(self):
         """
@@ -570,6 +618,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
         Sets the layers style to the first one, or the saved one if possible.
         """
         self.styles = [f"{style} | {self.layerobj.styles[style]['title']}" for style in self.layerobj.styles]
+        if self.parent.is_linear:
+            self.styles.extend(["linear | linear scaled y-axis", "log | log scaled y-axis"])
         if len(self.styles) > 0:
             self.style = self.styles[0]
             if str(self) in self.parent.settings["saved_styles"] and \
@@ -624,11 +674,25 @@ class Layer(QtWidgets.QTreeWidgetItem):
         elif self.is_synced and itime in self.parent.synced_reference.itimes:
             self.parent.synced_reference.itime = itime
 
+        if self.get_vtime():
+            if self.get_vtime() < itime:
+                valid_vtime = next((vtime for vtime in self.get_vtimes() if vtime >= itime), None)
+                if valid_vtime:
+                    self.set_vtime(valid_vtime)
+                    self.parent.carry_parameters["vtime"] = self.get_vtime()
+            self.parent.needs_repopulate.emit()
+
     def set_vtime(self, vtime):
         if (not self.parent.cbMultilayering.isChecked() or not self.is_synced) and vtime in self.vtimes:
             self.vtime = vtime
         elif self.is_synced and vtime in self.parent.synced_reference.vtimes:
             self.parent.synced_reference.vtime = vtime
+
+        if self.get_itime() and self.get_itime() > vtime:
+            valid_itimes = [itime for itime in self.get_itimes() if itime <= vtime]
+            if valid_itimes:
+                self.set_itime(valid_itimes[-1])
+                self.parent.needs_repopulate.emit()
 
     def get_layer(self):
         """
@@ -652,11 +716,12 @@ class Layer(QtWidgets.QTreeWidgetItem):
             return self.get_level().split(" (")[0]
 
     def get_legend_url(self):
-        style = self.get_style()
-        urlstr = None
-        if style and "legend" in self.layerobj.styles[style]:
-            urlstr = self.layerobj.styles[style]["legend"]
-        return urlstr
+        if not self.parent.is_linear:
+            style = self.get_style()
+            urlstr = None
+            if style and "legend" in self.layerobj.styles[style]:
+                urlstr = self.layerobj.styles[style]["legend"]
+            return urlstr
 
     def get_allowed_crs(self):
         if self.is_synced:
@@ -670,8 +735,10 @@ class Layer(QtWidgets.QTreeWidgetItem):
         """
         if isinstance(self.parent.dock_widget, mslib.msui.wms_control.HSecWMSControlWidget):
             self.parent.dock_widget.get_map([self])
-        else:
+        elif isinstance(self.parent.dock_widget, mslib.msui.wms_control.VSecWMSControlWidget):
             self.parent.dock_widget.get_vsec([self])
+        else:
+            self.parent.dock_widget.get_lsec([self])
 
     def get_wms(self):
         return self.parent.layers[self.header.text(0)]["wms"]
@@ -694,6 +761,17 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.parent.settings["saved_styles"][str(self)] = self.style
         else:
             self.parent.settings["saved_styles"].pop(str(self))
+        save_settings_qsettings("multilayers", self.parent.settings)
+
+    def color_changed(self, color):
+        """
+        Persistently saves the currently selected color of the layer, if it isn't black
+        """
+        self.color = color
+        if self.color != 0:
+            self.parent.settings["saved_colors"][str(self)] = self.color
+        else:
+            self.parent.settings["saved_colors"].pop(str(self))
         save_settings_qsettings("multilayers", self.parent.settings)
 
     def favourite_triggered(self):

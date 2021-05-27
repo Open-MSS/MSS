@@ -59,22 +59,25 @@ class MSSPlotDriver(metaclass=ABCMeta):
     """
 
     def __init__(self, data_access_object):
-        """Requires an instance of a data access object from the MSS
-           configuration (i.e. an NWPDataAccess instance).
+        """
+        Requires an instance of a data access object from the MSS
+        configuration (i.e. an NWPDataAccess instance).
         """
         self.data_access = data_access_object
         self.dataset = None
         self.plot_object = None
 
     def __del__(self):
-        """Closes the open NetCDF dataset, if existing.
+        """
+        Closes the open NetCDF dataset, if existing.
         """
         if self.dataset is not None:
             self.dataset.close()
 
     def _set_time(self, init_time, fc_time):
-        """Open the dataset that corresponds to a forecast field specified
-           by an initialisation and a valid time.
+        """
+        Open the dataset that corresponds to a forecast field specified
+        by an initialisation and a valid time.
 
         This method
           determines the files that correspond to an init time and forecast step
@@ -186,7 +189,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
         self._find_data_vars()
 
     def _find_data_vars(self):
-        """Find NetCDF variables of required data fields.
+        """
+        Find NetCDF variables of required data fields.
 
         A dictionary data_vars is created. Its keys are the CF standard names
         of the variables provided by the plot object. The values are pointers
@@ -203,7 +207,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
             self.data_units[df_name] = getattr(var, "units", None)
 
     def have_data(self, plot_object, init_time, valid_time):
-        """Checks if this driver has the required data to do the plot
+        """
+        Checks if this driver has the required data to do the plot
 
         This inquires the contained data access class if data is available for
         all required data fields for the specified times.
@@ -217,7 +222,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
                             style=None, bbox=None, figsize=(800, 600),
                             noframe=False, require_reload=False, transparent=False,
                             return_format="image/png"):
-        """Set parameters controlling the plot.
+        """
+        Set parameters controlling the plot.
 
         Parameters not passed as arguments are reset to standard values.
 
@@ -252,7 +258,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
     def update_plot_parameters(self, plot_object=None, figsize=None, style=None,
                                bbox=None, init_time=None, valid_time=None,
                                noframe=None, transparent=None, return_format=None):
-        """Update parameters controlling the plot.
+        """
+        Update parameters controlling the plot.
 
         Similar to set_plot_parameters(), but keeps all parameters already
         set except the ones that are specified.
@@ -287,8 +294,9 @@ class MSSPlotDriver(metaclass=ABCMeta):
 
     @abstractmethod
     def plot(self):
-        """Plot the figure (i.e. load the data fields and call the
-           corresponding plotting routines of the plot object).
+        """
+        Plot the figure (i.e. load the data fields and call the
+        corresponding plotting routines of the plot object).
 
         THIS METHOD NEEDS TO BE REIMPLEMENTED IN ANY CLASS DERIVING FROM
         MSSPlotDriver!
@@ -296,52 +304,60 @@ class MSSPlotDriver(metaclass=ABCMeta):
         pass
 
     def get_init_times(self):
-        """Returns a list of available forecast init times (base times).
+        """
+        Returns a list of available forecast init times (base times).
         """
         return self.data_access.get_init_times()
 
     def get_elevations(self, vert_type):
-        """See ECMWFDataAccess.get_elevations().
+        """
+        See ECMWFDataAccess.get_elevations().
         """
         return self.data_access.get_elevations(vert_type)
 
     def get_elevation_units(self, vert_type):
-        """See ECMWFDataAccess.get_elevation().
+        """
+        See ECMWFDataAccess.get_elevation().
         """
         return self.data_access.get_elevation_units(vert_type)
 
     def get_all_valid_times(self, variable, vartype):
-        """See ECMWFDataAccess.get_all_valid_times().
+        """
+        See ECMWFDataAccess.get_all_valid_times().
         """
         return self.data_access.get_all_valid_times(variable, vartype)
 
     def get_valid_times(self, variable, vartype, init_time):
-        """See ECMWFDataAccess.get_valid_times().
+        """
+        See ECMWFDataAccess.get_valid_times().
         """
         return self.data_access.get_valid_times(variable, vartype, init_time)
 
     def uses_inittime_dimension(self):
-        """Returns whether this driver uses the WMS inittime dimensions.
+        """
+        Returns whether this driver uses the WMS inittime dimensions.
         """
         return self.data_access.uses_inittime_dimension()
 
     def uses_validtime_dimension(self):
-        """Returns whether this layer uses the WMS time dimensions.
+        """
+        Returns whether this layer uses the WMS time dimensions.
         """
         return self.data_access.uses_validtime_dimension()
 
 
 class VerticalSectionDriver(MSSPlotDriver):
-    """The vertical section driver is responsible for loading the data that
-       is to be plotted and for calling the plotting routines (that have
-       to be registered).
+    """
+    The vertical section driver is responsible for loading the data that
+    is to be plotted and for calling the plotting routines (that have
+    to be registered).
     """
 
     def set_plot_parameters(self, plot_object=None, vsec_path=None,
                             vsec_numpoints=101, vsec_path_connection='linear',
                             vsec_numlabels=10,
                             init_time=None, valid_time=None, style=None,
-                            bbox=None, figsize=(800, 600), noframe=False,
+                            bbox=None, figsize=(800, 600), noframe=False, draw_verticals=False,
                             show=False, transparent=False,
                             return_format="image/png"):
         """
@@ -358,18 +374,20 @@ class VerticalSectionDriver(MSSPlotDriver):
                                         vsec_path_connection)
         self.show = show
         self.vsec_numlabels = vsec_numlabels
+        self.draw_verticals = draw_verticals
 
     def update_plot_parameters(self, plot_object=None, vsec_path=None,
                                vsec_numpoints=None, vsec_path_connection=None,
                                vsec_numlabels=None,
                                init_time=None, valid_time=None, style=None,
-                               bbox=None, figsize=None, noframe=None, show=None,
+                               bbox=None, figsize=None, noframe=None, draw_verticals=None, show=None,
                                transparent=None, return_format=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
         figsize = figsize if figsize is not None else self.figsize
         noframe = noframe if noframe is not None else self.noframe
+        draw_verticals = draw_verticals if draw_verticals else self.draw_verticals
         init_time = init_time if init_time is not None else self.init_time
         valid_time = valid_time if valid_time is not None else self.valid_time
         style = style if style is not None else self.style
@@ -393,6 +411,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                  bbox=bbox,
                                  figsize=figsize,
                                  noframe=noframe,
+                                 draw_verticals=draw_verticals,
                                  show=show,
                                  transparent=transparent,
                                  return_format=return_format)
@@ -412,8 +431,9 @@ class VerticalSectionDriver(MSSPlotDriver):
         self.vsec_path_connection = vsec_path_connection
 
     def _load_interpolate_timestep(self):
-        """Load and interpolate the data fields as required by the vertical
-           section style instance. Only data of time <fc_time> is processed.
+        """
+        Load and interpolate the data fields as required by the vertical
+        section style instance. Only data of time <fc_time> is processed.
 
         Shifts the data fields such that the longitudes are in the range
         left_longitude .. left_longitude+360, where left_longitude is the
@@ -468,7 +488,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         return data
 
     def shift_data(self):
-        """Shift the data fields such that the longitudes are in the range
+        """
+        Shift the data fields such that the longitudes are in the range
         left_longitude .. left_longitude+360, where left_longitude is the
         westmost longitude appearing in the list of waypoints minus one
         gridpoint (to include all waypoint longitudes).
@@ -524,6 +545,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                                highlight=self.vsec_path,
                                                noframe=self.noframe,
                                                figsize=self.figsize,
+                                               draw_verticals=self.draw_verticals,
                                                transparent=self.transparent,
                                                numlabels=self.vsec_numlabels,
                                                return_format=self.return_format)
@@ -538,9 +560,10 @@ class VerticalSectionDriver(MSSPlotDriver):
 
 
 class HorizontalSectionDriver(MSSPlotDriver):
-    """The horizontal section driver is responsible for loading the data that
-       is to be plotted and for calling the plotting routines (that have
-       to be registered).
+    """
+    The horizontal section driver is responsible for loading the data that
+    is to be plotted and for calling the plotting routines (that have
+    to be registered).
     """
 
     def set_plot_parameters(self, plot_object=None, bbox=None, level=None, crs=None, init_time=None, valid_time=None,
@@ -582,8 +605,9 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                  transparent=transparent, return_format=return_format)
 
     def _load_timestep(self):
-        """Load the data fields as required by the horizontal section style
-           instance at the current timestep.
+        """
+        Load the data fields as required by the horizontal section style
+        instance at the current timestep.
         """
         if self.dataset is None:
             return {}
@@ -648,6 +672,180 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                                noframe=self.noframe,
                                                figsize=self.figsize,
                                                transparent=self.transparent)
+        # Free memory.
+        del data
+
+        d3 = datetime.now()
+        logging.debug("Finished plotting (required time %s; total "
+                      "time %s).\n", d3 - d2, d3 - d1)
+
+        return image
+
+
+class LinearSectionDriver(VerticalSectionDriver):
+    """
+        The linear plot driver is responsible for loading the data that
+        is to be plotted and for calling the plotting routines (that have
+        to be registered).
+        """
+
+    def set_plot_parameters(self, plot_object=None, lsec_path=None,
+                            lsec_numpoints=101, lsec_path_connection='linear',
+                            init_time=None, valid_time=None, bbox=None):
+        """
+        """
+        MSSPlotDriver.set_plot_parameters(self, plot_object,
+                                          init_time=init_time,
+                                          valid_time=valid_time,
+                                          bbox=bbox)
+        self._set_linear_section_path(lsec_path, lsec_numpoints, lsec_path_connection)
+
+    def update_plot_parameters(self, plot_object=None, lsec_path=None,
+                               lsec_numpoints=None, lsec_path_connection=None,
+                               init_time=None, valid_time=None, bbox=None):
+        """
+        """
+        plot_object = plot_object if plot_object is not None else self.plot_object
+        init_time = init_time if init_time is not None else self.init_time
+        valid_time = valid_time if valid_time is not None else self.valid_time
+        bbox = bbox if bbox is not None else self.bbox
+        lsec_path = lsec_path if lsec_path is not None else self.lsec_path
+        lsec_numpoints = lsec_numpoints if lsec_numpoints is not None else self.lsec_numpoints
+        if lsec_path_connection is None:
+            lsec_path_connection = self.lsec_path_connection
+        self.set_plot_parameters(plot_object=plot_object,
+                                 lsec_path=lsec_path,
+                                 lsec_numpoints=lsec_numpoints,
+                                 lsec_path_connection=lsec_path_connection,
+                                 init_time=init_time,
+                                 valid_time=valid_time,
+                                 bbox=bbox)
+
+    def _set_linear_section_path(self, lsec_path, lsec_numpoints=101, lsec_path_connection='linear'):
+        """
+        """
+        logging.debug("computing %i interpolation points, connection: %s",
+                      lsec_numpoints, lsec_path_connection)
+        now = datetime.now()
+        self.lats, self.lons, self.alts, _ = utils.path_points(
+            [(_x, _y, _z, now) for _x, _y, _z in lsec_path],
+            numpoints=lsec_numpoints, connection=lsec_path_connection, contains_altitude=True)
+        self.lsec_path = lsec_path
+        self.lsec_numpoints = lsec_numpoints
+        self.lsec_path_connection = lsec_path_connection
+
+    def _load_interpolate_timestep(self):
+        """
+        Load and interpolate the data fields as required by the linear
+        section style instance. Only data of time <fc_time> is processed.
+
+        Shifts the data fields such that the longitudes are in the range
+        left_longitude .. left_longitude+360, where left_longitude is the
+        westmost longitude appearing in the list of waypoints minus one
+        gridpoint (to include all waypoint longitudes).
+
+        Necessary to prevent data cut-offs in situations where the requested
+        cross section crosses the data longitude boundaries (e.g. data is
+        stored on a 0..360 grid, but the path is in the range -10..+20).
+        """
+        if self.dataset is None:
+            return {}
+        data = {}
+
+        timestep = self.times.searchsorted(self.fc_time)
+        logging.debug("loading data for time step %s (%s)", timestep, self.fc_time)
+
+        # Determine the westmost longitude in the cross-section path. Subtract
+        # one gridbox size to obtain "left_longitude".
+        dlon = self.lon_data[1] - self.lon_data[0]
+        left_longitude = self.lons.min() - dlon
+        logging.debug("shifting data grid to gridpoint west of westmost "
+                      "longitude in path: %.2f (path %.2f).",
+                      left_longitude, self.lons.min())
+
+        # Shift the longitude field such that the data is in the range
+        # left_longitude .. left_longitude+360.
+        # NOTE: This does not overwrite self.lon_data (which is required
+        # in its original form in case other data is loaded while this
+        # file is open).
+        lon_data = ((self.lon_data - left_longitude) % 360) + left_longitude
+        lon_indices = lon_data.argsort()
+        lon_data = lon_data[lon_indices]
+        factors = []
+
+        # Make sure air_pressure is the first to be evaluated
+        variables = list(self.data_vars)
+        if variables[0] != "air_pressure":
+            variables.insert(0, variables.pop(variables.index("air_pressure")))
+
+        for name in variables:
+            var = self.data_vars[name]
+            data[name] = []
+            if len(var.shape) == 4:
+                var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
+            else:
+                var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
+            logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %s.",
+                          var_data.nbytes / 1048576., name, timestep)
+            logging.debug("\tVertical dimension direction is %s.",
+                          "up" if self.vert_order == 1 else "down")
+            logging.debug("\tInterpolating to cross-section path.")
+            # Re-arange longitude dimension in the data field.
+            var_data = var_data[:, :, lon_indices]
+
+            cross_section = utils.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
+            # Create vertical interpolation factors and indices for subsequent variables
+            # TODO: Improve performance for this interpolation in general
+            if name == "air_pressure":
+                for index_lonlat, alt in enumerate(self.alts):
+                    pressures = cross_section[:, index_lonlat]
+                    closest = 0
+                    direction = 1
+                    for index_altitude, pressure in enumerate(pressures):
+                        if abs(pressure - alt) < abs(pressures[closest] - alt):
+                            closest = index_altitude
+                            direction = 1 if pressure - alt > 0 else -1
+
+                    next_closest = closest + direction
+                    if next_closest >= len(pressures) or next_closest < 0:
+                        next_closest = closest
+
+                    if closest == next_closest:
+                        factors.append([[closest, 0.5], [closest, 0.5]])
+                    else:
+                        distance = abs(pressures[closest] - alt) + abs(pressures[next_closest] - alt)
+                        factors.append(
+                            [[closest, 1 - (abs(pressures[closest] - alt) / distance)],
+                             [next_closest, 1 - (abs(pressures[next_closest] - alt) / distance)]])
+
+            for index in range(len(self.alts)):
+                cur_factor = factors[index]
+                value = cross_section[cur_factor[0][0], index] * cur_factor[0][1] + \
+                    cross_section[cur_factor[1][0], index] * cur_factor[1][1]
+                data[name].append(value)
+
+            # Free memory.
+            del var_data
+            data[name] = np.array(data[name])
+
+        return data
+
+    def plot(self):
+        """
+        """
+        d1 = datetime.now()
+
+        # Load and interpolate the data fields as required by the linear
+        # section style instance. <data> is a dictionary containing the
+        # interpolated curtains of the variables identified through CF
+        # standard names as specified by <self.lsec_style_instance>.
+        data = self._load_interpolate_timestep()
+        d2 = datetime.now()
+
+        # Call the plotting method of the linear section style instance.
+        image = self.plot_object.plot_lsection(data, self.lats, self.lons,
+                                               valid_time=self.fc_time,
+                                               init_time=self.init_time)
         # Free memory.
         del data
 

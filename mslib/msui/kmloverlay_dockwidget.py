@@ -203,7 +203,7 @@ class KMLPatch(object):
 
     def parse_styles(self, kml_doc):
         # exterior_style : <Style> OUTSIDE placemarks
-        # interior style : within <Style>
+        # interior_style : within <Style>
         for exterior_style in kml_doc.styles():
             if isinstance(exterior_style, styles.Style):
                 name = exterior_style.id
@@ -236,7 +236,8 @@ class KMLPatch(object):
         return local_styles
 
     def draw(self):
-        """Do the actual plotting of the patch.
+        """
+        Do the actual plotting of the patch.
         """
         # Plot satellite track.
         self.styles = {}
@@ -248,9 +249,10 @@ class KMLPatch(object):
         self.map.ax.figure.canvas.draw()
 
     def update(self, color=None, linewidth=None):
-        """Removes the current plot of the patch and redraws the patch.
-           This is necessary, for instance, when the map projection and/or
-           extent has been changed.
+        """
+        Removes the current plot of the patch and redraws the patch.
+        This is necessary, for instance, when the map projection and/or
+        extent has been changed.
         """
         if color is not None:
             self.color = color
@@ -260,7 +262,8 @@ class KMLPatch(object):
         self.draw()
 
     def remove(self):
-        """Remove this satellite patch from the map canvas.
+        """
+        Remove this satellite patch from the map canvas.
         """
         for patch in self.patches:
             for element in patch:
@@ -327,7 +330,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 del self.dict_files[fn]  # remove non-existent files from dictionary
             self.load_file()
 
-        # When KMLoverlaywidget is opened,it ensures that the color of individual KML files are already shown as icons.
+        # When KMLoverlaywidget is opened, it ensures that the
+        # color of individual KML files are already shown as icons.
         self.set_color_icons()
         self.view.plot_kml(self)
 
@@ -410,8 +414,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
     def flagop(self):
         """
-        Flag operation method to control the call of self.load_file() whenever th item in the listWidget changes
-        by any means. If select_linewidth and select_color are already executed, then it doesnot calls self.load_file
+        Flag operation method to control the call of self.load_file() whenever the item in the listWidget changes
+        by any means. If select_linewidth and select_color are already executed, then it doesn't calls self.load_file
         otherwise, it always calls when item is changed anywhere.
         """
         if self.flag == 1:
@@ -453,7 +457,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.listWidget.item(index).setCheckState(QtCore.Qt.Checked)
 
     def get_file(self):
-        """Slot that opens a file dialog to choose a kml file or multiple files simultaneously
+        """
+        Slot that opens a file dialog to choose a kml file or multiple files simultaneously
         """
         filenames = get_open_filenames(
             self, "Open KML File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
@@ -469,7 +474,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     self.listWidget.item(index).setIcon(self.show_color_icon(filename, self.set_color(filename)))
 
     def select_file(self, filenames):
-        """Initializes selected file/ files
+        """
+        Initializes selected file/ files
         """
         for filename in filenames:
             if filename is None:

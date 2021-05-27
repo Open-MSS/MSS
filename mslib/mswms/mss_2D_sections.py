@@ -54,8 +54,9 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         self.required_datatypes()
 
     def required_datatypes(self):
-        """Returns a list containing the datatypes required by the
-           data fields requested by the style.
+        """
+        Returns a list containing the datatypes required by the
+        data fields requested by the style.
         """
         result = set([datafield[0] for datafield in self.required_datafields])
         if len(result) > 1 and "sfc" not in result:
@@ -71,31 +72,36 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         return result
 
     def _prepare_datafields(self):
-        """Optional re-implementation: Use this function to process some
-           input data before the plotting starts (e.g. to derive potential
-           temperature from pressure and temperature).
+        """
+        Optional re-implementation: Use this function to process some
+        input data before the plotting starts (e.g. to derive potential
+        temperature from pressure and temperature).
         """
         pass
 
     def supported_epsg_codes(self):
-        """Returns a list of supported EPSG codes, if available.
+        """
+        Returns a list of supported EPSG codes, if available.
         """
         return []
 
     @abstractmethod
     def supported_crs(self):
-        """Returns a list of the coordinate reference systems supported by
-           this style.
+        """
+        Returns a list of the coordinate reference systems supported by
+        this style.
         """
         pass
 
     def set_driver(self, driver):
-        """Set the driver object for this layer.
+        """
+        Set the driver object for this layer.
         """
         self.driver = driver
 
     def get_init_times(self):
-        """Returns a list of available forecast init times (base times).
+        """
+        Returns a list of available forecast init times (base times).
         """
         if self.uses_inittime_dimension() and self.driver is not None:
             return self.driver.get_init_times()
@@ -103,8 +109,9 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
             return []
 
     def get_all_valid_times(self):
-        """Returns a list containing the combined forecast valid times of
-           all available init times.
+        """
+        Returns a list containing the combined forecast valid times of
+        all available init times.
         """
         if self.uses_validtime_dimension() and self.driver is not None:
             valid_times = set()
@@ -120,23 +127,26 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
             return []
 
     def uses_elevation_dimension(self):
-        """Returns whether this layer uses the WMS elevation dimension. If False,
-           elevation does not have to be specified to plot_hsection().
+        """
+        Returns whether this layer uses the WMS elevation dimension. If False,
+        elevation does not have to be specified to plot_hsection().
         """
         return self._vert_type != "sfc"
 
     def uses_inittime_dimension(self):
-        """Returns whether this layer uses the WMS inittime dimension. If False,
-           init_time does not have to be specified to plot_hsection().
+        """
+        Returns whether this layer uses the WMS inittime dimension. If False,
+        init_time does not have to be specified to plot_hsection().
 
         Currently redirected to check for valid_time.
         """
         return self.driver.uses_validtime_dimension() if self.driver is not None else False
 
     def uses_validtime_dimension(self):
-        """Returns whether this layer uses the WMS time dimension. If False,
-           valid_time does not have to be specified to
-           plot_hsection().
+        """
+        Returns whether this layer uses the WMS time dimension. If False,
+        valid_time does not have to be specified to
+        plot_hsection().
 
         Currently implemented by testing whether the style requires data fields
         from the ECMWF forecast.
@@ -144,7 +154,8 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         return self.driver.uses_inittime_dimension() if self.driver is not None else False
 
     def get_elevations(self):
-        """Returns a list of available elevations for this layer.
+        """
+        Returns a list of available elevations for this layer.
 
         Assumes that the same elevation levels are available for all time
         steps.
@@ -156,7 +167,8 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
             return []
 
     def get_elevation_units(self):
-        """Returns the units of the elevation values.
+        """
+        Returns the units of the elevation values.
         """
         if self.driver is not None:
             return self.driver.get_elevation_units(self._vert_type)

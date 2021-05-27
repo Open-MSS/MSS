@@ -33,7 +33,6 @@ from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import (BadSignature, SignatureExpired, TimedJSONWebSignatureSerializer as Serializer)
 from passlib.apps import custom_app_context as pwd_context
 
-from mslib.mscolab.conf import mscolab_settings
 
 db = SQLAlchemy()
 
@@ -61,7 +60,13 @@ class User(db.Model):
     def verify_password(self, password_):
         return pwd_context.verify(password_, self.password)
 
-    def generate_auth_token(self, expiration=864000):
+    def generate_auth_token(self, expiration=None):
+        # ToDo cleanup API
+        # Importing conf here to avoid loading settings on opening chat window
+        from mslib.mscolab.conf import mscolab_settings
+        expiration = mscolab_settings.__dict__.get('EXPIRATION', expiration)
+        if expiration is None:
+            expiration = 864000
         s = Serializer(mscolab_settings.SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 
@@ -70,6 +75,8 @@ class User(db.Model):
         """
         token is the authentication string provided by client for each request
         """
+        # Importing conf here to avoid loading settings on opening chat window
+        from mslib.mscolab.conf import mscolab_settings
         s = Serializer(mscolab_settings.SECRET_KEY)
         try:
             data = s.loads(token)

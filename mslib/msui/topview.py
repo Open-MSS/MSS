@@ -50,8 +50,9 @@ KMLOVERLAY = 3
 
 
 class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
-    """Dialog to set map appearance parameters. User interface is
-       defined in "ui_topview_mapappearance.py".
+    """
+    Dialog to set map appearance parameters. User interface is
+    defined in "ui_topview_mapappearance.py".
     """
 
     def __init__(self, parent=None, settings_dict=None, wms_connected=False):
@@ -68,6 +69,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "fill_waterbodies": True,
                              "fill_continents": True,
                              "draw_flighttrack": True,
+                             "draw_marker": True,
                              "label_flighttrack": True,
                              "colour_water": (0, 0, 0, 0),
                              "colour_land": (0, 0, 0, 0),
@@ -93,6 +95,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbDrawGraticule.setChecked(settings_dict["draw_graticule"])
         self.cbDrawCoastlines.setChecked(settings_dict["draw_coastlines"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
+        self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
 
         for button, ids in [(self.btWaterColour, "colour_water"),
@@ -120,6 +123,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "fill_waterbodies": self.cbFillWaterBodies.isChecked(),
             "fill_continents": self.cbFillContinents.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
+            "draw_marker": self.cbDrawMarker.isChecked(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
 
             "colour_water":
@@ -134,8 +138,9 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         return settings_dict
 
     def setColour(self, which):
-        """Slot for the colour buttons: Opens a QColorDialog and sets the
-           new button face colour.
+        """
+        Slot for the colour buttons: Opens a QColorDialog and sets the
+        new button face colour.
         """
         if which == "water":
             button = self.btWaterColour
@@ -155,13 +160,15 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
 
 
 class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
-    """PyQt window implementing a MapCanvas as an interactive flight track
-       editor.
+    """
+    PyQt window implementing a MapCanvas as an interactive flight track
+    editor.
     """
     name = "Top View"
 
     def __init__(self, parent=None, model=None, _id=None):
-        """Set up user interface, connect signal/slots.
+        """
+        Set up user interface, connect signal/slots.
         """
         super(MSSTopViewWindow, self).__init__(parent, model, _id)
         logging.debug(_id)
@@ -200,8 +207,9 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         del self.mpl.canvas.waypoints_interactor
 
     def setup_top_view(self):
-        """Initialise GUI elements. (This method is called before signals/slots
-           are connected).
+        """
+        Initialise GUI elements. (This method is called before signals/slots
+        are connected).
         """
         toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay"]
         self.cbTools.clear()
@@ -219,6 +227,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Automatically enable or disable roundtrip when data changes
         self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
         self.update_roundtrip_enabled()
+        self.mpl.navbar.push_current()
 
     def update_predefined_maps(self, extra=None):
         self.cbChangeMapSection.clear()
@@ -230,7 +239,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             self.cbChangeMapSection.addItems(sorted(extra))
 
     def openTool(self, index):
-        """Slot that handles requests to open control windows.
+        """
+        Slot that handles requests to open control windows.
         """
         index = self.controlToBeCreated(index)
         if index >= 0:
@@ -267,7 +277,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.wms_connected = False
 
     def changeMapSection(self, index=0, only_kwargs=False):
-        """Change the current map section to one of the predefined regions.
+        """
+        Change the current map section to one of the predefined regions.
         """
         # Get the initial projection parameters from the tables in mss_settings.
         current_map_key = self.cbChangeMapSection.currentText()
@@ -280,7 +291,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Create a keyword arguments dictionary for basemap that contains
         # the projection parameters.
         kwargs = current_map["map"]
-        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"]})
+        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
+                       "PROJECT_NAME": self.waypoints_model.name})
         kwargs.update(proj_params["basemap"])
 
         if only_kwargs:
@@ -289,6 +301,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
 
         logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
         self.mpl.canvas.redraw_map(kwargs)
+        self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
         super(MSSTopViewWindow, self).setIdentifier(identifier)
@@ -308,14 +321,16 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         dlg.destroy()
 
     def save_settings(self):
-        """Save the current settings (map appearance) to the file
-           self.settingsfile.
+        """
+        Save the current settings (map appearance) to the file
+        self.settingsfile.
         """
         settings = self.getView().get_map_appearance()
         save_settings_qsettings(self.settings_tag, settings)
 
     def load_settings(self):
-        """Load settings from the file self.settingsfile.
+        """
+        Load settings from the file self.settingsfile.
         """
         settings = load_settings_qsettings(self.settings_tag, {})
         self.getView().set_map_appearance(settings)
@@ -345,10 +360,11 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             first_waypoint = self.waypoints_model.waypoint_data(0)
             last_waypoint = self.waypoints_model.waypoint_data(self.waypoints_model.rowCount() - 1)
 
-            condition = first_waypoint.lat != last_waypoint.lat or first_waypoint.lon != last_waypoint.lon or \
-                first_waypoint.flightlevel != last_waypoint.flightlevel
+            condition = ((first_waypoint.lat != last_waypoint.lat) or
+                         (first_waypoint.lon != last_waypoint.lon) or
+                         (first_waypoint.flightlevel != last_waypoint.flightlevel))
 
-        return condition
+        return bool(condition)
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
