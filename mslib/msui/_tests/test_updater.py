@@ -28,8 +28,8 @@ import sys
 import mock
 from PyQt5 import QtWidgets
 
-from mslib._tests.utils import wait_until_signal
 from mslib.msui.updater import Updater
+from mslib.utils import Worker
 from mslib import __version__
 
 
@@ -50,6 +50,17 @@ class SubprocessGitMock:
         self.stdout = "true"
 
 
+def create_mock(function, on_success=None, on_failure=None, start=True):
+    worker = Worker(function)
+    if on_success:
+        worker.finished.connect(on_success)
+    if on_failure:
+        worker.failed.connect(on_failure)
+    if start:
+        worker.run()
+    return worker
+
+
 class Test_MSS_ShortcutDialog:
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
@@ -60,7 +71,8 @@ class Test_MSS_ShortcutDialog:
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("subprocess.run", return_value=SubprocessVersionMock())
-    def test_update_recognised(self, subprocess_mock):
+    @mock.patch("mslib.utils.Worker.create", create_mock)
+    def test_update_recognised(self, mock):
         update_available = False
         status = ""
         progress = 0
@@ -70,9 +82,9 @@ class Test_MSS_ShortcutDialog:
             nonlocal status
             status = s
 
-        def progress_changed(i):
+        def progress_changed(value):
             nonlocal progress
-            progress = i
+            progress = value
 
         def update_signal():
             nonlocal update_available
@@ -88,12 +100,10 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_update_available.connect(update_signal)
         self.updater.run()
 
-        wait_until_signal(self.updater.on_update_available, 1)
         assert self.updater.new_version == "999.999.999"
         assert update_available
 
         self.updater.update_mss()
-        wait_until_signal(self.updater.on_update_finished, 1)
         assert self.updater.base_path == "999.999.999"
         assert self.updater.current_path == "999.999.999"
         assert progress == 100
@@ -101,7 +111,8 @@ class Test_MSS_ShortcutDialog:
         assert status == "Update finished. Please restart MSS."
 
     @mock.patch("subprocess.run", return_value=SubprocessSameMock())
-    def test_no_update(self, subprocess_mock):
+    @mock.patch("mslib.utils.Worker.create", create_mock)
+    def test_no_update(self, mock):
         update_available = False
         status = ""
 
@@ -117,13 +128,13 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_status_update.connect(status_changed)
         self.updater.run()
 
-        wait_until_signal(self.updater.on_update_available, 1)
         assert self.updater.new_version == __version__
         assert not update_available
         assert status == "Your MSS is up to date."
 
     @mock.patch("subprocess.run", return_value=SubprocessGitMock())
-    def test_no_update_on_git(self, subprocess_mock):
+    @mock.patch("mslib.utils.Worker.create", create_mock)
+    def test_no_update_on_git(self, mock):
         update_available = False
 
         def update_signal():
@@ -133,12 +144,12 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_update_available.connect(update_signal)
         self.updater.run()
 
-        wait_until_signal(self.updater.on_update_available, 1)
         assert self.updater.new_version is None
         assert not update_available
 
     @mock.patch("subprocess.run", return_value=SubprocessVersionMock())
-    def test_update_failed(self, subprocess_mock):
+    @mock.patch("mslib.utils.Worker.create", create_mock)
+    def test_update_failed(self, mock):
         update_available = False
         status = ""
         progress = 0
@@ -148,9 +159,9 @@ class Test_MSS_ShortcutDialog:
             nonlocal status
             status = s
 
-        def progress_changed(i):
+        def progress_changed(value):
             nonlocal progress
-            progress = i
+            progress = value
 
         def update_signal():
             nonlocal update_available
@@ -166,13 +177,19 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_update_available.connect(update_signal)
         self.updater.run()
 
-        wait_until_signal(self.updater.on_update_available, 1)
         assert self.updater.new_version == "999.999.999"
         assert update_available
         self.updater.new_version = "1000.1000.1000"
 
         self.updater.update_mss()
-        wait_until_signal(self.updater.on_update_failed, 1)
         assert progress == 45
         assert not finished
         assert status == "Update failed, please do it manually."
+
+    @mock.patch("subprocess.run", return_value=SubprocessVersionMock())
+    @mock.patch("shutil.copytree", return_value=None)
+    @mock.patch("shutil.rmtree", return_value=None)
+    def test_environment_replace(self, subprocess_mock, shutil1, shutil2):
+        self.updater.new_version = "999.999.999"
+        self.updater._set_base_env_path()
+        assert self.updater._try_environment_replace()
