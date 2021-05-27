@@ -919,7 +919,7 @@ class HPathInteractor(PathInteractor):
     """
 
     def __init__(self, mplmap, waypoints,
-                 linecolor='blue', markerfacecolor='red',
+                 linecolor='blue', markerfacecolor='red', show_marker=True,
                  label_waypoints=True):
         """Constructor passes a PathH_GC instance its parent (horizontal path
            with waypoints connected with great circles).
@@ -934,6 +934,7 @@ class HPathInteractor(PathInteractor):
         self.tangent_lines = None
         self.show_tangent_points = False
         self.solar_lines = None
+        self.show_marker = show_marker
         self.show_solar_angle = None
         self.remote_sensing = None
         super(HPathInteractor, self).__init__(
@@ -1149,7 +1150,7 @@ class HPathInteractor(PathInteractor):
         # (animated is important to remove the old scatter points from the map)
         self.wp_scatter = self.ax.scatter(x, y, color=self.markerfacecolor,
                                           s=20, zorder=3, animated=True,
-                                          visible=self.showverts)
+                                          visible=self.show_marker)
 
         # Draw waypoint labels.
         label_offset = self.appropriate_epsilon(px=5)
@@ -1242,7 +1243,7 @@ class HPathInteractor(PathInteractor):
     def set_vertices_visible(self, showverts=True):
         """Set the visibility of path vertices (the line plot).
         """
-        self.wp_scatter.set_visible(showverts)
+        self.wp_scatter.set_visible(self.show_marker)
         PathInteractor.set_vertices_visible(self, showverts)
 
     def set_tangent_visible(self, visible):

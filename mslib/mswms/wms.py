@@ -594,6 +594,8 @@ class WMSServer(object):
                 except ValueError:
                     return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
 
+                draw_verticals = query.get("DRAWVERTICALS", "false").lower() == "true"
+
                 plot_driver = self.vsec_drivers[dataset]
                 try:
                     plot_driver.set_plot_parameters(plot_object=self.vsec_layer_registry[dataset][layer],
@@ -607,6 +609,7 @@ class WMSServer(object):
                                                     bbox=bbox,
                                                     figsize=figsize,
                                                     noframe=noframe,
+                                                    draw_verticals=draw_verticals,
                                                     transparent=transparent,
                                                     return_format=return_format)
                     images.append(plot_driver.plot())
