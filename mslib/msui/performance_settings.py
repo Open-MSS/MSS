@@ -38,7 +38,7 @@ DEFAULT_PERFORMANCE = {
     "visible": False,
     "takeoff_weight": 0,
     "takeoff_time": QtCore.QDateTime.currentDateTimeUtc(),
-    "fuel": 0,
+    "empty_weight": 0,
     "ceiling_alt": [410],
 }
 
@@ -66,15 +66,16 @@ class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockW
         self.lbAircraftName.setText(self.aircraft.name)
         self.cbShowPerformance.setChecked(settings_dict["visible"])
         self.dsbTakeoffWeight.setValue(settings_dict["takeoff_weight"])
-        self.dsbFuel.setValue(settings_dict["fuel"])
+        self.dsbEmptyWeight.setValue(
+            settings_dict.get("empty_weight", settings_dict["takeoff_weight"] - settings_dict.get("fuel", 0)))
         self.dteTakeoffTime.setDateTime(settings_dict["takeoff_time"])
 
         # Connecting signals
         self.pbLoadPerformance.clicked.connect(self.load_performance)
-        self.cbShowPerformance.stateChanged.connect(lambda: self.parent.setPerformance(self.get_settings()))
-        self.dteTakeoffTime.dateTimeChanged.connect(lambda: self.parent.setPerformance(self.get_settings()))
-        self.dsbTakeoffWeight.valueChanged.connect(lambda: self.parent.setPerformance(self.get_settings()))
-        self.dsbFuel.valueChanged.connect(lambda: self.parent.setPerformance(self.get_settings()))
+        self.cbShowPerformance.stateChanged.connect(self.update_parent_performance)
+        self.dteTakeoffTime.dateTimeChanged.connect(self.update_parent_performance)
+        self.dsbTakeoffWeight.valueChanged.connect(self.update_parent_performance)
+        self.dsbEmptyWeight.valueChanged.connect(self.update_parent_performance)
 
     def get_settings(self):
         """
@@ -88,9 +89,12 @@ class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockW
             "visible": self.cbShowPerformance.isChecked(),
             "takeoff_time": self.dteTakeoffTime.dateTime(),
             "takeoff_weight": self.dsbTakeoffWeight.value(),
-            "fuel": self.dsbFuel.value()
+            "empty_weight": self.dsbEmptyWeight.value()
         }
         return settings_dict
+
+    def update_parent_performance(self):
+        self.parent.setPerformance(self.get_settings())
 
     def load_performance(self):
         """
@@ -105,9 +109,14 @@ class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockW
                 self.aircraft = aircrafts.SimpleAircraft(performance)
                 self.lbAircraftName.setText(self.aircraft.name)
                 self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
-                self.dsbFuel.setValue(self.aircraft.fuel)
+                if not any(hasattr(self.aircraft, _x) for _x in ("fuel", "empty_weight")):
+                    raise KeyError("empty_weight")
+                if hasattr(self.aircraft, "empty_weight"):
+                    self.dsbEmptyWeight.setValue(self.aircraft.empty_weight)
+                else:
+                    self.dsbEmptyWeight.setValue(self.aircraft.takeoff_weight - self.aircraft.fuel)
 
-                self.parent.setPerformance(self.get_settings())
+                self.update_parent_performance()
 
             except KeyError as ex:
                 QtWidgets.QMessageBox.critical(self, self.tr("Performance JSON Load"),
