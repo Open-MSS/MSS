@@ -229,8 +229,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.last_save_directory = config_loader(dataset="data_dir")
         self.mscolab_window = None
         self.config_editor = None
-        self.progressBar.setVisible(False)
-        self.labelUpdate.setVisible(False)
 
         # Connect Qt SIGNALs:
         # ===================
@@ -283,12 +281,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if "pytest" not in sys.modules:
             self.updater = Updater(self)
             self.updater.on_update_available.connect(self.notify_on_update)
-            self.updater.on_status_update.connect(lambda s: (self.labelUpdate.setVisible(True),
-                                                             self.labelUpdate.setText(s)))
-            self.updater.on_progress_update.connect(lambda i: (self.progressBar.setVisible(True),
-                                                               self.progressBar.setValue(i)))
-            self.updater.on_update_finished.connect(lambda: self.progressBar.setVisible(False))
-            self.updater.on_update_failed.connect(lambda: self.progressBar.setVisible(False))
             self.updater.run()
 
     @staticmethod
