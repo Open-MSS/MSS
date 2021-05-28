@@ -44,7 +44,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
-from mslib.msui import sideview, tableview, topview
+from mslib.msui import sideview, tableview, topview, linearview
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -108,6 +108,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.clicked.connect(self.open_topview)
         self.sideview.clicked.connect(self.open_sideview)
         self.tableview.clicked.connect(self.open_tableview)
+        self.linearview.clicked.connect(self.open_linearview)
         # int to store active pid
         self.active_pid = None
         # storing access_level to save network call
@@ -279,61 +280,70 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.loginButton.setEnabled(self.emailid.text() != "" and self.password.text() != "")
 
     def handle_import(self):
-        if self.workLocallyCheckBox.isChecked():
-            file_path = get_open_filename(self, "Select a file", "", "Flight track (*.ftml)")
-        else:
-            file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.import_plugins.keys()]
-            file_path = get_open_filename(self, "Select a file", "", ';;'.join(file_type))
-        if file_path is None:
-            return
-        dir_path, file_name = fs.path.split(file_path)
-        file_name = fs.path.basename(file_path)
-        name, file_ext = fs.path.splitext(file_name)
-        if file_ext[1:] == "ftml":
-            with open_fs(dir_path) as file_dir:
-                xml_content = file_dir.readtext(file_name)
-            try:
-                model = ft.WaypointsTableModel(xml_content=xml_content)
-            except SyntaxError:
-                show_popup(self, "Import Failed", f"The file - {file_name}, does not contain valid XML")
-                return
-            self.waypoints_model = model
+        if self.verify_user_token():
             if self.workLocallyCheckBox.isChecked():
-                self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+                file_path = get_open_filename(self, "Select a file", "", "Flight track (*.ftml)")
             else:
+                file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})"
+                                                         for ext in self.import_plugins.keys()]
+                file_path = get_open_filename(self, "Select a file", "", ';;'.join(file_type))
+            if file_path is None:
+                return
+            dir_path, file_name = fs.path.split(file_path)
+            file_name = fs.path.basename(file_path)
+            name, file_ext = fs.path.splitext(file_name)
+            if file_ext[1:] == "ftml":
+                with open_fs(dir_path) as file_dir:
+                    xml_content = file_dir.readtext(file_name)
+                try:
+                    model = ft.WaypointsTableModel(xml_content=xml_content)
+                except SyntaxError:
+                    show_popup(self, "Import Failed", f"The file - {file_name}, does not contain valid XML")
+                    return
+                self.waypoints_model = model
+                if self.workLocallyCheckBox.isChecked():
+                    self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                    self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+                else:
+                    self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
+                    self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            else:
+                _function = self.import_plugins[file_ext[1:]]
+                _, new_waypoints = _function(file_path)
+                model = ft.WaypointsTableModel(waypoints=new_waypoints)
+                self.waypoints_model = model
+                xml_doc = self.waypoints_model.get_xml_doc()
+                xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
                 self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            self.reload_view_windows()
+            show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
         else:
-            _function = self.import_plugins[file_ext[1:]]
-            _, new_waypoints = _function(file_path)
-            model = ft.WaypointsTableModel(waypoints=new_waypoints)
-            self.waypoints_model = model
-            xml_doc = self.waypoints_model.get_xml_doc()
-            xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
-            self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
-            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
-        self.reload_view_windows()
-        show_popup(self, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def handle_export(self):
-        # Setting default filename path for filedialogue
-        default_filename = self.active_project_name + ".ftml"
-        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
-        file_path = get_save_filename(self, "Save Flight track", default_filename, ';;'.join(file_type))
-        if file_path is None:
-            return
-        file_name = fs.path.basename(file_path)
-        file_name, file_ext = fs.path.splitext(file_name)
-        if file_ext[1:] == "ftml":
-            xml_doc = self.waypoints_model.get_xml_doc()
-            dir_path, file_name = fs.path.split(file_path)
-            with open_fs(dir_path).open(file_name, 'w') as file:
-                xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+        if self.verify_user_token():
+            # Setting default filename path for filedialogue
+            default_filename = self.active_project_name + ".ftml"
+            file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
+            file_path = get_save_filename(self, "Save Flight track", default_filename, ';;'.join(file_type))
+            if file_path is None:
+                return
+            file_name = fs.path.basename(file_path)
+            file_name, file_ext = fs.path.splitext(file_name)
+            if file_ext[1:] == "ftml":
+                xml_doc = self.waypoints_model.get_xml_doc()
+                dir_path, file_name = fs.path.split(file_path)
+                with open_fs(dir_path).open(file_name, 'w') as file:
+                    xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+            else:
+                _function = self.export_plugins[file_ext[1:]]
+                _function(file_path, file_name, self.waypoints_model.waypoints)
+                show_popup(self, "Export Success", f"The file - {file_name}, was exported successfully!", 1)
         else:
-            _function = self.export_plugins[file_ext[1:]]
-            _function(file_path, file_name, self.waypoints_model.waypoints)
-            show_popup(self, "Export Success", f"The file - {file_name}, was exported successfully!", 1)
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def disable_project_buttons(self):
         self.save_ft.setEnabled(False)
@@ -341,6 +351,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.topview.setEnabled(False)
         self.sideview.setEnabled(False)
         self.tableview.setEnabled(False)
+        self.linearview.setEnabled(False)
         self.workLocallyCheckBox.setEnabled(False)
         self.importBtn.setEnabled(False)
         self.exportBtn.setEnabled(False)
@@ -399,16 +410,20 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             return
         else:
             logging.debug(self.token)
-        self.proj_diag = QtWidgets.QDialog()
-        self.add_proj_dialog = add_project_ui.Ui_addProjectDialog()
-        self.add_proj_dialog.setupUi(self.proj_diag)
-        self.add_proj_dialog.f_content = None
-        self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
-        self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-        self.add_proj_dialog.path.textChanged.connect(self.check_and_enable_project_accept)
-        self.add_proj_dialog.description.textChanged.connect(self.check_and_enable_project_accept)
-        self.add_proj_dialog.browse.clicked.connect(self.set_exported_file)
-        self.proj_diag.show()
+        if self.verify_user_token():
+            self.proj_diag = QtWidgets.QDialog()
+            self.add_proj_dialog = add_project_ui.Ui_addProjectDialog()
+            self.add_proj_dialog.setupUi(self.proj_diag)
+            self.add_proj_dialog.f_content = None
+            self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
+            self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
+            self.add_proj_dialog.path.textChanged.connect(self.check_and_enable_project_accept)
+            self.add_proj_dialog.description.textChanged.connect(self.check_and_enable_project_accept)
+            self.add_proj_dialog.browse.clicked.connect(self.set_exported_file)
+            self.proj_diag.show()
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def check_and_enable_project_accept(self):
         if self.add_proj_dialog.path.text() != "" and self.add_proj_dialog.description.toPlainText() != "":
@@ -517,84 +532,100 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             self.help_dialog.show()
 
     def handle_delete_project(self):
-        entered_project_name, ok = QtWidgets.QInputDialog.getText(
-            self,
-            self.tr('Delete Project'),
-            self.tr(f"You're about to delete the project - '{self.active_project_name}'. "
-                    f"Enter the project name to confirm: "))
-        if ok:
-            if entered_project_name == self.active_project_name:
-                data = {
-                    "token": self.token,
-                    "p_id": self.active_pid
-                }
-                url = url_join(self.mscolab_server_url, 'delete_project')
-                try:
-                    res = requests.post(url, data=data)
-                    res.raise_for_status()
-                except requests.exceptions.RequestException as e:
-                    logging.debug(e)
-                    show_popup(self, "Error", "Some error occurred! Could not delete project.")
-            else:
-                show_popup(self, "Error", "Entered project name did not match!")
+        if self.verify_user_token():
+            entered_project_name, ok = QtWidgets.QInputDialog.getText(
+                self,
+                self.tr('Delete Project'),
+                self.tr(f"You're about to delete the project - '{self.active_project_name}'. "
+                        f"Enter the project name to confirm: "))
+            if ok:
+                if entered_project_name == self.active_project_name:
+                    data = {
+                        "token": self.token,
+                        "p_id": self.active_pid
+                    }
+                    url = url_join(self.mscolab_server_url, 'delete_project')
+                    try:
+                        res = requests.post(url, data=data)
+                        res.raise_for_status()
+                    except requests.exceptions.RequestException as e:
+                        logging.debug(e)
+                        show_popup(self, "Error", "Some error occurred! Could not delete project.")
+                else:
+                    show_popup(self, "Error", "Entered project name did not match!")
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def open_chat_window(self):
-        if self.active_pid is None:
-            return
+        if self.verify_user_token():
+            if self.active_pid is None:
+                return
 
-        if self.chat_window is not None:
-            self.chat_window.raise_()
-            self.chat_window.activateWindow()
-            return
+            if self.chat_window is not None:
+                self.chat_window.raise_()
+                self.chat_window.activateWindow()
+                return
 
-        self.chat_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.user, self.active_project_name,
-                                                   self.access_level, self.conn,
-                                                   mscolab_server_url=self.mscolab_server_url)
-        self.chat_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.chat_window.viewCloses.connect(self.close_chat_window)
-        self.chat_window.reloadWindows.connect(self.reload_windows_slot)
-        self.chat_window.show()
+            self.chat_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.user, self.active_project_name,
+                                                       self.access_level, self.conn,
+                                                       mscolab_server_url=self.mscolab_server_url)
+            self.chat_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.chat_window.viewCloses.connect(self.close_chat_window)
+            self.chat_window.reloadWindows.connect(self.reload_windows_slot)
+            self.chat_window.show()
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def close_chat_window(self):
         self.raise_()
         self.chat_window = None
 
     def open_admin_window(self):
-        if self.active_pid is None:
-            return
+        if self.verify_user_token():
+            if self.active_pid is None:
+                return
 
-        if self.admin_window is not None:
-            self.admin_window.raise_()
-            self.admin_window.activateWindow()
-            return
+            if self.admin_window is not None:
+                self.admin_window.raise_()
+                self.admin_window.activateWindow()
+                return
 
-        self.admin_window = maw.MSColabAdminWindow(self.token, self.active_pid, self.user,
-                                                   self.active_project_name, self.projects, self.conn,
-                                                   mscolab_server_url=self.mscolab_server_url)
-        self.admin_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.admin_window.viewCloses.connect(self.close_admin_window)
-        self.admin_window.show()
+            self.admin_window = maw.MSColabAdminWindow(self.token, self.active_pid, self.user,
+                                                       self.active_project_name, self.projects, self.conn,
+                                                       mscolab_server_url=self.mscolab_server_url)
+            self.admin_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.admin_window.viewCloses.connect(self.close_admin_window)
+            self.admin_window.show()
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def close_admin_window(self):
         self.raise_()
         self.admin_window = None
 
     def open_version_history_window(self):
-        if self.active_pid is None:
-            return
+        if self.verify_user_token():
+            if self.active_pid is None:
+                return
 
-        if self.version_window is not None:
-            self.version_window.raise_()
-            self.version_window.activateWindow()
-            return
+            if self.version_window is not None:
+                self.version_window.raise_()
+                self.version_window.activateWindow()
+                return
 
-        self.version_window = mvh.MSColabVersionHistory(self.token, self.active_pid, self.user,
-                                                        self.active_project_name, self.conn,
-                                                        mscolab_server_url=self.mscolab_server_url)
-        self.version_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.version_window.viewCloses.connect(self.close_version_history_window)
-        self.version_window.reloadWindows.connect(self.reload_windows_slot)
-        self.version_window.show()
+            self.version_window = mvh.MSColabVersionHistory(self.token, self.active_pid, self.user,
+                                                            self.active_project_name, self.conn,
+                                                            mscolab_server_url=self.mscolab_server_url)
+            self.version_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.version_window.viewCloses.connect(self.close_version_history_window)
+            self.version_window.reloadWindows.connect(self.reload_windows_slot)
+            self.version_window.show()
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def close_version_history_window(self):
         self.raise_()
@@ -611,34 +642,49 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             mss_dir.writetext(rel_file_path, server_data)
 
     def handle_work_locally_toggle(self):
-        if self.workLocallyCheckBox.isChecked():
-            if self.version_window is not None:
-                self.version_window.close()
-            self.create_local_project_file()
-            self.local_ftml_file = fs.path.combine(self.data_dir,
-                                                   fs.path.join('local_mscolab_data',
-                                                                self.user['username'], self.active_project_name,
-                                                                'mscolab_project.ftml'))
-            self.helperTextLabel.setText(
-                self.tr("Working On: Local File. Your changes are only available to you."
-                        "To save your changes with everyone, use the \"Save to Server\" button."))
-            self.save_ft.setEnabled(True)
-            self.fetch_ft.setEnabled(True)
-            self.versionHistoryBtn.setEnabled(False)
-            self.reload_local_wp()
+        if self.verify_user_token():
+            if self.workLocallyCheckBox.isChecked():
+                if self.version_window is not None:
+                    self.version_window.close()
+                self.create_local_project_file()
+                self.local_ftml_file = fs.path.combine(self.data_dir,
+                                                       fs.path.join('local_mscolab_data',
+                                                                    self.user['username'], self.active_project_name,
+                                                                    'mscolab_project.ftml'))
+                self.helperTextLabel.setText(
+                    self.tr("Working On: Local File. Your changes are only available to you."
+                            "To save your changes with everyone, use the \"Save to Server\" button."))
+                self.save_ft.setEnabled(True)
+                self.fetch_ft.setEnabled(True)
+                self.versionHistoryBtn.setEnabled(False)
+                self.reload_local_wp()
 
+            else:
+                self.local_ftml_file = None
+                self.helperTextLabel.setText(
+                    self.tr("Working On: Shared File. All your changes will be shared with everyone."
+                            "Turn on work locally to work on local flight track file"))
+                self.save_ft.setEnabled(False)
+                self.fetch_ft.setEnabled(False)
+                if self.access_level in ["admin", "creator", "collaborator"]:
+                    self.versionHistoryBtn.setEnabled(True)
+                self.waypoints_model = None
+                self.load_wps_from_server()
+            self.reload_view_windows()
         else:
-            self.local_ftml_file = None
-            self.helperTextLabel.setText(
-                self.tr("Working On: Shared File. All your changes will be shared with everyone."
-                        "Turn on work locally to work on local flight track file"))
-            self.save_ft.setEnabled(False)
-            self.fetch_ft.setEnabled(False)
-            if self.access_level in ["admin", "creator", "collaborator"]:
-                self.versionHistoryBtn.setEnabled(True)
-            self.waypoints_model = None
-            self.load_wps_from_server()
-        self.reload_view_windows()
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
+    def verify_user_token(self):
+        data = {
+            "token": self.token
+        }
+        try:
+            r = requests.get(f'{self.mscolab_server_url}/test_authorized', data=data)
+        except requests.exceptions.ConnectionError as ex:
+            logging.error("unexpected error: %s %s", type(ex), ex)
+            return False
+        return r.text == "True"
 
     def authorize(self):
         for key, value in config_loader(dataset="MSC_login").items():
@@ -701,52 +747,64 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def add_projects(self):
         # add projects
-        data = {
-            "token": self.token
-        }
-        r = requests.get(self.mscolab_server_url + '/projects', data=data)
-        if r.text != "False":
-            _json = json.loads(r.text)
-            self.projects = _json["projects"]
-            self.add_projects_to_ui(self.projects)
+        if self.verify_user_token():
+            data = {
+                "token": self.token
+            }
+            r = requests.get(self.mscolab_server_url + '/projects', data=data)
+            if r.text != "False":
+                _json = json.loads(r.text)
+                self.projects = _json["projects"]
+                self.add_projects_to_ui(self.projects)
+            else:
+                show_popup(self, "Error", "Session expired, new login required")
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def get_recent_pid(self):
         """
         get most recent project's p_id
         """
-        data = {
-            "token": self.token
-        }
-        r = requests.get(self.mscolab_server_url + '/projects', data=data)
-        if r.text != "False":
-            _json = json.loads(r.text)
-            projects = _json["projects"]
-            p_id = None
-            if projects:
-                p_id = projects[-1]["p_id"]
-            return p_id
+        if self.verify_user_token():
+            data = {
+                "token": self.token
+            }
+            r = requests.get(self.mscolab_server_url + '/projects', data=data)
+            if r.text != "False":
+                _json = json.loads(r.text)
+                projects = _json["projects"]
+                p_id = None
+                if projects:
+                    p_id = projects[-1]["p_id"]
+                return p_id
+            else:
+                show_popup(self, "Error", "Session expired, new login required")
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def get_recent_project(self):
         """
         get most recent project
         """
-        data = {
-            "token": self.token
-        }
-        r = requests.get(self.mscolab_server_url + '/projects', data=data)
-        if r.text != "False":
-            _json = json.loads(r.text)
-            projects = _json["projects"]
-            recent_project = None
-            if projects:
-                recent_project = projects[-1]
-            return recent_project
+        if self.verify_user_token():
+            data = {
+                "token": self.token
+            }
+            r = requests.get(self.mscolab_server_url + '/projects', data=data)
+            if r.text != "False":
+                _json = json.loads(r.text)
+                projects = _json["projects"]
+                recent_project = None
+                if projects:
+                    recent_project = projects[-1]
+                return recent_project
+            else:
+                show_popup(self, "Error", "Session expired, new login required")
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def add_projects_to_ui(self, projects):
         logging.debug("adding projects to ui")
@@ -772,45 +830,48 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.active_windows = []
 
     def set_active_pid(self, item):
-        if item.p_id == self.active_pid:
-            return
-        # close all hanging window
-        self.force_close_view_windows()
-        self.close_external_windows()
-        # Turn off work locally toggle
-        self.workLocallyCheckBox.blockSignals(True)
-        self.workLocallyCheckBox.setChecked(False)
-        self.workLocallyCheckBox.blockSignals(False)
-        self.save_ft.setEnabled(False)
-        self.fetch_ft.setEnabled(False)
-
-        # set active_pid here
-        self.active_pid = item.p_id
-        self.access_level = item.access_level
-        self.active_project_name = item.text().split("-")[0].strip()
-        self.waypoints_model = None
-        # set active flightpath here
-        self.load_wps_from_server()
-        # enable project specific buttons
-        self.helperTextLabel.setVisible(True)
-        self.helperTextLabel.setText(self.tr("Working On: Shared File. All your changes will be shared with everyone."
-                                             "Turn on work locally to work on local flight track file"))
-        self.importBtn.setEnabled(True)
-        self.exportBtn.setEnabled(True)
-        self.topview.setEnabled(True)
-        self.sideview.setEnabled(True)
-        self.tableview.setEnabled(True)
-        self.workLocallyCheckBox.setEnabled(True)
-
-        # enable access level specific buttons
-        self.handle_mscolab_buttons()
-
-        # change font style for selected
-        font = QtGui.QFont()
-        for i in range(self.listProjects.count()):
-            self.listProjects.item(i).setFont(font)
-        font.setBold(True)
-        item.setFont(font)
+        if self.verify_user_token():
+            if item.p_id == self.active_pid:
+                return
+            # close all hanging window
+            self.force_close_view_windows()
+            self.close_external_windows()
+            # Turn off work locally toggle
+            self.workLocallyCheckBox.blockSignals(True)
+            self.workLocallyCheckBox.setChecked(False)
+            self.workLocallyCheckBox.blockSignals(False)
+            self.save_ft.setEnabled(False)
+            self.fetch_ft.setEnabled(False)
+            # set active_pid here
+            self.active_pid = item.p_id
+            self.access_level = item.access_level
+            self.active_project_name = item.text().split("-")[0].strip()
+            self.waypoints_model = None
+            # set active flightpath here
+            self.load_wps_from_server()
+            # enable project specific buttons
+            self.helperTextLabel.setVisible(True)
+            self.helperTextLabel.setText(self.tr("Working On: Shared File."
+                                                 "All your changes will be shared with everyone."
+                                                 "Turn on work locally to work on local flight track file"))
+            self.importBtn.setEnabled(True)
+            self.exportBtn.setEnabled(True)
+            self.topview.setEnabled(True)
+            self.sideview.setEnabled(True)
+            self.tableview.setEnabled(True)
+            self.linearview.setEnabled(True)
+            self.workLocallyCheckBox.setEnabled(True)
+            # enable access level specific buttons
+            self.handle_mscolab_buttons()
+            # change font style for selected
+            font = QtGui.QFont()
+            for i in range(self.listProjects.count()):
+                self.listProjects.item(i).setFont(font)
+            font.setBold(True)
+            item.setFont(font)
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def reload_wps_from_server(self):
         if self.active_pid is None:
@@ -819,16 +880,20 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.reload_view_windows()
 
     def request_wps_from_server(self):
-        data = {
-            "token": self.token,
-            "p_id": self.active_pid
-        }
-        r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
-        if r.text != "False":
-            xml_content = json.loads(r.text)["content"]
-            return xml_content
+        if self.verify_user_token():
+            data = {
+                "token": self.token,
+                "p_id": self.active_pid
+            }
+            r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
+            if r.text != "False":
+                xml_content = json.loads(r.text)["content"]
+                return xml_content
+            else:
+                show_popup(self, "Error", "Session expired, new login required")
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def load_wps_from_server(self):
         if self.workLocallyCheckBox.isChecked():
@@ -840,21 +905,39 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
     def open_topview(self):
         # showing dummy info dialog
-        if self.active_pid is None:
-            return
-        self.create_view_window("topview")
+        if self.verify_user_token():
+            if self.active_pid is None:
+                return
+            self.create_view_window("topview")
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def open_sideview(self):
         # showing dummy info dialog
-        if self.active_pid is None:
-            return
-        self.create_view_window("sideview")
+        if self.verify_user_token():
+            if self.active_pid is None:
+                return
+            self.create_view_window("sideview")
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def open_tableview(self):
         # showing dummy info dialog
+        if self.verify_user_token():
+            if self.active_pid is None:
+                return
+            self.create_view_window("tableview")
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
+    def open_linearview(self):
+        # showing dummy info dialog
         if self.active_pid is None:
             return
-        self.create_view_window("tableview")
+        self.create_view_window("linearview")
 
     def create_view_window(self, _type):
         for active_window in self.active_windows:
@@ -863,6 +946,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 active_window.activateWindow()
                 return
 
+        self.waypoints_model.name = self.active_project_name
         if _type == "topview":
             view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
                                                    parent=self.listProjects,
@@ -873,15 +957,21 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                                                      parent=self.listProjects,
                                                      _id=self.id_count)
             view_window.view_type = "sideview"
-        else:
+        elif _type == "tableview":
             view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
                                                        parent=self.listProjects,
                                                        _id=self.id_count)
+            view_window.view_type = "tableview"
+        else:
+            view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
+                                                         parent=self.listProjects,
+                                                         _id=self.id_count)
             view_window.view_type = "tableview"
         if self.access_level == "viewer":
             self.disable_navbar_action_buttons(_type, view_window)
 
         view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        view_window.setWindowTitle(f"{view_window.windowTitle()} - {self.active_project_name}")
         view_window.show()
         view_window.viewClosesId.connect(self.handle_view_close)
         self.active_windows.append(view_window)
@@ -908,6 +998,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window.btCloneWaypoint.setEnabled(False)
             view_window.btDeleteWayPoint.setEnabled(False)
             view_window.btInvertDirection.setEnabled(False)
+            view_window.btRoundtrip.setEnabled(False)
+            view_window.cbTools.setEnabled(False)
+            view_window.tableWayPoints.setEnabled(False)
 
     def enable_navbar_action_buttons(self, _type, view_window):
         """
@@ -928,6 +1021,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window.btCloneWaypoint.setEnabled(True)
             view_window.btDeleteWayPoint.setEnabled(True)
             view_window.btInvertDirection.setEnabled(True)
+            view_window.btRoundtrip.setEnabled(True)
+            view_window.cbTools.setEnabled(True)
+            view_window.tableWayPoints.setEnabled(True)
 
     def logout(self):
         self.clean_up_window()
@@ -935,18 +1031,22 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.password.setEnabled(True)
 
     def delete_account(self):
-        w = QtWidgets.QWidget()
-        qm = QtWidgets.QMessageBox
-        reply = qm.question(w, self.tr('Continue?'),
-                            self.tr("You're about to delete your account. You cannot undo this operation!"),
-                            qm.Yes, qm.No)
-        if reply == QtWidgets.QMessageBox.No:
-            return
-        data = {
-            "token": self.token
-        }
-        requests.post(self.mscolab_server_url + '/delete_user', data=data)
-        self.clean_up_window()
+        if self.verify_user_token():
+            w = QtWidgets.QWidget()
+            qm = QtWidgets.QMessageBox
+            reply = qm.question(w, self.tr('Continue?'),
+                                self.tr("You're about to delete your account. You cannot undo this operation!"),
+                                qm.Yes, qm.No)
+            if reply == QtWidgets.QMessageBox.No:
+                return
+            data = {
+                "token": self.token
+            }
+            requests.post(self.mscolab_server_url + '/delete_user', data=data)
+            self.clean_up_window()
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def close_external_windows(self):
         if self.chat_window is not None:
@@ -987,27 +1087,35 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         save_settings_qsettings('mscolab', self.settings)
 
     def save_wp_mscolab(self, comment=None):
-        server_xml = self.request_wps_from_server()
-        server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
-        self.merge_dialog.saveBtn.setDisabled(True)
-        if self.merge_dialog.exec_():
-            xml_content = self.merge_dialog.get_values()
-            if xml_content is not None:
-                self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
-                self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
-                self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
-                self.reload_view_windows()
-                show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
-        self.merge_dialog = None
+        if self.verify_user_token():
+            server_xml = self.request_wps_from_server()
+            server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
+            self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self)
+            self.merge_dialog.saveBtn.setDisabled(True)
+            if self.merge_dialog.exec_():
+                xml_content = self.merge_dialog.get_values()
+                if xml_content is not None:
+                    self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
+                    self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                    self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                    self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+                    self.reload_view_windows()
+                    show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
+            self.merge_dialog = None
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def handle_waypoints_changed(self):
-        if self.workLocallyCheckBox.isChecked():
-            self.waypoints_model.save_to_ftml(self.local_ftml_file)
+        if self.verify_user_token():
+            if self.workLocallyCheckBox.isChecked():
+                self.waypoints_model.save_to_ftml(self.local_ftml_file)
+            else:
+                xml_content = self.waypoints_model.get_xml_content()
+                self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
         else:
-            xml_content = self.waypoints_model.get_xml_content()
-            self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     def reload_view_windows(self):
         for window in self.active_windows:
@@ -1024,19 +1132,23 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         self.reload_view_windows()
 
     def fetch_wp_mscolab(self):
-        server_xml = self.request_wps_from_server()
-        server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
-        self.merge_dialog.saveBtn.setDisabled(True)
-        if self.merge_dialog.exec_():
-            xml_content = self.merge_dialog.get_values()
-            if xml_content is not None:
-                self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
-                self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
-                self.reload_view_windows()
-                show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
-        self.merge_dialog = None
+        if self.verify_user_token():
+            server_xml = self.request_wps_from_server()
+            server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
+            self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self)
+            self.merge_dialog.saveBtn.setDisabled(True)
+            if self.merge_dialog.exec_():
+                xml_content = self.merge_dialog.get_values()
+                if xml_content is not None:
+                    self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                    self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                    self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+                    self.reload_view_windows()
+                    show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
+            self.merge_dialog = None
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     @QtCore.Slot(int, int, str)
     def handle_update_permission(self, p_id, u_id, access_level):
@@ -1139,7 +1251,8 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             if self.chat_window is not None:
                 self.chat_window.load_users()
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
 
     @QtCore.Slot(int)
     def handle_project_deleted(self, p_id):
