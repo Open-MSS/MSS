@@ -70,7 +70,9 @@ variables. ::
 update
 ++++++
 For updating an existing MSS installation to the current version, it is best to install
-it into a new environment.
+it into a new environment. If your current version is not far behind the new version
+you could try the mamba update mss as described.
+
 
 .. Important::
   mamba is under development. All dependencies of MSS and MSS itselfs are under development.
@@ -92,6 +94,7 @@ compare what you have installed ::
 If an existing environment shall be updated, it is important to update all packages in this environment. ::
 
    $ conda activate mssenv
+   (mssenv) $ mamba update mss
    (mssenv) $ mamba update --all
 
 In this example there was a further build done after the first release of 3.0.3.

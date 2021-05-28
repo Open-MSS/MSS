@@ -121,39 +121,48 @@ You can turn the `Work Locally` toggle off at any points and work on the common 
 
 Notes for server administrators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-If you're configuring mscolab server, there isn't a GUI to add or manage a group of users. There is however a
-proposal to bring this on around the next release of mss. For now, there is a command line tool available with the
-installation of mss, :code:`mscolab_add_permissions`. It's usage is as follows
+If you're configuring mscolab server, there is a manage users GUI to add or manage users to a project.
+There is a command line tool available with the installation of mss, :code:`mscolab`. It can import users to the database
+and can handle joins to projects.
 
-- Make a text file with the following format
-
- .. code-block:: text
-
-  path1
-    u1-c
-    u2-c
-    u3-a
-
-    path2
-    u1-a
-
-    path3
-    u2-v
-
-- `path1` represents the path of project in mscolab db. 
-- u1, u2, u3 are usernames. 
-- `c` stands for collaborator, `a` for admin, `v` for viewer.
-- Different paths are separated by 2 '\n's.
-- The tool can be invocated anywhere by a command, where :code:`/path/to/file` represents the path to file created above.
+Make a text file with the following format to import many users to the mscolab database
 
  .. code-block:: text
 
-  $ mscolab_add_permissions /path/to/file
+  suggested_username name <email>
+  suggested_username2 name2 <email2>
 
-instructions to use mscolab wsgi
+ .. code-block:: text
+
+  $ mscolab db --users_by_file /path/to/file
+
+After executed you get informations to exchange with users.
+
+ .. code-block:: text
+
+  Are you sure you want to add users to the database? (y/[n]):
+  y
+  Userdata: email suggested_username 30736d0350c9b886
+
+  "MSCOLAB_mailid": "email",
+  "MSCOLAB_password": "30736d0350c9b886",
+
+
+  Userdata: email2 suggested_username2 342434de34904303
+
+  "MSCOLAB_mailid": "email2",
+  "MSCOLAB_password": "342434de34904303",
+
+Further options can be listed by `mscolab db -h`
+
+
+Instructions to use mscolab wsgi
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 make a file called :code:`server.py`
+and install ::
+
+   mamba install eventlet==0.30.2 gunicorn
 
 **server.py**::
 
@@ -163,3 +172,6 @@ Then run the following commands. ::
 
   $ mamba install gunicorn eventlet
   $ gunicorn -b 0.0.0.0:8087 server:app
+
+
+For further options read `<https://flask.palletsprojects.com/en/1.1.x/deploying/wsgi-standalone/#gunicorn>`_
