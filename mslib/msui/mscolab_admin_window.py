@@ -9,6 +9,7 @@
     This file is part of mss.
 
     :copyright: 2020 Tanish Grover
+    :copyright: Copyright 2020-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
