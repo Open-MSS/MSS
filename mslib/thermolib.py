@@ -92,6 +92,7 @@ def geop_difference(p, t, method='trapz', axis=-1):
     else:
         raise TypeError('integration method for geopotential not understood')
 
+
 def omega_to_w(omega, p, t):
     """
     Convert pressure vertical velocity to geometric vertical velocity.
