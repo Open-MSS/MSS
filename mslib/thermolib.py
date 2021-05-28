@@ -42,6 +42,7 @@ class VapourPressureError(Exception):
     def __init__(self, error_string):
         logging.debug("%s", error_string)
 
+
 def geop_difference(p, t, method='trapz', axis=-1):
     """Compute geopotential difference in [m**2 s**-2] between the pressure
        levels given by the first and last element in p (= pressure).
