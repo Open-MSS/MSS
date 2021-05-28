@@ -52,7 +52,7 @@ from mslib.msui import wms_capabilities
 from mslib.msui import constants
 from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings, Worker
 from mslib.ogcwms import openURL, removeXMLNamespace
-from mslib.msui.multilayers import Multilayers
+from mslib.msui.multilayers import Multilayers, Layer
 
 
 WMS_SERVICE_CACHE = {}
@@ -130,7 +130,7 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # check layers and styles
         assert len(layers) > 0
         request['layers'] = ','.join(layers)
-        if styles is not None:
+        if styles:
             assert len(styles) == len(layers)
             request['styles'] = ','.join(styles)
         else:
@@ -318,13 +318,23 @@ class WMSMapFetcher(QtCore.QObject):
         logging.debug("MapPrefetcher %s %s.", kwargs["time"], kwargs["level"])
 
         if use_cache and os.path.exists(md5_filename):
-            img = Image.open(md5_filename)
-            img.load()
-            logging.debug("MapPrefetcher - found image cache")
+            if ".png" in md5_filename:
+                img = Image.open(md5_filename)
+                img.load()
+                logging.debug("MapPrefetcher - found image cache")
+            else:
+                with open(md5_filename, "r") as cache:
+                    return etree.fromstring(cache.read())
         else:
             self.started_request.emit()
             self.long_request = True
             urlobject = layer.get_wms().getmap(**kwargs)
+
+            if "xml" in urlobject.info()["content-type"].lower():
+                with open(md5_filename, "w") as cache:
+                    cache.write(str(urlobject.read(), encoding="utf8"))
+                return etree.fromstring(urlobject.read())
+
             image_io = io.BytesIO(urlobject.read())
             img = Image.open(image_io)
             # Check if the image is stored as indexed palette
@@ -1207,10 +1217,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def get_md5_filename(self, layer, kwargs):
         urlstr = layer.get_wms().getmap(return_only_url=True, **kwargs)
-        return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
+        ending = ".png" if "image" in kwargs["format"] else ".xml"
+        return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ending)
 
-    def retrieve_image(self, layer=None, crs="EPSG:4326", bbox=None, path_string=None,
-                       width=800, height=400, transparent=False):
+    def retrieve_image(self, layers=None, crs="EPSG:4326", bbox=None, path_string=None,
+                       width=800, height=400, transparent=False, format="image/png"):
         """Retrieve an image of the layer currently selected in the
            GUI elements from the current WMS provider. If caching is
            enabled, first check the cache for the requested image. If
@@ -1219,7 +1230,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            If a legend graphic is available for the layer, this image
            is also retrieved.
         Arguments:
-        crs -- coordinate reference system as a string passed to the WMS
+        crs -- coordinate reference: system as a string passed to the WMS
         path_string -- string of waypoints that resemble a vertical
                        section path. Can be omitted for horizontal
                        sections.
@@ -1227,11 +1238,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         width, height -- width and height of requested image in pixels
         """
         # Get layer and style names.
-        if not layer:
-            layer = self.multilayers.get_current_layer()
+        if not layers:
+            layers = [self.multilayers.get_current_layer()]
+        if isinstance(layers, Layer):
+            layers = [layers]
 
-        layer_name = layer.get_layer()
-        style = layer.get_style()
+        layer = layers[0]
+
+        layer_name = [layer.get_layer() for layer in layers]
+        style = [layer.get_style() if "image" in format else "" for layer in layers]
         level = layer.get_level_name()
 
         def normalize_crs(crs):
@@ -1275,8 +1290,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             #                threading-in-a-pyqt-application-use-qt-threads-or-python-threads
             # b) To retrieve the return value of getmap, a Queue is used.
             #    See: http://stackoverflow.com/questions/1886090/return-value-from-thread
-            kwargs = {"layers": [layer_name],
-                      "styles": [style],
+            kwargs = {"layers": layer_name,
+                      "styles": style,
                       "srs": crs,
                       "bbox": bbox,
                       "path_str": path_string,
@@ -1286,7 +1301,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       "time_name": layer.vtime_name,
                       "init_time_name": layer.itime_name,
                       "size": (width, height),
-                      "format": 'image/png',
+                      "format": format,
                       "transparent": transparent}
             legend_kwargs = {"urlstr": layer.get_legend_url(), "md5_filename": None}
             if legend_kwargs["urlstr"] is not None:
@@ -1521,8 +1536,9 @@ class VSecWMSControlWidget(WMSControlWidget):
         layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
 
         args = []
-        for layer in layers:
-            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height))
+        for i, layer in enumerate(layers):
+            transparent = self.cbTransparent.isChecked() if i == 0 else True
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent))
 
         self.fetch.emit(args)
 
@@ -1602,4 +1618,81 @@ class HSecWMSControlWidget(WMSControlWidget):
 
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
-        return crss is not None and not any(crs.startswith("VERT") for crs in crss)
+        return crss is not None and not any(crs.startswith("VERT") for crs in crss) \
+            and not any(crs.startswith("LINE") for crs in crss)
+
+
+class LSecWMSControlWidget(WMSControlWidget):
+    """Subclass of WMSControlWidget that extends the WMS client to
+       handle (non-standard) linear sections.
+    """
+
+    def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
+                 view=None, wms_cache=None):
+        super(LSecWMSControlWidget, self).__init__(
+            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
+        self.waypoints_model = waypoints_model
+        self.btGetMap.clicked.connect(self.get_all_maps)
+
+    def get_all_maps(self):
+        if self.multilayers.cbMultilayering.isChecked():
+            self.get_lsec(self.multilayers.get_active_layers())
+        else:
+            self.get_lsec([self.multilayers.get_current_layer()])
+
+    def setFlightTrackModel(self, model):
+        """Set the QAbstractItemModel instance from which the waypoints
+           are obtained.
+        """
+        self.waypoints_model = model
+
+    @QtCore.Slot()
+    def call_get_lsec(self):
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+            self.get_all_maps()
+
+    def get_lsec(self, layers=None):
+        """Slot that retrieves the linear plot and passes the image
+                   to the view.
+                """
+        # Specify the coordinate reference system for the request. We will
+        # use the non-standard "LINE:1" to query the MSS WMS Server for
+        # a linear plot.
+        crs = "LINE:1"
+        bbox = self.view.getBBOX()
+
+        # Get lat/lon/alt coordinates of flight track and convert to string for URL.
+        path_string = ""
+        for waypoint in self.waypoints_model.all_waypoint_data():
+            path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},{waypoint.pressure},"
+        path_string = path_string[:-1]
+
+        # Retrieve the image.
+        if not layers:
+            layers = [self.multilayers.get_current_layer()]
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+
+        args = []
+        for i, layer in enumerate(layers):
+            args.extend(self.retrieve_image(layer, crs, bbox, path_string, transparent=False, format="text/xml"))
+
+        self.fetch.emit(args)
+
+    def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
+        # Plot the image on the view canvas.
+        layers = self.multilayers.get_active_layers() if self.multilayers.cbMultilayering.isChecked() else \
+            [self.multilayers.get_current_layer()]
+        layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+        colors = [layer.color for layer in layers]
+        scales = [layer.get_style() for layer in layers]
+        self.view.draw_image(imgs, colors, scales)
+        self.view.draw_legend(self.append_multiple_images(legend_imgs))
+        style_title = self.multilayers.get_current_layer().get_style()
+        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+                                init_time=init_time,
+                                valid_time=valid_time,
+                                style=style_title)
+
+    def is_layer_aligned(self, layer):
+        crss = getattr(layer, "crsOptions", None)
+        return crss is not None and any(crs.startswith("LINE") for crs in crss)

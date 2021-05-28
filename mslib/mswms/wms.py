@@ -50,6 +50,7 @@ import io
 import logging
 import traceback
 import urllib.parse
+from xml.etree import ElementTree
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
@@ -93,6 +94,7 @@ except ImportError as ex:
         service_access_constraints = "This service is intended for research purposes only."
         register_horizontal_layers = []
         register_vertical_layers = []
+        register_linear_layers = []
         data = {}
         enable_basic_http_authentication = False
         __file__ = None
@@ -153,6 +155,14 @@ def squash_multiple_images(imgs):
         return output.getvalue()
 
 
+def squash_multiple_xml(xml_strings):
+    base = ElementTree.fromstring(xml_strings[0])
+    for xml in xml_strings[1:]:
+        tree = ElementTree.fromstring(xml)
+        base.extend(tree)
+    return ElementTree.tostring(base)
+
+
 class WMSServer(object):
 
     def __init__(self):
@@ -174,6 +184,11 @@ class WMSServer(object):
             self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
                 data_access_dict[key])
 
+        self.lsec_drivers = {}
+        for key in data_access_dict:
+            self.lsec_drivers[key] = mss_plot_driver.LinearSectionDriver(
+                data_access_dict[key])
+
         self.hsec_layer_registry = {}
         for layer, datasets in mss_wms_settings.register_horizontal_layers:
             self.register_hsec_layer(datasets, layer)
@@ -181,6 +196,18 @@ class WMSServer(object):
         self.vsec_layer_registry = {}
         for layer, datasets in mss_wms_settings.register_vertical_layers:
             self.register_vsec_layer(datasets, layer)
+
+        self.lsec_layer_registry = {}
+        if not hasattr(mss_wms_settings, "register_linear_layers"):
+            logging.info("Since 4.0.0 MSS has support for linear layers in the mss_wms_settings.py.\n"
+                         "Look at the documentation for an example "
+                         "https://mss.readthedocs.io/en/stable/deployment.html#configuration-file-of-the-wms-server")
+            mss_wms_settings.register_linear_layers = []
+        for layer in mss_wms_settings.register_linear_layers:
+            if len(layer) == 3:
+                self.register_lsec_layer(layer[2], layer[1], layer[0])
+            else:
+                self.register_lsec_layer(layer[1], layer_class=layer[0])
 
     def register_hsec_layer(self, datasets, layer_class):
         """
@@ -234,6 +261,34 @@ class WMSServer(object):
                 else:
                     raise ValueError("dataset '%s' not available", dataset)
             self.vsec_layer_registry[dataset][layer.name] = layer
+
+    def register_lsec_layer(self, datasets, variable=None, layer_class=None):
+        """
+        Register linear section layer in internal dict of layers.
+
+        See register_hsec_layer() for further information.
+        """
+        # Loop over all provided dataset names. Create an instance of the
+        # provided layer class for all datasets and register the layer
+        # instances with the datasets.
+        for dataset in datasets:
+            try:
+                if variable:
+                    layer = layer_class(self.lsec_drivers[dataset], variable)
+                else:
+                    layer = layer_class(self.lsec_drivers[dataset])
+            except KeyError as ex:
+                logging.debug("ERROR: %s %s", type(ex), ex)
+                continue
+            logging.debug("registering linear section layer '%s' with dataset '%s'", layer.name, dataset)
+            # Check if the current dataset has already been registered. If
+            # not, check whether a suitable driver is available.
+            if dataset not in self.lsec_layer_registry:
+                if dataset in self.lsec_drivers:
+                    self.lsec_layer_registry[dataset] = {}
+                else:
+                    raise ValueError("dataset '%s' not available", dataset)
+            self.lsec_layer_registry[dataset][layer.name] = layer
 
     def create_service_exception(self, code=None, text="", version="1.3.0"):
         """
@@ -302,8 +357,21 @@ class WMSServer(object):
                     continue
                 vsec_layers.append((dataset, layer))
 
+        # Linear Layers
+        lsec_layers = []
+        for dataset in self.lsec_layer_registry:
+            for layer in self.lsec_layer_registry[dataset].values():
+                if layer.uses_inittime_dimension() and len(layer.get_init_times()) == 0:
+                    logging.error("layer %s/%s has no init times!", layer, dataset)
+                    continue
+                if layer.uses_validtime_dimension() and len(layer.get_all_valid_times()) == 0:
+                    logging.error("layer %s/%s has no valid times!", layer, dataset)
+                    continue
+                lsec_layers.append((dataset, layer))
+
         settings = mss_wms_settings.__dict__
-        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, server_url=server_url,
+        return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, lsec_layers=lsec_layers,
+                               server_url=server_url,
                                service_name=settings.get("service_name", "OGC:WMS"),
                                service_title=settings.get("service_title", "Mission Support System Web Map Service"),
                                service_abstract=settings.get("service_abstract", ""),
@@ -354,7 +422,7 @@ class WMSServer(object):
 
             # Requested style(s).
             styles = [style for style in query.get('STYLES', 'default').strip().split(',') if style]
-            style = styles[0] if len(styles) > 0 else None
+            style = styles[index] if len(styles) > index else None
             logging.debug("  requested style = '%s'", style)
 
             # Forecast initialisation time.
@@ -389,6 +457,8 @@ class WMSServer(object):
             msg = None
             if crs.startswith('vert:logp'):
                 mode = "getvsec"
+            elif crs.startswith("line:1"):
+                mode = "getlsec"
             else:
                 try:
                     get_projection_params(crs)
@@ -551,9 +621,78 @@ class WMSServer(object):
                           "Hint: Check used waypoints."
                     return self.create_service_exception(text=msg, version=version)
 
+            elif mode == "getlsec":
+                if return_format != "text/xml":
+                    return self.create_service_exception(
+                        code="InvalidFORMAT",
+                        text=f"unsupported FORMAT: '{return_format}'",
+                        version=version)
+
+                # Linear section path.
+                path = query.get("PATH")
+                if path is None:
+                    return self.create_service_exception(text="PATH not specified", version=version)
+                try:
+                    path = [float(v) for v in path.split(',')]
+                    path = [[lat, lon, alt] for lat, lon, alt in zip(path[0::3], path[1::3], path[2::3])]
+                except ValueError:
+                    return self.create_service_exception(text=f"Invalid PATH: {path}", version=version)
+                logging.debug("LSEC PATH: %s", path)
+
+                # Check requested layers.
+                if (dataset not in self.lsec_layer_registry) or (layer not in self.lsec_layer_registry[dataset]):
+                    return self.create_service_exception(
+                        code="LayerNotDefined",
+                        text=f"Invalid LAYER '{dataset}.{layer}' requested",
+                        version=version)
+
+                # Check if the layer requires time information and if they are given.
+                if self.lsec_layer_registry[dataset][layer].uses_inittime_dimension():
+                    if init_time is None:
+                        return self.create_service_exception(
+                            code="MissingDimensionValue",
+                            text="INIT_TIME not specified (use the DIM_INIT_TIME keyword)",
+                            version=version)
+                    if valid_time is None:
+                        return self.create_service_exception(code="MissingDimensionValue",
+                                                             text="TIME not specified",
+                                                             version=version)
+
+                # Bounding box (num interp. points).
+                try:
+                    bbox = float(query.get("BBOX", "101"))
+                except ValueError:
+                    return self.create_service_exception(text=f"Invalid BBOX: {query.get('BBOX')}", version=version)
+
+                plot_driver = self.lsec_drivers[dataset]
+                try:
+                    plot_driver.set_plot_parameters(plot_object=self.lsec_layer_registry[dataset][layer],
+                                                    lsec_path=path,
+                                                    lsec_numpoints=bbox,
+                                                    lsec_path_connection="greatcircle",
+                                                    init_time=init_time,
+                                                    valid_time=valid_time,
+                                                    bbox=bbox)
+                    images.append(plot_driver.plot())
+                except (IOError, ValueError) as ex:
+                    logging.error("ERROR: %s %s", type(ex), ex)
+                    msg = "The data corresponding to your request is not available. Please check the " \
+                          "times and/or path you have specified.\n\n" \
+                          f"Error message: {ex}.\n" \
+                          "Hint: Check used waypoints."
+                    return self.create_service_exception(text=msg, version=version)
+
         # 4) Return the produced image.
         # =============================
-        return squash_multiple_images(images), return_format
+        if len(layers) > 1:
+            if "image" in return_format:
+                return squash_multiple_images(images), return_format
+            elif "xml" in return_format:
+                return squash_multiple_xml(images), return_format
+            else:
+                raise RuntimeError(f"Unexpected format error: {return_format}")
+        else:
+            return images[0], return_format
 
 
 server = WMSServer()
@@ -581,7 +720,7 @@ def application():
         if (request_type in ('getcapabilities', 'capabilities') and
                 request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
             return_data, return_format = server.get_capabilities(query, server_url)
-        elif request_type in ('getmap', 'getvsec') and request_version in ('1.1.1', '1.3.0', ''):
+        elif request_type in ('getmap', 'getvsec', 'getlsec') and request_version in ('1.1.1', '1.3.0', ''):
             return_data, return_format = server.produce_plot(query, request_type)
         else:
             logging.debug("Request type '%s' is not valid.", request)
