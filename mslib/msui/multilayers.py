@@ -562,7 +562,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if "elevation" in self.extents:
             units = self.dimensions["elevation"]["units"]
             values = self.extents["elevation"]["values"]
-            self.levels = ["{} ({})".format(e.strip(), units) for e in values]
+            self.levels = [f"{e.strip()} ({units})" for e in values]
             self.level = self.levels[0]
 
     def _parse_itimes(self):
@@ -583,7 +583,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
                     self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
-                    self.parent.dock_widget.tr("ERROR: {}".format(msg)))
+                    self.parent.dock_widget.tr(f"ERROR: {msg}"))
             else:
                 self.itime = self.itimes[-1]
 
@@ -605,7 +605,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
                     self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
-                    self.parent.dock_widget.tr("ERROR: {}".format(msg)))
+                    self.parent.dock_widget.tr(f"ERROR: {msg}"))
             else:
                 if self.itime:
                     self.vtime = next((vtime for vtime in self.vtimes if vtime >= self.itime), self.vtimes[0])
