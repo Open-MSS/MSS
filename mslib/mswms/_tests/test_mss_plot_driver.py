@@ -29,10 +29,11 @@
 
 from datetime import datetime
 import pytest
-from mslib.mswms.mss_plot_driver import VerticalSectionDriver, HorizontalSectionDriver
+from mslib.mswms.mss_plot_driver import VerticalSectionDriver, HorizontalSectionDriver, LinearSectionDriver
 import mss_wms_settings
 import mslib.mswms.mpl_vsec_styles as mpl_vsec_styles
 import mslib.mswms.mpl_hsec_styles as mpl_hsec_styles
+import mslib.mswms.mpl_lsec_styles as mpl_lsec_styles
 
 
 class Test_VSec(object):
@@ -126,6 +127,63 @@ class Test_VSec(object):
 
     def test_VS_EMACEyja_Style_01(self):
         img = self.plot(mpl_vsec_styles.VS_EMACEyja_Style_01(driver=self.vsec))
+        assert img is not None
+
+
+class Test_LSec(object):
+    def setup(self):
+        p1 = [45.00, 8., 25000]
+        p2 = [50.00, 12., 25000]
+        p3 = [51.00, 15., 25000]
+        p4 = [48.00, 11., 25000]
+        data = mss_wms_settings.data["ecmwf_EUR_LL015"]
+        data.setup()
+
+        self.path = [p1, p2, p3, p4]
+        self.bbox = [500]
+        self.init_time = datetime(2012, 10, 17, 12)
+        self.valid_time = datetime(2012, 10, 17, 12)
+        self.lsec = LinearSectionDriver(data)
+
+    def plot(self, plot_object):
+        self.lsec.set_plot_parameters(plot_object=plot_object,
+                                      bbox=self.bbox,
+                                      lsec_path=self.path,
+                                      lsec_numpoints=self.bbox[0],
+                                      init_time=self.init_time,
+                                      valid_time=self.valid_time)
+        return self.lsec.plot()
+
+    def test_repeated_locations(self):
+        p1 = [45.00, 8., 25000]
+        p2 = [50.00, 12., 25000]
+        self.path = [p1, p1]
+        img = self.plot(mpl_lsec_styles.LS_DefaultStyle(driver=self.lsec))
+        assert img is not None
+        self.path = [p1, p1, p2]
+        img = self.plot(mpl_lsec_styles.LS_DefaultStyle(driver=self.lsec))
+        assert img is not None
+        self.path = [p1, p2, p2]
+        img = self.plot(mpl_lsec_styles.LS_DefaultStyle(driver=self.lsec))
+        assert img is not None
+
+    def test_LS_DefaultStyle(self):
+        for variable in ["air_temperature", "specific_humidity",
+                         "cloud_area_fraction_in_atmosphere_layer", "specific_cloud_ice_water_content",
+                         "specific_cloud_liquid_water_content", "ertel_potential_vorticity"]:
+            img = self.plot(mpl_lsec_styles.LS_DefaultStyle(driver=self.lsec, variable=variable))
+            assert img is not None
+
+    def test_LS_RelativeHumdityStyle_01(self):
+        img = self.plot(mpl_lsec_styles.LS_RelativeHumdityStyle_01(driver=self.lsec))
+        assert img is not None
+
+    def test_LS_HorizontalVelocityStyle_01(self):
+        img = self.plot(mpl_lsec_styles.LS_HorizontalVelocityStyle_01(driver=self.lsec))
+        assert img is not None
+
+    def test_LS_VerticalVelocityStyle_01(self):
+        img = self.plot(mpl_lsec_styles.LS_VerticalVelocityStyle_01(driver=self.lsec))
         assert img is not None
 
 

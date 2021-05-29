@@ -33,7 +33,7 @@ import numpy as np
 AIRCRAFT_DUMMY = {
     "name": "DUMMY",
     "takeoff_weight": 90000,
-    "fuel": 35000,
+    "empty_weight": 55000,
     "climb": [[0.00, 0.0, 0.0, 0.0, 0.0]],
     "descent": [[0.00, 0.0, 0.0, 0.0, 0.0]],
     "cruise": [[0.00, 0.00, 400, 2900.00]],
@@ -50,7 +50,10 @@ class SimpleAircraft(object):
     def __init__(self, data):
         self.name = data["name"]
         self.takeoff_weight = data.get("takeoff_weight", 0)
-        self.fuel = data.get("fuel", 0)
+        if "fuel" in data and "empty_weight" not in data:
+            self.empty_weight = self.takeoff_weight - data["fuel"]
+        else:
+            self.empty_weight = data.get("empty_weight", 0)
         self._climb = self._setup(data["climb"])
         self._descent = self._setup(data["descent"])
         self._cruise = self._setup(data["cruise"])

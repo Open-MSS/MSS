@@ -354,19 +354,6 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btWaypointsColour">
-       <property name="minimumSize">
-        <size>
-         <width>135</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>colour of waypoints</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="btVerticesColour">
        <property name="minimumSize">
         <size>
@@ -381,6 +368,52 @@
      </item>
      <item>
       <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QCheckBox" name="cbDrawMarker">
+       <property name="minimumSize">
+        <size>
+         <width>145</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Draw a circle marker on every waypoint along the flight track</string>
+       </property>
+       <property name="text">
+        <string>draw marker</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btWaypointsColour">
+       <property name="minimumSize">
+        <size>
+         <width>135</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>colour of waypoints</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>

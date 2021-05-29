@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_topview_mapappearance.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_topview_mapappearance.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -133,10 +133,6 @@ class Ui_MapAppearanceDialog(object):
         self.cbDrawFlightTrack.setChecked(True)
         self.cbDrawFlightTrack.setObjectName("cbDrawFlightTrack")
         self.horizontalLayout_3.addWidget(self.cbDrawFlightTrack)
-        self.btWaypointsColour = QtWidgets.QPushButton(MapAppearanceDialog)
-        self.btWaypointsColour.setMinimumSize(QtCore.QSize(135, 0))
-        self.btWaypointsColour.setObjectName("btWaypointsColour")
-        self.horizontalLayout_3.addWidget(self.btWaypointsColour)
         self.btVerticesColour = QtWidgets.QPushButton(MapAppearanceDialog)
         self.btVerticesColour.setMinimumSize(QtCore.QSize(135, 0))
         self.btVerticesColour.setObjectName("btVerticesColour")
@@ -144,6 +140,19 @@ class Ui_MapAppearanceDialog(object):
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem2)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.cbDrawMarker = QtWidgets.QCheckBox(MapAppearanceDialog)
+        self.cbDrawMarker.setMinimumSize(QtCore.QSize(145, 0))
+        self.cbDrawMarker.setObjectName("cbDrawMarker")
+        self.horizontalLayout_5.addWidget(self.cbDrawMarker)
+        self.btWaypointsColour = QtWidgets.QPushButton(MapAppearanceDialog)
+        self.btWaypointsColour.setMinimumSize(QtCore.QSize(135, 0))
+        self.btWaypointsColour.setObjectName("btWaypointsColour")
+        self.horizontalLayout_5.addWidget(self.btWaypointsColour)
+        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem3)
+        self.verticalLayout.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.cbLabelFlightTrack = QtWidgets.QCheckBox(MapAppearanceDialog)
@@ -201,6 +210,7 @@ class Ui_MapAppearanceDialog(object):
         self.label.setObjectName("label")
         self.gridLayout_4.addWidget(self.label, 3, 0, 1, 1)
         self.verticalLayout.addWidget(self.groupBox)
+
         spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem4)
         self.buttonBox = QtWidgets.QDialogButtonBox(MapAppearanceDialog)
@@ -224,8 +234,10 @@ class Ui_MapAppearanceDialog(object):
         self.cbFillContinents.setText(_translate("MapAppearanceDialog", "fill continents"))
         self.btLandColour.setText(_translate("MapAppearanceDialog", "colour"))
         self.cbDrawFlightTrack.setText(_translate("MapAppearanceDialog", "draw flight track"))
-        self.btWaypointsColour.setText(_translate("MapAppearanceDialog", "colour of waypoints"))
         self.btVerticesColour.setText(_translate("MapAppearanceDialog", "colour of flight path"))
+        self.cbDrawMarker.setToolTip(_translate("MapAppearanceDialog", "Draw a circle marker on every waypoint along the flight track"))
+        self.cbDrawMarker.setText(_translate("MapAppearanceDialog", "draw marker"))
+        self.btWaypointsColour.setText(_translate("MapAppearanceDialog", "colour of waypoints"))
         self.cbLabelFlightTrack.setText(_translate("MapAppearanceDialog", "label flight track"))
         self.groupBox.setTitle(_translate("MapAppearanceDialog", "Font Sizes"))
         self.tov_cbtitlesize.setItemText(0, _translate("MapAppearanceDialog", "default"))
@@ -272,3 +284,4 @@ if __name__ == "__main__":
     ui.setupUi(MapAppearanceDialog)
     MapAppearanceDialog.show()
     sys.exit(app.exec_())
+

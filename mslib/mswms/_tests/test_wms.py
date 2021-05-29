@@ -222,6 +222,64 @@ class Test_WMS(object):
             callback_ok_xml(result.status, result.headers)
             assert result.data.count(b"ServiceExceptionReport") > 0, result
 
+    def test_produce_lsec_plot(self):
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.LS_HV01&styles=&srs=LINE%3A1&format=text%2Fxml&'
+                'request=GetMap&dim_init_time=2012-10-17T12%3A00%3A00Z&'
+                'version=1.1.1&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_xml(result.status, result.headers)
+
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.LS_HV01&styles=&crs=LINE%3A1&format=text%2Fxml&'
+                'request=GetMap&dim_init_time=2012-10-17T12%3A00%3A00Z&'
+                'version=1.3.0&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
+
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_xml(result.status, result.headers)
+
+    def test_produce_lsec_service_exception(self):
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.LS_HV01&styles=&srs=LINE%3A1&format=text%2Fxml&'
+                'request=GetMap&dim_init_time=2012-10-17T12%3A00%3A00Z&'
+                'version=1.1.1&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
+        query_string = environ["QUERY_STRING"]
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(query_string))
+        callback_ok_xml(result.status, result.headers)
+        assert result.data.count(b"ServiceExceptionReport") == 0, result
+
+        for orig, fake in [
+                ("time=2012-10-17T12%3A00%3A00Z", "time=2012-01-17T12%3A00%3A00Z"),
+                ("&dim_init_time=2012-10-17T12%3A00%3A00Z", ""),
+                ("&time=2012-10-17T12%3A00%3A00Z", ""),
+                ("layers=ecmwf_EUR_LL015.LS_HV01", "layers=ecmwf_AUR_LL015.LS_HV01"),
+                ("layers=ecmwf_EUR_LL015.LS_HV01", "layers=ecmwf_EUR_LL015.LS_HV99"),
+                ("format=text%2Fxml", "format=oext%2Fxml"),
+                ("path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000", "path=aaaa%2C-8.93%2C25000%2C48.08%2C11.28%2C25000"),
+                ("&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000", ""),
+                ("bbox=201", "bbox=aaa")]:
+            environ["QUERY_STRING"] = query_string.replace(orig, fake)
+
+            result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+            callback_ok_xml(result.status, result.headers)
+            assert result.data.count(b"ServiceExceptionReport") > 0, result
+
     def test_application_request(self):
         environ = {
             'wsgi.url_scheme': 'http',

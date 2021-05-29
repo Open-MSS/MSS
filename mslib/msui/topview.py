@@ -69,6 +69,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "fill_waterbodies": True,
                              "fill_continents": True,
                              "draw_flighttrack": True,
+                             "draw_marker": True,
                              "label_flighttrack": True,
                              "tov_plot_title_size": "default",
                              "tov_axes_label_size": "default",
@@ -96,6 +97,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbDrawGraticule.setChecked(settings_dict["draw_graticule"])
         self.cbDrawCoastlines.setChecked(settings_dict["draw_coastlines"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
+        self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
 
         for button, ids in [(self.btWaterColour, "colour_water"),
@@ -132,6 +134,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "fill_waterbodies": self.cbFillWaterBodies.isChecked(),
             "fill_continents": self.cbFillContinents.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
+            "draw_marker": self.cbDrawMarker.isChecked(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
             "tov_plot_title_size": self.tov_cbtitlesize.currentText(),
             "tov_axes_label_size": self.tov_cbaxessize.currentText(),
@@ -301,7 +304,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # Create a keyword arguments dictionary for basemap that contains
         # the projection parameters.
         kwargs = current_map["map"]
-        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"]})
+        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
+                       "PROJECT_NAME": self.waypoints_model.name})
         kwargs.update(proj_params["basemap"])
 
         if only_kwargs:

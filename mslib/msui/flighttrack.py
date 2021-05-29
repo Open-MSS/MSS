@@ -484,7 +484,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp1.utc_time = self.performance_settings["takeoff_time"].toPyDateTime()
                 wp1.weight = self.performance_settings["takeoff_weight"]
                 wp1.leg_fuel = 0
-                wp1.rem_fuel = self.performance_settings["fuel"]
+                wp1.rem_fuel = self.performance_settings["takeoff_weight"] - self.performance_settings["empty_weight"]
                 wp1.ascent_rate = 0
             else:
                 wp0 = waypoints[pos - 1]
