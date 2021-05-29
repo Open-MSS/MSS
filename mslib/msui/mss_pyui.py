@@ -197,7 +197,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         """
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
-        self.lblVersion.setText("Version: {}".format(__version__))
+        self.lblVersion.setText(f"Version: {__version__}")
         self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
         self.lblChanges.setText(f'<a href="{self.milestone_url}">New Features and Changes</a>')
         blub = QtGui.QPixmap(python_powered())
