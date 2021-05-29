@@ -139,14 +139,14 @@ def make_msschem_hs_class(
         _contourname = "_pcontours"
 
     class fnord(HS_MSSChemStyle):
-        name = "HS_{}_{}{}".format(entity, vert, _contourname)
+        name = f"HS_{entity}_{vert}{_contourname}"
         dataname = entity
         units = units
         unit_scale = scale
         _title_tpl = nam + " (" + vert + ")"
         long_name = entity
         if units:
-            _title_tpl += " ({})".format(units)
+            _title_tpl += f"({units})"
 
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours
@@ -308,14 +308,14 @@ def make_msschem_vs_class(
         add_contours = []
 
     class fnord(VS_MSSChemStyle):
-        name = "VS_{}_{}".format(entity, vert)
+        name = f"VS_{entity}_{vert} "
         dataname = entity
         units = units
         unit_scale = scale
         title = nam + " (" + vert + ")"
         long_name = entity
         if units:
-            title += " ({})".format(units)
+            title += f"({units})"
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours if add_contours else []
 

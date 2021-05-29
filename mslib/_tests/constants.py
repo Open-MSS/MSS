@@ -40,7 +40,7 @@ else:
 CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mss_wms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
-ROOT_FS = TempFS(identifier="mss{}".format(SHA))
+ROOT_FS = TempFS(identifier=f"mss{SHA}")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")
 
 ROOT_DIR = ROOT_FS.getsyspath("")
