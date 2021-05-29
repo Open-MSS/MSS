@@ -513,6 +513,9 @@ class MplSideViewCanvas(MplCanvas):
         # Main axes instance of mplwidget has zorder 99.
         self.imgax = self.fig.add_axes(
             self.ax.get_position(), frameon=True, xticks=[], yticks=[], label="imgax", zorder=0)
+
+        # Sets the default value of sideview fontsize settings from MSSDefaultConfig.
+        self.sideview_size_settings = config_loader(dataset="sideview")
         self.setup_side_view()
         # Draw a number of flight level lines.
         self.flightlevels = []
@@ -602,18 +605,17 @@ class MplSideViewCanvas(MplCanvas):
         vaxis = self.settings_dict["vertical_axis"]
         vaxis2 = self.settings_dict["secondary_axis"]
 
-        # Sets fontsize for x axis ticklabel.
-        if self.settings_dict["axes_label_size"] == "default":
-            axes_label_size = 10    # A default size of 10 has been taken.
-        else:
-            axes_label_size = int(self.settings_dict["axes_label_size"])
+        # Sets fontsize value for x axis ticklabel.
+        axes_label_size = (self.sideview_size_settings["axes_label_size"]
+                           if self.settings_dict["axes_label_size"] == "default"
+                           else int(self.settings_dict["axes_label_size"]))
+        # Sets fontsize value for plot title and axes title/label
+        plot_title_size = (self.sideview_size_settings["plot_title_size"]
+                           if self.settings_dict["plot_title_size"] == "default"
+                           else int(self.settings_dict["plot_title_size"]))
+        # Updates the fontsize of the x-axis ticklabels of sideview.
         self.ax.tick_params(axis='x', labelsize=axes_label_size)
-
-        # Sets fontsize for plot title and axes title/label
-        if self.settings_dict["plot_title_size"] == "default":
-            plot_title_size = 10
-        else:
-            plot_title_size = self.settings_dict["plot_title_size"]
+        # Updates the fontsize of plot title and x-axis title of sideview.
         self.ax.set_title("vertical flight profile", fontsize=plot_title_size, horizontalalignment="left", x=0)
         self.ax.set_xlabel("lat/lon", fontsize=plot_title_size)
 
@@ -641,7 +643,7 @@ class MplSideViewCanvas(MplCanvas):
         mss_batch_production/visualisation/mpl_vsec.py.
         """
 
-        self.ax.set_title("vertical flight profile", fontsize=10, horizontalalignment="left", x=0)
+        self.ax.set_title("vertical flight profile", horizontalalignment="left", x=0)
         self.ax.grid(b=True)
 
         self.ax.set_xlabel("lat/lon")
@@ -680,13 +682,13 @@ class MplSideViewCanvas(MplCanvas):
                                      for d in zip(lats[::tick_index_step],
                                                   lons[::tick_index_step],
                                                   times[::tick_index_step])],
-                                    rotation=25, fontsize=10, horizontalalignment="right")
+                                    rotation=25, horizontalalignment="right")
         else:
             self.ax.set_xticklabels([f"{d[0]:2.1f}, {d[1]:2.1f}"
                                      for d in zip(lats[::tick_index_step],
                                                   lons[::tick_index_step],
                                                   times[::tick_index_step])],
-                                    rotation=25, fontsize=10, horizontalalignment="right")
+                                    rotation=25, horizontalalignment="right")
 
         for _line in self.ceiling_alt:
             _line.remove()
@@ -914,6 +916,12 @@ class MplTopViewCanvas(MplCanvas):
         self.legax = None
         self.legimg = None
 
+        # stores the  topview plot title size(tov_pts) and topview axes label size(tov_als),initially as None.
+        self.tov_pts = None
+        self.tov_als = None
+        # Sets the default fontsize parameters' values for topview from MSSDefaultConfig.
+        self.topview_size_settings = config_loader(dataset="topview")
+
         # Set map appearance from parameter or, if not specified, to default
         # values.
         self.set_map_appearance(settings)
@@ -929,8 +937,18 @@ class MplTopViewCanvas(MplCanvas):
         self.map = mpl_map.MapCanvas(appearance=self.get_map_appearance(),
                                      resolution="l", area_thresh=1000., ax=ax,
                                      **kwargs)
+
+        # Sets the selected fontsize only if draw_graticule box from topview options is checked in.
+        if self.appearance_settings["draw_graticule"]:
+            try:
+                self.map._draw_auto_graticule(self.tov_als)
+            except Exception as ex:
+                logging.error("ERROR: cannot plot graticule (message: %s - '%s')", type(ex), ex)
+        else:
+            self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
+
         ax.set_autoscale_on(False)
-        ax.set_title("Top view", horizontalalignment="left", x=0)
+        ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
         self.draw()  # necessary?
 
         if model:
@@ -983,6 +1001,13 @@ class MplTopViewCanvas(MplCanvas):
 
         # 2) UPDATE MAP.
         self.map.update_with_coordinate_change(kwargs_update)
+
+        # Sets the graticule ticklabels/labels fontsize for topview when map is redrawn.
+        if self.appearance_settings["draw_graticule"]:
+            self.map.set_graticule_visible(False)
+            self.map._draw_auto_graticule(self.tov_als)
+        else:
+            self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
         # in waypoints_interactor()
@@ -1000,7 +1025,12 @@ class MplTopViewCanvas(MplCanvas):
         if self.kmloverlay:
             self.kmloverlay.update()
 
-        self.draw_metadata("Top view")
+        # self.draw_metadata() ; It is not needed here, since below here already plot title is being set.
+
+        # Setting fontsize for topview plot title when map is redrawn.
+        self.ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment='left', x=0)
+        self.draw()
+        self.repaint()
 
         # Update in case of a projection change
         self.waypoints_interactor.update()
@@ -1097,13 +1127,17 @@ class MplTopViewCanvas(MplCanvas):
                                                xticks=[], yticks=[],
                                                label="ax2", zorder=0)
                 self.legax.patch.set_facecolor("None")
+                # self.legax.set_yticklabels("ax2", fontsize=32, minor=False)
+                # print("Legax=if" + self.legax)
 
             # If axes exist, adjust their position.
             else:
                 self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
-
+                # self.legax.set_yticklabels("ax2", fontsize=32, minor=False)
+                # print("Legax=else" + self.legax)
             # Plot the new legimg in the legax axes.
             self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal", interpolation="nearest")
+            # print("Legimg" + self.legimg)
         self.draw()
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()
@@ -1140,6 +1174,8 @@ class MplTopViewCanvas(MplCanvas):
                     "fill_continents": True,
                     "draw_flighttrack": True,
                     "label_flighttrack": True,
+                    "tov_plot_title_size": "default",
+                    "tov_axes_label_size": "default",
                     "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
                     "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
                     "colour_ft_vertices": (0, 0, 1, 1),
@@ -1147,10 +1183,17 @@ class MplTopViewCanvas(MplCanvas):
         if settings_dict is not None:
             settings.update(settings_dict)
 
+        # Stores the exact value of fontsize for topview plot title size(tov_pts)
+        self.tov_pts = (self.topview_size_settings["plot_title_size"] if settings["tov_plot_title_size"] == "default"
+                        else int(settings["tov_plot_title_size"]))
+        # Stores the exact value of fontsize for topview axes label size(tov_als)
+        self.tov_als = (self.topview_size_settings["axes_label_size"] if settings["tov_axes_label_size"] == "default"
+                        else int(settings["tov_axes_label_size"]))
+
         self.appearance_settings = settings
+        ax = self.ax
 
         if self.map is not None:
-            self.map.set_graticule_visible(settings["draw_graticule"])
             self.map.set_coastlines_visible(settings["draw_coastlines"])
             self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
                                                 land_color=settings["colour_land"],
@@ -1161,6 +1204,18 @@ class MplTopViewCanvas(MplCanvas):
                                                      marker_facecolor=settings["colour_ft_waypoints"])
             self.waypoints_interactor.set_vertices_visible(settings["draw_flighttrack"])
             self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
+
+            # Updates plot title size as selected from combobox labelled plot title size.
+            ax.set_autoscale_on(False)
+            ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
+
+            # Updates graticule ticklabels/labels fontsize if draw_graticule is True.
+            if settings["draw_graticule"]:
+                self.map.set_graticule_visible(False)
+                self.map._draw_auto_graticule(self.tov_als)
+            else:
+                self.map.set_graticule_visible(settings["draw_graticule"])
+            self.draw()
 
     def set_remote_sensing_appearance(self, settings):
         self.waypoints_interactor.set_remote_sensing(settings["reference"])

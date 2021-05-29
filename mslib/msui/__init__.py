@@ -187,3 +187,11 @@ class MissionSupportSystemDefaultConfig(object):
 
     # dictionary for import plugins, e.g. { "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"] }
     import_plugins = {}
+
+    # dictionary to make title, label and ticklabel sizes for topview and sideview configurable.
+    # You can put your default value here, whatever you want to give,it should be a number.
+    topview = {"plot_title_size": 10,
+               "axes_label_size": 10}
+
+    sideview = {"plot_title_size": 10,
+                "axes_label_size": 10}

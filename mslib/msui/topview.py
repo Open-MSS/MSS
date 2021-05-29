@@ -70,6 +70,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "fill_continents": True,
                              "draw_flighttrack": True,
                              "label_flighttrack": True,
+                             "tov_plot_title_size": "default",
+                             "tov_axes_label_size": "default",
                              "colour_water": (0, 0, 0, 0),
                              "colour_land": (0, 0, 0, 0),
                              "colour_ft_vertices": (0, 0, 0, 0),
@@ -112,6 +114,15 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
 
+        # Shows previously selected element in the fontsize comboboxes as the current index.
+        for i in range(self.tov_cbtitlesize.count()):
+            if self.tov_cbtitlesize.itemText(i) == settings_dict["tov_plot_title_size"]:
+                self.tov_cbtitlesize.setCurrentIndex(i)
+
+        for i in range(self.tov_cbaxessize.count()):
+            if self.tov_cbaxessize.itemText(i) == settings_dict["tov_axes_label_size"]:
+                self.tov_cbaxessize.setCurrentIndex(i)
+
     def get_settings(self):
         """
         """
@@ -122,6 +133,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "fill_continents": self.cbFillContinents.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
+            "tov_plot_title_size": self.tov_cbtitlesize.currentText(),
+            "tov_axes_label_size": self.tov_cbaxessize.currentText(),
 
             "colour_water":
                 QtGui.QPalette(self.btWaterColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
