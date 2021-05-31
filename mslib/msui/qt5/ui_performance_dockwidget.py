@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_performance_dockwidget.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_PerformanceDockWidget(object):
     def setupUi(self, PerformanceDockWidget):
@@ -38,12 +40,12 @@ class Ui_PerformanceDockWidget(object):
         self.label_4.setIndent(1)
         self.label_4.setObjectName("label_4")
         self.horizontalLayout_4.addWidget(self.label_4)
-        self.dsbFuel = QtWidgets.QDoubleSpinBox(PerformanceDockWidget)
-        self.dsbFuel.setDecimals(0)
-        self.dsbFuel.setMaximum(9999999.0)
-        self.dsbFuel.setSingleStep(1000.0)
-        self.dsbFuel.setObjectName("dsbFuel")
-        self.horizontalLayout_4.addWidget(self.dsbFuel)
+        self.dsbEmptyWeight = QtWidgets.QDoubleSpinBox(PerformanceDockWidget)
+        self.dsbEmptyWeight.setDecimals(0)
+        self.dsbEmptyWeight.setMaximum(9999999.0)
+        self.dsbEmptyWeight.setSingleStep(1000.0)
+        self.dsbEmptyWeight.setObjectName("dsbEmptyWeight")
+        self.horizontalLayout_4.addWidget(self.dsbEmptyWeight)
         self.gridLayout.addLayout(self.horizontalLayout_4, 3, 0, 1, 1)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
@@ -87,18 +89,7 @@ class Ui_PerformanceDockWidget(object):
         self.label_2.setText(_translate("PerformanceDockWidget", "Aircraft:"))
         self.lbAircraftName.setText(_translate("PerformanceDockWidget", "DUMMY"))
         self.pbLoadPerformance.setText(_translate("PerformanceDockWidget", "Select"))
-        self.label_4.setText(_translate("PerformanceDockWidget", "Fuel (lb)"))
+        self.label_4.setText(_translate("PerformanceDockWidget", "Aircraft weight (no fuel) (lb)"))
         self.label_3.setText(_translate("PerformanceDockWidget", "Take off time"))
-        self.label_5.setText(_translate("PerformanceDockWidget", "Take off weight (lb)"))
+        self.label_5.setText(_translate("PerformanceDockWidget", "Maximum take off weight (lb)"))
         self.cbShowPerformance.setText(_translate("PerformanceDockWidget", "Show Performance"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    PerformanceDockWidget = QtWidgets.QDialog()
-    ui = Ui_PerformanceDockWidget()
-    ui.setupUi(PerformanceDockWidget)
-    PerformanceDockWidget.show()
-    sys.exit(app.exec_())
-

@@ -71,7 +71,7 @@
      <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>Fuel (lb)</string>
+        <string>Aircraft weight (no fuel) (lb)</string>
        </property>
        <property name="indent">
         <number>1</number>
@@ -79,7 +79,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="dsbFuel">
+      <widget class="QDoubleSpinBox" name="dsbEmptyWeight">
        <property name="decimals">
         <number>0</number>
        </property>
@@ -118,7 +118,7 @@
      <item>
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Take off weight (lb)</string>
+        <string>Maximum take off weight (lb)</string>
        </property>
        <property name="indent">
         <number>1</number>

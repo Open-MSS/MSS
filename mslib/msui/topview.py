@@ -69,6 +69,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "fill_waterbodies": True,
                              "fill_continents": True,
                              "draw_flighttrack": True,
+                             "draw_marker": True,
                              "label_flighttrack": True,
                              "colour_water": (0, 0, 0, 0),
                              "colour_land": (0, 0, 0, 0),
@@ -94,6 +95,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbDrawGraticule.setChecked(settings_dict["draw_graticule"])
         self.cbDrawCoastlines.setChecked(settings_dict["draw_coastlines"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
+        self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
 
         for button, ids in [(self.btWaterColour, "colour_water"),
@@ -121,6 +123,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "fill_waterbodies": self.cbFillWaterBodies.isChecked(),
             "fill_continents": self.cbFillContinents.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
+            "draw_marker": self.cbDrawMarker.isChecked(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
 
             "colour_water":

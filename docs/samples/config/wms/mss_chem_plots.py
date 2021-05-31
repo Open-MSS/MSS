@@ -9,6 +9,7 @@ from matplotlib import patheffects
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.utils import get_style_parameters, get_cbar_label_format
+from mslib.utils import convert_to
 from mslib import thermolib
 
 
@@ -167,7 +168,6 @@ _npressurelevels = len(_pressurelevels)
 for vert in ["ml"]:
     for stdname, props in MSSChemTargets.items():
         name, qty, units, scale = props
-        # ToDo string substitution
         key = "HS_MSSChemStyle_" + vert.upper() + "_" + name + "_" + qty + "_pcontours"
         globals()[key] = make_msschem_hs_class(
             stdname, name, vert, units, scale, add_data=[(vert, "air_pressure", None)],
@@ -220,14 +220,15 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
             # anyways, so we do a poor-man's on-the-fly conversion here.
             if 'air_pressure' not in self.data:
                 self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
-                flightlevel = 3.28083989501 / 100. * self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
-                self.data['air_pressure'][:] = thermolib.flightlevel2pressure_a(flightlevel)
+                self.data['air_pressure'][:] = thermolib.flightlevel2pressure_a(convert_to(
+                    self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                    self.driver.vert_units, "hft"))
 
     def _plot_style(self):
         ax = self.ax
         curtain_cc = self.data[self.dataname] * self.unit_scale
         curtain_cc = np.ma.masked_invalid(curtain_cc)
-        curtain_p = self.data["air_pressure"]  # TODO* 100
+        curtain_p = self.data["air_pressure"]
 
         numlevel = curtain_p.shape[0]
         numpoints = len(self.lats)

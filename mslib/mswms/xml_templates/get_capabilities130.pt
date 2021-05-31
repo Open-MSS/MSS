@@ -95,6 +95,20 @@
                     <Title>${ style_title }</Title>
                 </Style>
             </Layer>
+            <Layer tal:repeat="(dataset, layer) lsec_layers" tal:attributes="queryable '0' if layer.queryable else None">
+                <Name>${ "%s.%s" % (dataset, layer.name) }</Name>
+                <Title tal:condition="layer.title">${ layer.title.strip() }</Title>
+                <Abstract tal:condition="layer.abstract">${ layer.abstract.strip() }</Abstract>
+                <CRS tal:repeat="crs layer.supported_crs()">${ crs }</CRS>
+                <EX_GeographicBoundingBox>
+                    <westBoundLongitude>-180</westBoundLongitude>
+                    <eastBoundLongitude>180</eastBoundLongitude>
+                    <southBoundLatitude>-90</southBoundLatitude>
+                    <northBoundLatitude>90</northBoundLatitude>
+                </EX_GeographicBoundingBox>
+                <Dimension tal:condition="layer.uses_validtime_dimension()" name="TIME" units="ISO8601">${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_all_valid_times()]) }</Dimension>
+                <Dimension tal:condition="layer.uses_inittime_dimension()" name="INIT_TIME" units="ISO8601">${ (",").join([dt.strftime("%Y-%m-%dT%H:%M:%SZ") for dt in layer.get_init_times()]) }</Dimension>
+            </Layer>
         </Layer>
     </Capability>
 </WMS_Capabilities>
