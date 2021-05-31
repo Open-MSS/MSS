@@ -52,6 +52,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import tableview
 from mslib.msui import topview
 from mslib.msui import sideview
+from mslib.msui import linearview
 from mslib.msui import editor
 from mslib.msui import constants
 from mslib.msui import wms_control
@@ -245,6 +246,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionTopView.triggered.connect(self.create_new_view)
         self.actionSideView.triggered.connect(self.create_new_view)
         self.actionTableView.triggered.connect(self.create_new_view)
+        self.actionLinearView.triggered.connect(self.create_new_view)
 
         # mscolab menu
         self.actionMscolabProjects.triggered.connect(self.activate_mscolab_window)
@@ -512,6 +514,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
+        elif self.sender() == self.actionLinearView:
+            # Linear view.
+            view_window = linearview.MSSLinearViewWindow(model=self.active_flight_track)
+            view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).

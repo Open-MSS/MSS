@@ -177,6 +177,7 @@ for mod in [
         "ui_tableview_window",
         "ui_topview_mapappearance",
         "ui_topview_window",
+        "ui_linearview_window",
         "ui_wms_capabilities",
         "ui_wms_dockwidget",
         "ui_wms_password_dialog",

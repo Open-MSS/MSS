@@ -59,6 +59,7 @@ class MissionSupportSystemDefaultConfig(object):
     # layout of different views, with immutable they can't resized
     layout = {"topview": (963, 702),
               "sideview": (913, 557),
+              "linearview": (913, 557),
               "tableview": (1236, 424),
               "immutable": False}
 
@@ -100,6 +101,10 @@ class MissionSupportSystemDefaultConfig(object):
                    ]
 
     default_VSEC_WMS = [
+        "http://localhost:8081/"
+    ]
+
+    default_LSEC_WMS = [
         "http://localhost:8081/"
     ]
 

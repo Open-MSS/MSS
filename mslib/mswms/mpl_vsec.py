@@ -81,14 +81,15 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                                          self.lons[::tick_index_step])],
                            rotation=25, fontsize=10, horizontalalignment='right')
 
-        # Add lines to highlight points if any are given.
-        ipoint = 0
-        for i, (lat, lon) in enumerate(zip(self.lats, self.lons)):
-            if (ipoint < len(self.highlight) and
-                np.hypot(lat - self.highlight[ipoint][0],
-                         lon - self.highlight[ipoint][1]) < 2E-10):
-                ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
-                ipoint += 1
+        if self.draw_verticals:
+            # Add lines to highlight points if any are given.
+            ipoint = 0
+            for i, (lat, lon) in enumerate(zip(self.lats, self.lons)):
+                if (ipoint < len(self.highlight) and
+                    np.hypot(lat - self.highlight[ipoint][0],
+                             lon - self.highlight[ipoint][1]) < 2E-10):
+                    ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
+                    ipoint += 1
 
         # Add lower limit of pressure curtain to indicate orography.
         ax.fill_between(self.lat_inds, orography, y2=self.p_bot,
@@ -127,7 +128,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     def plot_vsection(self, data, lats, lons, valid_time, init_time,
                       resolution=(-1, -1), bbox=(-1, 1050, -1, 200), style=None,
                       show=False,
-                      highlight=None, noframe=False, figsize=(960, 480),
+                      highlight=None, noframe=False, figsize=(960, 480), draw_verticals=False,
                       numlabels=10, orography_color='k', transparent=False,
                       return_format="image/png"):
         """
@@ -155,6 +156,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.style = style
         self.highlight = highlight
         self.noframe = noframe
+        self.draw_verticals = draw_verticals
         self.p_bot = bbox[1] * 100
         self.p_top = bbox[3] * 100
         self.numlabels = numlabels
