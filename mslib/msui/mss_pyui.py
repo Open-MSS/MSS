@@ -282,6 +282,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.updater = Updater(self)
             self.updater.on_update_available.connect(self.notify_on_update)
             self.updater.run()
+            self.actionUpdater.triggered.connect(self.updater.show)
 
     @staticmethod
     def preload_wms(urls):
@@ -769,7 +770,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
             QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
-            self.updater.update_mss()
+            self.updater.show()
 
 
 def main():
