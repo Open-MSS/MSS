@@ -779,6 +779,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:
             self.updater.show()
+            self.updater.btUpdate.click()
 
 
 def main():

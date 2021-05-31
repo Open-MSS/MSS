@@ -88,8 +88,8 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         search = self._execute_command("conda search mss")
         self.new_version = search.split("\n")[-2].split()[1]
         self.labelVersion.setText(f"Newest Version: {self.new_version}")
-        list = self._execute_command("conda list mss")
-        self.old_version = list.split("\n")[-2].split()[1]
+        c_list = self._execute_command("conda list mss")
+        self.old_version = c_list.split("\n")[-2].split()[1]
         if any(c.isdigit() for c in self.new_version):
             if self.new_version > self.old_version:
                 self.statusLabel.setText("Your version of MSS is outdated!")
@@ -101,10 +101,13 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
 
     def _restart_mss(self):
         """
-        Restart mss with all the same parameters, not be entirely
+        Restart mss with all the same parameters, not entirely
         safe in case parameters change in higher versions, or while debugging
         """
-        os.execv(sys.executable, [sys.executable.split(os.sep)[-1]] + sys.argv)
+        command = [sys.executable.split(os.sep)[-1]] + sys.argv
+        if os.name == "nt":
+            command[1] += "-script.py"
+        os.execv(sys.executable, command)
 
     def _try_updating(self):
         """
