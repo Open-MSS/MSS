@@ -68,8 +68,8 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
     def _replace_clicked(self):
         ret = QtWidgets.QMessageBox.information(
             self, "Mission Support System",
-            f"Closing MSS during the replacement process may break your environment.\n"
-            f"Are you sure you want to automatically replace your current environment?",
+            "Closing MSS during the replacement process may break your environment.\n"
+            "Are you sure you want to automatically replace your current environment?",
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
             QtWidgets.QMessageBox.No)
         if ret == QtWidgets.QMessageBox.Yes:

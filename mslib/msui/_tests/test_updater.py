@@ -30,6 +30,11 @@ from PyQt5 import QtWidgets
 
 from mslib.msui.updater import Updater
 from mslib.utils import Worker
+from mslib import __version__
+
+
+def no_conda(args=None, **named_args):
+    raise FileNotFoundError
 
 
 class SubprocessDifferentVersionMock:
@@ -122,7 +127,28 @@ class Test_MSS_ShortcutDialog:
 
     @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)
     @mock.patch("subprocess.run", new=SubprocessDifferentVersionMock)
+    @mock.patch("mslib.utils.Worker.create", create_mock)
     def test_environment_replace(self):
         self.updater.new_version = "0.0.0"
         self.updater._set_base_env_path()
         assert self.updater._try_environment_replace()
+        self.updater.new_version = "999.999.999"
+        assert not self.updater._try_environment_replace()
+
+    @mock.patch("subprocess.Popen", new=no_conda)
+    @mock.patch("subprocess.run", new=no_conda)
+    @mock.patch("mslib.utils.Worker.create", create_mock)
+    def test_no_conda(self):
+        self.updater.run()
+        assert self.updater.new_version is None and self.updater.old_version is __version__
+
+    @mock.patch("subprocess.Popen", new=no_conda)
+    @mock.patch("subprocess.run", new=no_conda)
+    @mock.patch("mslib.utils.Worker.create", create_mock)
+    def test_exception(self):
+        self.updater.base_path = "999.999.999"
+        self.updater.current_path = "999.999.999"
+        self.updater.new_version = "999.999.999"
+        self.updater.old_version = "999.999.999"
+        self.updater.update_mss(True)
+        assert self.updater.statusLabel.text() == "Update failed, please do it manually."
