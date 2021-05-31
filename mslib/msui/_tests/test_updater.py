@@ -92,9 +92,6 @@ class Test_MSS_ShortcutDialog:
         self.updater.new_version = "0.0.0"
 
         self.updater.update_mss()
-        assert self.updater.base_path == "999.999.999"
-        assert self.updater.current_path == "999.999.999"
-        assert self.updater.progressBar.value() == 100
         assert self.updater.statusLabel.text() == "Update successful. Please restart MSS."
 
     @mock.patch("subprocess.Popen", new=SubprocessSameMock)
@@ -123,17 +120,7 @@ class Test_MSS_ShortcutDialog:
 
         self.updater.update_mss()
         assert self.updater.statusLabel.text() == "Update failed. Please try it manually or " \
-                                                  "try replacing the environment!"
-
-    @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)
-    @mock.patch("subprocess.run", new=SubprocessDifferentVersionMock)
-    @mock.patch("mslib.utils.Worker.create", create_mock)
-    def test_environment_replace(self):
-        self.updater.new_version = "0.0.0"
-        self.updater._set_base_env_path()
-        assert self.updater._try_environment_replace()
-        self.updater.new_version = "999.999.999"
-        assert not self.updater._try_environment_replace()
+                                                  "by creating a new environment!"
 
     @mock.patch("subprocess.Popen", new=no_conda)
     @mock.patch("subprocess.run", new=no_conda)
@@ -146,9 +133,7 @@ class Test_MSS_ShortcutDialog:
     @mock.patch("subprocess.run", new=no_conda)
     @mock.patch("mslib.utils.Worker.create", create_mock)
     def test_exception(self):
-        self.updater.base_path = "999.999.999"
-        self.updater.current_path = "999.999.999"
         self.updater.new_version = "999.999.999"
         self.updater.old_version = "999.999.999"
-        self.updater.update_mss(True)
+        self.updater.update_mss()
         assert self.updater.statusLabel.text() == "Update failed, please do it manually."

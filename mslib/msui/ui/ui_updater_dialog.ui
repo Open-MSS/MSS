@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>854</width>
-    <height>353</height>
+    <height>338</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,57 +32,17 @@
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>Update Current Environment</string>
+        <string>Update</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btReplace">
+      <widget class="QPushButton" name="btRestart">
        <property name="enabled">
         <bool>false</bool>
        </property>
-       <property name="palette">
-        <palette>
-         <active>
-          <colorrole role="ButtonText">
-           <brush brushstyle="SolidPattern">
-            <color alpha="255">
-             <red>255</red>
-             <green>0</green>
-             <blue>0</blue>
-            </color>
-           </brush>
-          </colorrole>
-         </active>
-         <inactive>
-          <colorrole role="ButtonText">
-           <brush brushstyle="SolidPattern">
-            <color alpha="255">
-             <red>255</red>
-             <green>0</green>
-             <blue>0</blue>
-            </color>
-           </brush>
-          </colorrole>
-         </inactive>
-         <disabled>
-          <colorrole role="ButtonText">
-           <brush brushstyle="SolidPattern">
-            <color alpha="255">
-             <red>190</red>
-             <green>190</green>
-             <blue>190</blue>
-            </color>
-           </brush>
-          </colorrole>
-         </disabled>
-        </palette>
-       </property>
-       <property name="toolTip">
-        <string>Closing MSS during this operation may break your environment!</string>
-       </property>
        <property name="text">
-        <string>Replace Current Environment</string>
+        <string>Restart MSS</string>
        </property>
       </widget>
      </item>
@@ -137,16 +97,6 @@
      </property>
      <property name="centerOnScroll">
       <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QProgressBar" name="progressBar">
-     <property name="value">
-      <number>0</number>
-     </property>
-     <property name="format">
-      <string>Installation Progress: %p%</string>
      </property>
     </widget>
    </item>

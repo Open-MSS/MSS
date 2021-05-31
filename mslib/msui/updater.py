@@ -25,7 +25,6 @@
 import subprocess
 import sys
 import os
-import tempfile
 
 from mslib import __version__
 from mslib.utils import Worker
@@ -55,25 +54,14 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
                                               self.output.verticalScrollBar().setSliderPosition(
                                                   self.output.verticalScrollBar().maximum())))
         self.old_version = __version__
-        self.backup_dir = os.path.join(tempfile.gettempdir(), "updater_backup")
         self.btUpdate.clicked.connect(self.update_mss)
-        self.btReplace.clicked.connect(self._replace_clicked)
+        self.btRestart.clicked.connect(self._restart_mss)
 
     def run(self):
         """
         Starts the updater process
         """
         Worker.create(self._check_version)
-
-    def _replace_clicked(self):
-        ret = QtWidgets.QMessageBox.information(
-            self, "Mission Support System",
-            "Closing MSS during the replacement process may break your environment.\n"
-            "Are you sure you want to automatically replace your current environment?",
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No)
-        if ret == QtWidgets.QMessageBox.Yes:
-            self.update_mss(True)
 
     def _check_version(self):
         """
@@ -97,10 +85,10 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         self.statusLabel.setText("Checking for updates...")
 
         # Check if "search mss" yields a higher version than the currently running one
-        search = self._execute_command("conda search mss", local=True)
+        search = self._execute_command("conda search mss")
         self.new_version = search.split("\n")[-2].split()[1]
         self.labelVersion.setText(f"Newest Version: {self.new_version}")
-        list = self._execute_command("conda list mss", local=True)
+        list = self._execute_command("conda list mss")
         self.old_version = list.split("\n")[-2].split()[1]
         if any(c.isdigit() for c in self.new_version):
             if self.new_version > self.old_version:
@@ -113,9 +101,9 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
 
     def _restart_mss(self):
         """
-        Restart mss with all the same parameters, might not be entirely safe
+        Restart mss with all the same parameters, not be entirely
+        safe in case parameters change in higher versions, or while debugging
         """
-        QtCore.QCoreApplication.quit()
         os.execv(sys.executable, [sys.executable.split(os.sep)[-1]] + sys.argv)
 
     def _try_updating(self):
@@ -130,115 +118,43 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
             pass
 
         self.statusLabel.setText("Trying to update MSS...")
-        self._execute_command(f"{command} install mss={self.new_version} python -y", local=True)
-        if self._verify_newest_mss(env=None):
+        self._execute_command(f"{command} install mss={self.new_version} python -y")
+        if self._verify_newest_mss():
             return True
 
         return False
 
-    def _try_environment_replace(self):
-        """
-        Replace the current working environment with a fresh one containing the newest MSS
-        Ideally this method is never called
-        """
-        self._execute_command("conda config --add channels conda-forge")
-        packages = {package.split()[0] for package in self._execute_command("conda list", local=True).split("\n")
-                    if package != "" and package[0] != "#"}
-
-        self.statusLabel.setText("Creating temporary environment...")
-        self._execute_command("conda create -n mss-tmp-env mamba -y")
-
-        self.statusLabel.setText("Installing latest MSS...")
-        self._execute_command(f"mamba install mss={self.new_version} python -y", "mss-tmp-env")
-
-        if not self._verify_newest_mss():
-            self._execute_command("conda remove -n mss-tmp-env --all -y")
-            return False
-
-        self.statusLabel.setText("Installing additional packages...")
-        tmp_packages = {package.split()[0] for package in self._execute_command("conda list", "mss-tmp-env").split("\n")
-                        if package != "" and package[0] != "#"}
-        to_install = packages.difference(tmp_packages)
-        if len(to_install) > 0:
-            self._execute_command(f"mamba install {' '.join(to_install)} -y", "mss-tmp-env")
-
-        self.statusLabel.setText("Updating packages...")
-        self._execute_command("mamba update --all -y", "mss-tmp-env")
-
-        self.statusLabel.setText("Backing up environment, please don't close MSS!")
-        self._move_environment()
-        self.statusLabel.setText("Replacing environment, please don't close MSS!")
-        self._execute_command(f"conda create -p {self.current_path} --clone mss-tmp-env -y")
-        if not self._verify_newest_mss(env=None):
-            self.statusLabel.setText("Restoring backup, please don't close MSS!")
-            self._restore_environment()
-            self._execute_command("conda remove -n mss-tmp-env --all -y")
-            return False
-
-        self.statusLabel.setText("Cleaning up, please don't close MSS!")
-        self._delete_backup()
-        self._execute_command("conda remove -n mss-tmp-env --all -y")
-        return True
-
-    def _update_mss(self, replace=False):
+    def _update_mss(self):
         """
         Try to install MSS' newest version
         """
-        self._set_base_env_path()
-
-        if not replace:
-            if not self._try_updating():
-                self.statusLabel.setText("Update failed. Please try it manually or try replacing the environment!")
-                self.btReplace.setEnabled(True)
-            else:
-                self.statusLabel.setText("Update successful. Please restart MSS.")
+        if not self._try_updating():
+            self.statusLabel.setText("Update failed. Please try it manually or by creating a new environment!")
         else:
-            if not self._try_environment_replace():
-                self.statusLabel.setText("Update failed. Please try it manually!")
-            else:
-                self.statusLabel.setText("Update successful. Please restart MSS.")
+            self.btRestart.setEnabled(True)
+            self.statusLabel.setText("Update successful. Please restart MSS.")
 
-    def _verify_newest_mss(self, env="mss-tmp-env"):
+    def _verify_newest_mss(self):
         """
         Return if the newest mss exists in the environment or not
         """
-        verify = self._execute_command("conda list mss", env=env, local=True if env is None else False)
+        verify = self._execute_command("conda list mss")
         if self.new_version in verify:
             return True
 
         return False
 
-    def _set_base_env_path(self):
-        """
-        Save the path of the base environment and current environment-
-        The output of env list is masked for executed scripts to pretend the current environment is base
-        """
-        env_list = self._execute_command("conda env list", local=True)
-        self.base_path = next(line for line in env_list.split("\n") if "#" not in line).split()[-1]
-        self.current_path = next(line for line in env_list.split("\n") if "*" in line).split()[-1]
-
-    def _execute_command(self, command, env=None, local=False):
+    def _execute_command(self, command):
         """
         Handles proper execution of conda subprocesses and logging
         """
-        if not local:
-            conda_command = ["conda", "run", "--no-capture-output", "-p", self.base_path]
-            if env is not None:
-                conda_command.extend(["conda", "run", "--no-capture-output", "-n", env])
-            conda_command.extend(command.split())
-            process = subprocess.Popen(conda_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
-        else:
-            process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                       encoding="utf8")
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
         self.on_log_update.emit(" ".join(process.args) + "\n")
 
-        if "install" in process.args or "update" in process.args:
-            text = self._update_download_progress(process)
-        else:
-            text = ""
-            for line in process.stdout:
-                self.on_log_update.emit(line)
-                text += line
+        text = ""
+        for line in process.stdout:
+            self.on_log_update.emit(line)
+            text += line
 
         # Happens e.g. on connection errors during installation attempts
         if "An unexpected error has occurred. Conda has prepared the above report" in text:
@@ -246,61 +162,13 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         else:
             return text
 
-    def _move_environment(self):
-        self._delete_backup()
-        if os.name != "nt":
-            self._execute_command(f"mv -v {self.current_path} {self.backup_dir}", local=True)
-        else:
-            self._execute_command(f"move {self.current_path} {self.backup_dir}", local=True)
-
-    def _delete_backup(self):
-        if os.name != "nt":
-            self._execute_command(f"rm -r -v -f {self.backup_dir}", local=True)
-        else:
-            self._execute_command(f"rmdir {self.backup_dir} /s /q", local=True)
-
-    def _restore_environment(self):
-        if os.path.exists(self.backup_dir):
-            self._execute_command(f"conda remove -p {self.current_path} --all -y")
-            if os.name != "nt":
-                self._execute_command(f"mv -v {self.backup_dir} {self.current_path}", local=True)
-            else:
-                self._execute_command(f"move {self.backup_dir} {self.current_path}", local=True)
-
-    def _update_download_progress(self, process):
-        """
-        Updates the progress bar to reflect the progress of the update or install
-        """
-        self.progressBar.setValue(0)
-        total_download = 0
-        downloaded = 0
-        output = ""
-        for line in process.stdout:
-            if line.startswith(""):
-                continue
-            output += line
-            self.on_log_update.emit(line)
-            line = line.replace("\n", "")
-            info = line.split()
-            if "Total download:" in line:
-                factor = 10**3 if info[-1] == "KB" else 10**6 if info[-1] == "MB" else 10**9 if info[-1] == "GB" else 1
-                total_download = int(float(info[-2]) * factor)
-            elif "Finished" in line:
-                factor = 10**3 if info[-3] == "KB" else 10**6 if info[-3] == "MB" else 10**9 if info[-3] == "GB" else 1
-                downloaded += int(float(info[-4]) * factor)
-                self.progressBar.setValue(int((downloaded / total_download) * 100))
-        self.progressBar.setValue(100)
-        return output
-
-    def update_mss(self, replace=False):
+    def update_mss(self):
         """
         Installs the newest mss version
         """
         def on_failure(e: Exception):
-            self._restore_environment()
             self.statusLabel.setText("Update failed, please do it manually.")
             self.on_log_update.emit(str(e))
 
-        Worker.create(lambda: self._update_mss(replace), on_failure=on_failure)
+        Worker.create(self._update_mss, on_failure=on_failure)
         self.btUpdate.setEnabled(False)
-        self.btReplace.setEnabled(False)
