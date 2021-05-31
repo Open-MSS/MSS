@@ -49,12 +49,6 @@ class SubprocessSameMock:
         self.args = args
 
 
-class SubprocessGitMock:
-    def __init__(self, args=None, **named_args):
-        self.stdout = "true"
-        self.args = args
-
-
 def create_mock(function, on_success=None, on_failure=None, start=True):
     worker = Worker(function)
     if on_success:
@@ -104,14 +98,6 @@ class Test_MSS_ShortcutDialog:
     def test_no_update(self):
         self.updater.run()
         assert self.updater.statusLabel.text() == "Your MSS is up to date."
-
-    @mock.patch("subprocess.Popen", new=SubprocessGitMock)
-    @mock.patch("subprocess.run", new=SubprocessGitMock)
-    @mock.patch("mslib.utils.Worker.create", create_mock)
-    def test_no_update_on_git(self):
-        self.updater.run()
-        assert self.updater.new_version is None
-        assert self.updater.statusLabel.text() == "Nothing to do"
 
     @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)
     @mock.patch("subprocess.run", new=SubprocessDifferentVersionMock)

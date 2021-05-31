@@ -57,7 +57,7 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         self.old_version = __version__
         self.backup_dir = os.path.join(tempfile.gettempdir(), "updater_backup")
         self.btUpdate.clicked.connect(self.update_mss)
-        self.btReplace.clicked.connect(lambda: self.update_mss(True))
+        self.btReplace.clicked.connect(self._replace_clicked)
 
     def run(self):
         """
@@ -65,20 +65,28 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         """
         Worker.create(self._check_version)
 
-    def _check_version(self, ignore_git=False):
+    def _replace_clicked(self):
+        ret = QtWidgets.QMessageBox.information(
+            self, "Mission Support System",
+            f"Closing MSS during the replacement process may break your environment.\n"
+            f"Are you sure you want to automatically replace your current environment?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No)
+        if ret == QtWidgets.QMessageBox.Yes:
+            self.update_mss(True)
+
+    def _check_version(self):
         """
         Checks if conda search has a newer version of MSS
         """
-        # Don't run updates if mss is in a git repo, as you are most likely a developer
-        if not ignore_git:
-            try:
-                git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
-                                     stderr=subprocess.STDOUT, encoding="utf8")
-                if "true" in git.stdout:
-                    self.is_git_env = True
-                    return
-            except FileNotFoundError:
-                pass
+        # Don't notify on updates if mss is in a git repo, as you are most likely a developer
+        try:
+            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, encoding="utf8")
+            if "true" in git.stdout:
+                self.is_git_env = True
+        except FileNotFoundError:
+            pass
 
         # Return if conda is not installed
         try:
@@ -91,14 +99,15 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         # Check if "search mss" yields a higher version than the currently running one
         search = self._execute_command("conda search mss", local=True)
         self.new_version = search.split("\n")[-2].split()[1]
+        self.labelVersion.setText(f"Newest Version: {self.new_version}")
         list = self._execute_command("conda list mss", local=True)
         self.old_version = list.split("\n")[-2].split()[1]
-        self.labelVersion.setText(f"Newest Version: {self.new_version}")
         if any(c.isdigit() for c in self.new_version):
             if self.new_version > self.old_version:
                 self.statusLabel.setText("Your version of MSS is outdated!")
                 self.btUpdate.setEnabled(True)
-                self.on_update_available.emit(self.old_version, self.new_version)
+                if not self.is_git_env:
+                    self.on_update_available.emit(self.old_version, self.new_version)
             else:
                 self.statusLabel.setText("Your MSS is up to date.")
 
@@ -208,7 +217,7 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         self.base_path = next(line for line in env_list.split("\n") if "#" not in line).split()[-1]
         self.current_path = next(line for line in env_list.split("\n") if "*" in line).split()[-1]
 
-    def _execute_command(self, command, env=None, local=False, return_text=True):
+    def _execute_command(self, command, env=None, local=False):
         """
         Handles proper execution of conda subprocesses and logging
         """
@@ -222,15 +231,19 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
             process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                        encoding="utf8")
         self.on_log_update.emit(" ".join(process.args) + "\n")
-        if not return_text:
-            return process
-        elif "install" in process.args or "update" in process.args:
-            return self._update_download_progress(process)
+
+        if "install" in process.args or "update" in process.args:
+            text = self._update_download_progress(process)
         else:
             text = ""
             for line in process.stdout:
                 self.on_log_update.emit(line)
                 text += line
+
+        # Happens e.g. on connection errors during installation attempts
+        if "An unexpected error has occurred. Conda has prepared the above report" in text:
+            raise RuntimeError("Something went wrong! Can't safely continue to update.")
+        else:
             return text
 
     def _move_environment(self):
@@ -247,11 +260,12 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
             self._execute_command(f"rmdir {self.backup_dir} /s /q", local=True)
 
     def _restore_environment(self):
-        self._execute_command(f"conda remove -p {self.current_path} --all -y")
-        if os.name != "nt":
-            self._execute_command(f"mv -v {self.backup_dir} {self.current_path}", local=True)
-        else:
-            self._execute_command(f"move {self.backup_dir} {self.current_path}", local=True)
+        if os.path.exists(self.backup_dir):
+            self._execute_command(f"conda remove -p {self.current_path} --all -y")
+            if os.name != "nt":
+                self._execute_command(f"mv -v {self.backup_dir} {self.current_path}", local=True)
+            else:
+                self._execute_command(f"move {self.backup_dir} {self.current_path}", local=True)
 
     def _update_download_progress(self, process):
         """
@@ -282,8 +296,10 @@ class Updater(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         """
         Installs the newest mss version
         """
-        def on_failure(e):
+        def on_failure(e: Exception):
+            self._restore_environment()
             self.statusLabel.setText("Update failed, please do it manually.")
+            self.on_log_update.emit(str(e))
 
         Worker.create(lambda: self._update_mss(replace), on_failure=on_failure)
         self.btUpdate.setEnabled(False)
