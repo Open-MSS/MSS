@@ -454,7 +454,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Font Sizes</string>
+      <string>Plot Options</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="3" column="1">

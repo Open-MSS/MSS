@@ -631,11 +631,11 @@ class MplSideViewCanvas(MplCanvas):
         for ax, typ in zip((self.ax, self.ax2), (vaxis, vaxis2)):
             ylabel, major_ticks, minor_ticks, labels = self._determine_ticks_labels(typ)
 
-            ax.set_ylabel(ylabel, fontsize=plot_title_size)     # Sets fontsize for both y labels/titles.
+            ax.set_ylabel(ylabel, fontsize=plot_title_size)
             ax.set_yticks(minor_ticks, minor=True)
             ax.set_yticks(major_ticks, minor=False)
             ax.set_yticklabels([], minor=True)
-            ax.set_yticklabels(labels, minor=False, fontsize=axes_label_size)   # Sets fontsize for both y ticklabels.
+            ax.set_yticklabels(labels, minor=False, fontsize=axes_label_size)
             ax.set_ylim(self.p_bot, self.p_top)
 
         if vaxis2 == "no secondary axis":
@@ -942,6 +942,9 @@ class MplLinearViewCanvas(MplCanvas):
             numlabels = config_loader(dataset='num_labels')
         super(MplLinearViewCanvas, self).__init__()
 
+        self.settings_dict = {"plot_title_size": "default",
+                              "axes_label_size": "default"}
+
         # Setup the plot.
         self.numlabels = numlabels
         self.setup_linear_view()
@@ -952,6 +955,10 @@ class MplLinearViewCanvas(MplCanvas):
         self.draw()
         if model:
             self.set_waypoints_model(model)
+
+        # Sets the default values of plot sizes from MissionSupportDefaultConfig.
+        self.linearview_size_settings = config_loader(dataset="linearview")
+        self.set_settings(self.settings_dict)
 
     def set_waypoints_model(self, model):
         """Set the WaypointsTableModel defining the linear section.
@@ -971,11 +978,11 @@ class MplLinearViewCanvas(MplCanvas):
                 redraw_xaxis=self.redraw_xaxis
             )
         self.redraw_xaxis()
+        # self.set_settings(self.settings_dict)
 
     def setup_linear_view(self):
         """Set up a linear section view.
         """
-        self.ax.set_title("Linear flight profile", horizontalalignment="left", x=0)
         self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
 
     def clear_figure(self):
@@ -1019,7 +1026,7 @@ class MplLinearViewCanvas(MplCanvas):
             self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
                                      for d in zip(lats[::tick_index_step],
                                                   lons[::tick_index_step])],
-                                    rotation=25, fontsize=10, horizontalalignment="right")
+                                    rotation=25, horizontalalignment="right")
 
             ipoint = 0
             highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
@@ -1065,7 +1072,30 @@ class MplLinearViewCanvas(MplCanvas):
         self.redraw_xaxis()
         self.fig.tight_layout()
         self.fig.subplots_adjust(top=0.85, bottom=0.20)
+        # self.set_settings(self.settings_dict)
         self.draw()
+
+    def get_settings(self):
+        """Returns a dictionary containing settings regarding the linear view
+           appearance.
+        """
+        return self.settings_dict
+
+    def set_settings(self, settings):
+        """
+        Apply settings from options ui to the linear view
+        """
+
+        if settings is None:
+            settings.update(self.settings_dict)
+        pts = (self.linearview_size_settings["plot_title_size"] if settings["plot_title_size"] == "default"
+               else int(settings["plot_title_size"]))
+        als = (self.linearview_size_settings["axes_label_size"] if settings["axes_label_size"] == "default"
+               else int(settings["axes_label_size"]))
+        self.ax.tick_params(axis='both', labelsize=als)
+        self.ax.set_title("Linear flight profile", fontsize=pts, horizontalalignment='left', x=0)
+        self.draw()
+        self.settings_dict = settings
 
 
 class MplLinearViewWidget(MplNavBarWidget):

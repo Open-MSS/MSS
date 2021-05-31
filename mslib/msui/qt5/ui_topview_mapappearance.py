@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_topview_mapappearance.ui'
+# Form implementation generated from reading ui file 'ui_topview_mapappearance.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -159,8 +159,8 @@ class Ui_MapAppearanceDialog(object):
         self.cbLabelFlightTrack.setObjectName("cbLabelFlightTrack")
         self.horizontalLayout_4.addWidget(self.cbLabelFlightTrack)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
-        spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem3)
+        spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout.addItem(spacerItem4)
         self.groupBox = QtWidgets.QGroupBox(MapAppearanceDialog)
         self.groupBox.setObjectName("groupBox")
         self.gridLayout_4 = QtWidgets.QGridLayout(self.groupBox)
@@ -210,9 +210,8 @@ class Ui_MapAppearanceDialog(object):
         self.label.setObjectName("label")
         self.gridLayout_4.addWidget(self.label, 3, 0, 1, 1)
         self.verticalLayout.addWidget(self.groupBox)
-
-        spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem4)
+        spacerItem5 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout.addItem(spacerItem5)
         self.buttonBox = QtWidgets.QDialogButtonBox(MapAppearanceDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
@@ -239,7 +238,7 @@ class Ui_MapAppearanceDialog(object):
         self.cbDrawMarker.setText(_translate("MapAppearanceDialog", "draw marker"))
         self.btWaypointsColour.setText(_translate("MapAppearanceDialog", "colour of waypoints"))
         self.cbLabelFlightTrack.setText(_translate("MapAppearanceDialog", "label flight track"))
-        self.groupBox.setTitle(_translate("MapAppearanceDialog", "Font Sizes"))
+        self.groupBox.setTitle(_translate("MapAppearanceDialog", "Plot Options"))
         self.tov_cbtitlesize.setItemText(0, _translate("MapAppearanceDialog", "default"))
         self.tov_cbtitlesize.setItemText(1, _translate("MapAppearanceDialog", "4"))
         self.tov_cbtitlesize.setItemText(2, _translate("MapAppearanceDialog", "6"))
@@ -284,4 +283,3 @@ if __name__ == "__main__":
     ui.setupUi(MapAppearanceDialog)
     MapAppearanceDialog.show()
     sys.exit(app.exec_())
-

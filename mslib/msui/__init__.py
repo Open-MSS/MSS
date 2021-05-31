@@ -200,3 +200,6 @@ class MissionSupportSystemDefaultConfig(object):
 
     sideview = {"plot_title_size": 10,
                 "axes_label_size": 10}
+
+    linearview = {"plot_title_size": 10,
+                  "axes_label_size": 10}
