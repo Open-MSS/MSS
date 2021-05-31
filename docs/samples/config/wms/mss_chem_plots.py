@@ -209,15 +209,10 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
         """Computes potential temperature from pressure and temperature if
         it has not been passed as a data field.
         """
-        if self.name[-2:] == "pl":
-            self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
-            self.data["air_pressure"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
-        elif self.name[-2:] == "tl":
-            self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
-            self.data["air_potential_temperature"][:] = self.driver.vert_data[::-self.driver.vert_order, np.newaxis]
-        elif self.name[-2:] == "al":
-            # CAMS Regional Ensemble doesn't provide any pressure information, but we want to plot vertical sections
-            # anyways, so we do a poor-man's on-the-fly conversion here.
+        if self.name[-2:] == "al":
+            # CAMS Regional Ensemble doesn't provide any pressure information,
+            # but we want to plot vertical sections anyways, so we do a
+            # poor-man's on-the-fly conversion here.
             if 'air_pressure' not in self.data:
                 self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
                 self.data['air_pressure'][:] = thermolib.flightlevel2pressure_a(convert_to(

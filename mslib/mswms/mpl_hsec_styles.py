@@ -106,13 +106,10 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         if self.style.lower() == "default":
             self.style = "TOT"
         if self.style in ["LOW", "TOT"]:
-            lcc = bm.contourf(lonmesh, latmesh, data['low_cloud_area_fraction'],
+            lcc = bm.contourf(self.lonmesh, self.latmesh, data['low_cloud_area_fraction'],
                               np.arange(0.2, 1.1, 0.1), cmap=plt.cm.autumn_r)
             if not self.noframe:
                 cbar = self.fig.colorbar(lcc, fraction=0.05, pad=-0.02, shrink=0.7)
@@ -125,7 +122,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 make_cbar_labels_readable(self.fig, axins1)
 
         if self.style in ["MED", "TOT"]:
-            mcc = bm.contourf(lonmesh, latmesh, data['medium_cloud_area_fraction'],
+            mcc = bm.contourf(self.lonmesh, self.latmesh, data['medium_cloud_area_fraction'],
                               np.arange(0.2, 1.1, 0.1), cmap=plt.cm.summer_r)
             if not self.noframe:
                 self.fig.colorbar(mcc, fraction=0.05, pad=-0.02, shrink=0.7, format='')
@@ -138,9 +135,9 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 make_cbar_labels_readable(self.fig, axins1)
 
         if self.style in ["HIGH", "TOT"]:
-            hcc = bm.contourf(lonmesh, latmesh, data['high_cloud_area_fraction'],
+            hcc = bm.contourf(self.lonmesh, self.latmesh, data['high_cloud_area_fraction'],
                               np.arange(0.2, 1.1, 0.1), cmap=plt.cm.Blues)
-            bm.contour(lonmesh, latmesh, data['high_cloud_area_fraction'],
+            bm.contour(self.lonmesh, self.latmesh, data['high_cloud_area_fraction'],
                        [0.2], colors="blue", linestyles="dotted")
             if not self.noframe:
                 self.fig.colorbar(hcc, fraction=0.05, pad=0.08, shrink=0.7, format='')
@@ -153,7 +150,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
                 make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, data['air_pressure_at_sea_level'],
+        cs = bm.contour(self.lonmesh, self.latmesh, data['air_pressure_at_sea_level'],
                         np.arange(950, 1050, 4), colors="burlywood", linewidths=2)
         ax.clabel(cs, fontsize=8, fmt='%i')
 
@@ -197,9 +194,6 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         thick_contours = np.arange(952, 1050, 8)
         thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
@@ -207,10 +201,10 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         mslp = data['air_pressure_at_sea_level']
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, mslp,
+        cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thick_contours, colors="darkblue", linewidths=2)
         ax.clabel(cs, fontsize=12, fmt='%.0f')
-        cs = bm.contour(lonmesh, latmesh, mslp,
+        cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thin_contours, colors="darkblue", linewidths=1)
 
         # Convert wind data from m/s to knots.
@@ -235,9 +229,9 @@ class HS_MSLPStyle_01(MPLBasemapHorizontalSectionStyle):
         #         minfits = minimum_filter(mslp, size=(50,50), mode="wrap")
         #         logging.debug("%s", minfits)
         #         #logging.debug("%s // %s // %s", min_values, lonmesh_.ravel()[min_indices],
-        #         #              latmesh_.ravel()[min_indices])
+        #         #              self.latmesh_.ravel()[min_indices])
 
-        #         bm.scatter(lonmesh.ravel()[min_indices], latmesh.ravel()[min_indices],
+        #         bm.scatter(lonmesh.ravel()[min_indices], self.latmesh.ravel()[min_indices],
         #                    s=20, c='blue', marker='s')
 
         titlestring = "Mean sea level pressure (hPa) and surface wind"
@@ -273,9 +267,6 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         thick_contours = np.arange(-10, 95, 5)
         thin_contours = [c for c in np.arange(0, 90, 1)
                          if c not in thick_contours]
@@ -285,7 +276,7 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
         sea = data['solar_elevation_angle']
 
         # Filled contour plot.
-        scs = bm.contourf(lonmesh, latmesh, sea,
+        scs = bm.contourf(self.lonmesh, self.latmesh, sea,
                           np.arange(0, 91, 1), cmap=plt.cm.nipy_spectral)
         if not self.noframe:
             cbar = self.fig.colorbar(scs, fraction=0.05, pad=0.08, shrink=0.7)
@@ -299,13 +290,13 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Contour lines plot.
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        bm.contour(lonmesh, latmesh, sea,
+        bm.contour(self.lonmesh, self.latmesh, sea,
                    thick_contours, colors="saddlebrown",
                    linewidths=3, linestyles="solid")
-        cs2 = bm.contour(lonmesh, latmesh, sea,
+        cs2 = bm.contour(self.lonmesh, self.latmesh, sea,
                          thin_contours, colors="white", linewidths=1)
         cs2.clabel(cs2.levels, fontsize=14, fmt='%i')
-        cs3 = bm.contour(lonmesh, latmesh, sea,
+        cs3 = bm.contour(self.lonmesh, self.latmesh, sea,
                          neg_thin_contours, colors="saddlebrown",
                          linewidths=1, linestyles="solid")
         cs3.clabel(fontsize=14, fmt='%i')
@@ -345,9 +336,6 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         ice = data['sea_ice_area_fraction']
 
         if self.style.lower() == "default":
@@ -355,12 +343,12 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
 
         # Filled contour plot.
         if self.style == "PCOL":
-            scs = bm.pcolormesh(lonmesh, latmesh, ice,
+            scs = bm.pcolormesh(self.lonmesh, self.latmesh, ice,
                                 cmap=plt.cm.Blues,
                                 norm=matplotlib.colors.Normalize(vmin=0.1, vmax=1.0),
                                 shading="nearest", edgecolors='none')
         else:
-            scs = bm.contourf(lonmesh, latmesh, ice,
+            scs = bm.contourf(self.lonmesh, self.latmesh, ice,
                               np.arange(0.1, 1.1, .1), cmap=plt.cm.Blues)
         if not self.noframe:
             cbar = self.fig.colorbar(scs, fraction=0.05, pad=0.08, shrink=0.7)
@@ -407,9 +395,6 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         cmin = -72
         cmax = 42
         thick_contours = np.arange(cmin, cmax, 6)
@@ -418,7 +403,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         tempC = data['air_temperature']
 
-        tc = bm.contourf(lonmesh, latmesh, tempC,
+        tc = bm.contourf(self.lonmesh, self.latmesh, tempC,
                          np.arange(cmin, cmax, 2), cmap=plt.cm.nipy_spectral)
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
@@ -431,12 +416,12 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, tempC,
+        cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         [0], colors="red", linewidths=4)
-        cs = bm.contour(lonmesh, latmesh, tempC,
+        cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thick_contours, colors="saddlebrown", linewidths=2)
         ax.clabel(cs, fontsize=14, fmt='%i')
-        cs = bm.contour(lonmesh, latmesh, tempC,
+        cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thin_contours, colors="saddlebrown", linewidths=1)
 
         titlestring = f"Temperature (degC) at model level {self.level}"
@@ -466,19 +451,16 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         bm = self.bm
         ax = self.bm.ax
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         show_data = np.ma.masked_invalid(self.data[self.dataname])
         # get cmin, cmax, cbar_log and cbar_format for level_key
         cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
         cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
             self.dataname, self.style, cmin, cmax, show_data)
 
-        tc = bm.contourf(lonmesh, latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
+        tc = bm.contourf(self.lonmesh, self.latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
 
         for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
-            cs_pv = ax.contour(lonmesh, latmesh, self.data[cont_data], cont_levels,
+            cs_pv = ax.contour(self.lonmesh, self.latmesh, self.data[cont_data], cont_levels,
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
@@ -593,9 +575,6 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         cmin = -72
         cmax = 42
         thick_contours = np.arange(cmin, cmax, 6)
@@ -604,7 +583,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         tempC = data['air_temperature']
 
-        tc = bm.contourf(lonmesh, latmesh, tempC,
+        tc = bm.contourf(self.lonmesh, self.latmesh, tempC,
                          np.arange(cmin, cmax, 2), cmap=plt.cm.nipy_spectral)
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
@@ -617,20 +596,20 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, tempC,
+        cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         [0], colors="red", linewidths=4)
-        cs = bm.contour(lonmesh, latmesh, tempC,
+        cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thick_contours, colors="saddlebrown",
                         linewidths=2, linestyles="solid")
         ax.clabel(cs, colors="black", fontsize=14, fmt='%i')
-        cs = bm.contour(lonmesh, latmesh, tempC,
+        cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thin_contours, colors="white",
                         linewidths=1, linestyles="solid")
 
         # Plot geopotential height contours.
         gpm = self.data["geopotential_height"]
         geop_contours = np.arange(400, 28000, 40)
-        cs = bm.contour(lonmesh, latmesh, gpm,
+        cs = bm.contour(self.lonmesh, self.latmesh, gpm,
                         geop_contours, colors="black", linewidths=1)
         if cs.levels[0] in geop_contours[::2]:
             lablevels = cs.levels[::2]
@@ -680,9 +659,6 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         # Compute wind speed.
         u = data["eastward_wind"]
         v = data["northward_wind"]
@@ -700,7 +676,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
             wind_contours = np.arange(20, 60, 5)
         elif self.style.lower() == "wind_15_55":
             wind_contours = np.arange(15, 60, 5)
-        cs = bm.contourf(lonmesh, latmesh, wind,
+        cs = bm.contourf(self.lonmesh, self.latmesh, wind,
                          # wind_contours, cmap=plt.cm.hot_r, alpha=0.8)
                          wind_contours, cmap=plt.cm.hot_r)
         if not self.noframe:
@@ -733,7 +709,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
-        cs = bm.contour(lonmesh, latmesh, gpm,
+        cs = bm.contour(self.lonmesh, self.latmesh, gpm,
                         geop_contours, colors="green", linewidths=2)
         if cs.levels[0] in geop_contours[::2]:
             lablevels = cs.levels[::2]
@@ -787,15 +763,12 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         filled_contours = np.arange(70, 140, 15)
         thin_contours = np.arange(10, 140, 15)
 
         rh = data["relative_humidity"]
 
-        rhc = bm.contourf(lonmesh, latmesh, rh,
+        rhc = bm.contourf(self.lonmesh, self.latmesh, rh,
                           filled_contours, cmap=plt.cm.winter_r)
         if not self.noframe:
             cbar = self.fig.colorbar(rhc, fraction=0.05, pad=0.08, shrink=0.7)
@@ -808,18 +781,18 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, rh,
+        cs = bm.contour(self.lonmesh, self.latmesh, rh,
                         thin_contours, colors="grey",
                         linewidths=0.5, linestyles="solid")
         ax.clabel(cs, colors="grey", fontsize=10, fmt='%i')
-        cs = bm.contour(lonmesh, latmesh, rh,
+        cs = bm.contour(self.lonmesh, self.latmesh, rh,
                         np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
         gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
-        cs = bm.contour(lonmesh, latmesh, gpm,
+        cs = bm.contour(self.lonmesh, self.latmesh, gpm,
                         geop_contours, colors="darkred", linewidths=2)
         if cs.levels[0] in geop_contours[::2]:
             lablevels = cs.levels[::2]
@@ -874,14 +847,11 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         filled_contours = np.arange(0, 72, 2)
         thin_contours = np.arange(-40, 100, 2)
 
         eqpt = data["equivalent_potential_temperature"]
-        eqptc = bm.contourf(lonmesh, latmesh, eqpt,
+        eqptc = bm.contourf(self.lonmesh, self.latmesh, eqpt,
                             filled_contours, cmap=plt.cm.gist_rainbow_r)
         if not self.noframe:
             cbar = self.fig.colorbar(eqptc, fraction=0.05, pad=0.08, shrink=0.7)
@@ -894,7 +864,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, eqpt,
+        cs = bm.contour(self.lonmesh, self.latmesh, eqpt,
                         thin_contours, colors="grey",
                         linewidths=0.5, linestyles="solid")
         if cs.levels[0] in thin_contours[::2]:
@@ -902,14 +872,14 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         else:
             lablevels = cs.levels[1::2]
         ax.clabel(cs, lablevels, colors="grey", fontsize=10, fmt='%i')
-        # cs = bm.contour(lonmesh, latmesh, eqpt,
+        # cs = bm.contour(self.lonmesh, self.latmesh, eqpt,
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
         gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
-        cs = bm.contour(lonmesh, latmesh, gpm,
+        cs = bm.contour(self.lonmesh, self.latmesh, gpm,
                         geop_contours, colors="white", linewidths=2)
         if cs.levels[0] in geop_contours[::2]:
             lablevels = cs.levels[::2]
@@ -964,13 +934,10 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         upward_contours = np.arange(-42, 46, 4)
         w = data["upward_wind"]
 
-        wc = bm.contourf(lonmesh, latmesh, w,
+        wc = bm.contourf(self.lonmesh, self.latmesh, w,
                          upward_contours, cmap=plt.cm.bwr)
         if not self.noframe:
             cbar = self.fig.colorbar(wc, fraction=0.05, pad=0.08, shrink=0.7)
@@ -983,21 +950,21 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, w,
+        cs = bm.contour(self.lonmesh, self.latmesh, w,
                         [2], colors="red",
                         linewidths=0.5, linestyles="solid")
-        cs = bm.contour(lonmesh, latmesh, w,
+        cs = bm.contour(self.lonmesh, self.latmesh, w,
                         [-2], colors="blue",
                         linewidths=0.5, linestyles="solid")
         # ax.clabel(cs, thin_contours[::2], colors="grey", fontsize=10, fmt='%i')
-        # cs = bm.contour(lonmesh, latmesh, w,
+        # cs = bm.contour(self.lonmesh, self.latmesh, w,
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
         gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
-        cs = bm.contour(lonmesh, latmesh, gpm,
+        cs = bm.contour(self.lonmesh, self.latmesh, gpm,
                         geop_contours, colors="darkgreen", linewidths=2)
         if cs.levels[0] in geop_contours[::2]:
             lablevels = cs.levels[::2]
@@ -1042,19 +1009,16 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         pos_contours = np.arange(4, 42, 4)
         neg_contours = np.arange(-40, 0, 4)
 
         d = data["divergence_of_wind"] * 1.e5
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, d,
+        cs = bm.contour(self.lonmesh, self.latmesh, d,
                         pos_contours, colors="red",
                         linewidths=2, linestyles="solid")
-        cs = bm.contour(lonmesh, latmesh, d,
+        cs = bm.contour(self.lonmesh, self.latmesh, d,
                         neg_contours, colors="blue",
                         linewidths=2, linestyles="solid")
 
@@ -1062,7 +1026,7 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         gpm = self.data["geopotential_height"]
         gpm_interval = 40 if self.level <= 500 else 20
         geop_contours = np.arange(400, 28000, gpm_interval)
-        cs = bm.contour(lonmesh, latmesh, gpm,
+        cs = bm.contour(self.lonmesh, self.latmesh, gpm,
                         geop_contours, colors="darkgreen", linewidths=2)
         if cs.levels[0] in geop_contours[::2]:
             lablevels = cs.levels[::2]
@@ -1108,15 +1072,12 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         tracer = data["emac_R12"] * 1.e4
 
         # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
-        tc = bm.pcolormesh(lonmesh, latmesh, tracer,
+        tc = bm.pcolormesh(self.lonmesh, self.latmesh, tracer,
                            cmap=plt.cm.hot_r,
                            norm=matplotlib.colors.LogNorm(vmin=1., vmax=100.),
                            shading='nearest', edgecolors='none')
 
-        ac = bm.contour(lonmesh, latmesh, tracer,
+        ac = bm.contour(self.lonmesh, self.latmesh, tracer,
                         np.arange(1, 101, 1)[::2],
                         colors="b", linewidths=1)
         ax.clabel(ac, fontsize=10, fmt='%i')
@@ -1167,24 +1128,12 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
 
         tracer = data["emac_column_density"]
 
-        # PCOLOR draws the grid boxes so that the coordinates given for a point
-        # become the lower left corner of the grid box. This, however, is wrong
-        # for ECMWF and EMAC: the variable value is given at the point that is
-        # specified by the coordinates, hence a correct visualisation has to draw
-        # the point in the middle of the grid box. To achieve this with
-        # pcolor, we shift the lat/lon grid by one half grid box size.
-        # NOTE that this assumes a regular grid, which is not fully true for
-        # EMAC's latitudes. The error, however, is small, thus we neglect it
-        # here.
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
-        tc = bm.pcolormesh(lonmesh, latmesh, tracer,
+        tc = bm.pcolormesh(self.lonmesh, self.latmesh, tracer,
                            cmap=plt.cm.hot_r,
                            norm=matplotlib.colors.LogNorm(vmin=0.05, vmax=0.5),
                            shading="nearest", edgecolors='none')
 
-        ac = bm.contour(lonmesh, latmesh, tracer,
+        ac = bm.contour(self.lonmesh, self.latmesh, tracer,
                         np.arange(0.05, 0.55, 0.05),
                         colors="b", linewidths=1)
         ax.clabel(ac, fontsize=10, fmt='%.2f')
@@ -1243,9 +1192,6 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         # Default style is pressure.
         if self.style.lower() == "default":
             self.style = "PRES"
@@ -1276,7 +1222,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
 
         # Filled contour plot of pressure/geop./pot.temp. Extend the colourbar
         # to fill regions whose values exceed the colourbar range.
-        contours = bm.contourf(lonmesh, latmesh, vardata,
+        contours = bm.contourf(self.lonmesh, self.latmesh, vardata,
                                filled_contours, cmap=fcmap, extend="both")
         if not self.noframe:
             cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
@@ -1289,7 +1235,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, vardata,
+        cs = bm.contour(self.lonmesh, self.latmesh, vardata,
                         thin_contours, colors="yellow",
                         linewidths=0.5, linestyles="solid")
         if cs.levels[0] in thin_contours[::2]:
@@ -1350,9 +1296,6 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         # Define colourbars and contour levels for the three styles. For
         # pressure and height, a terrain colourmap is used (bluish colours for
         # low altitudes, brownish colours for high altitudes). For potential
@@ -1374,14 +1317,14 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
 
         # Filled contour plot of pressure/geop./pot.temp. Extend the colourbar
         # to fill regions whose values exceed the colourbar range.
-        contours = bm.contourf(lonmesh, latmesh, vardata,
+        contours = bm.contourf(self.lonmesh, self.latmesh, vardata,
                                filled_contours, cmap=fcmap, extend="both")
 
         data["secondary_tropopause_altitude"] = np.ma.masked_invalid(data["secondary_tropopause_altitude"])
 
         if self.style == "default":
             mask = ~data["secondary_tropopause_altitude"].mask
-            bm.contourf(lonmesh, latmesh, mask, [0, 0.5, 1.5], hatches=["", "xx"], alpha=0)
+            bm.contourf(self.lonmesh, self.latmesh, mask, [0, 0.5, 1.5], hatches=["", "xx"], alpha=0)
 
         if not self.noframe:
             cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
@@ -1394,7 +1337,7 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, vardata,
+        cs = bm.contour(self.lonmesh, self.latmesh, vardata,
                         thin_contours, colors="yellow",
                         linewidths=0.5, linestyles="solid")
         if cs.levels[0] in thin_contours[::2]:
@@ -1427,9 +1370,6 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         thick_contours = np.arange(952, 1050, 8)
         thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
@@ -1438,14 +1378,14 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         pwcb = 100. * data["vertically_integrated_probability_of_wcb_occurrence"]
 
         # Contour plot of mean sea level pressure.
-        cs = bm.contour(lonmesh, latmesh, mslp,
+        cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thick_contours, colors="darkblue", linewidths=2)
         ax.clabel(cs, fontsize=12, fmt='%i')
-        cs = bm.contour(lonmesh, latmesh, mslp,
+        cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thin_contours, colors="darkblue", linewidths=1)
 
         # Filled contours of p(WCB).
-        contours = bm.contourf(lonmesh, latmesh, pwcb,
+        contours = bm.contourf(self.lonmesh, self.latmesh, pwcb,
                                np.arange(0, 101, 10), cmap=plt.cm.pink_r)
         if not self.noframe:
             self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
@@ -1492,9 +1432,6 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         thin_contours = [0.1, 0.5, 1., 2., 3., 4., 5., 6., 7., 8.]
 
         nwcb = 1.E6 * data["number_of_wcb_trajectories"]
@@ -1502,23 +1439,23 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         nmix = 1.E6 * data["number_of_mix_trajectories"]
 
         # Contour plot of num(INSITU).
-        # cs = bm.contour(lonmesh, latmesh, ninsitu,
+        # cs = bm.contour(self.lonmesh, self.latmesh, ninsitu,
         #                thick_contours, colors="darkred", linewidths=2)
         # ax.clabel(cs, fontsize=12, fmt='%i')
-        cs = bm.contour(lonmesh, latmesh, ninsitu,
+        cs = bm.contour(self.lonmesh, self.latmesh, ninsitu,
                         thin_contours, colors="red", linewidths=1)
         ax.clabel(cs, fontsize=12, fmt='%.1f')
 
         # Contour plot of num(MIX).
-        # cs = bm.contour(lonmesh, latmesh, nmix,
+        # cs = bm.contour(self.lonmesh, self.latmesh, nmix,
         #                thick_contours, colors="darkblue", linewidths=2)
         # ax.clabel(cs, fontsize=12, fmt='%i')
-        cs = bm.contour(lonmesh, latmesh, nmix,
+        cs = bm.contour(self.lonmesh, self.latmesh, nmix,
                         thin_contours, colors="darkblue", linewidths=1)
         ax.clabel(cs, fontsize=12, fmt='%.1f')
 
         # Filled contours of num(WCB).
-        contours = bm.contourf(lonmesh, latmesh, nwcb,
+        contours = bm.contourf(self.lonmesh, self.latmesh, nwcb,
                                thin_contours, cmap=plt.cm.gist_ncar_r, extend="max")
         if not self.noframe:
             self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
@@ -1561,9 +1498,6 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         thick_contours = np.arange(952, 1050, 8)
         thin_contours = [c for c in np.arange(952, 1050, 2)
                          if c not in thick_contours]
@@ -1571,16 +1505,16 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         mslp = data["air_pressure_at_sea_level"]
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(lonmesh, latmesh, mslp,
+        cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thick_contours, colors="darkred", linewidths=2)
         ax.clabel(cs, fontsize=12, fmt='%i')
-        cs = bm.contour(lonmesh, latmesh, mslp,
+        cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thin_contours, colors="darkred", linewidths=1)
 
         # Filled contours of BLH, interval 100m.
         blh = data["atmosphere_boundary_layer_thickness"]
         contours = bm.contourf(
-            lonmesh, latmesh, blh, np.arange(0, 3000, 100), cmap=plt.cm.terrain, extend="max")
+            self.lonmesh, self.latmesh, blh, np.arange(0, 3000, 100), cmap=plt.cm.terrain, extend="max")
         if not self.noframe:
             self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
         else:
@@ -1590,7 +1524,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
             axins1.yaxis.set_ticks_position("left")
 
         # Labelled thin grey contours of BLH, interval 500m.
-        cs = bm.contour(lonmesh, latmesh, blh,
+        cs = bm.contour(self.lonmesh, self.latmesh, blh,
                         np.arange(0, 3000, 500), colors="grey", linewidths=0.5)
         ax.clabel(cs, fontsize=12, fmt='%i')
 
@@ -1629,9 +1563,6 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         ax = self.bm.ax
         data = self.data
 
-        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
-        lonmesh, latmesh = bm(lonmesh_, latmesh_)
-
         cmin = 230
         cmax = 300
         # thick_contours = np.arange(cmin, cmax, 6)
@@ -1642,7 +1573,7 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
 
         logging.debug("Min: %.2f K, Max: %.2f K", tempC.min(), tempC.max())
 
-        tc = bm.contourf(lonmesh, latmesh, tempC,
+        tc = bm.contourf(self.lonmesh, self.latmesh, tempC,
                          np.arange(cmin, cmax, 2), cmap=plt.cm.gray_r, extend="both")
         if not self.noframe:
             cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
@@ -1655,12 +1586,12 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        # cs = bm.contour(lonmesh, latmesh, tempC,
+        # cs = bm.contour(self.lonmesh, self.latmesh, tempC,
         #                 [0], colors="red", linewidths=4)
-        # cs = bm.contour(lonmesh, latmesh, tempC,
+        # cs = bm.contour(self.lonmesh, self.latmesh, tempC,
         #                 thick_contours, colors="saddlebrown", linewidths=2)
         # ax.clabel(cs, fontsize=14, fmt='%i')
-        # cs = bm.contour(lonmesh, latmesh, tempC,
+        # cs = bm.contour(self.lonmesh, self.latmesh, tempC,
         #                 thin_contours, colors="saddlebrown", linewidths=1)
 
         titlestring = "10.8 um Brightness Temperature (K)"
