@@ -26,11 +26,10 @@
 """
 import sys
 import mock
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtTest
 
-from mslib.msui.updater import Updater
+from mslib.msui.updater import UpdaterUI, Updater
 from mslib.utils import Worker
-from mslib import __version__
 
 
 def no_conda(args=None, **named_args):
@@ -67,8 +66,24 @@ def create_mock(function, on_success=None, on_failure=None, start=True):
 
 class Test_MSS_ShortcutDialog:
     def setup(self):
-        self.application = QtWidgets.QApplication(sys.argv)
         self.updater = Updater()
+        self.status = ""
+        self.update_available = False
+        self.update_finished = False
+
+        def update_signal(old, new):
+            self.update_available = True
+
+        def update_finished_signal():
+            self.update_finished = True
+
+        def status_signal(s):
+            self.status = s
+
+        self.updater.on_update_available.connect(update_signal)
+        self.updater.on_status_update.connect(status_signal)
+        self.updater.on_update_finished.connect(update_finished_signal)
+        self.application = QtWidgets.QApplication(sys.argv)
 
     def teardown(self):
         self.application.quit()
@@ -78,56 +93,45 @@ class Test_MSS_ShortcutDialog:
     @mock.patch("subprocess.run", new=SubprocessDifferentVersionMock)
     @mock.patch("mslib.utils.Worker.create", create_mock)
     def test_update_recognised(self):
-        update_available = False
-
-        def update_signal():
-            nonlocal update_available
-            update_available = True
-
-        self.updater.on_update_available.connect(update_signal)
         self.updater.run()
 
         assert self.updater.new_version == "999.999.999"
-        assert update_available
+        assert self.update_available
         self.updater.new_version = "0.0.0"
 
         self.updater.update_mss()
-        assert self.updater.statusLabel.text() == "Update successful. Please restart MSS."
+        assert self.status == "Update successful. Please restart MSS."
+        assert self.update_finished
 
     @mock.patch("subprocess.Popen", new=SubprocessSameMock)
     @mock.patch("subprocess.run", new=SubprocessSameMock)
     @mock.patch("mslib.utils.Worker.create", create_mock)
     def test_no_update(self):
         self.updater.run()
-        assert self.updater.statusLabel.text() == "Your MSS is up to date."
+        assert self.status == "Your MSS is up to date."
+        assert not self.update_available
+        assert not self.update_finished
 
     @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)
     @mock.patch("subprocess.run", new=SubprocessDifferentVersionMock)
     @mock.patch("mslib.utils.Worker.create", create_mock)
     def test_update_failed(self):
-        update_available = False
-
-        def update_signal():
-            nonlocal update_available
-            update_available = True
-
-        self.updater.on_update_available.connect(update_signal)
         self.updater.run()
-
         assert self.updater.new_version == "999.999.999"
-        assert update_available
+        assert self.update_available
         self.updater.new_version = "1000.1000.1000"
-
         self.updater.update_mss()
-        assert self.updater.statusLabel.text() == "Update failed. Please try it manually or " \
-                                                  "by creating a new environment!"
+        assert self.status == "Update failed. Please try it manually or " \
+                              "by creating a new environment!"
 
     @mock.patch("subprocess.Popen", new=no_conda)
     @mock.patch("subprocess.run", new=no_conda)
     @mock.patch("mslib.utils.Worker.create", create_mock)
     def test_no_conda(self):
         self.updater.run()
-        assert self.updater.new_version is None and self.updater.old_version is __version__
+        assert self.updater.new_version is None and self.updater.old_version is None
+        assert not self.update_available
+        assert not self.update_finished
 
     @mock.patch("subprocess.Popen", new=no_conda)
     @mock.patch("subprocess.run", new=no_conda)
@@ -136,4 +140,16 @@ class Test_MSS_ShortcutDialog:
         self.updater.new_version = "999.999.999"
         self.updater.old_version = "999.999.999"
         self.updater.update_mss()
-        assert self.updater.statusLabel.text() == "Update failed, please do it manually."
+        assert self.status == "Update failed, please do it manually."
+        assert not self.update_finished
+
+    @mock.patch("subprocess.Popen", new=SubprocessSameMock)
+    @mock.patch("subprocess.run", new=SubprocessSameMock)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)
+    @mock.patch("mslib.utils.Worker.create", create_mock)
+    def test_ui(self, mock):
+        ui = UpdaterUI()
+        ui.updater.on_update_available.emit("", "")
+        QtTest.QTest.qWait(100)
+        assert ui.statusLabel.text() == "Update successful. Please restart MSS."
+        assert ui.btRestart.isEnabled()

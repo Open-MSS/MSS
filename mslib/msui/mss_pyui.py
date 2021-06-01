@@ -57,7 +57,7 @@ from mslib.msui import editor
 from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
-from mslib.msui.updater import Updater
+from mslib.msui.updater import UpdaterUI
 from mslib.utils import config_loader, setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
@@ -281,9 +281,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         # Don't start the updater during a test run of mss_pyui
         if "pytest" not in sys.modules:
-            self.updater = Updater(self)
-            self.updater.on_update_available.connect(self.notify_on_update)
-            self.updater.run()
+            self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
 
     @staticmethod
@@ -767,19 +765,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             filename = constants.CACHED_CONFIG_FILE
             head_filename, tail_filename = os.path.split(filename)
             return("Status : User Configuration '" + tail_filename + "' loaded")
-
-    def notify_on_update(self, old, new):
-        """
-        Asks the user if they want to update MSS
-        """
-        ret = QtWidgets.QMessageBox.information(
-            self, "Mission Support System",
-            f"MSS can be updated from {old} to {new}\nDo you want to update?",
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            QtWidgets.QMessageBox.No)
-        if ret == QtWidgets.QMessageBox.Yes:
-            self.updater.show()
-            self.updater.btUpdate.click()
 
 
 def main():
