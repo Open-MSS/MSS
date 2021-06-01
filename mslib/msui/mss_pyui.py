@@ -58,7 +58,7 @@ from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
 from mslib.msui.updater import UpdaterUI
-from mslib.utils import config_loader, setup_logging
+from mslib.utils import config_loader, setup_logging, Worker, Updater
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
@@ -784,6 +784,7 @@ def main():
                         default=os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log"))
     parser.add_argument("-m", "--menu", help="adds mss to menu", action="store_true", default=False)
     parser.add_argument("-d", "--deinstall", help="removes mss from menu", action="store_true", default=False)
+    parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -793,6 +794,16 @@ def main():
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
+        sys.exit()
+
+    if args.update:
+        updater = Updater()
+        updater.on_update_available.connect(lambda old, new: updater.update_mss())
+        updater.on_log_update.connect(lambda s: print(s.replace("\n", "")))
+        updater.on_status_update.connect(lambda s: print(s.replace("\n", "")))
+        updater.run()
+        while Worker.workers:
+            list(Worker.workers)[0].wait()
         sys.exit()
 
     setup_logging(args)

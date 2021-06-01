@@ -754,6 +754,11 @@ class Worker(QtCore.QThread):
         Worker.workers.add(self)
         super(Worker, self).__init__()
         self.function = function
+        # pyqtSignals don't work without an application eventloop running
+        if QtCore.QCoreApplication.startingUp():
+            self.finished = NonQtCallback()
+            self.failed = NonQtCallback()
+
         self.failed.connect(lambda e: self._update_gui())
         self.finished.connect(lambda x: self._update_gui())
 
@@ -807,6 +812,12 @@ class Updater(QtCore.QObject):
         self.is_git_env = False
         self.new_version = None
         self.old_version = None
+        # pyqtSignals don't work without an application eventloop running
+        if QtCore.QCoreApplication.startingUp():
+            self.on_update_available = NonQtCallback()
+            self.on_update_finished = NonQtCallback()
+            self.on_log_update = NonQtCallback()
+            self.on_status_update = NonQtCallback()
 
     def run(self):
         """
@@ -844,6 +855,9 @@ class Updater(QtCore.QObject):
             if self.new_version > self.old_version:
                 self.on_status_update.emit("Your version of MSS is outdated!")
                 self.on_update_available.emit(self.old_version, self.new_version)
+                if self.no_signals:
+                    logging.info(f"MSS can be updated from {self.old_version} to {self.new_version}.\n"
+                                 "Run the --update argument to update.")
             else:
                 self.on_status_update.emit("Your MSS is up to date.")
 
@@ -853,7 +867,7 @@ class Updater(QtCore.QObject):
         safe in case parameters change in higher versions, or while debugging
         """
         command = [sys.executable.split(os.sep)[-1]] + sys.argv
-        if os.name == "nt":
+        if os.name == "nt" and not command[1].endswith(".py"):
             command[1] += "-script.py"
         os.execv(sys.executable, command)
 
@@ -922,3 +936,23 @@ class Updater(QtCore.QObject):
             self.on_log_update.emit(str(e))
 
         Worker.create(self._update_mss, on_failure=on_failure)
+
+
+class NonQtCallback:
+    """
+    Small mock of pyqtSignal to work without the QT eventloop.
+    Callbacks are run on the same thread as the caller of emit, as opposed to the caller of connect.
+    Keep in mind if this causes issues.
+    """
+    def __init__(self):
+        self.callbacks = []
+
+    def connect(self, function):
+        self.callbacks.append(function)
+
+    def emit(self, *args):
+        for cb in self.callbacks:
+            try:
+                cb(*args)
+            except Exception:
+                pass

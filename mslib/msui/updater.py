@@ -22,9 +22,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from PyQt5 import QtCore, QtWidgets, QtGui
+
 from mslib.utils import Updater
 from mslib.msui.mss_qt import ui_updater_dialog
-from PyQt5 import QtCore, QtWidgets, QtGui
+from mslib import __version__
 
 
 class UpdaterUI(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
@@ -38,6 +40,7 @@ class UpdaterUI(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         super(UpdaterUI, self).__init__(parent)
         self.setupUi(self)
         self.hide()
+        self.labelVersion.setText(f"Newest Version: {__version__}")
         self.updater = Updater()
         monospace = QtGui.QFont("non-existent")
         monospace.setStyleHint(QtGui.QFont.Monospace)
