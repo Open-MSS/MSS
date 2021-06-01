@@ -1086,16 +1086,16 @@ class MplLinearViewCanvas(MplCanvas):
         Apply settings from options ui to the linear view
         """
 
-        if settings is None:
-            settings.update(self.settings_dict)
-        pts = (self.linearview_size_settings["plot_title_size"] if settings["plot_title_size"] == "default"
-               else int(settings["plot_title_size"]))
-        als = (self.linearview_size_settings["axes_label_size"] if settings["axes_label_size"] == "default"
-               else int(settings["axes_label_size"]))
+        if settings is not None:
+            self.settings_dict.update(settings)
+
+        pts = (self.linearview_size_settings["plot_title_size"] if self.settings_dict["plot_title_size"] == "default"
+               else int(self.settings_dict["plot_title_size"]))
+        als = (self.linearview_size_settings["axes_label_size"] if self.settings_dict["axes_label_size"] == "default"
+               else int(self.settings_dict["axes_label_size"]))
         self.ax.tick_params(axis='both', labelsize=als)
         self.ax.set_title("Linear flight profile", fontsize=pts, horizontalalignment='left', x=0)
         self.draw()
-        self.settings_dict = settings
 
 
 class MplLinearViewWidget(MplNavBarWidget):
