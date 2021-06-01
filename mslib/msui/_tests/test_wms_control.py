@@ -31,6 +31,7 @@ import mock
 import shutil
 import tempfile
 import pytest
+import hashlib
 import multiprocessing
 from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
@@ -39,7 +40,7 @@ import mslib.msui.wms_control as wc
 from mslib._tests.utils import wait_until_signal
 
 
-PORTS = list(range(8107, 8121))
+PORTS = list(range(8107, 8123))
 
 
 class HSecViewMockup(mock.Mock):
@@ -152,6 +153,25 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         self.query_server(f"http://.....127.0.0.1:{self.port}")
         assert mockbox.critical.call_count == 1
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_forward_backward_clicks(self, mockbox):
+        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.window.init_time_back_click()
+        self.window.init_time_fwd_click()
+        self.window.valid_time_fwd_click()
+        self.window.valid_time_back_click()
+        self.window.level_fwd_click()
+        self.window.level_back_click()
+        self.window.cb_init_time_back_click()
+        self.window.cb_valid_time_back_click()
+        self.window.cb_init_time_fwd_click()
+        self.window.cb_valid_time_fwd_click()
+        try:
+            self.window.secs_from_timestep("Wrong")
+        except ValueError as error:
+            pass
+        assert mockbox.critical.call_count == 0
 
     def test_server_abort_getmap(self):
         """
@@ -369,6 +389,32 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert layer_a.get_vtime() == layer_b.get_vtime()
         assert layer_a.get_itime() == layer_a.get_itimes()[-1]
         assert mockbox.critical.call_count == 0
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    @mock.patch("mslib.msui.wms_control.WMSMapFetcher.moveToThread")
+    def test_server_no_thread(self, mockbox, mockthread):
+        self.query_server(f"http://127.0.0.1:{self.port}")
+        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+                                                              QtCore.Qt.MatchFixedString)[0]
+        self.window.cbAutoUpdate.setCheckState(False)
+        server.setExpanded(True)
+        self.window.multilayers.cbMultilayering.setChecked(True)
+        server.child(0).setCheckState(0, 2)
+        server.child(1).setCheckState(0, 2)
+
+        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        wait_until_signal(self.window.image_displayed)
+
+        urlstr = f"http://127.0.0.1:{self.port}/mss/logo.png"
+        md5_filname = os.path.join(self.window.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
+        self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
+        self.window.fetcher.fetch_legend(urlstr, use_cache=True, md5_filename=md5_filname)
+
+        assert mockbox.critical.call_count == 0
+        assert self.view.draw_image.call_count == 1
+        assert self.view.draw_legend.call_count == 1
+        assert self.view.draw_metadata.call_count == 1
 
 
 @pytest.mark.skipif(os.name == "nt",
