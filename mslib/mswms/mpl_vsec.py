@@ -38,7 +38,7 @@ import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from mslib.mswms import mss_2D_sections
-from mslib.utils import convert_to
+from mslib.utils import convert_to, UR
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
@@ -162,8 +162,28 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.numlabels = numlabels
         self.orography_color = orography_color
 
+        # Provide an air_pressured 2-D field in 'Pa' from vertical axis
+        if (("air_pressure" not in self.data) and
+                UR(self.driver.vert_units).check("[pressure]")):
+            self.data_units["air_pressure"] = "Pa"
+            self.data["air_pressure"] = convert_to(
+                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                self.driver.vert_units, self.data_units["air_pressure"]).repeat(
+                    len(self.lats), axis=1)
+        if (("air_potential_temperature" not in self.data) and
+                UR(self.driver.vert_units).check("[temperature]")):
+            self.data_units["air_potential_temperature"] = "K"
+            self.data["air_potential_temperature"] = convert_to(
+                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                self.driver.vert_units, self.data_units["air_potential_temperature"]).repeat(
+                    len(self.lats), axis=1)
+
         # Derive additional data fields and make the plot.
         self._prepare_datafields()
+        if "air_pressure" not in self.data:
+            raise KeyError(
+                "'air_pressure' need to be available for VSEC plots."
+                "Either provide as data or compute in _prepare_datafields")
 
         # Code for producing a png image with Matplotlib.
         # ===============================================
@@ -180,6 +200,10 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                 self.ax = self.fig.add_axes([0.0, 0.0, 1.0, 1.0])
             else:
                 self.ax = self.fig.add_axes([0.07, 0.17, 0.9, 0.72])
+
+            # prepare horizontal axis
+            self.horizontal_coordinate = self.lat_inds[np.newaxis, :].repeat(
+                self.data["air_pressure"].shape[0], axis=0)
 
             self._plot_style()
 
@@ -208,8 +232,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # Read the above stored png into a PIL image and create an adaptive
             # colour palette.
             output.seek(0)  # necessary for PIL.Image.open()
-            palette_img = PIL.Image.open(output).convert(mode="RGB"
-                                                         ).convert("P", palette=PIL.Image.ADAPTIVE)
+            palette_img = PIL.Image.open(output).convert(
+                mode="RGB").convert("P", palette=PIL.Image.ADAPTIVE)
             output = io.BytesIO()
             if not transparent:
                 logging.debug("saving figure as non-transparent PNG.")
