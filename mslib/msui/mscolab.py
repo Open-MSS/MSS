@@ -966,7 +966,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
                                                          parent=self.listProjects,
                                                          _id=self.id_count)
-            view_window.view_type = "tableview"
+            view_window.view_type = "linearview"
         if self.access_level == "viewer":
             self.disable_navbar_action_buttons(_type, view_window)
 
@@ -986,7 +986,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         function disables some control, used if access_level is not appropriate
         """
-        if _type == "topview" or _type == "sideview":
+        if _type == "topview" or _type == "sideview" or _type == "linearview":
             actions = view_window.mpl.navbar.actions()
             for action in actions:
                 action_text = action.text()
@@ -1009,7 +1009,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         function enables some control, used if access_level is appropriate
         """
-        if _type == "topview" or _type == "sideview":
+        if _type == "topview" or _type == "sideview" or _type == "linearview":
             actions = view_window.mpl.navbar.actions()
             for action in actions:
                 action_text = action.text()

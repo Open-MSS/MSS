@@ -27,6 +27,9 @@
 import sys
 import os
 import fs
+import fs.errors
+import fs.opener.errors
+import requests.exceptions
 import mock
 import pytest
 
@@ -39,6 +42,14 @@ from mslib._tests.utils import mscolab_start_server
 
 
 PORTS = list(range(9481, 9530))
+
+
+class exception_mock:
+    def __init__(self, exc):
+        self.exc = exc
+
+    def raise_exc(self, *args, **kwargs):
+        raise self.exc
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -68,8 +79,8 @@ class Test_Mscolab(object):
     def test_url_combo(self):
         assert self.window.url.count() >= 1
 
-    def test_login(self):
-        pytest.skip("Failing randomly for unknown reasons #870")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_login(self, mockbox):
         self._connect_to_mscolab()
         self._login()
         # screen shows logout button
@@ -85,8 +96,19 @@ class Test_Mscolab(object):
         # assert self.window.label.text() == ""
         assert self.window.conn is None
 
+        with mock.patch("requests.get", new=exception_mock(requests.exceptions.ConnectionError).raise_exc):
+            self._login()
+        with mock.patch("requests.get", new=exception_mock(requests.exceptions.InvalidSchema).raise_exc):
+            self._login()
+        with mock.patch("requests.get", new=exception_mock(requests.exceptions.InvalidURL).raise_exc):
+            self._login()
+        with mock.patch("requests.get", new=exception_mock(requests.exceptions.SSLError).raise_exc):
+            self._login()
+        with mock.patch("requests.get", new=exception_mock(Exception("")).raise_exc):
+            self._login()
+        assert mockbox.critical.call_count == 5
+
     def test_disconnect(self):
-        pytest.skip("Failing randomly for unknown reasons #870")
         self._connect_to_mscolab()
         QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         assert self.window.mscolab_server_url is None
@@ -98,13 +120,15 @@ class Test_Mscolab(object):
         self._activate_project_at_index(0)
         assert self.window.active_pid is not None
 
-    def test_view_open(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_view_open(self, mockbox):
         self._connect_to_mscolab()
         self._login()
         # test without activating project
         QtTest.QTest.mouseClick(self.window.topview, QtCore.Qt.LeftButton)
         QtTest.QTest.mouseClick(self.window.sideview, QtCore.Qt.LeftButton)
         QtTest.QTest.mouseClick(self.window.tableview, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.linearview, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.active_windows) == 0
         # test after activating project
@@ -118,6 +142,23 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.sideview, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.active_windows) == 3
+        QtTest.QTest.mouseClick(self.window.linearview, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.active_windows) == 4
+        QtTest.QTest.mouseClick(self.window.topview, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.active_windows) == 4
+
+        project = self.window.active_pid
+        uid = self.window.user["id"]
+        topview = self.window.active_windows[1]
+        tableview = self.window.active_windows[0]
+        self.window.handle_update_permission(project, uid, "viewer")
+        assert not tableview.btAddWayPointToFlightTrack.isEnabled()
+        assert any(action.text() == "Ins WP" and not action.isEnabled() for action in topview.mpl.navbar.actions())
+        self.window.handle_update_permission(project, uid, "creator")
+        assert tableview.btAddWayPointToFlightTrack.isEnabled()
+        assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
@@ -211,7 +252,8 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listProjects.model().rowCount() == 1
 
-    def test_add_project(self):
+    @mock.patch("PyQt5.QtWidgets.QErrorMessage")
+    def test_add_project(self, mockbox):
         # ToDo test needs to be independent from test_user_delete
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
@@ -219,7 +261,34 @@ class Test_Mscolab(object):
         assert self.window.label.text() == 'Welcome, something'
         assert self.window.loginWidget.isVisible() is False
         self._create_project("Alpha", "Description Alpha")
+        assert mockbox.return_value.showMessage.call_count == 2
+        with mock.patch("PyQt5.QtWidgets.QLineEdit.text", return_value=None):
+            self._create_project("Alpha2", "Description Alpha")
+        with mock.patch("PyQt5.QtWidgets.QTextEdit.toPlainText", return_value=None):
+            self._create_project("Alpha3", "Description Alpha")
+        self._create_project("/", "Description Alpha")
+        assert mockbox.return_value.showMessage.call_count == 5
         assert self.window.listProjects.model().rowCount() == 1
+
+    @mock.patch("mslib.msui.mscolab.MSCOLAB_AuthenticationDialog.exec_", return_value=QtWidgets.QDialog.Accepted)
+    @mock.patch("PyQt5.QtWidgets.QErrorMessage")
+    def test_failed_authorize(self, mockbox, mockauth):
+        class response:
+            def __init__(self, code, text):
+                self.status_code = code
+                self.text = text
+
+        self._connect_to_mscolab()
+        with mock.patch("requests.Session.post", new=exception_mock(requests.exceptions.ConnectionError).raise_exc):
+            self._login()
+        with mock.patch("requests.Session.post", return_value=response(201, "False")):
+            self._login()
+        with mock.patch("requests.Session.post", return_value=response(401, "False")):
+            self._login()
+
+        # No return after self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
+        # causes 4 instead of 3 messages, I am not sure if this is on purpose.
+        assert mockbox.return_value.showMessage.call_count == 4
 
     def test_add_user(self):
         self._connect_to_mscolab()
@@ -300,6 +369,21 @@ class Test_Mscolab(object):
         p_id = self.window.get_recent_pid()
         self.window.delete_project_from_list(p_id)
         assert self.window.active_pid is None
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    @mock.patch("sys.exit")
+    def test_create_dir_exceptions(self, mockexit, mockbox):
+        with mock.patch("fs.open_fs", new=exception_mock(fs.errors.CreateFailed).raise_exc):
+            self.window.data_dir = "://"
+            self.window.create_dir()
+            assert mockbox.critical.call_count == 1
+            assert mockexit.call_count == 1
+
+        with mock.patch("fs.open_fs", new=exception_mock(fs.opener.errors.UnsupportedProtocol).raise_exc):
+            self.window.data_dir = "://"
+            self.window.create_dir()
+            assert mockbox.critical.call_count == 2
+            assert mockexit.call_count == 2
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText(self.url)

@@ -169,7 +169,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.window.cb_valid_time_fwd_click()
         try:
             self.window.secs_from_timestep("Wrong")
-        except ValueError as error:
+        except ValueError:
             pass
         assert mockbox.critical.call_count == 0
 
