@@ -351,6 +351,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.fig = fig
         self.shift_data()
         self.mask_data()
+        self.lonmesh, self.latmesh = bm(*np.meshgrid(self.lons, self.lats))
         self._plot_style()
 
         # Set transparency for the output image.
