@@ -41,6 +41,7 @@ class Test_MapCanvas:
         # On land
         self.map.ax.set_xlim([2, 3])
         self.map.ax.set_ylim([48, 49])
+        self.map._draw_auto_graticule()
         self.map.update_with_coordinate_change()
 
         # On water
