@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LinearViewOptionsDialog</class>
+ <widget class="QDialog" name="LinearViewOptionsDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>614</width>
+    <height>180</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Linear View Options</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_4">
+   <item>
+    <widget class="QGroupBox" name="groupBox_5">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Plot Options</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="3" column="1">
+       <widget class="QComboBox" name="lv_cbtitlesize">
+        <item>
+         <property name="text">
+          <string>default</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>4</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>6</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>8</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>10</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>12</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>14</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>16</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>18</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>20</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>22</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>24</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>26</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>28</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>30</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>32</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string> Axes Label Size  </string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QComboBox" name="lv_cbaxessize">
+        <item>
+         <property name="text">
+          <string>default</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>4</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>6</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>8</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>10</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>12</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>14</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>16</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>18</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>20</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>22</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>24</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>26</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>28</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>30</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>32</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string> Plot Title Size</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>LinearViewOptionsDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>LinearViewOptionsDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
