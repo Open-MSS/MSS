@@ -38,18 +38,10 @@ from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui.mscolab import MSSMscolabWindow
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib._tests.utils import mscolab_start_server
+from mslib._tests.utils import mscolab_start_server, ExceptionMock
 
 
 PORTS = list(range(9481, 9530))
-
-
-class exception_mock:
-    def __init__(self, exc):
-        self.exc = exc
-
-    def raise_exc(self, *args, **kwargs):
-        raise self.exc
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -96,15 +88,15 @@ class Test_Mscolab(object):
         # assert self.window.label.text() == ""
         assert self.window.conn is None
 
-        with mock.patch("requests.get", new=exception_mock(requests.exceptions.ConnectionError).raise_exc):
+        with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
             self._login()
-        with mock.patch("requests.get", new=exception_mock(requests.exceptions.InvalidSchema).raise_exc):
+        with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.InvalidSchema).raise_exc):
             self._login()
-        with mock.patch("requests.get", new=exception_mock(requests.exceptions.InvalidURL).raise_exc):
+        with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.InvalidURL).raise_exc):
             self._login()
-        with mock.patch("requests.get", new=exception_mock(requests.exceptions.SSLError).raise_exc):
+        with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.SSLError).raise_exc):
             self._login()
-        with mock.patch("requests.get", new=exception_mock(Exception("")).raise_exc):
+        with mock.patch("requests.get", new=ExceptionMock(Exception("")).raise_exc):
             self._login()
         assert mockbox.critical.call_count == 5
 
@@ -279,7 +271,7 @@ class Test_Mscolab(object):
                 self.text = text
 
         self._connect_to_mscolab()
-        with mock.patch("requests.Session.post", new=exception_mock(requests.exceptions.ConnectionError).raise_exc):
+        with mock.patch("requests.Session.post", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
             self._login()
         with mock.patch("requests.Session.post", return_value=response(201, "False")):
             self._login()
@@ -373,13 +365,13 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("sys.exit")
     def test_create_dir_exceptions(self, mockexit, mockbox):
-        with mock.patch("fs.open_fs", new=exception_mock(fs.errors.CreateFailed).raise_exc):
+        with mock.patch("fs.open_fs", new=ExceptionMock(fs.errors.CreateFailed).raise_exc):
             self.window.data_dir = "://"
             self.window.create_dir()
             assert mockbox.critical.call_count == 1
             assert mockexit.call_count == 1
 
-        with mock.patch("fs.open_fs", new=exception_mock(fs.opener.errors.UnsupportedProtocol).raise_exc):
+        with mock.patch("fs.open_fs", new=ExceptionMock(fs.opener.errors.UnsupportedProtocol).raise_exc):
             self.window.data_dir = "://"
             self.window.create_dir()
             assert mockbox.critical.call_count == 2

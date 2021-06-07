@@ -34,6 +34,7 @@ from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
 from mslib._tests.constants import ROOT_DIR
 import mslib.msui.mss_pyui as mss_pyui
+from mslib._tests.utils import ExceptionMock
 from mslib.plugins.io.text import load_from_txt, save_to_txt
 from mslib.plugins.io.flitestar import load_from_flitestar
 
@@ -136,8 +137,29 @@ class Test_MSSSideViewWindow(object):
         assert self.window.listViews.count() == 1
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_open_linearview(self, mockbox):
+        assert self.window.listViews.count() == 0
+        self.window.actionLinearView.trigger()
+        self.window.listViews.itemActivated.emit(self.window.listViews.item(0))
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listViews.count() == 1
+        assert mockbox.critical.call_count == 0
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_about(self, mockbox):
         self.window.actionAboutMSUI.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert mockbox.critical.call_count == 0
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_open_config(self, mockbox):
+        self.window.actionConfigurationEditor.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert mockbox.critical.call_count == 0
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_open_shotcut(self, mockbox):
+        self.window.actionShortcuts.trigger()
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
@@ -204,3 +226,58 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
         assert mockopen.call_count == 1
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    @mock.patch("mslib.msui.mss_pyui.config_loader",
+                return_value={"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"]})
+    def test_add_plugins(self, mockopen, mockbox):
+        assert len(self.window.menuImport_Flight_Track.actions()) == 1
+        assert len(self.window.menuExport_Active_Flight_Track.actions()) == 1
+        assert len(self.window._imported_plugins) == 0
+        assert len(self.window._exported_plugins) == 0
+        self.window.add_plugins()
+        assert len(self.window._imported_plugins) == 1
+        assert len(self.window._exported_plugins) == 1
+        assert len(self.window.menuImport_Flight_Track.actions()) == 2
+        assert len(self.window.menuExport_Active_Flight_Track.actions()) == 2
+        assert mockbox.critical.call_count == 0
+
+        with mock.patch("importlib.import_module", new=ExceptionMock(Exception()).raise_exc):
+            self.window.add_plugins()
+            assert mockbox.critical.call_count == 2
+        with mock.patch("mslib.msui.mss_pyui.MSSMainWindow.add_import_filter",
+                        new=ExceptionMock(Exception()).raise_exc):
+            self.window.add_plugins()
+            assert mockbox.critical.call_count == 4
+
+        self.window.remove_plugins()
+        assert len(self.window.menuImport_Flight_Track.actions()) == 1
+        assert len(self.window.menuExport_Active_Flight_Track.actions()) == 1
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    @mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_ftml)
+    @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=save_ftml)
+    def test_flight_track_io(self, mockload, mocksave, mockq, mocki, mockw, mockbox):
+        self.window.actionCloseSelectedFlightTrack.trigger()
+        assert mocki.call_count == 1
+        self.window.actionNewFlightTrack.trigger()
+        self.window.listFlightTracks.setCurrentRow(0)
+        assert self.window.listFlightTracks.count() == 2
+        tmp_ft = self.window.active_flight_track
+        self.window.active_flight_track = self.window.listFlightTracks.currentItem().flighttrack_model
+        self.window.actionCloseSelectedFlightTrack.trigger()
+        assert mocki.call_count == 2
+        self.window.last_save_directory = self.sample_path
+        self.window.actionSaveActiveFlightTrack.trigger()
+        filename = self.window.active_flight_track.get_filename()
+        self.window.actionSaveActiveFlightTrack.trigger()
+        self.window.active_flight_track = tmp_ft
+        self.window.actionCloseSelectedFlightTrack.trigger()
+        assert self.window.listFlightTracks.count() == 1
+        self.window.actionOpenFlightTrack.trigger()
+        assert self.window.listFlightTracks.count() == 2
+        assert os.path.exists(self.save_ftml)
+        os.remove(self.save_ftml)
