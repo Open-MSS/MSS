@@ -32,7 +32,7 @@ import sys
 from mslib import __version__
 from mslib.mswms.wms import mss_wms_settings
 from mslib.mswms.wms import app as application
-from mslib.utils import setup_logging
+from mslib.utils import setup_logging, Updater, Worker
 
 
 def main():
@@ -45,6 +45,7 @@ def main():
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="If set to a name log output goes to that file", dest="logfile",
                         default=None)
+    parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
     args = parser.parse_args()
 
     if args.version:
@@ -55,7 +56,20 @@ def main():
         print("Version:", __version__)
         sys.exit()
 
+    updater = Updater()
+    if args.update:
+        updater.on_update_available.connect(lambda old, new: updater.update_mss())
+        updater.on_log_update.connect(lambda s: print(s.replace("\n", "")))
+        updater.on_status_update.connect(lambda s: print(s.replace("\n", "")))
+        updater.run()
+        while Worker.workers:
+            list(Worker.workers)[0].wait()
+        sys.exit()
+
     setup_logging(args)
+    updater.on_update_available.connect(lambda old, new: logging.info(f"MSS can be updated from {old} to {new}.\nRun"
+                                                                      " the --update argument to update the server."))
+    updater.run()
 
     logging.info("Configuration File: '%s'", mss_wms_settings.__file__)
 

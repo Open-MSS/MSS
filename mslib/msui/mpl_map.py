@@ -91,7 +91,6 @@ class MapCanvas(basemap.Basemap):
                               "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.))}
         default_appearance.update(param_appearance)
         self.appearance = default_appearance
-
         # Identifier of this map canvas (used to query data structures that
         # are observed by different views).
         if identifier is not None:
@@ -145,10 +144,8 @@ class MapCanvas(basemap.Basemap):
                     self.crs_text = self.ax.figure.text(0, 0, self.crs)
 
         if self.appearance["draw_graticule"]:
-            try:
-                self._draw_auto_graticule()
-            except Exception as ex:
-                logging.error("ERROR: cannot plot graticule (message: %s - '%s')", type(ex), ex)
+            pass
+            # self._draw_auto_graticule() ; It's already called in mpl_qtwidget.py in MplTopviewCanvas init_map().
         else:
             self.map_parallels = None
             self.map_meridians = None
@@ -177,7 +174,7 @@ class MapCanvas(basemap.Basemap):
         super(MapCanvas, self).set_axes_limits(ax=ax)
         matplotlib.interactive(intact)
 
-    def _draw_auto_graticule(self):
+    def _draw_auto_graticule(self, font_size=None):
         """
         Draw an automatically spaced graticule on the map.
         """
@@ -281,14 +278,14 @@ class MapCanvas(basemap.Basemap):
         latStart = np.floor((mapLatStart / spacingLat)) * spacingLat
         latStop = np.ceil((mapLatStop / spacingLat)) * spacingLat
 
-        #   d) call the basemap methods to draw the lines in the determined
-        #      range.
+        # d) call the basemap methods to draw the lines in the determined
+        #    range.
         self.map_parallels = self.drawparallels(np.arange(latStart, latStop,
                                                           spacingLat),
-                                                labels=[1, 1, 0, 0], zorder=3)
+                                                labels=[1, 1, 0, 0], fontsize=font_size, zorder=3)
         self.map_meridians = self.drawmeridians(np.arange(lonStart, lonStop,
                                                           spacingLon),
-                                                labels=[0, 0, 0, 1], zorder=3)
+                                                labels=[0, 0, 0, 1], fontsize=font_size, zorder=3)
 
     def set_graticule_visible(self, visible=True):
         """

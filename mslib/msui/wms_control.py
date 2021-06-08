@@ -646,9 +646,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
             self.cpdlg.close()
 
-        self.capabilities_worker = Worker.create(lambda: MSSWebMapService(base_url, version=version,
-                                                                          username=username, password=password),
-                                                 on_success, on_failure)
+        Worker.create(lambda: MSSWebMapService(base_url, version=version, username=username, password=password),
+                      on_success, on_failure)
 
     def wms_url_changed(self, text):
         wms = WMS_SERVICE_CACHE.get(text)
@@ -729,8 +728,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 self.cpdlg.close()
 
         self.display_capabilities_dialog()
-        self.capabilities_worker = Worker.create(lambda: requests.get(base_url, params=params),
-                                                 on_success, on_failure)
+        Worker.create(lambda: requests.get(base_url, params=params),
+                      on_success, on_failure)
 
     def activate_wms(self, wms, cache=False):
         # Parse layer tree of the wms object and discover usable layers.

@@ -37,6 +37,8 @@ import pint
 from fs import open_fs, errors
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
+import subprocess
+import sys
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -79,8 +81,8 @@ UR.define("degreeS = -degrees")
 UR.define("degreeE = degrees")
 UR.define("degreeW = -degrees")
 
-UR.define("sigma = dimensionless")
 UR.define("fraction = [] = frac")
+UR.define("sigma = 1 fraction")
 UR.define("percent = 1e-2 fraction")
 UR.define("permille = 1e-3 fraction")
 UR.define("ppm = 1e-6 fraction")
@@ -743,12 +745,20 @@ class Worker(QtCore.QThread):
     Beware not to modify the parents connections through the function.
     You may change the GUI but it may sometimes not update until the Worker is done.
     """
+    # Static set of all workers to avoid segfaults
+    workers = set()
     finished = QtCore.pyqtSignal(object)
     failed = QtCore.pyqtSignal(Exception)
 
     def __init__(self, function):
+        Worker.workers.add(self)
         super(Worker, self).__init__()
         self.function = function
+        # pyqtSignals don't work without an application eventloop running
+        if QtCore.QCoreApplication.startingUp():
+            self.finished = NonQtCallback()
+            self.failed = NonQtCallback()
+
         self.failed.connect(lambda e: self._update_gui())
         self.finished.connect(lambda x: self._update_gui())
 
@@ -758,6 +768,8 @@ class Worker(QtCore.QThread):
             self.finished.emit(result)
         except Exception as e:
             self.failed.emit(e)
+        finally:
+            Worker.workers.remove(self)
 
     @staticmethod
     def create(function, on_success=None, on_failure=None, start=True):
@@ -783,3 +795,164 @@ class Worker(QtCore.QThread):
         """
         for window in QtWidgets.QApplication.allWindows():
             window.requestUpdate()
+
+
+class Updater(QtCore.QObject):
+    """
+    Checks for a newer versions of MSS and provide functions to install it asynchronously.
+    Only works if conda is installed.
+    """
+    on_update_available = QtCore.pyqtSignal([str, str])
+    on_update_finished = QtCore.pyqtSignal()
+    on_log_update = QtCore.pyqtSignal([str])
+    on_status_update = QtCore.pyqtSignal([str])
+
+    def __init__(self, parent=None):
+        super(Updater, self).__init__(parent)
+        self.is_git_env = False
+        self.new_version = None
+        self.old_version = None
+        # pyqtSignals don't work without an application eventloop running
+        if QtCore.QCoreApplication.startingUp():
+            self.on_update_available = NonQtCallback()
+            self.on_update_finished = NonQtCallback()
+            self.on_log_update = NonQtCallback()
+            self.on_status_update = NonQtCallback()
+
+    def run(self):
+        """
+        Starts the updater process
+        """
+        Worker.create(self._check_version)
+
+    def _check_version(self):
+        """
+        Checks if conda search has a newer version of MSS
+        """
+        # Don't notify on updates if mss is in a git repo, as you are most likely a developer
+        try:
+            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, encoding="utf8")
+            if "true" in git.stdout:
+                self.is_git_env = True
+        except FileNotFoundError:
+            pass
+
+        # Return if conda is not installed
+        try:
+            subprocess.run(["conda"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        except FileNotFoundError:
+            return
+
+        self.on_status_update.emit("Checking for updates...")
+
+        # Check if "search mss" yields a higher version than the currently running one
+        search = self._execute_command("conda search mss")
+        self.new_version = search.split("\n")[-2].split()[1]
+        c_list = self._execute_command("conda list mss")
+        self.old_version = c_list.split("\n")[-2].split()[1]
+        if any(c.isdigit() for c in self.new_version):
+            if self.new_version > self.old_version:
+                self.on_status_update.emit("Your version of MSS is outdated!")
+                self.on_update_available.emit(self.old_version, self.new_version)
+                if self.no_signals:
+                    logging.info(f"MSS can be updated from {self.old_version} to {self.new_version}.\n"
+                                 "Run the --update argument to update.")
+            else:
+                self.on_status_update.emit("Your MSS is up to date.")
+
+    def _restart_mss(self):
+        """
+        Restart mss with all the same parameters, not entirely
+        safe in case parameters change in higher versions, or while debugging
+        """
+        command = [sys.executable.split(os.sep)[-1]] + sys.argv
+        if os.name == "nt" and not command[1].endswith(".py"):
+            command[1] += "-script.py"
+        os.execv(sys.executable, command)
+
+    def _try_updating(self):
+        """
+        Execute 'conda/mamba install mss=newest python -y' and return if it worked or not
+        """
+        command = "conda"
+        try:
+            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            command = "mamba"
+        except FileNotFoundError:
+            pass
+
+        self.on_status_update.emit("Trying to update MSS...")
+        self._execute_command(f"{command} install mss={self.new_version} python -y")
+        if self._verify_newest_mss():
+            return True
+
+        return False
+
+    def _update_mss(self):
+        """
+        Try to install MSS' newest version
+        """
+        if not self._try_updating():
+            self.on_status_update.emit("Update failed. Please try it manually or by creating a new environment!")
+        else:
+            self.on_update_finished.emit()
+            self.on_status_update.emit("Update successful. Please restart MSS.")
+
+    def _verify_newest_mss(self):
+        """
+        Return if the newest mss exists in the environment or not
+        """
+        verify = self._execute_command("conda list mss")
+        if self.new_version in verify:
+            return True
+
+        return False
+
+    def _execute_command(self, command):
+        """
+        Handles proper execution of conda subprocesses and logging
+        """
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
+        self.on_log_update.emit(" ".join(process.args) + "\n")
+
+        text = ""
+        for line in process.stdout:
+            self.on_log_update.emit(line)
+            text += line
+
+        # Happens e.g. on connection errors during installation attempts
+        if "An unexpected error has occurred. Conda has prepared the above report" in text:
+            raise RuntimeError("Something went wrong! Can't safely continue to update.")
+        else:
+            return text
+
+    def update_mss(self):
+        """
+        Installs the newest mss version
+        """
+        def on_failure(e: Exception):
+            self.on_status_update.emit("Update failed, please do it manually.")
+            self.on_log_update.emit(str(e))
+
+        Worker.create(self._update_mss, on_failure=on_failure)
+
+
+class NonQtCallback:
+    """
+    Small mock of pyqtSignal to work without the QT eventloop.
+    Callbacks are run on the same thread as the caller of emit, as opposed to the caller of connect.
+    Keep in mind if this causes issues.
+    """
+    def __init__(self):
+        self.callbacks = []
+
+    def connect(self, function):
+        self.callbacks.append(function)
+
+    def emit(self, *args):
+        for cb in self.callbacks:
+            try:
+                cb(*args)
+            except Exception:
+                pass

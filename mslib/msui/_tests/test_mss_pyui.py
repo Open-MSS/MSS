@@ -100,6 +100,9 @@ class Test_MSSSideViewWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
+    def test_no_updater(self):
+        assert not hasattr(self.window, "updater")
+
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_app_start(self, mockbox):
         assert mockbox.critical.call_count == 0
