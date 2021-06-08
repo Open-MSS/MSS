@@ -272,7 +272,6 @@ class Test_MSSSideViewWindow(object):
         assert mocki.call_count == 2
         self.window.last_save_directory = self.sample_path
         self.window.actionSaveActiveFlightTrack.trigger()
-        filename = self.window.active_flight_track.get_filename()
         self.window.actionSaveActiveFlightTrack.trigger()
         self.window.active_flight_track = tmp_ft
         self.window.actionCloseSelectedFlightTrack.trigger()
