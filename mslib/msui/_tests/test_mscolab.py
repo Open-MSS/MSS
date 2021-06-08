@@ -163,7 +163,6 @@ class Test_Mscolab(object):
     @pytest.mark.parametrize("ext", [".ftml", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
-        print(ext)
         with mock.patch("mslib.msui.mscolab.config_loader",
                         return_value={"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"]}):
             self.window.export_plugins = self.window.add_plugins()

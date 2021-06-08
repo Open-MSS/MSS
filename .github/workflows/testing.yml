@@ -42,7 +42,7 @@ jobs:
         && pytest --cov=mslib mslib
         
     - name: coveralls
-      if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/i1013' }}
+      if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
