@@ -88,16 +88,10 @@ class Test_Mscolab(object):
         # assert self.window.label.text() == ""
         assert self.window.conn is None
 
-        with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
-            self._login()
-        with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.InvalidSchema).raise_exc):
-            self._login()
-        with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.InvalidURL).raise_exc):
-            self._login()
-        with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.SSLError).raise_exc):
-            self._login()
-        with mock.patch("requests.get", new=ExceptionMock(Exception("")).raise_exc):
-            self._login()
+        for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
+                    requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
+            with mock.patch("requests.get", new=ExceptionMock(exc).raise_exc):
+                self.window.connect_handler()
         assert mockbox.critical.call_count == 5
 
     def test_disconnect(self):
@@ -166,31 +160,39 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.waypoints_model.waypoint_data(i).lat
 
-    @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
-    @mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName",
-                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
+    @pytest.mark.parametrize("ext", [".ftml", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_import_file(self, mockExport, mockImport, mockMessage):
-        self._connect_to_mscolab()
-        self._login()
-        self._activate_project_at_index(0)
-        exported_wp = WaypointsTableModel(waypoints=self.window.waypoints_model.waypoints)
-        QtTest.QTest.mouseClick(self.window.exportBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        self.window.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        assert exported_wp.waypoint_data(0).lat != self.window.waypoints_model.waypoint_data(0).lat
-        QtTest.QTest.mouseClick(self.window.importBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        assert len(self.window.waypoints_model.waypoints) == 2
-        imported_wp = self.window.waypoints_model
-        wp_count = len(imported_wp.waypoints)
-        assert wp_count == 2
-        for i in range(wp_count):
-            assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
+    def test_import_file(self, mockbox, ext):
+        print(ext)
+        with mock.patch("mslib.msui.mscolab.config_loader",
+                        return_value={"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"]}):
+            self.window.export_plugins = self.window.add_plugins()
+        with mock.patch("mslib.msui.mscolab.config_loader",
+                        return_value={"Text": ["txt", "mslib.plugins.io.text", "load_from_txt"]}):
+            self.window.import_plugins = self.window.add_plugins()
+        with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(fs.path.join(
+                mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'), None)):
+            with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(fs.path.join(
+                    mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'), None)):
+                self._connect_to_mscolab()
+                self._login()
+                self._activate_project_at_index(0)
+                exported_wp = WaypointsTableModel(waypoints=self.window.waypoints_model.waypoints)
+                QtTest.QTest.mouseClick(self.window.exportBtn, QtCore.Qt.LeftButton)
+                QtWidgets.QApplication.processEvents()
+                self.window.waypoints_model.invert_direction()
+                QtWidgets.QApplication.processEvents()
+                QtTest.QTest.qWait(100)
+                assert exported_wp.waypoint_data(0).lat != self.window.waypoints_model.waypoint_data(0).lat
+                QtTest.QTest.mouseClick(self.window.importBtn, QtCore.Qt.LeftButton)
+                QtWidgets.QApplication.processEvents()
+                QtTest.QTest.qWait(100)
+                assert len(self.window.waypoints_model.waypoints) == 2
+                imported_wp = self.window.waypoints_model
+                wp_count = len(imported_wp.waypoints)
+                assert wp_count == 2
+                for i in range(wp_count):
+                    assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
 
     def test_work_locally_toggle(self):
         self._connect_to_mscolab()
