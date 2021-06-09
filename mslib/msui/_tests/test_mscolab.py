@@ -64,6 +64,8 @@ class Test_Mscolab(object):
             self.window.version_window.close()
         if self.window.conn:
             self.window.conn.disconnect()
+        self.window.force_close_view_windows()
+        self.window.close_external_windows()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

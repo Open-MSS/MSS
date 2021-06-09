@@ -323,7 +323,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://127.0.0.1:{self.port}")
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
-        self.window.multilayers.show()
         self.window.cbAutoUpdate.setCheckState(False)
         assert server is not None
         assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]

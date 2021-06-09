@@ -158,6 +158,7 @@ class Test_MSSSideViewWindow(object):
     def test_open_config(self, mockbox):
         self.window.actionConfigurationEditor.trigger()
         QtWidgets.QApplication.processEvents()
+        self.window.config_editor.close()
         assert mockbox.critical.call_count == 0
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")

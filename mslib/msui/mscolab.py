@@ -1101,6 +1101,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
                     show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
+            self.merge_dialog.close()
             self.merge_dialog = None
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
@@ -1145,6 +1146,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
                     show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
+            self.merge_dialog.close()
             self.merge_dialog = None
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
