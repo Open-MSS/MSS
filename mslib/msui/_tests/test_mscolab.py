@@ -105,6 +105,7 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.topview, QtCore.Qt.LeftButton)
         QtTest.QTest.mouseClick(self.window.sideview, QtCore.Qt.LeftButton)
         QtTest.QTest.mouseClick(self.window.tableview, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.linearview, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.active_windows) == 0
         # test after activating project
@@ -118,6 +119,9 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.sideview, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.active_windows) == 3
+        QtTest.QTest.mouseClick(self.window.linearview, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.active_windows) == 4
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
