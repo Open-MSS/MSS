@@ -966,7 +966,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
                                                          parent=self.listProjects,
                                                          _id=self.id_count)
-            view_window.view_type = "tableview"
+            view_window.view_type = "linearview"
         if self.access_level == "viewer":
             self.disable_navbar_action_buttons(_type, view_window)
 
