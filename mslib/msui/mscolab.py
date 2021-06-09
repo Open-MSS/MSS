@@ -1271,6 +1271,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for index, window in enumerate(self.active_windows):
             if window._id == value:
                 del self.active_windows[index]
+                self.raise_()
 
     def setIdentifier(self, identifier):
         self.identifier = identifier
