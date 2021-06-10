@@ -70,7 +70,7 @@ def rel_hum(p, t, q):
     rel_humidity = mpcalc.relative_humidity_from_specific_humidity(p * units("Pa"), t * units("K"), q)
 
     # Return specific humidity in [%].
-    return rel_humidity*100
+    return rel_humidity * 100
 
 
 def mixing_ratio(q):
@@ -105,7 +105,7 @@ def virt_temp(t, q):
     return v_temp
 
 
-def geop_difference(p, t, method='trapz', axis=-1):
+def geop_difference(p, t, method = 'trapz', axis = -1):
     """Compute geopotential difference in [m**2 s**-2] between the pressure
        levels given by the first and last element in p (= pressure).
 
@@ -203,8 +203,7 @@ def eqpt_approx(p, t, q):
     the inputs.
     """
     dew_temp = dewpoint(p, t, q)
-    eqpt_temp = mpcalc.equivalent_potential_temperature(p * units("Pa"), 
-                            t * units("K"), dew_temp * units("K"))
+    eqpt_temp = mpcalc.equivalent_potential_temperature(p * units("Pa"), t * units("K"), dew_temp * units("K"))
     return eqpt_temp
 
 
