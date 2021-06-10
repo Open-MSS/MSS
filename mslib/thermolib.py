@@ -50,7 +50,7 @@ def sat_vapour_pressure(t):
 
     Returns: Saturation Vapour Pressure in [Pa], in the same dimensions as the input.
     """
-    v_pr = mpcalc.saturation_vapor_pressure(t*units("K"))
+    v_pr = mpcalc.saturation_vapor_pressure(t * units("K"))
 
     # Convert return value units from mbar to Pa.
     return v_pr.to('Pa')
@@ -67,7 +67,7 @@ def rel_hum(p, t, q):
 
     Returns: Relative humidity in [%]. Same dimension as input fields.
     """
-    rel_humidity = mpcalc.relative_humidity_from_specific_humidity(p*units("Pa"), t*units("K"), q)
+    rel_humidity = mpcalc.relative_humidity_from_specific_humidity(p * units("Pa"), t * units("K"), q)
 
     # Return specific humidity in [%].
     return rel_humidity*100
@@ -101,8 +101,8 @@ def virt_temp(t, q):
     Returns: Virtual temperature in [K]. Same dimension as input fields.
     """
     mix_rat = mixing_ratio(q)
-    v_temp = mpcalc.virtual_temperature(t*units("K"), mix_rat)
-    return v_temp*units("K")
+    v_temp = mpcalc.virtual_temperature(t * units("K"), mix_rat)
+    return v_temp
 
 
 def geop_difference(p, t, method='trapz', axis=-1):
@@ -168,7 +168,7 @@ def pot_temp(p, t):
 
     Returns: potential temperature in [K]. Same dimensions as the inputs.
     """
-    potential_temp = mpcalc.potential_temperature(p.units("Pa"), t.units("K"))
+    potential_temp = mpcalc.potential_temperature(p * units("Pa"), t * units("K"))
     return potential_temp
 
 
@@ -183,7 +183,7 @@ def dewpoint(p, t, q):
 
     Returns: dewpoint temperature in [K]. Same dimensions as the inputs.
     """
-    dew_temp = mpcalc.dewpoint_from_specific_humidity(p*units("Pa"), t*units("K"), q)
+    dew_temp = mpcalc.dewpoint_from_specific_humidity(p * units("Pa"), t * units("K"), q)
     return dew_temp
 
 
@@ -203,7 +203,8 @@ def eqpt_approx(p, t, q):
     the inputs.
     """
     dew_temp = dewpoint(p, t, q)
-    eqpt_temp = mpcalc.equivalent_potential_temperature(p*units("Pa"), t*units("K"), dew_temp*units("K"))
+    eqpt_temp = mpcalc.equivalent_potential_temperature(p * units("Pa"), 
+                            t * units("K"), dew_temp * units("K"))
     return eqpt_temp
 
 
