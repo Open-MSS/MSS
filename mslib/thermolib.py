@@ -105,7 +105,7 @@ def virt_temp(t, q):
     return v_temp
 
 
-def geop_difference(p, t, method = 'trapz', axis=-1):
+def geop_difference(p, t, method='trapz', axis=-1):
     """Compute geopotential difference in [m**2 s**-2] between the pressure
        levels given by the first and last element in p (= pressure).
 
