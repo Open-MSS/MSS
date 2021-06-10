@@ -105,7 +105,7 @@ def virt_temp(t, q):
     return v_temp
 
 
-def geop_difference(p, t, method = 'trapz', axis = -1):
+def geop_difference(p, t, method = 'trapz', axis=-1):
     """Compute geopotential difference in [m**2 s**-2] between the pressure
        levels given by the first and last element in p (= pressure).
 
@@ -184,7 +184,7 @@ def dewpoint(p, t, q):
     Returns: dewpoint temperature in [K]. Same dimensions as the inputs.
     """
     dew_temp = mpcalc.dewpoint_from_specific_humidity(p * units("Pa"), t * units("K"), q)
-    return dew_temp
+    return dew_temp.to('K')
 
 
 def eqpt_approx(p, t, q):
@@ -203,8 +203,8 @@ def eqpt_approx(p, t, q):
     the inputs.
     """
     dew_temp = dewpoint(p, t, q)
-    eqpt_temp = mpcalc.equivalent_potential_temperature(p * units("Pa"), t * units("K"), dew_temp * units("K"))
-    return eqpt_temp
+    eqpt_temp = mpcalc.equivalent_potential_temperature(p * units("Pa"), t * units("K"), dew_temp)
+    return eqpt_temp.to('degC')
 
 
 def omega_to_w(omega, p, t):
