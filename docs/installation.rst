@@ -56,7 +56,7 @@ leave out the 'source' here and below). ::
 
     $ conda create -n mssenv mamba
     $ conda activate mssenv
-    (mssenv) $ mamba install mss
+    (mssenv) $ mamba install mss=4.0.1 python
 
 
 You need to reactivate after the installation once the environment to setup all needed enironment
@@ -123,7 +123,7 @@ We suggest to create a mss user.
 * login again or export PATH="/home/mss/miniconda3/bin:$PATH"
 * conda create -n mssenv mamba
 * conda activate mssenv
-* mamba install mss
+* mamba install mss=4.0.1 python
 
 For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
 
