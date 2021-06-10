@@ -26,12 +26,11 @@
     limitations under the License.
 """
 
-# The function sat_vapour_pressure() has been ported from the IDL function
-# 'VaporPressure' by Holger Voemel, available at http://cires.colorado.edu/~voemel/vp.html.
-
 import numpy
 import scipy.integrate
 import logging
+import metpy.calc as mpcalc
+from metpy.units import units
 
 
 class VapourPressureError(Exception):
@@ -41,6 +40,69 @@ class VapourPressureError(Exception):
 
     def __init__(self, error_string):
         logging.debug("%s", error_string)
+
+
+def sat_vapour_pressure(t):
+    """Compute saturation vapour presure in Pa from temperature.
+
+    Arguments:
+    t -- temperature in [K]
+
+    Returns: Saturation Vapour Pressure in [Pa], in the same dimensions as the input.
+    """
+    v_pr = mpcalc.saturation_vapor_pressure(t*units("K"))
+
+    # Convert return value units from mbar to Pa.
+    return v_pr.to('Pa')
+
+
+def rel_hum(p, t, q):
+    """Compute relative humidity in [%] from pressure, temperature, and
+       specific humidity.
+
+    Arguments:
+    p -- pressure in [Pa]
+    t -- temperature in [K]
+    q -- specific humidity in [kg/kg]
+
+    Returns: Relative humidity in [%]. Same dimension as input fields.
+    """
+    rel_humidity = mpcalc.relative_humidity_from_specific_humidity(p*units("Pa"), t*units("K"), q)
+
+    # Return specific humidity in [%].
+    return rel_humidity*100
+
+
+def mixing_ratio(q):
+    """
+    Compute mixing ratio from specific humidity.
+
+    Arguments:
+    q -- specific humidity in [Kg/Kg]
+
+    Returns: Mixing Ratio.
+    """
+    mix_rat = mpcalc.mixing_ratio_from_specific_humidity(q)
+    return mix_rat
+
+
+def virt_temp(t, q):
+    """
+    Compute virtual temperature in [K] from temperature and
+    specific humidity.
+
+    Arguments:
+    t -- temperature in [K]
+    q -- specific humidity in [kg/kg]
+
+    t and q can be scalars of NumPy arrays. They just have to either all
+    scalars, or all arrays.
+
+    Returns: Virtual temperature in [K]. Same dimension as input fields.
+    """
+    mix_rat = mixing_ratio(q)
+    v_temp = mpcalc.virtual_temperature(t*units("K"), mix_rat)
+    return v_temp*units("K")
 
 
 def geop_difference(p, t, method='trapz', axis=-1):
@@ -91,6 +153,58 @@ def geop_difference(p, t, method='trapz', axis=-1):
         return 287.058 * scipy.integrate.simps(t, lnp, axis=axis)
     else:
         raise TypeError('integration method for geopotential not understood')
+
+
+def pot_temp(p, t):
+    """
+    Computes potential temperature in [K] from pressure and temperature.
+
+    Arguments:
+    p -- pressure in [Pa]
+    t -- temperature in [K]
+
+    p and t can be scalars of NumPy arrays. They just have to either both
+    scalars, or both arrays.
+
+    Returns: potential temperature in [K]. Same dimensions as the inputs.
+    """
+    potential_temp = mpcalc.potential_temperature(p.units("Pa"), t.units("K"))
+    return potential_temp
+
+
+def dewpoint(p, t, q):
+    """
+    Computes dewpoint temperature in [K] from pressure, temperature and specific humidity.
+
+    Arguments:
+    p -- pressure in [Pa]
+    t -- temperature in [K]
+    q -- specific humidity in [Kg/Kg]
+
+    Returns: dewpoint temperature in [K]. Same dimensions as the inputs.
+    """
+    dew_temp = mpcalc.dewpoint_from_specific_humidity(p*units("Pa"), t*units("K"), q)
+    return dew_temp
+
+
+def eqpt_approx(p, t, q):
+    """
+    Computes equivalent potential temperature in [K] from pressure,
+    temperature and specific humidity.
+
+    Arguments:
+    p -- pressure in [Pa]
+    t -- temperature in [K]
+    q -- specific humidity in [kg/kg]
+
+    p, t and q can be scalars or NumPy arrays.
+
+    Returns: equivalent potential temperature in [K]. Same dimensions as
+    the inputs.
+    """
+    dew_temp = dewpoint(p, t, q)
+    eqpt_temp = mpcalc.equivalent_potential_temperature(p*units("Pa"), t*units("K"), dew_temp*units("K"))
+    return eqpt_temp
 
 
 def omega_to_w(omega, p, t):
