@@ -56,7 +56,7 @@ leave out the 'source' here and below). ::
 
     $ conda create -n mssenv mamba
     $ conda activate mssenv
-    (mssenv) $ mamba install mss
+    (mssenv) $ mamba install mss=4.0.1 python
 
 
 You need to reactivate after the installation once the environment to setup all needed enironment
@@ -81,13 +81,9 @@ you could try the mamba update mss as described.
 search for MSS what you can get ::
 
    (mssenv) $ mamba search mss
-
-   mss                            3.0.4  py38h578d9bd_0  conda-forge
-   mss                            3.0.4  py39hf3d152e_0  conda-forge
-   mss                            4.0.0  py36h5fab9bb_0  conda-forge
-   mss                            4.0.0  py37h89c1867_0  conda-forge
-   mss                            4.0.0  py38h578d9bd_0  conda-forge
-   mss                            4.0.0  py39hf3d152e_0  conda-forge
+   ...
+   mss                            4.0.1  py38h578d9bd_0  conda-forge
+   mss                            4.0.1  py39hf3d152e_0  conda-forge
 
 compare what you have installed ::
 
@@ -95,14 +91,11 @@ compare what you have installed ::
 
      mss                            3.0.2     py39hf3d152e_0    conda-forge
 
-We found that sometimes mss can be updated in an existing environment  ::
 
-   (mssenv) $ mamba update mss
+We have reports that often an update suceeds by using the install option and the new version number,
+in this example 4.0.1 and python as second option ::
 
-We have also reports that sometimes an update suceeds by giving by the install option and the new version number,
-in this example 4.0.0 and python as second option ::
-
-   (mssenv) $ mamba install mss=4.0.0 python
+   (mssenv) $ mamba install mss=4.0.1 python
 
 All attemmpts show what you get if you continue. **Continue only if you get what you want.**
 
@@ -130,7 +123,7 @@ We suggest to create a mss user.
 * login again or export PATH="/home/mss/miniconda3/bin:$PATH"
 * conda create -n mssenv mamba
 * conda activate mssenv
-* mamba install mss
+* mamba install mss=4.0.1 python
 
 For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
 
