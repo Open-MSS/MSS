@@ -205,7 +205,9 @@ class WMSServer(object):
             mss_wms_settings.register_linear_layers = []
         for layer in mss_wms_settings.register_linear_layers:
             if len(layer) == 3:
-                self.register_lsec_layer(layer[2], layer[1], layer[0])
+                self.register_lsec_layer(layer[2], layer[1], layer_class=layer[0])
+            elif len(layer) == 4:
+                self.register_lsec_layer(layer[3], layer[1], layer[2], layer[0])
             else:
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
@@ -262,7 +264,7 @@ class WMSServer(object):
                     raise ValueError("dataset '%s' not available", dataset)
             self.vsec_layer_registry[dataset][layer.name] = layer
 
-    def register_lsec_layer(self, datasets, variable=None, layer_class=None):
+    def register_lsec_layer(self, datasets, variable=None, filetype="ml", layer_class=None):
         """
         Register linear section layer in internal dict of layers.
 
@@ -274,7 +276,7 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 if variable:
-                    layer = layer_class(self.lsec_drivers[dataset], variable)
+                    layer = layer_class(self.lsec_drivers[dataset], variable, filetype)
                 else:
                     layer = layer_class(self.lsec_drivers[dataset])
             except KeyError as ex:
