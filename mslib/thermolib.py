@@ -67,7 +67,9 @@ def rel_hum(p, t, q):
 
     Returns: Relative humidity in [%]. Same dimension as input fields.
     """
-    rel_humidity = mpcalc.relative_humidity_from_specific_humidity(p * units.pascal, t * units.kelvin, q)
+    p = units.Quantity(p, "Pa")
+    t = units.Quantity(t, "K")
+    rel_humidity = mpcalc.relative_humidity_from_specific_humidity(p, t, q)
 
     # Return specific humidity in [%].
     return rel_humidity * 100
@@ -100,8 +102,9 @@ def virt_temp(t, q):
 
     Returns: Virtual temperature in [K]. Same dimension as input fields.
     """
+    t = units.Quantity(t, "K")
     mix_rat = mixing_ratio(q)
-    v_temp = mpcalc.virtual_temperature(t * units.kelvin, mix_rat)
+    v_temp = mpcalc.virtual_temperature(t, mix_rat)
     return v_temp
 
 
@@ -168,7 +171,9 @@ def pot_temp(p, t):
 
     Returns: potential temperature in [K]. Same dimensions as the inputs.
     """
-    potential_temp = mpcalc.potential_temperature(p * units.pascal, t * units.kelvin)
+    p = units.Quantity(p, "Pa")
+    t = units.Quantity(t, "K")
+    potential_temp = mpcalc.potential_temperature(p, t)
     return potential_temp
 
 
@@ -183,7 +188,9 @@ def dewpoint(p, t, q):
 
     Returns: dewpoint temperature in [K]. Same dimensions as the inputs.
     """
-    dew_temp = mpcalc.dewpoint_from_specific_humidity(p * units.pascal, t * units.kelvin, q)
+    p = units.Quantity(p, "Pa")
+    t = units.Quantity(t, "K")
+    dew_temp = mpcalc.dewpoint_from_specific_humidity(p, t, q)
     return dew_temp.to('K')
 
 
@@ -202,8 +209,10 @@ def eqpt_approx(p, t, q):
     Returns: equivalent potential temperature in [K]. Same dimensions as
     the inputs.
     """
+    p = units.Quantity(p, "Pa")
+    t = units.Quantity(t, "K")
     dew_temp = dewpoint(p, t, q)
-    eqpt_temp = mpcalc.equivalent_potential_temperature(p * units.pascal, t * units.kelvin, dew_temp)
+    eqpt_temp = mpcalc.equivalent_potential_temperature(p, t, dew_temp)
     return eqpt_temp.to('degC')
 
 
