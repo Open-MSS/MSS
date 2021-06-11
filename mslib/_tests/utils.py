@@ -228,3 +228,17 @@ def wait_until_signal(signal, timeout=5):
         pass
     finally:
         return finished
+
+
+class ExceptionMock:
+    """
+    Replace function calls with raised exceptions
+    e.g.
+    with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
+        self._login()
+    """
+    def __init__(self, exc):
+        self.exc = exc
+
+    def raise_exc(self, *args, **kwargs):
+        raise self.exc

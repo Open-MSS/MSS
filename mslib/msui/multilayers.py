@@ -209,7 +209,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                     wms_hits += 1
                 else:
                     widget.setHidden(True)
-            if wms_hits == 0 and len(filter_string) > 0:
+            if wms_hits == 0 and (len(filter_string) > 0 or self.filter_favourite):
                 header.setHidden(True)
             else:
                 header.setHidden(False)
