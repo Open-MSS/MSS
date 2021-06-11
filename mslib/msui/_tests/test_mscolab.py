@@ -249,7 +249,6 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QErrorMessage")
     def test_add_project(self, mockbox):
-        # ToDo test needs to be independent from test_user_delete
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")

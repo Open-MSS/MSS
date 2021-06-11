@@ -263,15 +263,16 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         except requests.exceptions.SSLError:
             logging.debug("Certificate Verification Failed")
             show_popup(self, "Error", "Certificate Verification Failed")
-        except requests.exceptions.ConnectionError:
-            logging.debug("MSColab server isn't active")
-            show_popup(self, "Error", "MSColab server isn't active")
         except requests.exceptions.InvalidSchema:
             logging.debug("invalid schema of url")
             show_popup(self, "Error", "Invalid Url Scheme!")
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
             show_popup(self, "Error", "Invalid URL")
+        # ConnectionError is a superclass of other errors, best to put it in the bottom and first catch the others
+        except requests.exceptions.ConnectionError:
+            logging.debug("MSColab server isn't active")
+            show_popup(self, "Error", "MSColab server isn't active")
         except Exception as e:
             logging.debug("Error %s", str(e))
             show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
