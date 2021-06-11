@@ -773,10 +773,11 @@ class LinearSectionDriver(VerticalSectionDriver):
         lon_data = lon_data[lon_indices]
         factors = []
 
-        # Make sure air_pressure is the first to be evaluated
+        # Make sure air_pressure is the first to be evaluated if needed
         variables = list(self.data_vars)
-        if variables[0] != "air_pressure":
-            variables.insert(0, variables.pop(variables.index("air_pressure")))
+        if "air_pressure" in self.data_vars:
+            if variables[0] != "air_pressure":
+                variables.insert(0, variables.pop(variables.index("air_pressure")))
 
         for name in variables:
             var = self.data_vars[name]
@@ -796,9 +797,10 @@ class LinearSectionDriver(VerticalSectionDriver):
             cross_section = utils.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
             # Create vertical interpolation factors and indices for subsequent variables
             # TODO: Improve performance for this interpolation in general
-            if name == "air_pressure":
+            if len(factors) == 0:
                 for index_lonlat, alt in enumerate(self.alts):
-                    pressures = cross_section[:, index_lonlat]
+                    pressures = cross_section[:, index_lonlat] if name == "air_pressure" \
+                        else self.vert_data[::-self.vert_order] * (100 if self.vert_units.lower() == "hpa" else 1)
                     closest = 0
                     direction = 1
                     for index_altitude, pressure in enumerate(pressures):
@@ -818,6 +820,7 @@ class LinearSectionDriver(VerticalSectionDriver):
                             [[closest, 1 - (abs(pressures[closest] - alt) / distance)],
                              [next_closest, 1 - (abs(pressures[next_closest] - alt) / distance)]])
 
+            # Interpolate with the previously calculated pressure indices and factors
             for index in range(len(self.alts)):
                 cur_factor = factors[index]
                 value = cross_section[cur_factor[0][0], index] * cur_factor[0][1] + \

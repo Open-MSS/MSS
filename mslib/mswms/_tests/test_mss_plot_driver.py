@@ -234,6 +234,11 @@ class Test_LSec(object):
             img = self.plot(mpl_lsec_styles.LS_DefaultStyle(driver=self.lsec, variable=variable))
             assert img is not None
 
+    def test_LS_DefaultStyle_PL(self):
+        img = self.plot(mpl_lsec_styles.LS_DefaultStyle(driver=self.lsec, variable="air_potential_temperature",
+                                                        filetype="pl"))
+        assert img is not None
+
     def test_LS_RelativeHumdityStyle_01(self):
         img = self.plot(mpl_lsec_styles.LS_RelativeHumdityStyle_01(driver=self.lsec))
         assert img is not None
