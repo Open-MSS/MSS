@@ -624,6 +624,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         self.cpdlg.close()
                         return
                 else:
+                    traceback.print_exc()
                     logging.error("cannot load capabilities document.. "
                                   "no layers can be used in this view.")
                     QtWidgets.QMessageBox.critical(
@@ -631,6 +632,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
                     self.cpdlg.close()
             except Exception as ex:
+                traceback.print_exc()
                 logging.error("cannot load capabilities document.. "
                               "no layers can be used in this view.")
                 QtWidgets.QMessageBox.critical(
@@ -719,6 +721,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     requests.exceptions.InvalidURL,
                     requests.exceptions.InvalidSchema,
                     requests.exceptions.MissingSchema) as ex:
+                traceback.print_exc()
                 logging.error("Cannot load capabilities document.\n"
                               "No layers can be used in this view.")
                 QtWidgets.QMessageBox.critical(
