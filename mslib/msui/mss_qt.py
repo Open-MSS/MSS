@@ -169,6 +169,8 @@ for mod in [
         "ui_kmloverlay_dockwidget",
         "ui_customize_kml",
         "ui_mainwindow",
+        "ui_mainwindow_new",
+        "ui_mscolab_connect_window",
         "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",
