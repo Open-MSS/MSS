@@ -797,10 +797,10 @@ class LinearSectionDriver(VerticalSectionDriver):
             cross_section = utils.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
             # Create vertical interpolation factors and indices for subsequent variables
             # TODO: Improve performance for this interpolation in general
-            if name == "air_pressure" or "air_pressure" not in self.data_vars and len(factors) == 0:
+            if len(factors) == 0:
                 for index_lonlat, alt in enumerate(self.alts):
-                    pressures = cross_section[:, index_lonlat] if "air_pressure" in self.data_vars \
-                        else self.vert_data[::-self.vert_order] * 100 if self.vert_units.lower() == "hpa" else 1
+                    pressures = cross_section[:, index_lonlat] if name == "air_pressure" \
+                        else self.vert_data[::-self.vert_order] * (100 if self.vert_units.lower() == "hpa" else 1)
                     closest = 0
                     direction = 1
                     for index_altitude, pressure in enumerate(pressures):
