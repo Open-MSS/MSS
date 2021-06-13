@@ -53,7 +53,7 @@ def sat_vapour_pressure(t):
     v_pr = mpcalc.saturation_vapor_pressure(t * units.kelvin)
 
     # Convert return value units from mbar to Pa.
-    return v_pr.to('Pa')
+    return v_pr.to('Pa').magnitude
 
 
 def rel_hum(p, t, q):
@@ -75,19 +75,6 @@ def rel_hum(p, t, q):
     return rel_humidity * 100
 
 
-def mixing_ratio(q):
-    """
-    Compute mixing ratio from specific humidity.
-
-    Arguments:
-    q -- specific humidity in [Kg/Kg]
-
-    Returns: Mixing Ratio.
-    """
-    mix_rat = mpcalc.mixing_ratio_from_specific_humidity(q)
-    return mix_rat
-
-
 def virt_temp(t, q):
     """
     Compute virtual temperature in [K] from temperature and
@@ -103,7 +90,7 @@ def virt_temp(t, q):
     Returns: Virtual temperature in [K]. Same dimension as input fields.
     """
     t = units.Quantity(t, "K")
-    mix_rat = mixing_ratio(q)
+    mix_rat = mpcalc.mixing_ratio_from_specific_humidity(q)
     v_temp = mpcalc.virtual_temperature(t, mix_rat)
     return v_temp
 
@@ -177,23 +164,6 @@ def pot_temp(p, t):
     return potential_temp
 
 
-def dewpoint(p, t, q):
-    """
-    Computes dewpoint temperature in [K] from pressure, temperature and specific humidity.
-
-    Arguments:
-    p -- pressure in [Pa]
-    t -- temperature in [K]
-    q -- specific humidity in [Kg/Kg]
-
-    Returns: dewpoint temperature in [K]. Same dimensions as the inputs.
-    """
-    p = units.Quantity(p, "Pa")
-    t = units.Quantity(t, "K")
-    dew_temp = mpcalc.dewpoint_from_specific_humidity(p, t, q)
-    return dew_temp.to('K')
-
-
 def eqpt_approx(p, t, q):
     """
     Computes equivalent potential temperature in [K] from pressure,
@@ -211,9 +181,9 @@ def eqpt_approx(p, t, q):
     """
     p = units.Quantity(p, "Pa")
     t = units.Quantity(t, "K")
-    dew_temp = dewpoint(p, t, q)
+    dew_temp = mpcalc.dewpoint_from_specific_humidity(p, t, q)
     eqpt_temp = mpcalc.equivalent_potential_temperature(p, t, dew_temp)
-    return eqpt_temp.to('degC')
+    return eqpt_temp.to('degC').magnitude
 
 
 def omega_to_w(omega, p, t):
