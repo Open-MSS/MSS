@@ -198,18 +198,12 @@ def omega_to_w(omega, p, t):
     All inputs can be scalars or NumPy arrays.
 
     Returns the vertical velocity in geometric coordinates, [m/s].
-
-    For all grid points, the pressure vertical velocity in Pa/s is converted
-    to m/s via
-                    w[m/s] =(approx) omega[Pa/s] / (-g*rho)
-                       rho = p / R*T
-    with R = 287.058 JK-1kg-1, g = 9.80665 m2s-2.
-    (see p.13 of 'Introduction to circulating atmospheres' by Ian N. James).
-
-    NOTE: Please check the resulting values, especially in the upper atmosphere!
     """
-    rho = p / (287.058 * t)
-    return (omega / (-9.80665 * rho))
+    omega = units.Quantity(omega, "Pa/s")
+    p = units.Quantity(p, "Pa")
+    t = units.Quantity(t, "K")
+    om_w = mpcalc.vertical_velocity(omega, p, t)
+    return om_w
 
 
 def flightlevel2pressure(flightlevel):
