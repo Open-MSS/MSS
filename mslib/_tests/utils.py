@@ -27,6 +27,8 @@
 """
 import time
 import fs
+import sys
+import pytest
 import socket
 import multiprocessing
 from PyQt5 import QtTest
@@ -242,3 +244,12 @@ class ExceptionMock:
 
     def raise_exc(self, *args, **kwargs):
         raise self.exc
+
+
+def skip_if_parallel():
+    """
+    Calls pytest.skip if the sys.argv indicate pytest -n >0
+    Useful for tests which modify files or imports which may be used by other parallel tests
+    """
+    if len(sys.argv) == 1 and "pytest" not in sys.argv[0]:
+        pytest.skip("Running this parallel may cause issues")

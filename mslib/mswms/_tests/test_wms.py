@@ -32,7 +32,8 @@ from shutil import move
 import mock
 import mslib.mswms.mswms as mswms
 from importlib import reload
-from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
+from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain, \
+    skip_if_parallel
 from mslib._tests.constants import DATA_DIR
 
 
@@ -371,6 +372,7 @@ class Test_WMS(object):
         callback_ok_xml(result.status, result.headers)
 
     def test_import_error(self):
+        skip_if_parallel()
         import mslib.mswms.wms
         with mock.patch.dict("sys.modules", {"mss_wms_settings": None, "mss_wms_auth": None}):
             reload(mslib.mswms.wms)
@@ -381,10 +383,11 @@ class Test_WMS(object):
         assert mslib.mswms.wms.mss_wms_auth.__file__ is not None
 
     def test_files_changed(self):
+        skip_if_parallel()
         environ = {
-              'wsgi.url_scheme': 'http',
-              'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
-              'QUERY_STRING':
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
                 'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=200&crs=EPSG%3A4326&format=image%2Fpng&'
                 'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
                 'version=1.3.0&bbox=20.0%2C-50.0%2C75.0%2C20.0&time=2012-10-17T12%3A00%3A00Z&'
