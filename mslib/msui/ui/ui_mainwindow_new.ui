@@ -65,6 +65,9 @@
          <property name="text">
           <string>Status: Disconnected</string>
          </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item alignment="Qt::AlignRight">
@@ -153,7 +156,7 @@
        <attribute name="title">
         <string>Share</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0">
+       <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0">
         <property name="leftMargin">
          <number>8</number>
         </property>
@@ -169,66 +172,8 @@
         <property name="verticalSpacing">
          <number>10</number>
         </property>
-        <item row="1" column="0" colspan="3">
-         <widget class="QListWidget" name="listProjectsMSC"/>
-        </item>
-        <item row="0" column="2" alignment="Qt::AlignRight">
-         <widget class="QPushButton" name="addProjectBtn">
-          <property name="text">
-           <string>Add Project</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="openProjectsMSCLabel">
-          <property name="text">
-           <string>Open Projects:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QComboBox" name="projectOptionsCb">
-          <item>
-           <property name="text">
-            <string>Project options</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Chat</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Version History</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Manage Users</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Share Project</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Delete Project</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QCheckBox" name="checkBox">
-          <property name="text">
-           <string>Work Locally</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QComboBox" name="comboBox">
+        <item row="3" column="1">
+         <widget class="QComboBox" name="sandboxOptionsCb">
           <item>
            <property name="text">
             <string>Sandbox Options</string>
@@ -244,6 +189,48 @@
             <string>Save To Server</string>
            </property>
           </item>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="openProjectsMSCLabel">
+          <property name="text">
+           <string>Open Projects:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QComboBox" name="projectOptionsCb"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="workLocallyCheckbox">
+          <property name="text">
+           <string>Work Locally</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="3">
+         <widget class="QListWidget" name="listProjectsMSC"/>
+        </item>
+        <item row="0" column="2" alignment="Qt::AlignRight">
+         <widget class="QPushButton" name="addProjectBtn">
+          <property name="text">
+           <string>Add Project</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="3">
+         <widget class="QLabel" name="workingStatusLabel">
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
        </layout>

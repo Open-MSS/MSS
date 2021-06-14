@@ -212,17 +212,22 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         blub = QtGui.QPixmap(python_powered())
         self.lblPython.setPixmap(blub)
 
-MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
 
-class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
+class MSColab_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
+    """MSColab connect window class. Provides user interface elements to connect/disconnect,
+       login, add new user to an MSColab Server. Also implements HTTP Server Authentication prompt.
+    """
+
     def __init__(self, parent=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
         """
-        super(MSS_ConnectWindow, self).__init__(parent)
+        super(MSColab_ConnectWindow, self).__init__(parent)
         self.setupUi(self)
         self.parent = parent
+
+        self.stackedWidget.setCurrentWidget(self.loginPage)
 
         # disable widgets in login frame
         self.loginEmailLe.setEnabled(False)
@@ -231,13 +236,18 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
         self.addUserBtn.setEnabled(False)
 
         self.urlCb.setEditable(True)
-        self.urlCb.setModel(MSCOLAB_URL_LIST)
         self.add_mscolab_urls()
 
+        # connect login, adduser, connect buttons
         self.connectBtn.clicked.connect(self.connect_handler)
         self.loginBtn.clicked.connect(self.login_handler)
         self.addUserBtn.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
 
+        # enable login button only if email and password are entered
+        self.loginEmailLe.textChanged[str].connect(self.enable_login_btn)
+        self.loginPasswordLe.textChanged[str].connect(self.enable_login_btn)
+
+        # connect new user dialogbutton
         self.newUserBb.accepted.connect(self.new_user_handler)
         self.newUserBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
 
@@ -267,6 +277,7 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
             self.connectBtn.setEnabled(False)
         else:
             self.connectBtn.setEnabled(True)
+        self.resize(self.sizeHint())
 
         # self.prev_index = index
 
@@ -292,10 +303,6 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
                 self.addUserBtn.setEnabled(True)
                 self.loginEmailLe.setEnabled(True)
                 self.loginPasswordLe.setEnabled(True)
-
-                # enable login button only if email and password are entered
-                self.loginEmailLe.textChanged[str].connect(self.enable_login_btn)
-                self.loginPasswordLe.textChanged[str].connect(self.enable_login_btn)
 
                 self.mscolab_server_url = url
                 # delete mscolab http_auth settings for the url
@@ -345,10 +352,15 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
         # clear text
         self.stackedWidget.setCurrentWidget(self.loginPage)
 
+        # delete mscolab http_auth settings for the url
+        if self.mscolab_server_url in self.settings["auth"].keys():
+            del self.settings["auth"][self.mscolab_server_url]
+        save_settings_qsettings('mscolab', self.settings)
+        self.mscolab_server_url = None
+
         self.connectBtn.setText('Connect')
         self.connectBtn.clicked.disconnect(self.disconnect_handler)
         self.connectBtn.clicked.connect(self.connect_handler)
-        self.mscolab_server_url = None
 
     def authenticate(self, data, r, url):
         if r.status_code == 401:
@@ -383,9 +395,9 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
         except requests.exceptions.ConnectionError as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             # popup that Failed to establish a connection
-            self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('Failed to establish a new connection'
-                                          f' to "{self.mscolab_server_url}". Try in a moment again.')
+            show_popup(self, "Error", 'Failed to establish a new connection'
+                                        f' to "{self.mscolab_server_url}". Try in a moment again.')
+            self.disconnect_handler()
             return
 
         if r.text == "False":
@@ -399,9 +411,7 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
             self.wmsBb.accepted.connect(self.login_server_auth)
             self.wmsBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
         else:
-            self.hide()
             self.parent.after_login(emailid, self.mscolab_server_url, r)
-            self.close()
 
     def login_server_auth(self):
         data, r, url, auth = self.login_data
@@ -410,9 +420,7 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
             r = self.authenticate(data, r, url)
             if r.status_code == 200 and r.text not in ["False", "Unauthorized Access"]:
                 constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (auth[0], auth[1])
-                self.hide()
                 self.parent.after_login(emailid, self.mscolab_server_url, r)
-                self.close()
             else:
                 show_popup(self, "Error", "Oh no, server authentication were incorrect.")
                 self.stackedWidget.setCurrentWidget(self.loginPage)
@@ -428,8 +436,7 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
         re_password = self.newConfirmPasswordLe.text()
         username = self.newUsernameLe.text()
         if password != re_password:
-            self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('Oh no, your passwords don\'t match')
+            show_popup(self, "Error", "Oh no, your passwords don\'t match")
             return
 
         data = {
@@ -446,23 +453,28 @@ class MSS_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
         except requests.exceptions.ConnectionError as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             # popup that Failed to establish a connection
-            self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('Failed to establish a new connection'
+            show_popup(self, "Error", 'Failed to establish a new connection'
                                         f' to "{self.mscolab_server_url}". Try in a moment again.')
+            self.disconnect_handler()
             return
 
-        self.newuser_data = [data, r, url]
-        self.stackedWidget.setCurrentWidget(self.wmsAuthPage)
-        self.wmsBb.accepted.connect(self.newuser_server_auth)
-        self.wmsBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
+        if r.status_code == 201:
+            show_popup(self, "Success", "You are registered, you can now log in.", icon=1)
+            self.stackedWidget.setCurrentWidget(self.loginPage)
+        elif r.status_code == 401:
+            self.newuser_data = [data, r, url]
+            self.stackedWidget.setCurrentWidget(self.wmsAuthPage)
+            self.wmsBb.accepted.connect(self.newuser_server_auth)
+            self.wmsBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
+        else:
+            error_msg = json.loads(r.text)["message"]
+            show_popup(self, "Error", error_msg)
 
     def newuser_server_auth(self):
         data, r, url = self.newuser_data
-        if r.status_code == 401:
-            r = self.authenticate(data, r, url)
-            if r.status_code == 201:
-                constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (data['username'], data['password'])
+        r = self.authenticate(data, r, url)
         if r.status_code == 201:
+            constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (data['username'], data['password'])
             show_popup(self, "Success", "You are registered, you can now log in.", icon=1)
             self.stackedWidget.setCurrentWidget(self.loginPage)
         else:
@@ -512,6 +524,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
 
+        self.tabWidget.setCurrentIndex(0)
         self.config_editor = None
 
         # Setting up Local Tab
@@ -521,7 +534,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir")
 
-        # self.createViewCb.currentIndexChanged.connect(self.create_view_local)
         # self.newFlightTrackBtn.clicked.connect(functools.partial(self.create_new_flight_track, None, None))
 
         # Flight Tracks.
@@ -531,14 +543,16 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
         # self.listViews.itemActivated.connect(self.activate_sub_window)
 
         # Setting up MSColab Tab
-        # self.createViewMSCCb.currentIndexChanged.connect(self.open_view_msc)
         self.connectBtn.clicked.connect(self.open_connect_window)
 
-        # self.hide_online_widgets()
+        # hide online widgets
         self.usernameLabel.hide()
         self.userOptionsTb.hide()
-        # self.connectBtn.hide()
-        # self.mscStatusLabel.setText("Connected to MSColab Server at http://localhost:8083")
+        self.addProjectBtn.hide()
+        self.workingStatusLabel.hide()
+        self.workLocallyCheckbox.hide()
+        self.sandboxOptionsCb.hide()
+        self.projectOptionsCb.hide()
 
         # int to store active pid
         self.active_pid = None
@@ -629,38 +643,40 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
             self.listViews.setCurrentItem(listitem)
             self.viewsChanged.emit()
 
-    def hide_online_widgets(self):
-        self.userOptionsFrame.hide()
-        self.projectOptionsCb.hide()
-        self.addProjectBtn.hide()
-        self.createViewMSCCb.hide()
-
-        self.workingStatusLabel.hide()
-        self.workLocallyCheckbox.hide()
-        self.fetchFromServerBtn.hide()
-        self.saveToServerBtn.hide()
-
-    def show_online_widgets(self):
-        self.userOptionsFrame.show()
-
     def open_connect_window(self):
-        connect_window = MSS_ConnectWindow(parent=self)
-        connect_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        connect_window.setWindowTitle("Connect to MSColab")
-        connect_window.show()
+        self.connect_window = MSColab_ConnectWindow(parent=self)
+        self.connect_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.connect_window.setWindowTitle("Connect to MSColab")
+        self.connect_window.show()
 
     def after_login(self, emailid, url, r):
+        self.connect_window.close()
         _json = json.loads(r.text)
         self.token = _json["token"]
         self.user = _json["user"]
         self.mscolab_server_url = url
 
-        self.usernameLabel.show()
-        self.userOptionsTb.show()
         self.connectBtn.hide()
-        self.usernameLabel.setText(self.tr(f"{self.user['username']}"))
+        # display connection status
         self.mscStatusLabel.setText(self.tr(f"Connected to MSColab Server at {self.mscolab_server_url}"))
-        # self.add_projects()
+        # display username beside useroptions toolbutton
+        self.usernameLabel.setText(self.tr(f"{self.user['username']}"))
+        self.usernameLabel.show()
+        # set up user menu and add to toolbutton
+        self.user_menu = QtWidgets.QMenu()
+        self.user_menu.addAction("Profile")
+        self.user_menu.addAction("Help")
+        self.user_menu.addAction("Logout")
+        self.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.userOptionsTb.setMenu(self.user_menu)
+        self.userOptionsTb.show()
+        # self.pixmap = QtGui.QPixmap("msui_redesign/gravatar.jpg")
+        # self.icon = QtGui.QIcon()
+        # self.icon.addPixmap(self.pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        # self.userOptionsTb.setIcon(self.icon)
+
+        self.add_projects_to_ui()
+        self.tabWidget.setCurrentIndex(1)
 
         # # create socket connection here
         # self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
@@ -671,8 +687,125 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
         # self.conn.signal_project_deleted.connect(self.handle_project_deleted)
 
         # activate add project button here
-        # self.addProject.setEnabled(True)
+        self.addProjectBtn.show()
         # save_settings_qsettings('mscolab', self.settings)
+
+    @verify_user_token
+    def add_projects_to_ui(self):
+        data = {
+            "token": self.token
+        }
+        r = requests.get(f'{self.mscolab_server_url}/projects', data=data)
+        if r.text != "False":
+            _json = json.loads(r.text)
+            self.projects = _json["projects"]
+            logging.debug("adding projects to ui")
+            projects = sorted(self.projects, key=lambda k: k["path"].lower())
+            self.listProjectsMSC.clear()
+            selectedProject = None
+            for project in projects:
+                project_desc = f'{project["path"]} - {project["access_level"]}'
+                widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjectsMSC)
+                widgetItem.p_id = project["p_id"]
+                widgetItem.access_level = project["access_level"]
+                if widgetItem.p_id == self.active_pid:
+                    selectedProject = widgetItem
+                self.listProjectsMSC.addItem(widgetItem)
+            if selectedProject is not None:
+                self.listProjectsMSC.setCurrentItem(selectedProject)
+                self.listProjectsMSC.itemActivated.emit(selectedProject)
+            self.listProjectsMSC.itemActivated.connect(self.set_active_pid)
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
+            self.logout()
+
+    @verify_user_token
+    def set_active_pid(self, item):
+        if item.p_id == self.active_pid:
+            return
+        # # close all hanging window
+        # self.force_close_view_windows()
+        # self.close_external_windows()
+        # # Turn off work locally toggle
+        self.workLocallyCheckbox.blockSignals(True)
+        self.workLocallyCheckbox.setChecked(False)
+        self.workLocallyCheckbox.blockSignals(False)
+        self.sandboxOptionsCb.hide()
+
+        # set active_pid here
+        self.active_pid = item.p_id
+        self.access_level = item.access_level
+        self.active_project_name = item.text().split("-")[0].strip()
+        self.waypoints_model = None
+
+        # # set active flightpath here
+        # self.load_wps_from_server()
+        # enable project specific buttons
+        self.workingStatusLabel.show()
+        self.workingStatusLabel.setText(self.tr("Working On: Shared File."
+                                             "All your changes will be shared with everyone."
+                                             "Turn on work locally to work on local flight track file"))
+        # enable access level specific buttons
+        self.show_project_options()
+
+        # change font style for selected
+        font = QtGui.QFont()
+        for i in range(self.listProjectsMSC.count()):
+            self.listProjectsMSC.item(i).setFont(font)
+        font.setBold(True)
+        item.setFont(font)
+
+    def reload_wps_from_server(self):
+        if self.active_pid is None:
+            return
+        self.load_wps_from_server()
+        self.reload_view_windows()
+
+    @verify_user_token
+    def request_wps_from_server(self):
+        data = {
+            "token": self.token,
+            "p_id": self.active_pid
+        }
+        r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
+        if r.text != "False":
+            xml_content = json.loads(r.text)["content"]
+            return xml_content
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
+
+    def load_wps_from_server(self):
+        if self.workLocallyCheckBox.isChecked():
+            return
+        xml_content = self.request_wps_from_server()
+        if xml_content is not None:
+            self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+
+    def show_project_options(self):
+        project_opt_list = ['Project Options']
+        allow_version_access = self.access_level in ["creator", "admin", "collaborator"]
+        if allow_version_access:
+            project_opt_list.extend(['Chat', 'Version History'])
+            self.workLocallyCheckbox.show()
+
+        allow_version_access = self.access_level in ["creator", "admin"]
+        if allow_version_access:
+            project_opt_list.extend(['Manage Users'])
+
+        allow_version_access = self.access_level in ["creator"]
+        if allow_version_access:
+            project_opt_list.extend(['Share Project', 'Delete Project'])
+
+        self.projectOptionsCb.clear()
+        self.projectOptionsCb.addItems(project_opt_list)
+        self.projectOptionsCb.show()
+
+    def hide_project_options(self):
+        self.workingStatusLabel.hide()
+        self.projectOptionsCb.hide()
+        self.workLocallyCheckbox.hide()
+        self.sandboxOptionsCb.hide()
 
     @verify_user_token
     def create_view_msc(self, index):
@@ -689,19 +822,19 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
         self.waypoints_model.name = self.active_project_name
         if _type == "topview":
             view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
-                                                   parent=self.listProjects,
+                                                   parent=self.listProjectsMSC,
                                                    _id=self.id_count)
         elif _type == "sideview":
             view_window = sideview.MSSSideViewWindow(model=self.waypoints_model,
-                                                     parent=self.listProjects,
+                                                     parent=self.listProjectsMSC,
                                                      _id=self.id_count)
         elif _type == "tableview":
             view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
-                                                       parent=self.listProjects,
+                                                       parent=self.listProjectsMSC,
                                                        _id=self.id_count)
         else:
             view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
-                                                         parent=self.listProjects,
+                                                         parent=self.listProjectsMSC,
                                                          _id=self.id_count)
         view_window.view_type = _type
 
