@@ -391,6 +391,8 @@ class DefaultDataAccess(NWPDataAccess):
                     logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
                     continue
                 self._file_cache[filename] = (mtime, content)
+                if content["vert_type"] not in self._elevations:
+                    self._elevations[content["vert_type"]] = content["elevations"]
             self._add_to_filetree(filename, content)
 
     def get_init_times(self):

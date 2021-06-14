@@ -25,11 +25,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+from nco import Nco
+from shutil import move
 
 import mock
 import mslib.mswms.mswms as mswms
 from importlib import reload
 from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
+from mslib._tests.constants import DATA_DIR
 
 
 class Test_WMS(object):
@@ -375,3 +379,32 @@ class Test_WMS(object):
         reload(mslib.mswms.wms)
         assert mslib.mswms.wms.mss_wms_settings.__file__ is not None
         assert mslib.mswms.wms.mss_wms_auth.__file__ is not None
+
+    def test_files_changed(self):
+        environ = {
+              'wsgi.url_scheme': 'http',
+              'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+              'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=200&crs=EPSG%3A4326&format=image%2Fpng&'
+                'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
+                'version=1.3.0&bbox=20.0%2C-50.0%2C75.0%2C20.0&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=XML&transparent=FALSE'}
+        pl_file = next(file for file in os.listdir(DATA_DIR) if ".pl" in file)
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+
+        # Assert modified file was reloaded and now looks different
+        nco = Nco()
+        nco.ncap2(input=os.path.join(DATA_DIR, pl_file), output=os.path.join(DATA_DIR, pl_file),
+                  options=["-s \"geopotential_height*=2\""])
+        result2 = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        nco.ncap2(input=os.path.join(DATA_DIR, pl_file), output=os.path.join(DATA_DIR, pl_file),
+                  options=["-s \"geopotential_height/=2\""])
+        assert result.data != result2.data
+
+        # Assert moved file was reloaded and now looks like the first image
+        move(os.path.join(DATA_DIR, pl_file), os.path.join(DATA_DIR, pl_file + "2"))
+        result3 = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        move(os.path.join(DATA_DIR, pl_file + "2"), os.path.join(DATA_DIR, pl_file))
+        assert result.data == result3.data
