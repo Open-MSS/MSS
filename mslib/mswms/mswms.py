@@ -30,7 +30,7 @@ import logging
 import sys
 
 from mslib import __version__
-from mslib.mswms.wms import mss_wms_settings
+from mslib.mswms.wms import mss_wms_settings, server
 from mslib.mswms.wms import app as application
 from mslib.utils import setup_logging, Updater, Worker
 
@@ -46,7 +46,16 @@ def main():
     parser.add_argument("--logfile", help="If set to a name log output goes to that file", dest="logfile",
                         default=None)
     parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
+
+    subparsers = parser.add_subparsers(help='Available actions', dest='action')
+    gallery = subparsers.add_parser("gallery", help="Generates plots of all layers not already present")
+    gallery.add_argument("--force-regenerate", action="store_true", default=False,
+                         help="Generates plots of all layers regardless if they are present of not")
+    gallery.add_argument("--show-code", action="store_true", default=False,
+                         help="Generates code snippets for each plot, available when clicking on them")
+
     args = parser.parse_args()
+    print(args)
 
     if args.version:
         print("***********************************************************************")
@@ -67,6 +76,10 @@ def main():
         sys.exit()
 
     setup_logging(args)
+
+    if args.action == "gallery":
+        server.generate_gallery(args.force_regenerate, args.show_code)
+
     updater.on_update_available.connect(lambda old, new: logging.info(f"MSS can be updated from {old} to {new}.\nRun"
                                                                       " the --update argument to update the server."))
     updater.run()

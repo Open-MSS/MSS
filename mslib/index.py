@@ -33,6 +33,7 @@ from flask import render_template
 from flask import Flask
 from flask import send_from_directory, send_file, url_for
 from flask import abort
+from flask import request
 from markdown import Markdown
 from xstatic.main import XStatic
 from mslib.msui.icons import icons
@@ -75,7 +76,8 @@ def prefix_route(route_function, prefix='', mask='{0}{1}'):
 
 
 def app_loader(name):
-    APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'))
+    APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'), static_url_path="/static",
+                static_folder=os.path.join(DOCS_SERVER_PATH, 'static'))
     APP.config.from_object(name)
     APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
@@ -104,6 +106,7 @@ def app_loader(name):
              ((url_for('about'), 'About'),
               (url_for('install'), 'Install'),
               (url_for('help'), 'Help'),
+              (url_for('plots'), 'Plots'),
               )),
         ]
         return menu
@@ -142,6 +145,18 @@ def app_loader(name):
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'installation.md')
         content = get_content(_file)
         return render_template("/content.html", act="install", content=content)
+
+    @APP.route("/mss/plots")
+    def plots():
+        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'plots.js')
+        content = get_content(_file)
+        return render_template("/content.html", act="plots", content=content)
+
+    @APP.route("/mss/code")
+    def code():
+        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'code', request.args.get("filename"))
+        content = get_content(_file)
+        return render_template("/content.html", act="code", content=content)
 
     @APP.route("/mss/help")
     def help():

@@ -274,7 +274,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         figsize = figsize if figsize is not None else self.figsize
         noframe = noframe if noframe is not None else self.noframe
         init_time = init_time if init_time is not None else self.init_time
-        valid_time = valid_time if valid_time is not None else self.valid_time
+        valid_time = valid_time if valid_time is not None else self.fc_time
         style = style if style is not None else self.style
         bbox = bbox if bbox is not None else self.bbox
         transparent = transparent if transparent is not None else self.transparent
@@ -389,7 +389,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         noframe = noframe if noframe is not None else self.noframe
         draw_verticals = draw_verticals if draw_verticals else self.draw_verticals
         init_time = init_time if init_time is not None else self.init_time
-        valid_time = valid_time if valid_time is not None else self.valid_time
+        valid_time = valid_time if valid_time is not None else self.fc_time
         style = style if style is not None else self.style
         bbox = bbox if bbox is not None else self.bbox
         vsec_path = vsec_path if vsec_path is not None else self.vsec_path
@@ -592,7 +592,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
         figsize = figsize if figsize is not None else self.figsize
         noframe = noframe if noframe is not None else self.noframe
         init_time = init_time if init_time is not None else self.init_time
-        valid_time = valid_time if valid_time is not None else self.valid_time
+        valid_time = valid_time if valid_time is not None else self.fc_time
         style = style if style is not None else self.style
         bbox = bbox if bbox is not None else self.bbox
         level = level if level is not None else self.level
@@ -707,7 +707,7 @@ class LinearSectionDriver(VerticalSectionDriver):
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
         init_time = init_time if init_time is not None else self.init_time
-        valid_time = valid_time if valid_time is not None else self.valid_time
+        valid_time = valid_time if valid_time is not None else self.fc_time
         bbox = bbox if bbox is not None else self.bbox
         lsec_path = lsec_path if lsec_path is not None else self.lsec_path
         lsec_numpoints = lsec_numpoints if lsec_numpoints is not None else self.lsec_numpoints
