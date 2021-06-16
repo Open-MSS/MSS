@@ -1,17 +1,19 @@
 .. _development:
 
-1. System requirement :
 
-Any system with basic configuration.
-Operating System : Any (Windows / Linux / Mac).
+1. System requirements
 
-2. Software requirement :
-Updated browser
-python
+  | Any system with basic configuration.
+  | Operating System : Any (Windows / Linux / Mac).
 
-3. Skill set :
-Knowledge of git & github.
-python
+2. Software requirement
+  | Python
+  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
+  
+
+3. Skill set
+  | Knowledge of git & github
+  | python
 
 ============================
 Setting Up local Environement
@@ -20,53 +22,57 @@ Setting Up local Environement
 ============================
 Forking the Repo
 ============================
-1.Firstly you have to make your own copy of project. For that you have to fork the repository. You can find the fork button on the top-right side of the browser window. 
+1. Firstly you have to make your own copy of project. For that you have to fork the repository. You can find the fork button on the top-right side of the browser window. 
 
-2.Kindly wait till it gets forked.
+2. Kindly wait till it gets forked.
 
-3.After that copy will look like <your-user-name>/MSS forked from Open-MSS/MSS.
+3. After that copy will look like *<your-user-name>/MSS* forked from *Open-MSS/MSS*.
 
 ============================
 Cloning the Repo
 ============================
 
-1.Now you have your own copy of project. Here you have to start your work.
+1. Now you have your own copy of project. Here you have to start your work.
 
-2.Go to desired location on your computer where you want to set-up the project.
+2. Go to desired location on your computer where you want to set-up the project.
 
-3.Right click there and click on git bash. A terminal window will pop up
+3. Right click there and click on git bash. A terminal window will pop up
 
-4.Type the command git clone <your-fork-url>.git and hit enter.
+4. Click The big green button which says "Code". Copy the URL. `Like this <https://user-images.githubusercontent.com/71402528/122255281-9a855d80-ceeb-11eb-9f85-fed38db30562.png>`_
 
-5.Wait for few seconds till the project gets copied
+5. Now Type the command ``git clone <your-fork-url>.git`` and hit enter.
+
+6. Wait for few seconds till the project gets copied
+
+  or simply head over here for `cloning a repository <https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository-from-github/cloning-a-repository>`_
 
 ============================
 Setting up remote :
 ============================
 
-1.Now you have to set up remote repositories
+1. Now you have to set up remote repositories
 
-2.Type git remote -v in terminal to list remote connections to your repo.
+2. Type ``git remote -v`` in terminal to list remote connections to your repo.
 
 3. It will show something like this:
 
-origin  https://github.com/<your-user-name>/MSS.git (fetch)
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (fetch)
 
-origin  https://github.com/<your-user-name>/MSS.git (push)
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (push)
 
-4. Now type the command git remote add upstream https://github.com/Open-MSS/MSS.git this will set upstream as main directory
+4. Now type the command git remote add upstream ``https://github.com/Open-MSS/MSS.git`` this will set upstream as main directory
 
 5. Again type in command git remote -v to check if remote has been set up correctly
 
 6. It should show something like this :
 
-origin  https://github.com/<your-user-name>/MSS.git (fetch)
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (fetch)
 
-origin  https://github.com/<your-user-name>/MSS.git (push)
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (push)
 
-upstream        https://github.com/Open-MSS/MSS.git (fetch)
+  upstream        ``https://github.com/Open-MSS/MSS.git`` (fetch)
 
-upstream        https://github.com/Open-MSS/MSS.git (push)
+  upstream        ``https://github.com/Open-MSS/MSS.git`` (push)
 
 
 ============================
@@ -340,12 +346,12 @@ Publish on Conda Forge
 Pushing your changes:
 ============================
 
-1. Now you have made the changes , tested them, and built them. so now its time to push them.
+1. Now you have made the changes , tested them, and built them. so now it's time to push them.
 
 2. Goto your terminal and type git status and hit enter, this will show your changes from the files
 3. Then type in git add and hit enter, this will add all the files to staging area
-4. Commit the changes by git commit -m "<message-describing-your-change>" and hit enter.
-5. Now push your branch to your fork by git push origin <your-branch-name> and hit enter.
+4. Commit the changes by ``git commit -m "<message-describing-your-change>"`` and hit enter.
+5. Now push your branch to your fork by ``git push origin <your-branch-name>`` and hit enter.
 
 
 ============================
