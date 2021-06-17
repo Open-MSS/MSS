@@ -353,8 +353,7 @@ Publish on Conda Forge
 Pushing your changes:
 ============================
 
-1. Now you have made the changes , tested them, and built them. so now it's time to push them.
-
+1. Now you have made the changes, tested them and built them. So now it's time to push them.
 2. Goto your terminal and type git status and hit enter, this will show your changes from the files
 3. Then type in git add and hit enter, this will add all the files to staging area
 4. Commit the changes by ``git commit -m "<message-describing-your-change>"`` and hit enter.
