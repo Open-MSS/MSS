@@ -559,6 +559,7 @@ class MplSideViewCanvas(MplCanvas):
             )
 
     def _determine_ticks_labels(self, typ):
+        from metpy.units import units
         if typ == "no secondary axis":
             major_ticks = []
             minor_ticks = []
@@ -585,8 +586,8 @@ class MplSideViewCanvas(MplCanvas):
                 ma_dist, mi_dist = 2, 0.5
             major_heights = np.arange(0, top_km + 1, ma_dist)
             minor_heights = np.arange(0, top_km + 1, mi_dist)
-            major_ticks = thermolib.flightlevel2pressure_a(major_heights / 0.03048)
-            minor_ticks = thermolib.flightlevel2pressure_a(minor_heights / 0.03048)
+            major_ticks = thermolib.flightlevel2pressure_a(units.Quantity(major_heights, "kilometer")).to(units.hPa).magnitude
+            minor_ticks = thermolib.flightlevel2pressure_a(units.Quantity(minor_heights, "kilometer")).to(units.hPa).magnitude
             labels = major_heights
             ylabel = "pressure altitude (km)"
         elif typ == "flight level":

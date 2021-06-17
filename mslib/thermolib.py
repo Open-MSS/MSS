@@ -35,6 +35,7 @@ from metpy.units import check_units, units
 from metpy.xarray import preprocess_and_wrap
 from xarray.ufuncs import exp, log
 from xarray import zeros_like
+import xarray
 import metpy.calc as mpcalc
 from metpy.units import units
 
@@ -404,42 +405,42 @@ def height_to_atmosphere(height):
     height_m = height.to(units.meter)
     # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
     # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
-    if height_m <= 11000:
+    if height_m <= 11000 * units.meter:
         z0 = 0 * units.meter
         T0 = 288.15 * units.kelvin
         gamma = 6.5e-3 * units.kelvin / units.kilometer
         p0 = 101325. * units.pascal
     # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
     # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
-    elif height_m <= 20000:
+    elif height_m <= 20000 * units.meter:
         z0 = 11000. * units.meter
         p0 = 22632.64 * units.pascal
         T0 = 216.65 * units.kelvin
         gamma = None
     # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
     # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
-    elif height_m <= 32000:
+    elif height_m <= 32000 * units.meter:
         z0 = 20000. * units.meter
         T0 = 216.65 * units.kelvin
         gamma = -1.0e-3 * units.kelvin / units.kilometer
         p0 = 5475.16 * units.pascal
     # ICAO standard atmosphere between 32 and 47 km: T(z=32km) = -44.5 degC,
     # p(z=32km) = 8.68019 hPa. Temperature gradient is -2.8 K/km.
-    elif height_m <= 47000:
+    elif height_m <= 47000 * units.meter:
         z0 = 32000. * units.meter
         T0 = 228.66 * units.kelvin
         gamma = -2.8e-3 * units.kelvin / units.kilometer
         p0 = 868.089 * units.pascal
     # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
     # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
-    elif height_m <= 51000:
+    elif height_m <= 51000 * units.meter:
         z0 = 47000. * units.meter
         T0 = 270.65 * units.kelvin
         p0 = 110.928 * units.pascal
         gamma = None
     # ICAO standard atmosphere between 51 and 71 km: T(z=51km) = -2.5 degC,
     # p(z=71km) = 0.66939 hPa. Temperature gradient is 2.8 K/km.
-    elif height_m <= 71000:
+    elif height_m <= 71000 * units.meter:
         z0 = 51000. * units.meter
         T0 = 270.65 * units.kelvin
         gamma = 2.8e-3 * units.kelvin / units.kilometer
@@ -470,22 +471,21 @@ def flightlevel2pressure_a(height):
     Returns:
         static pressure (Pa)
     """
-    if (height.to(units.meter) > 71000).any():
+    if (height.to(units.meter) > 71000 * units.meter).any():
         raise ValueError("height to pressure conversion not implemented for z > 71km")
 
     # Initialize the return array.
-    p = zeros_like(height)
+    p = numpy.zeros_like(height) * units.pascal
 
-    height_m = height.to(units.meter)
-    for segment_indices in [height_m <= 11000,
-                            11000 < height_m <= 20000,
-                            20000 < height_m <= 32000,
-                            32000 < height_m <= 47000,
-                            47000 < height_m <= 51000,
-                            51000 < height_m <= 71000,
-                            height_m > 71000]:
-        if segment_indices:
-            z0, T0, gamma, p0 = height_to_atmosphere(height_m[segment_indices[0]])
+    for segment_indices in [height <= 11000 * units.meter,
+                            (11000 * units.meter < height) * (height <= 20000 * units.meter),
+                            (20000 * units.meter < height) * (height <= 32000 * units.meter),
+                            (32000 * units.meter < height) * (height <= 47000 * units.meter),
+                            (47000 * units.meter < height) * (height <= 51000 * units.meter),
+                            (51000 * units.meter < height) * (height <= 71000 * units.meter),
+                            height > 71000 * units.meter]:
+        if any(segment_indices):
+            z0, T0, gamma, p0 = height_to_atmosphere(height[segment_indices][0])
             # Hydrostatic equation with linear temperature gradient.
             if gamma:
                 p[segment_indices] = p0 * ((T0 - gamma * (height[segment_indices] - z0)) / T0) ** (g / (gamma * Rd))
@@ -546,59 +546,3 @@ def pressure2flightlevel_a(pressure):
                 z[segment_indices] = p0 * exp(-g * (pressure_Pa[segment_indices] - z0) / (Rd * T0))
 
     return z
-
-
-def isa_temperature(flightlevel):
-    """
-    International standard atmosphere temperature at the given flight level.
-
-    Reference:
-        For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
-        470pp., Sections II.1.4. and II.6.1.2.
-
-    Arguments:
-        flightlevel -- flight level in hft
-    Returns:
-        temperature (K)
-    """
-    # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
-    z = flightlevel * 30.48
-
-    if z <= 11000.:
-        # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
-        # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
-        T0 = 288.15
-        gamma = 6.5e-3
-        return T0 - gamma * z
-
-    elif z <= 20000.:
-        # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
-        # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
-        T = 216.65
-        return T
-
-    elif z <= 32000.:
-        # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
-        # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
-        z0 = 20000.
-        T0 = 216.65
-        gamma = -1.0e-3
-        return T0 - gamma * (z - z0)
-
-    elif z <= 47000.:
-        # ICAO standard atmosphere between 32 and 47 km: T(z=32km) = -44.5 degC,
-        # p(z=32km) = 8.68019 hPa. Temperature gradient is -2.8 K/km.
-        z0 = 32000.
-        T0 = 228.65
-        gamma = -2.8e-3
-        return T0 - gamma * (z - z0)
-
-    elif z <= 47820.070345213892438:
-        # ICAO standard atmosphere between 47 and 47820.070345213892438 km: T(z=47km) = -2.5 degC,
-        # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
-        T = 270.65
-        return T
-
-    else:
-        raise ValueError("ISA temperature from flight level not "
-                         "implemented for z > 71km")

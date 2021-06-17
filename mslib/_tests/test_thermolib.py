@@ -59,19 +59,6 @@ def test_pressure2flightlevel():
                        tl.pressure2flightlevel_a(pss))
 
 
-def test_isa_temperature():
-    assert (tl.isa_temperature(100) - 268.3379999999811) < 1e-6
-    assert (tl.isa_temperature(200) - 248.5259999999622) < 1e-6
-    assert (tl.isa_temperature(300) - 228.7139999999434) < 1e-6
-    assert tl.isa_temperature(400) == 216.65
-    assert tl.isa_temperature(500) == 216.65
-    assert tl.isa_temperature(600) == 216.65
-    assert (tl.isa_temperature(700) - 217.9860000000203) < 1e-6
-    assert (tl.isa_temperature(800) - 221.0340000000232) < 1e-6
-    with pytest.raises(ValueError):
-        tl.isa_temperature(1568.9002625)
-
-
 def test_geop_thickness():
     """Test geop_thickness() with some values from the 1976 US standard
        atmosphere.
